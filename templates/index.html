@@ -509,7 +509,7 @@
                 <div id="updateBadge" class="hidden"></div>
 
                 
-                <div style="width:1px;height:20px;background:var(--border)"></div>
+                
 
                 
                 <button onclick="cycleTheme()" id="themeToggleBtn" class="nav-btn" title="Toggle theme">
@@ -517,7 +517,7 @@
                 </button>
 
                 
-                <div style="width:1px;height:20px;background:var(--border)"></div>
+                
 
                 
                 <button onclick="openBackupsModal()" class="nav-btn" title="Backups">
@@ -527,7 +527,7 @@
                     <i class="ph-bold ph-gear"></i>
                 </button>
                 {% if auth_enabled %}
-                <div style="width:1px;height:20px;background:var(--border)"></div>
+                
                 <form method="POST" action="{{ url_for('logout') }}" style="display:inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <button type="submit" class="nav-btn" title="Sign out" style="color:var(--muted)">
@@ -3190,7 +3190,7 @@ if (document.getElementById('toastContainer') && document.getElementById('toastC
 }
 </script>
 
-<div id="settingsModal" class="modal-overlay" style="display:none">
+<div id="settingsModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeSettingsModal()">
     <div class="modal-box" style="max-width:480px">
         <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
             <div class="flex items-center gap-2">
