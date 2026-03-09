@@ -9,7 +9,7 @@
 Add routes, manage middlewares, monitor services, and view TLS certificates — all without touching a YAML file by hand.
 
 [![Docker Image](https://img.shields.io/badge/ghcr.io-chr0nzz%2Ftraefik--manager-blue?logo=docker&logoColor=white)](https://github.com/chr0nzz/traefik-manager/pkgs/container/traefik-manager)
-[![License](https://img.shields.io/github/license/chr0nzz/traefik-manager)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/chr0nzz/traefik-manager)](https://github.com/chr0nzz/traefik-manager/releases)
 
 </div>
