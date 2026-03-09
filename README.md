@@ -13,6 +13,9 @@ Add routes, manage middlewares, monitor services, and view TLS certificates — 
 [![Version](https://img.shields.io/github/v/release/chr0nzz/traefik-manager)](https://github.com/chr0nzz/traefik-manager/releases)
 
 </div>
+<div align="center">
+<sub>Built for homelabbers who love Traefik but hate editing YAML at 2am.</sub>
+</div>
 
 ---
 
@@ -96,7 +99,7 @@ Open **http://your-server:5000** — the setup wizard will guide you through the
 | `/path/to/traefik/logs/access.log` | `/app/logs/access.log` | ➕ Optional | Enables the **Logs** tab |
 | `/var/run/docker.sock` | `/var/run/docker.sock` | ➕ Optional | Enables the **Docker** tab |
 
-> **Note:** The config directory mount (`/app/config`) must cover the same path as `dynamic.yml` — both live under `/app/config` inside the container. Use a single directory mount rather than two separate file mounts.
+> **Note:** The docker.sock is used to retrieve metadata such as container labels and IPs. It isn't required for monitoring (@docker) when using docker labels and is only necessary if you want the Docker Tab to display extra container information.
 
 ---
 
@@ -142,14 +145,12 @@ volumes:
 
 ### Docker tab
 
-Mount the Docker socket:
+Mount the Docker socket for extra information - Not required to view @docker routing:
 
 ```yaml
 volumes:
   - /var/run/docker.sock:/var/run/docker.sock:ro
 ```
-
----
 
 ## Full compose example (all tabs enabled)
 
@@ -314,10 +315,4 @@ Pull requests are welcome. For larger changes, please open an issue first to dis
 
 ## License
 
-[MIT](LICENSE)
-
----
-
-<div align="center">
-<sub>Built for homelabbers who love Traefik but hate editing YAML at 2am.</sub>
-</div>
+[GPL-3.0 license](LICENSE)
