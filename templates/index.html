@@ -1913,31 +1913,32 @@ async function checkManagerVersion() {
         const res = await fetch('/api/manager/version');
         if (!res.ok) return;
         const d = await res.json();
-        _managerVersion = d.version || null;
-        if (_managerVersion) {
-            const footerEl = document.getElementById('footerManagerVer');
-            if (footerEl) footerEl.textContent = 'v' + _managerVersion;
-            
-            const ghRes = await fetch(
-                `https://api.github.com/repos/${d.repo}/releases/latest`,
-                { headers: { 'Accept': 'application/vnd.github.v3+json' } }
-            );
-            if (!ghRes.ok) return;
-            const ghData = await ghRes.json();
+
+        const footerEl = document.getElementById('footerManagerVer');
+
+        const ghRes = await fetch(
+            `https://api.github.com/repos/${d.repo}/releases/latest`,
+            { headers: { 'Accept': 'application/vnd.github.v3+json' } }
+        );
+
+        if (ghRes.ok) {
+            const ghData    = await ghRes.json();
             const latestTag = (ghData.tag_name || '').replace(/^v/, '');
-            const current   = _managerVersion.replace(/^v/, '');
-            if (latestTag && latestTag !== current && compareVersions(latestTag, current) > 0) {
+            if (latestTag) {
+                _managerVersion = latestTag;
                 if (footerEl) {
-                    footerEl.innerHTML = `v${current} <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange);font-size:11px"></i>`;
-                    footerEl.title     = `Update available: v${latestTag}`;
-                    footerEl.style.color = 'var(--orange)';
+                    footerEl.textContent = 'v' + latestTag;
+                    footerEl.title = 'Traefik Manager v' + latestTag;
                 }
-                document.getElementById('mgrUpdateCurrentVer').textContent = 'v' + current;
+                document.getElementById('mgrUpdateCurrentVer').textContent = 'v' + latestTag;
                 document.getElementById('mgrUpdateLatestVer').textContent  = 'v' + latestTag;
                 document.getElementById('mgrUpdateReleaseLink').href       = ghData.html_url || 'https://github.com/chr0nzz/traefik-manager/releases';
             }
+        } else if (d.version) {
+            _managerVersion = d.version;
+            if (footerEl) footerEl.textContent = 'v' + d.version;
         }
-    } catch(e) { /* silently skip */ }
+    } catch(e) {}
 }
 
 function openManagerUpdateInfo() {
