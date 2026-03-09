@@ -125,5 +125,5 @@ Traefik Manager provides a clean interface to manage and monitor:
 * Plugins
 * Certificates
 
-All configuration is accessible through the UI, allowing quick inspection and editing of your Traefik configuration.
+All configuration is accessible through the UI, allowing quick inspection and editing of your Traefik dynamic.yml.
 
