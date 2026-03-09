@@ -36,6 +36,10 @@ Routes define how traffic is forwarded to services.
 
 ![Routes](images/routes.png)
 
+## Route Details
+
+![Route Edit](images/route-details.png)
+
 ## Editing a Route
 
 ![Route Edit](images/route-edit.png)
@@ -83,7 +87,7 @@ Examples include:
 
 # Plugins
 
-Plugins extend Traefik functionality and allow advanced behaviors.
+View and Monitor Active Plugins.
 
 ## Plugin List
 
@@ -97,7 +101,7 @@ Plugins extend Traefik functionality and allow advanced behaviors.
 
 # Certificates
 
-Manage TLS certificates used by Traefik.
+View and Monitor TLS certificates used by Traefik.
 
 ## Certificates View
 
@@ -105,9 +109,15 @@ Manage TLS certificates used by Traefik.
 
 ---
 
+# Settings
+
+Set new Password, Add domains and hide unused monitors
+
+![Settings](images/setings.png)
+
 # Summary
 
-Traefik Manager provides a clean interface to manage:
+Traefik Manager provides a clean interface to manage and monitor:
 
 * Routes
 * Services
