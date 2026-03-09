@@ -1,0 +1,3485 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Traefik Manager</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#0d1117">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Traefik">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        traefik: {
+                            blue: '#24a1de',
+                            dark: '#0d1117',
+                            card: '#161b22',
+                            border: '#30363d',
+                            muted: '#8b949e',
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        
+        :root {
+            --bg: #0d1117;
+            --card: #161b22;
+            --border: #30363d;
+            --muted: #8b949e;
+            --text: #e6edf3;
+            --text-secondary: #c9d1d9;
+            --blue: #24a1de;
+            --green: #3fb950;
+            --yellow: #d29922;
+            --red: #f85149;
+            --purple: #a371f7;
+            --orange: #f0883e;
+            --nav-bg: rgba(13,17,23,0.95);
+            --input-bg: #0d1117;
+            --btn-secondary-bg: #21262d;
+            --btn-secondary-hover: #30363d;
+            --code-bg: #161b22;
+        }
+        [data-theme="light"] {
+            --bg: #f6f8fa;
+            --card: #ffffff;
+            --border: #d0d7de;
+            --muted: #656d76;
+            --text: #1f2328;
+            --text-secondary: #36414c;
+            --blue: #0969da;
+            --green: #1a7f37;
+            --yellow: #9a6700;
+            --red: #d1242f;
+            --purple: #8250df;
+            --orange: #bc4c00;
+            --nav-bg: rgba(246,248,250,0.95);
+            --input-bg: #ffffff;
+            --btn-secondary-bg: #f6f8fa;
+            --btn-secondary-hover: #eaeef2;
+            --code-bg: #f6f8fa;
+        }
+
+        body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+        main { overflow-x: hidden; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn { position: relative; padding: 12px 4px; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; transition: border-color 0.2s, box-shadow 0.2s; }
+        .card:hover { border-color: var(--muted); box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+
+        .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-http { background: rgba(36,161,222,0.15); color: var(--blue); border: 1px solid rgba(36,161,222,0.3); }
+        .badge-tcp  { background: rgba(163,113,247,0.15); color: var(--purple); border: 1px solid rgba(163,113,247,0.3); }
+        .badge-udp  { background: rgba(240,136,62,0.15); color: var(--orange); border: 1px solid rgba(240,136,62,0.3); }
+        .badge-green { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+        .badge-red  { background: rgba(248,81,73,0.15); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+        .badge-muted { background: rgba(139,148,158,0.1); color: var(--muted); border: 1px solid rgba(139,148,158,0.3); }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+        .status-online  { background: var(--green); box-shadow: 0 0 6px rgba(63,185,80,0.6); }
+        .status-offline { background: var(--red); }
+        .status-unknown { background: var(--muted); }
+        .status-checking { background: var(--yellow); animation: pulse 1.5s infinite; }
+
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+        .input-field {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 13px;
+            width: 100%;
+            transition: border-color 0.15s;
+            outline: none;
+        }
+        .input-field:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(36,161,222,0.1); }
+        .input-field::placeholder { color: var(--muted); }
+        select.input-field option { background: var(--card); color: var(--text); }
+
+        .btn-primary {
+            background: var(--blue);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary:hover { filter: brightness(1.1); }
+        .btn-primary:active { transform: scale(0.97); }
+
+        .btn-secondary {
+            background: var(--btn-secondary-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-secondary:hover { background: var(--btn-secondary-hover); }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--muted);
+            border: none;
+            border-radius: 6px;
+            padding: 6px;
+            cursor: pointer;
+            transition: color 0.15s, background 0.15s;
+        }
+        .btn-danger:hover { color: var(--red); background: rgba(248,81,73,0.1); }
+
+        .btn-icon {
+            background: transparent;
+            color: var(--muted);
+            border: none;
+            border-radius: 6px;
+            padding: 6px;
+            cursor: pointer;
+            transition: color 0.15s, background 0.15s;
+        }
+        .btn-icon:hover { color: var(--text); background: var(--btn-secondary-bg); }
+
+        .modal-overlay { 
+            position: fixed; inset: 0; z-index: 50;
+            background: rgba(1,4,9,0.85);
+            backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 560px;
+            max-height: 92vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+        }
+
+        .proto-toggle { display: flex; gap: 4px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
+        .proto-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; background: transparent; transition: all 0.15s; color: var(--muted); letter-spacing: 0.05em; }
+        .proto-btn.active-http { background: rgba(36,161,222,0.2); color: var(--blue); }
+        .proto-btn.active-tcp  { background: rgba(163,113,247,0.2); color: var(--purple); }
+        .proto-btn.active-udp  { background: rgba(240,136,62,0.2); color: var(--orange); }
+
+        
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+        *::-webkit-scrollbar { width: 6px; height: 6px; }
+        *::-webkit-scrollbar-track { background: transparent; }
+        *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+        *::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+        *::-webkit-scrollbar-corner { background: transparent; }
+
+        
+        .tab-bar {
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            padding-bottom: 0;
+            
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+        .tab-bar::-webkit-scrollbar { height: 3px; }
+        .tab-bar::-webkit-scrollbar-track { background: transparent; }
+        .tab-bar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+        .scrollbar-hide { scrollbar-width: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        nav { background: var(--nav-bg); border-bottom: 1px solid var(--border); backdrop-filter: blur(12px); }
+
+        
+
+        .overview-bar { height: 4px; border-radius: 4px; background: var(--border); overflow: hidden; }
+        .overview-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+        pre { white-space: pre-wrap; word-break: break-all; }
+
+        
+        .toast { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .toast-item { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 12px 16px; font-size: 13px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); animation: slideIn 0.3s ease; pointer-events: all; max-width: 320px; }
+        .toast-item.success { border-left: 3px solid var(--green); }
+        .toast-item.error { border-left: 3px solid var(--red); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        
+        .tab-toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 10px; border-radius: 8px; cursor: pointer;
+            border: 1px solid var(--border); background: var(--input-bg);
+            transition: border-color 0.15s;
+            user-select: none;
+        }
+        .tab-toggle-row:hover { border-color: var(--blue); }
+        .toggle-switch {
+            width: 32px; height: 18px; border-radius: 99px;
+            background: var(--border); position: relative;
+            transition: background 0.2s; flex-shrink: 0;
+        }
+        .toggle-switch.on { background: var(--blue); }
+        .toggle-knob {
+            position: absolute; top: 2px; left: 2px;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: #fff; transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .toggle-switch.on .toggle-knob { transform: translateX(14px); }
+
+        .protocol-section { display: none; }
+        .protocol-section.active { display: block; }
+
+        label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+        
+        .detail-panel {
+            position: fixed; top: 0; right: 0; bottom: 0; z-index: 60;
+            width: 100%; max-width: 680px;
+            background: var(--bg);
+            border-left: 1px solid var(--border);
+            box-shadow: none;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s ease;
+        }
+        .detail-panel.open { transform: translateX(0); box-shadow: -24px 0 80px rgba(0,0,0,0.4); }
+        .detail-backdrop {
+            position: fixed; inset: 0; z-index: 59;
+            background: rgba(1,4,9,0.6);
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .detail-backdrop.open { opacity: 1; pointer-events: all; }
+
+        
+        .flow-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            min-width: 140px;
+            flex: 1;
+        }
+        .flow-box.active-box { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(36,161,222,0.12); }
+        .flow-arrow { display: flex; align-items: center; color: var(--border); font-size: 20px; padding: 0 8px; flex-shrink: 0; }
+
+        
+        .detail-section { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+        .detail-section-header { background: var(--card); padding: 10px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); }
+        .detail-kv { display: grid; grid-template-columns: 160px 1fr; gap: 0; }
+        .detail-key { padding: 9px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); border-bottom: 1px solid var(--border); }
+        .detail-val { padding: 9px 16px; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--text); border-bottom: 1px solid var(--border); word-break: break-all; }
+
+        
+        .nav-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            height: 34px; padding: 0 12px;
+            border-radius: 6px; font-size: 13px; font-weight: 600;
+            border: 1px solid var(--border);
+            background: var(--btn-secondary-bg);
+            color: var(--muted);
+            cursor: pointer; transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .nav-btn:hover { color: var(--text); border-color: var(--muted); }
+        .nav-btn-primary {
+            background: var(--blue); border-color: var(--blue); color: #fff !important;
+        }
+        .nav-btn-primary:hover { filter: brightness(1.12); border-color: transparent; }
+        .nav-btn.update-available {
+            color: var(--orange) !important;
+            border-color: rgba(240,136,62,0.4);
+            background: rgba(240,136,62,0.08);
+        }
+        .nav-btn.update-available:hover { background: rgba(240,136,62,0.15); }
+
+        
+        .route-card-inner { cursor: default; }
+
+        
+        .svc-row:hover { background: rgba(36,161,222,0.04); cursor: pointer; }
+
+        
+        #entrypointsList {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .ep-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            min-width: 160px;
+            justify-content: center;
+        }
+
+        
+        #mobileMenu {
+            display: none;
+            position: fixed; top: 56px; left: 0; right: 0; z-index: 45;
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            padding: 12px 16px;
+            flex-direction: column;
+            gap: 8px;
+        }
+        #mobileMenu.open { display: flex; }
+        .mobile-menu-item {
+            display: flex; align-items: center; gap-10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: background 0.15s;
+            gap: 10px;
+        }
+        .mobile-menu-item:hover { background: var(--btn-secondary-bg); }
+        .mobile-menu-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+        
+        .theme-btn { 
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
+            border: 1px solid var(--border); background: var(--btn-secondary-bg);
+            color: var(--muted); cursor: pointer; transition: all 0.15s;
+        }
+        .theme-btn.active { color: var(--blue); border-color: var(--blue); background: rgba(36,161,222,0.1); }
+        .theme-btn:hover { color: var(--text); }
+
+        
+        .text-green-400 { color: var(--green) !important; }
+        .text-yellow-400 { color: var(--yellow) !important; }
+        .text-red-400 { color: var(--red) !important; }
+        .text-purple-400 { color: var(--purple) !important; }
+        .text-blue-400 { color: var(--blue) !important; }
+        [data-theme="light"] .text-white { color: var(--text) !important; }
+
+        
+        [data-theme="light"] [style*="color:#e6edf3"] { color: var(--text) !important; }
+        [data-theme="light"] [style*="color:#7ee787"] { color: var(--green) !important; }
+        [data-theme="light"] [style*="color:#58a6ff"] { color: var(--blue) !important; }
+        [data-theme="light"] [style*="background:#0d1117"] { background: var(--bg) !important; }
+        [data-theme="light"] [style*="background:#161b22"] { background: var(--card) !important; }
+        [data-theme="light"] [style*="background:#21262d"] { background: var(--btn-secondary-bg) !important; }
+        [data-theme="light"] [style*="border:1px solid var(--border)"] { border-color: var(--border) !important; }
+
+        
+        #liveContent { width: 100%; }
+        #liveContent .card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        #liveContent table { min-width: 560px; width: 100%; table-layout: auto; border-collapse: collapse; }
+        #liveContent td, #liveContent th { white-space: nowrap; }
+        .svc-col-type, .svc-col-servers, .svc-col-provider {  }
+
+        
+        @media (max-width: 640px) {
+            .desktop-only { display: none !important; }
+
+            .stat-card { padding: 12px; }
+
+            .tab-btn { font-size: 12px; padding: 10px 2px; }
+
+            #tab-services .flex.flex-wrap.gap-2.mb-4 { flex-direction: column; }
+            #searchRoutes { width: 100%; }
+
+            .route-card-inner { padding: 12px 12px 8px; }
+
+            .modal-overlay { align-items: flex-end; padding: 0; }
+            .modal-box { max-width: 100% !important; width: 100%; border-radius: 18px 18px 0 0; max-height: 92vh; }
+
+            .detail-panel { max-width: 100%; border-left: none; border-top: 1px solid var(--border); }
+
+            .flow-diagram-row { flex-direction: column !important; align-items: stretch !important; }
+            .flow-arrow { transform: rotate(90deg); justify-content: center; padding: 4px 0; }
+            .flow-box { min-width: unset; }
+
+            .detail-kv { grid-template-columns: 1fr; }
+            .detail-key { border-bottom: none; padding-bottom: 2px; }
+            .detail-val { padding-top: 2px; border-bottom: 1px solid var(--border); }
+
+            .toast { left: 12px; right: 12px; bottom: 12px; }
+            .toast-item { max-width: 100%; }
+
+            .proto-toggle { width: 100%; }
+            .proto-btn { flex: 1; text-align: center; }
+
+            #entrypointsList { justify-content: center; }
+            .ep-pill { min-width: 130px; }
+
+            .filter-bar { flex-direction: column; }
+            .filter-bar .relative { width: 100%; }
+            .filter-bar .proto-toggle { width: 100%; }
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen font-sans">
+
+
+<div class="toast" id="toastContainer">
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+    <div class="toast-item {{ category }}" onclick="this.remove()">
+        {% if category == 'success' %}<i class="ph-fill ph-check-circle text-green-400 text-lg"></i>{% else %}<i class="ph-fill ph-warning-circle text-red-400 text-lg"></i>{% endif %}
+        <span>{{ message }}</span>
+        <button onclick="this.parentElement.remove()" class="ml-auto text-traefik-muted hover:text-white"><i class="ph-bold ph-x text-sm"></i></button>
+    </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+</div>
+
+
+<nav class="sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex items-center justify-between h-14">
+            
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <i class="ph-fill ph-traffic-signal text-2xl" style="color: var(--blue)"></i>
+                    <span class="font-bold text-base tracking-tight" style="color:var(--text)">Traefik <span style="color:var(--blue)">Manager</span></span>
+                </div>
+            </div>
+
+            
+            <div class="hidden sm:flex items-center gap-2">
+                
+                <button id="versionBadge" class="hidden nav-btn font-mono" title="Traefik version">
+                    <span id="apiStatusDot" style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span>
+                    <i class="ph-bold ph-git-branch"></i>
+                    <span id="versionText">—</span>
+                </button>
+                <div id="updateBadge" class="hidden"></div>
+
+                
+                <div style="width:1px;height:20px;background:var(--border)"></div>
+
+                
+                <button onclick="cycleTheme()" id="themeToggleBtn" class="nav-btn" title="Toggle theme">
+                    <i class="ph-bold ph-moon" id="themeIcon"></i>
+                </button>
+
+                
+                <div style="width:1px;height:20px;background:var(--border)"></div>
+
+                
+                <button onclick="openBackupsModal()" class="nav-btn" title="Backups">
+                    <i class="ph-bold ph-clock-counter-clockwise"></i>
+                </button>
+                <button onclick="openSettingsModal()" class="nav-btn" title="Settings">
+                    <i class="ph-bold ph-gear"></i>
+                </button>
+                {% if auth_enabled %}
+                <div style="width:1px;height:20px;background:var(--border)"></div>
+                <form method="POST" action="{{ url_for('logout') }}" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="nav-btn" title="Sign out" style="color:var(--muted)">
+                        <i class="ph-bold ph-sign-out"></i>
+                    </button>
+                </form>
+                {% endif %}
+                <button onclick="openMwModal()" class="nav-btn" title="Add Middleware">
+                    <i class="ph-bold ph-plugs-connected"></i>
+                    <span>Middleware</span>
+                </button>
+                <button onclick="openModal()" class="nav-btn nav-btn-primary">
+                    <i class="ph-bold ph-plus"></i>
+                    <span>Add Route</span>
+                </button>
+            </div>
+
+            
+            <div class="flex sm:hidden items-center gap-2">
+                <div id="versionBadgeMobile" class="hidden items-center gap-1 px-2 py-1 rounded-md text-xs font-mono" style="background:var(--btn-secondary-bg); border:1px solid var(--border); color:var(--muted)">
+                    <span id="apiStatusDotMobile" style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>
+                    <i class="ph-bold ph-git-branch text-xs"></i>
+                    <span id="versionTextMobile">—</span>
+                </div>
+                <button onclick="toggleMobileMenu()" class="btn-icon" id="hamburgerBtn">
+                    <i class="ph-bold ph-list text-xl" id="hamburgerIcon"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+<div id="mobileMenu">
+    <button onclick="openModal(); closeMobileMenu()" class="mobile-menu-item">
+        <i class="ph-bold ph-plus" style="color:var(--blue)"></i> Add Route
+    </button>
+    <button onclick="openMwModal(); closeMobileMenu()" class="mobile-menu-item">
+        <i class="ph-bold ph-plugs-connected" style="color:var(--purple)"></i> Add Middleware
+    </button>
+    <button onclick="openBackupsModal(); closeMobileMenu()" class="mobile-menu-item">
+        <i class="ph-bold ph-clock-counter-clockwise" style="color:var(--muted)"></i> Backups
+    </button>
+    <button onclick="openSettingsModal(); closeMobileMenu()" class="mobile-menu-item">
+        <i class="ph-bold ph-gear" style="color:var(--muted)"></i> Settings
+    </button>
+    {% if auth_enabled %}
+    <div class="mobile-menu-divider"></div>
+    <form method="POST" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="mobile-menu-item" style="width:100%;color:var(--red)">
+            <i class="ph-bold ph-sign-out" style="color:var(--red)"></i> Sign out
+        </button>
+    </form>
+    {% endif %}
+    <button id="pwaInstallBtnMobile" class="mobile-menu-item hidden" onclick="installPWA(); closeMobileMenu()">
+        <i class="ph-bold ph-device-mobile" style="color:var(--green)"></i> Install as App
+    </button>
+    <div class="mobile-menu-divider"></div>
+    <div class="px-2 py-1">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--muted)">Theme</div>
+        <div class="flex gap-2">
+            <button onclick="setTheme('dark')" id="theme-dark-m" class="theme-btn flex-1 justify-center"><i class="ph-bold ph-moon text-xs mr-1"></i>Dark</button>
+            <button onclick="setTheme('light')" id="theme-light-m" class="theme-btn flex-1 justify-center"><i class="ph-bold ph-sun text-xs mr-1"></i>Light</button>
+            <button onclick="setTheme('system')" id="theme-system-m" class="theme-btn flex-1 justify-center"><i class="ph-bold ph-desktop text-xs mr-1"></i>System</button>
+        </div>
+    </div>
+</div>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+    
+    <div id="overviewSection" class="mb-6">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="statsGrid">
+
+            
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">HTTP Routers</span>
+                    <i class="ph-fill ph-layout text-sm" style="color:var(--blue)"></i>
+                </div>
+                <div class="text-3xl font-bold text-white mb-3" id="statHttpRouters">—</div>
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
+                        <span class="font-mono text-green-400" id="statHttpSuccess">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
+                        <span class="font-mono text-yellow-400" id="statHttpWarn">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
+                        <span class="font-mono text-red-400" id="statHttpErr">—</span>
+                    </div>
+                </div>
+                <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barHttpRouters" style="background:var(--border)"></div>
+            </div>
+
+            
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">TCP / UDP</span>
+                    <i class="ph-fill ph-arrows-left-right text-sm" style="color:var(--purple)"></i>
+                </div>
+                <div class="text-3xl font-bold text-white mb-3" id="statTcpUdp">—</div>
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
+                        <span class="font-mono text-green-400" id="statTcpSuccess">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
+                        <span class="font-mono text-yellow-400" id="statTcpWarn">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
+                        <span class="font-mono text-red-400" id="statTcpErr">—</span>
+                    </div>
+                </div>
+                <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barTcpRouters" style="background:var(--border)"></div>
+            </div>
+
+            
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Services</span>
+                    <i class="ph-fill ph-circles-four text-sm" style="color:var(--green)"></i>
+                </div>
+                <div class="text-3xl font-bold text-white mb-3" id="statServices">—</div>
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
+                        <span class="font-mono text-green-400" id="statSvcSuccess">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
+                        <span class="font-mono text-yellow-400" id="statSvcWarn">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
+                        <span class="font-mono text-red-400" id="statSvcErr">—</span>
+                    </div>
+                </div>
+                <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barServices" style="background:var(--border)"></div>
+            </div>
+
+            
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Middlewares</span>
+                    <i class="ph-fill ph-plugs-connected text-sm" style="color:var(--yellow)"></i>
+                </div>
+                <div class="text-3xl font-bold text-white mb-3" id="statMiddlewares">—</div>
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
+                        <span class="font-mono text-green-400" id="statMwSuccess">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
+                        <span class="font-mono text-yellow-400" id="statMwWarn">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
+                        <span class="font-mono text-red-400" id="statMwErr">—</span>
+                    </div>
+                </div>
+                <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barMiddlewares" style="background:var(--border)"></div>
+            </div>
+
+        </div>
+
+        
+        <div id="entrypointsBar" class="mt-3 hidden">
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Entry Points</span>
+                </div>
+                <div id="entrypointsList" class="flex flex-wrap gap-2"></div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="tab-bar mb-6" id="tabBar">
+        <button onclick="switchTab('services')" id="btn-services" class="tab-btn active">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-layout"></i>
+                Routes
+                <span class="badge badge-muted" id="countRoutes">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('middlewares')" id="btn-middlewares" class="tab-btn">
+            <span class="flex items-center gap-2 ">
+                <i class="ph-bold ph-plugs-connected"></i>
+                Middlewares
+                <span class="badge badge-muted" id="countMw">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('live')" id="btn-live" class="tab-btn">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-activity"></i>
+                Services
+                <span class="badge badge-muted" id="svcTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('docker')" id="btn-docker" class="tab-btn tab-optional" data-tab="docker">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-cube"></i>
+                Docker
+                <span class="badge badge-muted" id="dockerTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('certs')" id="btn-certs" class="tab-btn tab-optional" data-tab="certs">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-shield-check"></i>
+                Certs
+                <span class="badge badge-muted" id="certsTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('plugins')" id="btn-plugins" class="tab-btn tab-optional" data-tab="plugins">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-puzzle-piece"></i>
+                Plugins
+                <span class="badge badge-muted" id="pluginsTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('logs')" id="btn-logs" class="tab-btn tab-optional" data-tab="logs">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-terminal"></i>
+                Logs
+            </span>
+        </button>
+    </div>
+
+    
+    <div id="tab-services" class="tab-content active">
+        
+        <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
+            <div class="relative flex-1 min-w-48">
+                <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
+                <input type="text" id="searchRoutes" oninput="filterRoutes()" placeholder="Search routes..." class="input-field pl-9">
+            </div>
+            <div class="flex gap-1 p-1 rounded-lg" style="background:#0d1117; border:1px solid var(--border)">
+                <button onclick="filterProto('all')" id="filterAll" class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+                <button onclick="filterProto('http')" id="filterHTTP" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
+                <button onclick="filterProto('tcp')" id="filterTCP" class="proto-btn text-xs px-3 py-1.5">TCP</button>
+                <button onclick="filterProto('udp')" id="filterUDP" class="proto-btn text-xs px-3 py-1.5">UDP</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="routeGrid">
+            {% for app in apps %}
+            {% set raw_rule = app.rule | replace("Host(`", "") | replace("`)", "") %}
+            {% if " && " in raw_rule %}
+                {% set domain = raw_rule[:raw_rule.find(" && ")] %}
+            {% else %}
+                {% set domain = raw_rule %}
+            {% endif %}
+
+            <div class="card route-card" data-protocol="{{ app.protocol }}" data-name="{{ app.name | lower }}" data-routekey="{{ app.name }}" data-idx="{{ loop.index0 }}">
+                
+                <div class="route-card-inner p-4 pb-2">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            {% if app.protocol == 'http' %}<span class="badge badge-http">HTTP</span>
+                            {% elif app.protocol == 'tcp' %}<span class="badge badge-tcp">TCP</span>
+                            {% else %}<span class="badge badge-udp">UDP</span>{% endif %}
+                            <span id="svc-status-{{ loop.index }}" class="status-dot status-checking" title="Checking..."></span>
+                        </div>
+                        <h3 class="font-bold text-sm text-white mt-1.5 truncate transition-colors">{{ app.name }}</h3>
+                        <div class="text-xs font-mono truncate" style="color:var(--muted)">{{ app.service_name }}</div>
+                    </div>
+                    <div class="flex items-center gap-0.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()">
+                        <button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="btn-icon" title="View details">
+                            <i class="ph-bold ph-info text-sm"></i>
+                        </button>
+                        {% if app.protocol == 'http' and domain and '{' not in domain and '*' not in domain and 'HostRegexp' not in domain %}
+                        <a href="https://{{ domain }}" target="_blank" class="btn-icon" title="Open site">
+                            <i class="ph-bold ph-arrow-square-out text-sm"></i>
+                        </a>
+                        {% endif %}
+                        <button type="button" data-app='{{ app|tojson|safe }}' onclick="handleEdit(this)" class="btn-icon" title="Edit">
+                            <i class="ph-bold ph-pencil-simple text-sm"></i>
+                        </button>
+                        <form action="{{ url_for('delete_entry', router_id=app.id) }}" method="POST" onsubmit="return confirm('Delete {{ app.name }}?');" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn-danger" title="Delete">
+                                <i class="ph-bold ph-trash text-sm"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {% if app.protocol == 'http' %}
+                <div class="space-y-2">
+                    <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
+                        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div>
+                        <div class="text-xs font-mono truncate" style="color:#58a6ff" title="{{ app.rule }}">{{ domain or app.rule }}</div>
+                    </div>
+                    <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
+                        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
+                        <div class="text-xs font-mono truncate" style="color:#7ee787">{{ app.target }}</div>
+                    </div>
+                    {% if app.entryPoints %}
+                    <div class="flex flex-wrap gap-1">
+                        {% for ep in app.entryPoints %}
+                        <span class="badge badge-muted text-xs">{{ ep }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if app.middlewares %}
+                    <div class="flex flex-wrap gap-1">
+                        {% for mw in app.middlewares %}
+                        <span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">{{ mw }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="space-y-2">
+                    {% if app.rule %}
+                    <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
+                        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div>
+                        <div class="text-xs font-mono truncate" style="color:#58a6ff">{{ app.rule }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
+                        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
+                        <div class="text-xs font-mono truncate" style="color:#7ee787">{{ app.target }}</div>
+                    </div>
+                    {% if app.entryPoints %}
+                    <div class="flex flex-wrap gap-1">
+                        {% for ep in app.entryPoints %}
+                        <span class="badge badge-muted text-xs">{{ ep }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not apps %}
+        <div class="text-center py-20" style="color:var(--muted)">
+            <i class="ph-light ph-layout text-6xl block mb-4 opacity-30"></i>
+            <p class="text-base font-medium">No routes configured yet</p>
+            <p class="text-sm mt-1">Click <strong>Add Route</strong> to get started</p>
+        </div>
+        {% endif %}
+    </div>
+
+    
+    <div id="tab-middlewares" class="tab-content">
+
+        <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
+            <div class="relative flex-1 min-w-48">
+                <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
+                <input type="text" id="searchMw" oninput="filterMw()" placeholder="Search middlewares..." class="input-field pl-9">
+            </div>
+            <div class="flex gap-1 p-1 rounded-lg" style="background:#0d1117; border:1px solid var(--border)">
+                <button onclick="filterMw('all')" id="mwf-all" class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+                <button onclick="filterMw('http')" id="mwf-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
+                <button onclick="filterMw('tcp')" id="mwf-tcp" class="proto-btn text-xs px-3 py-1.5">TCP</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="mwGrid">
+            {% for mw in middlewares %}
+            <div class="card p-4 mw-card" data-mwname="{{ mw.name | lower }}" data-mwtype="{{ mw.type | default('http') | lower }}">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span class="badge {% if mw.type == 'tcp' %}badge-tcp{% else %}badge-http{% endif %} mb-1.5 block w-fit">{{ mw.type | default('HTTP') | upper }}</span>
+                        <h3 class="font-bold text-sm text-white">{{ mw.name }}</h3>
+                    </div>
+                    <div class="flex gap-0.5">
+                        <button type="button" data-mw='{{ mw|tojson|safe }}' onclick="handleMwEdit(this)" class="btn-icon" title="Edit">
+                            <i class="ph-bold ph-pencil-simple text-sm"></i>
+                        </button>
+                        <form action="{{ url_for('delete_middleware', mw_name=mw.name) }}" method="POST" onsubmit="return confirm('Delete middleware {{ mw.name }}?');" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn-danger"><i class="ph-bold ph-trash text-sm"></i></button>
+                        </form>
+                    </div>
+                </div>
+                <div class="rounded-md p-3 overflow-x-auto" style="background:#0d1117; border:1px solid var(--border)">
+                    <pre class="text-xs font-mono leading-relaxed" style="color:#7ee787">{{ mw.yaml }}</pre>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="mwEmpty" class="hidden text-center py-20" style="color:var(--muted)">
+            <i class="ph-light ph-plugs-connected text-6xl block mb-4 opacity-30"></i>
+            <p class="text-base font-medium" id="mwEmptyText">No middlewares found</p>
+        </div>
+
+        {% if not middlewares %}
+        <div class="text-center py-20" style="color:var(--muted)">
+            <i class="ph-light ph-plugs-connected text-6xl block mb-4 opacity-30"></i>
+            <p class="text-base font-medium">No middlewares configured</p>
+            <p class="text-sm mt-1">Click <strong>Middleware</strong> to add one</p>
+        </div>
+        {% endif %}
+    </div>
+
+    
+    <div id="tab-live" class="tab-content">
+        <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
+            <div class="relative flex-1 min-w-48">
+                <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
+                <input type="text" id="svcSearch" oninput="filterServices()" placeholder="Search services..." class="input-field pl-9">
+            </div>
+            <div class="flex gap-1 p-1 rounded-lg" style="background:#0d1117; border:1px solid var(--border)">
+                <button onclick="filterServices('all')" id="sf-all" class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+                <button onclick="filterServices('success')" id="sf-success" class="proto-btn text-xs px-3 py-1.5">Success</button>
+                <button onclick="filterServices('warning')" id="sf-warning" class="proto-btn text-xs px-3 py-1.5">Warnings</button>
+                <button onclick="filterServices('error')" id="sf-error" class="proto-btn text-xs px-3 py-1.5">Errors</button>
+            </div>
+            <button onclick="refreshLiveView()" class="btn-secondary text-xs">
+                <i class="ph-bold ph-arrows-clockwise"></i> Refresh
+            </button>
+        </div>
+
+        <div id="liveContent">
+            <div class="text-center py-16" style="color:var(--muted)">
+                <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
+                <p>Loading services...</p>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="tab-docker" class="tab-content">
+        <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
+            <div class="relative flex-1 min-w-48">
+                <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
+                <input type="text" id="dockerSearch" oninput="filterDocker()" placeholder="Search docker routes..." class="input-field pl-9">
+            </div>
+            <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+                <button onclick="filterDocker('all')"   id="dk-all"   class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+                <button onclick="filterDocker('http')"  id="dk-http"  class="proto-btn text-xs px-3 py-1.5">HTTP</button>
+                <button onclick="filterDocker('tcp')"   id="dk-tcp"   class="proto-btn text-xs px-3 py-1.5">TCP</button>
+            </div>
+            <button onclick="refreshDockerTab()" class="btn-secondary text-xs">
+                <i class="ph-bold ph-arrows-clockwise"></i> Refresh
+            </button>
+        </div>
+        <div class="mb-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(36,161,222,0.08);border:1px solid rgba(36,161,222,0.2);color:var(--blue)">
+            <i class="ph-bold ph-info"></i>
+            These routes are managed by Docker labels and are read-only. Edit them via your container's labels.
+        </div>
+        <div id="dockerContent">
+            <div class="text-center py-16" style="color:var(--muted)">
+                <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
+                <p>Loading docker routes...</p>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="tab-certs" class="tab-content">
+        <div class="flex items-center justify-between mb-4">
+            <div></div>
+            <button onclick="refreshCertsTab()" class="btn-secondary text-xs">
+                <i class="ph-bold ph-arrows-clockwise"></i> Refresh
+            </button>
+        </div>
+        <div class="mb-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(36,161,222,0.08);border:1px solid rgba(36,161,222,0.2);color:var(--blue)">
+            <i class="ph-bold ph-info"></i>
+            TLS certificates are managed automatically by Traefik's ACME resolver. Renew or revoke them via your Traefik config.
+        </div>
+        <div id="certsContent">
+            <div class="text-center py-16" style="color:var(--muted)">
+                <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
+                <p>Loading certificates...</p>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="tab-plugins" class="tab-content">
+        <div class="flex items-center justify-between mb-4">
+            <div></div>
+            <div class="flex items-center gap-2">
+                <a href="https://plugins.traefik.io/plugins" target="_blank" class="btn-secondary text-xs" style="text-decoration:none">
+                    <i class="ph-bold ph-puzzle-piece"></i> Browse Plugins
+                </a>
+                <button onclick="refreshPluginsTab()" class="btn-secondary text-xs">
+                    <i class="ph-bold ph-arrows-clockwise"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="mb-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(36,161,222,0.08);border:1px solid rgba(36,161,222,0.2);color:var(--blue)">
+            <i class="ph-bold ph-info"></i>
+            Plugins are managed in your static <code class="font-mono">traefik.yml</code> under <code class="font-mono">experimental.plugins</code> and must be edited there directly.
+        </div>
+        <div id="pluginsContent">
+            <div class="text-center py-16" style="color:var(--muted)">
+                <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
+                <p>Loading plugins...</p>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="tab-logs" class="tab-content">
+        <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
+            <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">
+                <button onclick="setLogLines(100)"  id="log-100"  class="proto-btn active-http text-xs px-3 py-1.5">100</button>
+                <button onclick="setLogLines(200)"  id="log-200"  class="proto-btn text-xs px-3 py-1.5">200</button>
+                <button onclick="setLogLines(500)"  id="log-500"  class="proto-btn text-xs px-3 py-1.5">500</button>
+                <button onclick="setLogLines(1000)" id="log-1000" class="proto-btn text-xs px-3 py-1.5">1000</button>
+            </div>
+            <input type="text" id="logSearch" oninput="filterLogs()" placeholder="Filter logs..." class="input-field flex-1 min-w-48">
+            <button onclick="refreshLogs()" class="btn-secondary text-xs">
+                <i class="ph-bold ph-arrows-clockwise"></i> Refresh
+            </button>
+        </div>
+        <div id="logsContent">
+            <div class="text-center py-16" style="color:var(--muted)">
+                <i class="ph-light ph-terminal text-5xl block mb-3 opacity-30"></i>
+                <p class="font-medium">Access logs not loaded</p>
+                <p class="text-xs mt-1">Configure <code class="font-mono">Access Log Path</code> in Settings</p>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+
+<div id="appModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+        <form action="{{ url_for('save_entry') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="isEdit" id="isEdit" value="false">
+            <input type="hidden" name="originalId" id="originalId" value="">
+            <input type="hidden" name="protocol" id="protocolHidden" value="http">
+
+            
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+                <div class="flex items-center gap-2">
+                    <i class="ph-bold ph-layout" style="color:var(--blue)"></i>
+                    <h3 class="font-bold text-sm text-white" id="modalTitle">Add Route</h3>
+                </div>
+                <button type="button" onclick="closeModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+            </div>
+
+            <div class="px-5 py-4 space-y-4">
+                
+                <div>
+                    <label>Protocol</label>
+                    <div class="proto-toggle">
+                        <button type="button" class="proto-btn active-http" id="protoHTTP" onclick="setProtocol('http')">HTTP</button>
+                        <button type="button" class="proto-btn" id="protoTCP" onclick="setProtocol('tcp')">TCP</button>
+                        <button type="button" class="proto-btn" id="protoUDP" onclick="setProtocol('udp')">UDP</button>
+                    </div>
+                </div>
+
+                
+                <div>
+                    <label>Route / Service Name</label>
+                    <input type="text" name="serviceName" id="serviceName" required class="input-field" placeholder="e.g. my-app">
+                </div>
+
+                
+                <div id="httpSection" class="protocol-section active space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label>Subdomain</label>
+                            <input type="text" name="subdomain" id="subdomain" class="input-field" placeholder="app">
+                        </div>
+                        <div>
+                            <label>Domain</label>
+                            <select name="domain" id="domain" class="input-field">
+                                {% for d in domains %}
+                                <option value="{{ d }}">{{ d }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label>Target IP / Host</label>
+                            <input type="text" name="targetIp" id="targetIp" class="input-field" placeholder="10.0.0.10">
+                        </div>
+                        <div>
+                            <label>Port</label>
+                            <input type="text" name="targetPort" id="targetPort" class="input-field" placeholder="8080">
+                        </div>
+                    </div>
+                    <div>
+                        <label>Entry Points (comma separated)</label>
+                        <input type="text" name="entryPoints" id="entryPoints" class="input-field" value="https" placeholder="https">
+                    </div>
+                    <div>
+                        <label>Middlewares (comma separated)</label>
+                        <input type="text" name="middlewares" id="middlewares" class="input-field" placeholder="auth@file, redirect-https">
+                    </div>
+                </div>
+
+                
+                <div id="tcpSection" class="protocol-section space-y-4">
+                    <div>
+                        <label>Rule (SNI)</label>
+                        <input type="text" name="tcpRule" id="tcpRule" class="input-field" placeholder="HostSNI(`tcp.example.com`) or HostSNI(`*`)">
+                        <p class="text-xs mt-1" style="color:var(--muted)">Use <code class="font-mono">HostSNI(`*`)</code> to match all TLS or leave empty for passthrough</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label>Target IP / Host</label>
+                            <input type="text" name="targetIp" id="targetIpTcp" class="input-field" placeholder="10.0.0.10">
+                        </div>
+                        <div>
+                            <label>Port</label>
+                            <input type="text" name="targetPort" id="targetPortTcp" class="input-field" placeholder="5432">
+                        </div>
+                    </div>
+                    <div>
+                        <label>Entry Points</label>
+                        <input type="text" name="entryPoints" id="entryPointsTcp" class="input-field" placeholder="tcp, postgres">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="useTls" id="useTls" value="true" class="rounded" style="accent-color:var(--blue)">
+                        <span class="text-sm" style="color:#e6edf3">Enable TLS (with cert resolver)</span>
+                    </div>
+                </div>
+
+                
+                <div id="udpSection" class="protocol-section space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label>Target IP / Host</label>
+                            <input type="text" name="targetIp" id="targetIpUdp" class="input-field" placeholder="10.0.0.10">
+                        </div>
+                        <div>
+                            <label>Port</label>
+                            <input type="text" name="targetPort" id="targetPortUdp" class="input-field" placeholder="53">
+                        </div>
+                    </div>
+                    <div>
+                        <label>Entry Point</label>
+                        <input type="text" name="udpEntryPoint" id="entryPointsUdp" class="input-field" placeholder="e.g. qbittorrent-udp">
+                    </div>
+                    <div class="rounded-md p-3 text-xs" style="background:rgba(240,136,62,0.08);border:1px solid rgba(240,136,62,0.25);color:#d29922">
+                        <i class="ph-bold ph-info"></i> UDP routers don't support rules. Traffic is routed by entry point only.
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 px-5 py-4" style="border-top:1px solid var(--border)">
+                <button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Save Route</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div id="mwModal" class="modal-overlay" style="display:none">
+    <div class="modal-box" style="max-width:620px">
+        <form action="{{ url_for('save_middleware') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="isMwEdit" id="isMwEdit" value="false">
+            <input type="hidden" name="originalMwId" id="originalMwId" value="">
+
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+                <div class="flex items-center gap-2">
+                    <i class="ph-bold ph-plugs-connected" style="color:var(--purple)"></i>
+                    <h3 class="font-bold text-sm text-white" id="mwModalTitle">Add Middleware</h3>
+                </div>
+                <button type="button" onclick="closeMwModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+            </div>
+
+            <div class="px-5 py-4 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label>Name</label>
+                        <input type="text" name="middlewareName" id="middlewareName" required class="input-field" placeholder="my-auth">
+                    </div>
+                    <div>
+                        <label>Template</label>
+                        <select id="mwTemplate" onchange="applyMwTemplate(this)" class="input-field">
+                            <option value="">Custom…</option>
+                            <optgroup label="Auth">
+                                <option value="basicAuth">Basic Auth</option>
+                                <option value="digestAuth">Digest Auth</option>
+                                <option value="forwardAuth">Forward Auth</option>
+                                <option value="forwardAuthAuthentik">Forward Auth (Authentik)</option>
+                                <option value="forwardAuthAuthelia">Forward Auth (Authelia)</option>
+                            </optgroup>
+                            <optgroup label="Security">
+                                <option value="ipAllowList">IP Allow List</option>
+                                <option value="ipAllowListPrivate">IP Allow List (Private Ranges)</option>
+                                <option value="rateLimit">Rate Limit</option>
+                                <option value="secureHeaders">Secure Headers</option>
+                                <option value="corsHeaders">CORS Headers</option>
+                            </optgroup>
+                            <optgroup label="Routing">
+                                <option value="redirectScheme">Redirect to HTTPS</option>
+                                <option value="redirectRegex">Redirect Regex</option>
+                                <option value="stripPrefix">Strip Prefix</option>
+                                <option value="addPrefix">Add Prefix</option>
+                                <option value="replacePath">Replace Path</option>
+                            </optgroup>
+                            <optgroup label="Advanced">
+                                <option value="compress">Gzip Compress</option>
+                                <option value="retry">Retry</option>
+                                <option value="circuitBreaker">Circuit Breaker</option>
+                                <option value="buffering">Buffering</option>
+                                <option value="chain">Middleware Chain</option>
+                                <option value="inFlightReq">In-Flight Limit</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label>Configuration (YAML)</label>
+                    <textarea name="middlewareContent" id="middlewareContent" rows="10" required class="input-field font-mono" style="resize:vertical; line-height:1.6"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 px-5 py-4" style="border-top:1px solid var(--border)">
+                <button type="button" onclick="closeMwModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Save Middleware</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div id="backupsModal" class="modal-overlay" style="display:none">
+    <div class="modal-box" style="max-width:620px">
+        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+            <div class="flex items-center gap-2">
+                <i class="ph-bold ph-clock-counter-clockwise" style="color:var(--yellow)"></i>
+                <h3 class="font-bold text-sm text-white">Configuration Backups</h3>
+            </div>
+            <button type="button" onclick="closeBackupsModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+        </div>
+
+        <div class="px-5 py-4">
+            <div class="flex items-center gap-2 mb-4 p-3 rounded-lg text-xs" style="background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.2);color:#d29922">
+                <i class="ph-bold ph-warning text-sm"></i>
+                Restoring a backup will overwrite your current config. A backup of current state is created automatically before restoring.
+            </div>
+            <div id="backupsList">
+                <div class="text-center py-8" style="color:var(--muted)">
+                    <i class="ph-light ph-spinner-gap text-2xl animate-spin block mb-2"></i>
+                    Loading backups...
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 pb-4 flex justify-end">
+            <button type="button" onclick="closeBackupsModal()" class="btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+const APP_DATA = JSON.parse({{ apps | tojson | tojson }});
+
+function _csrfHeaders() {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    return { 'X-CSRF-Token': token };
+}
+</script>
+
+
+<div class="detail-backdrop" id="svcDetailBackdrop" onclick="closeSvcDetail()"></div>
+<div class="detail-backdrop" id="pluginDetailBackdrop" onclick="closePluginDetail()"></div>
+<div class="detail-panel" id="svcDetailPanel">
+    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:#0d1117; border-bottom:1px solid var(--border)">
+        <div class="flex items-center gap-3">
+            <span id="svcDetailProtoBadge" class="badge badge-http">HTTP</span>
+            <h2 class="font-bold text-white text-sm" id="svcDetailTitle">Service Details</h2>
+        </div>
+        <button onclick="closeSvcDetail()" class="btn-icon"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <div class="px-6 py-5 overflow-y-auto" id="svcDetailBody">
+        
+    </div>
+</div>
+
+<div class="detail-backdrop" id="pluginDetailBackdrop" onclick="closePluginDetail()"></div>
+<div class="detail-panel" id="pluginDetailPanel">
+    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:#0d1117; border-bottom:1px solid var(--border)">
+        <div class="flex items-center gap-3">
+            <i class="ph-bold ph-puzzle-piece text-lg" style="color:var(--blue)"></i>
+            <h2 class="font-bold text-white text-sm" id="pluginDetailTitle">Plugin Details</h2>
+        </div>
+        <button onclick="closePluginDetail()" class="btn-icon"><i class="ph-bold ph-x"></i></button>
+    </div>
+    <div class="px-6 py-5 overflow-y-auto" id="pluginDetailBody">
+        
+    </div>
+</div>
+
+<div class="detail-backdrop" id="detailBackdrop" onclick="closeRouteDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:#0d1117; border-bottom:1px solid var(--border)">
+        <div class="flex items-center gap-3">
+            <span id="detailProtoBadge" class="badge badge-http">HTTP</span>
+            <h2 class="font-bold text-white" id="detailTitle">Route Details</h2>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="detailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> Edit</button>
+            <button onclick="closeRouteDetail()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
+        </div>
+    </div>
+    <div id="detailContent" class="px-6 py-5">
+        <div class="text-center py-12" style="color:var(--muted)">
+            <i class="ph-light ph-spinner-gap text-3xl animate-spin block mb-2"></i>
+            Loading...
+        </div>
+    </div>
+</div>
+
+
+<div id="managerUpdateModal" class="modal-overlay" style="display:none">
+    <div class="modal-box" style="max-width:480px">
+        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+            <div class="flex items-center gap-2">
+                <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange)"></i>
+                <h3 class="font-bold text-sm">Traefik Manager Update Available</h3>
+            </div>
+            <button onclick="document.getElementById('managerUpdateModal').style.display='none'" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+        </div>
+        <div class="px-5 py-5 space-y-4">
+            <div class="flex items-center justify-between p-4 rounded-xl" style="background:var(--input-bg); border:1px solid var(--border)">
+                <div class="text-center flex-1">
+                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Current</div>
+                    <div class="font-mono font-bold text-lg" id="mgrUpdateCurrentVer">—</div>
+                </div>
+                <div class="text-2xl px-4" style="color:var(--border)">→</div>
+                <div class="text-center flex-1">
+                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Latest</div>
+                    <div class="font-mono font-bold text-lg" style="color:var(--green)" id="mgrUpdateLatestVer">—</div>
+                </div>
+            </div>
+            <p class="text-sm" style="color:var(--muted)">A new version of Traefik Manager is available. Pull the latest image to update.</p>
+            <a id="mgrUpdateReleaseLink" href="https://github.com/chr0nzz/traefik-manager/releases" target="_blank"
+               class="btn-primary" style="width:100%; justify-content:center; text-decoration:none">
+                <i class="ph-bold ph-github-logo"></i> View Release Notes
+            </a>
+        </div>
+    </div>
+</div>
+
+<div id="updateModal" class="modal-overlay" style="display:none">
+    <div class="modal-box" style="max-width:480px">
+        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+            <div class="flex items-center gap-2">
+                <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange)"></i>
+                <h3 class="font-bold text-sm text-white">Traefik Update Available</h3>
+            </div>
+            <button onclick="document.getElementById('updateModal').style.display='none'" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+        </div>
+        <div class="px-5 py-5 space-y-4">
+            <div class="flex items-center justify-between p-4 rounded-xl" style="background:#161b22; border:1px solid var(--border)">
+                <div class="text-center flex-1">
+                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Current</div>
+                    <div class="font-mono font-bold text-lg text-white" id="updateCurrentVer">—</div>
+                </div>
+                <div class="text-2xl px-4" style="color:var(--border)">→</div>
+                <div class="text-center flex-1">
+                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Latest</div>
+                    <div class="font-mono font-bold text-lg" style="color:var(--green)" id="updateLatestVer">—</div>
+                </div>
+            </div>
+            <p class="text-sm" style="color:var(--muted)">A new version of Traefik is available on GitHub. Update your Docker image to get the latest features and security fixes.</p>
+            <a id="updateReleaseLink" href="https://github.com/traefik/traefik/releases" target="_blank" class="btn-primary" style="width:100%; justify-content:center; text-decoration:none">
+                <i class="ph-bold ph-github-logo"></i> View Release Notes
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+
+document.querySelectorAll('.toast-item').forEach(t => {
+    setTimeout(() => {
+        t.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => t.remove(), 300);
+    }, 5000);
+});
+
+function showToast(msg, type='success') {
+    const icon = type === 'success' ? 'ph-check-circle' : 'ph-warning-circle';
+    const color = type === 'success' ? 'text-green-400' : 'text-red-400';
+    const el = document.createElement('div');
+    el.className = `toast-item ${type}`;
+    el.innerHTML = `<i class="ph-fill ${icon} ${color} text-lg"></i><span>${msg}</span>`;
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(() => { el.style.animation='slideOut 0.3s ease forwards'; setTimeout(()=>el.remove(),300); }, 4000);
+}
+
+const OPTIONAL_TABS = ['docker', 'certs', 'plugins', 'logs'];
+
+let _visibleTabsCache = {};
+
+function applyTabVisibility(map) {
+    if (map) _visibleTabsCache = map;
+    OPTIONAL_TABS.forEach(tab => {
+        const btn = document.getElementById('btn-' + tab);
+        if (!btn) return;
+        btn.style.display = _visibleTabsCache[tab] ? '' : 'none';
+    });
+    
+    const activeBtn = document.querySelector('.tab-btn.active');
+    if (activeBtn && activeBtn.style.display === 'none') {
+        switchTab('services');
+    }
+}
+
+function loadTabTogglesIntoModal() {
+    OPTIONAL_TABS.forEach(tab => {
+        const sw = document.getElementById('toggle-' + tab);
+        if (sw) sw.classList.toggle('on', !!_visibleTabsCache[tab]);
+    });
+}
+
+async function toggleTabVisibility(tab) {
+    const newVal = !_visibleTabsCache[tab];
+    
+    _visibleTabsCache[tab] = newVal;
+    const sw  = document.getElementById('toggle-' + tab);
+    const btn = document.getElementById('btn-' + tab);
+    if (sw)  sw.classList.toggle('on', newVal);
+    if (btn) {
+        btn.style.display = newVal ? '' : 'none';
+        if (!newVal && btn.classList.contains('active')) switchTab('services');
+    }
+    
+    try {
+        await fetch('/api/settings/tabs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token'] },
+            body: JSON.stringify({ [tab]: newVal })
+        });
+    } catch(e) {
+        console.error('Failed to save tab visibility', e);
+    }
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('btn-' + tab).classList.add('active');
+    if (tab === 'live')    refreshLiveView();
+    if (tab === 'docker')  refreshDockerTab();
+    if (tab === 'certs')   refreshCertsTab();
+    if (tab === 'plugins') refreshPluginsTab();
+    if (tab === 'logs')    refreshLogs();
+}
+
+let currentProtoFilter = 'all';
+
+function filterProto(proto) {
+    currentProtoFilter = proto;
+    ['all','HTTP','TCP','UDP'].forEach(p => {
+        const btn = document.getElementById('filter' + (p === 'all' ? 'All' : p));
+        if (btn) btn.className = 'proto-btn text-xs px-3 py-1.5';
+    });
+    const activeClass = proto === 'all' ? 'active-http' : proto === 'http' ? 'active-http' : proto === 'tcp' ? 'active-tcp' : 'active-udp';
+    const btnId = proto === 'all' ? 'filterAll' : 'filter' + proto.toUpperCase();
+    document.getElementById(btnId).className = `proto-btn ${activeClass} text-xs px-3 py-1.5`;
+    filterRoutes();
+}
+
+function filterRoutes() {
+    const q = document.getElementById('searchRoutes').value.toLowerCase();
+    document.querySelectorAll('.route-card').forEach(card => {
+        const name = card.dataset.name || '';
+        const proto = card.dataset.protocol || '';
+        const matchSearch = !q || name.includes(q);
+        const matchProto = currentProtoFilter === 'all' || proto === currentProtoFilter;
+        card.style.display = matchSearch && matchProto ? '' : 'none';
+    });
+}
+
+let currentProto = 'http';
+
+function setProtocol(proto) {
+    currentProto = proto;
+    document.getElementById('protocolHidden').value = proto;
+
+    
+    ['http','tcp','udp'].forEach(p => {
+        document.getElementById('proto' + p.toUpperCase()).className = 'proto-btn';
+    });
+    const cls = { http: 'active-http', tcp: 'active-tcp', udp: 'active-udp' };
+    document.getElementById('proto' + proto.toUpperCase()).className = `proto-btn ${cls[proto]}`;
+
+    
+    document.querySelectorAll('.protocol-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(proto + 'Section').classList.add('active');
+
+    
+    document.getElementById('targetIp').required = proto === 'http';
+    document.getElementById('targetPort').required = proto === 'http';
+    if (document.getElementById('targetIpTcp')) {
+        document.getElementById('targetIpTcp').required = proto === 'tcp';
+        document.getElementById('targetPortTcp').required = proto === 'tcp';
+    }
+    if (document.getElementById('targetIpUdp')) {
+        document.getElementById('targetIpUdp').required = proto === 'udp';
+        document.getElementById('targetPortUdp').required = proto === 'udp';
+    }
+}
+
+function openModal() {
+    document.getElementById('isEdit').value = 'false';
+    document.getElementById('modalTitle').innerText = 'Add Route';
+    document.getElementById('originalId').value = '';
+    ['serviceName','subdomain','targetIp','targetPort','middlewares','tcpRule'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('entryPoints').value = 'https';
+    document.getElementById('useTls') && (document.getElementById('useTls').checked = false);
+    setProtocol('http');
+    document.getElementById('appModal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('appModal').style.display = 'none'; }
+
+function openMwModal() {
+    const nameEl = document.getElementById('middlewareName');
+    const contentEl = document.getElementById('middlewareContent');
+    const editEl = document.getElementById('isMwEdit');
+    const titleEl = document.getElementById('mwModalTitle');
+    const modal = document.getElementById('mwModal');
+    if (!modal) { console.error('mwModal not found'); return; }
+    if (editEl) editEl.value = 'false';
+    if (nameEl) nameEl.value = '';
+    if (contentEl) contentEl.value = '';
+    if (titleEl) titleEl.innerText = 'Add Middleware';
+    modal.style.display = 'flex';
+}
+
+function closeMwModal() { document.getElementById('mwModal').style.display = 'none'; }
+
+function openBackupsModal() {
+    document.getElementById('backupsModal').style.display = 'flex';
+    loadBackups();
+}
+
+function closeBackupsModal() { document.getElementById('backupsModal').style.display = 'none'; }
+
+['appModal','mwModal','backupsModal'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function(e) {
+        if (e.target === this) this.style.display = 'none';
+    });
+});
+
+const availableDomains = {{ domains | tojson | safe }};
+
+function handleEdit(btn) {
+    const app = JSON.parse(btn.getAttribute('data-app'));
+    document.getElementById('isEdit').value = 'true';
+    document.getElementById('originalId').value = app.id;
+    document.getElementById('modalTitle').innerText = 'Edit ' + app.name;
+    document.getElementById('serviceName').value = app.name;
+
+    const proto = app.protocol || 'http';
+    setProtocol(proto);
+
+    if (proto === 'http') {
+        let rule = app.rule || '';
+        let subdomain = '', selectedDomain = availableDomains[0] || '';
+        const hostMatch = rule.match(/Host\(`([^`]+)`\)/);
+        if (hostMatch) {
+            let fullHost = hostMatch[1];
+            for (let d of availableDomains) {
+                if (fullHost.endsWith('.' + d)) { subdomain = fullHost.replace('.' + d, ''); selectedDomain = d; break; }
+                else if (fullHost === d) { subdomain = ''; selectedDomain = d; break; }
+            }
+            if (!subdomain && !availableDomains.includes(fullHost)) subdomain = fullHost;
+        }
+        document.getElementById('subdomain').value = subdomain;
+        document.getElementById('domain').value = selectedDomain;
+
+        let target = app.target.replace('http://','').replace('https://','');
+        const parts = target.split(':');
+        document.getElementById('targetIp').value = parts[0];
+        document.getElementById('targetPort').value = parts[1] || '80';
+        document.getElementById('middlewares').value = app.middlewares ? app.middlewares.join(', ') : '';
+        document.getElementById('entryPoints').value = app.entryPoints ? app.entryPoints.join(', ') : 'https';
+
+    } else if (proto === 'tcp') {
+        document.getElementById('tcpRule').value = app.rule || '';
+        const target = (app.target || '').split(':');
+        document.getElementById('targetIpTcp').value = target[0] || '';
+        document.getElementById('targetPortTcp').value = target[1] || '';
+        document.getElementById('entryPointsTcp').value = app.entryPoints ? app.entryPoints.join(', ') : '';
+
+    } else if (proto === 'udp') {
+        const target = (app.target || '').split(':');
+        document.getElementById('targetIpUdp').value = target[0] || '';
+        document.getElementById('targetPortUdp').value = target[1] || '';
+        document.getElementById('entryPointsUdp').value = app.entryPoints ? app.entryPoints[0] || '' : '';
+    }
+
+    document.getElementById('appModal').style.display = 'flex';
+}
+
+function handleMwEdit(btn) {
+    const mw = JSON.parse(btn.getAttribute('data-mw'));
+    document.getElementById('isMwEdit').value = 'true';
+    document.getElementById('originalMwId').value = mw.name;
+    document.getElementById('middlewareName').value = mw.name;
+    document.getElementById('middlewareContent').value = mw.yaml.trim();
+    document.getElementById('mwModalTitle').innerText = 'Edit ' + mw.name;
+    document.getElementById('mwModal').style.display = 'flex';
+}
+
+const mwTemplates = {
+    basicAuth: `basicAuth:\n  users:\n    - "admin:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/"`,
+    digestAuth: `digestAuth:\n  users:\n    - "admin:traefik:a2688e031edb4be6fe3079ef99a6274e"`,
+    forwardAuth: `forwardAuth:\n  address: "http://auth-service:4181"\n  trustForwardHeader: true\n  authResponseHeaders:\n    - "X-Auth-User"\n    - "X-Auth-Token"`,
+    forwardAuthAuthentik: `forwardAuth:\n  address: "http://authentik-server:9000/outpost.goauthentik.io/auth/traefik"\n  trustForwardHeader: true\n  authResponseHeaders:\n    - X-authentik-username\n    - X-authentik-groups\n    - X-authentik-email\n    - X-authentik-name\n    - X-authentik-uid`,
+    forwardAuthAuthelia: `forwardAuth:\n  address: "http://authelia:9091/api/verify?rd=https://auth.example.com"\n  trustForwardHeader: true\n  authResponseHeaders:\n    - Remote-User\n    - Remote-Groups\n    - Remote-Name\n    - Remote-Email`,
+    ipAllowList: `ipAllowList:\n  sourceRange:\n    - "127.0.0.1/32"\n    - "192.168.1.0/24"`,
+    ipAllowListPrivate: `ipAllowList:\n  sourceRange:\n    - "10.0.0.0/8"\n    - "172.16.0.0/12"\n    - "192.168.0.0/16"\n    - "127.0.0.1/32"`,
+    rateLimit: `rateLimit:\n  average: 100\n  burst: 50\n  period: 1s`,
+    secureHeaders: `headers:\n  sslRedirect: true\n  forceSTSHeader: true\n  stsSeconds: 315360000\n  stsIncludeSubdomains: true\n  stsPreload: true\n  contentTypeNosniff: true\n  browserXssFilter: true\n  referrerPolicy: "same-origin"\n  frameDeny: true`,
+    corsHeaders: `headers:\n  accessControlAllowMethods:\n    - GET\n    - OPTIONS\n    - PUT\n    - POST\n    - DELETE\n  accessControlAllowHeaders:\n    - "*"\n  accessControlAllowOriginList:\n    - "https://example.com"\n  accessControlMaxAge: 100\n  addVaryHeader: true`,
+    redirectScheme: `redirectScheme:\n  scheme: https\n  permanent: true`,
+    redirectRegex: `redirectRegex:\n  regex: "^http://(.*)"\n  replacement: "https://$${1}"\n  permanent: true`,
+    stripPrefix: `stripPrefix:\n  prefixes:\n    - "/api"\n    - "/v1"`,
+    addPrefix: `addPrefix:\n  prefix: "/api"`,
+    replacePath: `replacePath:\n  path: "/foo"`,
+    compress: `compress:\n  minResponseBodyBytes: 1200`,
+    retry: `retry:\n  attempts: 4\n  initialInterval: 100ms`,
+    circuitBreaker: `circuitBreaker:\n  expression: "NetworkErrorRatio() > 0.5"`,
+    buffering: `buffering:\n  maxRequestBodyBytes: 10485760\n  maxResponseBodyBytes: 10485760\n  retryExpression: "IsNetworkError() && Attempts() < 2"`,
+    chain: `chain:\n  middlewares:\n    - redirect-https\n    - secure-headers\n    - rate-limit`,
+    inFlightReq: `inFlightReq:\n  amount: 10`,
+};
+
+function applyMwTemplate(select) {
+    if (select.value && mwTemplates[select.value]) {
+        document.getElementById('middlewareContent').value = mwTemplates[select.value];
+    }
+}
+
+let _currentVersion = null;
+
+async function loadOverviewStats() {
+    try {
+        const [overview, routers, services, middlewares, version, entrypoints] = await Promise.allSettled([
+            fetch('/api/traefik/overview').then(r => r.json()),
+            fetch('/api/traefik/routers').then(r => r.json()),
+            fetch('/api/traefik/services').then(r => r.json()),
+            fetch('/api/traefik/middlewares').then(r => r.json()),
+            fetch('/api/traefik/version').then(r => r.json()),
+            fetch('/api/traefik/entrypoints').then(r => r.json()),
+        ]);
+
+        
+        const apiUp = version.status === 'fulfilled' && version.value?.Version;
+        const dotColor = apiUp ? 'var(--green)' : 'var(--red)';
+        const dotEl  = document.getElementById('apiStatusDot');
+        const dotElM = document.getElementById('apiStatusDotMobile');
+        if (dotEl)  dotEl.style.background  = dotColor;
+        if (dotElM) dotElM.style.background = dotColor;
+
+        
+        if (version.status === 'fulfilled' && version.value && version.value.Version) {
+            _currentVersion = version.value.Version;
+            document.getElementById('versionText').textContent = 'v' + _currentVersion;
+            document.getElementById('versionBadge').classList.remove('hidden');
+            document.getElementById('versionTextMobile').textContent = 'v' + _currentVersion;
+            document.getElementById('versionBadgeMobile').classList.remove('hidden');
+            document.getElementById('versionBadgeMobile').classList.add('flex');
+            checkForUpdate(_currentVersion);
+        }
+
+        
+        const apiStatusMap = {};
+        
+        function renderBar(elId, success, warn, err) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            const total = success + warn + err;
+            if (total === 0) { el.style.background = 'var(--border)'; el.innerHTML = ''; return; }
+            el.innerHTML = [
+                success ? `<div style="width:${success/total*100}%;background:#22c55e;height:100%"></div>` : '',
+                warn    ? `<div style="width:${warn/total*100}%;background:#eab308;height:100%"></div>` : '',
+                err     ? `<div style="width:${err/total*100}%;background:#ef4444;height:100%"></div>` : '',
+            ].join('');
+        }
+
+        function statusCounts(arr) {
+            const s = arr.filter(x => x.status === 'enabled').length;
+            const e = arr.filter(x => x.status === 'disabled' || x.status === 'error').length;
+            const w = arr.length - s - e;
+            return { s, w, e };
+        }
+
+        if (routers.status === 'fulfilled') {
+            const http = routers.value.http || [];
+            const tcp  = routers.value.tcp  || [];
+            const udp  = routers.value.udp  || [];
+            const tcpAll = [...tcp, ...udp];
+
+            [...http, ...tcp, ...udp].forEach(r => {
+                const shortName = (r.name || '').split('@')[0];
+                apiStatusMap[shortName] = { status: r.status || 'unknown', error: r.error || null };
+            });
+
+            const hc = statusCounts(http);
+            document.getElementById('statHttpRouters').textContent = http.length;
+            document.getElementById('statHttpSuccess').textContent = hc.s;
+            document.getElementById('statHttpWarn').textContent    = hc.w;
+            document.getElementById('statHttpErr').textContent     = hc.e;
+            renderBar('barHttpRouters', hc.s, hc.w, hc.e);
+            document.getElementById('countRoutes').textContent = http.length + tcpAll.length;
+
+            
+            const dockerCount = [...http, ...tcpAll].filter(r => (r.provider || (r.name||'').split('@')[1]||'') === 'docker').length;
+            document.getElementById('dockerTabCount').textContent = dockerCount || '—';
+
+            const tc = statusCounts(tcpAll);
+            document.getElementById('statTcpUdp').textContent  = tcpAll.length;
+            document.getElementById('statTcpSuccess').textContent = tc.s;
+            document.getElementById('statTcpWarn').textContent    = tc.w;
+            document.getElementById('statTcpErr').textContent     = tc.e;
+            renderBar('barTcpRouters', tc.s, tc.w, tc.e);
+        }
+
+        
+        document.querySelectorAll('.route-card').forEach(card => {
+            const routeName = card.dataset.routekey || '';
+            const statusEl = card.querySelector('.status-dot');
+            if (!statusEl) return;
+            const entry = apiStatusMap[routeName];
+            const apiStatus = entry ? entry.status : null;
+            const apiError  = entry ? entry.error  : null;
+            if (apiStatus === 'enabled') {
+                statusEl.className = 'status-dot status-online';
+                statusEl.title = 'Enabled';
+            } else if (apiStatus === 'disabled' || apiStatus === 'error') {
+                statusEl.className = 'status-dot status-offline';
+                statusEl.title = apiError ? `Error: ${apiError}` : 'Disabled / Error';
+                
+                if (apiError) {
+                    let errEl = card.querySelector('.card-error-msg');
+                    if (!errEl) {
+                        errEl = document.createElement('div');
+                        errEl.className = 'card-error-msg';
+                        errEl.style.cssText = 'margin-top:8px;padding:6px 10px;border-radius:6px;font-size:11px;font-family:monospace;color:var(--red);background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.25);word-break:break-word;line-height:1.4';
+                        card.appendChild(errEl);
+                    }
+                    errEl.innerHTML = `<i class="ph-bold ph-warning-circle" style="font-size:11px;margin-right:4px"></i>${apiError}`;
+                }
+            } else if (apiStatus) {
+                statusEl.className = 'status-dot status-unknown';
+                statusEl.title = `Status: ${apiStatus}`;
+            } else {
+                
+                const proto = card.dataset.protocol;
+                if (proto === 'http') {
+                    const domainEl = card.querySelector('[style*="58a6ff"]');
+                    const domain = domainEl ? domainEl.textContent.trim() : '';
+                    if (domain && !domain.includes('{') && !domain.includes('*')) {
+                        fetch('https://' + domain, { mode: 'no-cors', cache: 'no-cache', signal: AbortSignal.timeout(5000) })
+                            .then(() => { statusEl.className = 'status-dot status-online'; statusEl.title = 'Online (ping)'; })
+                            .catch(() => { statusEl.className = 'status-dot status-offline'; statusEl.title = 'Unreachable (ping)'; });
+                        return;
+                    }
+                }
+                statusEl.className = 'status-dot status-unknown';
+                statusEl.title = 'Status unknown (API unavailable)';
+            }
+        });
+
+        if (services.status === 'fulfilled') {
+            const http = services.value.http || [];
+            const sc = statusCounts(http);
+            document.getElementById('statServices').textContent    = http.length;
+            document.getElementById('statSvcSuccess').textContent  = sc.s;
+            document.getElementById('statSvcWarn').textContent     = sc.w;
+            document.getElementById('statSvcErr').textContent      = sc.e;
+            renderBar('barServices', sc.s, sc.w, sc.e);
+            const tcpudp = [...(services.value.tcp||[]), ...(services.value.udp||[])];
+            document.getElementById('svcTabCount').textContent = http.length;
+        }
+
+        if (middlewares.status === 'fulfilled') {
+            const all = [...(middlewares.value.http||[]), ...(middlewares.value.tcp||[])];
+            const mc = statusCounts(all);
+            document.getElementById('statMiddlewares').textContent  = all.length;
+            document.getElementById('statMwSuccess').textContent    = mc.s;
+            document.getElementById('statMwWarn').textContent       = mc.w;
+            document.getElementById('statMwErr').textContent        = mc.e;
+            renderBar('barMiddlewares', mc.s, mc.w, mc.e);
+            document.getElementById('countMw').textContent = all.length;
+        }
+
+        
+        if (entrypoints.status === 'fulfilled' && Array.isArray(entrypoints.value) && entrypoints.value.length > 0) {
+            const bar = document.getElementById('entrypointsBar');
+            const list = document.getElementById('entrypointsList');
+            bar.classList.remove('hidden');
+            list.innerHTML = entrypoints.value.map(ep => {
+                const addr = ep.address || '';
+                const port = addr.split(':').pop();
+                const isHttp = ['80','8080'].includes(port);
+                const isHttps = ['443','8443'].includes(port);
+                const color = isHttps ? 'badge-green' : isHttp ? 'badge-http' : 'badge-muted';
+                return `<div class="ep-pill">
+                    <span class="badge ${color} text-xs">${ep.name}</span>
+                    <span class="font-mono text-xs" style="color:var(--muted)">${addr}</span>
+                </div>`;
+            }).join('');
+        }
+
+    } catch (e) {
+        console.warn('Traefik API unavailable:', e);
+    }
+
+    
+    fetch('/api/traefik/certs').then(r => r.json()).then(res => {
+        const n = (res.certs || []).length;
+        document.getElementById('certsTabCount').textContent = n || '—';
+    }).catch(() => {});
+
+    fetch('/api/traefik/plugins').then(r => r.json()).then(res => {
+        const n = (res.plugins || []).length;
+        document.getElementById('pluginsTabCount').textContent = n || '—';
+    }).catch(() => {});
+}
+
+async function checkForUpdate(currentVersion) {
+    try {
+        const res = await fetch('https://api.github.com/repos/traefik/traefik/releases/latest', {
+            headers: { 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const latestTag = (data.tag_name || '').replace(/^v/, '');
+        const current   = currentVersion.replace(/^v/, '');
+
+        if (latestTag && latestTag !== current && compareVersions(latestTag, current) > 0) {
+            
+            const badge = document.getElementById('versionBadge');
+            badge.classList.add('update-available');
+            badge.title = `Update available: v${latestTag}`;
+            badge.onclick = openUpdateInfo;
+            document.getElementById('versionText').innerHTML =
+                `v${current} <i class="ph-bold ph-arrow-circle-up" style="font-size:11px"></i>`;
+            document.getElementById('updateCurrentVer').textContent = 'v' + current;
+            document.getElementById('updateLatestVer').textContent  = 'v' + latestTag;
+            document.getElementById('updateReleaseLink').href = data.html_url || 'https://github.com/traefik/traefik/releases';
+        }
+    } catch(e) { /* silently skip — GitHub API may be blocked */ }
+}
+
+function openUpdateInfo() { document.getElementById('updateModal').style.display = 'flex'; }
+
+function compareVersions(a, b) {
+    const pa = a.split('.').map(Number);
+    const pb = b.split('.').map(Number);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+        const diff = (pa[i] || 0) - (pb[i] || 0);
+        if (diff !== 0) return diff;
+    }
+    return 0;
+}
+
+let _managerVersion = null;
+async function checkManagerVersion() {
+    try {
+        const res = await fetch('/api/manager/version');
+        if (!res.ok) return;
+        const d = await res.json();
+        _managerVersion = d.version || null;
+        if (_managerVersion) {
+            const footerEl = document.getElementById('footerManagerVer');
+            if (footerEl) footerEl.textContent = 'v' + _managerVersion;
+            
+            const ghRes = await fetch(
+                `https://api.github.com/repos/${d.repo}/releases/latest`,
+                { headers: { 'Accept': 'application/vnd.github.v3+json' } }
+            );
+            if (!ghRes.ok) return;
+            const ghData = await ghRes.json();
+            const latestTag = (ghData.tag_name || '').replace(/^v/, '');
+            const current   = _managerVersion.replace(/^v/, '');
+            if (latestTag && latestTag !== current && compareVersions(latestTag, current) > 0) {
+                if (footerEl) {
+                    footerEl.innerHTML = `v${current} <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange);font-size:11px"></i>`;
+                    footerEl.title     = `Update available: v${latestTag}`;
+                    footerEl.style.color = 'var(--orange)';
+                }
+                document.getElementById('mgrUpdateCurrentVer').textContent = 'v' + current;
+                document.getElementById('mgrUpdateLatestVer').textContent  = 'v' + latestTag;
+                document.getElementById('mgrUpdateReleaseLink').href       = ghData.html_url || 'https://github.com/chr0nzz/traefik-manager/releases';
+            }
+        }
+    } catch(e) { /* silently skip */ }
+}
+
+function openManagerUpdateInfo() {
+    if (document.getElementById('mgrUpdateLatestVer').textContent !== '—') {
+        document.getElementById('managerUpdateModal').style.display = 'flex';
+    }
+}
+
+let _mwFilter = 'all';
+function filterMw(f) {
+    if (f) {
+        _mwFilter = f;
+        ['all','http','tcp'].forEach(k => {
+            document.getElementById('mwf-'+k)?.classList.toggle('active-http', k === f);
+        });
+    }
+    const search = (document.getElementById('searchMw')?.value || '').toLowerCase();
+    const cards = document.querySelectorAll('.mw-card');
+    let visible = 0;
+    cards.forEach(card => {
+        const nameMatch = card.dataset.mwname.includes(search);
+        const typeMatch = _mwFilter === 'all' || card.dataset.mwtype === _mwFilter;
+        const show = nameMatch && typeMatch;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+    const emptyEl = document.getElementById('mwEmpty');
+    const emptyText = document.getElementById('mwEmptyText');
+    if (emptyEl) {
+        emptyEl.classList.toggle('hidden', visible > 0 || cards.length === 0);
+        if (emptyText) emptyText.textContent = search ? `No middlewares match "${search}"` : 'No middlewares found';
+    }
+}
+
+let _allServices = [];
+let _svcFilter = 'all';
+
+async function refreshLiveView() {
+    const container = document.getElementById('liveContent');
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading services...</p></div>`;
+
+    try {
+        const res = await fetch('/api/traefik/services').then(r => r.json());
+        const http = (res.http || []).map(s => ({ ...s, _proto: 'HTTP' }));
+        const tcp  = (res.tcp  || []).map(s => ({ ...s, _proto: 'TCP' }));
+        const udp  = (res.udp  || []).map(s => ({ ...s, _proto: 'UDP' }));
+        _allServices = [...http, ...tcp, ...udp].sort((a,b) => (a.name||'').localeCompare(b.name||''));
+
+        if (_allServices.length === 0) {
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-sm mt-1">Set <code class="font-mono">TRAEFIK_API_URL</code> and enable <code class="font-mono">api: {}</code> in Traefik static config</p></div>`;
+            return;
+        }
+
+        renderServicesTable();
+    } catch(e) {
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p></div>`;
+    }
+}
+
+function filterServices(f) {
+    if (f) {
+        _svcFilter = f;
+        ['all','success','warning','error'].forEach(k => {
+            const btn = document.getElementById('sf-'+k);
+            if (btn) btn.classList.toggle('active-http', k === f);
+        });
+    }
+    renderServicesTable();
+}
+
+function renderServicesTable() {
+    const search = (document.getElementById('svcSearch')?.value || '').toLowerCase();
+    const statusOf = s => {
+        const st = (s.status || '').toLowerCase();
+        if (st === 'enabled') return 'success';
+        if (st === 'disabled' || st === 'error') return 'error';
+        return 'warning';
+    };
+
+    let items = _allServices.filter(s => {
+        if (_svcFilter !== 'all' && statusOf(s) !== _svcFilter) return false;
+        if (search && !(s.name||'').toLowerCase().includes(search)) return false;
+        return true;
+    });
+
+    const statusBadge = s => {
+        const st = (s.status || 'unknown').toLowerCase();
+        if (st === 'enabled') return `<span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-400 text-xs">Success</span></span>`;
+        if (st === 'disabled' || st === 'error') return `<span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span class="text-red-400 text-xs">Error</span></span>`;
+        return `<span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span class="text-yellow-400 text-xs">Warning</span></span>`;
+    };
+
+    const typeOf = s => {
+        if (s.loadBalancer) return 'loadbalancer';
+        if (s.mirroring)    return 'mirroring';
+        if (s.failover)     return 'failover';
+        if (s.weighted)     return 'weighted';
+        return '—';
+    };
+
+    const serversOf = s => {
+        const lb = s.loadBalancer;
+        if (!lb) return '—';
+        return (lb.servers || []).length;
+    };
+
+    const providerOf = s => {
+        const name = s.name || '';
+        const parts = name.split('@');
+        return parts.length > 1 ? parts[parts.length-1] : 'file';
+    };
+
+    const shortName = s => (s.name || '').split('@')[0];
+
+    const protoBadge = s => {
+        const p = s._proto;
+        if (p === 'HTTP') return `<span class="badge badge-http" style="font-size:9px">HTTP</span>`;
+        if (p === 'TCP')  return `<span class="badge badge-tcp"  style="font-size:9px">TCP</span>`;
+        return `<span class="badge badge-udp" style="font-size:9px">UDP</span>`;
+    };
+
+    const rows = items.map((s, i) => {
+        
+        const globalIdx = _allServices.indexOf(s);
+        return `
+        <tr class="svc-row cursor-pointer" onclick="openSvcDetail(${globalIdx})" style="border-top:1px solid var(--border)">
+            <td class="px-4 py-3">${statusBadge(s)}</td>
+            <td class="px-4 py-3">
+                <div class="flex items-center gap-2">
+                    ${protoBadge(s)}
+                    <span class="font-mono text-xs" style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px">${shortName(s)}</span>
+                </div>
+            </td>
+            <td class="px-4 py-3 font-mono text-xs svc-col-type" style="color:var(--muted)">${typeOf(s)}</td>
+            <td class="px-4 py-3 text-xs text-center svc-col-servers" style="color:var(--muted)">${serversOf(s)}</td>
+            <td class="px-4 py-3 svc-col-provider"><span class="badge badge-muted text-xs">${providerOf(s)}</span></td>
+        </tr>`;
+    }).join('');
+
+    const empty = items.length === 0
+        ? `<tr><td colspan="5" class="text-center py-12" style="color:var(--muted)">No services match filter</td></tr>`
+        : '';
+
+    document.getElementById('liveContent').innerHTML = `
+        <div class="card" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+            <table class="w-full text-left" style="min-width:560px">
+                <thead style="background:var(--btn-secondary-bg)">
+                    <tr>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Status</th>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Name</th>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider svc-col-type" style="color:var(--muted)">Type</th>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-center svc-col-servers" style="color:var(--muted)">Servers</th>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider svc-col-provider" style="color:var(--muted)">Provider</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}${empty}</tbody>
+            </table>
+        </div>`;
+
+    
+    document.getElementById('svcTabCount').textContent = _allServices.filter(s => s._proto === 'HTTP').length;
+}
+
+let _allDockerRoutes = [];
+let _dockerFilter    = 'all';
+
+async function refreshDockerTab() {
+    const container = document.getElementById('dockerContent');
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading docker routes...</p></div>`;
+
+    try {
+        const [routerRes, svcRes] = await Promise.all([
+            fetch('/api/traefik/routers').then(r => r.json()),
+            fetch('/api/traefik/services').then(r => r.json()).catch(() => ({})),
+        ]);
+
+        
+        
+        const svcMap = {};
+        [...(svcRes.http || []), ...(svcRes.tcp || [])].forEach(s => {
+            const nameParts = (s.name || '').split('@');
+            const svcProvider = s.provider || nameParts[1] || '';
+            if (svcProvider === 'docker') {
+                const servers = s.loadBalancer?.servers || [];
+                const url = servers[0]?.url || servers[0]?.address || null;
+                const statusKeys = Object.keys(s.serverStatus || {});
+                
+                const bareKey = nameParts[0];
+                svcMap[bareKey] = { url, containerAddr: statusKeys[0] || url };
+                svcMap[s.name]  = { url, containerAddr: statusKeys[0] || url };
+            }
+        });
+
+        const http = (routerRes.http || []).map(r => ({ ...r, _proto: 'HTTP' }));
+        const tcp  = (routerRes.tcp  || []).map(r => ({ ...r, _proto: 'TCP'  }));
+        const udp  = (routerRes.udp  || []).map(r => ({ ...r, _proto: 'UDP'  }));
+        const all  = [...http, ...tcp, ...udp];
+
+        
+        const getProvider = r => r.provider || (r.name || '').split('@')[1] || '';
+
+        
+        _allDockerRoutes = all
+            .filter(r => getProvider(r) === 'docker')
+            .map(r => {
+                
+                const svcFull  = r.service || '';
+                const svcBare  = svcFull.split('@')[0];
+                const svcInfo  = svcMap[svcBare] || svcMap[svcFull] || null;
+                return { ...r, _svcInfo: svcInfo };
+            })
+            .sort((a,b) => (a.name||'').localeCompare(b.name||''));
+
+        if (all.length === 0) {
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-xs mt-1">Configure <code class="font-mono">TRAEFIK_API_URL</code> in Settings</p></div>`;
+            return;
+        }
+        if (_allDockerRoutes.length === 0) {
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cube text-5xl block mb-3 opacity-30"></i><p class="font-medium">No Docker routes found</p><p class="text-xs mt-1">Routes discovered via Docker labels will appear here automatically</p></div>`;
+            return;
+        }
+
+        document.getElementById('dockerTabCount').textContent = _allDockerRoutes.length;
+        renderDockerRoutes();
+    } catch(e) {
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p></div>`;
+    }
+}
+
+function filterDocker(f) {
+    if (f) {
+        _dockerFilter = f;
+        ['all','http','tcp'].forEach(k => {
+            const btn = document.getElementById('dk-'+k);
+            if (btn) btn.classList.toggle('active-http', k === f);
+        });
+    }
+    renderDockerRoutes();
+}
+
+function renderDockerRoutes() {
+    const search = (document.getElementById('dockerSearch')?.value || '').toLowerCase();
+    const items  = _allDockerRoutes.filter(r => {
+        if (_dockerFilter !== 'all' && r._proto.toLowerCase() !== _dockerFilter) return false;
+        if (search && !(r.name||'').toLowerCase().includes(search) && !(r.rule||'').toLowerCase().includes(search)) return false;
+        return true;
+    });
+
+    const statusDot = r => {
+        const st = (r.status || '').toLowerCase();
+        if (st === 'enabled')  return `<span class="status-dot status-online"></span>`;
+        if (st === 'disabled' || st === 'error') return `<span class="status-dot status-offline"></span>`;
+        return `<span class="status-dot status-unknown"></span>`;
+    };
+
+    const protoBadge = r => {
+        if (r._proto === 'HTTP') return `<span class="badge badge-http" style="font-size:9px">HTTP</span>`;
+        if (r._proto === 'TCP')  return `<span class="badge badge-tcp"  style="font-size:9px">TCP</span>`;
+        return `<span class="badge badge-udp" style="font-size:9px">UDP</span>`;
+    };
+
+    const shortName = r => (r.name || '').split('@')[0];
+
+    const tlsBadge  = r => r.tls
+        ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS</span>`
+        : '';
+
+    const epBadges  = r => (r.entryPoints || [])
+        .map(ep => `<span class="badge badge-muted" style="font-size:9px">${ep}</span>`)
+        .join(' ');
+
+    if (items.length === 0) {
+        document.getElementById('dockerContent').innerHTML =
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No routes match filter</div>`;
+        return;
+    }
+
+    const cards = items.map((r, i) => {
+        const globalIdx = _allDockerRoutes.indexOf(r);
+        
+        const hostMatch = (r.rule || '').match(/Host\(`([^`]+)`\)/);
+        const domain = hostMatch ? hostMatch[1] : null;
+        const externalBtn = (domain && r._proto === 'HTTP')
+            ? `<a href="https://${domain}" target="_blank" class="btn-icon" title="Open site" style="padding:4px 6px;text-decoration:none">
+                <i class="ph-bold ph-arrow-square-out text-sm"></i>
+               </a>`
+            : '';
+        return `
+        <div class="card p-4 hover:border-blue-500/40 transition-all" style="border-color:var(--border)">
+            <div class="flex items-start justify-between gap-3 mb-3">
+                <div class="flex items-center gap-2 min-w-0">
+                    ${statusDot(r)}
+                    ${protoBadge(r)}
+                    <span class="font-bold text-sm truncate" style="color:var(--text)" title="${shortName(r)}">${shortName(r)}</span>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                    ${tlsBadge(r)}
+                    ${externalBtn}
+                    <button onclick="openDockerRouteDetail(${globalIdx})" class="btn-icon" title="View details" style="padding:4px 6px">
+                        <i class="ph-bold ph-info text-sm"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="rounded-md px-3 py-2 text-xs font-mono truncate" style="background:var(--bg);border:1px solid var(--border);color:var(--green)" title="${r.rule || '—'}">${r.rule || '—'}</div>
+                <div class="flex items-center justify-between text-xs">
+                    <span style="color:var(--muted)">Service</span>
+                    <span class="font-mono truncate ml-2" style="color:var(--text);max-width:200px" title="${r.service||'—'}">${(r.service||'—').split('@')[0]}</span>
+                </div>
+                ${r._svcInfo?.containerAddr ? `
+                <div class="flex items-center justify-between text-xs">
+                    <span style="color:var(--muted)">Container</span>
+                    <span class="font-mono truncate ml-2" style="color:var(--muted);max-width:200px" title="${r._svcInfo.containerAddr}">${r._svcInfo.containerAddr}</span>
+                </div>` : ''}
+                ${r.entryPoints?.length ? `<div class="flex items-center gap-1 flex-wrap">${epBadges(r)}</div>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('dockerContent').innerHTML =
+        `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${cards}</div>`;
+}
+
+function openSvcDetail(idx) {
+    const s = _allServices[idx];
+    if (!s) return;
+
+    const panel   = document.getElementById('svcDetailPanel');
+    const backdrop = document.getElementById('svcDetailBackdrop');
+    const body    = document.getElementById('svcDetailBody');
+
+    
+    const proto = s._proto || 'HTTP';
+    document.getElementById('svcDetailProtoBadge').className = `badge badge-${proto.toLowerCase()}`;
+    document.getElementById('svcDetailProtoBadge').textContent = proto;
+    document.getElementById('svcDetailTitle').textContent = (s.name || '').split('@')[0];
+
+    const provider = (s.name || '').includes('@') ? s.name.split('@').pop() : 'file';
+    const type = s.loadBalancer ? 'loadbalancer' : s.mirroring ? 'mirroring' : s.weighted ? 'weighted' : s.failover ? 'failover' : '—';
+    const status = s.status || 'unknown';
+    const statusBadge = status === 'enabled'
+        ? `<span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-400">Success</span></span>`
+        : status === 'disabled' || status === 'error'
+        ? `<span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span class="text-red-400">Error</span></span>`
+        : `<span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span class="text-yellow-400">Warning</span></span>`;
+
+    const lb = s.loadBalancer || {};
+    const servers = lb.servers || [];
+    const passHostHeader = lb.passHostHeader !== undefined ? String(lb.passHostHeader) : 'true';
+
+    
+    const serversHtml = servers.length > 0 ? `
+        <table class="w-full text-left mt-2">
+            <thead style="background:#0d1117">
+                <tr>
+                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Status</th>
+                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${servers.map(sv => `
+                <tr style="border-top:1px solid var(--border)">
+                    <td class="px-3 py-2.5">
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-400 text-xs">Active</span></span>
+                    </td>
+                    <td class="px-3 py-2.5 font-mono text-xs break-all" style="color:#e6edf3">${sv.url || sv.address || '—'}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>` : `<div class="text-xs mt-2" style="color:var(--muted)">No servers configured</div>`;
+
+    
+    const usedBy = s.usedBy || [];
+    const usedByHtml = usedBy.length > 0
+        ? usedBy.map(r => `<span class="badge badge-muted mr-1 mb-1">${r}</span>`).join('')
+        : `<span class="text-xs" style="color:var(--muted)">—</span>`;
+
+    const kv = (label, val, isHtml = false) => `
+        <div class="flex items-start py-2.5" style="border-bottom:1px solid var(--border)">
+            <div class="text-xs font-semibold uppercase tracking-wider w-40 shrink-0 pt-0.5" style="color:var(--muted)">${label}</div>
+            <div class="text-sm ${isHtml ? '' : 'font-mono'} text-white flex-1">${isHtml ? val : val}</div>
+        </div>`;
+
+    body.innerHTML = `
+        
+        <div class="mb-5">
+            <div class="flex items-center gap-2 mb-3">
+                <i class="ph-bold ph-info" style="color:var(--blue)"></i>
+                <span class="text-xs font-bold uppercase tracking-wider" style="color:var(--muted)">Service Details</span>
+            </div>
+            <div class="card p-0 overflow-hidden">
+                <div class="px-4">
+                    ${kv('Type', type)}
+                    ${kv('Provider', `<span class="badge badge-muted">${provider}</span>`, true)}
+                    ${kv('Status', statusBadge, true)}
+                    ${kv('Pass Host Header', `<span class="badge ${passHostHeader === 'true' ? 'badge-green' : 'badge-red'}">${passHostHeader === 'true' ? 'True' : 'False'}</span>`, true)}
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="mb-5">
+            <div class="flex items-center gap-2 mb-3">
+                <i class="ph-bold ph-globe" style="color:var(--green)"></i>
+                <span class="text-xs font-bold uppercase tracking-wider" style="color:var(--muted)">Servers</span>
+                <span class="badge badge-muted">${servers.length}</span>
+            </div>
+            <div class="card p-0 overflow-hidden">${serversHtml}</div>
+        </div>
+
+        
+        <div class="mb-5">
+            <div class="flex items-center gap-2 mb-3">
+                <i class="ph-bold ph-git-branch" style="color:var(--purple)"></i>
+                <span class="text-xs font-bold uppercase tracking-wider" style="color:var(--muted)">Used by Routers</span>
+            </div>
+            <div class="card px-4 py-3">${usedByHtml}</div>
+        </div>`;
+
+    backdrop.classList.add('open');
+    panel.classList.add('open');
+}
+
+function closeSvcDetail() {
+    document.getElementById('svcDetailPanel').classList.remove('open');
+    document.getElementById('svcDetailBackdrop').classList.remove('open');
+}
+
+async function loadBackups() {
+    const list = document.getElementById('backupsList');
+    try {
+        const res = await fetch('/api/backups');
+        const backups = await res.json();
+
+        if (!backups.length) {
+            list.innerHTML = `<div class="text-center py-8" style="color:var(--muted)"><i class="ph-light ph-archive text-4xl block mb-2 opacity-30"></i><p>No backups yet</p></div>`;
+            return;
+        }
+
+        list.innerHTML = backups.map(b => `
+            <div class="flex items-center justify-between py-2.5 rounded-lg px-3 mb-2" style="background:#0d1117;border:1px solid var(--border)">
+                <div>
+                    <div class="font-mono text-xs text-white">${b.name}</div>
+                    <div class="text-xs mt-0.5" style="color:var(--muted)">${b.modified} · ${formatBytes(b.size)}</div>
+                </div>
+                <div class="flex gap-1">
+                    <button onclick="restoreBackup('${b.name}')" class="btn-secondary text-xs py-1 px-2.5">
+                        <i class="ph-bold ph-arrow-counter-clockwise text-xs"></i> Restore
+                    </button>
+                    <button onclick="deleteBackup('${b.name}')" class="btn-danger p-1.5">
+                        <i class="ph-bold ph-trash text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        list.innerHTML = `<p class="text-sm" style="color:var(--red)">Failed to load backups</p>`;
+    }
+}
+
+async function restoreBackup(name) {
+    if (!confirm(`Restore backup "${name}"? Your current config will be backed up first.`)) return;
+    try {
+        const res = await fetch(`/api/restore/${name}`, { method: 'POST', headers: _csrfHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Backup restored successfully!', 'success');
+            closeBackupsModal();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('Restore failed: ' + data.error, 'error');
+        }
+    } catch (e) {
+        showToast('Restore failed', 'error');
+    }
+}
+
+async function deleteBackup(name) {
+    if (!confirm(`Delete backup "${name}"?`)) return;
+    try {
+        const res = await fetch(`/api/backup/delete/${name}`, { method: 'POST', headers: _csrfHeaders() });
+        const data = await res.json();
+        if (data.success) { showToast('Backup deleted', 'success'); loadBackups(); }
+        else showToast('Delete failed: ' + data.error, 'error');
+    } catch(e) { showToast('Delete failed', 'error'); }
+}
+
+function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    return (bytes / 1024).toFixed(1) + ' KB';
+}
+
+function openRouteDetailFromCard(card) {
+    const idx = parseInt(card.getAttribute('data-idx'), 10);
+    if (isNaN(idx) || !APP_DATA || !APP_DATA[idx]) {
+        console.error('No APP_DATA for idx', idx);
+        return;
+    }
+    const appData = APP_DATA[idx];
+    openRouteDetail(appData.name, appData.protocol, appData);
+}
+let _liveRoutersCache = null;
+let _liveServicesCache = null;
+let _liveEntrypointsCache = null;
+let _currentDetailApp = null;
+
+async function openRouteDetail(name, protocol, appData) {
+    _currentDetailApp = appData;
+    const panel = document.getElementById('detailPanel');
+    const backdrop = document.getElementById('detailBackdrop');
+    const badge = document.getElementById('detailProtoBadge');
+    const title = document.getElementById('detailTitle');
+    const content = document.getElementById('detailContent');
+    const editBtn = document.getElementById('detailEditBtn');
+
+    
+    badge.className = 'badge badge-' + protocol;
+    badge.textContent = protocol.toUpperCase();
+    title.textContent = name;
+
+    
+    editBtn.style.display = '';
+    editBtn.onclick = () => {
+        closeRouteDetail();
+        const fakeBtn = document.createElement('button');
+        fakeBtn.setAttribute('data-app', JSON.stringify(appData));
+        handleEdit(fakeBtn);
+    };
+
+    
+    panel.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    content.innerHTML = `<div class="text-center py-12" style="color:var(--muted)">
+        <i class="ph-light ph-spinner-gap text-3xl animate-spin block mb-2 opacity-50"></i>
+        <p class="text-sm">Fetching live data…</p>
+    </div>`;
+
+    try {
+        
+        const [routersRes, servicesRes, entrypointsRes] = await Promise.allSettled([
+            fetch('/api/traefik/routers').then(r => r.json()),
+            fetch('/api/traefik/services').then(r => r.json()),
+            fetch('/api/traefik/entrypoints').then(r => r.json()),
+        ]);
+
+        let liveRouter = null, liveService = null, entrypoints = [];
+
+        if (routersRes.status === 'fulfilled') {
+            const allRouters = [
+                ...(routersRes.value.http || []),
+                ...(routersRes.value.tcp  || []),
+                ...(routersRes.value.udp  || []),
+            ];
+            liveRouter = allRouters.find(r => r.name && r.name.split('@')[0] === name);
+        }
+
+        if (servicesRes.status === 'fulfilled') {
+            const allServices = [
+                ...(servicesRes.value.http || []),
+                ...(servicesRes.value.tcp  || []),
+                ...(servicesRes.value.udp  || []),
+            ];
+            const svcName = appData.service_name || (name + '-service');
+            liveService = allServices.find(s => s.name && s.name.split('@')[0] === svcName);
+        }
+
+        if (entrypointsRes.status === 'fulfilled') {
+            entrypoints = entrypointsRes.value || [];
+        }
+
+        content.innerHTML = renderDetailPanel(appData, protocol, liveRouter, liveService, entrypoints);
+
+    } catch(e) {
+        content.innerHTML = renderDetailPanel(appData, protocol, null, null, []);
+    }
+}
+
+function closeRouteDetail() {
+    document.getElementById('detailPanel').classList.remove('open');
+    document.getElementById('detailBackdrop').classList.remove('open');
+    document.getElementById('detailEditBtn').style.display = '';
+    
+    document.getElementById('detailTitle').nextElementSibling?.classList.contains('badge') &&
+        document.getElementById('detailTitle').nextElementSibling.remove();
+    document.body.style.overflow = '';
+}
+
+async function openDockerRouteDetail(idx) {
+    const r = _allDockerRoutes[idx];
+    if (!r) return;
+
+    
+    document.getElementById('detailEditBtn').style.display = 'none';
+
+    
+    const dockerBadge = `<span class="badge badge-muted ml-2" style="font-size:10px"><i class="ph-bold ph-cube" style="font-size:9px"></i> docker</span>`;
+
+    
+    let rawLabels = null;
+    try {
+        const proto = (r._proto || 'HTTP').toLowerCase();
+        const routerName = encodeURIComponent(r.name || '');
+        const detail = await fetch(`/api/traefik/router/${proto}/${routerName}`).then(res => res.json());
+        if (detail && detail.provider === 'docker') {
+            
+            rawLabels = detail.labels || null;
+        }
+    } catch(e) { /* labels unavailable */ }
+
+    
+    const svcRaw  = r.service || '';
+    const appData = {
+        id:             (r.name || '').split('@')[0],
+        name:           (r.name || '').split('@')[0],
+        rule:           r.rule || '',
+        service_name:   svcRaw.split('@')[0],
+        target:         r._svcInfo?.url || 'N/A',
+        containerAddr:  r._svcInfo?.containerAddr || null,
+        dockerLabels:   rawLabels,
+        middlewares:    r.middlewares || [],
+        entryPoints:    r.entryPoints || [],
+        protocol:       r._proto.toLowerCase(),
+    };
+
+    await openRouteDetail(appData.name, appData.protocol, appData);
+
+    
+    document.getElementById('detailEditBtn').style.display = 'none';
+
+    
+    document.getElementById('detailTitle').insertAdjacentHTML('afterend', dockerBadge);
+}
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        closeRouteDetail();
+        closeSvcDetail();
+        closePluginDetail();
+    }
+});
+
+function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) {
+    const status = liveRouter ? liveRouter.status : null;
+    const routerError = liveRouter ? (liveRouter.error || null) : null;
+    const statusBadge = status === 'enabled'
+        ? `<span class="badge badge-green"><i class="ph-fill ph-check-circle text-xs"></i> Enabled</span>`
+        : status === 'disabled' || status === 'error'
+        ? `<span class="badge badge-red"><i class="ph-fill ph-warning-circle text-xs"></i> ${status}</span>`
+        : `<span class="badge badge-muted">Unknown</span>`;
+    const errorBanner = routerError
+        ? `<div class="mt-4 p-3 rounded-lg text-xs font-mono leading-relaxed" style="color:var(--red);background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.25);word-break:break-word"><i class="ph-bold ph-warning-circle" style="margin-right:6px"></i>${routerError}</div>`
+        : '';
+
+    const apiNote = liveRouter
+        ? `<div class="flex items-center gap-1.5 text-xs mb-5" style="color:var(--muted)"><div style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block"></div> Live data from Traefik API</div>`
+        : `<div class="flex items-center gap-1.5 text-xs mb-5 p-2 rounded" style="color:var(--yellow);background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.2)"><i class="ph-bold ph-warning text-xs"></i> Traefik API unavailable — showing config file data only</div>`;
+
+    
+    const routerEPs = (liveRouter ? liveRouter.entryPoints : app.entryPoints) || [];
+    const matchedEPs = entrypoints.filter(ep => routerEPs.includes(ep.name));
+
+    const epBoxes = routerEPs.map(epName => {
+        const ep = matchedEPs.find(e => e.name === epName);
+        const addr = ep ? ep.address : '';
+        const port = addr.split(':').pop();
+        const isHttps = ['443','8443'].includes(port);
+        return `<div class="flow-box text-center">
+            <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">Entry Point</div>
+            <div class="font-bold text-white text-sm">${epName.toUpperCase()}</div>
+            ${addr ? `<div class="font-mono text-xs mt-1" style="color:var(--muted)">${addr}</div>` : ''}
+            ${isHttps ? `<div class="mt-1"><span class="badge badge-green text-xs" style="font-size:9px">TLS</span></div>` : ''}
+        </div>`;
+    }).join('') || `<div class="flow-box text-center"><div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">Entry Point</div><div class="text-sm" style="color:var(--muted)">—</div></div>`;
+
+    const hasTls = liveRouter ? !!(liveRouter.tls) : !!(app.entryPoints && app.entryPoints.includes('https'));
+    const tlsInfo = hasTls ? `<div class="mt-1.5"><span class="badge badge-green text-xs" style="font-size:9px"><i class="ph-bold ph-shield-check"></i> TLS</span></div>` : '';
+
+    const serversList = liveService ? (liveService.loadBalancer?.servers || []) : [];
+    const serversHtml = serversList.length > 0
+        ? serversList.map(s => `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:#7ee787;background:#0d1117;word-break:break-all">${s.url || s.address || '—'}</div>`).join('')
+        : `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:#7ee787;background:#0d1117;word-break:break-all">${app.target}</div>`;
+
+    const flowHtml = `
+    <div class="mb-5">
+        <div class="text-xs font-bold uppercase tracking-wider mb-3" style="color:var(--muted)">Traffic Flow</div>
+        <div class="flex items-stretch gap-2 flow-diagram-row">
+            <div class="flex flex-col gap-2 flex-1">${epBoxes}</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box active-box text-center flex-1">
+                <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--blue)">Router</div>
+                <div class="font-bold text-white text-sm">${app.name}</div>
+                ${tlsInfo}
+                <div class="mt-1.5">${statusBadge}</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box text-center flex-1">
+                <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">Service</div>
+                <div class="font-bold text-white text-sm truncate">${app.service_name}</div>
+                <div class="mt-2">${serversHtml}</div>
+            </div>
+        </div>
+    </div>`;
+
+    
+    const rule = liveRouter ? liveRouter.rule : app.rule;
+    const provider = liveRouter ? (liveRouter.provider || 'file') : 'file';
+    const priority = liveRouter ? (liveRouter.priority ?? '—') : '—';
+
+    const routerRows = [
+        ['Status', statusBadge, true],
+        ['Provider', `<span class="badge badge-muted">${provider}</span>`, true],
+        ['Rule', rule || '—', false],
+        ['Name', (liveRouter ? liveRouter.name : app.name) || '—', false],
+        ['Entry Points', routerEPs.map(ep => `<span class="badge badge-muted mr-1">${ep}</span>`).join('') || '—', true],
+        ['Service', app.service_name || '—', false],
+        ['Priority', String(priority), false],
+    ];
+
+    
+    const tlsData = liveRouter ? liveRouter.tls : (hasTls ? { certResolver: 'cloudflare' } : null);
+    let tlsSection = '';
+    if (protocol === 'http' || protocol === 'tcp') {
+        const tlsRows = [
+            ['TLS', tlsData ? `<span class="badge badge-green">True</span>` : `<span class="badge badge-red">False</span>`, true],
+            ['Certificate Resolver', tlsData ? (tlsData.certResolver || '—') : '—', false],
+            ['Options', tlsData ? (tlsData.options || 'default') : '—', false],
+            ['Passthrough', (protocol === 'tcp' && tlsData && tlsData.passthrough) ? `<span class="badge badge-green">True</span>` : `<span class="badge badge-red">False</span>`, true],
+        ];
+        tlsSection = renderSection('TLS', 'ph-shield', tlsRows);
+    }
+
+    
+    const mws = (liveRouter ? liveRouter.middlewares : app.middlewares) || [];
+    let mwSection = '';
+    if (protocol === 'http') {
+        if (mws.length > 0) {
+            const mwHtml = `<div class="p-4 flex flex-wrap gap-2">${mws.map(m => `<span class="badge" style="background:rgba(163,113,247,0.12);color:var(--purple);border:1px solid rgba(163,113,247,0.3)">${m}</span>`).join('')}</div>`;
+            mwSection = `<div class="detail-section mb-4">
+                <div class="detail-section-header flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+                    <i class="ph-bold ph-plugs-connected text-sm" style="color:var(--purple)"></i>
+                    <span class="font-bold text-sm text-white">Middlewares</span>
+                    <span class="badge badge-muted ml-1">${mws.length}</span>
+                </div>${mwHtml}</div>`;
+        } else {
+            mwSection = `<div class="detail-section mb-4">
+                <div class="detail-section-header flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+                    <i class="ph-bold ph-plugs-connected text-sm" style="color:var(--purple)"></i>
+                    <span class="font-bold text-sm text-white">Middlewares</span>
+                </div>
+                <div class="p-6 text-center" style="color:var(--muted)">
+                    <i class="ph-light ph-stack text-2xl block mb-1 opacity-30"></i>
+                    <p class="text-xs">No middlewares configured</p>
+                </div>
+            </div>`;
+        }
+    }
+
+    
+    const svcLoadBalancer = liveService ? liveService.loadBalancer : null;
+    const svcServers = svcLoadBalancer ? (svcLoadBalancer.servers || []) : [{ url: app.target }];
+    const svcPassHostHeader = svcLoadBalancer ? (svcLoadBalancer.passHostHeader !== false ? 'true' : 'false') : '—';
+    const svcStatus = liveService ? (liveService.status || '—') : '—';
+
+    const svcServerRows = svcServers.map((s, i) => [
+        `Server ${i + 1}`,
+        s.url || s.address || '—',
+        false
+    ]);
+
+    const svcRows = [
+        ['Status', svcStatus === 'enabled'
+            ? `<span class="badge badge-green">Enabled</span>`
+            : svcStatus !== '—' ? `<span class="badge badge-muted">${svcStatus}</span>` : '—', svcStatus !== '—'],
+        ['Type', 'Load Balancer', false],
+        ['Pass Host Header', svcPassHostHeader, false],
+        ...(app.containerAddr ? [['Container', app.containerAddr, false]] : []),
+        ...svcServerRows,
+    ];
+
+    
+    let labelsSection = '';
+    if (app.dockerLabels && typeof app.dockerLabels === 'object') {
+        const labelEntries = Object.entries(app.dockerLabels)
+            .filter(([k]) => k.startsWith('traefik.'))
+            .sort(([a], [b]) => a.localeCompare(b));
+        if (labelEntries.length > 0) {
+            const labelRows = labelEntries.map(([k, v]) =>
+                `<div class="font-mono text-xs py-1.5 px-0" style="border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start">
+                    <span style="color:var(--muted);word-break:break-all">${k.replace(/</g,'&lt;')}</span>
+                    <span style="color:var(--text);text-align:right;word-break:break-all">${String(v).replace(/</g,'&lt;')}</span>
+                </div>`
+            ).join('');
+            labelsSection = `<div class="detail-section mb-4">
+                <div class="flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+                    <i class="ph-bold ph-tag text-sm" style="color:var(--blue)"></i>
+                    <span class="font-bold text-sm text-white">Docker Labels</span>
+                    <span class="badge badge-muted ml-auto" style="font-size:9px">${labelEntries.length}</span>
+                </div>
+                <div class="px-4 py-2">${labelRows}</div>
+            </div>`;
+        }
+    }
+
+    return `
+    ${apiNote}
+    ${errorBanner}
+    ${flowHtml}
+    ${renderSection('Router Details', 'ph-info', routerRows)}
+    ${tlsSection}
+    ${mwSection}
+    ${renderSection('Service', 'ph-lightning', svcRows)}
+    ${labelsSection}
+    `;
+}
+
+function renderSection(title, icon, rows) {
+    const rowsHtml = rows.map(([key, val, isHtml]) => {
+        const displayVal = isHtml ? val : `<span class="font-mono" style="color:#e6edf3">${String(val).replace(/</g,'&lt;')}</span>`;
+        return `<div class="detail-key">${key}</div><div class="detail-val">${displayVal}</div>`;
+    }).join('');
+
+    return `<div class="detail-section mb-4">
+        <div class="flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+            <i class="ph-bold ${icon} text-sm" style="color:var(--blue)"></i>
+            <span class="font-bold text-sm text-white">${title}</span>
+        </div>
+        <div class="detail-kv">${rowsHtml}</div>
+    </div>`;
+}
+
+const THEMES = ['dark', 'light', 'system'];
+const THEME_ICONS = { dark: 'ph-moon', light: 'ph-sun', system: 'ph-desktop' };
+
+function applyTheme(theme) {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    
+    const icon = document.getElementById('themeIcon');
+    if (icon) icon.className = `ph-bold ${THEME_ICONS[theme]}`;
+    
+    ['dark','light','system'].forEach(t => {
+        document.getElementById('theme-'+t+'-m')?.classList.toggle('active', t === theme);
+    });
+}
+
+function setTheme(theme) {
+    localStorage.setItem('tm-theme', theme);
+    applyTheme(theme);
+}
+
+function cycleTheme() {
+    const cur = localStorage.getItem('tm-theme') || 'dark';
+    const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
+    setTheme(next);
+}
+
+(function() {
+    const saved = localStorage.getItem('tm-theme') || 'dark';
+    applyTheme(saved);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (localStorage.getItem('tm-theme') === 'system') applyTheme('system');
+    });
+})();
+
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    const icon = document.getElementById('hamburgerIcon');
+    const isOpen = menu.classList.toggle('open');
+    icon.className = isOpen ? 'ph-bold ph-x text-xl' : 'ph-bold ph-list text-xl';
+}
+function closeMobileMenu() {
+    document.getElementById('mobileMenu').classList.remove('open');
+    document.getElementById('hamburgerIcon').className = 'ph-bold ph-list text-xl';
+}
+
+document.addEventListener('click', e => {
+    const menu = document.getElementById('mobileMenu');
+    const btn = document.getElementById('hamburgerBtn');
+    if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
+        closeMobileMenu();
+    }
+});
+let _pwaInstallPrompt = null;
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/sw.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.warn('SW registration failed:', err));
+    });
+}
+
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    _pwaInstallPrompt = e;
+    document.getElementById('pwaInstallBtn').classList.remove('hidden');
+    document.getElementById('pwaInstallBtnMobile').classList.remove('hidden');
+});
+
+window.addEventListener('appinstalled', () => {
+    _pwaInstallPrompt = null;
+    document.getElementById('pwaInstallBtn').classList.add('hidden');
+    document.getElementById('pwaInstallBtnMobile').classList.add('hidden');
+    showToast('Traefik Manager installed as app!', 'success');
+});
+
+function installPWA() {
+    if (!_pwaInstallPrompt) return;
+    _pwaInstallPrompt.prompt();
+    _pwaInstallPrompt.userChoice.then(choice => {
+        if (choice.outcome === 'accepted') {
+            _pwaInstallPrompt = null;
+            document.getElementById('pwaInstallBtn').classList.add('hidden');
+        }
+    });
+}
+
+let _allPlugins = [];
+
+function _emptyMountState({ icon, title, description, steps, note }) {
+    const stepHtml = steps.map((step, i) => `
+        <div class="text-left" style="max-width:480px;margin:0 auto">
+            <p class="text-xs mb-2" style="color:var(--muted)">${steps.length > 1 ? `<span class="font-bold" style="color:var(--text)">Step ${i+1}.</span> ` : ''}${step.label}</p>
+            <div class="relative rounded-lg overflow-hidden" style="background:var(--input-bg);border:1px solid var(--border)">
+                <pre class="text-xs font-mono px-4 py-3 pr-16 leading-relaxed overflow-x-auto" style="color:var(--blue);white-space:pre">${step.code}</pre>
+                <button onclick="_copyCode(this, ${JSON.stringify(step.code)})"
+                    class="absolute top-2 right-2 flex items-center gap-1 text-xs px-2 py-1 rounded"
+                    style="background:var(--btn-secondary-bg);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all 0.15s"
+                    onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
+                    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+                    <i class="ph-bold ph-copy text-xs"></i> Copy
+                </button>
+            </div>
+        </div>`).join('<div style="height:12px"></div>');
+
+    const noteHtml = note ? `<p class="text-xs mt-4" style="color:var(--muted);opacity:0.7"><i class="ph-bold ph-info mr-1"></i>${note}</p>` : '';
+
+    return `<div class="text-center py-12 px-4 rounded-xl" style="border:1px solid var(--border)">
+        <i class="ph-light ${icon} text-5xl block mb-3 opacity-30" style="color:var(--muted)"></i>
+        <p class="font-semibold mb-2" style="color:var(--text)">${title}</p>
+        <p class="text-xs mb-6" style="color:var(--muted);max-width:400px;margin:0 auto 24px">${description}</p>
+        <div class="space-y-3">${stepHtml}</div>
+        ${noteHtml}
+    </div>`;
+}
+
+function _copyCode(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="ph-bold ph-check text-xs"></i> Copied';
+        btn.style.color      = 'var(--green)';
+        btn.style.borderColor = 'var(--green)';
+        setTimeout(() => {
+            btn.innerHTML      = orig;
+            btn.style.color      = 'var(--muted)';
+            btn.style.borderColor = 'var(--border)';
+        }, 2000);
+    });
+}
+
+async function refreshPluginsTab() {
+    const container = document.getElementById('pluginsContent');
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading plugins...</p></div>`;
+    try {
+        const res = await fetch('/api/traefik/plugins').then(r => r.json());
+        const plugins = Array.isArray(res.plugins) ? res.plugins : [];
+
+        if (res.error && plugins.length === 0) {
+            container.innerHTML = _emptyMountState({
+                icon: 'ph-puzzle-piece',
+                title: 'traefik.yml not mounted',
+                description: 'Mount your Traefik static config (<code class="font-mono" style="color:var(--blue)">traefik.yml</code>) into this container read-only to view installed plugins.',
+                steps: [
+                    { label: 'Add this volume to the <code class="font-mono">traefik-manager</code> service in your <code class="font-mono">docker-compose.yml</code>:',
+                      code: '- /path/to/traefik/traefik.yml:/app/traefik.yml:ro' },
+                ],
+                note: 'No Traefik restart needed — only traefik-manager needs to be updated.'
+            });
+            document.getElementById('pluginsTabCount').textContent = '0';
+            return;
+        }
+
+        if (plugins.length === 0) {
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">
+                <i class="ph-light ph-puzzle-piece text-5xl block mb-3 opacity-30"></i>
+                <p class="font-medium mb-1">No plugins configured</p>
+                <p class="text-xs max-w-sm mx-auto mt-1">Add plugins under <code class="font-mono">experimental.plugins</code> in your <code class="font-mono">traefik.yml</code>.</p>
+            </div>`;
+            document.getElementById('pluginsTabCount').textContent = '0';
+            return;
+        }
+
+        _allPlugins = plugins;
+        document.getElementById('pluginsTabCount').textContent = plugins.length;
+
+        const cards = plugins.map((p, idx) => {
+            const name       = p.name || 'Unknown';
+            const version    = p.version || '—';
+            const moduleName = p.moduleName || '';
+            
+            const repoUrl    = moduleName.startsWith('github.com/')
+                ? 'https://' + moduleName : '';
+
+            return `
+            <div class="card p-4 hover:border-blue-500/40 transition-all">
+                <div class="flex items-start justify-between gap-3 mb-3">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <i class="ph-bold ph-puzzle-piece text-sm shrink-0" style="color:var(--blue)"></i>
+                        <span class="font-bold text-sm truncate" style="color:var(--text)" title="${name}">${name}</span>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        ${repoUrl ? `<a href="${repoUrl}" target="_blank" class="btn-icon" title="View on GitHub" style="padding:4px 6px;text-decoration:none"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : ''}
+                        <button onclick="openPluginDetail(${idx})" class="btn-icon" title="View details" style="padding:4px 6px">
+                            <i class="ph-bold ph-info text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-2 text-xs">
+                    <div class="font-mono truncate" style="color:var(--muted)" title="${moduleName}">${moduleName}</div>
+                    <div class="flex items-center justify-between pt-1">
+                        <span class="badge badge-muted" style="font-size:9px">v${version}</span>
+                        <span class="badge badge-muted" style="font-size:9px">plugin</span>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
+        container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${cards}</div>`;
+    } catch(e) {
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p>Could not load plugin data</p></div>`;
+    }
+}
+
+function openPluginDetail(idx) {
+    const p = _allPlugins[idx];
+    if (!p) return;
+
+    const name       = p.name || 'Unknown';
+    const version    = p.version || '—';
+    const moduleName = p.moduleName || '';
+    const repoUrl    = moduleName.startsWith('github.com/') ? 'https://' + moduleName : '';
+
+    document.getElementById('pluginDetailTitle').textContent = name;
+
+    const rows = [
+        ['Name',        name],
+        ['Version',     version],
+        ['Module',      moduleName || '—'],
+        ...(repoUrl ? [['Repository', `<a href="${repoUrl}" target="_blank" style="color:var(--blue)">${repoUrl} <i class="ph-bold ph-arrow-square-out text-xs"></i></a>`]] : []),
+    ];
+
+    const rowsHtml = rows.map(([k, v]) =>
+        `<div class="detail-key">${k}</div><div class="detail-val"><span class="font-mono" style="color:#e6edf3">${v}</span></div>`
+    ).join('');
+
+    const settingsSection = p.settings ? `
+        <div class="detail-section mb-4 mt-4">
+            <div class="flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+                <i class="ph-bold ph-sliders text-sm" style="color:var(--blue)"></i>
+                <span class="font-bold text-sm text-white">Configuration Schema</span>
+            </div>
+            <pre class="text-xs font-mono p-4 leading-relaxed overflow-x-auto" style="color:var(--muted);max-height:300px">${JSON.stringify(p.settings, null, 2).replace(/</g,'&lt;')}</pre>
+        </div>` : '';
+
+    document.getElementById('pluginDetailBody').innerHTML = `
+        <div class="detail-section mb-4">
+            <div class="flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+                <i class="ph-bold ph-info text-sm" style="color:var(--blue)"></i>
+                <span class="font-bold text-sm text-white">Plugin Info</span>
+            </div>
+            <div class="detail-kv">${rowsHtml}</div>
+        </div>
+        ${settingsSection}`;
+
+    document.getElementById('pluginDetailPanel').classList.add('open');
+    document.getElementById('pluginDetailBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePluginDetail() {
+    document.getElementById('pluginDetailPanel').classList.remove('open');
+    document.getElementById('pluginDetailBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+async function refreshCertsTab() {
+    const container = document.getElementById('certsContent');
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading certificates...</p></div>`;
+    try {
+        const res  = await fetch('/api/traefik/certs').then(r => r.json());
+        const certs = Array.isArray(res.certs) ? res.certs : [];
+
+        if (res.error && certs.length === 0) {
+            container.innerHTML = _emptyMountState({
+                icon: 'ph-shield',
+                title: 'acme.json not mounted',
+                description: 'Mount your Traefik <code class="font-mono" style="color:var(--blue)">acme.json</code> into this container read-only to view and track your TLS certificates.',
+                steps: [
+                    { label: 'Add this volume to the <code class="font-mono">traefik-manager</code> service in your <code class="font-mono">docker-compose.yml</code>:',
+                      code: '- /path/to/traefik/acme.json:/app/acme.json:ro' },
+                ],
+                note: 'No Traefik restart needed — only traefik-manager needs to be updated.'
+            });
+            document.getElementById('certsTabCount').textContent = '0';
+            return;
+        }
+
+        if (certs.length === 0) {
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">
+                <i class="ph-light ph-shield text-5xl block mb-3 opacity-30"></i>
+                <p class="font-medium">No certificates found</p>
+                <p class="text-xs mt-1">acme.json may be empty — certs are issued on first request.</p>
+            </div>`;
+            document.getElementById('certsTabCount').textContent = '0';
+            return;
+        }
+
+        const now = Date.now();
+        const cards = certs.map(cert => {
+            const main   = cert.main || 'Unknown';
+            const sans   = cert.sans || [];
+            const resolver = cert.resolver || '—';
+
+            
+            let daysLeft = null, expiryStr = '—';
+            if (cert.not_after) {
+                const expiry = new Date(cert.not_after);
+                if (!isNaN(expiry)) {
+                    daysLeft = Math.ceil((expiry - now) / 86400000);
+                    expiryStr = expiry.toLocaleDateString();
+                }
+            }
+            const expiryColor = daysLeft === null ? 'var(--muted)' : daysLeft < 7 ? 'var(--red)' : daysLeft < 30 ? 'var(--yellow)' : 'var(--green)';
+            const expiryBadge = daysLeft !== null
+                ? `<span class="badge" style="background:${daysLeft<7?'rgba(248,81,73,0.15)':daysLeft<30?'rgba(210,153,34,0.15)':'rgba(63,185,80,0.15)'};color:${expiryColor};border-color:${expiryColor}40">${daysLeft}d left</span>`
+                : '';
+
+            return `<div class="card p-4">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <i class="ph-bold ph-shield-check text-sm shrink-0" style="color:var(--green)"></i>
+                        <span class="font-bold text-sm truncate" style="color:var(--text)" title="${main}">${main}</span>
+                    </div>
+                    ${expiryBadge}
+                </div>
+                ${sans.length ? `<div class="flex flex-wrap gap-1 mb-3">${sans.map(d=>`<span class="badge badge-muted" style="font-size:9px">${d}</span>`).join('')}</div>` : ''}
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div><span style="color:var(--muted)">Resolver</span><div class="font-mono mt-0.5" style="color:var(--text)">${resolver}</div></div>
+                    <div><span style="color:var(--muted)">Expires</span><div class="font-mono mt-0.5" style="color:${expiryColor}">${expiryStr}</div></div>
+                </div>
+            </div>`;
+        }).join('');
+
+        container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${cards}</div>`;
+        document.getElementById('certsTabCount').textContent = certs.length;
+    } catch(e) {
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p>Could not load certificate data</p></div>`;
+    }
+}
+
+let _allLogLines    = [];
+let _currentLogLines = 200;
+
+function setLogLines(n) {
+    _currentLogLines = n;
+    [100, 200, 500, 1000].forEach(v => {
+        document.getElementById('log-' + v)?.classList.toggle('active-http', v === n);
+    });
+    refreshLogs();
+}
+
+async function refreshLogs() {
+    const container = document.getElementById('logsContent');
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading logs...</p></div>`;
+    try {
+        const res = await fetch(`/api/traefik/logs?lines=${_currentLogLines}`).then(r => r.json());
+        if (res.error) {
+            container.innerHTML = _emptyMountState({
+                icon: 'ph-terminal',
+                title: 'Access log not mounted',
+                description: 'Stream live Traefik access logs by enabling access logging in Traefik and mounting the log file into this container.',
+                steps: [
+                    { label: 'Enable access logging in your <code class="font-mono">traefik.yml</code>:',
+                      code: 'accessLog:\n  filePath: "/logs/access.log"' },
+                    { label: 'Add this volume to the <code class="font-mono">traefik-manager</code> service in your <code class="font-mono">docker-compose.yml</code>:',
+                      code: '- /path/to/traefik/logs/access.log:/app/logs/access.log:ro' },
+                ],
+                note: 'Traefik must be restarted after adding <code class="font-mono">accessLog</code> to traefik.yml.'
+            });
+            return;
+        }
+        _allLogLines = res.lines || [];
+        renderLogs();
+    } catch(e) {
+        container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><p>Failed to load logs</p></div>`;
+    }
+}
+
+function filterLogs() { renderLogs(); }
+
+function renderLogs() {
+    const container = document.getElementById('logsContent');
+    const q = (document.getElementById('logSearch')?.value || '').toLowerCase();
+    const lines = q ? _allLogLines.filter(l => l.toLowerCase().includes(q)) : _allLogLines;
+
+    if (lines.length === 0) {
+        container.innerHTML = `<div class="text-center py-12" style="color:var(--muted)"><p>No log lines match</p></div>`;
+        return;
+    }
+
+    
+    const colorize = line => {
+        const html = line.replace(/</g, '&lt;');
+        
+        return html
+            .replace(/\b(5\d{2})\b/g, '<span style="color:var(--red)">$1</span>')
+            .replace(/\b(4\d{2})\b/g, '<span style="color:var(--yellow)">$1</span>')
+            .replace(/\b(2\d{2}|3\d{2})\b/g, '<span style="color:var(--green)">$1</span>')
+            .replace(/"(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)"/g, '"<span style="color:var(--blue)">$1</span>"');
+    };
+
+    container.innerHTML = `<div class="rounded-xl overflow-hidden" style="border:1px solid var(--border)">
+        <div class="flex items-center justify-between px-4 py-2 text-xs" style="background:#161b22;border-bottom:1px solid var(--border);color:var(--muted)">
+            <span><i class="ph-bold ph-terminal mr-1"></i>Access Log</span>
+            <span>${lines.length} lines</span>
+        </div>
+        <div class="overflow-x-auto" style="max-height:600px;overflow-y:auto;background:var(--bg)">
+            <pre class="text-xs font-mono p-4 leading-relaxed" style="color:var(--muted)">${lines.map(colorize).join('\n')}</pre>
+        </div>
+    </div>`;
+}
+
+(async () => {
+    try {
+        const res  = await fetch('/api/settings');
+        const data = await res.json();
+        applyTabVisibility(data.visible_tabs || {});
+    } catch(e) {
+        applyTabVisibility({});
+    }
+    loadOverviewStats();
+    checkManagerVersion();
+})();
+
+if (document.getElementById('toastContainer') && document.getElementById('toastContainer').children.length > 0) {
+    setTimeout(loadOverviewStats, 2000);
+    setTimeout(loadOverviewStats, 5000);
+}
+</script>
+
+<div id="settingsModal" class="modal-overlay" style="display:none">
+    <div class="modal-box" style="max-width:480px">
+        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+            <div class="flex items-center gap-2">
+                <i class="ph-bold ph-gear" style="color:var(--blue)"></i>
+                <h3 class="font-bold text-sm" style="color:var(--text)">Settings</h3>
+            </div>
+            <button type="button" onclick="closeSettingsModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+        </div>
+        <div class="px-5 py-4 space-y-5">
+            
+            <div>
+                <label>Domains</label>
+                <div class="text-xs mb-2" style="color:var(--muted)">Comma-separated list of base domains used when adding routes.</div>
+                <input type="text" id="settingsDomains" class="input-field" placeholder="example.com, example.net">
+            </div>
+            
+            <div>
+                <label>Certificate Resolver</label>
+                <div class="text-xs mb-2" style="color:var(--muted)">Name of the Traefik cert resolver (e.g. cloudflare, letsencrypt).</div>
+                <input type="text" id="settingsCertResolver" class="input-field" placeholder="cloudflare">
+            </div>
+            
+            <div>
+                <label>Traefik API URL</label>
+                <div class="text-xs mb-2" style="color:var(--muted)">Base URL of the Traefik API used for live stats.</div>
+                <input type="text" id="settingsApiUrl" class="input-field" placeholder="http://traefik:8080">
+                <button onclick="testTraefikApi()" class="mt-2 nav-btn text-xs" style="height:28px;padding:0 10px">
+                    <i class="ph-bold ph-plugs-connected"></i> Test connection
+                </button>
+                <span id="apiTestResult" class="text-xs ml-2" style="color:var(--muted)"></span>
+            </div>
+            
+            <div id="settingsSavedNotice" class="hidden text-xs px-3 py-2 rounded-md" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
+                <i class="ph-bold ph-check-circle mr-1"></i>Settings saved to <code>manager.yml</code>
+            </div>
+
+            
+            <div style="border-top:1px solid var(--border);padding-top:20px">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="ph-bold ph-tabs" style="color:var(--blue)"></i>
+                    <span class="text-sm font-semibold">Visible Tabs</span>
+                </div>
+                <div class="text-xs mb-3" style="color:var(--muted)">Hide tabs you don't use. Routes, Middlewares, and Services are always visible.</div>
+                <div class="grid grid-cols-2 gap-2" id="tabToggles">
+                    <label class="tab-toggle-row" onclick="toggleTabVisibility('docker')">
+                        <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-cube" style="color:var(--muted)"></i> Docker</span>
+                        <div class="toggle-switch" id="toggle-docker"><div class="toggle-knob"></div></div>
+                    </label>
+                    <label class="tab-toggle-row" onclick="toggleTabVisibility('certs')">
+                        <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-check" style="color:var(--muted)"></i> Certs</span>
+                        <div class="toggle-switch" id="toggle-certs"><div class="toggle-knob"></div></div>
+                    </label>
+                    <label class="tab-toggle-row" onclick="toggleTabVisibility('plugins')">
+                        <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-puzzle-piece" style="color:var(--muted)"></i> Plugins</span>
+                        <div class="toggle-switch" id="toggle-plugins"><div class="toggle-knob"></div></div>
+                    </label>
+                    <label class="tab-toggle-row" onclick="toggleTabVisibility('logs')">
+                        <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-terminal" style="color:var(--muted)"></i> Logs</span>
+                        <div class="toggle-switch" id="toggle-logs"><div class="toggle-knob"></div></div>
+                    </label>
+                </div>
+            </div>
+
+            
+            <div id="authSection" class="hidden">
+                <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:4px">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="ph-bold ph-lock-key" style="color:var(--blue)"></i>
+                            <span class="text-sm font-semibold">Built-in Authentication</span>
+                        </div>
+                        
+                        <button id="authToggleBtn" onclick="toggleAuth()" class="nav-btn text-xs hidden" title="Enable or disable built-in auth">
+                            <span id="authToggleLabel">Disable</span>
+                        </button>
+                    </div>
+                    <div id="authEnabledNotice" class="text-xs mb-3" style="color:var(--muted)">
+                        Built-in auth is <strong id="authStateLabel" style="color:var(--green)">enabled</strong>.
+                        <span id="authEnvForcedNote" class="hidden"> Controlled by the <code>AUTH_ENABLED</code> environment variable.</span>
+                    </div>
+
+                    
+                    <div id="changePwForm">
+                        <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--muted)">Change Password</div>
+                        <div class="space-y-2">
+                            <input type="password" id="pwCurrent" class="input-field" placeholder="Current password" autocomplete="current-password">
+                            <input type="password" id="pwNew"     class="input-field" placeholder="New password (min 8 chars)" autocomplete="new-password">
+                            <input type="password" id="pwConfirm" class="input-field" placeholder="Confirm new password" autocomplete="new-password">
+                        </div>
+                        <div id="pwChangeMsg" class="hidden text-xs mt-2 px-3 py-2 rounded-md"></div>
+                        <button onclick="changePassword()" class="mt-2 nav-btn text-xs">
+                            <i class="ph-bold ph-lock-key-open"></i> Update password
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="px-5 py-4 flex justify-end gap-2" style="border-top:1px solid var(--border)">
+            <button type="button" onclick="closeSettingsModal()" class="nav-btn">Cancel</button>
+            <button type="button" onclick="saveSettings()" class="nav-btn nav-btn-primary">
+                <i class="ph-bold ph-floppy-disk"></i> Save Settings
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+async function openSettingsModal() {
+    document.getElementById('settingsSavedNotice').classList.add('hidden');
+    document.getElementById('apiTestResult').textContent = '';
+    
+    ['pwCurrent','pwNew','pwConfirm'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    const msg = document.getElementById('pwChangeMsg');
+    if (msg) { msg.classList.add('hidden'); msg.textContent = ''; }
+    try {
+        const res  = await fetch('/api/settings');
+        const data = await res.json();
+        document.getElementById('settingsDomains').value       = (data.domains || []).join(', ');
+        document.getElementById('settingsCertResolver').value  = data.cert_resolver || '';
+        document.getElementById('settingsApiUrl').value        = data.traefik_api_url || '';
+
+        
+        if (data.visible_tabs) _visibleTabsCache = data.visible_tabs;
+        loadTabTogglesIntoModal();
+
+        
+        const authSection   = document.getElementById('authSection');
+        const toggleBtn     = document.getElementById('authToggleBtn');
+        const stateLabel    = document.getElementById('authStateLabel');
+        const toggleLabel   = document.getElementById('authToggleLabel');
+        const envForcedNote = document.getElementById('authEnvForcedNote');
+        const changePwForm  = document.getElementById('changePwForm');
+
+        if (data.has_password !== undefined) {
+            authSection.classList.remove('hidden');
+            const isOn = data.auth_enabled;
+            stateLabel.textContent  = isOn ? 'enabled' : 'disabled';
+            stateLabel.style.color  = isOn ? 'var(--green)' : 'var(--muted)';
+            if (!data.auth_env_forced && toggleBtn) {
+                toggleBtn.classList.remove('hidden');
+                toggleLabel.textContent = isOn ? 'Disable' : 'Enable';
+            } else {
+                envForcedNote.classList.remove('hidden');
+            }
+            if (changePwForm) changePwForm.style.display = isOn ? '' : 'none';
+        }
+    } catch(e) {
+        console.error('Could not load settings', e);
+    }
+    document.getElementById('settingsModal').style.display = 'flex';
+}
+
+function closeSettingsModal() {
+    document.getElementById('settingsModal').style.display = 'none';
+}
+
+async function changePassword() {
+    const current = document.getElementById('pwCurrent').value;
+    const newPw   = document.getElementById('pwNew').value;
+    const confirm = document.getElementById('pwConfirm').value;
+    const msg     = document.getElementById('pwChangeMsg');
+
+    const show = (text, ok) => {
+        msg.textContent  = text;
+        msg.style.background = ok ? 'rgba(63,185,80,0.1)' : 'rgba(248,81,73,0.1)';
+        msg.style.border     = ok ? '1px solid rgba(63,185,80,0.3)' : '1px solid rgba(248,81,73,0.3)';
+        msg.style.color      = ok ? 'var(--green)' : 'var(--red)';
+        msg.classList.remove('hidden');
+    };
+
+    if (!current || !newPw || !confirm) return show('Please fill in all fields.', false);
+    if (newPw.length < 8)              return show('New password must be at least 8 characters.', false);
+    if (newPw !== confirm)             return show('Passwords do not match.', false);
+
+    try {
+        const res  = await fetch('/api/auth/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token'] },
+            body: JSON.stringify({ current_password: current, new_password: newPw, confirm_password: confirm })
+        });
+        const data = await res.json();
+        if (data.success) {
+            show('Password updated successfully.', true);
+            ['pwCurrent','pwNew','pwConfirm'].forEach(id => document.getElementById(id).value = '');
+        } else {
+            show(data.error || 'Failed to update password.', false);
+        }
+    } catch(e) {
+        show('Request failed.', false);
+    }
+}
+
+async function toggleAuth() {
+    const stateLabel  = document.getElementById('authStateLabel');
+    const toggleLabel = document.getElementById('authToggleLabel');
+    const changePwForm = document.getElementById('changePwForm');
+    const currentlyOn = stateLabel.textContent === 'enabled';
+    const newState    = !currentlyOn;
+
+    if (currentlyOn && !confirm('Disable built-in authentication? Anyone who can reach this URL will have full access.')) return;
+
+    try {
+        const res  = await fetch('/api/auth/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token'] },
+            body: JSON.stringify({ auth_enabled: newState })
+        });
+        const data = await res.json();
+        if (data.success) {
+            stateLabel.textContent = newState ? 'enabled' : 'disabled';
+            stateLabel.style.color = newState ? 'var(--green)' : 'var(--muted)';
+            toggleLabel.textContent = newState ? 'Disable' : 'Enable';
+            if (changePwForm) changePwForm.style.display = newState ? '' : 'none';
+            showToast(`Authentication ${newState ? 'enabled' : 'disabled'}.`, 'success');
+        } else {
+            showToast(data.error || 'Failed to update auth.', 'error');
+        }
+    } catch(e) {
+        showToast('Request failed.', 'error');
+    }
+}
+
+async function saveSettings() {
+    const domains        = document.getElementById('settingsDomains').value.split(',').map(d => d.trim()).filter(Boolean);
+    const resolver       = document.getElementById('settingsCertResolver').value.trim();
+    const apiUrl         = document.getElementById('settingsApiUrl').value.trim();
+    if (!domains.length) { alert('Enter at least one domain.'); return; }
+    try {
+        const res  = await fetch('/api/settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token']},
+            body: JSON.stringify({ domains, cert_resolver: resolver, traefik_api_url: apiUrl })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('settingsSavedNotice').classList.remove('hidden');
+            
+            if (typeof availableDomains !== 'undefined') {
+                availableDomains.length = 0;
+                domains.forEach(d => availableDomains.push(d));
+                const sel = document.getElementById('domain');
+                if (sel) {
+                    sel.innerHTML = domains.map(d => `<option value="${d}">${d}</option>`).join('');
+                }
+            }
+            setTimeout(() => document.getElementById('settingsSavedNotice').classList.add('hidden'), 3000);
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    } catch(e) {
+        alert('Failed to save settings: ' + e);
+    }
+}
+
+async function testTraefikApi() {
+    const url    = document.getElementById('settingsApiUrl').value.trim();
+    const result = document.getElementById('apiTestResult');
+    result.textContent = 'Testing…';
+    result.style.color = 'var(--muted)';
+    try {
+        const res = await fetch('/api/traefik/version');
+        const d   = await res.json();
+        if (d && d.Version) {
+            result.textContent = `✓ Connected — Traefik v${d.Version}`;
+            result.style.color = 'var(--green)';
+        } else {
+            result.textContent = '✗ No response from API';
+            result.style.color = 'var(--red)';
+        }
+    } catch(e) {
+        result.textContent = '✗ Connection failed';
+        result.style.color = 'var(--red)';
+    }
+}
+
+</script>
+
+
+<footer style="text-align:center;padding:20px 0 24px;font-size:12px;color:var(--muted)">
+    <a href="https://github.com/traefik/traefik" target="_blank"
+       style="color:var(--muted);text-decoration:none" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Traefik</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/chr0nzz/traefik-manager" target="_blank"
+       style="color:var(--muted);text-decoration:none" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Traefik Manager</a>
+    &nbsp;·&nbsp;
+    <span id="footerManagerVer" style="cursor:pointer" title="Check for updates" onclick="openManagerUpdateInfo()">—</span>
+</footer>
+
+</body>
+</html>
