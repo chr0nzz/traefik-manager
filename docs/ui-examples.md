@@ -26,10 +26,6 @@ When first launching Traefik Manager, you are guided through a simple setup proc
 
 ![Setup Step 4](images/setup-4.png)
 
-## Step 5
-
-![Setup Step 5](images/setup-5.png)
-
 ---
 
 # Routes
