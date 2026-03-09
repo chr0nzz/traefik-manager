@@ -26,11 +26,11 @@ Explore the Traefik Manager interface and workflows. Click on a category below t
 <details>
 <summary><b>Initial Setup Workflow</b></summary>
 <p align="center">
-<img src="docs/images/setup-1.png" width="25%" alt="Setup Step 1" />
-<img src="docs/images/setup-2.png" width="25%" alt="Setup Step 2" />
+<img src="docs/images/setup-1.png" width="35%" alt="Setup Step 1" />
+<img src="docs/images/setup-2.png" width="35%" alt="Setup Step 2" />
 <br />
-<img src="docs/images/setup-3.png" width="25%" alt="Setup Step 3" />
-<img src="docs/images/setup-4.png" width="25%" alt="Setup Step 4" />
+<img src="docs/images/setup-3.png" width="35%" alt="Setup Step 3" />
+<img src="docs/images/setup-4.png" width="35%" alt="Setup Step 4" />
 </p>
 <p align="center"><i>A guided 4-step process to get your Traefik instance connected and configured.</i></p>
 </details>
@@ -149,10 +149,10 @@ Open **http://your-server:5000** — the setup wizard will guide you through the
 | `/path/to/traefik/dynamic.yml` | `/app/config/dynamic.yml` | ✅ | Traefik dynamic config — this is what Traefik Manager reads and writes |
 | `/path/to/traefik-manager/config` | `/app/config` | ✅ | Persists `manager.yml` (settings) and the session secret key |
 | `/path/to/traefik-manager/backups` | `/app/backups` | ✅ | Stores timestamped backups of `dynamic.yml` before every change |
-| `/path/to/traefik/acme.json` | `/app/acme.json` | ➕ Optional | Enables the **Certs** tab |
-| `/path/to/traefik/traefik.yml` | `/app/traefik.yml` | ➕ Optional | Enables the **Plugins** tab |
-| `/path/to/traefik/logs/access.log` | `/app/logs/access.log` | ➕ Optional | Enables the **Logs** tab |
-| `/var/run/docker.sock` | `/var/run/docker.sock` | ➕ Optional | Enables the **Docker** tab |
+| `/path/to/traefik/acme.json` | `/app/acme.json` | Optional | Enables the **Certs** tab |
+| `/path/to/traefik/traefik.yml` | `/app/traefik.yml` | Optional | Enables the **Plugins** tab |
+| `/path/to/traefik/logs/access.log` | `/app/logs/access.log` | Optional | Enables the **Logs** tab |
+| `/var/run/docker.sock` | `/var/run/docker.sock` | Optional | Enables the **Docker** tab |
 
 > **Note:** The docker.sock is used to retrieve metadata such as container labels and IPs. It isn't required for monitoring (@docker) when using docker labels and is only necessary if you want the Docker Tab to display extra container information.
 
