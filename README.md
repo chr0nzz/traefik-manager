@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://user.fm/files/v2-1b91adfdc6068ede7e20f5fe6bc80e41/fav.ico" width="64" height="64" alt="Traefik Manager">
+<img src="static/icons/icon-512x512.png" width="64" height="64" alt="Traefik Manager">
 
 # Traefik Manager
 
