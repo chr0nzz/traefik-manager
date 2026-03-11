@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="static/icons/icon-512x512.png" width="64" height="64" alt="Traefik Manager">
+<img src="static/icons/icon-256x256.png" width="64" height="64" alt="Traefik Manager">
 
 # Traefik Manager
 
