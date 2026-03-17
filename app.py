@@ -64,9 +64,7 @@ yaml.width = 4096
 safe_yaml = SafeYAML(typ='safe')
 
 
-CONFIG_PATH   = '/app/config/dynamic.yml'
-BACKUP_DIR    = '/app/backups'
-SETTINGS_PATH = '/app/config/manager.yml'
+SETTINGS_PATH = os.environ.get('SETTINGS_PATH', '/app/config/manager.yml')
 
 
 _ALLOWED_FILE_PREFIXES = ('/app/',)
@@ -89,11 +87,6 @@ def _safe_api_url(url: str) -> str:
     return ''
 
 
-ACCESS_LOG_PATH    = '/app/logs/access.log'
-ACME_JSON_PATH     = '/app/acme.json'
-STATIC_CONFIG_PATH = '/app/traefik.yml'
-
-
 OPTIONAL_TABS = ['docker', 'certs', 'plugins', 'logs']
 
 def load_settings() -> dict:
@@ -101,6 +94,11 @@ def load_settings() -> dict:
         'domains':         [d.strip() for d in os.environ.get('DOMAINS', 'example.com').split(',') if d.strip()] or ['example.com'],
         'cert_resolver':   os.environ.get('CERT_RESOLVER', 'cloudflare'),
         'traefik_api_url': os.environ.get('TRAEFIK_API_URL', 'http://traefik:8080'),
+        'traefik_static_config': '/app/traefik.yml',
+        'traefik_dynamic_config': '/app/config/dynamic.yml',
+        'acme_json_path': '/app/acme.json',
+        'access_log_path': '/app/logs/access.log',
+        'backup_dir': '/app/backup',
         'auth_enabled':    True,
         'password_hash':   '',
         'visible_tabs':    {t: False for t in OPTIONAL_TABS},
@@ -117,6 +115,16 @@ def load_settings() -> dict:
             merged['cert_resolver'] = str(data['cert_resolver']).strip()
         if 'traefik_api_url' in data:
             merged['traefik_api_url'] = _safe_api_url(str(data['traefik_api_url'])) or defaults['traefik_api_url']
+        if 'traefik_static_config' in data:
+            merged['traefik_static_config'] = str(data['traefik_static_config'])
+        if 'traefik_dynamic_config' in data:
+            merged['traefik_dynamic_config'] = str(data['traefik_dynamic_config'])
+        if 'acme_json_path' in data:
+            merged['acme_json_path'] = str(data['acme_json_path'])
+        if 'access_log_path' in data:
+            merged['access_log_path'] = str(data['access_log_path'])
+        if 'backup_dir' in data:
+            merged['backup_dir'] = str(data['backup_dir'])
         if 'auth_enabled' in data:
             merged['auth_enabled'] = bool(data['auth_enabled'])
         if 'password_hash' in data:
@@ -167,9 +175,9 @@ def _auth_enabled() -> bool:
 _s = load_settings()
 logger.info("===========================================")
 logger.info("Starting Traefik Manager")
-logger.info(f"Config Path:    {CONFIG_PATH}")
+logger.info(f"Config Path:    {_s['traefik_dynamic_config']}")
 logger.info(f"Settings Path:  {SETTINGS_PATH}")
-logger.info(f"Backup Dir:     {BACKUP_DIR}")
+logger.info(f"Backup Dir:     {_s['backup_dir']}")
 logger.info(f"Domains:        {_s['domains']}")
 logger.info(f"Cert Resolver:  {_s['cert_resolver']}")
 logger.info(f"Traefik API:    {_s['traefik_api_url']}")
@@ -583,10 +591,11 @@ def api_router_detail(protocol, name):
 @app.route('/api/traefik/plugins')
 @login_required
 def api_plugins():
-    if not os.path.exists(STATIC_CONFIG_PATH):
+    settings = load_settings()
+    if not os.path.exists(settings['traefik_static_config']):
         return jsonify({'plugins': [], 'error': 'traefik.yml not mounted'})
     try:
-        with open(STATIC_CONFIG_PATH, 'r') as f:
+        with open(settings['traefik_static_config'], 'r') as f:
             static = yaml.load(f) or {}
         raw = (static.get('experimental') or {}).get('plugins') or {}
         plugins = [
@@ -602,10 +611,11 @@ def api_plugins():
 @login_required
 def api_certs():
     import json as _json
-    if not os.path.exists(ACME_JSON_PATH):
+    settings = load_settings()
+    if not os.path.exists(settings['acme_json_path']):
         return jsonify({'certs': [], 'error': 'acme.json not mounted'})
     try:
-        with open(ACME_JSON_PATH, 'r') as f:
+        with open(settings['acme_json_path'], 'r') as f:
             acme_data = _json.load(f)
         certs = []
         for resolver_name, resolver_data in acme_data.items():
@@ -631,11 +641,12 @@ def api_certs():
 @app.route('/api/traefik/logs')
 @login_required
 def api_logs():
+    settings = load_settings()
     lines_req = min(int(request.args.get('lines', 200)), 1000)
-    if not os.path.exists(ACCESS_LOG_PATH):
+    if not os.path.exists(settings['access_log_path']):
         return jsonify({'error': 'Access log not mounted', 'lines': []})
     try:
-        with open(ACCESS_LOG_PATH, 'r', errors='replace') as f:
+        with open(settings['access_log_path'], 'r', errors='replace') as f:
             all_lines = f.readlines()
         return jsonify({'lines': [l.rstrip() for l in all_lines[-lines_req:]]})
     except Exception as e:
@@ -643,25 +654,28 @@ def api_logs():
 
 
 def ensure_backup_dir():
-    if not os.path.exists(BACKUP_DIR):
-        os.makedirs(BACKUP_DIR)
+    settings = load_settings()
+    if not os.path.exists(settings['backup_dir']):
+        os.makedirs(settings['backup_dir'])
 
 def create_backup():
     ensure_backup_dir()
-    if os.path.exists(CONFIG_PATH):
+    settings = load_settings()
+    if os.path.exists(settings['traefik_dynamic_config']):
         ts   = time.strftime("%Y%m%d_%H%M%S")
-        dest = os.path.join(BACKUP_DIR, f"dynamic.yml.{ts}.bak")
-        shutil.copy2(CONFIG_PATH, dest)
+        dest = os.path.join(settings['backup_dir'], f"dynamic.yml.{ts}.bak")
+        shutil.copy2(settings['traefik_dynamic_config'], dest)
         logger.info(f"Backup created: {dest}")
         return dest
     return None
 
 def list_backups():
     ensure_backup_dir()
+    settings = load_settings()
     backups = []
-    for f in sorted(os.listdir(BACKUP_DIR), reverse=True):
+    for f in sorted(os.listdir(settings['backup_dir']), reverse=True):
         if f.endswith('.bak'):
-            path = os.path.join(BACKUP_DIR, f)
+            path = os.path.join(settings['backup_dir'], f)
             st   = os.stat(path)
             backups.append({
                 'name':     f,
@@ -673,11 +687,12 @@ def list_backups():
 _BACKUP_RE = re.compile(r'^dynamic\.yml\.\d{8}_\d{6}\.bak$')
 
 def _validated_backup_path(filename: str) -> str:
+    settings = load_settings()
     if not _BACKUP_RE.match(filename):
         logger.warning(f"Invalid backup filename rejected: {filename!r}")
         abort(400)
-    path = os.path.realpath(os.path.join(BACKUP_DIR, filename))
-    if not path.startswith(os.path.realpath(BACKUP_DIR)):
+    path = os.path.realpath(os.path.join(settings['backup_dir'], filename))
+    if not path.startswith(os.path.realpath(settings['backup_dir'])):
         logger.warning(f"Path traversal attempt blocked: {filename!r}")
         abort(400)
     return path
@@ -691,12 +706,13 @@ def api_backups():
 @csrf_protect
 @login_required
 def api_restore(filename):
+    settings = load_settings()
     try:
         path = _validated_backup_path(filename)
         if not os.path.exists(path):
             return jsonify({'error': 'Backup not found'}), 404
         create_backup()
-        shutil.copy2(path, CONFIG_PATH)
+        shutil.copy2(path, settings['traefik_dynamic_config'])
         logger.info(f"Restored: {filename}")
         return jsonify({'success': True})
     except Exception as e:
@@ -782,14 +798,16 @@ def api_save_tabs():
 
 
 def load_config():
-    if not os.path.exists(CONFIG_PATH):
+    settings = load_settings()
+    if not os.path.exists(settings['traefik_dynamic_config']):
         return {"http": {"routers": {}, "services": {}, "middlewares": {}}}
-    with open(CONFIG_PATH, 'r') as f:
+    with open(settings['traefik_dynamic_config'], 'r') as f:
         data = yaml.load(f)
     return data if data and isinstance(data, dict) else {"http": {"routers": {}, "services": {}, "middlewares": {}}}
 
 def save_config(data):
-    with open(CONFIG_PATH, 'w') as f:
+    settings = load_settings()
+    with open(settings['traefik_dynamic_config'], 'w') as f:
         yaml.dump(data, f)
     logger.info("Configuration saved")
 

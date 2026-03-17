@@ -14,6 +14,14 @@ cert_resolver: cloudflare
 # ── Traefik API URL ───────────────────────────────────────────────────────────
 traefik_api_url: http://traefik:8080
 
+# ── Path Configuration ────────────────────────────────────────────────────────
+# Optional parameters.  Below are the defaults used when unspecified
+traefik_static_config: /app/traefik.yml
+traefik_dynamic_config: /app/config/dynamic.yml
+acme_json_path: /app/acme.json
+access_log_path: /app/logs/access.log
+backup_dir: /app/backup
+
 # ── Authentication ────────────────────────────────────────────────────────────
 # Set to false if using external auth (Authentik, Authelia, Traefik basicAuth).
 # AUTH_ENABLED env var takes priority over this field.
