@@ -20,8 +20,11 @@ traefik_api_url: http://traefik:8080
 auth_enabled: true
 
 # ── Password Hash ─────────────────────────────────────────────────────────────
-# Set automatically by the app. DO NOT edit manually.
-# To reset: delete this line and restart — you'll be sent to the setup screen.
+# Set automatically by the app. DO NOT edit manually unless pre-configuring.
+# If left empty the app auto-generates a temporary password on startup and
+# prints it to the container logs. You can also pre-set a bcrypt hash here
+# (use: python -c "import bcrypt; print(bcrypt.hashpw(b'yourpw', bcrypt.gensalt()).decode())")
+# and set setup_complete: true to skip the setup wizard entirely.
 password_hash: ""
 
 # ── Visible Tabs ──────────────────────────────────────────────────────────────
@@ -32,3 +35,12 @@ visible_tabs:
   certs: false
   plugins: false
   logs: false
+
+# ── Setup State ───────────────────────────────────────────────────────────────
+# Managed automatically by the app. Do not edit unless pre-configuring.
+# must_change_password: true forces a password-change on next login (set by
+#   auto-generation or `flask reset-password`).
+# setup_complete: true skips the setup wizard (set after wizard finishes, or
+#   set manually when pre-configuring this file).
+must_change_password: false
+setup_complete: false

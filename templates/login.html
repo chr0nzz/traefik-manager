@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if setup_mode %}Set Up Traefik Manager{% else %}Sign In — Traefik Manager{% endif %}</title>
+    <title>{% if setup_mode %}Set Up Traefik Manager{% elif force_change_mode %}Change Password — Traefik Manager{% else %}Sign In — Traefik Manager{% endif %}</title>
     <link rel="icon" type="image/x-icon" href="https://user.fm/files/v2-1b91adfdc6068ede7e20f5fe6bc80e41/fav.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -201,7 +201,57 @@
 </head>
 <body>
 
-{% if not setup_mode %}
+{% if force_change_mode %}
+
+<div style="width:100%;max-width:380px">
+    <div class="topbar">
+        <button class="theme-toggle" onclick="cycleTheme()" title="Toggle theme">
+            <i class="ph-bold ph-moon" id="themeIcon"></i>
+        </button>
+    </div>
+    <div class="card card-login">
+        <div class="logo">
+            <i class="ph-fill ph-traffic-signal logo-icon"></i>
+            <span class="logo-text">Traefik <span>Manager</span></span>
+        </div>
+        <div class="step-title">Set your permanent password</div>
+        <p class="step-subtitle">You're using a temporary password. Set a permanent one to continue.</p>
+        {% if error %}
+        <div class="banner banner-error">
+            <i class="ph-bold ph-warning-circle" style="flex-shrink:0;margin-top:1px"></i>
+            {{ error }}
+        </div>
+        {% endif %}
+        <form method="POST" action="{{ url_for('force_change_password') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="field">
+                <label for="new_password">New password</label>
+                <input type="password" id="new_password" name="new_password"
+                       placeholder="At least 8 characters" autofocus autocomplete="new-password"
+                       oninput="checkForcePwMatch()">
+            </div>
+            <div class="field">
+                <label for="confirm_password">Confirm password</label>
+                <input type="password" id="confirm_password" name="confirm_password"
+                       placeholder="Repeat your password" autocomplete="new-password"
+                       oninput="checkForcePwMatch()">
+                <p class="field-hint" id="forcePwHint" style="display:none"></p>
+            </div>
+            <div class="btn-row">
+                <button type="submit" id="forceSubmitBtn" class="btn-primary" disabled>
+                    <i class="ph-bold ph-check"></i> Set password
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="footer">
+        <a href="https://github.com/traefik/traefik" target="_blank">Traefik</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/chr0nzz/traefik-manager" target="_blank">Traefik Manager</a>
+    </div>
+</div>
+
+{% elif not setup_mode %}
 
 <div style="width:100%;max-width:380px">
     <div class="topbar">
@@ -216,6 +266,12 @@
         </div>
         <div class="step-title">Sign in</div>
         <p class="step-subtitle">Enter your password to access Traefik Manager.</p>
+        {% if temp_password_hint %}
+        <div class="banner banner-info">
+            <i class="ph-bold ph-info" style="flex-shrink:0;margin-top:1px"></i>
+            A temporary password was generated at startup — check your container logs.
+        </div>
+        {% endif %}
         {% if error %}
         <div class="banner banner-error">
             <i class="ph-bold ph-warning-circle" style="flex-shrink:0;margin-top:1px"></i>
@@ -258,15 +314,17 @@
             <span class="logo-text">Traefik <span>Manager</span></span>
         </div>
 
-        
+
         <div class="steps" id="stepIndicator" style="display:none">
             <div class="step-dot active" id="dot-1">1</div>
             <div class="step-line" id="line-1"></div>
             <div class="step-dot" id="dot-2">2</div>
             <div class="step-line" id="line-2"></div>
             <div class="step-dot" id="dot-3">3</div>
+            {% if not temp_password_mode %}
             <div class="step-line" id="line-3"></div>
             <div class="step-dot" id="dot-4"><i class="ph-bold ph-lock-key" style="font-size:11px"></i></div>
+            {% endif %}
         </div>
 
         
@@ -365,13 +423,19 @@
                 <button class="btn-secondary" onclick="goTo(1)">
                     <i class="ph-bold ph-arrow-left"></i> Back
                 </button>
+                {% if temp_password_mode %}
+                <button class="btn-primary" onclick="submitSetup()">
+                    <i class="ph-bold ph-check"></i> Finish setup
+                </button>
+                {% else %}
                 <button class="btn-primary" onclick="goTo(3)">
                     Next <i class="ph-bold ph-arrow-right"></i>
                 </button>
+                {% endif %}
             </div>
         </div>
 
-        
+        {% if not temp_password_mode %}
         <div class="step-panel" id="panel-3">
             <div class="step-title">Create your password</div>
             <p class="step-subtitle">Protects access to Traefik Manager. You can change it anytime from Settings.</p>
@@ -397,8 +461,8 @@
                 </button>
             </div>
         </div>
+        {% endif %}
 
-        
         <form method="POST" action="{{ url_for('setup') }}" id="setupForm" style="display:none">
             <input type="hidden" name="csrf_token"      value="{{ csrf_token }}">
             <input type="hidden" name="domains"         id="f_domains">
@@ -438,8 +502,10 @@ applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 
 {% if setup_mode %}
 
+const TEMP_PW_MODE = {{ 'true' if temp_password_mode else 'false' }};
 let currentStep = 0;
 const setupTabs = { docker: false, certs: false, plugins: false, logs: false };
+const MAX_STEP   = TEMP_PW_MODE ? 2 : 3;
 
 function goTo(step) {
     hideError();
@@ -452,20 +518,25 @@ function goTo(step) {
         indicator.style.display = 'none';
     } else {
         indicator.style.display = 'flex';
-        for (let i = 1; i <= 4; i++) {
+        for (let i = 1; i <= MAX_STEP; i++) {
             const dot  = document.getElementById('dot-' + i);
             const line = document.getElementById('line-' + i);
+            if (!dot) continue;
             if (i < step) {
                 dot.className = 'step-dot done';
                 dot.innerHTML = '<i class="ph-bold ph-check" style="font-size:10px"></i>';
                 if (line) line.classList.add('done');
             } else if (i === step) {
                 dot.className = 'step-dot active';
-                dot.innerHTML = i < 4 ? String(i) : '<i class="ph-bold ph-lock-key" style="font-size:11px"></i>';
+                dot.innerHTML = (!TEMP_PW_MODE && i === 4)
+                    ? '<i class="ph-bold ph-lock-key" style="font-size:11px"></i>'
+                    : String(i);
                 if (line) line.classList.remove('done');
             } else {
                 dot.className = 'step-dot';
-                dot.innerHTML = i < 4 ? String(i) : '<i class="ph-bold ph-lock-key" style="font-size:11px"></i>';
+                dot.innerHTML = (!TEMP_PW_MODE && i === 4)
+                    ? '<i class="ph-bold ph-lock-key" style="font-size:11px"></i>'
+                    : String(i);
                 if (line) line.classList.remove('done');
             }
         }
@@ -554,23 +625,52 @@ function checkPwMatch() {
 
 function submitSetup() {
     hideError();
-    const pw      = document.getElementById('s_password').value;
-    const confirm = document.getElementById('s_confirm').value;
-    if (pw.length < 8)  { showError('Password must be at least 8 characters.'); return; }
-    if (pw !== confirm) { showError('Passwords do not match.'); return; }
 
     document.getElementById('f_domains').value      = document.getElementById('s_domains').value.trim();
     document.getElementById('f_resolver').value     = document.getElementById('s_resolver').value.trim();
     document.getElementById('f_apiurl').value       = document.getElementById('s_apiurl').value.trim();
     document.getElementById('f_visible_tabs').value = JSON.stringify(setupTabs);
-    document.getElementById('f_password').value     = pw;
-    document.getElementById('f_confirm').value      = confirm;
 
-    const btn = document.getElementById('finishBtn');
-    btn.disabled  = true;
-    btn.innerHTML = '<i class="ph-bold ph-circle-notch" style="animation:spin 0.8s linear infinite"></i> Saving…';
+    if (!TEMP_PW_MODE) {
+        const pw      = document.getElementById('s_password').value;
+        const confirm = document.getElementById('s_confirm').value;
+        if (pw.length < 8)  { showError('Password must be at least 8 characters.'); return; }
+        if (pw !== confirm) { showError('Passwords do not match.'); return; }
+        document.getElementById('f_password').value = pw;
+        document.getElementById('f_confirm').value  = confirm;
+        const btn = document.getElementById('finishBtn');
+        btn.disabled  = true;
+        btn.innerHTML = '<i class="ph-bold ph-circle-notch" style="animation:spin 0.8s linear infinite"></i> Saving…';
+    }
 
     document.getElementById('setupForm').submit();
+}
+
+{% endif %}
+
+{% if force_change_mode %}
+function checkForcePwMatch() {
+    const pw      = document.getElementById('new_password').value;
+    const confirm = document.getElementById('confirm_password').value;
+    const hint    = document.getElementById('forcePwHint');
+    const btn     = document.getElementById('forceSubmitBtn');
+    if (!pw && !confirm) { hint.style.display = 'none'; btn.disabled = true; return; }
+    if (pw.length > 0 && pw.length < 8) {
+        hint.textContent = 'Password must be at least 8 characters.';
+        hint.style.color = 'var(--red)'; hint.style.display = 'block';
+        btn.disabled = true; return;
+    }
+    if (confirm && pw !== confirm) {
+        hint.textContent = 'Passwords do not match.';
+        hint.style.color = 'var(--red)'; hint.style.display = 'block';
+        btn.disabled = true; return;
+    }
+    if (pw.length >= 8 && pw === confirm) {
+        hint.textContent = '✓ Passwords match';
+        hint.style.color = 'var(--green)'; hint.style.display = 'block';
+        btn.disabled = false; return;
+    }
+    hint.style.display = 'none'; btn.disabled = true;
 }
 {% endif %}
 </script>

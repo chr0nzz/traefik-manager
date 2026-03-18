@@ -97,7 +97,9 @@ Explore the Traefik Manager interface and workflows. Click on a category below t
 - **Docker routes view** — see all routes discovered via Docker labels pulled directly from the Traefik API
 - **Automatic backups** — every config change creates a timestamped backup of `dynamic.yml`
 - **Built-in auth** — password-protected with bcrypt hashing, session management, and CSRF protection
-- **First-run setup wizard** — configure everything (domains, API URL, cert resolver, visible tabs, password) on first launch
+- **Auto-generated password** — a secure temporary password is printed to logs on first start; forced password-change flow afterwards
+- **CLI password reset** — `docker exec <container> flask reset-password` generates a new temporary password instantly
+- **First-run setup wizard** — configure everything (domains, API URL, cert resolver, visible tabs) on first launch
 - **Dark / light theme** — persisted per browser
 
 ---
@@ -294,28 +296,62 @@ docker run -d \
 
 ## First-run setup
 
-On first launch you'll be greeted by a setup wizard:
+On first launch a **temporary password is auto-generated** and printed to the container logs:
+
+```
+docker compose logs traefik-manager | grep -A3 "AUTO-GENERATED"
+```
+
+Use that password to log in. You'll then go through a quick setup wizard:
 
 1. **Connection & domains** — enter your base domains (e.g. `example.com, example.net`), certificate resolver name, and the internal Traefik API URL (usually `http://traefik:8080` on the same Docker network). Use the **Test connection** button to verify before proceeding.
 2. **Optional monitoring** — toggle on any of the four optional views (Docker, Certs, Plugins, Logs). You can change these anytime in Settings.
-3. **Password** — set a password (minimum 8 characters) to protect the UI.
 
-All settings are saved to `manager.yml` inside the config volume. The setup wizard only appears once — if you need to re-run it, delete `manager.yml` and restart the container.
+After the wizard you'll be prompted to **set a permanent password** before accessing the dashboard.
+
+All settings are saved to `manager.yml` inside the config volume. The setup wizard only runs once.
+
+### Pre-configuring manager.yml (skip the wizard)
+
+You can bypass the setup wizard entirely by pre-populating `manager.yml` before the first start:
+
+1. Generate a bcrypt password hash:
+   ```bash
+   python3 -c "import bcrypt; print(bcrypt.hashpw(b'yourpassword', bcrypt.gensalt()).decode())"
+   ```
+2. Edit `manager.yml` in your config volume:
+   ```yaml
+   domains:
+     - yourdomain.com
+   cert_resolver: cloudflare
+   traefik_api_url: http://traefik:8080
+   password_hash: "$2b$12$..."   # paste hash here
+   setup_complete: true
+   must_change_password: false
+   ```
+3. Start the container — the wizard and auto-generation are skipped.
 
 ---
 
 ## Resetting your password
 
-If you forget your password, remove the `password_hash` line from `manager.yml` and logout. The setup wizard will appear again for the password step.
+### Using the CLI (recommended)
+
+```bash
+docker exec traefik-manager flask reset-password
+```
+
+This generates a new temporary password, prints it to the terminal, and requires you to change it on next login.
+
+### Manual reset
+
+If you cannot exec into the container, remove the `password_hash` from `manager.yml` and also set `setup_complete: false`. Then restart the container — a new temporary password will be auto-generated and printed to the logs.
 
 ```bash
 nano /path/to/traefik-manager/config/manager.yml
-```
-
-Remove or blank the `password_hash` line, then:
-
-```bash
+# Remove or blank password_hash, set setup_complete: false
 docker restart traefik-manager
+docker compose logs traefik-manager | grep -A3 "AUTO-GENERATED"
 ```
 
 ---
@@ -327,6 +363,27 @@ If you're protecting Traefik Manager externally via Authentik, Authelia, or a Tr
 ```yaml
 environment:
   - AUTH_ENABLED=false
+```
+
+---
+
+## Configurable paths
+
+By default the container uses these paths:
+
+| Purpose | Default path | Override via env var |
+|---|---|---|
+| Traefik dynamic config | `/app/config/dynamic.yml` | `CONFIG_PATH` |
+| Backup directory | `/app/backups` | `BACKUP_DIR` |
+| Manager settings | `/app/config/manager.yml` | `SETTINGS_PATH` |
+
+Example — useful for Podman or non-standard volume layouts:
+
+```yaml
+environment:
+  - CONFIG_PATH=/data/traefik/dynamic.yml
+  - BACKUP_DIR=/data/traefik-manager/backups
+  - SETTINGS_PATH=/data/traefik-manager/manager.yml
 ```
 
 ---

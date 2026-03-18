@@ -64,12 +64,17 @@ yaml.width = 4096
 safe_yaml = SafeYAML(typ='safe')
 
 
-CONFIG_PATH   = '/app/config/dynamic.yml'
-BACKUP_DIR    = '/app/backups'
-SETTINGS_PATH = '/app/config/manager.yml'
+CONFIG_PATH   = os.environ.get('CONFIG_PATH',   '/app/config/dynamic.yml')
+BACKUP_DIR    = os.environ.get('BACKUP_DIR',    '/app/backups')
+SETTINGS_PATH = os.environ.get('SETTINGS_PATH', '/app/config/manager.yml')
 
 
-_ALLOWED_FILE_PREFIXES = ('/app/',)
+_ALLOWED_FILE_PREFIXES = tuple(sorted(set([
+    '/app/',
+    os.path.dirname(os.path.abspath(CONFIG_PATH))   + '/',
+    os.path.abspath(BACKUP_DIR)                     + '/',
+    os.path.dirname(os.path.abspath(SETTINGS_PATH)) + '/',
+])))
 _ALLOWED_API_SCHEMES   = ('http://', 'https://')
 
 def _safe_file_path(path: str) -> str:
@@ -98,12 +103,14 @@ OPTIONAL_TABS = ['docker', 'certs', 'plugins', 'logs']
 
 def load_settings() -> dict:
     defaults = {
-        'domains':         [d.strip() for d in os.environ.get('DOMAINS', 'example.com').split(',') if d.strip()] or ['example.com'],
-        'cert_resolver':   os.environ.get('CERT_RESOLVER', 'cloudflare'),
-        'traefik_api_url': os.environ.get('TRAEFIK_API_URL', 'http://traefik:8080'),
-        'auth_enabled':    True,
-        'password_hash':   '',
-        'visible_tabs':    {t: False for t in OPTIONAL_TABS},
+        'domains':              [d.strip() for d in os.environ.get('DOMAINS', 'example.com').split(',') if d.strip()] or ['example.com'],
+        'cert_resolver':        os.environ.get('CERT_RESOLVER', 'cloudflare'),
+        'traefik_api_url':      os.environ.get('TRAEFIK_API_URL', 'http://traefik:8080'),
+        'auth_enabled':         True,
+        'password_hash':        '',
+        'visible_tabs':         {t: False for t in OPTIONAL_TABS},
+        'must_change_password': False,
+        'setup_complete':       False,
     }
     if not os.path.exists(SETTINGS_PATH):
         return defaults
@@ -127,6 +134,15 @@ def load_settings() -> dict:
                 if t in data['visible_tabs']:
                     vt[t] = bool(data['visible_tabs'][t])
             merged['visible_tabs'] = vt
+        if 'must_change_password' in data:
+            merged['must_change_password'] = bool(data['must_change_password'])
+        if 'setup_complete' in data:
+            merged['setup_complete'] = bool(data['setup_complete'])
+        else:
+            # Backward-compat: existing installs with a password_hash already set
+            # are treated as having completed setup so the wizard doesn't re-appear.
+            if merged['password_hash']:
+                merged['setup_complete'] = True
         return merged
     except Exception as e:
         logger.warning(f"Could not load manager.yml, using defaults: {e}")
@@ -134,18 +150,28 @@ def load_settings() -> dict:
 
 
 def save_settings(domains, cert_resolver, traefik_api_url,
-                  auth_enabled=True, password_hash='', visible_tabs=None):
+                  auth_enabled=True, password_hash='', visible_tabs=None,
+                  must_change_password=None, setup_complete=None):
     if visible_tabs is None:
         visible_tabs = {t: False for t in OPTIONAL_TABS}
+    # Preserve existing values for the new flags if callers don't supply them
+    if must_change_password is None or setup_complete is None:
+        _cur = load_settings()
+        if must_change_password is None:
+            must_change_password = _cur.get('must_change_password', False)
+        if setup_complete is None:
+            setup_complete = _cur.get('setup_complete', False)
     os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
     with open(SETTINGS_PATH, 'w') as f:
         yaml.dump({
-            'domains':         domains,
-            'cert_resolver':   cert_resolver,
-            'traefik_api_url': traefik_api_url,
-            'auth_enabled':    auth_enabled,
-            'password_hash':   password_hash,
-            'visible_tabs':    visible_tabs,
+            'domains':              domains,
+            'cert_resolver':        cert_resolver,
+            'traefik_api_url':      traefik_api_url,
+            'auth_enabled':         auth_enabled,
+            'password_hash':        password_hash,
+            'visible_tabs':         visible_tabs,
+            'must_change_password': must_change_password,
+            'setup_complete':       setup_complete,
         }, f)
     logger.info("Manager settings saved")
 
@@ -164,6 +190,32 @@ def _auth_enabled() -> bool:
     return load_settings().get('auth_enabled', True)
 
 
+def _ensure_password():
+    """Auto-generate an admin password on first run if none is configured."""
+    if os.environ.get('ADMIN_PASSWORD', '').strip():
+        return  # env-var password takes priority — nothing to do
+    settings = load_settings()
+    if settings.get('password_hash', ''):
+        return  # password already stored in config
+    password = secrets.token_urlsafe(16)  # 22-char URL-safe string
+    logger.warning("=" * 60)
+    logger.warning("  TRAEFIK MANAGER — AUTO-GENERATED PASSWORD")
+    logger.warning(f"  Password: {password}")
+    logger.warning("  Log in with this password, complete setup, then")
+    logger.warning("  you will be prompted to set a permanent password.")
+    logger.warning("=" * 60)
+    save_settings(
+        domains=settings['domains'],
+        cert_resolver=settings['cert_resolver'],
+        traefik_api_url=settings['traefik_api_url'],
+        auth_enabled=settings['auth_enabled'],
+        password_hash=_hash_password(password),
+        visible_tabs=settings['visible_tabs'],
+        must_change_password=True,
+        setup_complete=False,
+    )
+
+
 _s = load_settings()
 logger.info("===========================================")
 logger.info("Starting Traefik Manager")
@@ -175,6 +227,8 @@ logger.info(f"Cert Resolver:  {_s['cert_resolver']}")
 logger.info(f"Traefik API:    {_s['traefik_api_url']}")
 logger.info(f"Auth Enabled:   {_auth_enabled()}")
 logger.info("===========================================")
+
+_ensure_password()
 
 
 def _get_csrf_token() -> str:
@@ -281,17 +335,18 @@ def login():
     if session.get('authenticated'):
         return redirect(url_for('index'))
 
-
-    if not _has_password_set():
-        return redirect(url_for('setup'))
+    settings = load_settings()
+    temp_password_hint = (
+        settings.get('must_change_password', False)
+        and not os.environ.get('ADMIN_PASSWORD', '').strip()
+    )
 
     error = None
     if request.method == 'POST':
         _check_csrf()
-        password    = request.form.get('password', '')
-        settings    = load_settings()
-        pw_hash     = settings.get('password_hash', '')
-        admin_pw    = os.environ.get('ADMIN_PASSWORD', '').strip()
+        password = request.form.get('password', '')
+        pw_hash  = settings.get('password_hash', '')
+        admin_pw = os.environ.get('ADMIN_PASSWORD', '').strip()
 
         if admin_pw:
             ok = secrets.compare_digest(password, admin_pw)
@@ -300,18 +355,24 @@ def login():
 
         if ok:
             session.clear()
-            session.permanent = True 
+            session.permanent = True
             session['authenticated'] = True
             session['last_active']   = time.time()
             session['login_time']    = datetime.now(timezone.utc).isoformat()
-            next_url = request.form.get('next') or url_for('index')
+            logger.info(f"Successful login from {request.remote_addr}")
 
+            # Redirect to the appropriate next step
+            if settings.get('must_change_password', False) and not admin_pw:
+                if not settings.get('setup_complete', False):
+                    return redirect(url_for('setup'))
+                else:
+                    return redirect(url_for('force_change_password'))
+
+            next_url = request.form.get('next') or url_for('index')
             if not next_url.startswith('/'):
                 next_url = url_for('index')
-            logger.info(f"Successful login from {request.remote_addr}")
             return redirect(next_url)
         else:
-
             import hmac as _hmac
             _hmac.compare_digest('a', 'b')
             time.sleep(0.3)
@@ -319,19 +380,32 @@ def login():
             logger.warning(f"Failed login attempt from {request.remote_addr}")
 
     next_url = request.args.get('next', '')
-    return render_template('login.html', error=error, next=next_url, csrf_token=_get_csrf_token())
+    return render_template('login.html', error=error, next=next_url,
+                           csrf_token=_get_csrf_token(),
+                           temp_password_hint=temp_password_hint)
 
 
 @app.route('/setup', methods=['GET', 'POST'])
 def setup():
-    """First-run setup wizard. Only accessible when no password has been set yet."""
+    """Setup wizard. Accessible on first run (setup_complete=False). Requires auth when a password exists."""
     if not _auth_enabled():
         return redirect(url_for('index'))
-    if _has_password_set():
-        return redirect(url_for('login'))
-
 
     current = load_settings()
+
+    # If setup is already done, go to the appropriate page
+    if current.get('setup_complete', False):
+        if current.get('must_change_password', False):
+            return redirect(url_for('force_change_password'))
+        return redirect(url_for('index'))
+
+    # When a password exists (auto-generated or pre-configured) require login first
+    if _has_password_set() and not session.get('authenticated'):
+        return redirect(url_for('login'))
+
+    # In temp-password mode the wizard skips step 4 (password is already set)
+    temp_password_mode = current.get('must_change_password', False) and bool(current.get('password_hash', ''))
+
     defaults = {
         'domains':         current['domains'],
         'cert_resolver':   current['cert_resolver'],
@@ -342,16 +416,14 @@ def setup():
     if request.method == 'POST':
         _check_csrf()
 
-
-        domains_raw     = request.form.get('domains', '').strip()
-        cert_resolver   = request.form.get('cert_resolver', '').strip()
-        traefik_api_url = request.form.get('traefik_api_url', '').strip()
+        domains_raw      = request.form.get('domains', '').strip()
+        cert_resolver    = request.form.get('cert_resolver', '').strip()
+        traefik_api_url  = request.form.get('traefik_api_url', '').strip()
         visible_tabs_raw = request.form.get('visible_tabs', '{}')
-        pw              = request.form.get('password', '')
-        confirm         = request.form.get('confirm', '')
+        pw               = request.form.get('password', '')
+        confirm          = request.form.get('confirm', '')
 
         domains = [d.strip() for d in domains_raw.split(',') if d.strip()]
-
 
         if not domains:
             error = 'Enter at least one domain.'
@@ -359,12 +431,11 @@ def setup():
             error = 'Enter the Traefik API URL.'
         elif not _safe_api_url(traefik_api_url):
             error = 'Traefik API URL must start with http:// or https://'
-        elif len(pw) < 8:
+        elif not temp_password_mode and len(pw) < 8:
             error = 'Password must be at least 8 characters.'
-        elif pw != confirm:
+        elif not temp_password_mode and pw != confirm:
             error = 'Passwords do not match.'
         else:
-
             import json as _json
             try:
                 vt_raw = _json.loads(visible_tabs_raw)
@@ -372,15 +443,23 @@ def setup():
             except Exception:
                 visible_tabs = {t: False for t in OPTIONAL_TABS}
 
+            pw_hash = current['password_hash'] if temp_password_mode else _hash_password(pw)
             save_settings(
                 domains=domains,
                 cert_resolver=cert_resolver or 'cloudflare',
                 traefik_api_url=traefik_api_url,
                 auth_enabled=True,
-                password_hash=_hash_password(pw),
+                password_hash=pw_hash,
                 visible_tabs=visible_tabs,
+                must_change_password=current.get('must_change_password', False),
+                setup_complete=True,
             )
             logger.info(f"Setup wizard completed from {request.remote_addr}")
+
+            if temp_password_mode:
+                # Session already valid; redirect to forced password change
+                return redirect(url_for('force_change_password'))
+
             session.clear()
             session.permanent        = True
             session['authenticated'] = True
@@ -389,7 +468,8 @@ def setup():
             return redirect(url_for('index'))
 
     return render_template('login.html', setup_mode=True, error=error,
-                           defaults=defaults, csrf_token=_get_csrf_token())
+                           defaults=defaults, csrf_token=_get_csrf_token(),
+                           temp_password_mode=temp_password_mode)
 
 
 @app.route('/logout', methods=['POST'])
@@ -398,6 +478,66 @@ def logout():
     session.clear()
     logger.info(f"User logged out from {request.remote_addr}")
     return redirect(url_for('login'))
+
+
+@app.route('/force-change-password', methods=['GET', 'POST'])
+@login_required
+def force_change_password():
+    """Forced password change for auto-generated or CLI-reset passwords."""
+    settings = load_settings()
+    if not settings.get('must_change_password', False):
+        return redirect(url_for('index'))
+
+    error = None
+    if request.method == 'POST':
+        _check_csrf()
+        new_pw  = request.form.get('new_password', '')
+        confirm = request.form.get('confirm_password', '')
+        if len(new_pw) < 8:
+            error = 'Password must be at least 8 characters.'
+        elif new_pw != confirm:
+            error = 'Passwords do not match.'
+        else:
+            save_settings(
+                domains=settings['domains'],
+                cert_resolver=settings['cert_resolver'],
+                traefik_api_url=settings['traefik_api_url'],
+                auth_enabled=settings['auth_enabled'],
+                password_hash=_hash_password(new_pw),
+                visible_tabs=settings['visible_tabs'],
+                must_change_password=False,
+                setup_complete=True,
+            )
+            logger.info(f"Forced password change completed from {request.remote_addr}")
+            return redirect(url_for('index'))
+
+    return render_template('login.html', force_change_mode=True, error=error,
+                           csrf_token=_get_csrf_token())
+
+
+@app.cli.command('reset-password')
+def reset_password_cli():
+    """Generate a new temporary password, save it, and print it to stdout.
+
+    Usage: docker exec <container> flask reset-password
+    """
+    password = secrets.token_urlsafe(16)
+    settings = load_settings()
+    save_settings(
+        domains=settings['domains'],
+        cert_resolver=settings['cert_resolver'],
+        traefik_api_url=settings['traefik_api_url'],
+        auth_enabled=settings.get('auth_enabled', True),
+        password_hash=_hash_password(password),
+        visible_tabs=settings['visible_tabs'],
+        must_change_password=True,
+        setup_complete=settings.get('setup_complete', True),
+    )
+    print("=" * 60)
+    print("TRAEFIK MANAGER — PASSWORD RESET")
+    print(f"New temporary password: {password}")
+    print("You will be required to change it on next login.")
+    print("=" * 60)
 
 
 @app.route('/api/auth/change-password', methods=['POST'])
@@ -554,10 +694,11 @@ def api_manager_version():
 
 
 @app.route('/api/setup/test-connection', methods=['POST'])
+@login_required
 def api_setup_test_connection():
-    """Public endpoint used during setup wizard to test a Traefik API URL before it's saved."""
-    if _has_password_set():
-
+    """Test a Traefik API URL during setup wizard (requires auth)."""
+    settings = load_settings()
+    if settings.get('setup_complete', False):
         return jsonify({'ok': False, 'error': 'Setup already complete'}), 403
     data    = request.get_json(silent=True) or {}
     raw_url = str(data.get('url', '')).strip()
@@ -886,8 +1027,12 @@ def save_entry():
         if is_edit and original_id and original_id != router_name:
             for sec in ('http', 'tcp', 'udp'):
                 s = config.get(sec, {})
-                s.get('routers', {}).pop(original_id, None)
-                s.get('services', {}).pop(f"{original_id}-service", None)
+                old_routers = s.get('routers', {})
+                old_svc = (old_routers.get(original_id, {}).get('service') or '').strip()
+                if original_id in old_routers:
+                    del old_routers[original_id]
+                if old_svc and 'services' in s and old_svc in s['services']:
+                    del s['services'][old_svc]
 
         if protocol == 'http':
             rule       = f"Host(`{subdomain}`)" if '.' in subdomain else (f"Host(`{subdomain}.{domain}`)" if subdomain else f"Host(`{domain}`)")
@@ -933,10 +1078,10 @@ def delete_entry(router_id):
         for sec in ('http', 'tcp', 'udp'):
             s = config.get(sec, {})
             if router_id in s.get('routers', {}):
-                svc = s['routers'][router_id].get('service')
+                svc = (s['routers'][router_id].get('service') or '').strip()
                 del s['routers'][router_id]
-                if svc:
-                    s.get('services', {}).pop(svc, None)
+                if svc and 'services' in s and svc in s['services']:
+                    del s['services'][svc]
         save_config(config)
         flash(f"Deleted {router_id}", "success")
     except Exception:
