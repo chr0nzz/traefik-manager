@@ -1,0 +1,70 @@
+<div id="mwModal" class="modal-overlay" style="display:none">
+    <div class="modal-box" style="max-width:620px">
+        <form action="{{ url_for('save_middleware') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="isMwEdit" id="isMwEdit" value="false">
+            <input type="hidden" name="originalMwId" id="originalMwId" value="">
+
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+                <div class="flex items-center gap-2">
+                    <i class="ph-bold ph-plugs-connected" style="color:var(--purple)"></i>
+                    <h3 class="font-bold text-sm text-white" id="mwModalTitle">Add Middleware</h3>
+                </div>
+                <button type="button" onclick="closeMwModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+            </div>
+
+            <div class="px-5 py-4 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label>Name</label>
+                        <input type="text" name="middlewareName" id="middlewareName" required class="input-field" placeholder="my-auth">
+                    </div>
+                    <div>
+                        <label>Template</label>
+                        <select id="mwTemplate" onchange="applyMwTemplate(this)" class="input-field">
+                            <option value="">Custom…</option>
+                            <optgroup label="Auth">
+                                <option value="basicAuth">Basic Auth</option>
+                                <option value="digestAuth">Digest Auth</option>
+                                <option value="forwardAuth">Forward Auth</option>
+                                <option value="forwardAuthAuthentik">Forward Auth (Authentik)</option>
+                                <option value="forwardAuthAuthelia">Forward Auth (Authelia)</option>
+                            </optgroup>
+                            <optgroup label="Security">
+                                <option value="ipAllowList">IP Allow List</option>
+                                <option value="ipAllowListPrivate">IP Allow List (Private Ranges)</option>
+                                <option value="rateLimit">Rate Limit</option>
+                                <option value="secureHeaders">Secure Headers</option>
+                                <option value="corsHeaders">CORS Headers</option>
+                            </optgroup>
+                            <optgroup label="Routing">
+                                <option value="redirectScheme">Redirect to HTTPS</option>
+                                <option value="redirectRegex">Redirect Regex</option>
+                                <option value="stripPrefix">Strip Prefix</option>
+                                <option value="addPrefix">Add Prefix</option>
+                                <option value="replacePath">Replace Path</option>
+                            </optgroup>
+                            <optgroup label="Advanced">
+                                <option value="compress">Gzip Compress</option>
+                                <option value="retry">Retry</option>
+                                <option value="circuitBreaker">Circuit Breaker</option>
+                                <option value="buffering">Buffering</option>
+                                <option value="chain">Middleware Chain</option>
+                                <option value="inFlightReq">In-Flight Limit</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label>Configuration (YAML)</label>
+                    <textarea name="middlewareContent" id="middlewareContent" rows="10" required class="input-field font-mono" style="resize:vertical; line-height:1.6"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 px-5 py-4" style="border-top:1px solid var(--border)">
+                <button type="button" onclick="closeMwModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Save Middleware</button>
+            </div>
+        </form>
+    </div>
+</div>

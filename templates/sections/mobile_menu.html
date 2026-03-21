@@ -1,0 +1,32 @@
+<div id="mobileMenu">
+    <button onclick="openModal(); closeMobileMenu()" class="mobile-menu-item">
+        <i class="ph-bold ph-plus" style="color:var(--blue)"></i> Add Route
+    </button>
+    <button onclick="openMwModal(); closeMobileMenu()" class="mobile-menu-item">
+        <i class="ph-bold ph-plugs-connected" style="color:var(--purple)"></i> Add Middleware
+    </button>
+    <button onclick="openSettingsModal(); closeMobileMenu()" class="mobile-menu-item">
+        <i class="ph-bold ph-gear" style="color:var(--muted)"></i> Settings
+    </button>
+    {% if auth_enabled %}
+    <div class="mobile-menu-divider"></div>
+    <form method="POST" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="mobile-menu-item" style="width:100%;color:var(--red)">
+            <i class="ph-bold ph-sign-out" style="color:var(--red)"></i> Sign out
+        </button>
+    </form>
+    {% endif %}
+    <button id="pwaInstallBtnMobile" class="mobile-menu-item hidden" onclick="installPWA(); closeMobileMenu()">
+        <i class="ph-bold ph-device-mobile" style="color:var(--green)"></i> Install as App
+    </button>
+    <div class="mobile-menu-divider"></div>
+    <div class="px-2 py-1">
+        <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--muted)">Theme</div>
+        <div class="flex gap-2">
+            <button onclick="setTheme('dark')" id="theme-dark-m" class="theme-btn flex-1 justify-center"><i class="ph-bold ph-moon text-xs mr-1"></i>Dark</button>
+            <button onclick="setTheme('light')" id="theme-light-m" class="theme-btn flex-1 justify-center"><i class="ph-bold ph-sun text-xs mr-1"></i>Light</button>
+            <button onclick="setTheme('system')" id="theme-system-m" class="theme-btn flex-1 justify-center"><i class="ph-bold ph-desktop text-xs mr-1"></i>System</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,55 @@
+<nav class="sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex items-center justify-between h-14">
+
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <i class="ph-fill ph-traffic-signal text-2xl" style="color: var(--blue)"></i>
+                    <span class="font-bold text-base tracking-tight" style="color:var(--text)">Traefik <span style="color:var(--blue)">Manager</span></span>
+                </div>
+            </div>
+
+            <div class="hidden sm:flex items-center gap-2">
+                <button id="versionBadge" class="hidden nav-btn font-mono" title="Traefik version">
+                    <span id="apiStatusDot" style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span>
+                    <i class="ph-bold ph-git-branch"></i>
+                    <span id="versionText">—</span>
+                </button>
+                <div id="updateBadge" class="hidden"></div>
+                <button onclick="cycleTheme()" id="themeToggleBtn" class="nav-btn" title="Toggle theme">
+                    <i class="ph-bold ph-moon" id="themeIcon"></i>
+                </button>
+                <button onclick="openSettingsModal()" class="nav-btn" title="Settings">
+                    <i class="ph-bold ph-gear"></i>
+                </button>
+                {% if auth_enabled %}
+                <form method="POST" action="{{ url_for('logout') }}" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="nav-btn" title="Sign out" style="color:var(--muted)">
+                        <i class="ph-bold ph-sign-out"></i>
+                    </button>
+                </form>
+                {% endif %}
+                <button onclick="openMwModal()" class="nav-btn" title="Add Middleware">
+                    <i class="ph-bold ph-plugs-connected"></i>
+                    <span>Middleware</span>
+                </button>
+                <button onclick="openModal()" class="nav-btn nav-btn-primary">
+                    <i class="ph-bold ph-plus"></i>
+                    <span>Add Route</span>
+                </button>
+            </div>
+
+            <div class="flex sm:hidden items-center gap-2">
+                <div id="versionBadgeMobile" class="hidden items-center gap-1 px-2 py-1 rounded-md text-xs font-mono" style="background:var(--btn-secondary-bg); border:1px solid var(--border); color:var(--muted)">
+                    <span id="apiStatusDotMobile" style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>
+                    <i class="ph-bold ph-git-branch text-xs"></i>
+                    <span id="versionTextMobile">—</span>
+                </div>
+                <button onclick="toggleMobileMenu()" class="btn-icon" id="hamburgerBtn">
+                    <i class="ph-bold ph-list text-xl" id="hamburgerIcon"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>

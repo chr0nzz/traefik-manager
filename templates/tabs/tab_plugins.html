@@ -1,0 +1,23 @@
+<div id="tab-plugins" class="tab-content">
+    <div class="flex items-center justify-between mb-4">
+        <div></div>
+        <div class="flex items-center gap-2">
+            <a href="https://plugins.traefik.io/plugins" target="_blank" class="btn-secondary text-xs" style="text-decoration:none">
+                <i class="ph-bold ph-puzzle-piece"></i> Browse Plugins
+            </a>
+            <button onclick="refreshPluginsTab()" class="btn-secondary text-xs">
+                <i class="ph-bold ph-arrows-clockwise"></i> Refresh
+            </button>
+        </div>
+    </div>
+    <div class="mb-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(36,161,222,0.08);border:1px solid rgba(36,161,222,0.2);color:var(--blue)">
+        <i class="ph-bold ph-info"></i>
+        Plugins are managed in your static <code class="font-mono">traefik.yml</code> under <code class="font-mono">experimental.plugins</code> and must be edited there directly.
+    </div>
+    <div id="pluginsContent">
+        <div class="text-center py-16" style="color:var(--muted)">
+            <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
+            <p>Loading plugins...</p>
+        </div>
+    </div>
+</div>

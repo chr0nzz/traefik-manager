@@ -31,7 +31,23 @@ password_hash: ""
 # Show or hide optional tabs. Routes, Middlewares, and Services are always on.
 # Toggle these in the Settings modal or edit here and restart.
 visible_tabs:
+  # Infrastructure
   docker: false
+  kubernetes: false
+  # Orchestrators
+  swarm: false
+  nomad: false
+  ecs: false
+  consulcatalog: false
+  # KV stores
+  redis: false
+  etcd: false
+  consul: false
+  zookeeper: false
+  # Config providers
+  http_provider: false
+  file_external: false
+  # System
   certs: false
   plugins: false
   logs: false

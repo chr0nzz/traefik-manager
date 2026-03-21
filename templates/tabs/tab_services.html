@@ -1,0 +1,118 @@
+<div id="tab-services" class="tab-content active">
+
+    <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
+        <div class="relative flex-1 min-w-48">
+            <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
+            <input type="text" id="searchRoutes" oninput="filterRoutes()" placeholder="Search routes..." class="input-field pl-9">
+        </div>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:#0d1117; border:1px solid var(--border)">
+            <button onclick="filterProto('all')" id="filterAll" class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+            <button onclick="filterProto('http')" id="filterHTTP" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
+            <button onclick="filterProto('tcp')" id="filterTCP" class="proto-btn text-xs px-3 py-1.5">TCP</button>
+            <button onclick="filterProto('udp')" id="filterUDP" class="proto-btn text-xs px-3 py-1.5">UDP</button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="routeGrid">
+        {% for app in apps %}
+        {% set raw_rule = app.rule | replace("Host(`", "") | replace("`)", "") %}
+        {% if " && " in raw_rule %}
+            {% set domain = raw_rule[:raw_rule.find(" && ")] %}
+        {% else %}
+            {% set domain = raw_rule %}
+        {% endif %}
+
+        <div class="card route-card" data-protocol="{{ app.protocol }}" data-name="{{ app.name | lower }}" data-routekey="{{ app.name }}" data-idx="{{ loop.index0 }}">
+
+            <div class="route-card-inner p-4 pb-2">
+            <div class="flex justify-between items-start mb-3">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-0.5">
+                        {% if app.protocol == 'http' %}<span class="badge badge-http">HTTP</span>
+                        {% elif app.protocol == 'tcp' %}<span class="badge badge-tcp">TCP</span>
+                        {% else %}<span class="badge badge-udp">UDP</span>{% endif %}
+                        <span id="svc-status-{{ loop.index }}" class="status-dot status-checking" title="Checking..."></span>
+                    </div>
+                    <h3 class="font-bold text-sm text-white mt-1.5 truncate transition-colors">{{ app.name }}</h3>
+                    <div class="text-xs font-mono truncate" style="color:var(--muted)">{{ app.service_name }}</div>
+                </div>
+                <div class="flex items-center gap-0.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()">
+                    <button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="btn-icon" title="View details">
+                        <i class="ph-bold ph-info text-sm"></i>
+                    </button>
+                    {% if app.protocol == 'http' and domain and '{' not in domain and '*' not in domain and 'HostRegexp' not in domain %}
+                    <a href="https://{{ domain }}" target="_blank" class="btn-icon" title="Open site">
+                        <i class="ph-bold ph-arrow-square-out text-sm"></i>
+                    </a>
+                    {% endif %}
+                    <button type="button" data-app='{{ app|tojson|safe }}' onclick="handleEdit(this)" class="btn-icon" title="Edit">
+                        <i class="ph-bold ph-pencil-simple text-sm"></i>
+                    </button>
+                    <form action="{{ url_for('delete_entry', router_id=app.id) }}" method="POST" onsubmit="return confirm('Delete {{ app.name }}?');" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn-danger" title="Delete">
+                            <i class="ph-bold ph-trash text-sm"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% if app.protocol == 'http' %}
+            <div class="space-y-2">
+                <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
+                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div>
+                    <div class="text-xs font-mono truncate" style="color:#58a6ff" title="{{ app.rule }}">{{ domain or app.rule }}</div>
+                </div>
+                <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
+                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
+                    <div class="text-xs font-mono truncate" style="color:#7ee787">{{ app.target }}</div>
+                </div>
+                {% if app.entryPoints %}
+                <div class="flex flex-wrap gap-1">
+                    {% for ep in app.entryPoints %}
+                    <span class="badge badge-muted text-xs">{{ ep }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if app.middlewares %}
+                <div class="flex flex-wrap gap-1">
+                    {% for mw in app.middlewares %}
+                    <span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">{{ mw }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="space-y-2">
+                {% if app.rule %}
+                <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
+                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div>
+                    <div class="text-xs font-mono truncate" style="color:#58a6ff">{{ app.rule }}</div>
+                </div>
+                {% endif %}
+                <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
+                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
+                    <div class="text-xs font-mono truncate" style="color:#7ee787">{{ app.target }}</div>
+                </div>
+                {% if app.entryPoints %}
+                <div class="flex flex-wrap gap-1">
+                    {% for ep in app.entryPoints %}
+                    <span class="badge badge-muted text-xs">{{ ep }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not apps %}
+    <div class="text-center py-20" style="color:var(--muted)">
+        <i class="ph-light ph-layout text-6xl block mb-4 opacity-30"></i>
+        <p class="text-base font-medium">No routes configured yet</p>
+        <p class="text-sm mt-1">Click <strong>Add Route</strong> to get started</p>
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,120 @@
+<div id="appModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+        <form action="{{ url_for('save_entry') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="isEdit" id="isEdit" value="false">
+            <input type="hidden" name="originalId" id="originalId" value="">
+            <input type="hidden" name="protocol" id="protocolHidden" value="http">
+
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+                <div class="flex items-center gap-2">
+                    <i class="ph-bold ph-layout" style="color:var(--blue)"></i>
+                    <h3 class="font-bold text-sm text-white" id="modalTitle">Add Route</h3>
+                </div>
+                <button type="button" onclick="closeModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+            </div>
+
+            <div class="px-5 py-4 space-y-4">
+                <div>
+                    <label>Protocol</label>
+                    <div class="proto-toggle">
+                        <button type="button" class="proto-btn active-http" id="protoHTTP" onclick="setProtocol('http')">HTTP</button>
+                        <button type="button" class="proto-btn" id="protoTCP" onclick="setProtocol('tcp')">TCP</button>
+                        <button type="button" class="proto-btn" id="protoUDP" onclick="setProtocol('udp')">UDP</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label>Route / Service Name</label>
+                    <input type="text" name="serviceName" id="serviceName" required class="input-field" placeholder="e.g. my-app">
+                </div>
+
+                <div id="httpSection" class="protocol-section active space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label>Subdomain</label>
+                            <input type="text" name="subdomain" id="subdomain" class="input-field" placeholder="app">
+                        </div>
+                        <div>
+                            <label>Domain</label>
+                            <select name="domain" id="domain" class="input-field">
+                                {% for d in domains %}
+                                <option value="{{ d }}">{{ d }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label>Target IP / Host</label>
+                            <input type="text" name="targetIp" id="targetIp" class="input-field" placeholder="10.0.0.10">
+                        </div>
+                        <div>
+                            <label>Port</label>
+                            <input type="text" name="targetPort" id="targetPort" class="input-field" placeholder="8080">
+                        </div>
+                    </div>
+                    <div>
+                        <label>Entry Points (comma separated)</label>
+                        <input type="text" name="entryPoints" id="entryPoints" class="input-field" value="https" placeholder="https">
+                    </div>
+                    <div>
+                        <label>Middlewares (comma separated)</label>
+                        <input type="text" name="middlewares" id="middlewares" class="input-field" placeholder="auth@file, redirect-https">
+                    </div>
+                </div>
+
+                <div id="tcpSection" class="protocol-section space-y-4">
+                    <div>
+                        <label>Rule (SNI)</label>
+                        <input type="text" name="tcpRule" id="tcpRule" class="input-field" placeholder="HostSNI(`tcp.example.com`) or HostSNI(`*`)">
+                        <p class="text-xs mt-1" style="color:var(--muted)">Use <code class="font-mono">HostSNI(`*`)</code> to match all TLS or leave empty for passthrough</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label>Target IP / Host</label>
+                            <input type="text" name="targetIp" id="targetIpTcp" class="input-field" placeholder="10.0.0.10">
+                        </div>
+                        <div>
+                            <label>Port</label>
+                            <input type="text" name="targetPort" id="targetPortTcp" class="input-field" placeholder="5432">
+                        </div>
+                    </div>
+                    <div>
+                        <label>Entry Points</label>
+                        <input type="text" name="entryPoints" id="entryPointsTcp" class="input-field" placeholder="tcp, postgres">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="useTls" id="useTls" value="true" class="rounded" style="accent-color:var(--blue)">
+                        <span class="text-sm" style="color:#e6edf3">Enable TLS (with cert resolver)</span>
+                    </div>
+                </div>
+
+                <div id="udpSection" class="protocol-section space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label>Target IP / Host</label>
+                            <input type="text" name="targetIp" id="targetIpUdp" class="input-field" placeholder="10.0.0.10">
+                        </div>
+                        <div>
+                            <label>Port</label>
+                            <input type="text" name="targetPort" id="targetPortUdp" class="input-field" placeholder="53">
+                        </div>
+                    </div>
+                    <div>
+                        <label>Entry Point</label>
+                        <input type="text" name="udpEntryPoint" id="entryPointsUdp" class="input-field" placeholder="e.g. qbittorrent-udp">
+                    </div>
+                    <div class="rounded-md p-3 text-xs" style="background:rgba(240,136,62,0.08);border:1px solid rgba(240,136,62,0.25);color:#d29922">
+                        <i class="ph-bold ph-info"></i> UDP routers don't support rules. Traffic is routed by entry point only.
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 px-5 py-4" style="border-top:1px solid var(--border)">
+                <button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Save Route</button>
+            </div>
+        </form>
+    </div>
+</div>

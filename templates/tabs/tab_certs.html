@@ -1,0 +1,18 @@
+<div id="tab-certs" class="tab-content">
+    <div class="flex items-center justify-between mb-4">
+        <div></div>
+        <button onclick="refreshCertsTab()" class="btn-secondary text-xs">
+            <i class="ph-bold ph-arrows-clockwise"></i> Refresh
+        </button>
+    </div>
+    <div class="mb-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(36,161,222,0.08);border:1px solid rgba(36,161,222,0.2);color:var(--blue)">
+        <i class="ph-bold ph-info"></i>
+        TLS certificates are managed automatically by Traefik's ACME resolver. Renew or revoke them via your Traefik config.
+    </div>
+    <div id="certsContent">
+        <div class="text-center py-16" style="color:var(--muted)">
+            <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
+            <p>Loading certificates...</p>
+        </div>
+    </div>
+</div>

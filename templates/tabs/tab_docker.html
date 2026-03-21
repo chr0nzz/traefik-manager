@@ -1,0 +1,220 @@
+<div id="tab-docker" class="tab-content">
+    <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
+        <div class="relative flex-1 min-w-48">
+            <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
+            <input type="text" id="dockerSearch" oninput="filterDocker()" placeholder="Search docker routes..." class="input-field pl-9">
+        </div>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="filterDocker('all')"   id="dk-all"   class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+            <button onclick="filterDocker('http')"  id="dk-http"  class="proto-btn text-xs px-3 py-1.5">HTTP</button>
+            <button onclick="filterDocker('tcp')"   id="dk-tcp"   class="proto-btn text-xs px-3 py-1.5">TCP</button>
+        </div>
+        <button onclick="refreshDockerTab()" class="btn-secondary text-xs">
+            <i class="ph-bold ph-arrows-clockwise"></i> Refresh
+        </button>
+    </div>
+    <div class="mb-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(36,161,222,0.08);border:1px solid rgba(36,161,222,0.2);color:var(--blue)">
+        <i class="ph-bold ph-info"></i>
+        These routes are managed by Docker labels and are read-only. Edit them via your container's labels.
+    </div>
+    <div id="dockerContent">
+        <div class="text-center py-16" style="color:var(--muted)">
+            <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
+            <p>Loading docker routes...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+let _allDockerRoutes = [];
+let _dockerFilter    = 'all';
+
+async function refreshDockerTab() {
+    const container = document.getElementById('dockerContent');
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading docker routes...</p></div>`;
+
+    try {
+        const [routerRes, svcRes] = await Promise.all([
+            fetch('/api/traefik/routers').then(r => r.json()),
+            fetch('/api/traefik/services').then(r => r.json()).catch(() => ({})),
+        ]);
+
+        const svcMap = {};
+        [...(svcRes.http || []), ...(svcRes.tcp || [])].forEach(s => {
+            const nameParts = (s.name || '').split('@');
+            const svcProvider = s.provider || nameParts[1] || '';
+            if (svcProvider === 'docker') {
+                const servers = s.loadBalancer?.servers || [];
+                const url = servers[0]?.url || servers[0]?.address || null;
+                const statusKeys = Object.keys(s.serverStatus || {});
+                const bareKey = nameParts[0];
+                svcMap[bareKey] = { url, containerAddr: statusKeys[0] || url };
+                svcMap[s.name]  = { url, containerAddr: statusKeys[0] || url };
+            }
+        });
+
+        const http = (routerRes.http || []).map(r => ({ ...r, _proto: 'HTTP' }));
+        const tcp  = (routerRes.tcp  || []).map(r => ({ ...r, _proto: 'TCP'  }));
+        const udp  = (routerRes.udp  || []).map(r => ({ ...r, _proto: 'UDP'  }));
+        const all  = [...http, ...tcp, ...udp];
+
+        const getProvider = r => r.provider || (r.name || '').split('@')[1] || '';
+
+        _allDockerRoutes = all
+            .filter(r => getProvider(r) === 'docker')
+            .map(r => {
+                const svcFull  = r.service || '';
+                const svcBare  = svcFull.split('@')[0];
+                const svcInfo  = svcMap[svcBare] || svcMap[svcFull] || null;
+                return { ...r, _svcInfo: svcInfo };
+            })
+            .sort((a,b) => (a.name||'').localeCompare(b.name||''));
+
+        if (all.length === 0) {
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-xs mt-1">Configure <code class="font-mono">TRAEFIK_API_URL</code> in Settings</p></div>`;
+            return;
+        }
+        if (_allDockerRoutes.length === 0) {
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cube text-5xl block mb-3 opacity-30"></i><p class="font-medium">No Docker routes found</p><p class="text-xs mt-1">Routes discovered via Docker labels will appear here automatically</p></div>`;
+            return;
+        }
+
+        document.getElementById('dockerTabCount').textContent = _allDockerRoutes.length;
+        renderDockerRoutes();
+    } catch(e) {
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p></div>`;
+    }
+}
+
+function filterDocker(f) {
+    if (f) {
+        _dockerFilter = f;
+        ['all','http','tcp'].forEach(k => {
+            const btn = document.getElementById('dk-'+k);
+            if (btn) btn.classList.toggle('active-http', k === f);
+        });
+    }
+    renderDockerRoutes();
+}
+
+function renderDockerRoutes() {
+    const search = (document.getElementById('dockerSearch')?.value || '').toLowerCase();
+    const items  = _allDockerRoutes.filter(r => {
+        if (_dockerFilter !== 'all' && r._proto.toLowerCase() !== _dockerFilter) return false;
+        if (search && !(r.name||'').toLowerCase().includes(search) && !(r.rule||'').toLowerCase().includes(search)) return false;
+        return true;
+    });
+
+    const statusDot = r => {
+        const st = (r.status || '').toLowerCase();
+        if (st === 'enabled')  return `<span class="status-dot status-online"></span>`;
+        if (st === 'disabled' || st === 'error') return `<span class="status-dot status-offline"></span>`;
+        return `<span class="status-dot status-unknown"></span>`;
+    };
+
+    const protoBadge = r => {
+        if (r._proto === 'HTTP') return `<span class="badge badge-http" style="font-size:9px">HTTP</span>`;
+        if (r._proto === 'TCP')  return `<span class="badge badge-tcp"  style="font-size:9px">TCP</span>`;
+        return `<span class="badge badge-udp" style="font-size:9px">UDP</span>`;
+    };
+
+    const shortName = r => (r.name || '').split('@')[0];
+
+    const tlsBadge  = r => r.tls
+        ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS</span>`
+        : '';
+
+    const epBadges  = r => (r.entryPoints || [])
+        .map(ep => `<span class="badge badge-muted" style="font-size:9px">${ep}</span>`)
+        .join(' ');
+
+    if (items.length === 0) {
+        document.getElementById('dockerContent').innerHTML =
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No routes match filter</div>`;
+        return;
+    }
+
+    const cards = items.map((r, i) => {
+        const globalIdx = _allDockerRoutes.indexOf(r);
+        const hostMatch = (r.rule || '').match(/Host\(`([^`]+)`\)/);
+        const domain = hostMatch ? hostMatch[1] : null;
+        const externalBtn = (domain && r._proto === 'HTTP')
+            ? `<a href="https://${domain}" target="_blank" class="btn-icon" title="Open site" style="padding:4px 6px;text-decoration:none">
+                <i class="ph-bold ph-arrow-square-out text-sm"></i>
+               </a>`
+            : '';
+        return `
+        <div class="card p-4 hover:border-blue-500/40 transition-all" style="border-color:var(--border)">
+            <div class="flex items-start justify-between gap-3 mb-3">
+                <div class="flex items-center gap-2 min-w-0">
+                    ${statusDot(r)}
+                    ${protoBadge(r)}
+                    <span class="font-bold text-sm truncate" style="color:var(--text)" title="${shortName(r)}">${shortName(r)}</span>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                    ${tlsBadge(r)}
+                    ${externalBtn}
+                    <button onclick="openDockerRouteDetail(${globalIdx})" class="btn-icon" title="View details" style="padding:4px 6px">
+                        <i class="ph-bold ph-info text-sm"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="rounded-md px-3 py-2 text-xs font-mono truncate" style="background:var(--bg);border:1px solid var(--border);color:var(--green)" title="${r.rule || '—'}">${r.rule || '—'}</div>
+                <div class="flex items-center justify-between text-xs">
+                    <span style="color:var(--muted)">Service</span>
+                    <span class="font-mono truncate ml-2" style="color:var(--text);max-width:200px" title="${r.service||'—'}">${(r.service||'—').split('@')[0]}</span>
+                </div>
+                ${r._svcInfo?.containerAddr ? `
+                <div class="flex items-center justify-between text-xs">
+                    <span style="color:var(--muted)">Container</span>
+                    <span class="font-mono truncate ml-2" style="color:var(--muted);max-width:200px" title="${r._svcInfo.containerAddr}">${r._svcInfo.containerAddr}</span>
+                </div>` : ''}
+                ${r.entryPoints?.length ? `<div class="flex items-center gap-1 flex-wrap">${epBadges(r)}</div>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('dockerContent').innerHTML =
+        `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${cards}</div>`;
+}
+
+async function openDockerRouteDetail(idx) {
+    const r = _allDockerRoutes[idx];
+    if (!r) return;
+
+    document.getElementById('detailEditBtn').style.display = 'none';
+
+    const dockerBadge = `<span class="badge badge-muted ml-2" style="font-size:10px"><i class="ph-bold ph-cube" style="font-size:9px"></i> docker</span>`;
+
+    let rawLabels = null;
+    try {
+        const proto = (r._proto || 'HTTP').toLowerCase();
+        const routerName = encodeURIComponent(r.name || '');
+        const detail = await fetch(`/api/traefik/router/${proto}/${routerName}`).then(res => res.json());
+        if (detail && detail.provider === 'docker') {
+            rawLabels = detail.labels || null;
+        }
+    } catch(e) { /* labels unavailable */ }
+
+    const svcRaw  = r.service || '';
+    const appData = {
+        id:             (r.name || '').split('@')[0],
+        name:           (r.name || '').split('@')[0],
+        rule:           r.rule || '',
+        service_name:   svcRaw.split('@')[0],
+        target:         r._svcInfo?.url || 'N/A',
+        containerAddr:  r._svcInfo?.containerAddr || null,
+        dockerLabels:   rawLabels,
+        middlewares:    r.middlewares || [],
+        entryPoints:    r.entryPoints || [],
+        protocol:       r._proto.toLowerCase(),
+    };
+
+    await openRouteDetail(appData.name, appData.protocol, appData);
+
+    document.getElementById('detailEditBtn').style.display = 'none';
+
+    document.getElementById('detailTitle').insertAdjacentHTML('afterend', dockerBadge);
+}
+</script>

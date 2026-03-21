@@ -1,0 +1,544 @@
+<div id="settingsModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeSettingsModal()">
+    <div class="modal-box" style="max-width:680px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;">
+
+        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border);flex-shrink:0;">
+            <div class="flex items-center gap-2">
+                <i class="ph-fill ph-gear" style="color:var(--blue);font-size:18px;"></i>
+                <h3 class="font-bold text-sm" style="color:var(--text)">Settings</h3>
+            </div>
+            <button type="button" onclick="closeSettingsModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+        </div>
+
+        <div class="modal-inner">
+
+            <div class="modal-sidebar">
+                <button class="modal-sidebar-btn active" id="msb-connection" onclick="switchSettingsPanel('connection', this)">
+                    <i class="ph-bold ph-plugs-connected"></i> Connection
+                </button>
+                <button class="modal-sidebar-btn" id="msb-tabs" onclick="switchSettingsPanel('tabs', this)">
+                    <i class="ph-bold ph-tabs"></i> Visible Tabs
+                </button>
+                <button class="modal-sidebar-btn" id="msb-auth" onclick="switchSettingsPanel('auth', this)">
+                    <i class="ph-bold ph-lock-key"></i> Authentication
+                </button>
+                <button class="modal-sidebar-btn" id="msb-backups" onclick="switchSettingsPanel('backups', this); loadBackups()">
+                    <i class="ph-bold ph-clock-counter-clockwise"></i> Backups
+                </button>
+                <button class="modal-sidebar-btn" id="msb-about" onclick="switchSettingsPanel('about', this)">
+                    <i class="ph-bold ph-info"></i> About
+                </button>
+            </div>
+
+            <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0;">
+
+                <div class="modal-panel active" id="mpanel-connection">
+                    <div>
+                        <span class="settings-section-label">Domains</span>
+                        <div class="text-xs mb-2" style="color:var(--muted)">Comma-separated list of base domains used when adding routes.</div>
+                        <input type="text" id="settingsDomains" class="input-field" placeholder="example.com, example.net" onblur="saveSettings()">
+                    </div>
+                    <div>
+                        <span class="settings-section-label">Certificate Resolver</span>
+                        <div class="text-xs mb-2" style="color:var(--muted)">Name of the Traefik cert resolver (e.g. cloudflare, letsencrypt).</div>
+                        <input type="text" id="settingsCertResolver" class="input-field" placeholder="cloudflare" onblur="saveSettings()">
+                    </div>
+                    <div>
+                        <span class="settings-section-label">Traefik API URL</span>
+                        <div class="text-xs mb-2" style="color:var(--muted)">Base URL of the Traefik API used for live stats.</div>
+                        <input type="text" id="settingsApiUrl" class="input-field" placeholder="http://traefik:8080" onblur="saveSettings()">
+                        <div class="flex items-center gap-2 mt-2">
+                            <button onclick="testTraefikApi()" class="nav-btn text-xs" style="height:28px;padding:0 10px;">
+                                <i class="ph-bold ph-plugs-connected"></i> Test connection
+                            </button>
+                            <span id="apiTestResult" class="text-xs" style="color:var(--muted)"></span>
+                        </div>
+                    </div>
+                    <div id="settingsSavedNotice" class="hidden text-xs px-3 py-2 rounded-md" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
+                        <i class="ph-bold ph-check-circle mr-1"></i>Settings saved to <code>manager.yml</code>
+                    </div>
+                </div>
+
+                <div class="modal-panel" id="mpanel-tabs">
+                    <div>
+                        <span class="settings-section-label">Optional Tabs</span>
+                        <div class="text-xs mb-3" style="color:var(--muted)">Hide tabs you don't use. Routes, Middlewares, and Services are always visible.</div>
+                        <div class="grid grid-cols-2 gap-2" id="tabToggles">
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('docker')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-cube" style="color:var(--muted)"></i> Docker</span>
+                                <div class="toggle-switch" id="toggle-docker"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('kubernetes')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-circles-three" style="color:var(--muted)"></i> Kubernetes</span>
+                                <div class="toggle-switch" id="toggle-kubernetes"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('swarm')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-graph" style="color:var(--muted)"></i> Swarm</span>
+                                <div class="toggle-switch" id="toggle-swarm"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('nomad')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-circles-four" style="color:var(--muted)"></i> Nomad</span>
+                                <div class="toggle-switch" id="toggle-nomad"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('ecs')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-cloud" style="color:var(--muted)"></i> ECS</span>
+                                <div class="toggle-switch" id="toggle-ecs"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('consulcatalog')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-address-book" style="color:var(--muted)"></i> Consul Catalog</span>
+                                <div class="toggle-switch" id="toggle-consulcatalog"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('redis')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-database" style="color:var(--muted)"></i> Redis</span>
+                                <div class="toggle-switch" id="toggle-redis"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('etcd')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-database" style="color:var(--muted)"></i> etcd</span>
+                                <div class="toggle-switch" id="toggle-etcd"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('consul')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-database" style="color:var(--muted)"></i> Consul KV</span>
+                                <div class="toggle-switch" id="toggle-consul"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('zookeeper')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-database" style="color:var(--muted)"></i> ZooKeeper</span>
+                                <div class="toggle-switch" id="toggle-zookeeper"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('http_provider')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-link" style="color:var(--muted)"></i> HTTP Provider</span>
+                                <div class="toggle-switch" id="toggle-http_provider"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('file_external')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-file-text" style="color:var(--muted)"></i> File (external)</span>
+                                <div class="toggle-switch" id="toggle-file_external"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('certs')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-check" style="color:var(--muted)"></i> Certs</span>
+                                <div class="toggle-switch" id="toggle-certs"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('plugins')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-puzzle-piece" style="color:var(--muted)"></i> Plugins</span>
+                                <div class="toggle-switch" id="toggle-plugins"><div class="toggle-knob"></div></div>
+                            </label>
+                            <label class="tab-toggle-row" onclick="toggleTabVisibility('logs')">
+                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-terminal" style="color:var(--muted)"></i> Logs</span>
+                                <div class="toggle-switch" id="toggle-logs"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-panel" id="mpanel-auth">
+                    <div id="authSection">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <span class="settings-section-label" style="margin:0;">Built-in Authentication</span>
+                                <div id="authEnabledNotice" class="text-xs mt-1" style="color:var(--muted)">
+                                    Built-in auth is <strong id="authStateLabel" style="color:var(--green)">enabled</strong>.
+                                    <span id="authEnvForcedNote" class="hidden"> Controlled by the <code>AUTH_ENABLED</code> env var.</span>
+                                </div>
+                            </div>
+                            <button id="authToggleBtn" onclick="toggleAuth()" class="nav-btn text-xs hidden" title="Enable or disable built-in auth">
+                                <span id="authToggleLabel">Disable</span>
+                            </button>
+                        </div>
+                        <div id="changePwForm" style="display:flex;flex-direction:column;gap:10px;">
+                            <span class="settings-section-label">Change Password</span>
+                            <input type="password" id="pwCurrent" class="input-field" placeholder="Current password" autocomplete="current-password">
+                            <input type="password" id="pwNew"     class="input-field" placeholder="New password (min 8 chars)" autocomplete="new-password">
+                            <input type="password" id="pwConfirm" class="input-field" placeholder="Confirm new password" autocomplete="new-password">
+                            <div id="pwChangeMsg" class="hidden text-xs px-3 py-2 rounded-md"></div>
+                            <div>
+                                <button onclick="changePassword()" class="nav-btn text-xs">
+                                    <i class="ph-bold ph-lock-key-open"></i> Update password
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="authHiddenMsg" class="hidden text-xs" style="color:var(--muted);padding:8px 0;">
+                        Authentication settings are not available — no password has been configured.
+                    </div>
+                </div>
+
+                <div class="modal-panel" id="mpanel-backups">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="settings-section-label" style="margin:0;">Configuration Backups</span>
+                            <button onclick="createAndLoadBackups()" class="nav-btn text-xs">
+                                <i class="ph-bold ph-plus"></i> Create Backup
+                            </button>
+                        </div>
+                        <div class="text-xs mb-4 px-3 py-2 rounded-lg flex items-center gap-2" style="background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.2);color:#d29922">
+                            <i class="ph-bold ph-warning text-sm flex-shrink-0"></i>
+                            Restoring a backup will overwrite your current config. A backup of the current state is created automatically before restoring.
+                        </div>
+                        <div id="sm-backups-list">
+                            <div class="text-center py-8" style="color:var(--muted)">
+                                <i class="ph-light ph-spinner-gap text-2xl animate-spin block mb-2"></i>
+                                Loading backups...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-panel" id="mpanel-about">
+                    <div class="space-y-4">
+
+                        <div class="flex items-center gap-3 pb-4" style="border-bottom:1px solid var(--border)">
+                            <img src="{{ url_for('static', filename='icons/icon.png') }}" width="44" height="44" alt="" class="rounded-xl flex-shrink-0">
+                            <div>
+                                <div class="font-bold text-sm" style="color:var(--text)">Traefik Manager</div>
+                                <div class="text-xs mt-0.5" style="color:var(--muted)">
+                                    GPL-3.0 licence ·
+                                    <a href="https://github.com/chr0nzz/traefik-manager" target="_blank" style="color:var(--blue);text-decoration:none">chr0nzz</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--muted)">Traefik Manager</div>
+                            <div class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs mb-2" style="background:var(--input-bg);border:1px solid var(--border)">
+                                <span style="color:var(--muted)">Installed</span>
+                                <span class="font-mono font-semibold" id="mgrUpdateCurrentVer" style="color:var(--text)">—</span>
+                                <span style="color:var(--border)">·</span>
+                                <span style="color:var(--muted)">Latest</span>
+                                <span class="font-mono font-semibold" style="color:var(--green)" id="mgrUpdateLatestVer">—</span>
+                            </div>
+                            <div id="sm-mgr-update-notice" class="hidden text-xs px-3 py-2 rounded-md mb-2" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)">
+                                <i class="ph-bold ph-arrow-circle-up mr-1"></i><span id="sm-mgr-update-text"></span>
+                            </div>
+                            <a id="mgrUpdateReleaseLink" href="https://github.com/chr0nzz/traefik-manager/releases" target="_blank"
+                               class="nav-btn text-xs" style="text-decoration:none;display:inline-flex">
+                                <i class="ph-bold ph-github-logo"></i> Release Notes
+                            </a>
+                        </div>
+
+                        <div id="sm-about-release-notes" style="max-height:200px;overflow-y:auto;font-size:12px;line-height:1.6;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--input-bg)">
+                            <span style="color:var(--muted)">Loading release notes…</span>
+                        </div>
+
+                        <div>
+                            <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--muted)">Traefik</div>
+                            <div class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs mb-2" style="background:var(--input-bg);border:1px solid var(--border)">
+                                <span style="color:var(--muted)">Installed</span>
+                                <span class="font-mono font-semibold" id="updateCurrentVer" style="color:var(--text)">—</span>
+                                <span style="color:var(--border)">·</span>
+                                <span style="color:var(--muted)">Latest</span>
+                                <span class="font-mono font-semibold" style="color:var(--green)" id="updateLatestVer">—</span>
+                            </div>
+                            <div id="sm-traefik-update-notice" class="hidden text-xs px-3 py-2 rounded-md mb-2" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)">
+                                <i class="ph-bold ph-arrow-circle-up mr-1"></i><span id="sm-traefik-update-text"></span>
+                            </div>
+                            <a id="updateReleaseLink" href="https://github.com/traefik/traefik/releases" target="_blank"
+                               class="nav-btn text-xs" style="text-decoration:none;display:inline-flex">
+                                <i class="ph-bold ph-github-logo"></i> Release Notes
+                            </a>
+                        </div>
+
+                        <div class="flex items-center justify-between py-2.5" style="border-top:1px solid var(--border)">
+                            <div>
+                                <div class="text-xs font-medium" style="color:var(--text)">Show version badge in navbar</div>
+                                <div class="text-xs" style="color:var(--muted)">Traefik version shown next to the logo</div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-traefik-badge" onclick="toggleTraefikBadge()"><div class="toggle-knob"></div></div>
+                        </div>
+
+                        <div class="flex gap-2" style="border-top:1px solid var(--border);padding-top:12px">
+                            <a href="https://github.com/chr0nzz/traefik-manager" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
+                                <i class="ph-bold ph-github-logo"></i> GitHub
+                            </a>
+                            <a href="https://github.com/chr0nzz/traefik-manager/wiki" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
+                                <i class="ph-bold ph-book-open"></i> Docs
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+function switchSettingsPanel(id, btn) {
+    document.querySelectorAll('.modal-sidebar-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.modal-panel').forEach(p => p.classList.remove('active'));
+    const activeBtn = btn || document.getElementById('msb-' + id);
+    if (activeBtn) activeBtn.classList.add('active');
+    document.getElementById('mpanel-' + id).classList.add('active');
+}
+
+async function openSettingsModal(panel) {
+    document.getElementById('settingsSavedNotice').classList.add('hidden');
+    document.getElementById('apiTestResult').textContent = '';
+
+    ['pwCurrent','pwNew','pwConfirm'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    const msg = document.getElementById('pwChangeMsg');
+    if (msg) { msg.classList.add('hidden'); msg.textContent = ''; }
+    try {
+        const res  = await fetch('/api/settings');
+        const data = await res.json();
+        document.getElementById('settingsDomains').value       = (data.domains || []).join(', ');
+        document.getElementById('settingsCertResolver').value  = data.cert_resolver || '';
+        document.getElementById('settingsApiUrl').value        = data.traefik_api_url || '';
+
+        if (data.visible_tabs) _visibleTabsCache = data.visible_tabs;
+        loadTabTogglesIntoModal();
+        _applyTraefikBadgeVisibility();
+
+        const authSection   = document.getElementById('authSection');
+        const toggleBtn     = document.getElementById('authToggleBtn');
+        const stateLabel    = document.getElementById('authStateLabel');
+        const toggleLabel   = document.getElementById('authToggleLabel');
+        const envForcedNote = document.getElementById('authEnvForcedNote');
+        const changePwForm  = document.getElementById('changePwForm');
+
+        if (data.has_password !== undefined) {
+            document.getElementById('authHiddenMsg') && (document.getElementById('authHiddenMsg').classList.add('hidden'));
+            const isOn = data.auth_enabled;
+            stateLabel.textContent  = isOn ? 'enabled' : 'disabled';
+            stateLabel.style.color  = isOn ? 'var(--green)' : 'var(--muted)';
+            if (!data.auth_env_forced && toggleBtn) {
+                toggleBtn.classList.remove('hidden');
+                toggleLabel.textContent = isOn ? 'Disable' : 'Enable';
+            } else {
+                envForcedNote.classList.remove('hidden');
+            }
+            if (changePwForm) changePwForm.style.display = isOn ? '' : 'none';
+        }
+    } catch(e) {
+        console.error('Could not load settings', e);
+    }
+    document.getElementById('settingsModal').style.display = 'flex';
+    const target = panel || 'connection';
+    switchSettingsPanel(target);
+    if (target === 'backups') loadBackups();
+}
+
+function closeSettingsModal() {
+    document.getElementById('settingsModal').style.display = 'none';
+}
+
+async function changePassword() {
+    const current = document.getElementById('pwCurrent').value;
+    const newPw   = document.getElementById('pwNew').value;
+    const confirm = document.getElementById('pwConfirm').value;
+    const msg     = document.getElementById('pwChangeMsg');
+
+    const show = (text, ok) => {
+        msg.textContent  = text;
+        msg.style.background = ok ? 'rgba(63,185,80,0.1)' : 'rgba(248,81,73,0.1)';
+        msg.style.border     = ok ? '1px solid rgba(63,185,80,0.3)' : '1px solid rgba(248,81,73,0.3)';
+        msg.style.color      = ok ? 'var(--green)' : 'var(--red)';
+        msg.classList.remove('hidden');
+    };
+
+    if (!current || !newPw || !confirm) return show('Please fill in all fields.', false);
+    if (newPw.length < 8)              return show('New password must be at least 8 characters.', false);
+    if (newPw !== confirm)             return show('Passwords do not match.', false);
+
+    try {
+        const res  = await fetch('/api/auth/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token'] },
+            body: JSON.stringify({ current_password: current, new_password: newPw, confirm_password: confirm })
+        });
+        const data = await res.json();
+        if (data.success) {
+            show('Password updated successfully.', true);
+            ['pwCurrent','pwNew','pwConfirm'].forEach(id => document.getElementById(id).value = '');
+        } else {
+            show(data.error || 'Failed to update password.', false);
+        }
+    } catch(e) {
+        show('Request failed.', false);
+    }
+}
+
+async function toggleAuth() {
+    const stateLabel  = document.getElementById('authStateLabel');
+    const toggleLabel = document.getElementById('authToggleLabel');
+    const changePwForm = document.getElementById('changePwForm');
+    const currentlyOn = stateLabel.textContent === 'enabled';
+    const newState    = !currentlyOn;
+
+    if (currentlyOn && !confirm('Disable built-in authentication? Anyone who can reach this URL will have full access.')) return;
+
+    try {
+        const res  = await fetch('/api/auth/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token'] },
+            body: JSON.stringify({ auth_enabled: newState })
+        });
+        const data = await res.json();
+        if (data.success) {
+            stateLabel.textContent = newState ? 'enabled' : 'disabled';
+            stateLabel.style.color = newState ? 'var(--green)' : 'var(--muted)';
+            toggleLabel.textContent = newState ? 'Disable' : 'Enable';
+            if (changePwForm) changePwForm.style.display = newState ? '' : 'none';
+            showToast(`Authentication ${newState ? 'enabled' : 'disabled'}.`, 'success');
+        } else {
+            showToast(data.error || 'Failed to update auth.', 'error');
+        }
+    } catch(e) {
+        showToast('Request failed.', 'error');
+    }
+}
+
+async function saveSettings() {
+    const domains        = document.getElementById('settingsDomains').value.split(',').map(d => d.trim()).filter(Boolean);
+    const resolver       = document.getElementById('settingsCertResolver').value.trim();
+    const apiUrl         = document.getElementById('settingsApiUrl').value.trim();
+    if (!domains.length) return;
+    try {
+        const res  = await fetch('/api/settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token']},
+            body: JSON.stringify({ domains, cert_resolver: resolver, traefik_api_url: apiUrl })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('settingsSavedNotice').classList.remove('hidden');
+            if (typeof availableDomains !== 'undefined') {
+                availableDomains.length = 0;
+                domains.forEach(d => availableDomains.push(d));
+                const sel = document.getElementById('domain');
+                if (sel) sel.innerHTML = domains.map(d => `<option value="${d}">${d}</option>`).join('');
+            }
+            setTimeout(() => document.getElementById('settingsSavedNotice').classList.add('hidden'), 3000);
+        } else {
+            showToast(data.error || 'Failed to save settings', 'error');
+        }
+    } catch(e) {
+        showToast('Failed to save settings', 'error');
+    }
+}
+
+async function testTraefikApi() {
+    const result = document.getElementById('apiTestResult');
+    result.textContent = 'Testing…';
+    result.style.color = 'var(--muted)';
+    try {
+        const res = await fetch('/api/traefik/version');
+        const d   = await res.json();
+        if (d && d.Version) {
+            result.textContent = `✓ Connected — Traefik v${d.Version}`;
+            result.style.color = 'var(--green)';
+        } else {
+            result.textContent = '✗ No response from API';
+            result.style.color = 'var(--red)';
+        }
+    } catch(e) {
+        result.textContent = '✗ Connection failed';
+        result.style.color = 'var(--red)';
+    }
+}
+
+async function loadBackups() {
+    const list = document.getElementById('sm-backups-list');
+    list.innerHTML = `<div class="text-center py-8" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-2xl animate-spin block mb-2"></i>Loading…</div>`;
+    try {
+        const res     = await fetch('/api/backups');
+        const backups = await res.json();
+
+        if (!backups.length) {
+            list.innerHTML = `<div class="text-center py-8" style="color:var(--muted)"><i class="ph-light ph-archive text-4xl block mb-2 opacity-30"></i><p>No backups yet</p></div>`;
+            return;
+        }
+
+        list.innerHTML = backups.map(b => `
+            <div class="flex items-center justify-between py-2.5 rounded-lg px-3 mb-2" style="background:var(--bg);border:1px solid var(--border)">
+                <div>
+                    <div class="font-mono text-xs text-white">${b.name}</div>
+                    <div class="text-xs mt-0.5" style="color:var(--muted)">${b.modified} · ${formatBytes(b.size)}</div>
+                </div>
+                <div class="flex gap-1">
+                    <button onclick="restoreBackup('${b.name}')" class="btn-secondary text-xs py-1 px-2.5">
+                        <i class="ph-bold ph-arrow-counter-clockwise text-xs"></i> Restore
+                    </button>
+                    <button onclick="deleteBackup('${b.name}')" class="btn-danger p-1.5">
+                        <i class="ph-bold ph-trash text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        list.innerHTML = `<p class="text-sm" style="color:var(--red)">Failed to load backups</p>`;
+    }
+}
+
+async function createAndLoadBackups() {
+    try {
+        const res  = await fetch('/api/backup/create', { method: 'POST', headers: _csrfHeaders() });
+        const data = await res.json();
+        if (data.success) { showToast('Backup created', 'success'); loadBackups(); }
+        else showToast('Backup failed: ' + (data.error || 'Unknown'), 'error');
+    } catch(e) { showToast('Backup failed', 'error'); }
+}
+
+async function restoreBackup(name) {
+    if (!confirm(`Restore backup "${name}"? Your current config will be backed up first.`)) return;
+    try {
+        const res  = await fetch(`/api/restore/${name}`, { method: 'POST', headers: _csrfHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Backup restored successfully!', 'success');
+            closeSettingsModal();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('Restore failed: ' + data.error, 'error');
+        }
+    } catch (e) {
+        showToast('Restore failed', 'error');
+    }
+}
+
+async function deleteBackup(name) {
+    if (!confirm(`Delete backup "${name}"?`)) return;
+    try {
+        const res  = await fetch(`/api/backup/delete/${name}`, { method: 'POST', headers: _csrfHeaders() });
+        const data = await res.json();
+        if (data.success) { showToast('Backup deleted', 'success'); loadBackups(); }
+        else showToast('Delete failed: ' + data.error, 'error');
+    } catch(e) { showToast('Delete failed', 'error'); }
+}
+
+function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    return (bytes / 1024).toFixed(1) + ' KB';
+}
+
+function toggleTraefikBadge() {
+    const show = localStorage.getItem('showTraefikBadge') !== 'false';
+    localStorage.setItem('showTraefikBadge', show ? 'false' : 'true');
+    _applyTraefikBadgeVisibility();
+}
+
+function _applyTraefikBadgeVisibility() {
+    const show = localStorage.getItem('showTraefikBadge') !== 'false';
+    const hasVersion = (document.getElementById('versionText').textContent || '').trim() !== '—';
+    const badge  = document.getElementById('versionBadge');
+    const badgeM = document.getElementById('versionBadgeMobile');
+    if (badge)  badge.classList.toggle('hidden', !show || !hasVersion);
+    if (badgeM) {
+        badgeM.classList.toggle('hidden', !show || !hasVersion);
+        if (show && hasVersion) badgeM.classList.add('flex');
+    }
+    const tog = document.getElementById('toggle-traefik-badge');
+    if (tog) tog.classList.toggle('on', show);
+}
+
+function renderReleaseNotes(md) {
+    return md
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/^#{3,} (.+)$/gm, '<div style="font-weight:600;color:var(--text);margin:10px 0 4px">$1</div>')
+        .replace(/^## (.+)$/gm, '<div style="font-weight:700;color:var(--text);font-size:13px;margin:12px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--border)">$1</div>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text)">$1</strong>')
+        .replace(/`([^`]+)`/g, '<code style="background:var(--border);padding:1px 4px;border-radius:3px;font-size:11px">$1</code>')
+        .replace(/^[-*] (.+)$/gm, '<div style="padding:1px 0 1px 10px;border-left:2px solid var(--border);margin:2px 0">$1</div>')
+        .replace(/\n{2,}/g, '<br>');
+}
+
+</script>

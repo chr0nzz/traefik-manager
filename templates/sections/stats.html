@@ -1,0 +1,106 @@
+<div id="overviewSection" class="mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="statsGrid">
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">HTTP Routers</span>
+                <i class="ph-fill ph-layout text-sm" style="color:var(--blue)"></i>
+            </div>
+            <div class="text-3xl font-bold text-white mb-3" id="statHttpRouters">—</div>
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
+                    <span class="font-mono text-green-400" id="statHttpSuccess">—</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
+                    <span class="font-mono text-yellow-400" id="statHttpWarn">—</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
+                    <span class="font-mono text-red-400" id="statHttpErr">—</span>
+                </div>
+            </div>
+            <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barHttpRouters" style="background:var(--border)"></div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">TCP / UDP</span>
+                <i class="ph-fill ph-arrows-left-right text-sm" style="color:var(--purple)"></i>
+            </div>
+            <div class="text-3xl font-bold text-white mb-3" id="statTcpUdp">—</div>
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
+                    <span class="font-mono text-green-400" id="statTcpSuccess">—</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
+                    <span class="font-mono text-yellow-400" id="statTcpWarn">—</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
+                    <span class="font-mono text-red-400" id="statTcpErr">—</span>
+                </div>
+            </div>
+            <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barTcpRouters" style="background:var(--border)"></div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Services</span>
+                <i class="ph-fill ph-circles-four text-sm" style="color:var(--green)"></i>
+            </div>
+            <div class="text-3xl font-bold text-white mb-3" id="statServices">—</div>
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
+                    <span class="font-mono text-green-400" id="statSvcSuccess">—</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
+                    <span class="font-mono text-yellow-400" id="statSvcWarn">—</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
+                    <span class="font-mono text-red-400" id="statSvcErr">—</span>
+                </div>
+            </div>
+            <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barServices" style="background:var(--border)"></div>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Middlewares</span>
+                <i class="ph-fill ph-plugs-connected text-sm" style="color:var(--yellow)"></i>
+            </div>
+            <div class="text-3xl font-bold text-white mb-3" id="statMiddlewares">—</div>
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
+                    <span class="font-mono text-green-400" id="statMwSuccess">—</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
+                    <span class="font-mono text-yellow-400" id="statMwWarn">—</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
+                    <span class="font-mono text-red-400" id="statMwErr">—</span>
+                </div>
+            </div>
+            <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barMiddlewares" style="background:var(--border)"></div>
+        </div>
+
+    </div>
+
+    <div id="entrypointsBar" class="mt-3 hidden">
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Entry Points</span>
+            </div>
+            <div id="entrypointsList" class="flex flex-wrap gap-2"></div>
+        </div>
+    </div>
+</div>

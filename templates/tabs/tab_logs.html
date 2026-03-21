@@ -1,0 +1,21 @@
+<div id="tab-logs" class="tab-content">
+    <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">
+            <button onclick="setLogLines(100)"  id="log-100"  class="proto-btn active-http text-xs px-3 py-1.5">100</button>
+            <button onclick="setLogLines(200)"  id="log-200"  class="proto-btn text-xs px-3 py-1.5">200</button>
+            <button onclick="setLogLines(500)"  id="log-500"  class="proto-btn text-xs px-3 py-1.5">500</button>
+            <button onclick="setLogLines(1000)" id="log-1000" class="proto-btn text-xs px-3 py-1.5">1000</button>
+        </div>
+        <input type="text" id="logSearch" oninput="filterLogs()" placeholder="Filter logs..." class="input-field flex-1 min-w-48">
+        <button onclick="refreshLogs()" class="btn-secondary text-xs">
+            <i class="ph-bold ph-arrows-clockwise"></i> Refresh
+        </button>
+    </div>
+    <div id="logsContent">
+        <div class="text-center py-16" style="color:var(--muted)">
+            <i class="ph-light ph-terminal text-5xl block mb-3 opacity-30"></i>
+            <p class="font-medium">Access logs not loaded</p>
+            <p class="text-xs mt-1">Configure <code class="font-mono">Access Log Path</code> in Settings</p>
+        </div>
+    </div>
+</div>

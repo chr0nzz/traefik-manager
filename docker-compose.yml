@@ -1,6 +1,6 @@
 services:
   traefik-manager:
-    # image: ghcr.io/chr0nzz/traefik-manager:latest
+    image: ghcr.io/chr0nzz/traefik-manager:latest
     build: .
     container_name: traefik-manager
     restart: unless-stopped

@@ -99,7 +99,7 @@ ACME_JSON_PATH     = '/app/acme.json'
 STATIC_CONFIG_PATH = '/app/traefik.yml'
 
 
-OPTIONAL_TABS = ['docker', 'certs', 'plugins', 'logs']
+OPTIONAL_TABS = ['docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs']
 
 def load_settings() -> dict:
     defaults = {
@@ -646,6 +646,17 @@ def api_middlewares():
         'tcp':  traefik_api_get('/api/tcp/middlewares')  or [],
     })
 
+@app.route('/api/manager/router-names')
+@login_required
+def api_manager_router_names():
+    """Return the set of router names managed by traefik-manager (from dynamic.yml)."""
+    config = load_config()
+    names = set()
+    for proto in ('http', 'tcp', 'udp'):
+        names.update(config.get(proto, {}).get('routers', {}).keys())
+    return jsonify(list(names))
+
+
 @app.route('/api/traefik/entrypoints')
 @login_required
 def api_entrypoints():
@@ -842,6 +853,18 @@ def api_restore(filename):
         return jsonify({'success': True})
     except Exception as e:
         logger.exception("Restore error")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/backup/create', methods=['POST'])
+@csrf_protect
+@login_required
+def api_backup_create():
+    try:
+        dest = create_backup()
+        if dest:
+            return jsonify({'success': True, 'name': os.path.basename(dest)})
+        return jsonify({'error': 'No config file to backup'}), 400
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/backup/delete/<filename>', methods=['POST'])

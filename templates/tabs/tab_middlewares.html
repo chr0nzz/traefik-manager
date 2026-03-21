@@ -1,0 +1,52 @@
+<div id="tab-middlewares" class="tab-content">
+
+    <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
+        <div class="relative flex-1 min-w-48">
+            <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
+            <input type="text" id="searchMw" oninput="filterMw()" placeholder="Search middlewares..." class="input-field pl-9">
+        </div>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:#0d1117; border:1px solid var(--border)">
+            <button onclick="filterMw('all')" id="mwf-all" class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+            <button onclick="filterMw('http')" id="mwf-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
+            <button onclick="filterMw('tcp')" id="mwf-tcp" class="proto-btn text-xs px-3 py-1.5">TCP</button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="mwGrid">
+        {% for mw in middlewares %}
+        <div class="card p-4 mw-card" data-mwname="{{ mw.name | lower }}" data-mwtype="{{ mw.type | default('http') | lower }}">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <span class="badge {% if mw.type == 'tcp' %}badge-tcp{% else %}badge-http{% endif %} mb-1.5 block w-fit">{{ mw.type | default('HTTP') | upper }}</span>
+                    <h3 class="font-bold text-sm text-white">{{ mw.name }}</h3>
+                </div>
+                <div class="flex gap-0.5">
+                    <button type="button" data-mw='{{ mw|tojson|safe }}' onclick="handleMwEdit(this)" class="btn-icon" title="Edit">
+                        <i class="ph-bold ph-pencil-simple text-sm"></i>
+                    </button>
+                    <form action="{{ url_for('delete_middleware', mw_name=mw.name) }}" method="POST" onsubmit="return confirm('Delete middleware {{ mw.name }}?');" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn-danger"><i class="ph-bold ph-trash text-sm"></i></button>
+                    </form>
+                </div>
+            </div>
+            <div class="rounded-md p-3 overflow-x-auto" style="background:#0d1117; border:1px solid var(--border)">
+                <pre class="text-xs font-mono leading-relaxed" style="color:#7ee787">{{ mw.yaml }}</pre>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="mwEmpty" class="hidden text-center py-20" style="color:var(--muted)">
+        <i class="ph-light ph-plugs-connected text-6xl block mb-4 opacity-30"></i>
+        <p class="text-base font-medium" id="mwEmptyText">No middlewares found</p>
+    </div>
+
+    {% if not middlewares %}
+    <div class="text-center py-20" style="color:var(--muted)">
+        <i class="ph-light ph-plugs-connected text-6xl block mb-4 opacity-30"></i>
+        <p class="text-base font-medium">No middlewares configured</p>
+        <p class="text-sm mt-1">Click <strong>Middleware</strong> to add one</p>
+    </div>
+    {% endif %}
+</div>

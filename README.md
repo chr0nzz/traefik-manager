@@ -6,7 +6,7 @@
 
 **A clean, self-hosted web UI for managing your Traefik reverse proxy.**
 
-Add routes, manage middlewares, monitor services, and view TLS certificates — all without touching a YAML file by hand.
+Add routes, manage middlewares, monitor services, and view TLS certificates - all without touching a YAML file by hand.
 
 [![Docker Image](https://img.shields.io/badge/ghcr.io-chr0nzz%2Ftraefik--manager-blue?logo=docker&logoColor=white)](https://github.com/chr0nzz/traefik-manager/pkgs/container/traefik-manager)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
@@ -88,25 +88,37 @@ Explore the Traefik Manager interface and workflows. Click on a category below t
 
 ## Features
 
-- **Route management** — add, edit, and delete HTTP, TCP, and UDP routes via a simple form
-- **Middleware management** — create and manage Traefik middlewares with built-in templates (Basic Auth, Forward Auth, Redirect, Strip Prefix)
-- **Live dashboard** — real-time stats pulled from the Traefik API: router counts, service health, entrypoints, and version
-- **TLS certificates** — view all certificates from `acme.json` with expiry tracking
-- **Plugin viewer** — inspect plugins configured in your static `traefik.yml`
-- **Access logs** — stream and filter Traefik access logs in the browser
-- **Docker routes view** — see all routes discovered via Docker labels pulled directly from the Traefik API
-- **Automatic backups** — every config change creates a timestamped backup of `dynamic.yml`
-- **Built-in auth** — password-protected with bcrypt hashing, session management, and CSRF protection
-- **Auto-generated password** — a secure temporary password is printed to logs on first start; forced password-change flow afterwards
-- **CLI password reset** — `docker exec <container> flask reset-password` generates a new temporary password instantly
-- **First-run setup wizard** — configure everything (domains, API URL, cert resolver, visible tabs) on first launch
-- **Dark / light theme** — persisted per browser
+- **Route management** - add, edit, and delete HTTP, TCP, and UDP routes via a simple form
+- **Middleware management** - create and manage Traefik middlewares with built-in templates (Basic Auth, Forward Auth, Redirect, Strip Prefix)
+- **Live dashboard** - real-time stats pulled from the Traefik API: router counts, service health, entrypoints, and version
+- **TLS certificates** - view all certificates from `acme.json` with expiry tracking
+- **Plugin viewer** - inspect plugins configured in your static `traefik.yml`
+- **Access logs** - stream and filter Traefik access logs in the browser
+- **Docker routes view** - see all routes discovered via Docker labels pulled directly from the Traefik API
+- **Kubernetes routes view** - see all routes managed by Kubernetes (CRD, Ingress, Gateway API) pulled from the Traefik API
+- **Swarm routes view** - see all routes discovered via Docker Swarm service labels pulled from the Traefik API
+- **Nomad routes view** - see all routes discovered via HashiCorp Nomad pulled from the Traefik API
+- **ECS routes view** - see all routes discovered via Amazon ECS pulled from the Traefik API
+- **Consul Catalog routes view** - see all routes discovered via Consul service catalog pulled from the Traefik API
+- **Redis routes view** - see all routes stored in Redis KV pulled from the Traefik API
+- **etcd routes view** - see all routes stored in etcd KV pulled from the Traefik API
+- **Consul KV routes view** - see all routes stored in Consul's key-value store pulled from the Traefik API
+- **ZooKeeper routes view** - see all routes stored in ZooKeeper KV pulled from the Traefik API
+- **HTTP provider routes view** - see all routes sourced from an HTTP endpoint pulled from the Traefik API
+- **File (external) routes view** - see routes from external file provider configurations (traefik-manager's own routes are excluded to avoid duplication)
+- **Automatic backups** - every config change creates a timestamped backup of `dynamic.yml`
+- **Built-in auth** - password-protected with bcrypt hashing, session management, and CSRF protection
+- **Auto-generated password** - a secure temporary password is printed to logs on first start; forced password-change flow afterwards
+- **CLI password reset** - `docker exec traefik-manager flask reset-password` generates a new temporary password instantly
+- **First-run setup wizard** - configure everything (domains, API URL, cert resolver, visible tabs) on first launch
+- **Dark / light theme** - persisted per browser
+- **PWA** - Install as a web app on mobile devices and manage traefik on the go
 
 ---
 
 ## Requirements
 
-- Docker + Docker Compose
+- Docker + Docker Compose (or Podman - see [docs/podman.md](docs/podman.md))
 - A running [Traefik v2/v3](https://traefik.io/) instance
 - Traefik's `dynamic.yml` file accessible on the host
 
@@ -140,7 +152,7 @@ Then run:
 docker compose up -d
 ```
 
-Open **http://your-server:5000** — the setup wizard will guide you through the rest.
+Open **http://your-server:5000** - the setup wizard will guide you through the rest.
 
 ---
 
@@ -148,7 +160,7 @@ Open **http://your-server:5000** — the setup wizard will guide you through the
 
 | Host path | Container path | Required | Purpose |
 |---|---|---|---|
-| `/path/to/traefik/dynamic.yml` | `/app/config/dynamic.yml` | ✅ | Traefik dynamic config — this is what Traefik Manager reads and writes |
+| `/path/to/traefik/dynamic.yml` | `/app/config/dynamic.yml` | ✅ | Traefik dynamic config - this is what Traefik Manager reads and writes |
 | `/path/to/traefik-manager/config` | `/app/config` | ✅ | Persists `manager.yml` (settings) and the session secret key |
 | `/path/to/traefik-manager/backups` | `/app/backups` | ✅ | Stores timestamped backups of `dynamic.yml` before every change |
 | `/path/to/traefik/acme.json` | `/app/acme.json` | Optional | Enables the **Certs** tab |
@@ -159,7 +171,85 @@ Open **http://your-server:5000** — the setup wizard will guide you through the
 
 ## Optional Monitoring Tabs
 
-Traefik Manager includes four optional views that can be enabled during the setup wizard or toggled anytime in Settings. If a required file is not mounted yet, the tab will show the exact line to add to your compose file.
+Traefik Manager includes optional views that can be enabled during the setup wizard or toggled anytime in **Settings → Visible Tabs**. API-based tabs (Docker, Kubernetes, Swarm, Nomad, ECS, Consul Catalog, Redis, etcd, Consul KV, ZooKeeper, HTTP Provider, File external) require no extra mounts - just a working Traefik API connection. File-based tabs (Certs, Plugins, Logs) will show the exact volume line to add if the file is not yet mounted.
+
+See [docs/README.md](docs/README.md) for the full tab reference and `traefik.yml` configuration snippets for every provider.
+
+### Docker tab
+
+No extra configuration needed. Enable the tab in Settings and routes discovered via Docker labels will appear automatically (requires a working Traefik API connection).
+
+### Kubernetes tab
+
+Enable the tab in Settings. Routes discovered by any Kubernetes provider (CRD, Ingress, or Gateway API) will appear automatically. Traefik must be configured with at least one Kubernetes provider in your `traefik.yml`:
+
+```yaml
+providers:
+  kubernetesCRD: {}
+  kubernetesIngress: {}
+```
+
+No extra file mounts into the traefik-manager container are needed.
+
+### Swarm tab
+
+No extra configuration needed beyond the Swarm provider in your `traefik.yml`. Routes discovered via Docker Swarm service labels will appear automatically.
+
+### Nomad tab
+
+Requires the Nomad provider configured in your `traefik.yml`. Routes discovered via HashiCorp Nomad will appear automatically.
+
+### ECS tab
+
+Requires the ECS provider configured in your `traefik.yml`. Routes discovered via Amazon ECS task labels will appear automatically.
+
+### Consul Catalog tab
+
+Requires the Consul Catalog provider configured in your `traefik.yml`. Routes registered in the Consul service catalog with Traefik tags will appear automatically.
+
+### Redis tab
+
+Requires the Redis provider configured in your `traefik.yml`. Routes stored in Redis KV will appear automatically.
+
+### etcd tab
+
+Requires the etcd provider configured in your `traefik.yml`. Routes stored in etcd will appear automatically.
+
+### Consul KV tab
+
+Requires the Consul KV provider configured in your `traefik.yml`. Routes stored in Consul's key-value store will appear automatically. This is distinct from the Consul Catalog tab which uses service discovery.
+
+### ZooKeeper tab
+
+Requires the ZooKeeper provider configured in your `traefik.yml`. Routes stored in ZooKeeper will appear automatically.
+
+### HTTP Provider tab
+
+Requires the HTTP provider configured in your `traefik.yml`:
+
+```yaml
+providers:
+  http:
+    endpoint: "https://my-config-server/traefik-config"
+    pollInterval: "5s"
+```
+
+Routes sourced from the configured HTTP endpoint will appear automatically.
+
+### File (external) tab
+
+Shows routes from Traefik's file provider that are not managed by traefik-manager. Routes that traefik-manager manages (stored in `dynamic.yml`) are shown in the main Routes tab and are automatically excluded from this view to avoid duplication.
+
+Requires the file provider configured in your `traefik.yml`:
+
+```yaml
+providers:
+  file:
+    directory: "/etc/traefik/conf.d"
+    watch: true
+```
+
+No extra file mounts into the traefik-manager container are needed - data is pulled live from the Traefik API.
 
 ### Certs tab
 
@@ -304,8 +394,8 @@ docker compose logs traefik-manager | grep -A3 "AUTO-GENERATED"
 
 Use that password to log in. You'll then go through a quick setup wizard:
 
-1. **Connection & domains** — enter your base domains (e.g. `example.com, example.net`), certificate resolver name, and the internal Traefik API URL (usually `http://traefik:8080` on the same Docker network). Use the **Test connection** button to verify before proceeding.
-2. **Optional monitoring** — toggle on any of the four optional views (Docker, Certs, Plugins, Logs). You can change these anytime in Settings.
+1. **Connection & domains** - enter your base domains (e.g. `example.com, example.net`), certificate resolver name, and the internal Traefik API URL (usually `http://traefik:8080` on the same Docker network). Use the **Test connection** button to verify before proceeding.
+2. **Optional monitoring** - toggle on any optional views (Docker, Kubernetes, Certs, Plugins, Logs). You can change these anytime in Settings.
 
 After the wizard you'll be prompted to **set a permanent password** before accessing the dashboard.
 
@@ -329,7 +419,7 @@ You can bypass the setup wizard entirely by pre-populating `manager.yml` before 
    setup_complete: true
    must_change_password: false
    ```
-3. Start the container — the wizard and auto-generation are skipped.
+3. Start the container - the wizard and auto-generation are skipped.
 
 ---
 
@@ -345,7 +435,7 @@ This generates a new temporary password, prints it to the terminal, and requires
 
 ### Manual reset
 
-If you cannot exec into the container, remove the `password_hash` from `manager.yml` and also set `setup_complete: false`. Then restart the container — a new temporary password will be auto-generated and printed to the logs.
+If you cannot exec into the container, remove the `password_hash` from `manager.yml` and also set `setup_complete: false`. Then restart the container - a new temporary password will be auto-generated and printed to the logs.
 
 ```bash
 nano /path/to/traefik-manager/config/manager.yml
@@ -377,7 +467,7 @@ By default the container uses these paths:
 | Backup directory | `/app/backups` | `BACKUP_DIR` |
 | Manager settings | `/app/config/manager.yml` | `SETTINGS_PATH` |
 
-Example — useful for Podman or non-standard volume layouts:
+Example - useful for non-standard volume layouts. For Podman-specific setup see [docs/podman.md](docs/podman.md).
 
 ```yaml
 environment:
@@ -390,7 +480,7 @@ environment:
 
 ## How it works
 
-Traefik Manager reads and writes Traefik's `dynamic.yml` file directly. Since Traefik watches this file for changes, routes take effect immediately — no Traefik restart needed.
+Traefik Manager reads and writes Traefik's `dynamic.yml` file directly. Since Traefik watches this file for changes, routes take effect immediately - no Traefik restart needed.
 
 The Traefik API (read-only) is used to pull live stats, service health, router details, and version information shown in the dashboard.
 

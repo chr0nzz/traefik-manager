@@ -38,474 +38,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <style>
-        
-        :root {
-            --bg: #0d1117;
-            --card: #161b22;
-            --border: #30363d;
-            --muted: #8b949e;
-            --text: #e6edf3;
-            --text-secondary: #c9d1d9;
-            --blue: #24a1de;
-            --green: #3fb950;
-            --yellow: #d29922;
-            --red: #f85149;
-            --purple: #a371f7;
-            --orange: #f0883e;
-            --nav-bg: rgba(13,17,23,0.95);
-            --input-bg: #0d1117;
-            --btn-secondary-bg: #21262d;
-            --btn-secondary-hover: #30363d;
-            --code-bg: #161b22;
-        }
-        [data-theme="light"] {
-            --bg: #f6f8fa;
-            --card: #ffffff;
-            --border: #d0d7de;
-            --muted: #656d76;
-            --text: #1f2328;
-            --text-secondary: #36414c;
-            --blue: #0969da;
-            --green: #1a7f37;
-            --yellow: #9a6700;
-            --red: #d1242f;
-            --purple: #8250df;
-            --orange: #bc4c00;
-            --nav-bg: rgba(246,248,250,0.95);
-            --input-bg: #ffffff;
-            --btn-secondary-bg: #f6f8fa;
-            --btn-secondary-hover: #eaeef2;
-            --code-bg: #f6f8fa;
-        }
-
-        body { background: var(--bg); color: var(--text); overflow-x: hidden; }
-        main { overflow-x: hidden; }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .tab-btn { position: relative; padding: 12px 4px; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
-        .tab-btn:hover { color: var(--text); }
-        .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
-
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; transition: border-color 0.2s, box-shadow 0.2s; }
-        .card:hover { border-color: var(--muted); box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
-
-        .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-
-        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .badge-http { background: rgba(36,161,222,0.15); color: var(--blue); border: 1px solid rgba(36,161,222,0.3); }
-        .badge-tcp  { background: rgba(163,113,247,0.15); color: var(--purple); border: 1px solid rgba(163,113,247,0.3); }
-        .badge-udp  { background: rgba(240,136,62,0.15); color: var(--orange); border: 1px solid rgba(240,136,62,0.3); }
-        .badge-green { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
-        .badge-red  { background: rgba(248,81,73,0.15); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
-        .badge-muted { background: rgba(139,148,158,0.1); color: var(--muted); border: 1px solid rgba(139,148,158,0.3); }
-
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-        .status-online  { background: var(--green); box-shadow: 0 0 6px rgba(63,185,80,0.6); }
-        .status-offline { background: var(--red); }
-        .status-unknown { background: var(--muted); }
-        .status-checking { background: var(--yellow); animation: pulse 1.5s infinite; }
-
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-
-        .input-field {
-            background: var(--input-bg);
-            border: 1px solid var(--border);
-            color: var(--text);
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-size: 13px;
-            width: 100%;
-            transition: border-color 0.15s;
-            outline: none;
-        }
-        .input-field:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(36,161,222,0.1); }
-        .input-field::placeholder { color: var(--muted); }
-        select.input-field option { background: var(--card); color: var(--text); }
-
-        .btn-primary {
-            background: var(--blue);
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.15s, transform 0.1s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-primary:hover { filter: brightness(1.1); }
-        .btn-primary:active { transform: scale(0.97); }
-
-        .btn-secondary {
-            background: var(--btn-secondary-bg);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.15s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-secondary:hover { background: var(--btn-secondary-hover); }
-
-        .btn-danger {
-            background: transparent;
-            color: var(--muted);
-            border: none;
-            border-radius: 6px;
-            padding: 6px;
-            cursor: pointer;
-            transition: color 0.15s, background 0.15s;
-        }
-        .btn-danger:hover { color: var(--red); background: rgba(248,81,73,0.1); }
-
-        .btn-icon {
-            background: transparent;
-            color: var(--muted);
-            border: none;
-            border-radius: 6px;
-            padding: 6px;
-            cursor: pointer;
-            transition: color 0.15s, background 0.15s;
-        }
-        .btn-icon:hover { color: var(--text); background: var(--btn-secondary-bg); }
-
-        .modal-overlay { 
-            position: fixed; inset: 0; z-index: 50;
-            background: rgba(1,4,9,0.85);
-            backdrop-filter: blur(4px);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .modal-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            width: 100%;
-            max-width: 560px;
-            max-height: 92vh;
-            overflow-y: auto;
-            box-shadow: 0 24px 80px rgba(0,0,0,0.6);
-        }
-
-
-        .modal-inner { display: flex; flex: 1; overflow: hidden; min-height: 380px; }
-        .modal-sidebar { width: 160px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; }
-        .modal-sidebar-btn { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 7px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border: none; background: transparent; font-family: inherit; transition: all 0.15s; width: 100%; text-align: left; }
-        .modal-sidebar-btn:hover { color: var(--text); background: var(--btn-secondary-bg); }
-        .modal-sidebar-btn.active { color: var(--blue); background: rgba(36,161,222,0.1); }
-        .modal-panel { display: none; flex: 1; padding: 20px; overflow-y: auto; min-width: 0; flex-direction: column; gap: 16px; }
-        .modal-panel.active { display: flex; }
-        .settings-section-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: block; }
-        .tab-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; background: var(--input-bg); transition: border-color 0.15s; }
-        .tab-toggle-row:hover { border-color: var(--muted); }
-
-        .proto-toggle { display: flex; gap: 4px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
-        .proto-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; background: transparent; transition: all 0.15s; color: var(--muted); letter-spacing: 0.05em; }
-        .proto-btn.active-http { background: rgba(36,161,222,0.2); color: var(--blue); }
-        .proto-btn.active-tcp  { background: rgba(163,113,247,0.2); color: var(--purple); }
-        .proto-btn.active-udp  { background: rgba(240,136,62,0.2); color: var(--orange); }
-
-        
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
-        }
-        *::-webkit-scrollbar { width: 6px; height: 6px; }
-        *::-webkit-scrollbar-track { background: transparent; }
-        *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-        *::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-        *::-webkit-scrollbar-corner { background: transparent; }
-
-        
-        .tab-bar {
-            display: flex;
-            gap: 4px;
-            border-bottom: 1px solid var(--border);
-            overflow-x: auto;
-            padding-bottom: 0;
-            
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
-        }
-        .tab-bar::-webkit-scrollbar { height: 3px; }
-        .tab-bar::-webkit-scrollbar-track { background: transparent; }
-        .tab-bar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-
-        .scrollbar-hide { scrollbar-width: none; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-
-        nav { background: var(--nav-bg); border-bottom: 1px solid var(--border); backdrop-filter: blur(12px); }
-
-        
-
-        .overview-bar { height: 4px; border-radius: 4px; background: var(--border); overflow: hidden; }
-        .overview-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-
-        pre { white-space: pre-wrap; word-break: break-all; }
-
-        
-        .toast { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-        .toast-item { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 12px 16px; font-size: 13px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); animation: slideIn 0.3s ease; pointer-events: all; max-width: 320px; }
-        .toast-item.success { border-left: 3px solid var(--green); }
-        .toast-item.error { border-left: 3px solid var(--red); }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        
-        .tab-toggle-row {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 8px 10px; border-radius: 8px; cursor: pointer;
-            border: 1px solid var(--border); background: var(--input-bg);
-            transition: border-color 0.15s;
-            user-select: none;
-        }
-        .tab-toggle-row:hover { border-color: var(--blue); }
-        .toggle-switch {
-            width: 32px; height: 18px; border-radius: 99px;
-            background: var(--border); position: relative;
-            transition: background 0.2s; flex-shrink: 0;
-        }
-        .toggle-switch.on { background: var(--blue); }
-        .toggle-knob {
-            position: absolute; top: 2px; left: 2px;
-            width: 14px; height: 14px; border-radius: 50%;
-            background: #fff; transition: transform 0.2s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        }
-        .toggle-switch.on .toggle-knob { transform: translateX(14px); }
-
-        .protocol-section { display: none; }
-        .protocol-section.active { display: block; }
-
-        label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
-
-        
-        .detail-panel {
-            position: fixed; top: 0; right: 0; bottom: 0; z-index: 60;
-            width: 100%; max-width: 680px;
-            background: var(--bg);
-            border-left: 1px solid var(--border);
-            box-shadow: none;
-            overflow-y: auto;
-            transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s ease;
-        }
-        .detail-panel.open { transform: translateX(0); box-shadow: -24px 0 80px rgba(0,0,0,0.4); }
-        .detail-backdrop {
-            position: fixed; inset: 0; z-index: 59;
-            background: rgba(1,4,9,0.6);
-            backdrop-filter: blur(2px);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        .detail-backdrop.open { opacity: 1; pointer-events: all; }
-
-        
-        .flow-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 14px 16px;
-            min-width: 140px;
-            flex: 1;
-        }
-        .flow-box.active-box { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(36,161,222,0.12); }
-        .flow-arrow { display: flex; align-items: center; color: var(--border); font-size: 20px; padding: 0 8px; flex-shrink: 0; }
-
-        
-        .detail-section { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
-        .detail-section-header { background: var(--card); padding: 10px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); }
-        .detail-kv { display: grid; grid-template-columns: 160px 1fr; gap: 0; }
-        .detail-key { padding: 9px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); border-bottom: 1px solid var(--border); }
-        .detail-val { padding: 9px 16px; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--text); border-bottom: 1px solid var(--border); word-break: break-all; }
-
-        
-        .nav-btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            height: 34px; padding: 0 12px;
-            border-radius: 6px; font-size: 13px; font-weight: 600;
-            border: 1px solid var(--border);
-            background: var(--btn-secondary-bg);
-            color: var(--muted);
-            cursor: pointer; transition: all 0.15s;
-            white-space: nowrap;
-        }
-        .nav-btn:hover { color: var(--text); border-color: var(--muted); }
-        .nav-btn-primary {
-            background: var(--blue); border-color: var(--blue); color: #fff !important;
-        }
-        .nav-btn-primary:hover { filter: brightness(1.12); border-color: transparent; }
-        .nav-btn.update-available {
-            color: var(--orange) !important;
-            border-color: rgba(240,136,62,0.4);
-            background: rgba(240,136,62,0.08);
-        }
-        .nav-btn.update-available:hover { background: rgba(240,136,62,0.15); }
-
-        
-        .route-card-inner { cursor: default; }
-
-        
-        .svc-row:hover { background: rgba(36,161,222,0.04); cursor: pointer; }
-
-        
-        #entrypointsList {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-        }
-        .ep-pill {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
-            border-radius: 8px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            min-width: 160px;
-            justify-content: center;
-        }
-
-        
-        #mobileMenu {
-            display: none;
-            position: fixed; top: 56px; left: 0; right: 0; z-index: 45;
-            background: var(--nav-bg);
-            border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(12px);
-            padding: 12px 16px;
-            flex-direction: column;
-            gap: 8px;
-        }
-        #mobileMenu.open { display: flex; }
-        .mobile-menu-item {
-            display: flex; align-items: center; gap-10px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text);
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            text-align: left;
-            transition: background 0.15s;
-            gap: 10px;
-        }
-        .mobile-menu-item:hover { background: var(--btn-secondary-bg); }
-        .mobile-menu-divider { height: 1px; background: var(--border); margin: 4px 0; }
-
-        
-        .theme-btn { 
-            display: flex; align-items: center; gap: 6px;
-            padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
-            border: 1px solid var(--border); background: var(--btn-secondary-bg);
-            color: var(--muted); cursor: pointer; transition: all 0.15s;
-        }
-        .theme-btn.active { color: var(--blue); border-color: var(--blue); background: rgba(36,161,222,0.1); }
-        .theme-btn:hover { color: var(--text); }
-
-        
-        .text-green-400 { color: var(--green) !important; }
-        .text-yellow-400 { color: var(--yellow) !important; }
-        .text-red-400 { color: var(--red) !important; }
-        .text-purple-400 { color: var(--purple) !important; }
-        .text-blue-400 { color: var(--blue) !important; }
-        [data-theme="light"] .text-white { color: var(--text) !important; }
-
-        
-        [data-theme="light"] [style*="color:#e6edf3"] { color: var(--text) !important; }
-        [data-theme="light"] [style*="color:#7ee787"] { color: var(--green) !important; }
-        [data-theme="light"] [style*="color:#58a6ff"] { color: var(--blue) !important; }
-        [data-theme="light"] [style*="background:#0d1117"] { background: var(--bg) !important; }
-        [data-theme="light"] [style*="background:#161b22"] { background: var(--card) !important; }
-        [data-theme="light"] [style*="background:#21262d"] { background: var(--btn-secondary-bg) !important; }
-        [data-theme="light"] [style*="border:1px solid var(--border)"] { border-color: var(--border) !important; }
-
-        
-        #liveContent { width: 100%; }
-        #liveContent .card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        #liveContent table { min-width: 560px; width: 100%; table-layout: auto; border-collapse: collapse; }
-        #liveContent td, #liveContent th { white-space: nowrap; }
-        .svc-col-type, .svc-col-servers, .svc-col-provider {  }
-
-        
-        @media (max-width: 640px) {
-            .desktop-only { display: none !important; }
-
-            .stat-card { padding: 12px; }
-
-            .tab-btn { font-size: 12px; padding: 10px 2px; }
-
-            #tab-services .flex.flex-wrap.gap-2.mb-4 { flex-direction: column; }
-            #searchRoutes { width: 100%; }
-
-            .route-card-inner { padding: 12px 12px 8px; }
-
-            .modal-overlay { align-items: flex-end; padding: 0; }
-            .modal-box { max-width: 100% !important; width: 100%; border-radius: 18px 18px 0 0; max-height: 92vh; }
-
-            /* Settings modal — mobile bottom sheet layout */
-            #settingsModal .modal-box { display: flex; flex-direction: column; }
-            #settingsModal .modal-inner { flex-direction: column; min-height: unset; overflow: visible; }
-            #settingsModal .modal-sidebar {
-                width: 100%; flex-direction: row; border-right: none;
-                border-bottom: 1px solid var(--border);
-                padding: 6px 8px; gap: 4px; overflow-x: auto;
-                scrollbar-width: none; flex-shrink: 0;
-            }
-            #settingsModal .modal-sidebar::-webkit-scrollbar { display: none; }
-            #settingsModal .modal-sidebar-btn {
-                flex-direction: column; gap: 4px; padding: 6px 10px;
-                font-size: 11px; white-space: nowrap; flex-shrink: 0; width: auto;
-                border-bottom: 2px solid transparent; border-radius: 0;
-                background: transparent !important;
-            }
-            #settingsModal .modal-sidebar-btn i { font-size: 16px; }
-            #settingsModal .modal-sidebar-btn.active {
-                color: var(--blue); border-bottom-color: var(--blue);
-                background: transparent !important;
-            }
-            #settingsModal .modal-sidebar > div { flex: 1; overflow-y: auto; }
-            #settingsModal .modal-panel { padding: 16px; max-height: 54vh; overflow-y: auto; }
-            #settingsModal #tabToggles { grid-template-columns: 1fr !important; }
-            #settingsModal .tab-toggle-row { padding: 10px 12px; }
-
-            .detail-panel { max-width: 100%; border-left: none; border-top: 1px solid var(--border); }
-
-            .flow-diagram-row { flex-direction: column !important; align-items: stretch !important; }
-            .flow-arrow { transform: rotate(90deg); justify-content: center; padding: 4px 0; }
-            .flow-box { min-width: unset; }
-
-            .detail-kv { grid-template-columns: 1fr; }
-            .detail-key { border-bottom: none; padding-bottom: 2px; }
-            .detail-val { padding-top: 2px; border-bottom: 1px solid var(--border); }
-
-            .toast { left: 12px; right: 12px; bottom: 12px; }
-            .toast-item { max-width: 100%; }
-
-            .proto-toggle { width: 100%; }
-            .proto-btn { flex: 1; text-align: center; }
-
-            #entrypointsList { justify-content: center; }
-            .ep-pill { min-width: 130px; }
-
-            .filter-bar { flex-direction: column; }
-            .filter-bar .relative { width: 100%; }
-            .filter-bar .proto-toggle { width: 100%; }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body class="text-slate-100 min-h-screen font-sans">
 
@@ -525,232 +58,15 @@
 </div>
 
 
-<nav class="sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="flex items-center justify-between h-14">
-            
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <i class="ph-fill ph-traffic-signal text-2xl" style="color: var(--blue)"></i>
-                    <span class="font-bold text-base tracking-tight" style="color:var(--text)">Traefik <span style="color:var(--blue)">Manager</span></span>
-                </div>
-            </div>
-
-            
-            <div class="hidden sm:flex items-center gap-2">
-                
-                <button id="versionBadge" class="hidden nav-btn font-mono" title="Traefik version">
-                    <span id="apiStatusDot" style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span>
-                    <i class="ph-bold ph-git-branch"></i>
-                    <span id="versionText">—</span>
-                </button>
-                <div id="updateBadge" class="hidden"></div>
-
-                
-                
-
-                
-                <button onclick="cycleTheme()" id="themeToggleBtn" class="nav-btn" title="Toggle theme">
-                    <i class="ph-bold ph-moon" id="themeIcon"></i>
-                </button>
-
-                
-                
-
-                
-                <button onclick="openBackupsModal()" class="nav-btn" title="Backups">
-                    <i class="ph-bold ph-clock-counter-clockwise"></i>
-                </button>
-                <button onclick="openSettingsModal()" class="nav-btn" title="Settings">
-                    <i class="ph-bold ph-gear"></i>
-                </button>
-                {% if auth_enabled %}
-                
-                <form method="POST" action="{{ url_for('logout') }}" style="display:inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <button type="submit" class="nav-btn" title="Sign out" style="color:var(--muted)">
-                        <i class="ph-bold ph-sign-out"></i>
-                    </button>
-                </form>
-                {% endif %}
-                <button onclick="openMwModal()" class="nav-btn" title="Add Middleware">
-                    <i class="ph-bold ph-plugs-connected"></i>
-                    <span>Middleware</span>
-                </button>
-                <button onclick="openModal()" class="nav-btn nav-btn-primary">
-                    <i class="ph-bold ph-plus"></i>
-                    <span>Add Route</span>
-                </button>
-            </div>
-
-            
-            <div class="flex sm:hidden items-center gap-2">
-                <div id="versionBadgeMobile" class="hidden items-center gap-1 px-2 py-1 rounded-md text-xs font-mono" style="background:var(--btn-secondary-bg); border:1px solid var(--border); color:var(--muted)">
-                    <span id="apiStatusDotMobile" style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>
-                    <i class="ph-bold ph-git-branch text-xs"></i>
-                    <span id="versionTextMobile">—</span>
-                </div>
-                <button onclick="toggleMobileMenu()" class="btn-icon" id="hamburgerBtn">
-                    <i class="ph-bold ph-list text-xl" id="hamburgerIcon"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</nav>
+{% include 'sections/navbar.html' %}
 
 
-<div id="mobileMenu">
-    <button onclick="openModal(); closeMobileMenu()" class="mobile-menu-item">
-        <i class="ph-bold ph-plus" style="color:var(--blue)"></i> Add Route
-    </button>
-    <button onclick="openMwModal(); closeMobileMenu()" class="mobile-menu-item">
-        <i class="ph-bold ph-plugs-connected" style="color:var(--purple)"></i> Add Middleware
-    </button>
-    <button onclick="openBackupsModal(); closeMobileMenu()" class="mobile-menu-item">
-        <i class="ph-bold ph-clock-counter-clockwise" style="color:var(--muted)"></i> Backups
-    </button>
-    <button onclick="openSettingsModal(); closeMobileMenu()" class="mobile-menu-item">
-        <i class="ph-bold ph-gear" style="color:var(--muted)"></i> Settings
-    </button>
-    {% if auth_enabled %}
-    <div class="mobile-menu-divider"></div>
-    <form method="POST" action="{{ url_for('logout') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button type="submit" class="mobile-menu-item" style="width:100%;color:var(--red)">
-            <i class="ph-bold ph-sign-out" style="color:var(--red)"></i> Sign out
-        </button>
-    </form>
-    {% endif %}
-    <button id="pwaInstallBtnMobile" class="mobile-menu-item hidden" onclick="installPWA(); closeMobileMenu()">
-        <i class="ph-bold ph-device-mobile" style="color:var(--green)"></i> Install as App
-    </button>
-    <div class="mobile-menu-divider"></div>
-    <div class="px-2 py-1">
-        <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--muted)">Theme</div>
-        <div class="flex gap-2">
-            <button onclick="setTheme('dark')" id="theme-dark-m" class="theme-btn flex-1 justify-center"><i class="ph-bold ph-moon text-xs mr-1"></i>Dark</button>
-            <button onclick="setTheme('light')" id="theme-light-m" class="theme-btn flex-1 justify-center"><i class="ph-bold ph-sun text-xs mr-1"></i>Light</button>
-            <button onclick="setTheme('system')" id="theme-system-m" class="theme-btn flex-1 justify-center"><i class="ph-bold ph-desktop text-xs mr-1"></i>System</button>
-        </div>
-    </div>
-</div>
+{% include 'sections/mobile_menu.html' %}
 
 <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
 
-    
-    <div id="overviewSection" class="mb-6">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="statsGrid">
+    {% include 'sections/stats.html' %}
 
-            
-            <div class="stat-card">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">HTTP Routers</span>
-                    <i class="ph-fill ph-layout text-sm" style="color:var(--blue)"></i>
-                </div>
-                <div class="text-3xl font-bold text-white mb-3" id="statHttpRouters">—</div>
-                <div class="space-y-1.5">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
-                        <span class="font-mono text-green-400" id="statHttpSuccess">—</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
-                        <span class="font-mono text-yellow-400" id="statHttpWarn">—</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
-                        <span class="font-mono text-red-400" id="statHttpErr">—</span>
-                    </div>
-                </div>
-                <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barHttpRouters" style="background:var(--border)"></div>
-            </div>
-
-            
-            <div class="stat-card">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">TCP / UDP</span>
-                    <i class="ph-fill ph-arrows-left-right text-sm" style="color:var(--purple)"></i>
-                </div>
-                <div class="text-3xl font-bold text-white mb-3" id="statTcpUdp">—</div>
-                <div class="space-y-1.5">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
-                        <span class="font-mono text-green-400" id="statTcpSuccess">—</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
-                        <span class="font-mono text-yellow-400" id="statTcpWarn">—</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
-                        <span class="font-mono text-red-400" id="statTcpErr">—</span>
-                    </div>
-                </div>
-                <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barTcpRouters" style="background:var(--border)"></div>
-            </div>
-
-            
-            <div class="stat-card">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Services</span>
-                    <i class="ph-fill ph-circles-four text-sm" style="color:var(--green)"></i>
-                </div>
-                <div class="text-3xl font-bold text-white mb-3" id="statServices">—</div>
-                <div class="space-y-1.5">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
-                        <span class="font-mono text-green-400" id="statSvcSuccess">—</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
-                        <span class="font-mono text-yellow-400" id="statSvcWarn">—</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
-                        <span class="font-mono text-red-400" id="statSvcErr">—</span>
-                    </div>
-                </div>
-                <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barServices" style="background:var(--border)"></div>
-            </div>
-
-            
-            <div class="stat-card">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Middlewares</span>
-                    <i class="ph-fill ph-plugs-connected text-sm" style="color:var(--yellow)"></i>
-                </div>
-                <div class="text-3xl font-bold text-white mb-3" id="statMiddlewares">—</div>
-                <div class="space-y-1.5">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
-                        <span class="font-mono text-green-400" id="statMwSuccess">—</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
-                        <span class="font-mono text-yellow-400" id="statMwWarn">—</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
-                        <span class="font-mono text-red-400" id="statMwErr">—</span>
-                    </div>
-                </div>
-                <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barMiddlewares" style="background:var(--border)"></div>
-            </div>
-
-        </div>
-
-        
-        <div id="entrypointsBar" class="mt-3 hidden">
-            <div class="stat-card">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Entry Points</span>
-                </div>
-                <div id="entrypointsList" class="flex flex-wrap gap-2"></div>
-            </div>
-        </div>
-    </div>
-
-    
     <div class="tab-bar mb-6" id="tabBar">
         <button onclick="switchTab('services')" id="btn-services" class="tab-btn active">
             <span class="flex items-center gap-2">
@@ -780,6 +96,83 @@
                 <span class="badge badge-muted" id="dockerTabCount">—</span>
             </span>
         </button>
+        <button onclick="switchTab('kubernetes')" id="btn-kubernetes" class="tab-btn tab-optional" data-tab="kubernetes">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-circles-three"></i>
+                Kubernetes
+                <span class="badge badge-muted" id="kubernetesTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('swarm')" id="btn-swarm" class="tab-btn tab-optional" data-tab="swarm">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-graph"></i>
+                Swarm
+                <span class="badge badge-muted" id="swarmTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('nomad')" id="btn-nomad" class="tab-btn tab-optional" data-tab="nomad">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-circles-four"></i>
+                Nomad
+                <span class="badge badge-muted" id="nomadTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('ecs')" id="btn-ecs" class="tab-btn tab-optional" data-tab="ecs">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-cloud"></i>
+                ECS
+                <span class="badge badge-muted" id="ecsTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('consulcatalog')" id="btn-consulcatalog" class="tab-btn tab-optional" data-tab="consulcatalog">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-address-book"></i>
+                Consul Catalog
+                <span class="badge badge-muted" id="consulcatalogTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('redis')" id="btn-redis" class="tab-btn tab-optional" data-tab="redis">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-database"></i>
+                Redis
+                <span class="badge badge-muted" id="redisTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('etcd')" id="btn-etcd" class="tab-btn tab-optional" data-tab="etcd">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-database"></i>
+                etcd
+                <span class="badge badge-muted" id="etcdTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('consul')" id="btn-consul" class="tab-btn tab-optional" data-tab="consul">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-database"></i>
+                Consul KV
+                <span class="badge badge-muted" id="consulTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('zookeeper')" id="btn-zookeeper" class="tab-btn tab-optional" data-tab="zookeeper">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-database"></i>
+                ZooKeeper
+                <span class="badge badge-muted" id="zookeeperTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('http_provider')" id="btn-http_provider" class="tab-btn tab-optional" data-tab="http_provider">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-link"></i>
+                HTTP Provider
+                <span class="badge badge-muted" id="httpProviderTabCount">—</span>
+            </span>
+        </button>
+        <button onclick="switchTab('file_external')" id="btn-file_external" class="tab-btn tab-optional" data-tab="file_external">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-file-text"></i>
+                File (external)
+                <span class="badge badge-muted" id="fileExternalTabCount">—</span>
+            </span>
+        </button>
         <button onclick="switchTab('certs')" id="btn-certs" class="tab-btn tab-optional" data-tab="certs">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-shield-check"></i>
@@ -803,533 +196,56 @@
     </div>
 
     
-    <div id="tab-services" class="tab-content active">
-        
-        <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
-            <div class="relative flex-1 min-w-48">
-                <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-                <input type="text" id="searchRoutes" oninput="filterRoutes()" placeholder="Search routes..." class="input-field pl-9">
-            </div>
-            <div class="flex gap-1 p-1 rounded-lg" style="background:#0d1117; border:1px solid var(--border)">
-                <button onclick="filterProto('all')" id="filterAll" class="proto-btn active-http text-xs px-3 py-1.5">All</button>
-                <button onclick="filterProto('http')" id="filterHTTP" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
-                <button onclick="filterProto('tcp')" id="filterTCP" class="proto-btn text-xs px-3 py-1.5">TCP</button>
-                <button onclick="filterProto('udp')" id="filterUDP" class="proto-btn text-xs px-3 py-1.5">UDP</button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="routeGrid">
-            {% for app in apps %}
-            {% set raw_rule = app.rule | replace("Host(`", "") | replace("`)", "") %}
-            {% if " && " in raw_rule %}
-                {% set domain = raw_rule[:raw_rule.find(" && ")] %}
-            {% else %}
-                {% set domain = raw_rule %}
-            {% endif %}
-
-            <div class="card route-card" data-protocol="{{ app.protocol }}" data-name="{{ app.name | lower }}" data-routekey="{{ app.name }}" data-idx="{{ loop.index0 }}">
-                
-                <div class="route-card-inner p-4 pb-2">
-                <div class="flex justify-between items-start mb-3">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-0.5">
-                            {% if app.protocol == 'http' %}<span class="badge badge-http">HTTP</span>
-                            {% elif app.protocol == 'tcp' %}<span class="badge badge-tcp">TCP</span>
-                            {% else %}<span class="badge badge-udp">UDP</span>{% endif %}
-                            <span id="svc-status-{{ loop.index }}" class="status-dot status-checking" title="Checking..."></span>
-                        </div>
-                        <h3 class="font-bold text-sm text-white mt-1.5 truncate transition-colors">{{ app.name }}</h3>
-                        <div class="text-xs font-mono truncate" style="color:var(--muted)">{{ app.service_name }}</div>
-                    </div>
-                    <div class="flex items-center gap-0.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()">
-                        <button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="btn-icon" title="View details">
-                            <i class="ph-bold ph-info text-sm"></i>
-                        </button>
-                        {% if app.protocol == 'http' and domain and '{' not in domain and '*' not in domain and 'HostRegexp' not in domain %}
-                        <a href="https://{{ domain }}" target="_blank" class="btn-icon" title="Open site">
-                            <i class="ph-bold ph-arrow-square-out text-sm"></i>
-                        </a>
-                        {% endif %}
-                        <button type="button" data-app='{{ app|tojson|safe }}' onclick="handleEdit(this)" class="btn-icon" title="Edit">
-                            <i class="ph-bold ph-pencil-simple text-sm"></i>
-                        </button>
-                        <form action="{{ url_for('delete_entry', router_id=app.id) }}" method="POST" onsubmit="return confirm('Delete {{ app.name }}?');" style="display:inline">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                            <button type="submit" class="btn-danger" title="Delete">
-                                <i class="ph-bold ph-trash text-sm"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                {% if app.protocol == 'http' %}
-                <div class="space-y-2">
-                    <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
-                        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div>
-                        <div class="text-xs font-mono truncate" style="color:#58a6ff" title="{{ app.rule }}">{{ domain or app.rule }}</div>
-                    </div>
-                    <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
-                        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
-                        <div class="text-xs font-mono truncate" style="color:#7ee787">{{ app.target }}</div>
-                    </div>
-                    {% if app.entryPoints %}
-                    <div class="flex flex-wrap gap-1">
-                        {% for ep in app.entryPoints %}
-                        <span class="badge badge-muted text-xs">{{ ep }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                    {% if app.middlewares %}
-                    <div class="flex flex-wrap gap-1">
-                        {% for mw in app.middlewares %}
-                        <span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">{{ mw }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-                {% else %}
-                <div class="space-y-2">
-                    {% if app.rule %}
-                    <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
-                        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div>
-                        <div class="text-xs font-mono truncate" style="color:#58a6ff">{{ app.rule }}</div>
-                    </div>
-                    {% endif %}
-                    <div class="rounded-md p-2.5" style="background:#0d1117; border:1px solid var(--border)">
-                        <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
-                        <div class="text-xs font-mono truncate" style="color:#7ee787">{{ app.target }}</div>
-                    </div>
-                    {% if app.entryPoints %}
-                    <div class="flex flex-wrap gap-1">
-                        {% for ep in app.entryPoints %}
-                        <span class="badge badge-muted text-xs">{{ ep }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-                {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        {% if not apps %}
-        <div class="text-center py-20" style="color:var(--muted)">
-            <i class="ph-light ph-layout text-6xl block mb-4 opacity-30"></i>
-            <p class="text-base font-medium">No routes configured yet</p>
-            <p class="text-sm mt-1">Click <strong>Add Route</strong> to get started</p>
-        </div>
-        {% endif %}
-    </div>
+    {% include 'tabs/tab_services.html' %}
 
     
-    <div id="tab-middlewares" class="tab-content">
+    {% include 'tabs/tab_middlewares.html' %}
 
-        <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
-            <div class="relative flex-1 min-w-48">
-                <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-                <input type="text" id="searchMw" oninput="filterMw()" placeholder="Search middlewares..." class="input-field pl-9">
-            </div>
-            <div class="flex gap-1 p-1 rounded-lg" style="background:#0d1117; border:1px solid var(--border)">
-                <button onclick="filterMw('all')" id="mwf-all" class="proto-btn active-http text-xs px-3 py-1.5">All</button>
-                <button onclick="filterMw('http')" id="mwf-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
-                <button onclick="filterMw('tcp')" id="mwf-tcp" class="proto-btn text-xs px-3 py-1.5">TCP</button>
-            </div>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="mwGrid">
-            {% for mw in middlewares %}
-            <div class="card p-4 mw-card" data-mwname="{{ mw.name | lower }}" data-mwtype="{{ mw.type | default('http') | lower }}">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <span class="badge {% if mw.type == 'tcp' %}badge-tcp{% else %}badge-http{% endif %} mb-1.5 block w-fit">{{ mw.type | default('HTTP') | upper }}</span>
-                        <h3 class="font-bold text-sm text-white">{{ mw.name }}</h3>
-                    </div>
-                    <div class="flex gap-0.5">
-                        <button type="button" data-mw='{{ mw|tojson|safe }}' onclick="handleMwEdit(this)" class="btn-icon" title="Edit">
-                            <i class="ph-bold ph-pencil-simple text-sm"></i>
-                        </button>
-                        <form action="{{ url_for('delete_middleware', mw_name=mw.name) }}" method="POST" onsubmit="return confirm('Delete middleware {{ mw.name }}?');" style="display:inline">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                            <button type="submit" class="btn-danger"><i class="ph-bold ph-trash text-sm"></i></button>
-                        </form>
-                    </div>
-                </div>
-                <div class="rounded-md p-3 overflow-x-auto" style="background:#0d1117; border:1px solid var(--border)">
-                    <pre class="text-xs font-mono leading-relaxed" style="color:#7ee787">{{ mw.yaml }}</pre>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+    {% include 'tabs/tab_live.html' %}
 
-        <div id="mwEmpty" class="hidden text-center py-20" style="color:var(--muted)">
-            <i class="ph-light ph-plugs-connected text-6xl block mb-4 opacity-30"></i>
-            <p class="text-base font-medium" id="mwEmptyText">No middlewares found</p>
-        </div>
 
-        {% if not middlewares %}
-        <div class="text-center py-20" style="color:var(--muted)">
-            <i class="ph-light ph-plugs-connected text-6xl block mb-4 opacity-30"></i>
-            <p class="text-base font-medium">No middlewares configured</p>
-            <p class="text-sm mt-1">Click <strong>Middleware</strong> to add one</p>
-        </div>
-        {% endif %}
-    </div>
+    {% include 'tabs/tab_docker.html' %}
+
+    {% include 'tabs/tab_kubernetes.html' %}
+
+    {% include 'tabs/tab_swarm.html' %}
+
+    {% include 'tabs/tab_nomad.html' %}
+
+    {% include 'tabs/tab_ecs.html' %}
+
+    {% include 'tabs/tab_consulcatalog.html' %}
+
+    {% include 'tabs/tab_redis.html' %}
+
+    {% include 'tabs/tab_etcd.html' %}
+
+    {% include 'tabs/tab_consul.html' %}
+
+    {% include 'tabs/tab_zookeeper.html' %}
+
+    {% include 'tabs/tab_http_provider.html' %}
+
+    {% include 'tabs/tab_file_external.html' %}
+
+
+    {% include 'tabs/tab_certs.html' %}
 
     
-    <div id="tab-live" class="tab-content">
-        <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
-            <div class="relative flex-1 min-w-48">
-                <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-                <input type="text" id="svcSearch" oninput="filterServices()" placeholder="Search services..." class="input-field pl-9">
-            </div>
-            <div class="flex gap-1 p-1 rounded-lg" style="background:#0d1117; border:1px solid var(--border)">
-                <button onclick="filterServices('all')" id="sf-all" class="proto-btn active-http text-xs px-3 py-1.5">All</button>
-                <button onclick="filterServices('success')" id="sf-success" class="proto-btn text-xs px-3 py-1.5">Success</button>
-                <button onclick="filterServices('warning')" id="sf-warning" class="proto-btn text-xs px-3 py-1.5">Warnings</button>
-                <button onclick="filterServices('error')" id="sf-error" class="proto-btn text-xs px-3 py-1.5">Errors</button>
-            </div>
-            <button onclick="refreshLiveView()" class="btn-secondary text-xs">
-                <i class="ph-bold ph-arrows-clockwise"></i> Refresh
-            </button>
-        </div>
-
-        <div id="liveContent">
-            <div class="text-center py-16" style="color:var(--muted)">
-                <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
-                <p>Loading services...</p>
-            </div>
-        </div>
-    </div>
+    {% include 'tabs/tab_plugins.html' %}
 
     
-    <div id="tab-docker" class="tab-content">
-        <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
-            <div class="relative flex-1 min-w-48">
-                <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-                <input type="text" id="dockerSearch" oninput="filterDocker()" placeholder="Search docker routes..." class="input-field pl-9">
-            </div>
-            <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-                <button onclick="filterDocker('all')"   id="dk-all"   class="proto-btn active-http text-xs px-3 py-1.5">All</button>
-                <button onclick="filterDocker('http')"  id="dk-http"  class="proto-btn text-xs px-3 py-1.5">HTTP</button>
-                <button onclick="filterDocker('tcp')"   id="dk-tcp"   class="proto-btn text-xs px-3 py-1.5">TCP</button>
-            </div>
-            <button onclick="refreshDockerTab()" class="btn-secondary text-xs">
-                <i class="ph-bold ph-arrows-clockwise"></i> Refresh
-            </button>
-        </div>
-        <div class="mb-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(36,161,222,0.08);border:1px solid rgba(36,161,222,0.2);color:var(--blue)">
-            <i class="ph-bold ph-info"></i>
-            These routes are managed by Docker labels and are read-only. Edit them via your container's labels.
-        </div>
-        <div id="dockerContent">
-            <div class="text-center py-16" style="color:var(--muted)">
-                <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
-                <p>Loading docker routes...</p>
-            </div>
-        </div>
-    </div>
-
-    
-    <div id="tab-certs" class="tab-content">
-        <div class="flex items-center justify-between mb-4">
-            <div></div>
-            <button onclick="refreshCertsTab()" class="btn-secondary text-xs">
-                <i class="ph-bold ph-arrows-clockwise"></i> Refresh
-            </button>
-        </div>
-        <div class="mb-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(36,161,222,0.08);border:1px solid rgba(36,161,222,0.2);color:var(--blue)">
-            <i class="ph-bold ph-info"></i>
-            TLS certificates are managed automatically by Traefik's ACME resolver. Renew or revoke them via your Traefik config.
-        </div>
-        <div id="certsContent">
-            <div class="text-center py-16" style="color:var(--muted)">
-                <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
-                <p>Loading certificates...</p>
-            </div>
-        </div>
-    </div>
-
-    
-    <div id="tab-plugins" class="tab-content">
-        <div class="flex items-center justify-between mb-4">
-            <div></div>
-            <div class="flex items-center gap-2">
-                <a href="https://plugins.traefik.io/plugins" target="_blank" class="btn-secondary text-xs" style="text-decoration:none">
-                    <i class="ph-bold ph-puzzle-piece"></i> Browse Plugins
-                </a>
-                <button onclick="refreshPluginsTab()" class="btn-secondary text-xs">
-                    <i class="ph-bold ph-arrows-clockwise"></i> Refresh
-                </button>
-            </div>
-        </div>
-        <div class="mb-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(36,161,222,0.08);border:1px solid rgba(36,161,222,0.2);color:var(--blue)">
-            <i class="ph-bold ph-info"></i>
-            Plugins are managed in your static <code class="font-mono">traefik.yml</code> under <code class="font-mono">experimental.plugins</code> and must be edited there directly.
-        </div>
-        <div id="pluginsContent">
-            <div class="text-center py-16" style="color:var(--muted)">
-                <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
-                <p>Loading plugins...</p>
-            </div>
-        </div>
-    </div>
-
-    
-    <div id="tab-logs" class="tab-content">
-        <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
-            <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">
-                <button onclick="setLogLines(100)"  id="log-100"  class="proto-btn active-http text-xs px-3 py-1.5">100</button>
-                <button onclick="setLogLines(200)"  id="log-200"  class="proto-btn text-xs px-3 py-1.5">200</button>
-                <button onclick="setLogLines(500)"  id="log-500"  class="proto-btn text-xs px-3 py-1.5">500</button>
-                <button onclick="setLogLines(1000)" id="log-1000" class="proto-btn text-xs px-3 py-1.5">1000</button>
-            </div>
-            <input type="text" id="logSearch" oninput="filterLogs()" placeholder="Filter logs..." class="input-field flex-1 min-w-48">
-            <button onclick="refreshLogs()" class="btn-secondary text-xs">
-                <i class="ph-bold ph-arrows-clockwise"></i> Refresh
-            </button>
-        </div>
-        <div id="logsContent">
-            <div class="text-center py-16" style="color:var(--muted)">
-                <i class="ph-light ph-terminal text-5xl block mb-3 opacity-30"></i>
-                <p class="font-medium">Access logs not loaded</p>
-                <p class="text-xs mt-1">Configure <code class="font-mono">Access Log Path</code> in Settings</p>
-            </div>
-        </div>
-    </div>
+    {% include 'tabs/tab_logs.html' %}
 
 </main>
 
 
-<div id="appModal" class="modal-overlay" style="display:none">
-    <div class="modal-box">
-        <form action="{{ url_for('save_entry') }}" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <input type="hidden" name="isEdit" id="isEdit" value="false">
-            <input type="hidden" name="originalId" id="originalId" value="">
-            <input type="hidden" name="protocol" id="protocolHidden" value="http">
+{% include 'modals/route_modal.html' %}
 
-            
-            <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
-                <div class="flex items-center gap-2">
-                    <i class="ph-bold ph-layout" style="color:var(--blue)"></i>
-                    <h3 class="font-bold text-sm text-white" id="modalTitle">Add Route</h3>
-                </div>
-                <button type="button" onclick="closeModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
-            </div>
+{% include 'modals/mw_modal.html' %}
 
-            <div class="px-5 py-4 space-y-4">
-                
-                <div>
-                    <label>Protocol</label>
-                    <div class="proto-toggle">
-                        <button type="button" class="proto-btn active-http" id="protoHTTP" onclick="setProtocol('http')">HTTP</button>
-                        <button type="button" class="proto-btn" id="protoTCP" onclick="setProtocol('tcp')">TCP</button>
-                        <button type="button" class="proto-btn" id="protoUDP" onclick="setProtocol('udp')">UDP</button>
-                    </div>
-                </div>
-
-                
-                <div>
-                    <label>Route / Service Name</label>
-                    <input type="text" name="serviceName" id="serviceName" required class="input-field" placeholder="e.g. my-app">
-                </div>
-
-                
-                <div id="httpSection" class="protocol-section active space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label>Subdomain</label>
-                            <input type="text" name="subdomain" id="subdomain" class="input-field" placeholder="app">
-                        </div>
-                        <div>
-                            <label>Domain</label>
-                            <select name="domain" id="domain" class="input-field">
-                                {% for d in domains %}
-                                <option value="{{ d }}">{{ d }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label>Target IP / Host</label>
-                            <input type="text" name="targetIp" id="targetIp" class="input-field" placeholder="10.0.0.10">
-                        </div>
-                        <div>
-                            <label>Port</label>
-                            <input type="text" name="targetPort" id="targetPort" class="input-field" placeholder="8080">
-                        </div>
-                    </div>
-                    <div>
-                        <label>Entry Points (comma separated)</label>
-                        <input type="text" name="entryPoints" id="entryPoints" class="input-field" value="https" placeholder="https">
-                    </div>
-                    <div>
-                        <label>Middlewares (comma separated)</label>
-                        <input type="text" name="middlewares" id="middlewares" class="input-field" placeholder="auth@file, redirect-https">
-                    </div>
-                </div>
-
-                
-                <div id="tcpSection" class="protocol-section space-y-4">
-                    <div>
-                        <label>Rule (SNI)</label>
-                        <input type="text" name="tcpRule" id="tcpRule" class="input-field" placeholder="HostSNI(`tcp.example.com`) or HostSNI(`*`)">
-                        <p class="text-xs mt-1" style="color:var(--muted)">Use <code class="font-mono">HostSNI(`*`)</code> to match all TLS or leave empty for passthrough</p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label>Target IP / Host</label>
-                            <input type="text" name="targetIp" id="targetIpTcp" class="input-field" placeholder="10.0.0.10">
-                        </div>
-                        <div>
-                            <label>Port</label>
-                            <input type="text" name="targetPort" id="targetPortTcp" class="input-field" placeholder="5432">
-                        </div>
-                    </div>
-                    <div>
-                        <label>Entry Points</label>
-                        <input type="text" name="entryPoints" id="entryPointsTcp" class="input-field" placeholder="tcp, postgres">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" name="useTls" id="useTls" value="true" class="rounded" style="accent-color:var(--blue)">
-                        <span class="text-sm" style="color:#e6edf3">Enable TLS (with cert resolver)</span>
-                    </div>
-                </div>
-
-                
-                <div id="udpSection" class="protocol-section space-y-4">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label>Target IP / Host</label>
-                            <input type="text" name="targetIp" id="targetIpUdp" class="input-field" placeholder="10.0.0.10">
-                        </div>
-                        <div>
-                            <label>Port</label>
-                            <input type="text" name="targetPort" id="targetPortUdp" class="input-field" placeholder="53">
-                        </div>
-                    </div>
-                    <div>
-                        <label>Entry Point</label>
-                        <input type="text" name="udpEntryPoint" id="entryPointsUdp" class="input-field" placeholder="e.g. qbittorrent-udp">
-                    </div>
-                    <div class="rounded-md p-3 text-xs" style="background:rgba(240,136,62,0.08);border:1px solid rgba(240,136,62,0.25);color:#d29922">
-                        <i class="ph-bold ph-info"></i> UDP routers don't support rules. Traffic is routed by entry point only.
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-2 px-5 py-4" style="border-top:1px solid var(--border)">
-                <button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button>
-                <button type="submit" class="btn-primary">Save Route</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-
-<div id="mwModal" class="modal-overlay" style="display:none">
-    <div class="modal-box" style="max-width:620px">
-        <form action="{{ url_for('save_middleware') }}" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <input type="hidden" name="isMwEdit" id="isMwEdit" value="false">
-            <input type="hidden" name="originalMwId" id="originalMwId" value="">
-
-            <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
-                <div class="flex items-center gap-2">
-                    <i class="ph-bold ph-plugs-connected" style="color:var(--purple)"></i>
-                    <h3 class="font-bold text-sm text-white" id="mwModalTitle">Add Middleware</h3>
-                </div>
-                <button type="button" onclick="closeMwModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
-            </div>
-
-            <div class="px-5 py-4 space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label>Name</label>
-                        <input type="text" name="middlewareName" id="middlewareName" required class="input-field" placeholder="my-auth">
-                    </div>
-                    <div>
-                        <label>Template</label>
-                        <select id="mwTemplate" onchange="applyMwTemplate(this)" class="input-field">
-                            <option value="">Custom…</option>
-                            <optgroup label="Auth">
-                                <option value="basicAuth">Basic Auth</option>
-                                <option value="digestAuth">Digest Auth</option>
-                                <option value="forwardAuth">Forward Auth</option>
-                                <option value="forwardAuthAuthentik">Forward Auth (Authentik)</option>
-                                <option value="forwardAuthAuthelia">Forward Auth (Authelia)</option>
-                            </optgroup>
-                            <optgroup label="Security">
-                                <option value="ipAllowList">IP Allow List</option>
-                                <option value="ipAllowListPrivate">IP Allow List (Private Ranges)</option>
-                                <option value="rateLimit">Rate Limit</option>
-                                <option value="secureHeaders">Secure Headers</option>
-                                <option value="corsHeaders">CORS Headers</option>
-                            </optgroup>
-                            <optgroup label="Routing">
-                                <option value="redirectScheme">Redirect to HTTPS</option>
-                                <option value="redirectRegex">Redirect Regex</option>
-                                <option value="stripPrefix">Strip Prefix</option>
-                                <option value="addPrefix">Add Prefix</option>
-                                <option value="replacePath">Replace Path</option>
-                            </optgroup>
-                            <optgroup label="Advanced">
-                                <option value="compress">Gzip Compress</option>
-                                <option value="retry">Retry</option>
-                                <option value="circuitBreaker">Circuit Breaker</option>
-                                <option value="buffering">Buffering</option>
-                                <option value="chain">Middleware Chain</option>
-                                <option value="inFlightReq">In-Flight Limit</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label>Configuration (YAML)</label>
-                    <textarea name="middlewareContent" id="middlewareContent" rows="10" required class="input-field font-mono" style="resize:vertical; line-height:1.6"></textarea>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-2 px-5 py-4" style="border-top:1px solid var(--border)">
-                <button type="button" onclick="closeMwModal()" class="btn-secondary">Cancel</button>
-                <button type="submit" class="btn-primary">Save Middleware</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-
-<div id="backupsModal" class="modal-overlay" style="display:none">
-    <div class="modal-box" style="max-width:620px">
-        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
-            <div class="flex items-center gap-2">
-                <i class="ph-bold ph-clock-counter-clockwise" style="color:var(--yellow)"></i>
-                <h3 class="font-bold text-sm text-white">Configuration Backups</h3>
-            </div>
-            <button type="button" onclick="closeBackupsModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
-        </div>
-
-        <div class="px-5 py-4">
-            <div class="flex items-center gap-2 mb-4 p-3 rounded-lg text-xs" style="background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.2);color:#d29922">
-                <i class="ph-bold ph-warning text-sm"></i>
-                Restoring a backup will overwrite your current config. A backup of current state is created automatically before restoring.
-            </div>
-            <div id="backupsList">
-                <div class="text-center py-8" style="color:var(--muted)">
-                    <i class="ph-light ph-spinner-gap text-2xl animate-spin block mb-2"></i>
-                    Loading backups...
-                </div>
-            </div>
-        </div>
-
-        <div class="px-5 pb-4 flex justify-end">
-            <button type="button" onclick="closeBackupsModal()" class="btn-secondary">Close</button>
-        </div>
-    </div>
-</div>
-
+{% include 'modals/detail_panels.html' %}
 
 <script>
 const APP_DATA = JSON.parse({{ apps | tojson | tojson }});
@@ -1339,116 +255,6 @@ function _csrfHeaders() {
     return { 'X-CSRF-Token': token };
 }
 </script>
-
-
-<div class="detail-backdrop" id="svcDetailBackdrop" onclick="closeSvcDetail()"></div>
-<div class="detail-backdrop" id="pluginDetailBackdrop" onclick="closePluginDetail()"></div>
-<div class="detail-panel" id="svcDetailPanel">
-    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:#0d1117; border-bottom:1px solid var(--border)">
-        <div class="flex items-center gap-3">
-            <span id="svcDetailProtoBadge" class="badge badge-http">HTTP</span>
-            <h2 class="font-bold text-white text-sm" id="svcDetailTitle">Service Details</h2>
-        </div>
-        <button onclick="closeSvcDetail()" class="btn-icon"><i class="ph-bold ph-x"></i></button>
-    </div>
-    <div class="px-6 py-5 overflow-y-auto" id="svcDetailBody">
-        
-    </div>
-</div>
-
-<div class="detail-backdrop" id="pluginDetailBackdrop" onclick="closePluginDetail()"></div>
-<div class="detail-panel" id="pluginDetailPanel">
-    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:#0d1117; border-bottom:1px solid var(--border)">
-        <div class="flex items-center gap-3">
-            <i class="ph-bold ph-puzzle-piece text-lg" style="color:var(--blue)"></i>
-            <h2 class="font-bold text-white text-sm" id="pluginDetailTitle">Plugin Details</h2>
-        </div>
-        <button onclick="closePluginDetail()" class="btn-icon"><i class="ph-bold ph-x"></i></button>
-    </div>
-    <div class="px-6 py-5 overflow-y-auto" id="pluginDetailBody">
-        
-    </div>
-</div>
-
-<div class="detail-backdrop" id="detailBackdrop" onclick="closeRouteDetail()"></div>
-<div class="detail-panel" id="detailPanel">
-    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:#0d1117; border-bottom:1px solid var(--border)">
-        <div class="flex items-center gap-3">
-            <span id="detailProtoBadge" class="badge badge-http">HTTP</span>
-            <h2 class="font-bold text-white" id="detailTitle">Route Details</h2>
-        </div>
-        <div class="flex items-center gap-2">
-            <button id="detailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> Edit</button>
-            <button onclick="closeRouteDetail()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
-        </div>
-    </div>
-    <div id="detailContent" class="px-6 py-5">
-        <div class="text-center py-12" style="color:var(--muted)">
-            <i class="ph-light ph-spinner-gap text-3xl animate-spin block mb-2"></i>
-            Loading...
-        </div>
-    </div>
-</div>
-
-
-<div id="managerUpdateModal" class="modal-overlay" style="display:none">
-    <div class="modal-box" style="max-width:480px">
-        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
-            <div class="flex items-center gap-2">
-                <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange)"></i>
-                <h3 class="font-bold text-sm">Traefik Manager Update Available</h3>
-            </div>
-            <button onclick="document.getElementById('managerUpdateModal').style.display='none'" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
-        </div>
-        <div class="px-5 py-5 space-y-4">
-            <div class="flex items-center justify-between p-4 rounded-xl" style="background:var(--input-bg); border:1px solid var(--border)">
-                <div class="text-center flex-1">
-                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Current</div>
-                    <div class="font-mono font-bold text-lg" id="mgrUpdateCurrentVer">—</div>
-                </div>
-                <div class="text-2xl px-4" style="color:var(--border)">→</div>
-                <div class="text-center flex-1">
-                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Latest</div>
-                    <div class="font-mono font-bold text-lg" style="color:var(--green)" id="mgrUpdateLatestVer">—</div>
-                </div>
-            </div>
-            <p class="text-sm" style="color:var(--muted)">A new version of Traefik Manager is available. Pull the latest image to update.</p>
-            <a id="mgrUpdateReleaseLink" href="https://github.com/chr0nzz/traefik-manager/releases" target="_blank"
-               class="btn-primary" style="width:100%; justify-content:center; text-decoration:none">
-                <i class="ph-bold ph-github-logo"></i> View Release Notes
-            </a>
-        </div>
-    </div>
-</div>
-
-<div id="updateModal" class="modal-overlay" style="display:none">
-    <div class="modal-box" style="max-width:480px">
-        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
-            <div class="flex items-center gap-2">
-                <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange)"></i>
-                <h3 class="font-bold text-sm text-white">Traefik Update Available</h3>
-            </div>
-            <button onclick="document.getElementById('updateModal').style.display='none'" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
-        </div>
-        <div class="px-5 py-5 space-y-4">
-            <div class="flex items-center justify-between p-4 rounded-xl" style="background:#161b22; border:1px solid var(--border)">
-                <div class="text-center flex-1">
-                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Current</div>
-                    <div class="font-mono font-bold text-lg text-white" id="updateCurrentVer">—</div>
-                </div>
-                <div class="text-2xl px-4" style="color:var(--border)">→</div>
-                <div class="text-center flex-1">
-                    <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Latest</div>
-                    <div class="font-mono font-bold text-lg" style="color:var(--green)" id="updateLatestVer">—</div>
-                </div>
-            </div>
-            <p class="text-sm" style="color:var(--muted)">A new version of Traefik is available on GitHub. Update your Docker image to get the latest features and security fixes.</p>
-            <a id="updateReleaseLink" href="https://github.com/traefik/traefik/releases" target="_blank" class="btn-primary" style="width:100%; justify-content:center; text-decoration:none">
-                <i class="ph-bold ph-github-logo"></i> View Release Notes
-            </a>
-        </div>
-    </div>
-</div>
 
 <script>
 
@@ -1469,7 +275,7 @@ function showToast(msg, type='success') {
     setTimeout(() => { el.style.animation='slideOut 0.3s ease forwards'; setTimeout(()=>el.remove(),300); }, 4000);
 }
 
-const OPTIONAL_TABS = ['docker', 'certs', 'plugins', 'logs'];
+const OPTIONAL_TABS = ['docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs'];
 
 let _visibleTabsCache = {};
 
@@ -1522,11 +328,22 @@ function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.add('active');
     document.getElementById('btn-' + tab).classList.add('active');
-    if (tab === 'live')    refreshLiveView();
-    if (tab === 'docker')  refreshDockerTab();
-    if (tab === 'certs')   refreshCertsTab();
-    if (tab === 'plugins') refreshPluginsTab();
-    if (tab === 'logs')    refreshLogs();
+    if (tab === 'live')          refreshLiveView();
+    if (tab === 'docker')        refreshDockerTab();
+    if (tab === 'kubernetes')    refreshKubernetesTab();
+    if (tab === 'swarm')         refreshSwarmTab();
+    if (tab === 'nomad')         refreshNomadTab();
+    if (tab === 'ecs')           refreshEcsTab();
+    if (tab === 'consulcatalog') refreshConsulCatalogTab();
+    if (tab === 'redis')         refreshRedisTab();
+    if (tab === 'etcd')          refreshEtcdTab();
+    if (tab === 'consul')        refreshConsulTab();
+    if (tab === 'zookeeper')     refreshZookeeperTab();
+    if (tab === 'http_provider') refreshHttpProviderTab();
+    if (tab === 'file_external') refreshFileExternalTab();
+    if (tab === 'certs')         refreshCertsTab();
+    if (tab === 'plugins')       refreshPluginsTab();
+    if (tab === 'logs')          refreshLogs();
 }
 
 let currentProtoFilter = 'all';
@@ -1616,14 +433,7 @@ function openMwModal() {
 
 function closeMwModal() { document.getElementById('mwModal').style.display = 'none'; }
 
-function openBackupsModal() {
-    document.getElementById('backupsModal').style.display = 'flex';
-    loadBackups();
-}
-
-function closeBackupsModal() { document.getElementById('backupsModal').style.display = 'none'; }
-
-['appModal','mwModal','backupsModal'].forEach(id => {
+['appModal','mwModal'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) {
         if (e.target === this) this.style.display = 'none';
     });
@@ -1745,10 +555,12 @@ async function loadOverviewStats() {
         if (version.status === 'fulfilled' && version.value && version.value.Version) {
             _currentVersion = version.value.Version;
             document.getElementById('versionText').textContent = 'v' + _currentVersion;
-            document.getElementById('versionBadge').classList.remove('hidden');
             document.getElementById('versionTextMobile').textContent = 'v' + _currentVersion;
-            document.getElementById('versionBadgeMobile').classList.remove('hidden');
-            document.getElementById('versionBadgeMobile').classList.add('flex');
+            if (localStorage.getItem('showTraefikBadge') !== 'false') {
+                document.getElementById('versionBadge').classList.remove('hidden');
+                document.getElementById('versionBadgeMobile').classList.remove('hidden');
+                document.getElementById('versionBadgeMobile').classList.add('flex');
+            }
             checkForUpdate(_currentVersion);
         }
 
@@ -1918,22 +730,26 @@ async function checkForUpdate(currentVersion) {
         const latestTag = (data.tag_name || '').replace(/^v/, '');
         const current   = currentVersion.replace(/^v/, '');
 
+        const curEl    = document.getElementById('updateCurrentVer');
+        const latEl    = document.getElementById('updateLatestVer');
+        const linkEl   = document.getElementById('updateReleaseLink');
+        if (curEl) curEl.textContent = 'v' + current;
+        if (latEl) latEl.textContent = 'v' + (latestTag || '—');
+        if (linkEl && data.html_url) linkEl.href = data.html_url;
+
         if (latestTag && latestTag !== current && compareVersions(latestTag, current) > 0) {
-            
             const badge = document.getElementById('versionBadge');
             badge.classList.add('update-available');
             badge.title = `Update available: v${latestTag}`;
-            badge.onclick = openUpdateInfo;
+            badge.onclick = () => openSettingsModal('about');
             document.getElementById('versionText').innerHTML =
                 `v${current} <i class="ph-bold ph-arrow-circle-up" style="font-size:11px"></i>`;
-            document.getElementById('updateCurrentVer').textContent = 'v' + current;
-            document.getElementById('updateLatestVer').textContent  = 'v' + latestTag;
-            document.getElementById('updateReleaseLink').href = data.html_url || 'https://github.com/traefik/traefik/releases';
+            const notice = document.getElementById('sm-traefik-update-notice');
+            const text   = document.getElementById('sm-traefik-update-text');
+            if (notice && text) { text.textContent = `v${latestTag} available`; notice.classList.remove('hidden'); }
         }
-    } catch(e) { /* silently skip — GitHub API may be blocked */ }
+    } catch(e) {}
 }
-
-function openUpdateInfo() { document.getElementById('updateModal').style.display = 'flex'; }
 
 function compareVersions(a, b) {
     const pa = a.split('.').map(Number);
@@ -1961,6 +777,9 @@ async function checkManagerVersion() {
             footerEl.title = 'Traefik Manager v' + current;
         }
 
+        const curEl = document.getElementById('mgrUpdateCurrentVer');
+        if (curEl && current) curEl.textContent = 'v' + current;
+
         const ghRes = await fetch(
             `https://api.github.com/repos/${d.repo}/releases/latest`,
             { headers: { 'Accept': 'application/vnd.github.v3+json' } }
@@ -1970,25 +789,25 @@ async function checkManagerVersion() {
         const ghData    = await ghRes.json();
         const latestTag = (ghData.tag_name || '').replace(/^v/, '');
 
+        const latEl  = document.getElementById('mgrUpdateLatestVer');
+        const linkEl = document.getElementById('mgrUpdateReleaseLink');
+        if (latEl && latestTag) latEl.textContent = 'v' + latestTag;
+        if (linkEl && ghData.html_url) linkEl.href = ghData.html_url;
+
+        const notesEl = document.getElementById('sm-about-release-notes');
+        if (notesEl && ghData.body) notesEl.innerHTML = renderReleaseNotes(ghData.body);
+
         if (latestTag && current && compareVersions(latestTag, current) > 0) {
             if (footerEl) {
-                footerEl.innerHTML  = `v${current} <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange);font-size:11px"></i>`;
-                footerEl.title      = `Update available: v${latestTag}`;
+                footerEl.innerHTML   = `v${current} <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange);font-size:11px"></i>`;
+                footerEl.title       = `Update available: v${latestTag}`;
                 footerEl.style.color = 'var(--orange)';
             }
-            document.getElementById('mgrUpdateCurrentVer').textContent = 'v' + current;
-            document.getElementById('mgrUpdateLatestVer').textContent  = 'v' + latestTag;
-            document.getElementById('mgrUpdateReleaseLink').href       = ghData.html_url || 'https://github.com/chr0nzz/traefik-manager/releases';
+            const notice = document.getElementById('sm-mgr-update-notice');
+            const text   = document.getElementById('sm-mgr-update-text');
+            if (notice && text) { text.textContent = `v${latestTag} available`; notice.classList.remove('hidden'); }
         }
     } catch(e) {}
-}
-
-function openManagerUpdateInfo() {
-    const latest  = document.getElementById('mgrUpdateLatestVer').textContent;
-    const current = document.getElementById('mgrUpdateCurrentVer').textContent;
-    if (latest !== '—' && latest !== current) {
-        document.getElementById('managerUpdateModal').style.display = 'flex';
-    }
 }
 
 let _mwFilter = 'all';
@@ -2146,166 +965,6 @@ function renderServicesTable() {
     document.getElementById('svcTabCount').textContent = _allServices.filter(s => s._proto === 'HTTP').length;
 }
 
-let _allDockerRoutes = [];
-let _dockerFilter    = 'all';
-
-async function refreshDockerTab() {
-    const container = document.getElementById('dockerContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading docker routes...</p></div>`;
-
-    try {
-        const [routerRes, svcRes] = await Promise.all([
-            fetch('/api/traefik/routers').then(r => r.json()),
-            fetch('/api/traefik/services').then(r => r.json()).catch(() => ({})),
-        ]);
-
-        
-        
-        const svcMap = {};
-        [...(svcRes.http || []), ...(svcRes.tcp || [])].forEach(s => {
-            const nameParts = (s.name || '').split('@');
-            const svcProvider = s.provider || nameParts[1] || '';
-            if (svcProvider === 'docker') {
-                const servers = s.loadBalancer?.servers || [];
-                const url = servers[0]?.url || servers[0]?.address || null;
-                const statusKeys = Object.keys(s.serverStatus || {});
-                
-                const bareKey = nameParts[0];
-                svcMap[bareKey] = { url, containerAddr: statusKeys[0] || url };
-                svcMap[s.name]  = { url, containerAddr: statusKeys[0] || url };
-            }
-        });
-
-        const http = (routerRes.http || []).map(r => ({ ...r, _proto: 'HTTP' }));
-        const tcp  = (routerRes.tcp  || []).map(r => ({ ...r, _proto: 'TCP'  }));
-        const udp  = (routerRes.udp  || []).map(r => ({ ...r, _proto: 'UDP'  }));
-        const all  = [...http, ...tcp, ...udp];
-
-        
-        const getProvider = r => r.provider || (r.name || '').split('@')[1] || '';
-
-        
-        _allDockerRoutes = all
-            .filter(r => getProvider(r) === 'docker')
-            .map(r => {
-                
-                const svcFull  = r.service || '';
-                const svcBare  = svcFull.split('@')[0];
-                const svcInfo  = svcMap[svcBare] || svcMap[svcFull] || null;
-                return { ...r, _svcInfo: svcInfo };
-            })
-            .sort((a,b) => (a.name||'').localeCompare(b.name||''));
-
-        if (all.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-xs mt-1">Configure <code class="font-mono">TRAEFIK_API_URL</code> in Settings</p></div>`;
-            return;
-        }
-        if (_allDockerRoutes.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cube text-5xl block mb-3 opacity-30"></i><p class="font-medium">No Docker routes found</p><p class="text-xs mt-1">Routes discovered via Docker labels will appear here automatically</p></div>`;
-            return;
-        }
-
-        document.getElementById('dockerTabCount').textContent = _allDockerRoutes.length;
-        renderDockerRoutes();
-    } catch(e) {
-        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p></div>`;
-    }
-}
-
-function filterDocker(f) {
-    if (f) {
-        _dockerFilter = f;
-        ['all','http','tcp'].forEach(k => {
-            const btn = document.getElementById('dk-'+k);
-            if (btn) btn.classList.toggle('active-http', k === f);
-        });
-    }
-    renderDockerRoutes();
-}
-
-function renderDockerRoutes() {
-    const search = (document.getElementById('dockerSearch')?.value || '').toLowerCase();
-    const items  = _allDockerRoutes.filter(r => {
-        if (_dockerFilter !== 'all' && r._proto.toLowerCase() !== _dockerFilter) return false;
-        if (search && !(r.name||'').toLowerCase().includes(search) && !(r.rule||'').toLowerCase().includes(search)) return false;
-        return true;
-    });
-
-    const statusDot = r => {
-        const st = (r.status || '').toLowerCase();
-        if (st === 'enabled')  return `<span class="status-dot status-online"></span>`;
-        if (st === 'disabled' || st === 'error') return `<span class="status-dot status-offline"></span>`;
-        return `<span class="status-dot status-unknown"></span>`;
-    };
-
-    const protoBadge = r => {
-        if (r._proto === 'HTTP') return `<span class="badge badge-http" style="font-size:9px">HTTP</span>`;
-        if (r._proto === 'TCP')  return `<span class="badge badge-tcp"  style="font-size:9px">TCP</span>`;
-        return `<span class="badge badge-udp" style="font-size:9px">UDP</span>`;
-    };
-
-    const shortName = r => (r.name || '').split('@')[0];
-
-    const tlsBadge  = r => r.tls
-        ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS</span>`
-        : '';
-
-    const epBadges  = r => (r.entryPoints || [])
-        .map(ep => `<span class="badge badge-muted" style="font-size:9px">${ep}</span>`)
-        .join(' ');
-
-    if (items.length === 0) {
-        document.getElementById('dockerContent').innerHTML =
-            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No routes match filter</div>`;
-        return;
-    }
-
-    const cards = items.map((r, i) => {
-        const globalIdx = _allDockerRoutes.indexOf(r);
-        
-        const hostMatch = (r.rule || '').match(/Host\(`([^`]+)`\)/);
-        const domain = hostMatch ? hostMatch[1] : null;
-        const externalBtn = (domain && r._proto === 'HTTP')
-            ? `<a href="https://${domain}" target="_blank" class="btn-icon" title="Open site" style="padding:4px 6px;text-decoration:none">
-                <i class="ph-bold ph-arrow-square-out text-sm"></i>
-               </a>`
-            : '';
-        return `
-        <div class="card p-4 hover:border-blue-500/40 transition-all" style="border-color:var(--border)">
-            <div class="flex items-start justify-between gap-3 mb-3">
-                <div class="flex items-center gap-2 min-w-0">
-                    ${statusDot(r)}
-                    ${protoBadge(r)}
-                    <span class="font-bold text-sm truncate" style="color:var(--text)" title="${shortName(r)}">${shortName(r)}</span>
-                </div>
-                <div class="flex items-center gap-1 shrink-0">
-                    ${tlsBadge(r)}
-                    ${externalBtn}
-                    <button onclick="openDockerRouteDetail(${globalIdx})" class="btn-icon" title="View details" style="padding:4px 6px">
-                        <i class="ph-bold ph-info text-sm"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="space-y-2">
-                <div class="rounded-md px-3 py-2 text-xs font-mono truncate" style="background:var(--bg);border:1px solid var(--border);color:var(--green)" title="${r.rule || '—'}">${r.rule || '—'}</div>
-                <div class="flex items-center justify-between text-xs">
-                    <span style="color:var(--muted)">Service</span>
-                    <span class="font-mono truncate ml-2" style="color:var(--text);max-width:200px" title="${r.service||'—'}">${(r.service||'—').split('@')[0]}</span>
-                </div>
-                ${r._svcInfo?.containerAddr ? `
-                <div class="flex items-center justify-between text-xs">
-                    <span style="color:var(--muted)">Container</span>
-                    <span class="font-mono truncate ml-2" style="color:var(--muted);max-width:200px" title="${r._svcInfo.containerAddr}">${r._svcInfo.containerAddr}</span>
-                </div>` : ''}
-                ${r.entryPoints?.length ? `<div class="flex items-center gap-1 flex-wrap">${epBadges(r)}</div>` : ''}
-            </div>
-        </div>`;
-    }).join('');
-
-    document.getElementById('dockerContent').innerHTML =
-        `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${cards}</div>`;
-}
-
 function openSvcDetail(idx) {
     const s = _allServices[idx];
     if (!s) return;
@@ -2410,69 +1069,6 @@ function closeSvcDetail() {
     document.getElementById('svcDetailBackdrop').classList.remove('open');
 }
 
-async function loadBackups() {
-    const list = document.getElementById('backupsList');
-    try {
-        const res = await fetch('/api/backups');
-        const backups = await res.json();
-
-        if (!backups.length) {
-            list.innerHTML = `<div class="text-center py-8" style="color:var(--muted)"><i class="ph-light ph-archive text-4xl block mb-2 opacity-30"></i><p>No backups yet</p></div>`;
-            return;
-        }
-
-        list.innerHTML = backups.map(b => `
-            <div class="flex items-center justify-between py-2.5 rounded-lg px-3 mb-2" style="background:#0d1117;border:1px solid var(--border)">
-                <div>
-                    <div class="font-mono text-xs text-white">${b.name}</div>
-                    <div class="text-xs mt-0.5" style="color:var(--muted)">${b.modified} · ${formatBytes(b.size)}</div>
-                </div>
-                <div class="flex gap-1">
-                    <button onclick="restoreBackup('${b.name}')" class="btn-secondary text-xs py-1 px-2.5">
-                        <i class="ph-bold ph-arrow-counter-clockwise text-xs"></i> Restore
-                    </button>
-                    <button onclick="deleteBackup('${b.name}')" class="btn-danger p-1.5">
-                        <i class="ph-bold ph-trash text-sm"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    } catch (e) {
-        list.innerHTML = `<p class="text-sm" style="color:var(--red)">Failed to load backups</p>`;
-    }
-}
-
-async function restoreBackup(name) {
-    if (!confirm(`Restore backup "${name}"? Your current config will be backed up first.`)) return;
-    try {
-        const res = await fetch(`/api/restore/${name}`, { method: 'POST', headers: _csrfHeaders() });
-        const data = await res.json();
-        if (data.success) {
-            showToast('Backup restored successfully!', 'success');
-            closeBackupsModal();
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showToast('Restore failed: ' + data.error, 'error');
-        }
-    } catch (e) {
-        showToast('Restore failed', 'error');
-    }
-}
-
-async function deleteBackup(name) {
-    if (!confirm(`Delete backup "${name}"?`)) return;
-    try {
-        const res = await fetch(`/api/backup/delete/${name}`, { method: 'POST', headers: _csrfHeaders() });
-        const data = await res.json();
-        if (data.success) { showToast('Backup deleted', 'success'); loadBackups(); }
-        else showToast('Delete failed: ' + data.error, 'error');
-    } catch(e) { showToast('Delete failed', 'error'); }
-}
-
-function formatBytes(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    return (bytes / 1024).toFixed(1) + ' KB';
-}
 
 function openRouteDetailFromCard(card) {
     const idx = parseInt(card.getAttribute('data-idx'), 10);
@@ -2569,52 +1165,6 @@ function closeRouteDetail() {
     document.getElementById('detailTitle').nextElementSibling?.classList.contains('badge') &&
         document.getElementById('detailTitle').nextElementSibling.remove();
     document.body.style.overflow = '';
-}
-
-async function openDockerRouteDetail(idx) {
-    const r = _allDockerRoutes[idx];
-    if (!r) return;
-
-    
-    document.getElementById('detailEditBtn').style.display = 'none';
-
-    
-    const dockerBadge = `<span class="badge badge-muted ml-2" style="font-size:10px"><i class="ph-bold ph-cube" style="font-size:9px"></i> docker</span>`;
-
-    
-    let rawLabels = null;
-    try {
-        const proto = (r._proto || 'HTTP').toLowerCase();
-        const routerName = encodeURIComponent(r.name || '');
-        const detail = await fetch(`/api/traefik/router/${proto}/${routerName}`).then(res => res.json());
-        if (detail && detail.provider === 'docker') {
-            
-            rawLabels = detail.labels || null;
-        }
-    } catch(e) { /* labels unavailable */ }
-
-    
-    const svcRaw  = r.service || '';
-    const appData = {
-        id:             (r.name || '').split('@')[0],
-        name:           (r.name || '').split('@')[0],
-        rule:           r.rule || '',
-        service_name:   svcRaw.split('@')[0],
-        target:         r._svcInfo?.url || 'N/A',
-        containerAddr:  r._svcInfo?.containerAddr || null,
-        dockerLabels:   rawLabels,
-        middlewares:    r.middlewares || [],
-        entryPoints:    r.entryPoints || [],
-        protocol:       r._proto.toLowerCase(),
-    };
-
-    await openRouteDetail(appData.name, appData.protocol, appData);
-
-    
-    document.getElementById('detailEditBtn').style.display = 'none';
-
-    
-    document.getElementById('detailTitle').insertAdjacentHTML('afterend', dockerBadge);
 }
 
 document.addEventListener('keydown', e => {
@@ -3235,320 +1785,7 @@ if (document.getElementById('toastContainer') && document.getElementById('toastC
 }
 </script>
 
-<div id="settingsModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeSettingsModal()">
-    <div class="modal-box" style="max-width:680px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;">
-
-        <!-- Header -->
-        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border);flex-shrink:0;">
-            <div class="flex items-center gap-2">
-                <i class="ph-fill ph-gear" style="color:var(--blue);font-size:18px;"></i>
-                <h3 class="font-bold text-sm" style="color:var(--text)">Settings</h3>
-            </div>
-            <button type="button" onclick="closeSettingsModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
-        </div>
-
-        <!-- Body: sidebar + panels -->
-        <div class="modal-inner">
-
-            <!-- Sidebar -->
-            <div class="modal-sidebar">
-                <button class="modal-sidebar-btn active" id="msb-connection" onclick="switchSettingsPanel('connection', this)">
-                    <i class="ph-bold ph-plugs-connected"></i> Connection
-                </button>
-                <button class="modal-sidebar-btn" id="msb-tabs" onclick="switchSettingsPanel('tabs', this)">
-                    <i class="ph-bold ph-tabs"></i> Visible Tabs
-                </button>
-                <button class="modal-sidebar-btn" id="msb-auth" onclick="switchSettingsPanel('auth', this)">
-                    <i class="ph-bold ph-lock-key"></i> Authentication
-                </button>
-            </div>
-
-            <!-- Panels -->
-            <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0;">
-
-                <!-- Connection panel -->
-                <div class="modal-panel active" id="mpanel-connection">
-                    <div>
-                        <span class="settings-section-label">Domains</span>
-                        <div class="text-xs mb-2" style="color:var(--muted)">Comma-separated list of base domains used when adding routes.</div>
-                        <input type="text" id="settingsDomains" class="input-field" placeholder="example.com, example.net">
-                    </div>
-                    <div>
-                        <span class="settings-section-label">Certificate Resolver</span>
-                        <div class="text-xs mb-2" style="color:var(--muted)">Name of the Traefik cert resolver (e.g. cloudflare, letsencrypt).</div>
-                        <input type="text" id="settingsCertResolver" class="input-field" placeholder="cloudflare">
-                    </div>
-                    <div>
-                        <span class="settings-section-label">Traefik API URL</span>
-                        <div class="text-xs mb-2" style="color:var(--muted)">Base URL of the Traefik API used for live stats.</div>
-                        <input type="text" id="settingsApiUrl" class="input-field" placeholder="http://traefik:8080">
-                        <div class="flex items-center gap-2 mt-2">
-                            <button onclick="testTraefikApi()" class="nav-btn text-xs" style="height:28px;padding:0 10px;">
-                                <i class="ph-bold ph-plugs-connected"></i> Test connection
-                            </button>
-                            <span id="apiTestResult" class="text-xs" style="color:var(--muted)"></span>
-                        </div>
-                    </div>
-                    <div id="settingsSavedNotice" class="hidden text-xs px-3 py-2 rounded-md" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
-                        <i class="ph-bold ph-check-circle mr-1"></i>Settings saved to <code>manager.yml</code>
-                    </div>
-                </div>
-
-                <!-- Visible Tabs panel -->
-                <div class="modal-panel" id="mpanel-tabs">
-                    <div>
-                        <span class="settings-section-label">Optional Tabs</span>
-                        <div class="text-xs mb-3" style="color:var(--muted)">Hide tabs you don't use. Routes, Middlewares, and Services are always visible.</div>
-                        <div class="grid grid-cols-2 gap-2" id="tabToggles">
-                            <label class="tab-toggle-row" onclick="toggleTabVisibility('docker')">
-                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-cube" style="color:var(--muted)"></i> Docker</span>
-                                <div class="toggle-switch" id="toggle-docker"><div class="toggle-knob"></div></div>
-                            </label>
-                            <label class="tab-toggle-row" onclick="toggleTabVisibility('certs')">
-                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-check" style="color:var(--muted)"></i> Certs</span>
-                                <div class="toggle-switch" id="toggle-certs"><div class="toggle-knob"></div></div>
-                            </label>
-                            <label class="tab-toggle-row" onclick="toggleTabVisibility('plugins')">
-                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-puzzle-piece" style="color:var(--muted)"></i> Plugins</span>
-                                <div class="toggle-switch" id="toggle-plugins"><div class="toggle-knob"></div></div>
-                            </label>
-                            <label class="tab-toggle-row" onclick="toggleTabVisibility('logs')">
-                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-terminal" style="color:var(--muted)"></i> Logs</span>
-                                <div class="toggle-switch" id="toggle-logs"><div class="toggle-knob"></div></div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Authentication panel -->
-                <div class="modal-panel" id="mpanel-auth">
-                    <div id="authSection">
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <span class="settings-section-label" style="margin:0;">Built-in Authentication</span>
-                                <div id="authEnabledNotice" class="text-xs mt-1" style="color:var(--muted)">
-                                    Built-in auth is <strong id="authStateLabel" style="color:var(--green)">enabled</strong>.
-                                    <span id="authEnvForcedNote" class="hidden"> Controlled by the <code>AUTH_ENABLED</code> env var.</span>
-                                </div>
-                            </div>
-                            <button id="authToggleBtn" onclick="toggleAuth()" class="nav-btn text-xs hidden" title="Enable or disable built-in auth">
-                                <span id="authToggleLabel">Disable</span>
-                            </button>
-                        </div>
-                        <div id="changePwForm" style="display:flex;flex-direction:column;gap:10px;">
-                            <span class="settings-section-label">Change Password</span>
-                            <input type="password" id="pwCurrent" class="input-field" placeholder="Current password" autocomplete="current-password">
-                            <input type="password" id="pwNew"     class="input-field" placeholder="New password (min 8 chars)" autocomplete="new-password">
-                            <input type="password" id="pwConfirm" class="input-field" placeholder="Confirm new password" autocomplete="new-password">
-                            <div id="pwChangeMsg" class="hidden text-xs px-3 py-2 rounded-md"></div>
-                            <div>
-                                <button onclick="changePassword()" class="nav-btn text-xs">
-                                    <i class="ph-bold ph-lock-key-open"></i> Update password
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="authHiddenMsg" class="hidden text-xs" style="color:var(--muted);padding:8px 0;">
-                        Authentication settings are not available — no password has been configured.
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="px-5 py-4 flex justify-end gap-2" style="border-top:1px solid var(--border);flex-shrink:0;">
-            <button type="button" onclick="closeSettingsModal()" class="nav-btn">Cancel</button>
-            <button type="button" onclick="saveSettings()" class="nav-btn nav-btn-primary">
-                <i class="ph-bold ph-floppy-disk"></i> Save Settings
-            </button>
-        </div>
-    </div>
-</div>
-
-<script>
-
-function switchSettingsPanel(id, btn) {
-    document.querySelectorAll('.modal-sidebar-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.modal-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('mpanel-' + id).classList.add('active');
-}
-
-async function openSettingsModal() {
-    document.getElementById('settingsSavedNotice').classList.add('hidden');
-    document.getElementById('apiTestResult').textContent = '';
-    
-    ['pwCurrent','pwNew','pwConfirm'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-    const msg = document.getElementById('pwChangeMsg');
-    if (msg) { msg.classList.add('hidden'); msg.textContent = ''; }
-    try {
-        const res  = await fetch('/api/settings');
-        const data = await res.json();
-        document.getElementById('settingsDomains').value       = (data.domains || []).join(', ');
-        document.getElementById('settingsCertResolver').value  = data.cert_resolver || '';
-        document.getElementById('settingsApiUrl').value        = data.traefik_api_url || '';
-
-        
-        if (data.visible_tabs) _visibleTabsCache = data.visible_tabs;
-        loadTabTogglesIntoModal();
-
-        
-        const authSection   = document.getElementById('authSection');
-        const toggleBtn     = document.getElementById('authToggleBtn');
-        const stateLabel    = document.getElementById('authStateLabel');
-        const toggleLabel   = document.getElementById('authToggleLabel');
-        const envForcedNote = document.getElementById('authEnvForcedNote');
-        const changePwForm  = document.getElementById('changePwForm');
-
-        if (data.has_password !== undefined) {
-            document.getElementById('authHiddenMsg') && (document.getElementById('authHiddenMsg').classList.add('hidden'));
-            const isOn = data.auth_enabled;
-            stateLabel.textContent  = isOn ? 'enabled' : 'disabled';
-            stateLabel.style.color  = isOn ? 'var(--green)' : 'var(--muted)';
-            if (!data.auth_env_forced && toggleBtn) {
-                toggleBtn.classList.remove('hidden');
-                toggleLabel.textContent = isOn ? 'Disable' : 'Enable';
-            } else {
-                envForcedNote.classList.remove('hidden');
-            }
-            if (changePwForm) changePwForm.style.display = isOn ? '' : 'none';
-        }
-    } catch(e) {
-        console.error('Could not load settings', e);
-    }
-    document.getElementById('settingsModal').style.display = 'flex';
-    // Always open on Connection panel
-    document.querySelectorAll('.modal-sidebar-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.modal-panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('msb-connection').classList.add('active');
-    document.getElementById('mpanel-connection').classList.add('active');
-}
-
-function closeSettingsModal() {
-    document.getElementById('settingsModal').style.display = 'none';
-}
-
-async function changePassword() {
-    const current = document.getElementById('pwCurrent').value;
-    const newPw   = document.getElementById('pwNew').value;
-    const confirm = document.getElementById('pwConfirm').value;
-    const msg     = document.getElementById('pwChangeMsg');
-
-    const show = (text, ok) => {
-        msg.textContent  = text;
-        msg.style.background = ok ? 'rgba(63,185,80,0.1)' : 'rgba(248,81,73,0.1)';
-        msg.style.border     = ok ? '1px solid rgba(63,185,80,0.3)' : '1px solid rgba(248,81,73,0.3)';
-        msg.style.color      = ok ? 'var(--green)' : 'var(--red)';
-        msg.classList.remove('hidden');
-    };
-
-    if (!current || !newPw || !confirm) return show('Please fill in all fields.', false);
-    if (newPw.length < 8)              return show('New password must be at least 8 characters.', false);
-    if (newPw !== confirm)             return show('Passwords do not match.', false);
-
-    try {
-        const res  = await fetch('/api/auth/change-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token'] },
-            body: JSON.stringify({ current_password: current, new_password: newPw, confirm_password: confirm })
-        });
-        const data = await res.json();
-        if (data.success) {
-            show('Password updated successfully.', true);
-            ['pwCurrent','pwNew','pwConfirm'].forEach(id => document.getElementById(id).value = '');
-        } else {
-            show(data.error || 'Failed to update password.', false);
-        }
-    } catch(e) {
-        show('Request failed.', false);
-    }
-}
-
-async function toggleAuth() {
-    const stateLabel  = document.getElementById('authStateLabel');
-    const toggleLabel = document.getElementById('authToggleLabel');
-    const changePwForm = document.getElementById('changePwForm');
-    const currentlyOn = stateLabel.textContent === 'enabled';
-    const newState    = !currentlyOn;
-
-    if (currentlyOn && !confirm('Disable built-in authentication? Anyone who can reach this URL will have full access.')) return;
-
-    try {
-        const res  = await fetch('/api/auth/toggle', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token'] },
-            body: JSON.stringify({ auth_enabled: newState })
-        });
-        const data = await res.json();
-        if (data.success) {
-            stateLabel.textContent = newState ? 'enabled' : 'disabled';
-            stateLabel.style.color = newState ? 'var(--green)' : 'var(--muted)';
-            toggleLabel.textContent = newState ? 'Disable' : 'Enable';
-            if (changePwForm) changePwForm.style.display = newState ? '' : 'none';
-            showToast(`Authentication ${newState ? 'enabled' : 'disabled'}.`, 'success');
-        } else {
-            showToast(data.error || 'Failed to update auth.', 'error');
-        }
-    } catch(e) {
-        showToast('Request failed.', 'error');
-    }
-}
-
-async function saveSettings() {
-    const domains        = document.getElementById('settingsDomains').value.split(',').map(d => d.trim()).filter(Boolean);
-    const resolver       = document.getElementById('settingsCertResolver').value.trim();
-    const apiUrl         = document.getElementById('settingsApiUrl').value.trim();
-    if (!domains.length) { alert('Enter at least one domain.'); return; }
-    try {
-        const res  = await fetch('/api/settings', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token']},
-            body: JSON.stringify({ domains, cert_resolver: resolver, traefik_api_url: apiUrl })
-        });
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById('settingsSavedNotice').classList.remove('hidden');
-            
-            if (typeof availableDomains !== 'undefined') {
-                availableDomains.length = 0;
-                domains.forEach(d => availableDomains.push(d));
-                const sel = document.getElementById('domain');
-                if (sel) {
-                    sel.innerHTML = domains.map(d => `<option value="${d}">${d}</option>`).join('');
-                }
-            }
-            setTimeout(() => document.getElementById('settingsSavedNotice').classList.add('hidden'), 3000);
-        } else {
-            alert('Error: ' + (data.error || 'Unknown error'));
-        }
-    } catch(e) {
-        alert('Failed to save settings: ' + e);
-    }
-}
-
-async function testTraefikApi() {
-    const url    = document.getElementById('settingsApiUrl').value.trim();
-    const result = document.getElementById('apiTestResult');
-    result.textContent = 'Testing…';
-    result.style.color = 'var(--muted)';
-    try {
-        const res = await fetch('/api/traefik/version');
-        const d   = await res.json();
-        if (d && d.Version) {
-            result.textContent = `✓ Connected — Traefik v${d.Version}`;
-            result.style.color = 'var(--green)';
-        } else {
-            result.textContent = '✗ No response from API';
-            result.style.color = 'var(--red)';
-        }
-    } catch(e) {
-        result.textContent = '✗ Connection failed';
-        result.style.color = 'var(--red)';
-    }
-}
-
-</script>
+{% include 'modals/settings_modal.html' %}
 
 
 <footer style="text-align:center;padding:20px 0 24px;font-size:12px;color:var(--muted)">
@@ -3558,7 +1795,7 @@ async function testTraefikApi() {
     <a href="https://github.com/chr0nzz/traefik-manager" target="_blank"
        style="color:var(--muted);text-decoration:none" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Traefik Manager</a>
     &nbsp;·&nbsp;
-    <span id="footerManagerVer" style="cursor:pointer" title="Check for updates" onclick="openManagerUpdateInfo()">—</span>
+    <span id="footerManagerVer" style="cursor:pointer" title="About" onclick="openSettingsModal('about')">—</span>
 </footer>
 
 </body>
