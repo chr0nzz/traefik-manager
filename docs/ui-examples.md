@@ -51,21 +51,6 @@ if (typeof document$ !== 'undefined') {
 
 ---
 
-## Table of Contents
-
-- [Initial Setup](#initial-setup)
-- [Dashboard](#dashboard)
-- [Routes](#routes)
-- [Services](#services)
-- [Middlewares](#middlewares)
-- [Plugins](#plugins)
-- [Certificates](#certificates)
-- [Docker](#docker)
-- [Logs](#logs)
-- [Settings](#settings)
-
----
-
 # Initial Setup
 
 When first launching Traefik Manager you are guided through a short setup wizard.
