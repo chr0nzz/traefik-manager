@@ -21,7 +21,7 @@ Routes are **read-only** - edit them via your Consul service registrations and T
 Toggle **Consul Catalog** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable Consul Catalog.
+Go to **Settings → Route Monitoring** and enable Consul Catalog.
 
 ## Requirements
 

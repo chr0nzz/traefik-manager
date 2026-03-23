@@ -1,9 +1,9 @@
 <div class="detail-backdrop" id="svcDetailBackdrop" onclick="closeSvcDetail()"></div>
 <div class="detail-panel" id="svcDetailPanel">
-    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:#0d1117; border-bottom:1px solid var(--border)">
+    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card); border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <span id="svcDetailProtoBadge" class="badge badge-http">HTTP</span>
-            <h2 class="font-bold text-white text-sm" id="svcDetailTitle">Service Details</h2>
+            <h2 class="font-bold text-sm" style="color:var(--text)" id="svcDetailTitle">Service Details</h2>
         </div>
         <button onclick="closeSvcDetail()" class="btn-icon"><i class="ph-bold ph-x"></i></button>
     </div>
@@ -12,10 +12,10 @@
 
 <div class="detail-backdrop" id="pluginDetailBackdrop" onclick="closePluginDetail()"></div>
 <div class="detail-panel" id="pluginDetailPanel">
-    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:#0d1117; border-bottom:1px solid var(--border)">
+    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card); border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <i class="ph-bold ph-puzzle-piece text-lg" style="color:var(--blue)"></i>
-            <h2 class="font-bold text-white text-sm" id="pluginDetailTitle">Plugin Details</h2>
+            <h2 class="font-bold text-sm" style="color:var(--text)" id="pluginDetailTitle">Plugin Details</h2>
         </div>
         <button onclick="closePluginDetail()" class="btn-icon"><i class="ph-bold ph-x"></i></button>
     </div>
@@ -24,10 +24,10 @@
 
 <div class="detail-backdrop" id="detailBackdrop" onclick="closeRouteDetail()"></div>
 <div class="detail-panel" id="detailPanel">
-    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:#0d1117; border-bottom:1px solid var(--border)">
+    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card); border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <span id="detailProtoBadge" class="badge badge-http">HTTP</span>
-            <h2 class="font-bold text-white" id="detailTitle">Route Details</h2>
+            <h2 class="font-bold" style="color:var(--text)" id="detailTitle">Route Details</h2>
         </div>
         <div class="flex items-center gap-2">
             <button id="detailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> Edit</button>

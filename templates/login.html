@@ -251,6 +251,48 @@
     </div>
 </div>
 
+{% elif otp_mode %}
+
+<div style="width:100%;max-width:380px">
+    <div class="topbar">
+        <button class="theme-toggle" onclick="cycleTheme()" title="Toggle theme">
+            <i class="ph-bold ph-moon" id="themeIcon"></i>
+        </button>
+    </div>
+    <div class="card card-login">
+        <div class="logo">
+            <i class="ph-fill ph-traffic-signal logo-icon"></i>
+            <span class="logo-text">Traefik <span>Manager</span></span>
+        </div>
+        <div class="step-title">Two-factor authentication</div>
+        <p class="step-subtitle">Enter the 6-digit code from your authenticator app.</p>
+        {% if error %}
+        <div class="banner banner-error">
+            <i class="ph-bold ph-warning-circle" style="flex-shrink:0;margin-top:1px"></i>
+            {{ error }}
+        </div>
+        {% endif %}
+        <form method="POST" action="{{ url_for('login_otp') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="field">
+                <label for="code">Authenticator code</label>
+                <input type="text" id="code" name="code"
+                       placeholder="000000" autofocus autocomplete="one-time-code"
+                       inputmode="numeric" maxlength="6"
+                       style="font-family:'JetBrains Mono',monospace;letter-spacing:.2em;font-size:20px;text-align:center">
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">
+                    <i class="ph-bold ph-check"></i> Verify
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="footer">
+        <a href="{{ url_for('login') }}">← Back to sign in</a>
+    </div>
+</div>
+
 {% elif not setup_mode %}
 
 <div style="width:100%;max-width:380px">
@@ -286,6 +328,10 @@
                 <input type="password" id="password" name="password"
                        placeholder="Your password" autofocus autocomplete="current-password">
             </div>
+            <label class="flex items-center gap-2 text-sm mb-3" style="color:var(--muted);cursor:pointer">
+                <input type="checkbox" name="remember" value="on" checked style="accent-color:var(--blue)">
+                Remember me for 7 days
+            </label>
             <div class="btn-row">
                 <button type="submit" class="btn-primary">
                     <i class="ph-bold ph-sign-in"></i> Sign in
@@ -395,7 +441,8 @@
             <div class="step-title">Optional monitoring</div>
             <p class="step-subtitle">Enable extra views for deeper insight into your Traefik setup. All of these are optional — you can turn them on or off anytime in Settings.</p>
 
-            <div class="tab-grid">
+            <div class="text-xs font-semibold mb-2" style="color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Route Monitoring</div>
+            <div class="tab-grid" style="margin-bottom:16px">
                 <div class="tab-toggle-row" onclick="toggleSetupTab('docker')">
                     <span class="tab-toggle-label"><i class="ph-bold ph-cube"></i> Docker</span>
                     <div class="toggle-switch" id="sw-docker"><div class="toggle-knob"></div></div>
@@ -444,6 +491,10 @@
                     <span class="tab-toggle-label"><i class="ph-bold ph-file-text"></i> File (external)</span>
                     <div class="toggle-switch" id="sw-file_external"><div class="toggle-knob"></div></div>
                 </div>
+            </div>
+
+            <div class="text-xs font-semibold mb-2" style="color:var(--muted);text-transform:uppercase;letter-spacing:.05em">System Monitoring</div>
+            <div class="tab-grid" style="margin-bottom:12px">
                 <div class="tab-toggle-row" onclick="toggleSetupTab('certs')">
                     <span class="tab-toggle-label"><i class="ph-bold ph-shield-check"></i> Certs</span>
                     <div class="toggle-switch" id="sw-certs"><div class="toggle-knob"></div></div>
@@ -458,9 +509,9 @@
                 </div>
             </div>
 
-            <div class="banner banner-info" style="margin-top:16px;margin-bottom:0">
+            <div class="banner banner-info" style="margin-bottom:0">
                 <i class="ph-bold ph-info" style="flex-shrink:0;margin-top:1px"></i>
-                <span>Certs, Plugins, and Logs each need a file mounted into this container. If not yet mounted, each view will show the exact volume line to add to your <code style="font-family:monospace">docker-compose.yml</code>.</span>
+                <span>System Monitoring tabs (Certs, Plugins, Logs) each need a file mounted into this container. If not yet mounted, each view will show the exact volume line to add to your <code style="font-family:monospace">docker-compose.yml</code>.</span>
             </div>
 
             <div class="btn-row">

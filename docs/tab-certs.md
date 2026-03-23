@@ -16,7 +16,7 @@ Certificates are **read-only** - they are issued and renewed automatically by Tr
 Toggle **Certs** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable Certs.
+Go to **Settings → System Monitoring** and enable Certs.
 
 ## Requirements
 

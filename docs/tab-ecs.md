@@ -19,7 +19,7 @@ Routes are **read-only** - edit them via your ECS task definitions and Traefik l
 Toggle **ECS** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable ECS.
+Go to **Settings → Route Monitoring** and enable ECS.
 
 ## Requirements
 

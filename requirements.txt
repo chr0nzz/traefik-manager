@@ -3,3 +3,4 @@ ruamel.yaml==0.18.5
 requests==2.31.0
 cryptography==42.0.5
 bcrypt==4.1.2
+pyotp==2.9.0

@@ -27,9 +27,9 @@ auth_enabled: true
 # and set setup_complete: true to skip the setup wizard entirely.
 password_hash: ""
 
-# ── Visible Tabs ──────────────────────────────────────────────────────────────
+# ── Route & System Monitoring ─────────────────────────────────────────────────
 # Show or hide optional tabs. Routes, Middlewares, and Services are always on.
-# Toggle these in the Settings modal or edit here and restart.
+# Toggle in Settings → Route Monitoring / System Monitoring, or edit here and restart.
 visible_tabs:
   # Infrastructure
   docker: false

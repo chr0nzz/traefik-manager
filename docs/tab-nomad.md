@@ -19,7 +19,7 @@ Routes are **read-only** - edit them via your Nomad job definitions.
 Toggle **Nomad** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable Nomad.
+Go to **Settings → Route Monitoring** and enable Nomad.
 
 ## Requirements
 

@@ -19,7 +19,7 @@ Routes are **read-only** - edit them directly in the relevant file provider conf
 Toggle **File (external)** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable File (external).
+Go to **Settings → Route Monitoring** and enable File (external).
 
 ## Requirements
 

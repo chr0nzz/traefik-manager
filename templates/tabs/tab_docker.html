@@ -136,43 +136,15 @@ function renderDockerRoutes() {
 
     const cards = items.map((r, i) => {
         const globalIdx = _allDockerRoutes.indexOf(r);
-        const hostMatch = (r.rule || '').match(/Host\(`([^`]+)`\)/);
-        const domain = hostMatch ? hostMatch[1] : null;
-        const externalBtn = (domain && r._proto === 'HTTP')
-            ? `<a href="https://${domain}" target="_blank" class="btn-icon" title="Open site" style="padding:4px 6px;text-decoration:none">
-                <i class="ph-bold ph-arrow-square-out text-sm"></i>
-               </a>`
+        const target = r._svcInfo?.containerAddr || r._svcInfo?.url || null;
+        const containerRow = (r._svcInfo?.containerAddr && r._svcInfo?.url && r._svcInfo.containerAddr !== r._svcInfo.url)
+            ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Container</div><div class="text-xs font-mono truncate" style="color:var(--muted)">${r._svcInfo.containerAddr}</div></div>`
             : '';
-        return `
-        <div class="card p-4 hover:border-blue-500/40 transition-all" style="border-color:var(--border)">
-            <div class="flex items-start justify-between gap-3 mb-3">
-                <div class="flex items-center gap-2 min-w-0">
-                    ${statusDot(r)}
-                    ${protoBadge(r)}
-                    <span class="font-bold text-sm truncate" style="color:var(--text)" title="${shortName(r)}">${shortName(r)}</span>
-                </div>
-                <div class="flex items-center gap-1 shrink-0">
-                    ${tlsBadge(r)}
-                    ${externalBtn}
-                    <button onclick="openDockerRouteDetail(${globalIdx})" class="btn-icon" title="View details" style="padding:4px 6px">
-                        <i class="ph-bold ph-info text-sm"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="space-y-2">
-                <div class="rounded-md px-3 py-2 text-xs font-mono truncate" style="background:var(--bg);border:1px solid var(--border);color:var(--green)" title="${r.rule || '—'}">${r.rule || '—'}</div>
-                <div class="flex items-center justify-between text-xs">
-                    <span style="color:var(--muted)">Service</span>
-                    <span class="font-mono truncate ml-2" style="color:var(--text);max-width:200px" title="${r.service||'—'}">${(r.service||'—').split('@')[0]}</span>
-                </div>
-                ${r._svcInfo?.containerAddr ? `
-                <div class="flex items-center justify-between text-xs">
-                    <span style="color:var(--muted)">Container</span>
-                    <span class="font-mono truncate ml-2" style="color:var(--muted);max-width:200px" title="${r._svcInfo.containerAddr}">${r._svcInfo.containerAddr}</span>
-                </div>` : ''}
-                ${r.entryPoints?.length ? `<div class="flex items-center gap-1 flex-wrap">${epBadges(r)}</div>` : ''}
-            </div>
-        </div>`;
+        return renderProviderCard(r, {
+            onDetailClick: `openDockerRouteDetail(${globalIdx})`,
+            target,
+            extraRows: containerRow,
+        });
     }).join('');
 
     document.getElementById('dockerContent').innerHTML =

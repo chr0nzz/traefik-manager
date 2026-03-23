@@ -15,7 +15,7 @@ The **Logs** tab displays Traefik's access log - a record of every HTTP request 
 Toggle **Logs** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable Logs.
+Go to **Settings → System Monitoring** and enable Logs.
 
 ## Requirements
 

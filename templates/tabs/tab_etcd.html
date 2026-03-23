@@ -113,30 +113,7 @@ function renderEtcdRoutes() {
 
     const cards = items.map(r => {
         const globalIdx = _allEtcdRoutes.indexOf(r);
-        return `
-        <div class="card p-4 hover:border-blue-500/40 transition-all" style="border-color:var(--border)">
-            <div class="flex items-start justify-between gap-3 mb-3">
-                <div class="flex items-center gap-2 min-w-0">
-                    ${statusDot(r)}
-                    ${protoBadge(r)}
-                    <span class="font-bold text-sm truncate" style="color:var(--text)" title="${shortName(r)}">${shortName(r)}</span>
-                </div>
-                <div class="flex items-center gap-1 shrink-0">
-                    ${tlsBadge(r)}
-                    <button onclick="openEtcdRouteDetail(${globalIdx})" class="btn-icon" title="View details" style="padding:4px 6px">
-                        <i class="ph-bold ph-info text-sm"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="space-y-2">
-                <div class="rounded-md px-3 py-2 text-xs font-mono truncate" style="background:var(--bg);border:1px solid var(--border);color:var(--green)" title="${r.rule || '—'}">${r.rule || '—'}</div>
-                <div class="flex items-center justify-between text-xs">
-                    <span style="color:var(--muted)">Service</span>
-                    <span class="font-mono truncate ml-2" style="color:var(--text);max-width:200px" title="${r.service || '—'}">${(r.service || '—').split('@')[0]}</span>
-                </div>
-                ${r.entryPoints?.length ? `<div class="flex items-center gap-1 flex-wrap">${epBadges(r)}</div>` : ''}
-            </div>
-        </div>`;
+        return renderProviderCard(r, { onDetailClick: `openEtcdRouteDetail(${globalIdx})` });
     }).join('');
 
     document.getElementById('etcdContent').innerHTML =

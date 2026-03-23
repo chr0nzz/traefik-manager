@@ -19,7 +19,7 @@ Routes are **read-only** - edit them directly in your Redis KV store.
 Toggle **Redis** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable Redis.
+Go to **Settings → Route Monitoring** and enable Redis.
 
 ## Requirements
 

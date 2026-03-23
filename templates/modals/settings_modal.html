@@ -15,14 +15,20 @@
                 <button class="modal-sidebar-btn active" id="msb-connection" onclick="switchSettingsPanel('connection', this)">
                     <i class="ph-bold ph-plugs-connected"></i> Connection
                 </button>
-                <button class="modal-sidebar-btn" id="msb-tabs" onclick="switchSettingsPanel('tabs', this)">
-                    <i class="ph-bold ph-tabs"></i> Visible Tabs
+                <button class="modal-sidebar-btn" id="msb-routes" onclick="switchSettingsPanel('routes', this)">
+                    <i class="ph-bold ph-path"></i> Route Monitoring
+                </button>
+                <button class="modal-sidebar-btn" id="msb-system" onclick="switchSettingsPanel('system', this)">
+                    <i class="ph-bold ph-monitor"></i> System Monitoring
                 </button>
                 <button class="modal-sidebar-btn" id="msb-auth" onclick="switchSettingsPanel('auth', this)">
                     <i class="ph-bold ph-lock-key"></i> Authentication
                 </button>
                 <button class="modal-sidebar-btn" id="msb-backups" onclick="switchSettingsPanel('backups', this); loadBackups()">
                     <i class="ph-bold ph-clock-counter-clockwise"></i> Backups
+                </button>
+                <button class="modal-sidebar-btn" id="msb-ui" onclick="switchSettingsPanel('ui', this)">
+                    <i class="ph-bold ph-sliders"></i> Interface
                 </button>
                 <button class="modal-sidebar-btn" id="msb-about" onclick="switchSettingsPanel('about', this)">
                     <i class="ph-bold ph-info"></i> About
@@ -58,11 +64,11 @@
                     </div>
                 </div>
 
-                <div class="modal-panel" id="mpanel-tabs">
+                <div class="modal-panel" id="mpanel-routes">
                     <div>
-                        <span class="settings-section-label">Optional Tabs</span>
-                        <div class="text-xs mb-3" style="color:var(--muted)">Hide tabs you don't use. Routes, Middlewares, and Services are always visible.</div>
-                        <div class="grid grid-cols-2 gap-2" id="tabToggles">
+                        <span class="settings-section-label">Route Monitoring</span>
+                        <div class="text-xs mb-3" style="color:var(--muted)">Provider tabs pulled live from the Traefik API — no file mounts needed.</div>
+                        <div class="grid grid-cols-2 gap-2">
                             <label class="tab-toggle-row" onclick="toggleTabVisibility('docker')">
                                 <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-cube" style="color:var(--muted)"></i> Docker</span>
                                 <div class="toggle-switch" id="toggle-docker"><div class="toggle-knob"></div></div>
@@ -111,6 +117,15 @@
                                 <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-file-text" style="color:var(--muted)"></i> File (external)</span>
                                 <div class="toggle-switch" id="toggle-file_external"><div class="toggle-knob"></div></div>
                             </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-panel" id="mpanel-system">
+                    <div>
+                        <span class="settings-section-label">System Monitoring</span>
+                        <div class="text-xs mb-3" style="color:var(--muted)">These tabs require a file mount in your compose file — each tab shows the exact volume line to add if not yet mounted.</div>
+                        <div class="grid grid-cols-2 gap-2">
                             <label class="tab-toggle-row" onclick="toggleTabVisibility('certs')">
                                 <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-check" style="color:var(--muted)"></i> Certs</span>
                                 <div class="toggle-switch" id="toggle-certs"><div class="toggle-knob"></div></div>
@@ -153,6 +168,36 @@
                                 </button>
                             </div>
                         </div>
+
+                        <div id="otpSection" style="display:flex;flex-direction:column;gap:10px;margin-top:8px;padding-top:12px;border-top:1px solid var(--border)">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="settings-section-label" style="margin:0;">Two-Factor Authentication</span>
+                                    <div class="text-xs mt-1" style="color:var(--muted)">
+                                        Status: <strong id="otpStatusLabel" style="color:var(--muted)">Disabled</strong>
+                                    </div>
+                                </div>
+                                <button id="otpToggleBtn" onclick="otpToggleFlow()" class="nav-btn text-xs">
+                                    <span id="otpToggleBtnLabel">Enable 2FA</span>
+                                </button>
+                            </div>
+
+                            <div id="otpSetupFlow" class="hidden" style="display:none;flex-direction:column;gap:10px;">
+                                <div class="text-xs px-3 py-2 rounded-md" style="background:rgba(58,130,246,0.08);border:1px solid rgba(58,130,246,0.2);color:var(--blue)">
+                                    <i class="ph-bold ph-info mr-1"></i>Scan the QR code with Google Authenticator or any TOTP app, then enter the 6-digit code to confirm.
+                                </div>
+                                <div id="otpQrCanvas" class="flex justify-center py-3"></div>
+                                <div class="text-xs text-center" style="color:var(--muted)">
+                                    Or enter manually: <code id="otpManualSecret" style="background:var(--border);padding:2px 6px;border-radius:3px;font-family:monospace;user-select:all"></code>
+                                </div>
+                                <input type="text" id="otpVerifyCode" class="input-field" placeholder="Enter 6-digit code to confirm" inputmode="numeric" maxlength="6" style="text-align:center;letter-spacing:.2em;font-family:monospace">
+                                <div id="otpSetupMsg" class="hidden text-xs px-3 py-2 rounded-md"></div>
+                                <div class="flex gap-2">
+                                    <button onclick="otpConfirmEnable()" class="nav-btn text-xs"><i class="ph-bold ph-check"></i> Verify &amp; Enable</button>
+                                    <button onclick="otpCancelSetup()" class="nav-btn text-xs"><i class="ph-bold ph-x"></i> Cancel</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div id="authHiddenMsg" class="hidden text-xs" style="color:var(--muted);padding:8px 0;">
                         Authentication settings are not available — no password has been configured.
@@ -176,6 +221,46 @@
                                 <i class="ph-light ph-spinner-gap text-2xl animate-spin block mb-2"></i>
                                 Loading backups...
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-panel" id="mpanel-ui">
+                    <div>
+                        <span class="settings-section-label">Dashboard</span>
+                        <div class="text-xs mb-3" style="color:var(--muted)">Show or hide sections of the dashboard. Preferences are saved locally.</div>
+                        <div style="display:flex;flex-direction:column;gap:2px;">
+                            <div class="flex items-center justify-between py-2.5" style="border-bottom:1px solid var(--border)">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Show stat cards</div>
+                                    <div class="text-xs" style="color:var(--muted)">HTTP Routers, TCP/UDP, Services and Middlewares overview</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-ui-statcards" onclick="toggleUiPref('showStatCards')"><div class="toggle-knob"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between py-2.5" style="border-bottom:1px solid var(--border)">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Compact stat cards</div>
+                                    <div class="text-xs" style="color:var(--muted)">Smaller count with status breakdown (ok / warn / error)</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-ui-compact-stats" onclick="toggleUiPref('compactStatCards')"><div class="toggle-knob"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between py-2.5" style="border-bottom:1px solid var(--border)">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Show entry points bar</div>
+                                    <div class="text-xs" style="color:var(--muted)">Traefik entry point badges below the stat cards</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-ui-entrypoints" onclick="toggleUiPref('showEntrypoints')"><div class="toggle-knob"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <span class="settings-section-label">Navbar</span>
+                        <div class="flex items-center justify-between py-2.5" style="border-bottom:1px solid var(--border)">
+                            <div>
+                                <div class="text-xs font-medium" style="color:var(--text)">Show version badge in navbar</div>
+                                <div class="text-xs" style="color:var(--muted)">Traefik version shown next to the logo</div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-traefik-badge" onclick="toggleTraefikBadge()"><div class="toggle-knob"></div></div>
                         </div>
                     </div>
                 </div>
@@ -234,19 +319,11 @@
                             </a>
                         </div>
 
-                        <div class="flex items-center justify-between py-2.5" style="border-top:1px solid var(--border)">
-                            <div>
-                                <div class="text-xs font-medium" style="color:var(--text)">Show version badge in navbar</div>
-                                <div class="text-xs" style="color:var(--muted)">Traefik version shown next to the logo</div>
-                            </div>
-                            <div class="toggle-switch" id="toggle-traefik-badge" onclick="toggleTraefikBadge()"><div class="toggle-knob"></div></div>
-                        </div>
-
                         <div class="flex gap-2" style="border-top:1px solid var(--border);padding-top:12px">
                             <a href="https://github.com/chr0nzz/traefik-manager" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
                                 <i class="ph-bold ph-github-logo"></i> GitHub
                             </a>
-                            <a href="https://github.com/chr0nzz/traefik-manager/wiki" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
+                            <a href="https://chr0nzz.github.io/traefik-manager/" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
                                 <i class="ph-bold ph-book-open"></i> Docs
                             </a>
                         </div>
@@ -286,7 +363,9 @@ async function openSettingsModal(panel) {
 
         if (data.visible_tabs) _visibleTabsCache = data.visible_tabs;
         loadTabTogglesIntoModal();
+        loadUiTogglesIntoModal();
         _applyTraefikBadgeVisibility();
+        loadOtpStatus();
 
         const authSection   = document.getElementById('authSection');
         const toggleBtn     = document.getElementById('authToggleBtn');
@@ -451,7 +530,7 @@ async function loadBackups() {
         list.innerHTML = backups.map(b => `
             <div class="flex items-center justify-between py-2.5 rounded-lg px-3 mb-2" style="background:var(--bg);border:1px solid var(--border)">
                 <div>
-                    <div class="font-mono text-xs text-white">${b.name}</div>
+                    <div class="font-mono text-xs" style="color:var(--text)">${b.name}</div>
                     <div class="text-xs mt-0.5" style="color:var(--muted)">${b.modified} · ${formatBytes(b.size)}</div>
                 </div>
                 <div class="flex gap-1">
@@ -531,14 +610,221 @@ function _applyTraefikBadgeVisibility() {
 }
 
 function renderReleaseNotes(md) {
-    return md
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/^#{3,} (.+)$/gm, '<div style="font-weight:600;color:var(--text);margin:10px 0 4px">$1</div>')
-        .replace(/^## (.+)$/gm, '<div style="font-weight:700;color:var(--text);font-size:13px;margin:12px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--border)">$1</div>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text)">$1</strong>')
-        .replace(/`([^`]+)`/g, '<code style="background:var(--border);padding:1px 4px;border-radius:3px;font-size:11px">$1</code>')
-        .replace(/^[-*] (.+)$/gm, '<div style="padding:1px 0 1px 10px;border-left:2px solid var(--border);margin:2px 0">$1</div>')
-        .replace(/\n{2,}/g, '<br>');
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function inline(s) {
+        return esc(s)
+            .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text)">$1</strong>')
+            .replace(/`([^`]+)`/g, '<code style="background:var(--border);padding:1px 5px;border-radius:3px;font-size:11px;font-family:monospace">$1</code>')
+            .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--blue);text-decoration:none">$1</a>');
+    }
+    function isTableRow(l) { const t = l.trim(); return t.startsWith('|') && t.endsWith('|'); }
+    function isSepRow(l) { return l.replace(/^\||\|$/g, '').split('|').every(c => /^[\s\-:]+$/.test(c)); }
+    function parseCells(l) { return l.replace(/^\||\|$/g, '').split('|').map(c => c.trim()); }
+
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '', inList = false, i = 0;
+
+    while (i < lines.length) {
+        const line = lines[i].trimEnd();
+
+        // Table — collect all consecutive table rows
+        if (isTableRow(line)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            const block = [];
+            while (i < lines.length && isTableRow(lines[i].trimEnd())) { block.push(lines[i].trimEnd()); i++; }
+            const rows = block.filter(l => !isSepRow(l));
+            if (rows.length) {
+                html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin:6px 0">';
+                rows.forEach((row, idx) => {
+                    const tag = idx === 0 ? 'th' : 'td';
+                    const st  = idx === 0
+                        ? 'padding:3px 8px;border-bottom:1px solid var(--border);color:var(--text);font-weight:600;text-align:left;white-space:nowrap'
+                        : 'padding:3px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
+                    html += '<tr>' + parseCells(row).map(c => `<${tag} style="${st}">${inline(c)}</${tag}>`).join('') + '</tr>';
+                });
+                html += '</table>';
+            }
+            continue;
+        }
+
+        // Blockquote
+        if (/^> /.test(line)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<div style="margin:6px 0;padding:5px 10px;border-left:3px solid var(--blue);background:rgba(58,130,246,0.06);border-radius:0 4px 4px 0;font-size:11px;color:var(--muted)">${inline(line.replace(/^> /, ''))}</div>`;
+            i++; continue;
+        }
+
+        // Horizontal rule
+        if (/^---+$/.test(line.trim())) {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += '<hr style="border:none;border-top:1px solid var(--border);margin:10px 0">';
+            i++; continue;
+        }
+
+        // Headings
+        if (/^#{1,4} /.test(line)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            const lvl   = line.match(/^(#{1,4}) /)[1].length;
+            const text  = inline(line.replace(/^#{1,4} /, ''));
+            const sz    = lvl <= 2 ? '12px' : '11px';
+            const mt    = lvl <= 2 ? '14px' : '10px';
+            const extra = lvl <= 2 ? 'border-bottom:1px solid var(--border);padding-bottom:4px;' : '';
+            html += `<div style="font-weight:700;color:var(--text);font-size:${sz};margin:${mt} 0 4px;${extra}">${text}</div>`;
+            i++; continue;
+        }
+
+        // List item
+        if (/^[-*] /.test(line)) {
+            if (!inList) { html += '<ul style="margin:4px 0 6px;padding-left:16px;list-style:disc">'; inList = true; }
+            html += `<li style="margin:2px 0;color:var(--text)">${inline(line.replace(/^[-*] /, ''))}</li>`;
+            i++; continue;
+        }
+
+        // Blank line
+        if (line.trim() === '') {
+            if (inList) { html += '</ul>'; inList = false; }
+            i++; continue;
+        }
+
+        // Paragraph
+        if (inList) { html += '</ul>'; inList = false; }
+        html += `<p style="margin:3px 0;color:var(--muted)">${inline(line)}</p>`;
+        i++;
+    }
+
+    if (inList) html += '</ul>';
+    return html;
+}
+
+// ── UI Preferences ────────────────────────────────────────────────────────────
+
+function _uiPref(key) { return localStorage.getItem(key) !== 'false'; }
+
+function _applyEntrypointsVisibility() {
+    const bar  = document.getElementById('entrypointsBar');
+    const list = document.getElementById('entrypointsList');
+    if (!bar) return;
+    const hasData = list && list.children.length > 0;
+    bar.classList.toggle('hidden', !_uiPref('showEntrypoints') || !hasData);
+}
+
+function applyUiPrefs() {
+    const overviewSection = document.getElementById('overviewSection');
+    if (overviewSection) overviewSection.classList.toggle('hidden', !_uiPref('showStatCards'));
+    _applyEntrypointsVisibility();
+    const grid = document.getElementById('statsGrid');
+    if (grid) grid.classList.toggle('stats-compact', localStorage.getItem('compactStatCards') === 'true');
+}
+
+function loadUiTogglesIntoModal() {
+    const sc = document.getElementById('toggle-ui-statcards');
+    const ep = document.getElementById('toggle-ui-entrypoints');
+    const cs = document.getElementById('toggle-ui-compact-stats');
+    if (sc) sc.classList.toggle('on', _uiPref('showStatCards'));
+    if (ep) ep.classList.toggle('on', _uiPref('showEntrypoints'));
+    if (cs) cs.classList.toggle('on', localStorage.getItem('compactStatCards') === 'true');
+}
+
+function toggleUiPref(key) {
+    // compactStatCards defaults off; all others default on
+    const current = key === 'compactStatCards'
+        ? localStorage.getItem(key) === 'true'
+        : _uiPref(key);
+    localStorage.setItem(key, current ? 'false' : 'true');
+    applyUiPrefs();
+    loadUiTogglesIntoModal();
+}
+
+// ── OTP Setup ─────────────────────────────────────────────────────────────────
+
+let _otpEnabled = false;
+
+async function loadOtpStatus() {
+    try {
+        const res  = await fetch('/api/auth/otp/status');
+        const data = await res.json();
+        _otpEnabled = !!data.otp_enabled;
+        const label = document.getElementById('otpStatusLabel');
+        const btn   = document.getElementById('otpToggleBtnLabel');
+        if (label) {
+            label.textContent  = _otpEnabled ? 'Enabled' : 'Disabled';
+            label.style.color  = _otpEnabled ? 'var(--green)' : 'var(--muted)';
+        }
+        if (btn) btn.textContent = _otpEnabled ? 'Disable 2FA' : 'Enable 2FA';
+    } catch(e) {}
+}
+
+async function otpToggleFlow() {
+    if (_otpEnabled) {
+        if (!confirm('Disable two-factor authentication?')) return;
+        try {
+            const res  = await fetch('/api/auth/otp/disable', { method: 'POST', headers: _csrfHeaders() });
+            const data = await res.json();
+            if (data.success) { showToast('2FA disabled', 'success'); loadOtpStatus(); }
+            else showToast(data.error || 'Failed', 'error');
+        } catch(e) { showToast('Request failed', 'error'); }
+        return;
+    }
+    // Start setup flow
+    try {
+        const res  = await fetch('/api/auth/otp/setup', { method: 'POST', headers: _csrfHeaders() });
+        const data = await res.json();
+        if (data.error) { showToast(data.error, 'error'); return; }
+
+        document.getElementById('otpManualSecret').textContent = data.secret;
+        const canvas = document.getElementById('otpQrCanvas');
+        canvas.innerHTML = '';
+        const qrDiv = document.createElement('div');
+        canvas.appendChild(qrDiv);
+
+        if (typeof QRCode !== 'undefined') {
+            new QRCode(qrDiv, { text: data.uri, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+        } else {
+            qrDiv.innerHTML = `<div class="text-xs" style="color:var(--muted)">Manual entry: use the secret below.</div>`;
+        }
+
+        const flow = document.getElementById('otpSetupFlow');
+        flow.style.display = 'flex';
+        flow.classList.remove('hidden');
+        document.getElementById('otpVerifyCode').value = '';
+        const msg = document.getElementById('otpSetupMsg');
+        if (msg) msg.classList.add('hidden');
+    } catch(e) { showToast('Failed to start 2FA setup', 'error'); }
+}
+
+async function otpConfirmEnable() {
+    const code = (document.getElementById('otpVerifyCode').value || '').trim();
+    const msg  = document.getElementById('otpSetupMsg');
+    const show = (text, ok) => {
+        msg.textContent = text;
+        msg.style.background = ok ? 'rgba(63,185,80,0.1)' : 'rgba(248,81,73,0.1)';
+        msg.style.border     = ok ? '1px solid rgba(63,185,80,0.3)' : '1px solid rgba(248,81,73,0.3)';
+        msg.style.color      = ok ? 'var(--green)' : 'var(--red)';
+        msg.classList.remove('hidden');
+    };
+    if (!code || code.length !== 6) return show('Enter the 6-digit code.', false);
+    try {
+        const res  = await fetch('/api/auth/otp/enable', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token'] },
+            body: JSON.stringify({ code })
+        });
+        const data = await res.json();
+        if (data.success) {
+            show('2FA enabled successfully!', true);
+            setTimeout(() => { otpCancelSetup(); loadOtpStatus(); }, 1200);
+        } else {
+            show(data.error || 'Invalid code. Try again.', false);
+        }
+    } catch(e) { show('Request failed.', false); }
+}
+
+function otpCancelSetup() {
+    const flow = document.getElementById('otpSetupFlow');
+    flow.style.display = 'none';
+    flow.classList.add('hidden');
 }
 
 </script>

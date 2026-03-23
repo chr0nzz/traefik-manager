@@ -1,6 +1,9 @@
 <div id="tab-plugins" class="tab-content">
-    <div class="flex items-center justify-between mb-4">
-        <div></div>
+    <div class="flex flex-wrap gap-2 mb-4 items-center">
+        <div class="relative flex-1 min-w-48">
+            <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
+            <input type="text" id="pluginsSearch" oninput="filterPlugins()" placeholder="Search plugins..." class="input-field pl-9">
+        </div>
         <div class="flex items-center gap-2">
             <a href="https://plugins.traefik.io/plugins" target="_blank" class="btn-secondary text-xs" style="text-decoration:none">
                 <i class="ph-bold ph-puzzle-piece"></i> Browse Plugins

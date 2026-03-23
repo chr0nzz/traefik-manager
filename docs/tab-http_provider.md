@@ -19,7 +19,7 @@ Routes are **read-only** - edit them at the source HTTP endpoint Traefik is poll
 Toggle **HTTP Provider** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable HTTP Provider.
+Go to **Settings → Route Monitoring** and enable HTTP Provider.
 
 ## Requirements
 

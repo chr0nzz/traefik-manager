@@ -19,7 +19,7 @@ Routes are **read-only** - edit them directly in your ZooKeeper instance.
 Toggle **ZooKeeper** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable ZooKeeper.
+Go to **Settings → Route Monitoring** and enable ZooKeeper.
 
 ## Requirements
 

@@ -21,7 +21,7 @@ Routes are **read-only** - edit them directly in the Consul KV store.
 Toggle **Consul KV** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable Consul KV.
+Go to **Settings → Route Monitoring** and enable Consul KV.
 
 ## Requirements
 

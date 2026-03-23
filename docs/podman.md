@@ -6,14 +6,14 @@ Traefik Manager works with Podman. This page covers the key differences from Doc
 
 ## Key differences from Docker
 
-| | Docker | Podman |
-|---|---|---|
-| Compose command | `docker compose` | `podman compose` (Podman 4.7+) or `podman-compose` |
-| Exec into container | `docker exec` | `podman exec` |
-| SELinux hosts | No label needed | Add `:z` (shared) or `:Z` (private) to volume mounts |
-| Rootless ports | Ports < 1024 need root | Same - use port ≥ 1024 or configure `net.ipv4.ip_unprivileged_port_start` |
-| Restart policy | `unless-stopped` | Use `always` with podman-compose, or use a Quadlet unit for systemd integration |
-| Network aliases | Docker Compose sets them | Must create a named network and join both containers to it |
+|                     | Docker                   | Podman                                                                          |
+| ---------------------| --------------------------| ---------------------------------------------------------------------------------|
+| Compose command     | `docker compose`         | `podman compose` (Podman 4.7+) or `podman-compose`                              |
+| Exec into container | `docker exec`            | `podman exec`                                                                   |
+| SELinux hosts       | No label needed          | Add `:z` (shared) or `:Z` (private) to volume mounts                            |
+| Rootless ports      | Ports < 1024 need root   | Same - use port ≥ 1024 or configure `net.ipv4.ip_unprivileged_port_start`       |
+| Restart policy      | `unless-stopped`         | Use `always` with podman-compose, or use a Quadlet unit for systemd integration |
+| Network aliases     | Docker Compose sets them | Must create a named network and join both containers to it                      |
 
 ---
 
@@ -53,7 +53,7 @@ podman compose up -d
 
 ---
 
-## Connecting to Traefik on the same host
+## Connecting to Traefik on the same host 
 
 Traefik Manager needs to reach the Traefik API URL you configure in settings (e.g. `http://traefik:8080`). When both containers run on the same Podman network they can reach each other by container name.
 

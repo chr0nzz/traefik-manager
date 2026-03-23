@@ -17,7 +17,7 @@ Plugins are **read-only** here - they must be declared in `traefik.yml` under `e
 Toggle **Plugins** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable Plugins.
+Go to **Settings → System Monitoring** and enable Plugins.
 
 ## Requirements
 

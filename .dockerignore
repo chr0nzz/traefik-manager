@@ -19,6 +19,7 @@ docs/
 docker-compose.yml
 Dockerfile
 manager.yml
+mkdocs.yml
 
 # Metadata
 .DS_Store

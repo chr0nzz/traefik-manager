@@ -19,7 +19,7 @@ Routes are **read-only** - edit them via your container's Docker labels.
 Toggle **Docker** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable Docker.
+Go to **Settings → Route Monitoring** and enable Docker.
 
 ## Requirements
 

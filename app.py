@@ -7,6 +7,7 @@ import logging
 import requests
 from datetime import datetime, timezone, timedelta
 from functools import wraps
+import click
 from flask import (Flask, render_template, request, redirect,
                    url_for, flash, jsonify, abort, session)
 from ruamel.yaml import YAML
@@ -111,6 +112,8 @@ def load_settings() -> dict:
         'visible_tabs':         {t: False for t in OPTIONAL_TABS},
         'must_change_password': False,
         'setup_complete':       False,
+        'otp_secret':           '',
+        'otp_enabled':          False,
     }
     if not os.path.exists(SETTINGS_PATH):
         return defaults
@@ -138,9 +141,11 @@ def load_settings() -> dict:
             merged['must_change_password'] = bool(data['must_change_password'])
         if 'setup_complete' in data:
             merged['setup_complete'] = bool(data['setup_complete'])
+        if 'otp_secret' in data:
+            merged['otp_secret'] = str(data['otp_secret']).strip()
+        if 'otp_enabled' in data:
+            merged['otp_enabled'] = bool(data['otp_enabled'])
         else:
-            # Backward-compat: existing installs with a password_hash already set
-            # are treated as having completed setup so the wizard doesn't re-appear.
             if merged['password_hash']:
                 merged['setup_complete'] = True
         return merged
@@ -151,16 +156,19 @@ def load_settings() -> dict:
 
 def save_settings(domains, cert_resolver, traefik_api_url,
                   auth_enabled=True, password_hash='', visible_tabs=None,
-                  must_change_password=None, setup_complete=None):
+                  must_change_password=None, setup_complete=None,
+                  otp_secret=None, otp_enabled=None):
     if visible_tabs is None:
         visible_tabs = {t: False for t in OPTIONAL_TABS}
-    # Preserve existing values for the new flags if callers don't supply them
-    if must_change_password is None or setup_complete is None:
-        _cur = load_settings()
-        if must_change_password is None:
-            must_change_password = _cur.get('must_change_password', False)
-        if setup_complete is None:
-            setup_complete = _cur.get('setup_complete', False)
+    _cur = load_settings()
+    if must_change_password is None:
+        must_change_password = _cur.get('must_change_password', False)
+    if setup_complete is None:
+        setup_complete = _cur.get('setup_complete', False)
+    if otp_secret is None:
+        otp_secret = _cur.get('otp_secret', '')
+    if otp_enabled is None:
+        otp_enabled = _cur.get('otp_enabled', False)
     os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
     with open(SETTINGS_PATH, 'w') as f:
         yaml.dump({
@@ -172,16 +180,13 @@ def save_settings(domains, cert_resolver, traefik_api_url,
             'visible_tabs':         visible_tabs,
             'must_change_password': must_change_password,
             'setup_complete':       setup_complete,
+            'otp_secret':           otp_secret,
+            'otp_enabled':          otp_enabled,
         }, f)
     logger.info("Manager settings saved")
 
 
 def _auth_enabled() -> bool:
-    """
-    Auth is disabled only when explicitly opted out.
-    Priority: AUTH_ENABLED env var → manager.yml auth_enabled field → default True.
-    Set AUTH_ENABLED=false in docker-compose if using Authentik / Traefik basicAuth.
-    """
     env = os.environ.get('AUTH_ENABLED', '').strip().lower()
     if env in ('false', '0', 'no'):
         return False
@@ -191,13 +196,12 @@ def _auth_enabled() -> bool:
 
 
 def _ensure_password():
-    """Auto-generate an admin password on first run if none is configured."""
     if os.environ.get('ADMIN_PASSWORD', '').strip():
-        return  # env-var password takes priority — nothing to do
+        return
     settings = load_settings()
     if settings.get('password_hash', ''):
-        return  # password already stored in config
-    password = secrets.token_urlsafe(16)  # 22-char URL-safe string
+        return
+    password = secrets.token_urlsafe(16) 
     logger.warning("=" * 60)
     logger.warning("  TRAEFIK MANAGER — AUTO-GENERATED PASSWORD")
     logger.warning(f"  Password: {password}")
@@ -270,14 +274,15 @@ def _check_password(plaintext: str, hashed: str) -> bool:
         return False
 
 def _is_authenticated() -> bool:
-    """True if auth is disabled OR if the session carries a valid auth marker."""
+
     if not _auth_enabled():
         return True
     return session.get('authenticated') is True
 
 def _check_inactivity():
-    """Log out the session if the user has been inactive for INACTIVITY_TIMEOUT minutes."""
     if not session.get('authenticated'):
+        return
+    if session.permanent:
         return
     last = session.get('last_active')
     now  = time.time()
@@ -288,7 +293,6 @@ def _check_inactivity():
     session['last_active'] = now
 
 def login_required(f):
-    """Route decorator: redirect to /login if not authenticated."""
     @wraps(f)
     def decorated(*args, **kwargs):
         _check_inactivity()
@@ -304,7 +308,6 @@ def _has_password_set() -> bool:
     return bool(load_settings().get('password_hash', ''))
 
 def _get_effective_hash() -> str:
-    """Return the bcrypt hash to check against. ADMIN_PASSWORD env var takes priority."""
     admin_pw = os.environ.get('ADMIN_PASSWORD', '').strip()
     if admin_pw:
 
@@ -354,14 +357,25 @@ def login():
             ok = bool(pw_hash) and _check_password(password, pw_hash)
 
         if ok:
+            remember = request.form.get('remember') == 'on'
+
+            if settings.get('otp_enabled') and settings.get('otp_secret') and not admin_pw:
+                session.clear()
+                session['otp_pending']  = True
+                session['otp_remember'] = remember
+                session['otp_next']     = request.form.get('next') or ''
+                session['otp_must_change'] = settings.get('must_change_password', False)
+                session['otp_setup_complete'] = settings.get('setup_complete', False)
+                logger.info(f"OTP step required for login from {request.remote_addr}")
+                return redirect(url_for('login_otp'))
+
             session.clear()
-            session.permanent = True
+            session.permanent        = remember
             session['authenticated'] = True
             session['last_active']   = time.time()
             session['login_time']    = datetime.now(timezone.utc).isoformat()
             logger.info(f"Successful login from {request.remote_addr}")
 
-            # Redirect to the appropriate next step
             if settings.get('must_change_password', False) and not admin_pw:
                 if not settings.get('setup_complete', False):
                     return redirect(url_for('setup'))
@@ -387,23 +401,19 @@ def login():
 
 @app.route('/setup', methods=['GET', 'POST'])
 def setup():
-    """Setup wizard. Accessible on first run (setup_complete=False). Requires auth when a password exists."""
     if not _auth_enabled():
         return redirect(url_for('index'))
 
     current = load_settings()
 
-    # If setup is already done, go to the appropriate page
     if current.get('setup_complete', False):
         if current.get('must_change_password', False):
             return redirect(url_for('force_change_password'))
         return redirect(url_for('index'))
 
-    # When a password exists (auto-generated or pre-configured) require login first
     if _has_password_set() and not session.get('authenticated'):
         return redirect(url_for('login'))
 
-    # In temp-password mode the wizard skips step 4 (password is already set)
     temp_password_mode = current.get('must_change_password', False) and bool(current.get('password_hash', ''))
 
     defaults = {
@@ -457,7 +467,6 @@ def setup():
             logger.info(f"Setup wizard completed from {request.remote_addr}")
 
             if temp_password_mode:
-                # Session already valid; redirect to forced password change
                 return redirect(url_for('force_change_password'))
 
             session.clear()
@@ -483,7 +492,6 @@ def logout():
 @app.route('/force-change-password', methods=['GET', 'POST'])
 @login_required
 def force_change_password():
-    """Forced password change for auto-generated or CLI-reset passwords."""
     settings = load_settings()
     if not settings.get('must_change_password', False):
         return redirect(url_for('index'))
@@ -516,11 +524,10 @@ def force_change_password():
 
 
 @app.cli.command('reset-password')
-def reset_password_cli():
-    """Generate a new temporary password, save it, and print it to stdout.
+@click.option('--disable-otp', is_flag=True, default=False,
+              help='Also disable two-factor authentication (use if TOTP app is lost).')
+def reset_password_cli(disable_otp):
 
-    Usage: docker exec <container> flask reset-password
-    """
     password = secrets.token_urlsafe(16)
     settings = load_settings()
     save_settings(
@@ -532,10 +539,14 @@ def reset_password_cli():
         visible_tabs=settings['visible_tabs'],
         must_change_password=True,
         setup_complete=settings.get('setup_complete', True),
+        otp_secret='' if disable_otp else None,
+        otp_enabled=False if disable_otp else None,
     )
     print("=" * 60)
     print("TRAEFIK MANAGER — PASSWORD RESET")
     print(f"New temporary password: {password}")
+    if disable_otp:
+        print("Two-factor authentication has been DISABLED.")
     print("You will be required to change it on next login.")
     print("=" * 60)
 
@@ -544,7 +555,7 @@ def reset_password_cli():
 @csrf_protect
 @login_required
 def api_change_password():
-    """Change password from the Settings modal. Requires current password."""
+
     data        = request.get_json()
     current_pw  = (data or {}).get('current_password', '')
     new_pw      = (data or {}).get('new_password', '')
@@ -585,7 +596,7 @@ def api_change_password():
 @csrf_protect
 @login_required
 def api_auth_toggle():
-    """Enable or disable built-in auth from the Settings modal."""
+
     data    = request.get_json()
     enabled = bool((data or {}).get('auth_enabled', True))
     settings = load_settings()
@@ -599,6 +610,109 @@ def api_auth_toggle():
     )
     logger.info(f"auth_enabled set to {enabled} by {request.remote_addr}")
     return jsonify({'success': True, 'auth_enabled': enabled})
+
+
+@app.route('/login/otp', methods=['GET', 'POST'])
+def login_otp():
+    if not session.get('otp_pending'):
+        return redirect(url_for('login'))
+
+    error = None
+    if request.method == 'POST':
+        _check_csrf()
+        import pyotp
+        code     = request.form.get('code', '').strip()
+        settings = load_settings()
+        secret   = settings.get('otp_secret', '')
+        if secret and pyotp.TOTP(secret).verify(code, valid_window=1):
+            remember           = session.pop('otp_remember', False)
+            must_change        = session.pop('otp_must_change', False)
+            setup_complete     = session.pop('otp_setup_complete', False)
+            next_url           = session.pop('otp_next', '') or url_for('index')
+            session.pop('otp_pending', None)
+            session.permanent        = remember
+            session['authenticated'] = True
+            session['last_active']   = time.time()
+            session['login_time']    = datetime.now(timezone.utc).isoformat()
+            logger.info(f"Successful OTP login from {request.remote_addr}")
+            if must_change:
+                if not setup_complete:
+                    return redirect(url_for('setup'))
+                return redirect(url_for('force_change_password'))
+            if not next_url.startswith('/'):
+                next_url = url_for('index')
+            return redirect(next_url)
+        else:
+            time.sleep(0.3)
+            error = 'Invalid code. Please try again.'
+            logger.warning(f"Failed OTP attempt from {request.remote_addr}")
+
+    return render_template('login.html', otp_mode=True, error=error,
+                           csrf_token=_get_csrf_token())
+
+
+@app.route('/api/auth/otp/setup', methods=['POST'])
+@csrf_protect
+@login_required
+def api_otp_setup():
+    import pyotp
+    secret = pyotp.random_base32()
+    uri    = pyotp.TOTP(secret).provisioning_uri(
+        name='Traefik Manager',
+        issuer_name='traefik-manager'
+    )
+    session['otp_pending_secret'] = secret
+    return jsonify({'secret': secret, 'uri': uri})
+
+
+@app.route('/api/auth/otp/enable', methods=['POST'])
+@csrf_protect
+@login_required
+def api_otp_enable():
+    import pyotp
+    code   = (request.get_json() or {}).get('code', '').strip()
+    secret = session.pop('otp_pending_secret', '')
+    if not secret or not pyotp.TOTP(secret).verify(code, valid_window=1):
+        return jsonify({'error': 'Invalid code — please try again.'}), 400
+    settings = load_settings()
+    save_settings(
+        domains=settings['domains'],
+        cert_resolver=settings['cert_resolver'],
+        traefik_api_url=settings['traefik_api_url'],
+        auth_enabled=settings['auth_enabled'],
+        password_hash=settings['password_hash'],
+        visible_tabs=settings['visible_tabs'],
+        otp_secret=secret,
+        otp_enabled=True,
+    )
+    logger.info(f"OTP enabled by {request.remote_addr}")
+    return jsonify({'success': True})
+
+
+@app.route('/api/auth/otp/disable', methods=['POST'])
+@csrf_protect
+@login_required
+def api_otp_disable():
+    settings = load_settings()
+    save_settings(
+        domains=settings['domains'],
+        cert_resolver=settings['cert_resolver'],
+        traefik_api_url=settings['traefik_api_url'],
+        auth_enabled=settings['auth_enabled'],
+        password_hash=settings['password_hash'],
+        visible_tabs=settings['visible_tabs'],
+        otp_secret='',
+        otp_enabled=False,
+    )
+    logger.info(f"OTP disabled by {request.remote_addr}")
+    return jsonify({'success': True})
+
+
+@app.route('/api/auth/otp/status')
+@login_required
+def api_otp_status():
+    settings = load_settings()
+    return jsonify({'otp_enabled': settings.get('otp_enabled', False)})
 
 
 def traefik_api_get(path):
@@ -649,7 +763,6 @@ def api_middlewares():
 @app.route('/api/manager/router-names')
 @login_required
 def api_manager_router_names():
-    """Return the set of router names managed by traefik-manager (from dynamic.yml)."""
     config = load_config()
     names = set()
     for proto in ('http', 'tcp', 'udp'):
@@ -707,7 +820,6 @@ def api_manager_version():
 @app.route('/api/setup/test-connection', methods=['POST'])
 @login_required
 def api_setup_test_connection():
-    """Test a Traefik API URL during setup wizard (requires auth)."""
     settings = load_settings()
     if settings.get('setup_complete', False):
         return jsonify({'ok': False, 'error': 'Setup already complete'}), 403
@@ -783,13 +895,28 @@ def api_certs():
 @app.route('/api/traefik/logs')
 @login_required
 def api_logs():
-    lines_req = min(int(request.args.get('lines', 200)), 1000)
+    lines_req = min(int(request.args.get('lines', 100)), 1000)
     if not os.path.exists(ACCESS_LOG_PATH):
         return jsonify({'error': 'Access log not mounted', 'lines': []})
     try:
-        with open(ACCESS_LOG_PATH, 'r', errors='replace') as f:
-            all_lines = f.readlines()
-        return jsonify({'lines': [l.rstrip() for l in all_lines[-lines_req:]]})
+        lines = []
+        buf_size = 8192
+        with open(ACCESS_LOG_PATH, 'rb') as f:
+            f.seek(0, 2)
+            remaining = f.tell()
+            partial = b''
+            while remaining > 0 and len(lines) < lines_req:
+                chunk = min(buf_size, remaining)
+                remaining -= chunk
+                f.seek(remaining)
+                data = f.read(chunk) + partial
+                split = data.split(b'\n')
+                partial = split[0]
+                lines = split[1:] + lines
+            if partial:
+                lines = [partial] + lines
+        result = [l.decode('utf-8', errors='replace').rstrip() for l in lines[-lines_req:] if l]
+        return jsonify({'lines': result})
     except Exception as e:
         return jsonify({'error': str(e), 'lines': []})
 
@@ -958,42 +1085,37 @@ def save_config(data):
     logger.info("Configuration saved")
 
 
-@app.route('/')
-@login_required
-def index():
-    settings    = load_settings()
-    config      = load_config()
-    apps        = []
+def _build_apps(config):
+    apps = []
     http_config = config.get('http', {})
-
     for rname, rdata in http_config.get('routers', {}).items():
-        svc_name   = rdata.get('service', '')
+        svc_name = rdata.get('service', '')
         target_url = 'N/A'
-        svcs       = http_config.get('services', {})
+        svcs = http_config.get('services', {})
         if svc_name in svcs:
             servers = svcs[svc_name].get('loadBalancer', {}).get('servers', [])
             if servers:
                 target_url = servers[0].get('url', 'Unknown')
-        apps.append({'id': rname, 'name': rname, 'rule': rdata.get('rule',''),
+        apps.append({'id': rname, 'name': rname, 'rule': rdata.get('rule', ''),
                      'service_name': svc_name, 'target': target_url,
-                     'middlewares': rdata.get('middlewares',[]),
-                     'entryPoints': rdata.get('entryPoints',[]), 'protocol': 'http'})
-
+                     'middlewares': rdata.get('middlewares', []),
+                     'entryPoints': rdata.get('entryPoints', []), 'protocol': 'http',
+                     'tls': bool(rdata.get('tls'))})
     for rname, rdata in config.get('tcp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
-        target   = 'N/A'
+        target = 'N/A'
         tcp_svcs = config.get('tcp', {}).get('services', {})
         if svc_name in tcp_svcs:
             servers = tcp_svcs[svc_name].get('loadBalancer', {}).get('servers', [])
             if servers:
                 target = servers[0].get('address', 'N/A')
-        apps.append({'id': rname, 'name': rname, 'rule': rdata.get('rule',''),
+        apps.append({'id': rname, 'name': rname, 'rule': rdata.get('rule', ''),
                      'service_name': svc_name, 'target': target,
-                     'middlewares': [], 'entryPoints': rdata.get('entryPoints',[]), 'protocol': 'tcp'})
-
+                     'middlewares': [], 'entryPoints': rdata.get('entryPoints', []),
+                     'protocol': 'tcp', 'tls': bool(rdata.get('tls'))})
     for rname, rdata in config.get('udp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
-        target   = 'N/A'
+        target = 'N/A'
         udp_svcs = config.get('udp', {}).get('services', {})
         if svc_name in udp_svcs:
             servers = udp_svcs[svc_name].get('loadBalancer', {}).get('servers', [])
@@ -1001,13 +1123,34 @@ def index():
                 target = servers[0].get('address', 'N/A')
         apps.append({'id': rname, 'name': rname, 'rule': '',
                      'service_name': svc_name, 'target': target,
-                     'middlewares': [], 'entryPoints': rdata.get('entryPoints',[]), 'protocol': 'udp'})
+                     'middlewares': [], 'entryPoints': rdata.get('entryPoints', []),
+                     'protocol': 'udp', 'tls': False})
+    return apps
 
+
+def _build_middlewares(config):
     middlewares = []
-    for mname, mdata in http_config.get('middlewares', {}).items():
+    for mname, mdata in config.get('http', {}).get('middlewares', {}).items():
         buf = StringIO()
         yaml.dump(mdata, buf)
         middlewares.append({'name': mname, 'yaml': buf.getvalue(), 'type': 'http'})
+    return middlewares
+
+
+@app.route('/api/routes')
+@login_required
+def api_routes():
+    config = load_config()
+    return jsonify({'apps': _build_apps(config), 'middlewares': _build_middlewares(config)})
+
+
+@app.route('/')
+@login_required
+def index():
+    settings    = load_settings()
+    config      = load_config()
+    apps        = _build_apps(config)
+    middlewares = _build_middlewares(config)
 
 
     auth_on = _auth_enabled()
@@ -1018,10 +1161,15 @@ def index():
                            auth_enabled=auth_on, login_time=login_time)
 
 
+def _is_fetch():
+    return request.headers.get('X-Requested-With') == 'fetch'
+
+
 @app.route('/save', methods=['POST'])
 @csrf_protect
 @login_required
 def save_entry():
+    fetch = _is_fetch()
     try:
         settings       = load_settings()
         svc_name       = request.form.get('serviceName', '').strip()
@@ -1036,9 +1184,13 @@ def save_entry():
         tcp_rule       = request.form.get('tcpRule', '').strip()
 
         if not svc_name:
+            if fetch:
+                return jsonify({'ok': False, 'message': 'Service name is required'}), 400
             flash("Service name is required", "error")
             return redirect(url_for('index'))
         if protocol not in ('http', 'tcp', 'udp'):
+            if fetch:
+                return jsonify({'ok': False, 'message': 'Invalid protocol'}), 400
             flash("Invalid protocol", "error")
             return redirect(url_for('index'))
 
@@ -1084,9 +1236,14 @@ def save_entry():
             config['udp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
 
         save_config(config)
-        flash(f"Successfully saved {svc_name}", "success")
+        msg = f"Successfully saved {svc_name}"
+        if fetch:
+            return jsonify({'ok': True, 'message': msg})
+        flash(msg, "success")
     except Exception:
         logger.exception("Error saving configuration")
+        if fetch:
+            return jsonify({'ok': False, 'message': 'Error saving configuration'}), 500
         flash("Error saving configuration", "error")
     return redirect(url_for('index'))
 
@@ -1095,6 +1252,7 @@ def save_entry():
 @csrf_protect
 @login_required
 def delete_entry(router_id):
+    fetch = _is_fetch()
     try:
         create_backup()
         config = load_config()
@@ -1106,9 +1264,14 @@ def delete_entry(router_id):
                 if svc and 'services' in s and svc in s['services']:
                     del s['services'][svc]
         save_config(config)
-        flash(f"Deleted {router_id}", "success")
+        msg = f"Deleted {router_id}"
+        if fetch:
+            return jsonify({'ok': True, 'message': msg})
+        flash(msg, "success")
     except Exception:
         logger.exception("Delete error")
+        if fetch:
+            return jsonify({'ok': False, 'message': 'Error deleting'}), 500
         flash("Error deleting", "error")
     return redirect(url_for('index'))
 
@@ -1117,12 +1280,15 @@ def delete_entry(router_id):
 @csrf_protect
 @login_required
 def save_middleware():
+    fetch = _is_fetch()
     try:
         mw_name     = request.form.get('middlewareName', '').strip()
         mw_content  = request.form.get('middlewareContent', '').strip()
         is_edit     = request.form.get('isMwEdit') == 'true'
         original_id = request.form.get('originalMwId', '')
         if not mw_name:
+            if fetch:
+                return jsonify({'ok': False, 'message': 'Middleware name is required'}), 400
             flash("Middleware name is required", "error")
             return redirect(url_for('index'))
         create_backup()
@@ -1132,9 +1298,14 @@ def save_middleware():
             config['http']['middlewares'].pop(original_id, None)
         config['http']['middlewares'][mw_name] = safe_yaml.load(mw_content)
         save_config(config)
-        flash(f"Successfully saved middleware {mw_name}", "success")
+        msg = f"Successfully saved middleware {mw_name}"
+        if fetch:
+            return jsonify({'ok': True, 'message': msg})
+        flash(msg, "success")
     except Exception:
         logger.exception("Middleware save error")
+        if fetch:
+            return jsonify({'ok': False, 'message': 'Error saving middleware'}), 500
         flash("Error saving middleware", "error")
     return redirect(url_for('index'))
 
@@ -1143,14 +1314,20 @@ def save_middleware():
 @csrf_protect
 @login_required
 def delete_middleware(mw_name):
+    fetch = _is_fetch()
     try:
         create_backup()
         config = load_config()
         config.get('http', {}).get('middlewares', {}).pop(mw_name, None)
         save_config(config)
-        flash(f"Deleted middleware {mw_name}", "success")
+        msg = f"Deleted middleware {mw_name}"
+        if fetch:
+            return jsonify({'ok': True, 'message': msg})
+        flash(msg, "success")
     except Exception:
         logger.exception("Middleware delete error")
+        if fetch:
+            return jsonify({'ok': False, 'message': 'Error deleting middleware'}), 500
         flash("Error deleting middleware", "error")
     return redirect(url_for('index'))
 

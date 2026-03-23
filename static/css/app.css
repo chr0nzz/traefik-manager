@@ -12,6 +12,7 @@
     --red: #f85149;
     --purple: #a371f7;
     --orange: #f0883e;
+    --teal: #1abc9c;
     --nav-bg: rgba(13,17,23,0.95);
     --input-bg: #0d1117;
     --btn-secondary-bg: #21262d;
@@ -31,6 +32,7 @@
     --red: #d1242f;
     --purple: #8250df;
     --orange: #bc4c00;
+    --teal: #0d9488;
     --nav-bg: rgba(246,248,250,0.95);
     --input-bg: #ffffff;
     --btn-secondary-bg: #f6f8fa;
@@ -52,9 +54,50 @@ main { overflow-x: hidden; }
 
 .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
 
+/* ── Expanded mode (default) ─────────────────────────────── */
+.stat-exp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.stat-exp-title  { font-size:14px; font-weight:600; color:var(--text); }
+.explore-link    { font-size:11px; font-weight:500; color:var(--blue); background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; gap:3px; }
+.explore-link:hover { text-decoration:underline; }
+.stat-exp-body   { display:flex; align-items:center; gap:12px; }
+.stat-legend     { flex:1; display:flex; flex-direction:column; gap:6px; min-width:0; }
+.stat-legend-row { display:flex; align-items:center; gap:6px; font-size:12px; }
+.stat-legend-icon { width:22px; height:22px; border-radius:5px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:11px; }
+.stat-legend-icon.ok   { background:rgba(34,197,94,0.15);  color:#22c55e; }
+.stat-legend-icon.warn { background:rgba(245,158,11,0.15); color:#f59e0b; }
+.stat-legend-icon.err  { background:rgba(239,68,68,0.15);  color:#ef4444; }
+.stat-legend-label { flex:1; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.stat-legend-pct   { font-size:11px; color:var(--muted); flex-shrink:0; }
+.stat-legend-count { font-weight:700; font-size:13px; color:var(--text); flex-shrink:0; min-width:20px; text-align:right; }
+
+/* Hidden in expanded */
+.stat-cmp-header { display:none; }
+.stat-count      { display:none; }
+.stat-counts     { display:none; }
+.stat-bar        { display:none !important; }  /* bar hidden in expanded — donut covers it */
+
+/* ── Compact mode ────────────────────────────────────────── */
+#statsGrid.stats-compact .stat-exp-header { display:none; }
+#statsGrid.stats-compact .stat-exp-body   { display:none; }
+#statsGrid.stats-compact .stat-cmp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+#statsGrid.stats-compact .stat-count      { display:none; }
+#statsGrid.stats-compact .stat-counts     { display:flex; gap:10px; font-size:11px; font-family:monospace; margin-bottom:8px; }
+#statsGrid.stats-compact .stat-bar        { display:flex !important; }
+.stat-counts .ok   { color:var(--green); }
+.stat-counts .warn { color:var(--yellow); }
+.stat-counts .err  { color:var(--red); }
+
+/* ── Stat card mobile ────────────────────────────────────── */
+@media (max-width: 639px) {
+    /* Expanded mode: single column so cards have full width */
+    #statsGrid:not(.stats-compact) { grid-template-columns: 1fr; }
+    /* Compact mode: keep 2 columns, stack legend tighter */
+    #statsGrid.stats-compact .stat-cmp-header { margin-bottom:6px; }
+}
+
 .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
 .badge-http { background: rgba(36,161,222,0.15); color: var(--blue); border: 1px solid rgba(36,161,222,0.3); }
-.badge-tcp  { background: rgba(163,113,247,0.15); color: var(--purple); border: 1px solid rgba(163,113,247,0.3); }
+.badge-tcp  { background: rgba(26,188,156,0.15);  color: var(--teal);   border: 1px solid rgba(26,188,156,0.3); }
 .badge-udp  { background: rgba(240,136,62,0.15); color: var(--orange); border: 1px solid rgba(240,136,62,0.3); }
 .badge-green { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
 .badge-red  { background: rgba(248,81,73,0.15); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }

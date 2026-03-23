@@ -8,7 +8,7 @@ The **Services** tab shows all services registered in Traefik across every provi
 - Status badge: Success, Warning, or Error
 - HTTP, TCP, and UDP services
 
-## Filtering
+## Filtering 
 
 - **Search** - filter by service name
 - **Status buttons** - show All / Success / Warnings / Errors

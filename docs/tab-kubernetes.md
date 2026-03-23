@@ -31,7 +31,7 @@ Routes are **read-only** - edit them via your Kubernetes manifests or Helm value
 Toggle **Kubernetes** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable Kubernetes.
+Go to **Settings → Route Monitoring** and enable Kubernetes.
 
 ## Requirements
 

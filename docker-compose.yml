@@ -7,8 +7,8 @@ services:
     ports:
       - "5000:5000"
     environment:
-      # Required when running behind HTTPS — marks the session cookie as Secure
-      - COOKIE_SECURE=true
+      # Set true when running behind HTTPS PROXY
+      - COOKIE_SECURE=false
     volumes:
       # Required
       - /path/to/traefik/dynamic.yml:/app/config/dynamic.yml

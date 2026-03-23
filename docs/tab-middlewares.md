@@ -9,7 +9,7 @@ The **Middlewares** tab manages all middleware definitions stored in `dynamic.ym
 - Protocol badge (HTTP / TCP)
 - Edit and delete controls
 
-## Creating a middleware
+## Creating a middleware 
 
 Click **Add Middleware** in the top bar. Two fields:
 

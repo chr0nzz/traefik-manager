@@ -5,13 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Traefik Manager</title>
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon.png">
     <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
     <link rel="manifest" href="/static/manifest.json">
     <meta name="theme-color" content="#0d1117">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Traefik">
+    <script>
+        (function() {
+            var t = localStorage.getItem('tm-theme') || 'dark';
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var isDark = t === 'dark' || (t === 'system' && prefersDark);
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -38,9 +46,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="/static/css/app.css">
 </head>
-<body class="text-slate-100 min-h-screen font-sans">
+<body class="min-h-screen font-sans">
 
 
 <div class="toast" id="toastContainer">
@@ -346,6 +355,77 @@ function switchTab(tab) {
     if (tab === 'logs')          refreshLogs();
 }
 
+// ── Shared provider card renderer (matches Routes tab card style) ─────────────
+function renderProviderCard(r, opts = {}) {
+    const proto = (r._proto || 'HTTP').toUpperCase();
+    const name  = (r.name  || '').split('@')[0];
+    const svc   = (r.service || '').split('@')[0];
+
+    const protoBadge = proto === 'TCP'  ? `<span class="badge badge-tcp">TCP</span>`
+                     : proto === 'UDP'  ? `<span class="badge badge-udp">UDP</span>`
+                     :                   `<span class="badge badge-http">HTTP</span>`;
+
+    const tlsBadge = r.tls ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS</span>` : '';
+
+    const st = (r.status || '').toLowerCase();
+    const dotCls = st === 'enabled' ? 'status-online' : (st === 'disabled' || st === 'error') ? 'status-offline' : 'status-unknown';
+
+    const hostMatch = (r.rule || '').match(/Host\(`([^`]+)`\)/);
+    const domain    = hostMatch ? hostMatch[1] : null;
+    const isHTTP    = proto === 'HTTP';
+
+    const externalBtn = (domain && isHTTP)
+        ? `<a href="https://${domain}" target="_blank" class="btn-icon" title="Open site"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>`
+        : '';
+
+    const domainBlock = isHTTP
+        ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
+               <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div>
+               <div class="text-xs font-mono truncate" style="color:var(--blue)" title="${r.rule || '—'}">${domain || r.rule || '—'}</div>
+           </div>`
+        : (r.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
+               <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div>
+               <div class="text-xs font-mono truncate" style="color:var(--blue)">${r.rule}</div>
+           </div>` : '');
+
+    const targetBlock = opts.target
+        ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
+               <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
+               <div class="text-xs font-mono truncate" style="color:var(--green)">${opts.target}</div>
+           </div>`
+        : '';
+
+    const epHtml = (r.entryPoints || []).length
+        ? `<div class="flex flex-wrap gap-1">${(r.entryPoints || []).map(ep => `<span class="badge badge-muted text-xs">${ep}</span>`).join('')}</div>`
+        : '';
+
+    const mwHtml = (r.middlewares || []).length
+        ? `<div class="flex flex-wrap gap-1">${(r.middlewares || []).map(mw => `<span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">${mw.split('@')[0]}</span>`).join('')}</div>`
+        : '';
+
+    return `
+    <div class="card route-card">
+        <div class="route-card-inner p-4 pb-2">
+            <div class="flex justify-between items-start mb-3">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-0.5">
+                        ${protoBadge}${tlsBadge}<span class="status-dot ${dotCls}"></span>
+                    </div>
+                    <h3 class="font-bold text-sm mt-1.5 truncate" style="color:var(--text)" title="${name}">${name}</h3>
+                    <div class="text-xs font-mono truncate" style="color:var(--muted)">${svc}</div>
+                </div>
+                <div class="flex items-center gap-0.5 ml-2 flex-shrink-0">
+                    ${opts.extraBadges || ''}${externalBtn}
+                    ${opts.onDetailClick ? `<button onclick="${opts.onDetailClick}" class="btn-icon" title="View details"><i class="ph-bold ph-info text-sm"></i></button>` : ''}
+                </div>
+            </div>
+            <div class="space-y-2">
+                ${domainBlock}${targetBlock}${opts.extraRows || ''}${epHtml}${mwHtml}
+            </div>
+        </div>
+    </div>`;
+}
+
 let currentProtoFilter = 'all';
 
 function filterProto(proto) {
@@ -432,6 +512,122 @@ function openMwModal() {
 }
 
 function closeMwModal() { document.getElementById('mwModal').style.display = 'none'; }
+
+function _esc(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function saveRouteAjax(event) {
+    event.preventDefault();
+    const form = event.target;
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true;
+    try {
+        const res = await fetch(form.action, { method:'POST', headers:{'X-Requested-With':'fetch'}, body: new FormData(form) });
+        const json = await res.json();
+        closeModal();
+        showToast(json.message, json.ok ? 'success' : 'error');
+        if (json.ok) refreshRoutes();
+    } catch(e) {
+        showToast('Error saving route', 'error');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function saveMwAjax(event) {
+    event.preventDefault();
+    const form = event.target;
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true;
+    try {
+        const res = await fetch(form.action, { method:'POST', headers:{'X-Requested-With':'fetch'}, body: new FormData(form) });
+        const json = await res.json();
+        closeMwModal();
+        showToast(json.message, json.ok ? 'success' : 'error');
+        if (json.ok) refreshRoutes();
+    } catch(e) {
+        showToast('Error saving middleware', 'error');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function deleteRoute(id) {
+    if (!confirm('Delete route "' + id + '"?')) return;
+    const data = new FormData();
+    data.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+    try {
+        const res = await fetch('/delete/' + encodeURIComponent(id), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
+        const json = await res.json();
+        showToast(json.message, json.ok ? 'success' : 'error');
+        if (json.ok) refreshRoutes();
+    } catch(e) { showToast('Error deleting route', 'error'); }
+}
+
+async function deleteMw(name) {
+    if (!confirm('Delete middleware "' + name + '"?')) return;
+    const data = new FormData();
+    data.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+    try {
+        const res = await fetch('/delete-middleware/' + encodeURIComponent(name), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
+        const json = await res.json();
+        showToast(json.message, json.ok ? 'success' : 'error');
+        if (json.ok) refreshRoutes();
+    } catch(e) { showToast('Error deleting middleware', 'error'); }
+}
+
+async function refreshRoutes() {
+    try {
+        const res = await fetch('/api/routes');
+        const data = await res.json();
+        renderRouteGrid(data.apps || []);
+        renderMwGrid(data.middlewares || []);
+        loadOverviewStats();
+    } catch(e) {}
+}
+
+function renderRouteGrid(apps) {
+    const grid = document.getElementById('routeGrid');
+    if (!grid) return;
+    const emptyEl = document.getElementById('routeEmpty');
+    if (apps.length === 0) {
+        grid.innerHTML = '';
+        if (emptyEl) emptyEl.style.display = '';
+        return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+    grid.innerHTML = apps.map((app, i) => {
+        const proto = app.protocol || 'http';
+        const rawRule = (app.rule || '').replace(/Host\(`/g, '').replace(/`\)/g, '');
+        const domain = rawRule.includes(' && ') ? rawRule.slice(0, rawRule.indexOf(' && ')) : rawRule;
+        const badgeClass = proto === 'http' ? 'badge-http' : (proto === 'tcp' ? 'badge-tcp' : 'badge-udp');
+        const tlsBadge = app.tls ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS</span>` : '';
+        const openLink = (proto === 'http' && domain && !domain.includes('{') && !domain.includes('*') && !domain.includes('HostRegexp'))
+            ? `<a href="https://${domain}" target="_blank" class="btn-icon" title="Open site"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : '';
+        const epBadges = (app.entryPoints || []).map(ep => `<span class="badge badge-muted text-xs">${_esc(ep)}</span>`).join('');
+        const mwBadges = (app.middlewares || []).map(mw => `<span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">${_esc(mw)}</span>`).join('');
+        const appJson = JSON.stringify(app).replace(/'/g, '&#39;');
+        const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div><div class="text-xs font-mono truncate" style="color:var(--blue)" title="${_esc(app.rule)}">${_esc(domain || app.rule)}</div></div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>${epBadges ? `<div class="flex flex-wrap gap-1">${epBadges}</div>` : ''}${mwBadges ? `<div class="flex flex-wrap gap-1">${mwBadges}</div>` : ''}`;
+        const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>${epBadges ? `<div class="flex flex-wrap gap-1">${epBadges}</div>` : ''}`;
+        return `<div class="card route-card" data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}"><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-0.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="btn-icon" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="btn-icon" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button><button type="button" onclick="deleteRoute('${_esc(app.id)}')" class="btn-danger" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button></div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div></div></div>`;
+    }).join('');
+}
+
+function renderMwGrid(middlewares) {
+    const grid = document.getElementById('mwGrid');
+    if (!grid) return;
+    const staticEmpty = document.getElementById('mwStaticEmpty');
+    if (staticEmpty) staticEmpty.style.display = 'none';
+    grid.innerHTML = middlewares.map(mw => {
+        const typeLower = (mw.type || 'http').toLowerCase();
+        const typeUpper = typeLower === 'tcp' ? 'TCP' : 'HTTP';
+        const badgeClass = typeLower === 'tcp' ? 'badge-tcp' : 'badge-http';
+        const mwJson = JSON.stringify(mw).replace(/'/g, '&#39;');
+        return `<div class="card p-4 mw-card" data-mwname="${_esc(mw.name.toLowerCase())}" data-mwtype="${typeLower}"><div class="flex justify-between items-start mb-3"><div><span class="badge ${badgeClass} mb-1.5 block w-fit">${typeUpper}</span><h3 class="font-bold text-sm" style="color:var(--text)">${_esc(mw.name)}</h3></div><div class="flex gap-0.5"><button type="button" data-mw='${mwJson}' onclick="handleMwEdit(this)" class="btn-icon" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button><button type="button" onclick="deleteMw('${_esc(mw.name)}')" class="btn-danger"><i class="ph-bold ph-trash text-sm"></i></button></div></div><div class="rounded-md p-3 overflow-x-auto" style="background:var(--input-bg);border:1px solid var(--border)"><pre class="text-xs font-mono leading-relaxed" style="color:var(--green)">${_esc(mw.yaml)}</pre></div></div>`;
+    }).join('');
+    filterMw();
+}
 
 ['appModal','mwModal'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) {
@@ -566,7 +762,30 @@ async function loadOverviewStats() {
 
         
         const apiStatusMap = {};
-        
+
+        function pct(n, total) { return total === 0 ? '0%' : Math.round(n / total * 100) + '%'; }
+
+        function renderDonut(svgId, s, w, e) {
+            const svg = document.getElementById(svgId);
+            if (!svg) return;
+            const total = s + w + e, r = 30, cx = 40, cy = 40;
+            const circ = 2 * Math.PI * r;
+            if (total === 0) {
+                svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="14"/>`;
+                return;
+            }
+            function seg(n, offsetFrac, color) {
+                if (n === 0) return '';
+                const len = (n / total) * circ;
+                return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="14" stroke-dasharray="${len} ${circ}" transform="rotate(${offsetFrac * 360 - 90} ${cx} ${cy})"/>`;
+            }
+            svg.innerHTML =
+                `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="14"/>` +
+                seg(s, 0,             '#22c55e') +
+                seg(w, s/total,       '#f59e0b') +
+                seg(e, (s+w)/total,   '#ef4444');
+        }
+
         function renderBar(elId, success, warn, err) {
             const el = document.getElementById(elId);
             if (!el) return;
@@ -600,20 +819,33 @@ async function loadOverviewStats() {
             const hc = statusCounts(http);
             document.getElementById('statHttpRouters').textContent = http.length;
             document.getElementById('statHttpSuccess').textContent = hc.s;
+            document.getElementById('pctHttpSuccess').textContent  = pct(hc.s, http.length);
             document.getElementById('statHttpWarn').textContent    = hc.w;
+            document.getElementById('pctHttpWarn').textContent     = pct(hc.w, http.length);
             document.getElementById('statHttpErr').textContent     = hc.e;
+            document.getElementById('pctHttpErr').textContent      = pct(hc.e, http.length);
+            document.getElementById('cmpHttpSuccess').textContent  = hc.s;
+            document.getElementById('cmpHttpWarn').textContent     = hc.w;
+            document.getElementById('cmpHttpErr').textContent      = hc.e;
+            renderDonut('donutHttp', hc.s, hc.w, hc.e);
             renderBar('barHttpRouters', hc.s, hc.w, hc.e);
             document.getElementById('countRoutes').textContent = http.length + tcpAll.length;
 
-            
             const dockerCount = [...http, ...tcpAll].filter(r => (r.provider || (r.name||'').split('@')[1]||'') === 'docker').length;
             document.getElementById('dockerTabCount').textContent = dockerCount || '—';
 
             const tc = statusCounts(tcpAll);
-            document.getElementById('statTcpUdp').textContent  = tcpAll.length;
-            document.getElementById('statTcpSuccess').textContent = tc.s;
-            document.getElementById('statTcpWarn').textContent    = tc.w;
-            document.getElementById('statTcpErr').textContent     = tc.e;
+            document.getElementById('statTcpUdp').textContent     = tcpAll.length;
+            document.getElementById('statTcpSuccess').textContent  = tc.s;
+            document.getElementById('pctTcpSuccess').textContent   = pct(tc.s, tcpAll.length);
+            document.getElementById('statTcpWarn').textContent     = tc.w;
+            document.getElementById('pctTcpWarn').textContent      = pct(tc.w, tcpAll.length);
+            document.getElementById('statTcpErr').textContent      = tc.e;
+            document.getElementById('pctTcpErr').textContent       = pct(tc.e, tcpAll.length);
+            document.getElementById('cmpTcpSuccess').textContent   = tc.s;
+            document.getElementById('cmpTcpWarn').textContent      = tc.w;
+            document.getElementById('cmpTcpErr').textContent       = tc.e;
+            renderDonut('donutTcp', tc.s, tc.w, tc.e);
             renderBar('barTcpRouters', tc.s, tc.w, tc.e);
         }
 
@@ -666,31 +898,42 @@ async function loadOverviewStats() {
         if (services.status === 'fulfilled') {
             const http = services.value.http || [];
             const sc = statusCounts(http);
-            document.getElementById('statServices').textContent    = http.length;
-            document.getElementById('statSvcSuccess').textContent  = sc.s;
-            document.getElementById('statSvcWarn').textContent     = sc.w;
-            document.getElementById('statSvcErr').textContent      = sc.e;
+            document.getElementById('statServices').textContent   = http.length;
+            document.getElementById('statSvcSuccess').textContent = sc.s;
+            document.getElementById('pctSvcSuccess').textContent  = pct(sc.s, http.length);
+            document.getElementById('statSvcWarn').textContent    = sc.w;
+            document.getElementById('pctSvcWarn').textContent     = pct(sc.w, http.length);
+            document.getElementById('statSvcErr').textContent     = sc.e;
+            document.getElementById('pctSvcErr').textContent      = pct(sc.e, http.length);
+            document.getElementById('cmpSvcSuccess').textContent  = sc.s;
+            document.getElementById('cmpSvcWarn').textContent     = sc.w;
+            document.getElementById('cmpSvcErr').textContent      = sc.e;
+            renderDonut('donutSvc', sc.s, sc.w, sc.e);
             renderBar('barServices', sc.s, sc.w, sc.e);
-            const tcpudp = [...(services.value.tcp||[]), ...(services.value.udp||[])];
             document.getElementById('svcTabCount').textContent = http.length;
         }
 
         if (middlewares.status === 'fulfilled') {
             const all = [...(middlewares.value.http||[]), ...(middlewares.value.tcp||[])];
             const mc = statusCounts(all);
-            document.getElementById('statMiddlewares').textContent  = all.length;
-            document.getElementById('statMwSuccess').textContent    = mc.s;
-            document.getElementById('statMwWarn').textContent       = mc.w;
-            document.getElementById('statMwErr').textContent        = mc.e;
+            document.getElementById('statMiddlewares').textContent = all.length;
+            document.getElementById('statMwSuccess').textContent   = mc.s;
+            document.getElementById('pctMwSuccess').textContent    = pct(mc.s, all.length);
+            document.getElementById('statMwWarn').textContent      = mc.w;
+            document.getElementById('pctMwWarn').textContent       = pct(mc.w, all.length);
+            document.getElementById('statMwErr').textContent       = mc.e;
+            document.getElementById('pctMwErr').textContent        = pct(mc.e, all.length);
+            document.getElementById('cmpMwSuccess').textContent    = mc.s;
+            document.getElementById('cmpMwWarn').textContent       = mc.w;
+            document.getElementById('cmpMwErr').textContent        = mc.e;
+            renderDonut('donutMw', mc.s, mc.w, mc.e);
             renderBar('barMiddlewares', mc.s, mc.w, mc.e);
             document.getElementById('countMw').textContent = all.length;
         }
 
         
         if (entrypoints.status === 'fulfilled' && Array.isArray(entrypoints.value) && entrypoints.value.length > 0) {
-            const bar = document.getElementById('entrypointsBar');
             const list = document.getElementById('entrypointsList');
-            bar.classList.remove('hidden');
             list.innerHTML = entrypoints.value.map(ep => {
                 const addr = ep.address || '';
                 const port = addr.split(':').pop();
@@ -702,6 +945,7 @@ async function loadOverviewStats() {
                     <span class="font-mono text-xs" style="color:var(--muted)">${addr}</span>
                 </div>`;
             }).join('');
+            _applyEntrypointsVisibility();
         }
 
     } catch (e) {
@@ -995,7 +1239,7 @@ function openSvcDetail(idx) {
     
     const serversHtml = servers.length > 0 ? `
         <table class="w-full text-left mt-2">
-            <thead style="background:#0d1117">
+            <thead style="background:var(--card)">
                 <tr>
                     <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Status</th>
                     <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">URL</th>
@@ -1007,7 +1251,7 @@ function openSvcDetail(idx) {
                     <td class="px-3 py-2.5">
                         <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-400 text-xs">Active</span></span>
                     </td>
-                    <td class="px-3 py-2.5 font-mono text-xs break-all" style="color:#e6edf3">${sv.url || sv.address || '—'}</td>
+                    <td class="px-3 py-2.5 font-mono text-xs break-all" style="color:var(--text)">${sv.url || sv.address || '—'}</td>
                 </tr>`).join('')}
             </tbody>
         </table>` : `<div class="text-xs mt-2" style="color:var(--muted)">No servers configured</div>`;
@@ -1021,7 +1265,7 @@ function openSvcDetail(idx) {
     const kv = (label, val, isHtml = false) => `
         <div class="flex items-start py-2.5" style="border-bottom:1px solid var(--border)">
             <div class="text-xs font-semibold uppercase tracking-wider w-40 shrink-0 pt-0.5" style="color:var(--muted)">${label}</div>
-            <div class="text-sm ${isHtml ? '' : 'font-mono'} text-white flex-1">${isHtml ? val : val}</div>
+            <div class="text-sm ${isHtml ? '' : 'font-mono'} flex-1" style="color:var(--text)">${isHtml ? val : val}</div>
         </div>`;
 
     body.innerHTML = `
@@ -1202,7 +1446,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
         const isHttps = ['443','8443'].includes(port);
         return `<div class="flow-box text-center">
             <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">Entry Point</div>
-            <div class="font-bold text-white text-sm">${epName.toUpperCase()}</div>
+            <div class="font-bold text-sm" style="color:var(--text)">${epName.toUpperCase()}</div>
             ${addr ? `<div class="font-mono text-xs mt-1" style="color:var(--muted)">${addr}</div>` : ''}
             ${isHttps ? `<div class="mt-1"><span class="badge badge-green text-xs" style="font-size:9px">TLS</span></div>` : ''}
         </div>`;
@@ -1213,8 +1457,8 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
 
     const serversList = liveService ? (liveService.loadBalancer?.servers || []) : [];
     const serversHtml = serversList.length > 0
-        ? serversList.map(s => `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:#7ee787;background:#0d1117;word-break:break-all">${s.url || s.address || '—'}</div>`).join('')
-        : `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:#7ee787;background:#0d1117;word-break:break-all">${app.target}</div>`;
+        ? serversList.map(s => `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:var(--green);background:var(--input-bg);word-break:break-all">${s.url || s.address || '—'}</div>`).join('')
+        : `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:var(--green);background:var(--input-bg);word-break:break-all">${app.target}</div>`;
 
     const flowHtml = `
     <div class="mb-5">
@@ -1224,14 +1468,14 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
             <div class="flow-arrow">→</div>
             <div class="flow-box active-box text-center flex-1">
                 <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--blue)">Router</div>
-                <div class="font-bold text-white text-sm">${app.name}</div>
+                <div class="font-bold text-sm" style="color:var(--text)">${app.name}</div>
                 ${tlsInfo}
                 <div class="mt-1.5">${statusBadge}</div>
             </div>
             <div class="flow-arrow">→</div>
             <div class="flow-box text-center flex-1">
                 <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">Service</div>
-                <div class="font-bold text-white text-sm truncate">${app.service_name}</div>
+                <div class="font-bold text-sm truncate" style="color:var(--text)">${app.service_name}</div>
                 <div class="mt-2">${serversHtml}</div>
             </div>
         </div>
@@ -1272,16 +1516,16 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
         if (mws.length > 0) {
             const mwHtml = `<div class="p-4 flex flex-wrap gap-2">${mws.map(m => `<span class="badge" style="background:rgba(163,113,247,0.12);color:var(--purple);border:1px solid rgba(163,113,247,0.3)">${m}</span>`).join('')}</div>`;
             mwSection = `<div class="detail-section mb-4">
-                <div class="detail-section-header flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+                <div class="detail-section-header flex items-center gap-2 px-4 py-3" style="background:var(--card);border-bottom:1px solid var(--border)">
                     <i class="ph-bold ph-plugs-connected text-sm" style="color:var(--purple)"></i>
-                    <span class="font-bold text-sm text-white">Middlewares</span>
+                    <span class="font-bold text-sm" style="color:var(--text)">Middlewares</span>
                     <span class="badge badge-muted ml-1">${mws.length}</span>
                 </div>${mwHtml}</div>`;
         } else {
             mwSection = `<div class="detail-section mb-4">
-                <div class="detail-section-header flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+                <div class="detail-section-header flex items-center gap-2 px-4 py-3" style="background:var(--card);border-bottom:1px solid var(--border)">
                     <i class="ph-bold ph-plugs-connected text-sm" style="color:var(--purple)"></i>
-                    <span class="font-bold text-sm text-white">Middlewares</span>
+                    <span class="font-bold text-sm" style="color:var(--text)">Middlewares</span>
                 </div>
                 <div class="p-6 text-center" style="color:var(--muted)">
                     <i class="ph-light ph-stack text-2xl block mb-1 opacity-30"></i>
@@ -1327,9 +1571,9 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
                 </div>`
             ).join('');
             labelsSection = `<div class="detail-section mb-4">
-                <div class="flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+                <div class="flex items-center gap-2 px-4 py-3" style="background:var(--card);border-bottom:1px solid var(--border)">
                     <i class="ph-bold ph-tag text-sm" style="color:var(--blue)"></i>
-                    <span class="font-bold text-sm text-white">Docker Labels</span>
+                    <span class="font-bold text-sm" style="color:var(--text)">Docker Labels</span>
                     <span class="badge badge-muted ml-auto" style="font-size:9px">${labelEntries.length}</span>
                 </div>
                 <div class="px-4 py-2">${labelRows}</div>
@@ -1351,14 +1595,14 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
 
 function renderSection(title, icon, rows) {
     const rowsHtml = rows.map(([key, val, isHtml]) => {
-        const displayVal = isHtml ? val : `<span class="font-mono" style="color:#e6edf3">${String(val).replace(/</g,'&lt;')}</span>`;
+        const displayVal = isHtml ? val : `<span class="font-mono" style="color:var(--text)">${String(val).replace(/</g,'&lt;')}</span>`;
         return `<div class="detail-key">${key}</div><div class="detail-val">${displayVal}</div>`;
     }).join('');
 
     return `<div class="detail-section mb-4">
-        <div class="flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+        <div class="flex items-center gap-2 px-4 py-3" style="background:var(--card);border-bottom:1px solid var(--border)">
             <i class="ph-bold ${icon} text-sm" style="color:var(--blue)"></i>
-            <span class="font-bold text-sm text-white">${title}</span>
+            <span class="font-bold text-sm" style="color:var(--text)">${title}</span>
         </div>
         <div class="detail-kv">${rowsHtml}</div>
     </div>`;
@@ -1402,6 +1646,7 @@ function cycleTheme() {
 function toggleMobileMenu() {
     const menu = document.getElementById('mobileMenu');
     const icon = document.getElementById('hamburgerIcon');
+    menu.style.display = '';
     const isOpen = menu.classList.toggle('open');
     icon.className = isOpen ? 'ph-bold ph-x text-xl' : 'ph-bold ph-list text-xl';
 }
@@ -1453,6 +1698,7 @@ function installPWA() {
 }
 
 let _allPlugins = [];
+let _allCerts   = [];
 
 function _emptyMountState({ icon, title, description, steps, note }) {
     const stepHtml = steps.map((step, i) => `
@@ -1529,43 +1775,55 @@ async function refreshPluginsTab() {
 
         _allPlugins = plugins;
         document.getElementById('pluginsTabCount').textContent = plugins.length;
-
-        const cards = plugins.map((p, idx) => {
-            const name       = p.name || 'Unknown';
-            const version    = p.version || '—';
-            const moduleName = p.moduleName || '';
-            
-            const repoUrl    = moduleName.startsWith('github.com/')
-                ? 'https://' + moduleName : '';
-
-            return `
-            <div class="card p-4 hover:border-blue-500/40 transition-all">
-                <div class="flex items-start justify-between gap-3 mb-3">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <i class="ph-bold ph-puzzle-piece text-sm shrink-0" style="color:var(--blue)"></i>
-                        <span class="font-bold text-sm truncate" style="color:var(--text)" title="${name}">${name}</span>
-                    </div>
-                    <div class="flex items-center gap-1 shrink-0">
-                        ${repoUrl ? `<a href="${repoUrl}" target="_blank" class="btn-icon" title="View on GitHub" style="padding:4px 6px;text-decoration:none"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : ''}
-                        <button onclick="openPluginDetail(${idx})" class="btn-icon" title="View details" style="padding:4px 6px">
-                            <i class="ph-bold ph-info text-sm"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="space-y-2 text-xs">
-                    <div class="font-mono truncate" style="color:var(--muted)" title="${moduleName}">${moduleName}</div>
-                    <div class="flex items-center justify-between pt-1">
-                        <span class="badge badge-muted" style="font-size:9px">v${version}</span>
-                        <span class="badge badge-muted" style="font-size:9px">plugin</span>
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-
-        container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${cards}</div>`;
+        renderPluginCards();
     } catch(e) {
         container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p>Could not load plugin data</p></div>`;
     }
+}
+
+function filterPlugins() { renderPluginCards(); }
+
+function renderPluginCards() {
+    const q = (document.getElementById('pluginsSearch')?.value || '').toLowerCase();
+    const items = _allPlugins.filter(p =>
+        !q || (p.name||'').toLowerCase().includes(q) || (p.moduleName||'').toLowerCase().includes(q)
+    );
+    if (items.length === 0) {
+        document.getElementById('pluginsContent').innerHTML =
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No plugins match your search</div>`;
+        return;
+    }
+    const cards = items.map(p => {
+        const idx        = _allPlugins.indexOf(p);
+        const name       = p.name || 'Unknown';
+        const version    = p.version || '—';
+        const moduleName = p.moduleName || '';
+        const repoUrl    = moduleName.startsWith('github.com/') ? 'https://' + moduleName : '';
+        return `
+        <div class="card p-4 hover:border-blue-500/40 transition-all">
+            <div class="flex items-start justify-between gap-3 mb-3">
+                <div class="flex items-center gap-2 min-w-0">
+                    <i class="ph-bold ph-puzzle-piece text-sm shrink-0" style="color:var(--blue)"></i>
+                    <span class="font-bold text-sm truncate" style="color:var(--text)" title="${name}">${name}</span>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                    ${repoUrl ? `<a href="${repoUrl}" target="_blank" class="btn-icon" title="View on GitHub" style="padding:4px 6px;text-decoration:none"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : ''}
+                    <button onclick="openPluginDetail(${idx})" class="btn-icon" title="View details" style="padding:4px 6px">
+                        <i class="ph-bold ph-info text-sm"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-2 text-xs">
+                <div class="font-mono truncate" style="color:var(--muted)" title="${moduleName}">${moduleName}</div>
+                <div class="flex items-center justify-between pt-1">
+                    <span class="badge badge-muted" style="font-size:9px">v${version}</span>
+                    <span class="badge badge-muted" style="font-size:9px">plugin</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    document.getElementById('pluginsContent').innerHTML =
+        `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${cards}</div>`;
 }
 
 function openPluginDetail(idx) {
@@ -1587,23 +1845,23 @@ function openPluginDetail(idx) {
     ];
 
     const rowsHtml = rows.map(([k, v]) =>
-        `<div class="detail-key">${k}</div><div class="detail-val"><span class="font-mono" style="color:#e6edf3">${v}</span></div>`
+        `<div class="detail-key">${k}</div><div class="detail-val"><span class="font-mono" style="color:var(--text)">${v}</span></div>`
     ).join('');
 
     const settingsSection = p.settings ? `
         <div class="detail-section mb-4 mt-4">
-            <div class="flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+            <div class="flex items-center gap-2 px-4 py-3" style="background:var(--card);border-bottom:1px solid var(--border)">
                 <i class="ph-bold ph-sliders text-sm" style="color:var(--blue)"></i>
-                <span class="font-bold text-sm text-white">Configuration Schema</span>
+                <span class="font-bold text-sm" style="color:var(--text)">Configuration Schema</span>
             </div>
             <pre class="text-xs font-mono p-4 leading-relaxed overflow-x-auto" style="color:var(--muted);max-height:300px">${JSON.stringify(p.settings, null, 2).replace(/</g,'&lt;')}</pre>
         </div>` : '';
 
     document.getElementById('pluginDetailBody').innerHTML = `
         <div class="detail-section mb-4">
-            <div class="flex items-center gap-2 px-4 py-3" style="background:#161b22;border-bottom:1px solid var(--border)">
+            <div class="flex items-center gap-2 px-4 py-3" style="background:var(--card);border-bottom:1px solid var(--border)">
                 <i class="ph-bold ph-info text-sm" style="color:var(--blue)"></i>
-                <span class="font-bold text-sm text-white">Plugin Info</span>
+                <span class="font-bold text-sm" style="color:var(--text)">Plugin Info</span>
             </div>
             <div class="detail-kv">${rowsHtml}</div>
         </div>
@@ -1618,6 +1876,54 @@ function closePluginDetail() {
     document.getElementById('pluginDetailPanel').classList.remove('open');
     document.getElementById('pluginDetailBackdrop').classList.remove('open');
     document.body.style.overflow = '';
+}
+
+function filterCerts() { renderCertCards(); }
+
+function renderCertCards() {
+    const q   = (document.getElementById('certsSearch')?.value || '').toLowerCase();
+    const now = Date.now();
+    const items = _allCerts.filter(cert =>
+        !q || (cert.main||'').toLowerCase().includes(q) || (cert.sans||[]).some(d => d.toLowerCase().includes(q))
+    );
+    if (items.length === 0) {
+        document.getElementById('certsContent').innerHTML =
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No certificates match your search</div>`;
+        return;
+    }
+    const cards = items.map(cert => {
+        const main     = cert.main || 'Unknown';
+        const sans     = cert.sans || [];
+        const resolver = cert.resolver || '—';
+        let daysLeft = null, expiryStr = '—';
+        if (cert.not_after) {
+            const expiry = new Date(cert.not_after);
+            if (!isNaN(expiry)) {
+                daysLeft  = Math.ceil((expiry - now) / 86400000);
+                expiryStr = expiry.toLocaleDateString();
+            }
+        }
+        const expiryColor = daysLeft === null ? 'var(--muted)' : daysLeft < 7 ? 'var(--red)' : daysLeft < 30 ? 'var(--yellow)' : 'var(--green)';
+        const expiryBadge = daysLeft !== null
+            ? `<span class="badge" style="background:${daysLeft<7?'rgba(248,81,73,0.15)':daysLeft<30?'rgba(210,153,34,0.15)':'rgba(63,185,80,0.15)'};color:${expiryColor};border-color:${expiryColor}40">${daysLeft}d left</span>`
+            : '';
+        return `<div class="card p-4">
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-2 min-w-0">
+                    <i class="ph-bold ph-shield-check text-sm shrink-0" style="color:var(--green)"></i>
+                    <span class="font-bold text-sm truncate" style="color:var(--text)" title="${main}">${main}</span>
+                </div>
+                ${expiryBadge}
+            </div>
+            ${sans.length ? `<div class="flex flex-wrap gap-1 mb-3">${sans.map(d=>`<span class="badge badge-muted" style="font-size:9px">${d}</span>`).join('')}</div>` : ''}
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div><span style="color:var(--muted)">Resolver</span><div class="font-mono mt-0.5" style="color:var(--text)">${resolver}</div></div>
+                <div><span style="color:var(--muted)">Expires</span><div class="font-mono mt-0.5" style="color:${expiryColor}">${expiryStr}</div></div>
+            </div>
+        </div>`;
+    }).join('');
+    document.getElementById('certsContent').innerHTML =
+        `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${cards}</div>`;
 }
 
 async function refreshCertsTab() {
@@ -1652,51 +1958,16 @@ async function refreshCertsTab() {
             return;
         }
 
-        const now = Date.now();
-        const cards = certs.map(cert => {
-            const main   = cert.main || 'Unknown';
-            const sans   = cert.sans || [];
-            const resolver = cert.resolver || '—';
-
-            
-            let daysLeft = null, expiryStr = '—';
-            if (cert.not_after) {
-                const expiry = new Date(cert.not_after);
-                if (!isNaN(expiry)) {
-                    daysLeft = Math.ceil((expiry - now) / 86400000);
-                    expiryStr = expiry.toLocaleDateString();
-                }
-            }
-            const expiryColor = daysLeft === null ? 'var(--muted)' : daysLeft < 7 ? 'var(--red)' : daysLeft < 30 ? 'var(--yellow)' : 'var(--green)';
-            const expiryBadge = daysLeft !== null
-                ? `<span class="badge" style="background:${daysLeft<7?'rgba(248,81,73,0.15)':daysLeft<30?'rgba(210,153,34,0.15)':'rgba(63,185,80,0.15)'};color:${expiryColor};border-color:${expiryColor}40">${daysLeft}d left</span>`
-                : '';
-
-            return `<div class="card p-4">
-                <div class="flex items-start justify-between mb-3">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <i class="ph-bold ph-shield-check text-sm shrink-0" style="color:var(--green)"></i>
-                        <span class="font-bold text-sm truncate" style="color:var(--text)" title="${main}">${main}</span>
-                    </div>
-                    ${expiryBadge}
-                </div>
-                ${sans.length ? `<div class="flex flex-wrap gap-1 mb-3">${sans.map(d=>`<span class="badge badge-muted" style="font-size:9px">${d}</span>`).join('')}</div>` : ''}
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div><span style="color:var(--muted)">Resolver</span><div class="font-mono mt-0.5" style="color:var(--text)">${resolver}</div></div>
-                    <div><span style="color:var(--muted)">Expires</span><div class="font-mono mt-0.5" style="color:${expiryColor}">${expiryStr}</div></div>
-                </div>
-            </div>`;
-        }).join('');
-
-        container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${cards}</div>`;
+        _allCerts = certs;
         document.getElementById('certsTabCount').textContent = certs.length;
+        renderCertCards();
     } catch(e) {
         container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p>Could not load certificate data</p></div>`;
     }
 }
 
 let _allLogLines    = [];
-let _currentLogLines = 200;
+let _currentLogLines = 100;
 
 function setLogLines(n) {
     _currentLogLines = n;
@@ -1757,7 +2028,7 @@ function renderLogs() {
     };
 
     container.innerHTML = `<div class="rounded-xl overflow-hidden" style="border:1px solid var(--border)">
-        <div class="flex items-center justify-between px-4 py-2 text-xs" style="background:#161b22;border-bottom:1px solid var(--border);color:var(--muted)">
+        <div class="flex items-center justify-between px-4 py-2 text-xs" style="background:var(--card);border-bottom:1px solid var(--border);color:var(--muted)">
             <span><i class="ph-bold ph-terminal mr-1"></i>Access Log</span>
             <span>${lines.length} lines</span>
         </div>
@@ -1775,6 +2046,7 @@ function renderLogs() {
     } catch(e) {
         applyTabVisibility({});
     }
+    if (typeof applyUiPrefs === 'function') applyUiPrefs();
     loadOverviewStats();
     checkManagerVersion();
 })();

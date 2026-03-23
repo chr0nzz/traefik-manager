@@ -1,103 +1,188 @@
 <div id="overviewSection" class="mb-6">
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="statsGrid">
 
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-3">
+        <!-- HTTP Routers -->
+        <div class="stat-card" style="border-left:3px solid var(--blue)">
+            <div class="stat-exp-header">
+                <span class="stat-exp-title">HTTP Routers</span>
+                <button class="explore-link" onclick="switchTab('services');filterProto('http')">Explore <i class="ph-bold ph-arrow-right"></i></button>
+            </div>
+            <div class="stat-exp-body">
+                <svg id="donutHttp" viewBox="0 0 80 80" width="76" height="76" style="flex-shrink:0">
+                    <circle cx="40" cy="40" r="30" fill="none" stroke="var(--border)" stroke-width="14"/>
+                </svg>
+                <div class="stat-legend">
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon ok"><i class="ph-bold ph-check"></i></span>
+                        <span class="stat-legend-label">Success</span>
+                        <span class="stat-legend-pct" id="pctHttpSuccess">—</span>
+                        <span class="stat-legend-count" id="statHttpSuccess">—</span>
+                    </div>
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon warn"><i class="ph-bold ph-clock"></i></span>
+                        <span class="stat-legend-label">Warnings</span>
+                        <span class="stat-legend-pct" id="pctHttpWarn">—</span>
+                        <span class="stat-legend-count" id="statHttpWarn">—</span>
+                    </div>
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon err"><i class="ph-bold ph-warning-circle"></i></span>
+                        <span class="stat-legend-label">Errors</span>
+                        <span class="stat-legend-pct" id="pctHttpErr">—</span>
+                        <span class="stat-legend-count" id="statHttpErr">—</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-cmp-header">
                 <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">HTTP Routers</span>
                 <i class="ph-fill ph-layout text-sm" style="color:var(--blue)"></i>
             </div>
-            <div class="text-3xl font-bold text-white mb-3" id="statHttpRouters">—</div>
-            <div class="space-y-1.5">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
-                    <span class="font-mono text-green-400" id="statHttpSuccess">—</span>
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
-                    <span class="font-mono text-yellow-400" id="statHttpWarn">—</span>
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
-                    <span class="font-mono text-red-400" id="statHttpErr">—</span>
-                </div>
+            <div class="stat-count font-bold mb-2" id="statHttpRouters" style="color:var(--blue)">—</div>
+            <div class="stat-counts mb-2">
+                <span class="ok"><i class="ph-bold ph-check-circle"></i> <span id="cmpHttpSuccess">—</span></span>
+                <span class="warn"><i class="ph-bold ph-warning"></i> <span id="cmpHttpWarn">—</span></span>
+                <span class="err"><i class="ph-bold ph-x-circle"></i> <span id="cmpHttpErr">—</span></span>
             </div>
-            <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barHttpRouters" style="background:var(--border)"></div>
+            <div class="stat-bar h-1.5 rounded-full overflow-hidden flex gap-px" id="barHttpRouters" style="background:var(--border)"></div>
         </div>
 
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-3">
+        <!-- TCP / UDP -->
+        <div class="stat-card" style="border-left:3px solid var(--orange)">
+            <div class="stat-exp-header">
+                <span class="stat-exp-title">TCP / UDP</span>
+                <button class="explore-link" onclick="switchTab('services');filterProto('tcp')">Explore TCP <i class="ph-bold ph-arrow-right"></i></button>
+            </div>
+            <div class="stat-exp-body">
+                <svg id="donutTcp" viewBox="0 0 80 80" width="76" height="76" style="flex-shrink:0">
+                    <circle cx="40" cy="40" r="30" fill="none" stroke="var(--border)" stroke-width="14"/>
+                </svg>
+                <div class="stat-legend">
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon ok"><i class="ph-bold ph-check"></i></span>
+                        <span class="stat-legend-label">Success</span>
+                        <span class="stat-legend-pct" id="pctTcpSuccess">—</span>
+                        <span class="stat-legend-count" id="statTcpSuccess">—</span>
+                    </div>
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon warn"><i class="ph-bold ph-clock"></i></span>
+                        <span class="stat-legend-label">Warnings</span>
+                        <span class="stat-legend-pct" id="pctTcpWarn">—</span>
+                        <span class="stat-legend-count" id="statTcpWarn">—</span>
+                    </div>
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon err"><i class="ph-bold ph-warning-circle"></i></span>
+                        <span class="stat-legend-label">Errors</span>
+                        <span class="stat-legend-pct" id="pctTcpErr">—</span>
+                        <span class="stat-legend-count" id="statTcpErr">—</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-cmp-header">
                 <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">TCP / UDP</span>
-                <i class="ph-fill ph-arrows-left-right text-sm" style="color:var(--purple)"></i>
+                <i class="ph-fill ph-arrows-left-right text-sm" style="color:var(--orange)"></i>
             </div>
-            <div class="text-3xl font-bold text-white mb-3" id="statTcpUdp">—</div>
-            <div class="space-y-1.5">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
-                    <span class="font-mono text-green-400" id="statTcpSuccess">—</span>
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
-                    <span class="font-mono text-yellow-400" id="statTcpWarn">—</span>
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
-                    <span class="font-mono text-red-400" id="statTcpErr">—</span>
-                </div>
+            <div class="stat-count font-bold mb-2" id="statTcpUdp" style="color:var(--orange)">—</div>
+            <div class="stat-counts mb-2">
+                <span class="ok"><i class="ph-bold ph-check-circle"></i> <span id="cmpTcpSuccess">—</span></span>
+                <span class="warn"><i class="ph-bold ph-warning"></i> <span id="cmpTcpWarn">—</span></span>
+                <span class="err"><i class="ph-bold ph-x-circle"></i> <span id="cmpTcpErr">—</span></span>
             </div>
-            <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barTcpRouters" style="background:var(--border)"></div>
+            <div class="stat-bar h-1.5 rounded-full overflow-hidden flex gap-px" id="barTcpRouters" style="background:var(--border)"></div>
         </div>
 
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-3">
+        <!-- Services -->
+        <div class="stat-card" style="border-left:3px solid var(--green)">
+            <div class="stat-exp-header">
+                <span class="stat-exp-title">Services</span>
+                <button class="explore-link" onclick="switchTab('live')">Explore <i class="ph-bold ph-arrow-right"></i></button>
+            </div>
+            <div class="stat-exp-body">
+                <svg id="donutSvc" viewBox="0 0 80 80" width="76" height="76" style="flex-shrink:0">
+                    <circle cx="40" cy="40" r="30" fill="none" stroke="var(--border)" stroke-width="14"/>
+                </svg>
+                <div class="stat-legend">
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon ok"><i class="ph-bold ph-check"></i></span>
+                        <span class="stat-legend-label">Success</span>
+                        <span class="stat-legend-pct" id="pctSvcSuccess">—</span>
+                        <span class="stat-legend-count" id="statSvcSuccess">—</span>
+                    </div>
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon warn"><i class="ph-bold ph-clock"></i></span>
+                        <span class="stat-legend-label">Warnings</span>
+                        <span class="stat-legend-pct" id="pctSvcWarn">—</span>
+                        <span class="stat-legend-count" id="statSvcWarn">—</span>
+                    </div>
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon err"><i class="ph-bold ph-warning-circle"></i></span>
+                        <span class="stat-legend-label">Errors</span>
+                        <span class="stat-legend-pct" id="pctSvcErr">—</span>
+                        <span class="stat-legend-count" id="statSvcErr">—</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-cmp-header">
                 <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Services</span>
-                <i class="ph-fill ph-circles-four text-sm" style="color:var(--green)"></i>
+                <i class="ph-bold ph-activity text-sm" style="color:var(--green)"></i>
             </div>
-            <div class="text-3xl font-bold text-white mb-3" id="statServices">—</div>
-            <div class="space-y-1.5">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
-                    <span class="font-mono text-green-400" id="statSvcSuccess">—</span>
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
-                    <span class="font-mono text-yellow-400" id="statSvcWarn">—</span>
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
-                    <span class="font-mono text-red-400" id="statSvcErr">—</span>
-                </div>
+            <div class="stat-count font-bold mb-2" id="statServices" style="color:var(--green)">—</div>
+            <div class="stat-counts mb-2">
+                <span class="ok"><i class="ph-bold ph-check-circle"></i> <span id="cmpSvcSuccess">—</span></span>
+                <span class="warn"><i class="ph-bold ph-warning"></i> <span id="cmpSvcWarn">—</span></span>
+                <span class="err"><i class="ph-bold ph-x-circle"></i> <span id="cmpSvcErr">—</span></span>
             </div>
-            <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barServices" style="background:var(--border)"></div>
+            <div class="stat-bar h-1.5 rounded-full overflow-hidden flex gap-px" id="barServices" style="background:var(--border)"></div>
         </div>
 
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-3">
+        <!-- Middlewares -->
+        <div class="stat-card" style="border-left:3px solid var(--purple)">
+            <div class="stat-exp-header">
+                <span class="stat-exp-title">Middlewares</span>
+                <button class="explore-link" onclick="switchTab('middlewares')">Explore <i class="ph-bold ph-arrow-right"></i></button>
+            </div>
+            <div class="stat-exp-body">
+                <svg id="donutMw" viewBox="0 0 80 80" width="76" height="76" style="flex-shrink:0">
+                    <circle cx="40" cy="40" r="30" fill="none" stroke="var(--border)" stroke-width="14"/>
+                </svg>
+                <div class="stat-legend">
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon ok"><i class="ph-bold ph-check"></i></span>
+                        <span class="stat-legend-label">Success</span>
+                        <span class="stat-legend-pct" id="pctMwSuccess">—</span>
+                        <span class="stat-legend-count" id="statMwSuccess">—</span>
+                    </div>
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon warn"><i class="ph-bold ph-clock"></i></span>
+                        <span class="stat-legend-label">Warnings</span>
+                        <span class="stat-legend-pct" id="pctMwWarn">—</span>
+                        <span class="stat-legend-count" id="statMwWarn">—</span>
+                    </div>
+                    <div class="stat-legend-row">
+                        <span class="stat-legend-icon err"><i class="ph-bold ph-warning-circle"></i></span>
+                        <span class="stat-legend-label">Errors</span>
+                        <span class="stat-legend-pct" id="pctMwErr">—</span>
+                        <span class="stat-legend-count" id="statMwErr">—</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-cmp-header">
                 <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Middlewares</span>
-                <i class="ph-fill ph-plugs-connected text-sm" style="color:var(--yellow)"></i>
+                <i class="ph-fill ph-plugs-connected text-sm" style="color:var(--purple)"></i>
             </div>
-            <div class="text-3xl font-bold text-white mb-3" id="statMiddlewares">—</div>
-            <div class="space-y-1.5">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span style="color:var(--muted)">Success</span></span>
-                    <span class="font-mono text-green-400" id="statMwSuccess">—</span>
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span style="color:var(--muted)">Warnings</span></span>
-                    <span class="font-mono text-yellow-400" id="statMwWarn">—</span>
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span style="color:var(--muted)">Errors</span></span>
-                    <span class="font-mono text-red-400" id="statMwErr">—</span>
-                </div>
+            <div class="stat-count font-bold mb-2" id="statMiddlewares" style="color:var(--purple)">—</div>
+            <div class="stat-counts mb-2">
+                <span class="ok"><i class="ph-bold ph-check-circle"></i> <span id="cmpMwSuccess">—</span></span>
+                <span class="warn"><i class="ph-bold ph-warning"></i> <span id="cmpMwWarn">—</span></span>
+                <span class="err"><i class="ph-bold ph-x-circle"></i> <span id="cmpMwErr">—</span></span>
             </div>
-            <div class="mt-3 h-1 rounded-full overflow-hidden flex gap-px" id="barMiddlewares" style="background:var(--border)"></div>
+            <div class="stat-bar h-1.5 rounded-full overflow-hidden flex gap-px" id="barMiddlewares" style="background:var(--border)"></div>
         </div>
 
     </div>
 
     <div id="entrypointsBar" class="mt-3 hidden">
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-3">
+        <div class="stat-card" style="border-left:3px solid var(--muted)">
+            <div class="flex items-center gap-2 mb-3">
+                <i class="ph-fill ph-door-open text-sm" style="color:var(--muted)"></i>
                 <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Entry Points</span>
             </div>
             <div id="entrypointsList" class="flex flex-wrap gap-2"></div>

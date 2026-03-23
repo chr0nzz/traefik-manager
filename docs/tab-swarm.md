@@ -19,7 +19,7 @@ Routes are **read-only** - edit them via your Docker Swarm service labels.
 Toggle **Swarm** on in the "Optional monitoring" step.
 
 ### After setup
-Go to **Settings → Optional Tabs** and enable Swarm.
+Go to **Settings → Route Monitoring** and enable Swarm.
 
 ## Requirements
 

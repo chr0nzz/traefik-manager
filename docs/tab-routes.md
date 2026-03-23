@@ -10,7 +10,7 @@ The **Routes** tab (also called Services) is the main management interface. It d
 - Status badge from the Traefik API (enabled / warning / error)
 - Full detail view via the info button - shows live Traefik status, service health, and raw config
 
-## Creating a route
+## Creating a route 
 
 Click **Add Route** in the top bar. Fill in:
 
