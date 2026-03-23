@@ -11,7 +11,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates — 
 [![Docker Image](https://img.shields.io/badge/ghcr.io-chr0nzz%2Ftraefik--manager-blue?logo=docker&logoColor=white)](https://github.com/chr0nzz/traefik-manager/pkgs/container/traefik-manager)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/chr0nzz/traefik-manager)](https://github.com/chr0nzz/traefik-manager/releases)
-[![Docs](https://img.shields.io/badge/docs-github.io-blue)](https://chr0nzz.github.io/traefik-manager/)
+[![Docs](https://img.shields.io/badge/docs-github.io-blue)](https://traefik-manager.xyzlab.dev/)
 
 </div>
 <div align="center">
@@ -283,25 +283,25 @@ Open **http://your-server:5000** — the setup wizard will guide you through the
 
 ## Deployment
 
-| Runtime | Guide |
-|---------|-------|
-| 🐳 Docker | [Docker Compose setup, networking, behind Traefik](https://chr0nzz.github.io/traefik-manager/docker/) |
-| 🦭 Podman | [Rootless, Quadlet/systemd, SELinux labels](https://chr0nzz.github.io/traefik-manager/podman/) |
-| 🐧 Linux | [Native Python + systemd, no container required](https://chr0nzz.github.io/traefik-manager/linux/) |
+| Runtime　 | Guide                                                                                          |
+| -----------| ------------------------------------------------------------------------------------------------|
+| 🐳 Docker | [Docker Compose setup, networking, behind Traefik](https://traefik-manager.xyzlab.dev/docker/) |
+| 🦭 Podman | [Rootless, Quadlet/systemd, SELinux labels](https://traefik-manager.xyzlab.dev/podman/)        |
+| 🐧 Linux　| [Native Python + systemd, no container required](https://traefik-manager.xyzlab.dev/linux/)    |
 
 ---
 
 ## Documentation
 
-Full documentation at **[chr0nzz.github.io/traefik-manager](https://chr0nzz.github.io/traefik-manager/)**
+Full documentation at **[traefik-manager.xyzlab.dev](https://traefik-manager.xyzlab.dev/)**
 
 | | |
 |---|---|
-| [Get Started](https://chr0nzz.github.io/traefik-manager/docker/) | Deployment guides for Docker, Podman, and Linux |
-| [Configuration](https://chr0nzz.github.io/traefik-manager/manager-yml/) | `manager.yml` reference and environment variables |
-| [Reset Password](https://chr0nzz.github.io/traefik-manager/reset-password/) | CLI reset, TOTP recovery, manual reset |
-| [UI Examples](https://chr0nzz.github.io/traefik-manager/ui-examples/) | Screenshots and walkthroughs |
-| [Provider Tabs](https://chr0nzz.github.io/traefik-manager/) | Docker, Kubernetes, Swarm, Nomad, ECS, and more |
+| [Get Started](https://traefik-manager.xyzlab.dev/docker/) | Deployment guides for Docker, Podman, and Linux |
+| [Configuration](https://traefik-manager.xyzlab.dev/manager-yml/) | `manager.yml` reference and environment variables |
+| [Reset Password](https://traefik-manager.xyzlab.dev/reset-password/) | CLI reset, TOTP recovery, manual reset |
+| [UI Examples](https://traefik-manager.xyzlab.dev/ui-examples/) | Screenshots and walkthroughs |
+| [Provider Tabs](https://traefik-manager.xyzlab.dev/) | Docker, Kubernetes, Swarm, Nomad, ECS, and more |
 
 ---
 
