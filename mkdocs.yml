@@ -1,4 +1,5 @@
 site_name: Traefik Manager
+site_url: https://traefik-manager.xyzlab.dev
 site_description: Manage and monitor Traefik routes, middlewares, services, and providers through a clean web UI.
 docs_dir: docs
 repo_url: https://github.com/chr0nzz/traefik-manager
