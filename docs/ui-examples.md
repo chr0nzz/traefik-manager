@@ -47,7 +47,7 @@ if (typeof document$ !== 'undefined') {
 }
 </script>
 
-<div id="ui-examples-wrap">
+<div id="ui-examples-wrap" markdown="1">
 
 ---
 
