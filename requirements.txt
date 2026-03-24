@@ -4,3 +4,4 @@ requests==2.31.0
 cryptography==42.0.5
 bcrypt==4.1.2
 pyotp==2.9.0
+flask-limiter==3.8.0

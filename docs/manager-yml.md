@@ -165,10 +165,44 @@ Whether TOTP two-factor authentication is active. Managed via **Settings → Aut
 
 ### `otp_secret`
 
-**Type:** string (base32)
+**Type:** string (Fernet-encrypted)
 **Default:** `""`
 
-The TOTP secret used to generate and verify 6-digit codes. Generated when 2FA is enabled. Cleared when 2FA is disabled. Do not share or commit this value.
+The TOTP secret used to generate and verify 6-digit codes. Stored **encrypted at rest** using Fernet symmetric encryption since v0.5.0. Generated when 2FA is enabled. Cleared when 2FA is disabled.
+
+The encryption key is loaded from the `OTP_ENCRYPTION_KEY` environment variable or auto-generated to `/app/config/.otp_key`. Do not share or commit this value.
+
+!!! note "Migration"
+    Existing plaintext secrets from pre-v0.5.0 are automatically encrypted on the next settings save. No manual migration is needed.
+
+---
+
+### `disabled_routes`
+
+**Type:** map of string → object
+**Default:** `{}`
+
+Stores the full configuration of routes that have been disabled via the enable/disable toggle in the Routes tab. When a route is disabled, its router and service entries are removed from `dynamic.yml` (so Traefik stops routing it) and saved here.
+
+This field is managed entirely by the UI — do not edit it by hand.
+
+---
+
+### `api_key_hash`
+
+**Type:** string (bcrypt hash)
+**Default:** `""`
+
+Bcrypt hash of the generated API key for mobile/app authentication. Set automatically when a key is generated via **Settings → Authentication → Generate Key**. Clear it (or set `api_key_enabled: false`) to revoke access.
+
+---
+
+### `api_key_enabled`
+
+**Type:** boolean
+**Default:** `false`
+
+Whether API key authentication is active. Requests with a valid `X-Api-Key` header bypass the session login flow when this is `true` and `api_key_hash` is set.
 
 ---
 

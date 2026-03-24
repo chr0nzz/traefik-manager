@@ -13,6 +13,7 @@ from flask import (Flask, render_template, request, redirect,
 from ruamel.yaml import YAML
 from ruamel.yaml import YAML as SafeYAML
 from io import StringIO
+from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO = "chr0nzz/traefik-manager"
 
@@ -45,6 +46,34 @@ def _load_or_create_secret_key() -> bytes:
 
 app.secret_key = _load_or_create_secret_key()
 
+_OTP_KEY_PATH = os.path.join(os.path.dirname(os.environ.get('SETTINGS_PATH', '/app/config/manager.yml')), '.otp_key')
+
+def _get_otp_fernet() -> Fernet:
+    key = os.environ.get('OTP_ENCRYPTION_KEY', '').strip()
+    if not key:
+        if os.path.exists(_OTP_KEY_PATH):
+            with open(_OTP_KEY_PATH) as f:
+                key = f.read().strip()
+        else:
+            key = Fernet.generate_key().decode()
+            os.makedirs(os.path.dirname(_OTP_KEY_PATH), exist_ok=True)
+            with open(_OTP_KEY_PATH, 'w') as f:
+                f.write(key)
+    return Fernet(key.encode() if isinstance(key, str) else key)
+
+def _encrypt_otp_secret(secret: str) -> str:
+    if not secret:
+        return ''
+    return _get_otp_fernet().encrypt(secret.encode()).decode()
+
+def _decrypt_otp_secret(token: str) -> str:
+    if not token:
+        return ''
+    try:
+        return _get_otp_fernet().decrypt(token.encode()).decode()
+    except (InvalidToken, Exception):
+        return token
+
 
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_COOKIE_HTTPONLY']    = True
@@ -55,6 +84,10 @@ app.config['SESSION_COOKIE_SECURE']      = os.environ.get('COOKIE_SECURE', 'fals
 
 
 INACTIVITY_TIMEOUT = int(os.environ.get('INACTIVITY_TIMEOUT_MINUTES', '120'))
+
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+limiter = Limiter(get_remote_address, app=app, default_limits=[], storage_uri="memory://")
 
 
 yaml = YAML()
@@ -114,6 +147,9 @@ def load_settings() -> dict:
         'setup_complete':       False,
         'otp_secret':           '',
         'otp_enabled':          False,
+        'disabled_routes':      {},
+        'api_key_hash':         '',
+        'api_key_enabled':      False,
     }
     if not os.path.exists(SETTINGS_PATH):
         return defaults
@@ -142,12 +178,18 @@ def load_settings() -> dict:
         if 'setup_complete' in data:
             merged['setup_complete'] = bool(data['setup_complete'])
         if 'otp_secret' in data:
-            merged['otp_secret'] = str(data['otp_secret']).strip()
+            merged['otp_secret'] = _decrypt_otp_secret(str(data['otp_secret']).strip())
         if 'otp_enabled' in data:
             merged['otp_enabled'] = bool(data['otp_enabled'])
         else:
             if merged['password_hash']:
                 merged['setup_complete'] = True
+        if 'disabled_routes' in data and isinstance(data['disabled_routes'], dict):
+            merged['disabled_routes'] = dict(data['disabled_routes'])
+        if 'api_key_hash' in data:
+            merged['api_key_hash'] = str(data['api_key_hash']).strip()
+        if 'api_key_enabled' in data:
+            merged['api_key_enabled'] = bool(data['api_key_enabled'])
         return merged
     except Exception as e:
         logger.warning(f"Could not load manager.yml, using defaults: {e}")
@@ -157,7 +199,9 @@ def load_settings() -> dict:
 def save_settings(domains, cert_resolver, traefik_api_url,
                   auth_enabled=True, password_hash='', visible_tabs=None,
                   must_change_password=None, setup_complete=None,
-                  otp_secret=None, otp_enabled=None):
+                  otp_secret=None, otp_enabled=None,
+                  api_key_hash=None, api_key_enabled=None,
+                  disabled_routes=None):
     if visible_tabs is None:
         visible_tabs = {t: False for t in OPTIONAL_TABS}
     _cur = load_settings()
@@ -169,8 +213,16 @@ def save_settings(domains, cert_resolver, traefik_api_url,
         otp_secret = _cur.get('otp_secret', '')
     if otp_enabled is None:
         otp_enabled = _cur.get('otp_enabled', False)
+    if api_key_hash is None:
+        api_key_hash = _cur.get('api_key_hash', '')
+    if api_key_enabled is None:
+        api_key_enabled = _cur.get('api_key_enabled', False)
+    if disabled_routes is None:
+        disabled_routes = _cur.get('disabled_routes', {})
+    otp_secret = _encrypt_otp_secret(otp_secret)
     os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
-    with open(SETTINGS_PATH, 'w') as f:
+    tmp = SETTINGS_PATH + '.tmp'
+    with open(tmp, 'w') as f:
         yaml.dump({
             'domains':              domains,
             'cert_resolver':        cert_resolver,
@@ -182,7 +234,11 @@ def save_settings(domains, cert_resolver, traefik_api_url,
             'setup_complete':       setup_complete,
             'otp_secret':           otp_secret,
             'otp_enabled':          otp_enabled,
+            'disabled_routes':      disabled_routes,
+            'api_key_hash':         api_key_hash,
+            'api_key_enabled':      api_key_enabled,
         }, f)
+    os.replace(tmp, SETTINGS_PATH)
     logger.info("Manager settings saved")
 
 
@@ -253,7 +309,8 @@ def csrf_protect(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):
-            _check_csrf()
+            if not request.headers.get('X-Api-Key'):
+                _check_csrf()
         return f(*args, **kwargs)
     return decorated
 
@@ -292,11 +349,24 @@ def _check_inactivity():
         return
     session['last_active'] = now
 
+def _check_api_key() -> bool:
+    key = request.headers.get('X-Api-Key', '')
+    if not key:
+        return False
+    settings = load_settings()
+    if not settings.get('api_key_enabled') or not settings.get('api_key_hash'):
+        return False
+    return _check_password(key, settings['api_key_hash'])
+
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        if _check_api_key():
+            return f(*args, **kwargs)
         _check_inactivity()
         if not _is_authenticated():
+            if request.headers.get('X-Api-Key'):
+                abort(401)
             return redirect(url_for('login', next=request.path))
         return f(*args, **kwargs)
     return decorated
@@ -326,10 +396,14 @@ def set_security_headers(response):
     response.headers['X-Frame-Options']         = 'DENY'
     response.headers['Referrer-Policy']          = 'strict-origin-when-cross-origin'
     response.headers['X-XSS-Protection']         = '1; mode=block'
+    response.headers['Permissions-Policy']       = 'camera=(), microphone=(), geolocation=()'
+    if app.config.get('SESSION_COOKIE_SECURE'):
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     return response
 
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute", methods=["POST"])
 def login():
 
     if not _auth_enabled():
@@ -369,11 +443,11 @@ def login():
                 logger.info(f"OTP step required for login from {request.remote_addr}")
                 return redirect(url_for('login_otp'))
 
+            _vals = {'permanent': remember, 'authenticated': True,
+                     'last_active': time.time(),
+                     'login_time': datetime.now(timezone.utc).isoformat()}
             session.clear()
-            session.permanent        = remember
-            session['authenticated'] = True
-            session['last_active']   = time.time()
-            session['login_time']    = datetime.now(timezone.utc).isoformat()
+            session.update(_vals)
             logger.info(f"Successful login from {request.remote_addr}")
 
             if settings.get('must_change_password', False) and not admin_pw:
@@ -387,9 +461,6 @@ def login():
                 next_url = url_for('index')
             return redirect(next_url)
         else:
-            import hmac as _hmac
-            _hmac.compare_digest('a', 'b')
-            time.sleep(0.3)
             error = 'Incorrect password.'
             logger.warning(f"Failed login attempt from {request.remote_addr}")
 
@@ -552,6 +623,7 @@ def reset_password_cli(disable_otp):
 
 
 @app.route('/api/auth/change-password', methods=['POST'])
+@limiter.limit("10 per minute")
 @csrf_protect
 @login_required
 def api_change_password():
@@ -576,7 +648,6 @@ def api_change_password():
         ok = bool(pw_hash) and _check_password(current_pw, pw_hash)
 
     if not ok:
-        time.sleep(0.3)
         logger.warning(f"Failed password change attempt from {request.remote_addr}")
         return jsonify({'error': 'Current password is incorrect.'}), 403
 
@@ -613,6 +684,7 @@ def api_auth_toggle():
 
 
 @app.route('/login/otp', methods=['GET', 'POST'])
+@limiter.limit("5 per minute", methods=["POST"])
 def login_otp():
     if not session.get('otp_pending'):
         return redirect(url_for('login'))
@@ -625,15 +697,15 @@ def login_otp():
         settings = load_settings()
         secret   = settings.get('otp_secret', '')
         if secret and pyotp.TOTP(secret).verify(code, valid_window=1):
-            remember           = session.pop('otp_remember', False)
-            must_change        = session.pop('otp_must_change', False)
-            setup_complete     = session.pop('otp_setup_complete', False)
-            next_url           = session.pop('otp_next', '') or url_for('index')
-            session.pop('otp_pending', None)
-            session.permanent        = remember
-            session['authenticated'] = True
-            session['last_active']   = time.time()
-            session['login_time']    = datetime.now(timezone.utc).isoformat()
+            remember       = session.get('otp_remember', False)
+            must_change    = session.get('otp_must_change', False)
+            setup_complete = session.get('otp_setup_complete', False)
+            next_url       = session.get('otp_next', '') or url_for('index')
+            _vals = {'permanent': remember, 'authenticated': True,
+                     'last_active': time.time(),
+                     'login_time': datetime.now(timezone.utc).isoformat()}
+            session.clear()
+            session.update(_vals)
             logger.info(f"Successful OTP login from {request.remote_addr}")
             if must_change:
                 if not setup_complete:
@@ -643,7 +715,6 @@ def login_otp():
                 next_url = url_for('index')
             return redirect(next_url)
         else:
-            time.sleep(0.3)
             error = 'Invalid code. Please try again.'
             logger.warning(f"Failed OTP attempt from {request.remote_addr}")
 
@@ -713,6 +784,60 @@ def api_otp_disable():
 def api_otp_status():
     settings = load_settings()
     return jsonify({'otp_enabled': settings.get('otp_enabled', False)})
+
+
+@app.route('/api/auth/apikey/generate', methods=['POST'])
+@limiter.limit("5 per hour")
+@csrf_protect
+@login_required
+def api_apikey_generate():
+    key = secrets.token_urlsafe(32)
+    settings = load_settings()
+    save_settings(
+        domains=settings['domains'],
+        cert_resolver=settings['cert_resolver'],
+        traefik_api_url=settings['traefik_api_url'],
+        auth_enabled=settings['auth_enabled'],
+        password_hash=settings['password_hash'],
+        visible_tabs=settings['visible_tabs'],
+        otp_secret=settings['otp_secret'],
+        otp_enabled=settings['otp_enabled'],
+        api_key_hash=_hash_password(key),
+        api_key_enabled=True,
+    )
+    logger.info(f"API key generated by {request.remote_addr}")
+    return jsonify({'ok': True, 'key': key})
+
+
+@app.route('/api/auth/apikey/revoke', methods=['POST'])
+@csrf_protect
+@login_required
+def api_apikey_revoke():
+    settings = load_settings()
+    save_settings(
+        domains=settings['domains'],
+        cert_resolver=settings['cert_resolver'],
+        traefik_api_url=settings['traefik_api_url'],
+        auth_enabled=settings['auth_enabled'],
+        password_hash=settings['password_hash'],
+        visible_tabs=settings['visible_tabs'],
+        otp_secret=settings['otp_secret'],
+        otp_enabled=settings['otp_enabled'],
+        api_key_hash='',
+        api_key_enabled=False,
+    )
+    logger.info(f"API key revoked by {request.remote_addr}")
+    return jsonify({'ok': True})
+
+
+@app.route('/api/auth/apikey/status')
+@login_required
+def api_apikey_status():
+    settings = load_settings()
+    return jsonify({
+        'enabled': bool(settings.get('api_key_enabled', False)),
+        'has_key': bool(settings.get('api_key_hash', '')),
+    })
 
 
 def traefik_api_get(path):
@@ -967,6 +1092,7 @@ def api_backups():
     return jsonify(list_backups())
 
 @app.route('/api/restore/<filename>', methods=['POST'])
+@limiter.limit("10 per minute")
 @csrf_protect
 @login_required
 def api_restore(filename):
@@ -1080,8 +1206,16 @@ def load_config():
     return data if data and isinstance(data, dict) else {"http": {"routers": {}, "services": {}, "middlewares": {}}}
 
 def save_config(data):
-    with open(CONFIG_PATH, 'w') as f:
-        yaml.dump(data, f)
+    tmp = CONFIG_PATH + '.tmp'
+    try:
+        with open(tmp, 'w') as f:
+            yaml.dump(data, f)
+        shutil.copyfile(tmp, CONFIG_PATH)
+    finally:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
     logger.info("Configuration saved")
 
 
@@ -1100,7 +1234,7 @@ def _build_apps(config):
                      'service_name': svc_name, 'target': target_url,
                      'middlewares': rdata.get('middlewares', []),
                      'entryPoints': rdata.get('entryPoints', []), 'protocol': 'http',
-                     'tls': bool(rdata.get('tls'))})
+                     'tls': bool(rdata.get('tls')), 'enabled': True})
     for rname, rdata in config.get('tcp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
         target = 'N/A'
@@ -1112,7 +1246,7 @@ def _build_apps(config):
         apps.append({'id': rname, 'name': rname, 'rule': rdata.get('rule', ''),
                      'service_name': svc_name, 'target': target,
                      'middlewares': [], 'entryPoints': rdata.get('entryPoints', []),
-                     'protocol': 'tcp', 'tls': bool(rdata.get('tls'))})
+                     'protocol': 'tcp', 'tls': bool(rdata.get('tls')), 'enabled': True})
     for rname, rdata in config.get('udp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
         target = 'N/A'
@@ -1124,7 +1258,35 @@ def _build_apps(config):
         apps.append({'id': rname, 'name': rname, 'rule': '',
                      'service_name': svc_name, 'target': target,
                      'middlewares': [], 'entryPoints': rdata.get('entryPoints', []),
-                     'protocol': 'udp', 'tls': False})
+                     'protocol': 'udp', 'tls': False, 'enabled': True})
+    settings = load_settings()
+    for rname, rdata in settings.get('disabled_routes', {}).items():
+        proto    = rdata.get('protocol', 'http')
+        router   = rdata.get('router', {})
+        svc_name = router.get('service', '')
+        svc      = rdata.get('service', {})
+        if proto == 'http':
+            servers    = svc.get('loadBalancer', {}).get('servers', [])
+            target_url = servers[0].get('url', 'N/A') if servers else 'N/A'
+            apps.append({'id': rname, 'name': rname, 'rule': router.get('rule', ''),
+                         'service_name': svc_name, 'target': target_url,
+                         'middlewares': router.get('middlewares', []),
+                         'entryPoints': router.get('entryPoints', []),
+                         'protocol': 'http', 'tls': bool(router.get('tls')), 'enabled': False})
+        elif proto == 'tcp':
+            servers = svc.get('loadBalancer', {}).get('servers', [])
+            target  = servers[0].get('address', 'N/A') if servers else 'N/A'
+            apps.append({'id': rname, 'name': rname, 'rule': router.get('rule', ''),
+                         'service_name': svc_name, 'target': target,
+                         'middlewares': [], 'entryPoints': router.get('entryPoints', []),
+                         'protocol': 'tcp', 'tls': bool(router.get('tls')), 'enabled': False})
+        else:
+            servers = svc.get('loadBalancer', {}).get('servers', [])
+            target  = servers[0].get('address', 'N/A') if servers else 'N/A'
+            apps.append({'id': rname, 'name': rname, 'rule': '',
+                         'service_name': svc_name, 'target': target,
+                         'middlewares': [], 'entryPoints': router.get('entryPoints', []),
+                         'protocol': 'udp', 'tls': False, 'enabled': False})
     return apps
 
 
@@ -1137,11 +1299,70 @@ def _build_middlewares(config):
     return middlewares
 
 
+def _toggle_route(route_id: str, enable: bool):
+    config   = load_config()
+    settings = load_settings()
+    disabled = settings.get('disabled_routes', {})
+
+    if enable:
+        if route_id not in disabled:
+            return
+        saved    = disabled.pop(route_id)
+        proto    = saved.get('protocol', 'http')
+        router   = saved.get('router', {})
+        svc_name = router.get('service', route_id)
+        svc      = saved.get('service', {})
+        section  = config.setdefault(proto, {})
+        section.setdefault('routers', {})[route_id]  = router
+        section.setdefault('services', {})[svc_name] = svc
+    else:
+        proto   = None
+        router  = None
+        svc_name = None
+        svc     = None
+        for p in ('http', 'tcp', 'udp'):
+            routers = config.get(p, {}).get('routers', {})
+            if route_id in routers:
+                proto    = p
+                router   = dict(routers.pop(route_id))
+                svc_name = router.get('service', route_id)
+                svc      = dict(config.get(p, {}).get('services', {}).pop(svc_name, {}))
+                break
+        if proto is None:
+            return
+        disabled[route_id] = {'protocol': proto, 'router': router, 'service': svc}
+
+    create_backup()
+    save_config(config)
+    save_settings(
+        domains=settings['domains'],
+        cert_resolver=settings['cert_resolver'],
+        traefik_api_url=settings['traefik_api_url'],
+        auth_enabled=settings['auth_enabled'],
+        password_hash=settings['password_hash'],
+        visible_tabs=settings['visible_tabs'],
+        disabled_routes=disabled,
+    )
+
+
 @app.route('/api/routes')
 @login_required
 def api_routes():
     config = load_config()
     return jsonify({'apps': _build_apps(config), 'middlewares': _build_middlewares(config)})
+
+
+@app.route('/api/routes/<path:route_id>/toggle', methods=['POST'])
+@csrf_protect
+@login_required
+def api_toggle_route(route_id):
+    enable = (request.get_json(force=True, silent=True) or {}).get('enable', True)
+    try:
+        _toggle_route(route_id, bool(enable))
+        return jsonify({'ok': True})
+    except Exception as e:
+        logger.error(f"Toggle route error: {e}")
+        return jsonify({'ok': False, 'message': 'Failed to toggle route.'}), 500
 
 
 @app.route('/')

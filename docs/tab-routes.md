@@ -33,9 +33,18 @@ Click the pencil icon on any route card, or open the detail panel and click **Ed
 
 Click the trash icon on the route card. The corresponding service entry in `dynamic.yml` is removed automatically.
 
+## Enabling and disabling routes
+
+Each route card has a toggle icon (green when active, grey when inactive). Clicking it:
+
+- **Disable** — removes the router and service from `dynamic.yml` (Traefik immediately stops routing traffic) and saves the full config in `manager.yml`. The card is greyed out.
+- **Enable** — restores the router and service to `dynamic.yml`. Traefik picks it up instantly.
+
+A backup is created before each toggle operation. Disabled routes persist across restarts.
+
 ## Backups
 
-A backup of `dynamic.yml` is created automatically before every create, edit, or delete operation. Access backups via **Settings → Backups**.
+A backup of `dynamic.yml` is created automatically before every create, edit, delete, or toggle operation. Access backups via **Settings → Backups**.
 
 ## How it works
 

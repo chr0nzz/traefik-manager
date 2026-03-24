@@ -12,6 +12,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates — 
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/chr0nzz/traefik-manager)](https://github.com/chr0nzz/traefik-manager/releases)
 [![Docs](https://img.shields.io/badge/docs-github.io-blue)](https://traefik-manager.xyzlab.dev/)
+[![Mobile App](https://img.shields.io/badge/mobile-traefik--manager--mobile-green?logo=android&logoColor=white)](https://github.com/chr0nzz/traefik-manager-mobile)
 
 </div>
 <div align="center">
@@ -235,13 +236,14 @@ Add routes, manage middlewares, monitor services, and view TLS certificates — 
 ## Features
 
 **Routing & Middleware**
-- Add, edit, and delete HTTP, TCP, and UDP routes — no YAML editing required
+- Add, edit, delete, and **enable/disable** HTTP, TCP, and UDP routes — no YAML editing required
 - Create middlewares with built-in templates (Basic Auth, Forward Auth, Redirect, Strip Prefix)
 - Timestamped backups of `dynamic.yml` before every change; one-click restore from Settings
 
 **Live Dashboard**
 - Real-time stats: router counts, service health, entrypoints, Traefik version
 - Provider tabs: Docker, Kubernetes, Swarm, Nomad, ECS, Consul Catalog, Redis, etcd, Consul KV, ZooKeeper, HTTP Provider, File — all API-based, no extra mounts
+- **Filter live services** by protocol (HTTP/TCP/UDP) and provider (docker, file, kubernetes…)
 
 **System Monitoring** *(optional file mounts)*
 - **Certs** — `acme.json` certificates with expiry tracking
@@ -249,9 +251,27 @@ Add routes, manage middlewares, monitor services, and view TLS certificates — 
 - **Logs** — live Traefik access log tail
 
 **Security**
-- bcrypt passwords, CSRF protection, session management
+- bcrypt passwords, CSRF protection, session management with session fixation protection
 - Optional TOTP 2FA · 7-day remember me · 2hr inactivity timeout for browser sessions
 - Auto-generated password on first start · CLI recovery with `flask reset-password`
+- **API key authentication** — scoped `X-Api-Key` for mobile/app access, revocable without touching your password or 2FA
+- **Rate limiting** on login and auth endpoints (Flask-Limiter)
+- **Atomic config writes** — crash-safe YAML saves via temp file + rename
+- **Encrypted OTP secret** — TOTP seed encrypted at rest with Fernet
+
+---
+
+## Mobile App
+
+**traefik-manager-mobile** is a React Native companion app for managing Traefik Manager from your phone. Requires **Traefik Manager v0.5.0 or higher**.
+
+| | |
+|---|---|
+| Repo | [github.com/chr0nzz/traefik-manager-mobile](https://github.com/chr0nzz/traefik-manager-mobile) |
+| Download | [traefik-manager-v0.1.0.apk](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.1.0/traefik-manager-v0.1.0.apk) |
+| Auth | API key — generate one in **Settings → Authentication** |
+
+Features: browse routes, middlewares, and services · enable/disable routes · add and edit routes and middlewares (12 middleware templates) · edit mode for bulk actions · system light/dark theme.
 
 ---
 
@@ -311,7 +331,7 @@ Full documentation at **[traefik-manager.xyzlab.dev](https://traefik-manager.xyz
 | -----------| -----------------------------------------------|
 | Backend   | Python 3.11 · Flask · Gunicorn                |
 | Config    | ruamel.yaml (preserves comments)              |
-| Auth      | bcrypt · pyotp (TOTP) · Flask sessions · CSRF |
+| Auth      | bcrypt · pyotp (TOTP) · Flask sessions · CSRF · Flask-Limiter · Fernet |
 | Frontend  | Vanilla JS · Tailwind CSS · Phosphor Icons    |
 | Container | Docker · Alpine Linux                         |
 

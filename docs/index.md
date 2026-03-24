@@ -42,7 +42,7 @@ These tabs are always visible. They let you read and write your Traefik `dynamic
 
 | Tab | Description |
 |-----|-------------|
-| [Routes](tab-routes.md) | Create, edit, and delete HTTP, TCP, and UDP routes |
+| [Routes](tab-routes.md) | Create, edit, delete, and enable/disable HTTP, TCP, and UDP routes |
 | [Middlewares](tab-middlewares.md) | Create and manage middlewares with built-in templates |
 | [Services](tab-services.md) | Read-only view of all services across every provider |
 
@@ -217,6 +217,26 @@ Minimal additions to your `traefik.yml` to enable each provider tab.
       filePath: "/logs/access.log"
       format: common
     ```
+---
+
+## Mobile App
+
+A companion Android app for managing Traefik Manager on the go. Requires **v0.5.0 or higher**.
+
+<div class="grid cards" markdown>
+
+-   :simple-android: **traefik-manager-mobile**
+
+    ---
+
+    Browse routes, middlewares, and services. Enable/disable routes. Add and edit with built-in templates. Follows system light/dark theme.
+
+    Authenticates via the API key from **Settings → Authentication**.
+
+    [:octicons-download-24: Download APK (v0.1.0)](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.1.0/traefik-manager-v0.1.0.apk) · [:octicons-arrow-right-24: Mobile docs](mobile.md)
+
+</div>
+
 ---
 
 ## Tech Stack

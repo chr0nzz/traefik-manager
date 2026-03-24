@@ -79,21 +79,21 @@
     <div class="tab-bar mb-6" id="tabBar">
         <button onclick="switchTab('services')" id="btn-services" class="tab-btn active">
             <span class="flex items-center gap-2">
-                <i class="ph-bold ph-layout"></i>
+                <i class="ph-bold ph-arrows-left-right"></i>
                 Routes
                 <span class="badge badge-muted" id="countRoutes">—</span>
             </span>
         </button>
         <button onclick="switchTab('middlewares')" id="btn-middlewares" class="tab-btn">
             <span class="flex items-center gap-2 ">
-                <i class="ph-bold ph-plugs-connected"></i>
+                <i class="ph-bold ph-shield-check"></i>
                 Middlewares
                 <span class="badge badge-muted" id="countMw">—</span>
             </span>
         </button>
         <button onclick="switchTab('live')" id="btn-live" class="tab-btn">
             <span class="flex items-center gap-2">
-                <i class="ph-bold ph-activity"></i>
+                <i class="ph-bold ph-lightning"></i>
                 Services
                 <span class="badge badge-muted" id="svcTabCount">—</span>
             </span>
@@ -577,6 +577,25 @@ async function deleteMw(name) {
     } catch(e) { showToast('Error deleting middleware', 'error'); }
 }
 
+async function toggleRoute(id, currentlyEnabled) {
+    const data = new FormData();
+    data.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+    try {
+        const res = await fetch('/api/routes/' + encodeURIComponent(id) + '/toggle', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'fetch', 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || '', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enable: !currentlyEnabled, csrf_token: document.querySelector('meta[name="csrf-token"]')?.content || '' })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            showToast(currentlyEnabled ? 'Route disabled.' : 'Route enabled.', 'success');
+            refreshRoutes();
+        } else {
+            showToast(json.message || 'Failed to toggle route.', 'error');
+        }
+    } catch(e) { showToast('Error toggling route.', 'error'); }
+}
+
 async function refreshRoutes() {
     try {
         const res = await fetch('/api/routes');
@@ -584,6 +603,67 @@ async function refreshRoutes() {
         renderRouteGrid(data.apps || []);
         renderMwGrid(data.middlewares || []);
         loadOverviewStats();
+    } catch(e) {}
+}
+
+async function generateApiKey() {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    try {
+        const res = await fetch('/api/auth/apikey/generate', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'fetch', 'X-CSRF-Token': token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csrf_token: token })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            document.getElementById('apikeyValue').value = json.key;
+            document.getElementById('apikeyDisplay').classList.remove('hidden');
+            document.getElementById('apikeyStatusLabel').textContent = 'Active';
+            document.getElementById('apikeyStatusLabel').style.color = 'var(--green)';
+            document.getElementById('btnRevokeApiKey').classList.remove('hidden');
+            showToast('API key generated. Copy it now.', 'success');
+        } else {
+            showToast('Failed to generate key.', 'error');
+        }
+    } catch(e) { showToast('Error generating key.', 'error'); }
+}
+
+async function revokeApiKey() {
+    if (!confirm('Revoke the current API key?')) return;
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    try {
+        const res = await fetch('/api/auth/apikey/revoke', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'fetch', 'X-CSRF-Token': token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csrf_token: token })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            document.getElementById('apikeyStatusLabel').textContent = 'Inactive';
+            document.getElementById('apikeyStatusLabel').style.color = 'var(--muted)';
+            document.getElementById('apikeyDisplay').classList.add('hidden');
+            document.getElementById('btnRevokeApiKey').classList.add('hidden');
+            showToast('API key revoked.', 'success');
+        }
+    } catch(e) { showToast('Error revoking key.', 'error'); }
+}
+
+function copyApiKey() {
+    const val = document.getElementById('apikeyValue')?.value || '';
+    if (val) navigator.clipboard.writeText(val).then(() => showToast('Key copied.', 'success'));
+}
+
+async function loadApiKeyStatus() {
+    try {
+        const res = await fetch('/api/auth/apikey/status');
+        const json = await res.json();
+        const label = document.getElementById('apikeyStatusLabel');
+        const revokeBtn = document.getElementById('btnRevokeApiKey');
+        if (label) {
+            label.textContent = json.has_key ? 'Active' : 'Inactive';
+            label.style.color = json.has_key ? 'var(--green)' : 'var(--muted)';
+        }
+        if (revokeBtn) revokeBtn.classList.toggle('hidden', !json.has_key);
     } catch(e) {}
 }
 
@@ -607,10 +687,15 @@ function renderRouteGrid(apps) {
             ? `<a href="https://${domain}" target="_blank" class="btn-icon" title="Open site"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : '';
         const epBadges = (app.entryPoints || []).map(ep => `<span class="badge badge-muted text-xs">${_esc(ep)}</span>`).join('');
         const mwBadges = (app.middlewares || []).map(mw => `<span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">${_esc(mw)}</span>`).join('');
+        const enabled = app.enabled !== false;
         const appJson = JSON.stringify(app).replace(/'/g, '&#39;');
+        const toggleIcon = enabled ? 'ph-toggle-right' : 'ph-toggle-left';
+        const toggleColor = enabled ? 'var(--green)' : 'var(--muted)';
+        const toggleTitle = enabled ? 'Disable route' : 'Enable route';
+        const toggleBtn = `<button type="button" onclick="toggleRoute('${_esc(app.id)}',${enabled})" class="btn-icon" title="${toggleTitle}"><i class="ph-bold ${toggleIcon} text-sm" style="color:${toggleColor}"></i></button>`;
         const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div><div class="text-xs font-mono truncate" style="color:var(--blue)" title="${_esc(app.rule)}">${_esc(domain || app.rule)}</div></div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>${epBadges ? `<div class="flex flex-wrap gap-1">${epBadges}</div>` : ''}${mwBadges ? `<div class="flex flex-wrap gap-1">${mwBadges}</div>` : ''}`;
         const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>${epBadges ? `<div class="flex flex-wrap gap-1">${epBadges}</div>` : ''}`;
-        return `<div class="card route-card" data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}"><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-0.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="btn-icon" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="btn-icon" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button><button type="button" onclick="deleteRoute('${_esc(app.id)}')" class="btn-danger" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button></div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div></div></div>`;
+        return `<div class="card route-card${enabled ? '' : ' opacity-50'}" data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}"><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-0.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="btn-icon" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="btn-icon" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}<button type="button" onclick="deleteRoute('${_esc(app.id)}')" class="btn-danger" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button></div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div></div></div>`;
     }).join('');
 }
 
@@ -753,9 +838,9 @@ async function loadOverviewStats() {
             document.getElementById('versionText').textContent = 'v' + _currentVersion;
             document.getElementById('versionTextMobile').textContent = 'v' + _currentVersion;
             if (localStorage.getItem('showTraefikBadge') !== 'false') {
-                document.getElementById('versionBadge').classList.remove('hidden');
-                document.getElementById('versionBadgeMobile').classList.remove('hidden');
-                document.getElementById('versionBadgeMobile').classList.add('flex');
+                document.getElementById('versionBadge')?.classList.remove('hidden');
+                document.getElementById('versionBadgeMobile')?.classList.remove('hidden');
+                document.getElementById('versionBadgeMobile')?.classList.add('flex');
             }
             checkForUpdate(_currentVersion);
         }
@@ -983,9 +1068,11 @@ async function checkForUpdate(currentVersion) {
 
         if (latestTag && latestTag !== current && compareVersions(latestTag, current) > 0) {
             const badge = document.getElementById('versionBadge');
-            badge.classList.add('update-available');
-            badge.title = `Update available: v${latestTag}`;
-            badge.onclick = () => openSettingsModal('about');
+            if (badge) {
+                badge.classList.add('update-available');
+                badge.title = `Update available: v${latestTag}`;
+                badge.onclick = () => openSettingsModal('about');
+            }
             document.getElementById('versionText').innerHTML =
                 `v${current} <i class="ph-bold ph-arrow-circle-up" style="font-size:11px"></i>`;
             const notice = document.getElementById('sm-traefik-update-notice');
@@ -1082,6 +1169,70 @@ function filterMw(f) {
 
 let _allServices = [];
 let _svcFilter = 'all';
+let _protoLiveFilter = 'all';
+let _providerFilter = 'all';
+
+function toggleLiveDd(id) {
+    const menu = document.getElementById(id + '-menu');
+    const btn  = document.getElementById(id + '-btn');
+    const isOpen = menu.classList.contains('open');
+    document.querySelectorAll('.live-dd-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.live-dd-btn.open').forEach(b => b.classList.remove('open'));
+    if (!isOpen) { menu.classList.add('open'); btn.classList.add('open'); }
+}
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('.live-dd')) {
+        document.querySelectorAll('.live-dd-menu.open').forEach(m => m.classList.remove('open'));
+        document.querySelectorAll('.live-dd-btn.open').forEach(b => b.classList.remove('open'));
+    }
+});
+
+function _setLiveDdActive(menuId, val) {
+    document.querySelectorAll('#' + menuId + ' .live-dd-item').forEach(el => {
+        const oc = el.getAttribute('onclick') || '';
+        el.classList.toggle('active', oc.includes("'" + val + "'"));
+    });
+}
+
+function pickLiveStatus(val, label) {
+    _svcFilter = val;
+    document.getElementById('dd-status-label').textContent = label;
+    document.getElementById('dd-status-btn').classList.toggle('active', val !== 'all');
+    _setLiveDdActive('dd-status-menu', val);
+    toggleLiveDd('dd-status');
+    renderServicesTable();
+}
+
+function pickLiveProto(val, label) {
+    _protoLiveFilter = val;
+    document.getElementById('dd-proto-label').textContent = label;
+    document.getElementById('dd-proto-btn').classList.toggle('active', val !== 'all');
+    _setLiveDdActive('dd-proto-menu', val);
+    toggleLiveDd('dd-proto');
+    renderServicesTable();
+}
+
+function pickLiveProvider(val, label) {
+    _providerFilter = val;
+    document.getElementById('dd-provider-label').textContent = label;
+    document.getElementById('dd-provider-btn').classList.toggle('active', val !== 'all');
+    _setLiveDdActive('dd-provider-menu', val);
+    toggleLiveDd('dd-provider');
+    renderServicesTable();
+}
+
+function filterLiveProto(p) { pickLiveProto(p, p === 'all' ? 'All Protocols' : p); }
+function filterLiveProvider(v) { pickLiveProvider(v, v === 'all' ? 'All Providers' : v); }
+
+function clearLiveFilters() {
+    pickLiveStatus('all', 'All Status');
+    pickLiveProto('all', 'All Protocols');
+    pickLiveProvider('all', 'All Providers');
+    const s = document.getElementById('svcSearch');
+    if (s) { s.value = ''; }
+    renderServicesTable();
+}
 
 async function refreshLiveView() {
     const container = document.getElementById('liveContent');
@@ -1106,12 +1257,10 @@ async function refreshLiveView() {
 }
 
 function filterServices(f) {
-    if (f) {
-        _svcFilter = f;
-        ['all','success','warning','error'].forEach(k => {
-            const btn = document.getElementById('sf-'+k);
-            if (btn) btn.classList.toggle('active-http', k === f);
-        });
+    if (f && f !== _svcFilter) {
+        const labels = { all: 'All Status', success: 'Success', warning: 'Warnings', error: 'Errors' };
+        pickLiveStatus(f, labels[f] || f);
+        return;
     }
     renderServicesTable();
 }
@@ -1124,88 +1273,101 @@ function renderServicesTable() {
         if (st === 'disabled' || st === 'error') return 'error';
         return 'warning';
     };
-
-    let items = _allServices.filter(s => {
-        if (_svcFilter !== 'all' && statusOf(s) !== _svcFilter) return false;
-        if (search && !(s.name||'').toLowerCase().includes(search)) return false;
-        return true;
-    });
-
-    const statusBadge = s => {
-        const st = (s.status || 'unknown').toLowerCase();
-        if (st === 'enabled') return `<span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-400 text-xs">Success</span></span>`;
-        if (st === 'disabled' || st === 'error') return `<span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span><span class="text-red-400 text-xs">Error</span></span>`;
-        return `<span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span><span class="text-yellow-400 text-xs">Warning</span></span>`;
-    };
-
-    const typeOf = s => {
-        if (s.loadBalancer) return 'loadbalancer';
-        if (s.mirroring)    return 'mirroring';
-        if (s.failover)     return 'failover';
-        if (s.weighted)     return 'weighted';
-        return '—';
-    };
-
-    const serversOf = s => {
-        const lb = s.loadBalancer;
-        if (!lb) return '—';
-        return (lb.servers || []).length;
-    };
-
     const providerOf = s => {
         const name = s.name || '';
         const parts = name.split('@');
         return parts.length > 1 ? parts[parts.length-1] : 'file';
     };
 
-    const shortName = s => (s.name || '').split('@')[0];
+    const uniqueProtos = [...new Set(_allServices.map(s => s._proto).filter(Boolean))].sort();
+    const uniqueProviders = [...new Set(_allServices.map(providerOf))].sort();
+    const protoMenu = document.getElementById('dd-proto-menu');
+    if (protoMenu) {
+        protoMenu.innerHTML = ['all', ...uniqueProtos].map(p => {
+            const label = p === 'all' ? 'All Protocols' : p;
+            return `<button class="live-dd-item${_protoLiveFilter === p ? ' active' : ''}" onclick="pickLiveProto('${p}','${label}')">${label}</button>`;
+        }).join('');
+    }
+    const provMenu = document.getElementById('dd-provider-menu');
+    if (provMenu) {
+        provMenu.innerHTML = ['all', ...uniqueProviders].map(v => {
+            const label = v === 'all' ? 'All Providers' : v;
+            return `<button class="live-dd-item${_providerFilter === v ? ' active' : ''}" onclick="pickLiveProvider('${v}','${label}')">${label}</button>`;
+        }).join('');
+    }
 
-    const protoBadge = s => {
-        const p = s._proto;
-        if (p === 'HTTP') return `<span class="badge badge-http" style="font-size:9px">HTTP</span>`;
-        if (p === 'TCP')  return `<span class="badge badge-tcp"  style="font-size:9px">TCP</span>`;
-        return `<span class="badge badge-udp" style="font-size:9px">UDP</span>`;
+    let items = _allServices.filter(s => {
+        if (_svcFilter !== 'all' && statusOf(s) !== _svcFilter) return false;
+        if (_protoLiveFilter !== 'all' && s._proto !== _protoLiveFilter) return false;
+        if (_providerFilter !== 'all' && providerOf(s) !== _providerFilter) return false;
+        if (search && !(s.name||'').toLowerCase().includes(search)) return false;
+        return true;
+    });
+
+    const typeOf = s => {
+        if (s.loadBalancer) return 'loadbalancer';
+        if (s.mirroring)    return 'mirroring';
+        if (s.failover)     return 'failover';
+        if (s.weighted)     return 'weighted';
+        return null;
     };
 
-    const rows = items.map((s, i) => {
-        
+    const cards = items.map(s => {
         const globalIdx = _allServices.indexOf(s);
+        const proto     = s._proto || 'HTTP';
+        const name      = (s.name || '').split('@')[0];
+        const provider  = providerOf(s);
+        const type      = typeOf(s);
+        const st        = statusOf(s);
+
+        const stColor = st === 'success' ? 'var(--green)' : st === 'error' ? 'var(--red)' : 'var(--yellow)';
+        const stLabel = st === 'success' ? 'Success'      : st === 'error' ? 'Error'      : 'Warning';
+
+        // Server health from serverStatus map (Traefik API)
+        const serverStatus  = s.serverStatus || {};
+        const serverEntries = Object.entries(serverStatus);
+        const activeCount   = serverEntries.filter(([,v]) => (v||'').toLowerCase() === 'up').length;
+        const serverSummary = serverEntries.length > 0 ? `${activeCount}/${serverEntries.length} active` : null;
+        const srvColor      = serverEntries.length > 0 && activeCount === serverEntries.length ? 'var(--green)' : 'var(--orange)';
+
+        // Used-by router chips
+        const usedBy = s.usedBy || [];
+        const usedByHtml = usedBy.length > 0 ? `
+            <div class="svc-card-usedby">
+                ${usedBy.slice(0, 3).map(r => {
+                    const rName = r.includes('@') ? r.split('@')[0] : r;
+                    return `<span class="svc-used-chip"><i class="ph-bold ph-git-branch" style="font-size:9px"></i>${_esc(rName)}</span>`;
+                }).join('')}
+                ${usedBy.length > 3 ? `<span class="svc-used-chip">+${usedBy.length - 3}</span>` : ''}
+            </div>` : '';
+
         return `
-        <tr class="svc-row cursor-pointer" onclick="openSvcDetail(${globalIdx})" style="border-top:1px solid var(--border)">
-            <td class="px-4 py-3">${statusBadge(s)}</td>
-            <td class="px-4 py-3">
-                <div class="flex items-center gap-2">
-                    ${protoBadge(s)}
-                    <span class="font-mono text-xs" style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px">${shortName(s)}</span>
+        <div class="card svc-card" onclick="openSvcDetail(${globalIdx})">
+            <div class="svc-card-header">
+                <div class="flex items-center gap-1.5">
+                    <span class="badge badge-${proto.toLowerCase()}" style="font-size:9px">${proto}</span>
+                    ${type ? `<span class="svc-type-badge">${type}</span>` : ''}
                 </div>
-            </td>
-            <td class="px-4 py-3 font-mono text-xs svc-col-type" style="color:var(--muted)">${typeOf(s)}</td>
-            <td class="px-4 py-3 text-xs text-center svc-col-servers" style="color:var(--muted)">${serversOf(s)}</td>
-            <td class="px-4 py-3 svc-col-provider"><span class="badge badge-muted text-xs">${providerOf(s)}</span></td>
-        </tr>`;
+                <span class="svc-status-chip" style="color:${stColor};background:color-mix(in srgb,${stColor} 12%,transparent);border-color:color-mix(in srgb,${stColor} 35%,transparent)">
+                    <span class="svc-status-dot" style="background:${stColor}"></span>${stLabel}
+                </span>
+            </div>
+            <div class="svc-card-name">${_esc(name)}</div>
+            <div class="svc-card-meta">
+                <span class="svc-meta-chip"><i class="ph-bold ph-database" style="font-size:10px"></i>${_esc(provider)}</span>
+                ${serverSummary ? `<span class="svc-meta-chip" style="color:${srvColor};background:color-mix(in srgb,${srvColor} 10%,transparent);border-color:color-mix(in srgb,${srvColor} 35%,transparent)"><i class="ph-bold ph-server" style="font-size:10px"></i>${serverSummary}</span>` : ''}
+            </div>
+            ${usedByHtml}
+        </div>`;
     }).join('');
 
     const empty = items.length === 0
-        ? `<tr><td colspan="5" class="text-center py-12" style="color:var(--muted)">No services match filter</td></tr>`
+        ? `<div class="text-center py-12" style="color:var(--muted)">No services match filter</div>`
         : '';
 
-    document.getElementById('liveContent').innerHTML = `
-        <div class="card" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-            <table class="w-full text-left" style="min-width:560px">
-                <thead style="background:var(--btn-secondary-bg)">
-                    <tr>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Status</th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Name</th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider svc-col-type" style="color:var(--muted)">Type</th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-center svc-col-servers" style="color:var(--muted)">Servers</th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider svc-col-provider" style="color:var(--muted)">Provider</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}${empty}</tbody>
-            </table>
-        </div>`;
+    document.getElementById('liveContent').innerHTML =
+        `<div class="svc-card-grid">${cards}${empty}</div>`;
 
-    
     document.getElementById('svcTabCount').textContent = _allServices.filter(s => s._proto === 'HTTP').length;
 }
 
@@ -1675,14 +1837,14 @@ if ('serviceWorker' in navigator) {
 window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     _pwaInstallPrompt = e;
-    document.getElementById('pwaInstallBtn').classList.remove('hidden');
-    document.getElementById('pwaInstallBtnMobile').classList.remove('hidden');
+    document.getElementById('pwaInstallBtn')?.classList.remove('hidden');
+    document.getElementById('pwaInstallBtnMobile')?.classList.remove('hidden');
 });
 
 window.addEventListener('appinstalled', () => {
     _pwaInstallPrompt = null;
-    document.getElementById('pwaInstallBtn').classList.add('hidden');
-    document.getElementById('pwaInstallBtnMobile').classList.add('hidden');
+    document.getElementById('pwaInstallBtn')?.classList.add('hidden');
+    document.getElementById('pwaInstallBtnMobile')?.classList.add('hidden');
     showToast('Traefik Manager installed as app!', 'success');
 });
 
@@ -1692,7 +1854,7 @@ function installPWA() {
     _pwaInstallPrompt.userChoice.then(choice => {
         if (choice.outcome === 'accepted') {
             _pwaInstallPrompt = null;
-            document.getElementById('pwaInstallBtn').classList.add('hidden');
+            document.getElementById('pwaInstallBtn')?.classList.add('hidden');
         }
     });
 }

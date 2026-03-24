@@ -22,7 +22,7 @@
             {% set domain = raw_rule %}
         {% endif %}
 
-        <div class="card route-card" data-protocol="{{ app.protocol }}" data-name="{{ app.name | lower }}" data-routekey="{{ app.name }}" data-idx="{{ loop.index0 }}">
+        <div class="card route-card{% if not app.enabled %} opacity-50{% endif %}" data-protocol="{{ app.protocol }}" data-name="{{ app.name | lower }}" data-routekey="{{ app.name }}" data-idx="{{ loop.index0 }}" data-enabled="{{ app.enabled | tojson }}">
 
             <div class="route-card-inner p-4 pb-2">
             <div class="flex justify-between items-start mb-3">
@@ -48,6 +48,9 @@
                     {% endif %}
                     <button type="button" data-app='{{ app|tojson|safe }}' onclick="handleEdit(this)" class="btn-icon" title="Edit">
                         <i class="ph-bold ph-pencil-simple text-sm"></i>
+                    </button>
+                    <button type="button" onclick="toggleRoute('{{ app.id }}', {{ app.enabled | tojson }})" class="btn-icon" title="{{ 'Disable route' if app.enabled else 'Enable route' }}">
+                        <i class="ph-bold {{ 'ph-toggle-right' if app.enabled else 'ph-toggle-left' }} text-sm" style="color:{{ 'var(--green)' if app.enabled else 'var(--muted)' }}"></i>
                     </button>
                     <button type="button" onclick="deleteRoute('{{ app.id }}')" class="btn-danger" title="Delete">
                         <i class="ph-bold ph-trash text-sm"></i>

@@ -202,6 +202,33 @@
                     <div id="authHiddenMsg" class="hidden text-xs" style="color:var(--muted);padding:8px 0;">
                         Authentication settings are not available — no password has been configured.
                     </div>
+
+                    <div class="settings-divider"></div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <span class="settings-section-label" style="margin:0;">App / Mobile API Key</span>
+                                <div class="text-xs mt-1" style="color:var(--muted)">
+                                    Status: <strong id="apikeyStatusLabel" style="color:var(--muted)">Loading...</strong>
+                                </div>
+                                <div class="text-xs mt-1" style="color:var(--muted)">Send via <code>X-Api-Key</code> header. Revoke instantly without changing your password or 2FA.</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="generateApiKey()" id="btnGenerateApiKey" class="nav-btn text-xs"><i class="ph-bold ph-key"></i> Generate Key</button>
+                                <button onclick="revokeApiKey()" id="btnRevokeApiKey" class="nav-btn text-xs hidden"><i class="ph-bold ph-x"></i> Revoke</button>
+                            </div>
+                        </div>
+                        <div id="apikeyDisplay" class="hidden mt-3">
+                            <div class="rounded-md p-3 mb-2" style="background:rgba(250,173,20,0.08);border:1px solid rgba(250,173,20,0.25)">
+                                <div class="text-xs font-semibold mb-1" style="color:var(--yellow)"><i class="ph-bold ph-warning"></i> Copy this key now — it will not be shown again.</div>
+                                <div class="flex gap-2 items-center mt-2">
+                                    <input type="text" id="apikeyValue" readonly class="input-field text-xs font-mono flex-1" style="font-size:11px">
+                                    <button onclick="copyApiKey()" class="nav-btn text-xs"><i class="ph-bold ph-copy"></i> Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-panel" id="mpanel-backups">
@@ -366,6 +393,7 @@ async function openSettingsModal(panel) {
         loadUiTogglesIntoModal();
         _applyTraefikBadgeVisibility();
         loadOtpStatus();
+        loadApiKeyStatus();
 
         const authSection   = document.getElementById('authSection');
         const toggleBtn     = document.getElementById('authToggleBtn');

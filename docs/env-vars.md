@@ -17,6 +17,7 @@ All supported environment variables for Traefik Manager. Variables marked **Over
 | `CONFIG_PATH` | `/app/config/dynamic.yml` | — | Path to the Traefik dynamic config |
 | `BACKUP_DIR` | `/app/backups` | — | Directory for timestamped config backups |
 | `SETTINGS_PATH` | `/app/config/manager.yml` | — | Path to the Traefik Manager settings file |
+| `OTP_ENCRYPTION_KEY` | _(auto-generated)_ | — | Fernet key for encrypting the TOTP secret at rest |
 
 ---
 
@@ -210,3 +211,32 @@ Path to the Traefik Manager settings file. Useful if you want to separate it fro
     ```ini
     Environment=SETTINGS_PATH=/var/lib/traefik-manager/manager.yml
     ```
+
+---
+
+### `OTP_ENCRYPTION_KEY`
+
+**Default:** _(auto-generated and stored at `/app/config/.otp_key`)_
+
+Fernet symmetric key used to encrypt the TOTP secret at rest in `manager.yml`. If not set, a key is automatically generated on first start and written to `.otp_key` inside the config directory.
+
+Set this variable if you want to manage the key yourself (e.g., from a secrets manager) or to ensure the key survives config volume replacement.
+
+=== "Docker / Podman"
+    ```yaml
+    environment:
+      - OTP_ENCRYPTION_KEY=your-32-byte-url-safe-base64-key
+    ```
+
+=== "Linux (systemd)"
+    ```ini
+    Environment=OTP_ENCRYPTION_KEY=your-32-byte-url-safe-base64-key
+    ```
+
+!!! tip "Generating a key"
+    ```bash
+    python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    ```
+
+!!! note
+    If you lose this key, existing TOTP secrets become unreadable and 2FA will need to be re-enrolled. The `.otp_key` file is separate from `manager.yml` — back it up alongside your config volume.
