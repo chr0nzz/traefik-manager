@@ -88,5 +88,6 @@ nav:
     - Environment Variables: env-vars.md
   - Operations:
     - Reset Password: reset-password.md
+  - API Reference: api.md
   - Mobile App: mobile.md
   - UI Examples: ui-examples.md
