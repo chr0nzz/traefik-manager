@@ -251,6 +251,11 @@ def _auth_enabled() -> bool:
     return load_settings().get('auth_enabled', True)
 
 
+def _hash_password(plaintext: str) -> str:
+    import bcrypt
+    return bcrypt.hashpw(plaintext.encode(), bcrypt.gensalt(rounds=12)).decode()
+
+
 def _ensure_password():
     if os.environ.get('ADMIN_PASSWORD', '').strip():
         return
@@ -318,10 +323,6 @@ def csrf_protect(f):
 def inject_csrf():
     return {'csrf_token': _get_csrf_token()}
 
-
-def _hash_password(plaintext: str) -> str:
-    import bcrypt
-    return bcrypt.hashpw(plaintext.encode(), bcrypt.gensalt(rounds=12)).decode()
 
 def _check_password(plaintext: str, hashed: str) -> bool:
     import bcrypt
