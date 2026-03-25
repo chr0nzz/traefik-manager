@@ -58,6 +58,9 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Mobile App: mobile.md
+  - API Reference: api.md
+  - UI Examples: ui-examples.md
   - Getting Started:
     - Docker: docker.md
     - Podman: podman.md
@@ -88,6 +91,3 @@ nav:
     - Environment Variables: env-vars.md
   - Operations:
     - Reset Password: reset-password.md
-  - API Reference: api.md
-  - Mobile App: mobile.md
-  - UI Examples: ui-examples.md
