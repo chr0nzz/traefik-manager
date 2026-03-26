@@ -18,6 +18,7 @@ Click **Add Middleware** in the top bar. Two fields:
 | Name | Unique identifier - referenced in routes as `name@file` |
 | Template | Pick a preset or choose Custom to write raw YAML |
 | Configuration | YAML body for the middleware (auto-filled when a template is chosen) |
+| Config File | Shown only when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Select which file the middleware is saved to. |
 
 ### Available templates
 
@@ -38,4 +39,4 @@ When creating or editing a route, enter middleware names in the **Middlewares** 
 
 ## How it works
 
-Middleware definitions are written to `dynamic.yml` under `http.middlewares`. traefik-manager reads the live status for each from the Traefik API (`/api/http/middlewares`).
+Middleware definitions are written to the dynamic config under `http.middlewares`. When multiple config files are mounted, each middleware card shows a small badge with its source file. traefik-manager reads the live status for each from the Traefik API (`/api/http/middlewares`).

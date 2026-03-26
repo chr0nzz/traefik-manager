@@ -22,6 +22,10 @@ Click **Add Route** in the top bar. Fill in:
 | Target IP / Port | Backend server to forward to |
 | Entry Points | Traefik entry points (e.g. `https`, `websecure`) |
 | Middlewares | Comma-separated list of middleware names (e.g. `auth@file`) |
+| Backend Scheme | `HTTP` or `HTTPS` - the scheme Traefik uses to connect to your backend. Use `HTTPS` when the backend serves TLS internally. |
+| Pass Host Header | Enabled by default. Disable if the backend needs to see its own hostname instead of the original request `Host` header. Writes `passHostHeader: false` to the service in `dynamic.yml`. |
+| Cert Resolver | Shown for HTTP and TCP routes. Select which ACME cert resolver to use. Defaults to the first resolver configured in Settings. Only appears when at least one resolver is configured. |
+| Config File | Shown only when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Select which file the route is saved to. |
 
 For TCP routes, enter a raw SNI rule (`HostSNI(\`*\`)` for passthrough). UDP routes route by entry point only - no rule needed.
 
@@ -37,8 +41,8 @@ Click the trash icon on the route card. The corresponding service entry in `dyna
 
 Each route card has a toggle icon (green when active, grey when inactive). Clicking it:
 
-- **Disable** — removes the router and service from `dynamic.yml` (Traefik immediately stops routing traffic) and saves the full config in `manager.yml`. The card is greyed out.
-- **Enable** — restores the router and service to `dynamic.yml`. Traefik picks it up instantly.
+- **Disable** - removes the router and service from `dynamic.yml` (Traefik immediately stops routing traffic) and saves the full config in `manager.yml`. The card is greyed out.
+- **Enable** - restores the router and service to `dynamic.yml`. Traefik picks it up instantly.
 
 A backup is created before each toggle operation. Disabled routes persist across restarts.
 
@@ -48,4 +52,4 @@ A backup of `dynamic.yml` is created automatically before every create, edit, de
 
 ## How it works
 
-Routes are stored in `dynamic.yml` (the Traefik file provider config). traefik-manager reads and writes this file directly using `ruamel.yaml` to preserve comments and formatting. The Routes tab shows the full list from the app's config combined with live status from the Traefik API.
+Routes are stored in Traefik dynamic config files (the file provider config). traefik-manager reads and writes these files directly using `ruamel.yaml` to preserve comments and formatting. When multiple config files are mounted, each route card shows a small badge with its source file. The Routes tab shows the combined list from all config files plus live status from the Traefik API.

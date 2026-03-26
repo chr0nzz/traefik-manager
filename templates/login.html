@@ -411,7 +411,7 @@
                 <label for="s_resolver">Certificate Resolver</label>
                 <input type="text" id="s_resolver" placeholder="cloudflare"
                        value="{{ defaults.cert_resolver }}">
-                <p class="field-hint">Matches a resolver in your <code style="font-family:monospace;color:var(--blue)">traefik.yml</code> — e.g. <code style="font-family:monospace;color:var(--blue)">cloudflare</code> or <code style="font-family:monospace;color:var(--blue)">letsencrypt</code>.</p>
+                <p class="field-hint">One or more resolver names from your <code style="font-family:monospace;color:var(--blue)">traefik.yml</code>, comma-separated - e.g. <code style="font-family:monospace;color:var(--blue)">cloudflare</code> or <code style="font-family:monospace;color:var(--blue)">letsencrypt, cloudflare</code>. The first is used as the default per route.</p>
             </div>
             <div class="field">
                 <label for="s_apiurl">Traefik API URL</label>

@@ -173,6 +173,71 @@ volumes:
 
 ---
 
+## Config file setup
+
+### Single config file (default)
+
+The default setup. Mount one dynamic config file and set `CONFIG_PATH` to point at it:
+
+```yaml
+environment:
+  - CONFIG_PATH=/app/config/dynamic.yml
+volumes:
+  - /path/to/traefik/dynamic.yml:/app/config/dynamic.yml:z
+  - /path/to/traefik-manager/config:/app/config:z
+  - /path/to/traefik-manager/backups:/app/backups:z
+```
+
+If you mount your file to `/app/config/dynamic.yml` and do not set `CONFIG_PATH`, that path is used automatically as the default.
+
+### Multiple config files
+
+Mount more than one Traefik dynamic config and manage them all from one UI. A **Config File** picker appears automatically in the route and middleware forms when more than one file is loaded.
+
+=== "CONFIG_PATHS (explicit list)"
+    Comma-separated list of config file paths inside the container. Use this when you want to name exactly which files are managed.
+
+    ```yaml
+    environment:
+      # Single config file (default):
+      # - CONFIG_PATH=/app/config/dynamic.yml
+      # Multiple config files:
+      - CONFIG_PATHS=/app/config/routes.yml,/app/config/services.yml
+    volumes:
+      - /path/to/traefik-manager/config:/app/config:z
+      - /path/to/traefik/routes.yml:/app/config/routes.yml:z
+      - /path/to/traefik/services.yml:/app/config/services.yml:z
+      - /path/to/traefik-manager/backups:/app/backups:z
+    ```
+
+=== "CONFIG_DIR (auto-discover from directory)"
+    Point at a directory and every `.yml` file inside it is picked up automatically. Useful when the number of config files changes over time.
+
+    ```yaml
+    environment:
+      # Single config file (default):
+      # - CONFIG_PATH=/app/config/dynamic.yml
+      # Multiple config files (auto-discover):
+      - CONFIG_DIR=/app/config/traefik
+    volumes:
+      - /path/to/traefik-manager/config:/app/config:z
+      - /path/to/traefik/config:/app/config/traefik:z
+      - /path/to/traefik-manager/backups:/app/backups:z
+    ```
+
+**Quadlet units:** set the environment variable in the `[Container]` section:
+
+```ini
+# Single config file (default):
+# Environment=CONFIG_PATH=/app/config/dynamic.yml
+# Multiple config files:
+Environment=CONFIG_PATHS=/app/config/routes.yml,/app/config/services.yml
+```
+
+See the [Environment Variables](env-vars.md) reference for the full priority order.
+
+---
+
 ## Behind Traefik (expose via subdomain)
 
 Works the same as with Docker. Remove `ports`, add labels, and make sure both containers share the same Podman network:

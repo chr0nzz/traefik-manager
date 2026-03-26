@@ -45,7 +45,7 @@
                     </div>
                     <div>
                         <span class="settings-section-label">Certificate Resolver</span>
-                        <div class="text-xs mb-2" style="color:var(--muted)">Name of the Traefik cert resolver (e.g. cloudflare, letsencrypt).</div>
+                        <div class="text-xs mb-2" style="color:var(--muted)">One or more cert resolver names, comma-separated (e.g. <code class="font-mono">letsencrypt, cloudflare</code>). The first is the default - each route can override it individually.</div>
                         <input type="text" id="settingsCertResolver" class="input-field" placeholder="cloudflare" onblur="saveSettings()">
                     </div>
                     <div>

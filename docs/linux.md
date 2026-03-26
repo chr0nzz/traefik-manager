@@ -50,7 +50,7 @@ COOKIE_SECURE=false \
   app:app
 ```
 
-Open **http://your-server:5000** — the setup wizard will guide you through the rest.
+Open **http://your-server:5000** - the setup wizard will guide you through the rest.
 
 ---
 
@@ -128,18 +128,18 @@ journalctl -u traefik-manager -f
 
 ## Optional monitoring mounts
 
-The Certs, Plugins, and Logs tabs work the same as with Docker — just point the env vars at your existing files:
+The Certs, Plugins, and Logs tabs work the same as with Docker - just point the env vars at your existing files:
 
 ```ini
 # In the [Service] section of the systemd unit:
 
-# Certs tab — path to acme.json
+# Certs tab - path to acme.json
 Environment=ACME_JSON_PATH=/etc/traefik/acme.json
 
-# Plugins tab — path to traefik.yml
+# Plugins tab - path to traefik.yml
 Environment=STATIC_CONFIG_PATH=/etc/traefik/traefik.yml
 
-# Logs tab — path to access.log
+# Logs tab - path to access.log
 Environment=ACCESS_LOG_PATH=/logs/access.log
 ```
 
@@ -149,6 +149,51 @@ Make sure `traefik-manager` user has read access to each file:
 chmod o+r /etc/traefik/acme.json
 chmod o+r /etc/traefik/traefik.yml
 ```
+
+---
+
+## Config file setup
+
+### Single config file (default)
+
+The default setup. Point `CONFIG_PATH` at your dynamic config file:
+
+```ini
+# In the [Service] section of the systemd unit:
+Environment=CONFIG_PATH=/etc/traefik/dynamic.yml
+```
+
+### Multiple config files
+
+Mount more than one Traefik dynamic config and manage them all from one UI. A **Config File** picker appears automatically in the route and middleware forms when more than one file is loaded.
+
+=== "CONFIG_PATHS (explicit list)"
+    Comma-separated list of config file paths. Use this when you want to name exactly which files are managed.
+
+    ```ini
+    # In the [Service] section of the systemd unit:
+    # Single config file (default):
+    # Environment=CONFIG_PATH=/etc/traefik/dynamic.yml
+    # Multiple config files:
+    Environment=CONFIG_PATHS=/etc/traefik/routes.yml,/etc/traefik/services.yml
+    ```
+
+    Make sure `traefik-manager` user has read/write access to each file.
+
+=== "CONFIG_DIR (auto-discover from directory)"
+    Point at a directory and every `.yml` file inside it is picked up automatically. Useful when the number of config files changes over time.
+
+    ```ini
+    # In the [Service] section of the systemd unit:
+    # Single config file (default):
+    # Environment=CONFIG_PATH=/etc/traefik/dynamic.yml
+    # Multiple config files (auto-discover):
+    Environment=CONFIG_DIR=/etc/traefik/conf.d
+    ```
+
+    Make sure `traefik-manager` user has read/write access to the directory and all `.yml` files in it.
+
+See the [Environment Variables](env-vars.md) reference for the full priority order.
 
 ---
 

@@ -4,6 +4,7 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="isMwEdit" id="isMwEdit" value="false">
             <input type="hidden" name="originalMwId" id="originalMwId" value="">
+            <input type="hidden" name="configFile" id="mwConfigFile" value="">
 
             <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
                 <div class="flex items-center gap-2">
@@ -14,6 +15,16 @@
             </div>
 
             <div class="px-5 py-4 space-y-4">
+                {% if multi_config %}
+                <div>
+                    <label>Config File</label>
+                    <select id="mwConfigFileSelect" class="input-field" onchange="document.getElementById('mwConfigFile').value=this.value">
+                        {% for cp in config_paths_list %}
+                        <option value="{{ cp.label }}">{{ cp.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label>Name</label>

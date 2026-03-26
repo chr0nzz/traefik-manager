@@ -98,17 +98,27 @@ yaml.width = 4096
 safe_yaml = SafeYAML(typ='safe')
 
 
-CONFIG_PATH   = os.environ.get('CONFIG_PATH',   '/app/config/dynamic.yml')
 BACKUP_DIR    = os.environ.get('BACKUP_DIR',    '/app/backups')
 SETTINGS_PATH = os.environ.get('SETTINGS_PATH', '/app/config/manager.yml')
 
+_config_dir = os.environ.get('CONFIG_DIR', '').strip()
+if _config_dir:
+    import glob as _glob
+    CONFIG_PATHS = sorted(_glob.glob(os.path.join(_config_dir, '*.yml'))) or [os.path.join(_config_dir, 'dynamic.yml')]
+else:
+    _raw_paths = os.environ.get('CONFIG_PATHS', '').strip()
+    if _raw_paths:
+        CONFIG_PATHS = [p.strip() for p in _raw_paths.split(',') if p.strip()]
+    else:
+        CONFIG_PATHS = [os.environ.get('CONFIG_PATH', '/app/config/dynamic.yml')]
 
-_ALLOWED_FILE_PREFIXES = tuple(sorted(set([
-    '/app/',
-    os.path.dirname(os.path.abspath(CONFIG_PATH))   + '/',
-    os.path.abspath(BACKUP_DIR)                     + '/',
-    os.path.dirname(os.path.abspath(SETTINGS_PATH)) + '/',
-])))
+CONFIG_PATH  = CONFIG_PATHS[0]
+MULTI_CONFIG = len(CONFIG_PATHS) > 1
+
+_ALLOWED_FILE_PREFIXES = tuple(sorted(set(
+    ['/app/', os.path.abspath(BACKUP_DIR) + '/', os.path.dirname(os.path.abspath(SETTINGS_PATH)) + '/'] +
+    [os.path.dirname(os.path.abspath(p)) + '/' for p in CONFIG_PATHS]
+)))
 _ALLOWED_API_SCHEMES   = ('http://', 'https://')
 
 def _safe_file_path(path: str) -> str:
@@ -118,6 +128,18 @@ def _safe_file_path(path: str) -> str:
     if any(resolved.startswith(p) for p in _ALLOWED_FILE_PREFIXES):
         return resolved
     logger.warning(f"Blocked unsafe file path: {path!r}")
+    return ''
+
+def _resolve_config_path(s: str) -> str:
+    """Validate a config file given a basename or full path against CONFIG_PATHS.
+    Returns the canonical path if valid, '' otherwise."""
+    if not s:
+        return CONFIG_PATH
+    s = s.strip()
+    for p in CONFIG_PATHS:
+        if s == p or s == os.path.basename(p):
+            return p
+    logger.warning(f"Config file not in CONFIG_PATHS: {s!r}")
     return ''
 
 def _safe_api_url(url: str) -> str:
@@ -251,13 +273,18 @@ def _auth_enabled() -> bool:
     return load_settings().get('auth_enabled', True)
 
 
+def _hash_password(plaintext: str) -> str:
+    import bcrypt
+    return bcrypt.hashpw(plaintext.encode(), bcrypt.gensalt(rounds=12)).decode()
+
+
 def _ensure_password():
     if os.environ.get('ADMIN_PASSWORD', '').strip():
         return
     settings = load_settings()
     if settings.get('password_hash', ''):
         return
-    password = secrets.token_urlsafe(16) 
+    password = secrets.token_urlsafe(16)
     logger.warning("=" * 60)
     logger.warning("  TRAEFIK MANAGER — AUTO-GENERATED PASSWORD")
     logger.warning(f"  Password: {password}")
@@ -279,7 +306,11 @@ def _ensure_password():
 _s = load_settings()
 logger.info("===========================================")
 logger.info("Starting Traefik Manager")
-logger.info(f"Config Path:    {CONFIG_PATH}")
+if MULTI_CONFIG:
+    for _cp in CONFIG_PATHS:
+        logger.info(f"Config File:    {_cp}")
+else:
+    logger.info(f"Config Path:    {CONFIG_PATH}")
 logger.info(f"Settings Path:  {SETTINGS_PATH}")
 logger.info(f"Backup Dir:     {BACKUP_DIR}")
 logger.info(f"Domains:        {_s['domains']}")
@@ -318,10 +349,6 @@ def csrf_protect(f):
 def inject_csrf():
     return {'csrf_token': _get_csrf_token()}
 
-
-def _hash_password(plaintext: str) -> str:
-    import bcrypt
-    return bcrypt.hashpw(plaintext.encode(), bcrypt.gensalt(rounds=12)).decode()
 
 def _check_password(plaintext: str, hashed: str) -> bool:
     import bcrypt
@@ -1050,12 +1077,15 @@ def ensure_backup_dir():
     if not os.path.exists(BACKUP_DIR):
         os.makedirs(BACKUP_DIR)
 
-def create_backup():
+def create_backup(path=None):
+    if path is None:
+        path = CONFIG_PATH
     ensure_backup_dir()
-    if os.path.exists(CONFIG_PATH):
+    if os.path.exists(path):
         ts   = time.strftime("%Y%m%d_%H%M%S")
-        dest = os.path.join(BACKUP_DIR, f"dynamic.yml.{ts}.bak")
-        shutil.copy2(CONFIG_PATH, dest)
+        base = os.path.basename(path)
+        dest = os.path.join(BACKUP_DIR, f"{base}.{ts}.bak")
+        shutil.copy2(path, dest)
         logger.info(f"Backup created: {dest}")
         return dest
     return None
@@ -1074,7 +1104,7 @@ def list_backups():
             })
     return backups
 
-_BACKUP_RE = re.compile(r'^dynamic\.yml\.\d{8}_\d{6}\.bak$')
+_BACKUP_RE = re.compile(r'^[a-zA-Z0-9._-]+\.yml\.\d{8}_\d{6}\.bak$')
 
 def _validated_backup_path(filename: str) -> str:
     if not _BACKUP_RE.match(filename):
@@ -1100,9 +1130,18 @@ def api_restore(filename):
         path = _validated_backup_path(filename)
         if not os.path.exists(path):
             return jsonify({'error': 'Backup not found'}), 404
-        create_backup()
-        shutil.copy2(path, CONFIG_PATH)
-        logger.info(f"Restored: {filename}")
+        # Infer the target config file from the backup filename (basename.yml.ts.bak)
+        # Strip the timestamp suffix to get the original basename
+        bname = filename  # e.g. dynamic.yml.20260325_120000.bak
+        # Find matching config path by basename prefix
+        target_path = CONFIG_PATH
+        for p in CONFIG_PATHS:
+            if bname.startswith(os.path.basename(p) + '.'):
+                target_path = p
+                break
+        create_backup(target_path)
+        shutil.copy2(path, target_path)
+        logger.info(f"Restored: {filename} → {target_path}")
         return jsonify({'success': True})
     except Exception as e:
         logger.exception("Restore error")
@@ -1198,43 +1237,54 @@ def api_save_tabs():
         return jsonify({'error': str(e)}), 500
 
 
-def load_config():
-    if not os.path.exists(CONFIG_PATH):
+def load_config(path=None):
+    if path is None:
+        path = CONFIG_PATH
+    if not os.path.exists(path):
         return {"http": {"routers": {}, "services": {}, "middlewares": {}}}
-    with open(CONFIG_PATH, 'r') as f:
+    with open(path, 'r') as f:
         data = yaml.load(f)
     return data if data and isinstance(data, dict) else {"http": {"routers": {}, "services": {}, "middlewares": {}}}
 
-def save_config(data):
-    tmp = CONFIG_PATH + '.tmp'
+def save_config(data, path=None):
+    if path is None:
+        path = CONFIG_PATH
+    tmp = path + '.tmp'
     try:
         with open(tmp, 'w') as f:
             yaml.dump(data, f)
-        shutil.copyfile(tmp, CONFIG_PATH)
+        shutil.copyfile(tmp, path)
     finally:
         try:
             os.unlink(tmp)
         except OSError:
             pass
-    logger.info("Configuration saved")
+    logger.info(f"Configuration saved: {path}")
 
 
-def _build_apps(config):
+def _build_apps(config, config_file=''):
     apps = []
     http_config = config.get('http', {})
     for rname, rdata in http_config.get('routers', {}).items():
         svc_name = rdata.get('service', '')
         target_url = 'N/A'
         svcs = http_config.get('services', {})
+        lb = {}
         if svc_name in svcs:
-            servers = svcs[svc_name].get('loadBalancer', {}).get('servers', [])
+            lb = svcs[svc_name].get('loadBalancer', {})
+            servers = lb.get('servers', [])
             if servers:
                 target_url = servers[0].get('url', 'Unknown')
-        apps.append({'id': rname, 'name': rname, 'rule': rdata.get('rule', ''),
+        app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
+        tls_http = rdata.get('tls', {})
+        apps.append({'id': app_id, 'name': rname, 'rule': rdata.get('rule', ''),
                      'service_name': svc_name, 'target': target_url,
                      'middlewares': rdata.get('middlewares', []),
                      'entryPoints': rdata.get('entryPoints', []), 'protocol': 'http',
-                     'tls': bool(rdata.get('tls')), 'enabled': True})
+                     'tls': bool(tls_http), 'enabled': True,
+                     'passHostHeader': lb.get('passHostHeader', True),
+                     'certResolver': tls_http.get('certResolver', '') if isinstance(tls_http, dict) else '',
+                     'configFile': config_file})
     for rname, rdata in config.get('tcp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
         target = 'N/A'
@@ -1243,10 +1293,14 @@ def _build_apps(config):
             servers = tcp_svcs[svc_name].get('loadBalancer', {}).get('servers', [])
             if servers:
                 target = servers[0].get('address', 'N/A')
-        apps.append({'id': rname, 'name': rname, 'rule': rdata.get('rule', ''),
+        app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
+        tls_tcp = rdata.get('tls', {})
+        apps.append({'id': app_id, 'name': rname, 'rule': rdata.get('rule', ''),
                      'service_name': svc_name, 'target': target,
                      'middlewares': [], 'entryPoints': rdata.get('entryPoints', []),
-                     'protocol': 'tcp', 'tls': bool(rdata.get('tls')), 'enabled': True})
+                     'protocol': 'tcp', 'tls': bool(tls_tcp), 'enabled': True,
+                     'certResolver': tls_tcp.get('certResolver', '') if isinstance(tls_tcp, dict) else '',
+                     'configFile': config_file})
     for rname, rdata in config.get('udp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
         target = 'N/A'
@@ -1255,85 +1309,115 @@ def _build_apps(config):
             servers = udp_svcs[svc_name].get('loadBalancer', {}).get('servers', [])
             if servers:
                 target = servers[0].get('address', 'N/A')
-        apps.append({'id': rname, 'name': rname, 'rule': '',
+        app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
+        apps.append({'id': app_id, 'name': rname, 'rule': '',
                      'service_name': svc_name, 'target': target,
                      'middlewares': [], 'entryPoints': rdata.get('entryPoints', []),
-                     'protocol': 'udp', 'tls': False, 'enabled': True})
+                     'protocol': 'udp', 'tls': False, 'enabled': True,
+                     'configFile': config_file})
+    return apps
+
+
+def _build_middlewares(config, config_file=''):
+    middlewares = []
+    for mname, mdata in config.get('http', {}).get('middlewares', {}).items():
+        buf = StringIO()
+        yaml.dump(mdata, buf)
+        middlewares.append({'name': mname, 'yaml': buf.getvalue(), 'type': 'http', 'configFile': config_file})
+    return middlewares
+
+
+def _build_all_apps():
+    """Build combined apps and middlewares from all config files, plus disabled routes."""
+    all_apps = []
+    all_middlewares = []
+    for p in CONFIG_PATHS:
+        cf = os.path.basename(p) if MULTI_CONFIG else ''
+        config = load_config(p)
+        all_apps.extend(_build_apps(config, cf))
+        all_middlewares.extend(_build_middlewares(config, cf))
     settings = load_settings()
     for rname, rdata in settings.get('disabled_routes', {}).items():
         proto    = rdata.get('protocol', 'http')
         router   = rdata.get('router', {})
         svc_name = router.get('service', '')
         svc      = rdata.get('service', {})
+        cf       = rdata.get('configFile', '')
         if proto == 'http':
             servers    = svc.get('loadBalancer', {}).get('servers', [])
             target_url = servers[0].get('url', 'N/A') if servers else 'N/A'
-            apps.append({'id': rname, 'name': rname, 'rule': router.get('rule', ''),
-                         'service_name': svc_name, 'target': target_url,
-                         'middlewares': router.get('middlewares', []),
-                         'entryPoints': router.get('entryPoints', []),
-                         'protocol': 'http', 'tls': bool(router.get('tls')), 'enabled': False})
+            all_apps.append({'id': rname, 'name': rname, 'rule': router.get('rule', ''),
+                             'service_name': svc_name, 'target': target_url,
+                             'middlewares': router.get('middlewares', []),
+                             'entryPoints': router.get('entryPoints', []),
+                             'protocol': 'http', 'tls': bool(router.get('tls')), 'enabled': False,
+                             'passHostHeader': svc.get('loadBalancer', {}).get('passHostHeader', True),
+                             'configFile': cf})
         elif proto == 'tcp':
             servers = svc.get('loadBalancer', {}).get('servers', [])
             target  = servers[0].get('address', 'N/A') if servers else 'N/A'
-            apps.append({'id': rname, 'name': rname, 'rule': router.get('rule', ''),
-                         'service_name': svc_name, 'target': target,
-                         'middlewares': [], 'entryPoints': router.get('entryPoints', []),
-                         'protocol': 'tcp', 'tls': bool(router.get('tls')), 'enabled': False})
+            all_apps.append({'id': rname, 'name': rname, 'rule': router.get('rule', ''),
+                             'service_name': svc_name, 'target': target,
+                             'middlewares': [], 'entryPoints': router.get('entryPoints', []),
+                             'protocol': 'tcp', 'tls': bool(router.get('tls')), 'enabled': False,
+                             'configFile': cf})
         else:
             servers = svc.get('loadBalancer', {}).get('servers', [])
             target  = servers[0].get('address', 'N/A') if servers else 'N/A'
-            apps.append({'id': rname, 'name': rname, 'rule': '',
-                         'service_name': svc_name, 'target': target,
-                         'middlewares': [], 'entryPoints': router.get('entryPoints', []),
-                         'protocol': 'udp', 'tls': False, 'enabled': False})
-    return apps
-
-
-def _build_middlewares(config):
-    middlewares = []
-    for mname, mdata in config.get('http', {}).get('middlewares', {}).items():
-        buf = StringIO()
-        yaml.dump(mdata, buf)
-        middlewares.append({'name': mname, 'yaml': buf.getvalue(), 'type': 'http'})
-    return middlewares
+            all_apps.append({'id': rname, 'name': rname, 'rule': '',
+                             'service_name': svc_name, 'target': target,
+                             'middlewares': [], 'entryPoints': router.get('entryPoints', []),
+                             'protocol': 'udp', 'tls': False, 'enabled': False,
+                             'configFile': cf})
+    return all_apps, all_middlewares
 
 
 def _toggle_route(route_id: str, enable: bool):
-    config   = load_config()
     settings = load_settings()
     disabled = settings.get('disabled_routes', {})
 
     if enable:
         if route_id not in disabled:
             return
-        saved    = disabled.pop(route_id)
-        proto    = saved.get('protocol', 'http')
-        router   = saved.get('router', {})
-        svc_name = router.get('service', route_id)
-        svc      = saved.get('service', {})
-        section  = config.setdefault(proto, {})
+        saved       = disabled.pop(route_id)
+        proto       = saved.get('protocol', 'http')
+        router      = saved.get('router', {})
+        svc_name    = router.get('service', route_id)
+        svc         = saved.get('service', {})
+        cf          = saved.get('configFile', '')
+        target_path = _resolve_config_path(cf) or CONFIG_PATH
+        config      = load_config(target_path)
+        section     = config.setdefault(proto, {})
         section.setdefault('routers', {})[route_id]  = router
         section.setdefault('services', {})[svc_name] = svc
+        create_backup(target_path)
+        save_config(config, target_path)
     else:
-        proto   = None
-        router  = None
-        svc_name = None
-        svc     = None
-        for p in ('http', 'tcp', 'udp'):
-            routers = config.get(p, {}).get('routers', {})
-            if route_id in routers:
-                proto    = p
-                router   = dict(routers.pop(route_id))
-                svc_name = router.get('service', route_id)
-                svc      = dict(config.get(p, {}).get('services', {}).pop(svc_name, {}))
+        proto       = None
+        router      = None
+        svc_name    = None
+        svc         = None
+        target_path = None
+        for p in CONFIG_PATHS:
+            config = load_config(p)
+            for prot in ('http', 'tcp', 'udp'):
+                routers = config.get(prot, {}).get('routers', {})
+                if route_id in routers:
+                    proto       = prot
+                    router      = dict(routers.pop(route_id))
+                    svc_name    = router.get('service', route_id)
+                    svc         = dict(config.get(prot, {}).get('services', {}).pop(svc_name, {}))
+                    target_path = p
+                    break
+            if proto:
                 break
         if proto is None:
             return
-        disabled[route_id] = {'protocol': proto, 'router': router, 'service': svc}
+        cf = os.path.basename(target_path) if MULTI_CONFIG else ''
+        disabled[route_id] = {'protocol': proto, 'router': router, 'service': svc, 'configFile': cf}
+        create_backup(target_path)
+        save_config(config, target_path)
 
-    create_backup()
-    save_config(config)
     save_settings(
         domains=settings['domains'],
         cert_resolver=settings['cert_resolver'],
@@ -1348,8 +1432,14 @@ def _toggle_route(route_id: str, enable: bool):
 @app.route('/api/routes')
 @login_required
 def api_routes():
-    config = load_config()
-    return jsonify({'apps': _build_apps(config), 'middlewares': _build_middlewares(config)})
+    apps, middlewares = _build_all_apps()
+    return jsonify({'apps': apps, 'middlewares': middlewares})
+
+
+@app.route('/api/configs')
+@login_required
+def api_configs():
+    return jsonify([{'label': os.path.basename(p), 'path': p} for p in CONFIG_PATHS])
 
 
 @app.route('/api/routes/<path:route_id>/toggle', methods=['POST'])
@@ -1369,17 +1459,18 @@ def api_toggle_route(route_id):
 @login_required
 def index():
     settings    = load_settings()
-    config      = load_config()
-    apps        = _build_apps(config)
-    middlewares = _build_middlewares(config)
-
-
-    auth_on = _auth_enabled()
+    apps, middlewares = _build_all_apps()
+    auth_on    = _auth_enabled()
     login_time = session.get('login_time', '')
+    config_paths_list = [{'label': os.path.basename(p), 'path': p} for p in CONFIG_PATHS]
+    cert_resolvers    = [r.strip() for r in settings['cert_resolver'].split(',') if r.strip()]
 
     return render_template('index.html', apps=apps, domains=settings['domains'],
                            middlewares=middlewares, settings=settings,
-                           auth_enabled=auth_on, login_time=login_time)
+                           auth_enabled=auth_on, login_time=login_time,
+                           multi_config=MULTI_CONFIG,
+                           config_paths_list=config_paths_list,
+                           cert_resolvers=cert_resolvers)
 
 
 def _is_fetch():
@@ -1403,6 +1494,12 @@ def save_entry():
         is_edit        = request.form.get('isEdit') == 'true'
         original_id    = request.form.get('originalId', '')
         tcp_rule       = request.form.get('tcpRule', '').strip()
+        scheme         = request.form.get('scheme', 'http').strip().lower()
+        pass_host      = request.form.get('passHostHeader') == 'true'
+        resolvers      = [r.strip() for r in settings['cert_resolver'].split(',') if r.strip()]
+        cert_resolver  = request.form.get('certResolver', '').strip() or (resolvers[0] if resolvers else 'cloudflare')
+        config_file_raw = request.form.get('configFile', '').strip()
+        target_path    = _resolve_config_path(config_file_raw) or CONFIG_PATH
 
         if not svc_name:
             if fetch:
@@ -1417,8 +1514,8 @@ def save_entry():
 
         router_name  = svc_name
         service_name = f"{svc_name}-service"
-        create_backup()
-        config = load_config()
+        create_backup(target_path)
+        config = load_config(target_path)
 
         if is_edit and original_id and original_id != router_name:
             for sec in ('http', 'tcp', 'udp'):
@@ -1432,21 +1529,24 @@ def save_entry():
 
         if protocol == 'http':
             rule       = f"Host(`{subdomain}`)" if '.' in subdomain else (f"Host(`{subdomain}.{domain}`)" if subdomain else f"Host(`{domain}`)")
-            target_url = target_ip if target_ip.startswith('http') else f"http://{target_ip}:{target_port}"
+            target_url = target_ip if target_ip.startswith('http') else f"{scheme}://{target_ip}:{target_port}"
             mws        = [m.strip() for m in middlewares_in.split(',')] if middlewares_in else []
             config.setdefault('http', {}).setdefault('routers', {})
             config['http'].setdefault('services', {})
-            r = {'rule': rule, 'entryPoints': ['https'], 'tls': {'certResolver': settings['cert_resolver']}, 'service': service_name}
+            r = {'rule': rule, 'entryPoints': ['https'], 'tls': {'certResolver': cert_resolver}, 'service': service_name}
             if mws:
                 r['middlewares'] = mws
+            lb = {'servers': [{'url': target_url}]}
+            if not pass_host:
+                lb['passHostHeader'] = False
             config['http']['routers'][router_name]   = r
-            config['http']['services'][service_name] = {'loadBalancer': {'servers': [{'url': target_url}]}}
+            config['http']['services'][service_name] = {'loadBalancer': lb}
 
         elif protocol == 'tcp':
             rule = tcp_rule or (f"HostSNI(`{subdomain}.{domain}`)" if subdomain else "HostSNI(`*`)")
             config.setdefault('tcp', {}).setdefault('routers', {})
             config['tcp'].setdefault('services', {})
-            config['tcp']['routers'][router_name]   = {'rule': rule, 'entryPoints': ['https'], 'tls': {'certResolver': settings['cert_resolver']}, 'service': service_name}
+            config['tcp']['routers'][router_name]   = {'rule': rule, 'entryPoints': ['https'], 'tls': {'certResolver': cert_resolver}, 'service': service_name}
             config['tcp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
 
         elif protocol == 'udp':
@@ -1456,7 +1556,7 @@ def save_entry():
             config['udp']['routers'][router_name]   = {'entryPoints': [udp_ep] if udp_ep else [], 'service': service_name}
             config['udp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
 
-        save_config(config)
+        save_config(config, target_path)
         msg = f"Successfully saved {svc_name}"
         if fetch:
             return jsonify({'ok': True, 'message': msg})
@@ -1475,16 +1575,28 @@ def save_entry():
 def delete_entry(router_id):
     fetch = _is_fetch()
     try:
-        create_backup()
-        config = load_config()
-        for sec in ('http', 'tcp', 'udp'):
-            s = config.get(sec, {})
-            if router_id in s.get('routers', {}):
-                svc = (s['routers'][router_id].get('service') or '').strip()
-                del s['routers'][router_id]
-                if svc and 'services' in s and svc in s['services']:
-                    del s['services'][svc]
-        save_config(config)
+        config_file_raw = request.form.get('configFile', '').strip()
+        # Find which config file contains this route
+        if config_file_raw:
+            search_paths = [_resolve_config_path(config_file_raw) or CONFIG_PATH]
+        else:
+            search_paths = CONFIG_PATHS
+        deleted = False
+        for target_path in search_paths:
+            config = load_config(target_path)
+            for sec in ('http', 'tcp', 'udp'):
+                s = config.get(sec, {})
+                if router_id in s.get('routers', {}):
+                    svc = (s['routers'][router_id].get('service') or '').strip()
+                    del s['routers'][router_id]
+                    if svc and 'services' in s and svc in s['services']:
+                        del s['services'][svc]
+                    create_backup(target_path)
+                    save_config(config, target_path)
+                    deleted = True
+                    break
+            if deleted:
+                break
         msg = f"Deleted {router_id}"
         if fetch:
             return jsonify({'ok': True, 'message': msg})
@@ -1503,22 +1615,24 @@ def delete_entry(router_id):
 def save_middleware():
     fetch = _is_fetch()
     try:
-        mw_name     = request.form.get('middlewareName', '').strip()
-        mw_content  = request.form.get('middlewareContent', '').strip()
-        is_edit     = request.form.get('isMwEdit') == 'true'
-        original_id = request.form.get('originalMwId', '')
+        mw_name         = request.form.get('middlewareName', '').strip()
+        mw_content      = request.form.get('middlewareContent', '').strip()
+        is_edit         = request.form.get('isMwEdit') == 'true'
+        original_id     = request.form.get('originalMwId', '')
+        config_file_raw = request.form.get('configFile', '').strip()
+        target_path     = _resolve_config_path(config_file_raw) or CONFIG_PATH
         if not mw_name:
             if fetch:
                 return jsonify({'ok': False, 'message': 'Middleware name is required'}), 400
             flash("Middleware name is required", "error")
             return redirect(url_for('index'))
-        create_backup()
-        config = load_config()
+        create_backup(target_path)
+        config = load_config(target_path)
         config.setdefault('http', {}).setdefault('middlewares', {})
         if is_edit and original_id and original_id != mw_name:
             config['http']['middlewares'].pop(original_id, None)
         config['http']['middlewares'][mw_name] = safe_yaml.load(mw_content)
-        save_config(config)
+        save_config(config, target_path)
         msg = f"Successfully saved middleware {mw_name}"
         if fetch:
             return jsonify({'ok': True, 'message': msg})
@@ -1537,10 +1651,19 @@ def save_middleware():
 def delete_middleware(mw_name):
     fetch = _is_fetch()
     try:
-        create_backup()
-        config = load_config()
-        config.get('http', {}).get('middlewares', {}).pop(mw_name, None)
-        save_config(config)
+        config_file_raw = request.form.get('configFile', '').strip()
+        if config_file_raw:
+            search_paths = [_resolve_config_path(config_file_raw) or CONFIG_PATH]
+        else:
+            search_paths = CONFIG_PATHS
+        for target_path in search_paths:
+            config = load_config(target_path)
+            mws = config.get('http', {}).get('middlewares', {})
+            if mw_name in mws:
+                mws.pop(mw_name, None)
+                create_backup(target_path)
+                save_config(config, target_path)
+                break
         msg = f"Deleted middleware {mw_name}"
         if fetch:
             return jsonify({'ok': True, 'message': msg})

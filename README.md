@@ -6,7 +6,7 @@
 
 **A clean, self-hosted web UI for managing your Traefik reverse proxy.**
 
-Add routes, manage middlewares, monitor services, and view TLS certificates — all without touching a YAML file by hand.
+Add routes, manage middlewares, monitor services, and view TLS certificates - all without touching a YAML file by hand.
 
 [![Docker Image](https://img.shields.io/badge/ghcr.io-chr0nzz%2Ftraefik--manager-blue?logo=docker&logoColor=white)](https://github.com/chr0nzz/traefik-manager/pkgs/container/traefik-manager)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
@@ -25,7 +25,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates — 
 
 <details>
 <summary><b>Initial Setup Workflow</b></summary>
-<p align="center"><i>Screenshots coming soon — setup screen is currently in development.</i></p>
+<p align="center"><i>Screenshots coming soon - setup screen is currently in development.</i></p>
 </details>
 
 <details>
@@ -236,42 +236,43 @@ Add routes, manage middlewares, monitor services, and view TLS certificates — 
 ## Features
 
 **Routing & Middleware**
-- Add, edit, delete, and **enable/disable** HTTP, TCP, and UDP routes — no YAML editing required
+- Add, edit, delete, and **enable/disable** HTTP, TCP, and UDP routes - no YAML editing required
 - Create middlewares with built-in templates (Basic Auth, Forward Auth, Redirect, Strip Prefix)
-- Timestamped backups of `dynamic.yml` before every change; one-click restore from Settings
+- **Multi-config file support** - mount several dynamic config files with `CONFIG_DIR` or `CONFIG_PATHS`; a dropdown selects which file each route or middleware is saved to
+- Timestamped backups before every change; one-click restore from Settings
 
 **Live Dashboard**
 - Real-time stats: router counts, service health, entrypoints, Traefik version
-- Provider tabs: Docker, Kubernetes, Swarm, Nomad, ECS, Consul Catalog, Redis, etcd, Consul KV, ZooKeeper, HTTP Provider, File — all API-based, no extra mounts
+- Provider tabs: Docker, Kubernetes, Swarm, Nomad, ECS, Consul Catalog, Redis, etcd, Consul KV, ZooKeeper, HTTP Provider, File - all API-based, no extra mounts
 - **Filter live services** by protocol (HTTP/TCP/UDP) and provider (docker, file, kubernetes…)
 
 **System Monitoring** *(optional file mounts)*
-- **Certs** — `acme.json` certificates with expiry tracking
-- **Plugins** — plugins from your static `traefik.yml`
-- **Logs** — live Traefik access log tail
+- **Certs** - `acme.json` certificates with expiry tracking
+- **Plugins** - plugins from your static `traefik.yml`
+- **Logs** - live Traefik access log tail
 
 **Security**
 - bcrypt passwords, CSRF protection, session management with session fixation protection
 - Optional TOTP 2FA · 7-day remember me · 2hr inactivity timeout for browser sessions
 - Auto-generated password on first start · CLI recovery with `flask reset-password`
-- **API key authentication** — scoped `X-Api-Key` for mobile/app access, revocable without touching your password or 2FA
+- **API key authentication** - scoped `X-Api-Key` for mobile/app access, revocable without touching your password or 2FA
 - **Rate limiting** on login and auth endpoints (Flask-Limiter)
-- **Atomic config writes** — crash-safe YAML saves via temp file + rename
-- **Encrypted OTP secret** — TOTP seed encrypted at rest with Fernet
+- **Atomic config writes** - crash-safe YAML saves via temp file + rename
+- **Encrypted OTP secret** - TOTP seed encrypted at rest with Fernet
 
 ---
 
 ## Mobile App
 
-**traefik-manager-mobile** is a React Native companion app for managing Traefik Manager from your phone. Requires **Traefik Manager v0.5.0 or higher**.
+**traefik-manager-mobile** is a React Native companion app for managing Traefik Manager from your phone. Requires **Traefik Manager v0.6.0 or higher**.
 
 | | |
 |---|---|
 | Repo | [github.com/chr0nzz/traefik-manager-mobile](https://github.com/chr0nzz/traefik-manager-mobile) |
-| Download | [traefik-manager-v0.1.0.apk](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.1.0/traefik-manager-v0.1.0.apk) |
-| Auth | API key — generate one in **Settings → Authentication** |
+| Download | [traefik-manager-v0.2.0.apk](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.2.0/traefik-manager-v0.2.0.apk) |
+| Auth | API key - generate one in **Settings → Authentication** |
 
-Features: browse routes, middlewares, and services · enable/disable routes · add and edit routes and middlewares (12 middleware templates) · edit mode for bulk actions · system light/dark theme.
+Features: browse routes, middlewares, and services · enable/disable routes · add and edit routes and middlewares (12 middleware templates) · backend scheme + pass host header controls · multi-config file picker · edit mode for bulk actions · system light/dark theme.
 
 ---
 
@@ -287,6 +288,10 @@ services:
       - "5000:5000"
     environment:
       - COOKIE_SECURE=false
+      # Single config file (default):
+      # - CONFIG_PATH=/app/config/dynamic.yml
+      # Multiple config files:
+      # - CONFIG_PATHS=/app/config/routes.yml,/app/config/services.yml
     volumes:
       - /path/to/traefik/dynamic.yml:/app/config/dynamic.yml
       - /path/to/traefik-manager/config:/app/config
@@ -297,7 +302,7 @@ services:
 docker compose up -d
 ```
 
-Open **http://your-server:5000** — the setup wizard will guide you through the rest.
+Open **http://your-server:5000** - the setup wizard will guide you through the rest.
 
 ---
 
@@ -318,7 +323,8 @@ Full documentation at **[traefik-manager.xyzlab.dev](https://traefik-manager.xyz
 | | |
 |---|---|
 | [Get Started](https://traefik-manager.xyzlab.dev/docker/) | Deployment guides for Docker, Podman, and Linux |
-| [Configuration](https://traefik-manager.xyzlab.dev/manager-yml/) | `manager.yml` reference and environment variables |
+| [Configuration](https://traefik-manager.xyzlab.dev/manager-yml/) | `manager.yml` reference |
+| [Environment Variables](https://traefik-manager.xyzlab.dev/env-vars/) | `CONFIG_DIR`, `CONFIG_PATHS`, auth, domains, and more |
 | [Reset Password](https://traefik-manager.xyzlab.dev/reset-password/) | CLI reset, TOTP recovery, manual reset |
 | [UI Examples](https://traefik-manager.xyzlab.dev/ui-examples/) | Screenshots and walkthroughs |
 | [Provider Tabs](https://traefik-manager.xyzlab.dev/) | Docker, Kubernetes, Swarm, Nomad, ECS, and more |

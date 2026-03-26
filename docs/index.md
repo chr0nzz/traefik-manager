@@ -1,6 +1,6 @@
 # Traefik Manager
 
-A self-hosted web UI for managing and monitoring your [Traefik](https://traefik.io/) reverse proxy — add routes, manage middlewares, view TLS certificates, and inspect live traffic, all without editing YAML by hand.
+A self-hosted web UI for managing and monitoring your [Traefik](https://traefik.io/) reverse proxy - add routes, manage middlewares, view TLS certificates, and inspect live traffic, all without editing YAML by hand.
 
 ---
 
@@ -12,7 +12,7 @@ A self-hosted web UI for managing and monitoring your [Traefik](https://traefik.
 
     ---
 
-    Deploy with Docker Compose — minimal setup, pre-built image on GHCR.
+    Deploy with Docker Compose - minimal setup, pre-built image on GHCR.
 
     [:octicons-arrow-right-24: Docker guide](docker.md)
 
@@ -38,7 +38,7 @@ A self-hosted web UI for managing and monitoring your [Traefik](https://traefik.
 
 ## Management
 
-These tabs are always visible. They let you read and write your Traefik `dynamic.yml`.
+These tabs are always visible. They let you read and write your Traefik dynamic config.
 
 | Tab | Description |
 |-----|-------------|
@@ -46,11 +46,13 @@ These tabs are always visible. They let you read and write your Traefik `dynamic
 | [Middlewares](tab-middlewares.md) | Create and manage middlewares with built-in templates |
 | [Services](tab-services.md) | Read-only view of all services across every provider |
 
+**Multiple config files** - mount several Traefik dynamic config files using `CONFIG_DIR` or `CONFIG_PATHS`. A dropdown in the route/middleware modals lets you choose which file each entry is saved to. See [Environment Variables](env-vars.md) for setup.
+
 ---
 
 ## Monitoring
 
-Optional tabs — each requires a file mounted into the container.
+Optional tabs - each requires a file mounted into the container.
 
 | Tab                          | Mount required                       | Description                            |
 | ------------------------------| --------------------------------------| ----------------------------------------|
@@ -62,7 +64,7 @@ Optional tabs — each requires a file mounted into the container.
 
 ## Providers
 
-Read-only tabs that pull live data from the Traefik API. No extra mounts needed — just a working API connection.
+Read-only tabs that pull live data from the Traefik API. No extra mounts needed - just a working API connection.
 
 ### Orchestrators
 
@@ -99,7 +101,7 @@ Read-only tabs that pull live data from the Traefik API. No extra mounts needed 
 
 | Page | Description |
 |------|-------------|
-| [manager.yml](manager-yml.md) | Full settings file reference — all keys, types, and defaults |
+| [manager.yml](manager-yml.md) | Full settings file reference - all keys, types, and defaults |
 | [Environment Variables](env-vars.md) | All supported environment variables with override behaviour |
 
 ---
