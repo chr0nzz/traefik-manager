@@ -1,6 +1,6 @@
 # API Reference
 
-Traefik Manager exposes a REST API that powers the web UI and can be used to build integrations — the official mobile app uses it exclusively.
+Traefik Manager exposes a REST API that powers the web UI and can be used to build integrations - the official mobile app uses it exclusively.
 
 ## Overview
 
@@ -10,9 +10,9 @@ All API endpoints are relative to your Traefik Manager base URL (e.g. `https://m
 
 Two methods are supported:
 
-**Session cookie** — log in via the web UI. The browser session is used automatically for all subsequent requests.
+**Session cookie** - log in via the web UI. The browser session is used automatically for all subsequent requests.
 
-**API key** — generate a key in **Settings → Authentication → API Key** and send it as a header:
+**API key** - generate a key in **Settings → Authentication → API Key** and send it as a header:
 
 ```
 X-Api-Key: your-api-key-here
@@ -162,7 +162,7 @@ Check whether an API key exists and is active.
 
 #### `POST /api/auth/apikey/generate`
 
-Generate a new API key. Only one key exists at a time — generating a new one replaces the previous one.
+Generate a new API key. Only one key exists at a time - generating a new one replaces the previous one.
 
 **Auth:** Session · **CSRF:** required · **Rate limit:** 5/hour
 
@@ -192,7 +192,7 @@ These endpoints proxy directly to the Traefik API and return live data. They are
 
 #### `GET /api/traefik/overview`
 
-Traefik dashboard overview — router/service/middleware counts, features, version.
+Traefik dashboard overview - router/service/middleware counts, features, version.
 
 **Auth:** Session or API key
 
@@ -340,9 +340,25 @@ Tail Traefik access logs if the log file is mounted.
 
 ## Routes & middlewares
 
+#### `GET /api/configs`
+
+List all loaded dynamic config files. Returns one entry when only `CONFIG_PATH` is set; multiple entries when `CONFIG_DIR` or `CONFIG_PATHS` is used.
+
+**Auth:** Session or API key
+
+**Response**
+```json
+[
+  { "label": "routes.yml", "path": "/app/config/routes.yml" },
+  { "label": "services.yml", "path": "/app/config/services.yml" }
+]
+```
+
+---
+
 #### `GET /api/routes`
 
-Get all managed routes and middlewares from `dynamic.yml`.
+Get all managed routes and middlewares from all loaded config files.
 
 **Auth:** Session or API key
 
@@ -358,14 +374,21 @@ Get all managed routes and middlewares from `dynamic.yml`.
       "rule": "Host(`app.example.com`)",
       "target": "http://192.168.1.10:8080",
       "middlewares": ["auth@file"],
-      "tls": true
+      "tls": true,
+      "certResolver": "letsencrypt",
+      "passHostHeader": true,
+      "configFile": "routes.yml"
     }
   ],
   "middlewares": [
-    { "name": "auth", "type": "basicauth", ... }
+    { "name": "auth", "type": "http", "yaml": "...", "configFile": "routes.yml" }
   ]
 }
 ```
+
+`configFile` is the basename of the config file the entry came from. Empty string when only one file is loaded.
+
+`id` is prefixed as `configFile::name` when multiple config files are loaded (e.g. `routes.yml::my-app`), to avoid collisions across files.
 
 ---
 
@@ -403,6 +426,10 @@ Create a new route or update an existing one.
 | `targetPort` | Backend port |
 | `protocol` | `http`, `tcp`, or `udp` |
 | `middlewares` | Comma-separated middleware names |
+| `scheme` | Backend scheme: `http` or `https` (default `http`) |
+| `passHostHeader` | `true` to forward original `Host` header (default `true`) |
+| `certResolver` | ACME cert resolver name (HTTP/TCP with TLS only). Falls back to the first configured resolver when omitted. |
+| `configFile` | Basename of the target config file (multi-config only) |
 | `isEdit` | `true` when updating an existing route |
 | `originalId` | ID of the route being replaced (edit only) |
 
@@ -413,6 +440,12 @@ Create a new route or update an existing one.
 Delete a managed route.
 
 **Auth:** Session or API key · **CSRF:** required (session only)
+
+**Request (form-encoded)**
+
+| Field | Description |
+|---|---|
+| `configFile` | Basename of the config file containing this route (multi-config only). Omit to search all files. |
 
 ---
 
@@ -428,6 +461,7 @@ Create or update a middleware. Config is provided as raw YAML.
 |---|---|
 | `middlewareName` | Middleware name |
 | `middlewareContent` | YAML config body |
+| `configFile` | Basename of the target config file (multi-config only) |
 | `isMwEdit` | `true` when updating |
 | `originalMwId` | Name of middleware being replaced (edit only) |
 
@@ -438,6 +472,12 @@ Create or update a middleware. Config is provided as raw YAML.
 Delete a managed middleware.
 
 **Auth:** Session or API key · **CSRF:** required (session only)
+
+**Request (form-encoded)**
+
+| Field | Description |
+|---|---|
+| `configFile` | Basename of the config file containing this middleware (multi-config only). Omit to search all files. |
 
 ---
 
@@ -459,6 +499,8 @@ Get current application settings. Password hash is never included.
   "visible_tabs": { "docker": true, "kubernetes": false, ... }
 }
 ```
+
+`cert_resolver` is a comma-separated string when multiple resolvers are configured (e.g. `"letsencrypt, cloudflare"`). The first resolver is the default for new routes.
 
 ---
 

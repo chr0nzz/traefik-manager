@@ -18,7 +18,7 @@
 
 ### 1. Generate an API key
 
-In the Traefik Manager web UI go to **Settings → Authentication** and generate an API key. Copy it — you will need it in the next step.
+In the Traefik Manager web UI go to **Settings → Authentication** and generate an API key. Copy it - you will need it in the next step.
 
 ### 2. Configure the app
 
@@ -29,7 +29,7 @@ Open the **Settings** tab in the mobile app and enter:
 | Server URL | Base URL of your Traefik Manager instance, e.g. `https://traefik-manager.example.com` |
 | API Key | The key generated in step 1 |
 
-Tap **Save** — the app connects immediately.
+Tap **Save** - the app connects immediately.
 
 ---
 
@@ -38,7 +38,7 @@ Tap **Save** — the app connects immediately.
 ### Routes
 
 - List all HTTP, TCP, and UDP routes with status, domain, target, and attached middlewares
-- Enable / disable routes with a toggle — configuration is preserved, Traefik stops routing until re-enabled
+- Enable / disable routes with a toggle - configuration is preserved, Traefik stops routing until re-enabled
 - Add new routes via a form (name, host/domain, target IP, port, protocol, middlewares)
 - Edit existing routes
 - Delete routes with confirmation
@@ -47,7 +47,7 @@ Tap **Save** — the app connects immediately.
 ### Middlewares
 
 - List all middlewares with type, protocol, and YAML config preview
-- Add new middlewares — two-step flow: choose from 12 built-in templates then fill in the form
+- Add new middlewares - two-step flow: choose from 12 built-in templates then fill in the form
 
     | Template | Description |
     |---|---|
@@ -78,9 +78,9 @@ Tap **Save** — the app connects immediately.
 
 Tap the **pencil icon** in the top bar to enter edit mode. In edit mode, cards reveal:
 
-- **Toggle** (routes only) — enable or disable the route
-- **Edit** — open the edit form
-- **Delete** — remove with confirmation
+- **Toggle** (routes only) - enable or disable the route
+- **Edit** - open the edit form
+- **Delete** - remove with confirmation
 
 Buttons are hidden when not in edit mode to keep the list clean.
 

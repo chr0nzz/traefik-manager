@@ -28,7 +28,6 @@ theme:
   features:
     - navigation.top
     - navigation.indexes
-    - navigation.expand
     - search.suggest
     - search.highlight
     - content.code.copy
@@ -38,6 +37,9 @@ theme:
 
 extra_css:
   - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/nav.js
 
 markdown_extensions:
   - admonition

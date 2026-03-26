@@ -5,6 +5,7 @@
             <input type="hidden" name="isEdit" id="isEdit" value="false">
             <input type="hidden" name="originalId" id="originalId" value="">
             <input type="hidden" name="protocol" id="protocolHidden" value="http">
+            <input type="hidden" name="configFile" id="configFile" value="">
 
             <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
                 <div class="flex items-center gap-2">
@@ -15,6 +16,16 @@
             </div>
 
             <div class="px-5 py-4 space-y-4">
+                {% if multi_config %}
+                <div>
+                    <label>Config File</label>
+                    <select id="configFileSelect" class="input-field" onchange="document.getElementById('configFile').value=this.value">
+                        {% for cp in config_paths_list %}
+                        <option value="{{ cp.label }}">{{ cp.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
                 <div>
                     <label>Protocol</label>
                     <div class="proto-toggle">
@@ -62,6 +73,30 @@
                         <label>Middlewares (comma separated)</label>
                         <input type="text" name="middlewares" id="middlewares" class="input-field" placeholder="auth@file, redirect-https">
                     </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label>Backend Scheme</label>
+                            <select name="scheme" id="scheme" class="input-field">
+                                <option value="http">HTTP</option>
+                                <option value="https">HTTPS</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2 pt-5">
+                            <input type="checkbox" name="passHostHeader" id="passHostHeader" value="true" checked class="rounded" style="accent-color:var(--blue)">
+                            <span class="text-sm" style="color:var(--text)">Pass Host Header</span>
+                        </div>
+                    </div>
+                    <p class="text-xs -mt-2" style="color:var(--muted)">Pass Host Header forwards the original <code class="font-mono">Host</code> to the backend. Disable if the backend needs to see its own hostname.</p>
+                    {% if cert_resolvers %}
+                    <div>
+                        <label>Cert Resolver</label>
+                        <select name="certResolver" id="certResolver" class="input-field">
+                            {% for r in cert_resolvers %}
+                            <option value="{{ r }}">{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div id="tcpSection" class="protocol-section space-y-4">
@@ -85,9 +120,19 @@
                         <input type="text" name="entryPoints" id="entryPointsTcp" class="input-field" placeholder="tcp, postgres">
                     </div>
                     <div class="flex items-center gap-2">
-                        <input type="checkbox" name="useTls" id="useTls" value="true" class="rounded" style="accent-color:var(--blue)">
+                        <input type="checkbox" name="useTls" id="useTls" value="true" class="rounded" style="accent-color:var(--blue)" onchange="toggleTcpCertResolver(this.checked)">
                         <span class="text-sm" style="color:var(--text)">Enable TLS (with cert resolver)</span>
                     </div>
+                    {% if cert_resolvers %}
+                    <div id="tcpCertResolverRow" style="display:none">
+                        <label>Cert Resolver</label>
+                        <select name="certResolver" id="certResolverTcp" class="input-field">
+                            {% for r in cert_resolvers %}
+                            <option value="{{ r }}">{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div id="udpSection" class="protocol-section space-y-4">

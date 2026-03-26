@@ -39,7 +39,7 @@ function uiInitTheme() {
   }
 }
 
-// MkDocs Material instant navigation — fires on every page load/navigation
+// MkDocs Material instant navigation - fires on every page load/navigation
 if (typeof document$ !== 'undefined') {
   document$.subscribe(uiInitTheme);
 } else {
@@ -55,7 +55,7 @@ if (typeof document$ !== 'undefined') {
 
 When first launching Traefik Manager you are guided through a short setup wizard.
 
-> **Screenshots coming soon** — setup screen is currently in development.
+> **Screenshots coming soon** - setup screen is currently in development.
 
 ---
 
@@ -134,7 +134,7 @@ Services represent the backend targets that Traefik forwards traffic to.
 
 ## Middlewares
 
-Middlewares modify requests before they reach your services — authentication, rate limiting, headers, redirects, and more.
+Middlewares modify requests before they reach your services - authentication, rate limiting, headers, redirects, and more.
 
 ### Middleware List
 

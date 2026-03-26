@@ -8,16 +8,18 @@ All supported environment variables for Traefik Manager. Variables marked **Over
 
 | Variable | Default | Override | Description |
 |----------|---------|----------|-------------|
-| `COOKIE_SECURE` | `false` | — | Mark session cookie as `Secure` (required for HTTPS) |
+| `COOKIE_SECURE` | `false` | - | Mark session cookie as `Secure` (required for HTTPS) |
 | `AUTH_ENABLED` | `true` | ✅ `auth_enabled` | Disable built-in login entirely |
 | `ADMIN_PASSWORD` | _(unset)_ | ✅ `password_hash` | Admin password in plain text (hashed at runtime) |
 | `DOMAINS` | `example.com` | ✅ `domains` | Comma-separated base domains |
 | `CERT_RESOLVER` | `cloudflare` | ✅ `cert_resolver` | Default ACME resolver name |
 | `TRAEFIK_API_URL` | `http://traefik:8080` | ✅ `traefik_api_url` | Traefik API URL |
-| `CONFIG_PATH` | `/app/config/dynamic.yml` | — | Path to the Traefik dynamic config |
-| `BACKUP_DIR` | `/app/backups` | — | Directory for timestamped config backups |
-| `SETTINGS_PATH` | `/app/config/manager.yml` | — | Path to the Traefik Manager settings file |
-| `OTP_ENCRYPTION_KEY` | _(auto-generated)_ | — | Fernet key for encrypting the TOTP secret at rest |
+| `CONFIG_DIR` | _(unset)_ | - | Directory - load all `.yml` files in it as config files |
+| `CONFIG_PATHS` | _(unset)_ | - | Comma-separated list of config file paths |
+| `CONFIG_PATH` | `/app/config/dynamic.yml` | - | Single config file (legacy, backwards-compatible) |
+| `BACKUP_DIR` | `/app/backups` | - | Directory for timestamped config backups |
+| `SETTINGS_PATH` | `/app/config/manager.yml` | - | Path to the Traefik Manager settings file |
+| `OTP_ENCRYPTION_KEY` | _(auto-generated)_ | - | Fernet key for encrypting the TOTP secret at rest |
 
 ---
 
@@ -41,7 +43,7 @@ Set to `true` when Traefik Manager is served over HTTPS. Marks the session cooki
     ```
 
 !!! warning
-    If you are behind a reverse proxy with HTTPS and do not set this, logins will fail silently — the session cookie will not be sent by the browser.
+    If you are behind a reverse proxy with HTTPS and do not set this, logins will fail silently - the session cookie will not be sent by the browser.
 
 ---
 
@@ -87,7 +89,7 @@ Set the admin password in plain text. It is hashed with bcrypt at runtime. Usefu
     ```
 
 !!! note
-    When this variable is set, the CLI `flask reset-password` command and the in-UI password change have no effect — the password always comes from this variable. Remove the variable to switch back to `manager.yml`-managed passwords.
+    When this variable is set, the CLI `flask reset-password` command and the in-UI password change have no effect - the password always comes from this variable. Remove the variable to switch back to `manager.yml`-managed passwords.
 
 ---
 
@@ -116,17 +118,19 @@ Comma-separated list of base domains shown in the **Add Route** form.
 **Default:** `cloudflare`
 **Overrides:** `cert_resolver` in `manager.yml`
 
-The default ACME cert resolver name pre-filled in the **Add Route** form.
+One or more ACME cert resolver names, comma-separated. The first resolver is used as the default for new routes. Each route can override this individually in the Add/Edit Route form.
 
 === "Docker / Podman"
     ```yaml
     environment:
       - CERT_RESOLVER=letsencrypt
+
+      - CERT_RESOLVER=letsencrypt, cloudflare
     ```
 
 === "Linux (systemd)"
     ```ini
-    Environment=CERT_RESOLVER=letsencrypt
+    Environment=CERT_RESOLVER=letsencrypt, cloudflare
     ```
 
 ---
@@ -151,11 +155,57 @@ The URL of the Traefik API. Must be reachable from the host running Traefik Mana
 
 ---
 
-### `CONFIG_PATH`
+### Multi-config: `CONFIG_DIR`, `CONFIG_PATHS`, `CONFIG_PATH`
+
+Traefik Manager can manage one or many dynamic config files. Three variables control this in priority order:
+
+```
+CONFIG_DIR  >  CONFIG_PATHS  >  CONFIG_PATH
+```
+
+Only one should be set. When multiple config files are loaded, a **Config File** dropdown appears in the Add/Edit Route and Middleware modals, and each route card shows a small file badge.
+
+---
+
+#### `CONFIG_DIR`
+
+**Default:** _(unset)_
+
+Point to a directory and every `.yml` file inside it is loaded as a config file. Best for setups with many files where you don't want to list them all explicitly.
+
+=== "Docker / Podman"
+    ```yaml
+    environment:
+      - CONFIG_DIR=/app/config/traefik
+    volumes:
+      - /host/traefik/config:/app/config/traefik
+      # every *.yml in that directory is picked up automatically
+    ```
+
+---
+
+#### `CONFIG_PATHS`
+
+**Default:** _(unset)_
+
+Comma-separated list of full config file paths. Good for 2–5 named files.
+
+=== "Docker / Podman"
+    ```yaml
+    environment:
+      - CONFIG_PATHS=/app/config/routes.yml,/app/config/services.yml
+    volumes:
+      - /host/routes.yml:/app/config/routes.yml
+      - /host/services.yml:/app/config/services.yml
+    ```
+
+---
+
+#### `CONFIG_PATH`
 
 **Default:** `/app/config/dynamic.yml`
 
-Path to the Traefik dynamic config file. Change this if your layout does not match the default.
+Single config file. Existing behaviour - no changes needed for single-file setups.
 
 === "Docker / Podman"
     ```yaml
@@ -239,4 +289,4 @@ Set this variable if you want to manage the key yourself (e.g., from a secrets m
     ```
 
 !!! note
-    If you lose this key, existing TOTP secrets become unreadable and 2FA will need to be re-enrolled. The `.otp_key` file is separate from `manager.yml` — back it up alongside your config volume.
+    If you lose this key, existing TOTP secrets become unreadable and 2FA will need to be re-enrolled. The `.otp_key` file is separate from `manager.yml` - back it up alongside your config volume.

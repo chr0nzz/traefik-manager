@@ -491,7 +491,16 @@ function openModal() {
     });
     document.getElementById('entryPoints').value = 'https';
     document.getElementById('useTls') && (document.getElementById('useTls').checked = false);
+    toggleTcpCertResolver(false);
+    const crHttp = document.getElementById('certResolver');
+    if (crHttp && availableCertResolvers.length > 0) crHttp.value = availableCertResolvers[0];
+    const crTcp = document.getElementById('certResolverTcp');
+    if (crTcp && availableCertResolvers.length > 0) crTcp.value = availableCertResolvers[0];
     setProtocol('http');
+    // Init config file to first option (multi-config mode)
+    const cfSel = document.getElementById('configFileSelect');
+    const cfHid = document.getElementById('configFile');
+    if (cfSel && cfHid) cfHid.value = cfSel.value;
     document.getElementById('appModal').style.display = 'flex';
 }
 
@@ -508,6 +517,9 @@ function openMwModal() {
     if (nameEl) nameEl.value = '';
     if (contentEl) contentEl.value = '';
     if (titleEl) titleEl.innerText = 'Add Middleware';
+    const mwCfSel = document.getElementById('mwConfigFileSelect');
+    const mwCfHid = document.getElementById('mwConfigFile');
+    if (mwCfSel && mwCfHid) mwCfHid.value = mwCfSel.value;
     modal.style.display = 'flex';
 }
 
@@ -553,10 +565,11 @@ async function saveMwAjax(event) {
     }
 }
 
-async function deleteRoute(id) {
+async function deleteRoute(id, configFile) {
     if (!confirm('Delete route "' + id + '"?')) return;
     const data = new FormData();
     data.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+    if (configFile) data.append('configFile', configFile);
     try {
         const res = await fetch('/delete/' + encodeURIComponent(id), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
         const json = await res.json();
@@ -565,10 +578,11 @@ async function deleteRoute(id) {
     } catch(e) { showToast('Error deleting route', 'error'); }
 }
 
-async function deleteMw(name) {
+async function deleteMw(name, configFile) {
     if (!confirm('Delete middleware "' + name + '"?')) return;
     const data = new FormData();
     data.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+    if (configFile) data.append('configFile', configFile);
     try {
         const res = await fetch('/delete-middleware/' + encodeURIComponent(name), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
         const json = await res.json();
@@ -695,7 +709,8 @@ function renderRouteGrid(apps) {
         const toggleBtn = `<button type="button" onclick="toggleRoute('${_esc(app.id)}',${enabled})" class="btn-icon" title="${toggleTitle}"><i class="ph-bold ${toggleIcon} text-sm" style="color:${toggleColor}"></i></button>`;
         const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div><div class="text-xs font-mono truncate" style="color:var(--blue)" title="${_esc(app.rule)}">${_esc(domain || app.rule)}</div></div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>${epBadges ? `<div class="flex flex-wrap gap-1">${epBadges}</div>` : ''}${mwBadges ? `<div class="flex flex-wrap gap-1">${mwBadges}</div>` : ''}`;
         const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>${epBadges ? `<div class="flex flex-wrap gap-1">${epBadges}</div>` : ''}`;
-        return `<div class="card route-card${enabled ? '' : ' opacity-50'}" data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}"><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-0.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="btn-icon" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="btn-icon" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}<button type="button" onclick="deleteRoute('${_esc(app.id)}')" class="btn-danger" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button></div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div></div></div>`;
+        const cfArg = app.configFile ? `,'${_esc(app.configFile)}'` : ',\'\'';
+        return `<div class="card route-card${enabled ? '' : ' opacity-50'}" data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}"><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${MULTI_CONFIG && app.configFile ? `<span class="badge badge-muted text-xs" style="font-size:9px">${_esc(app.configFile)}</span>` : ''}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-0.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="btn-icon" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="btn-icon" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="btn-danger" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button></div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div></div></div>`;
     }).join('');
 }
 
@@ -709,7 +724,9 @@ function renderMwGrid(middlewares) {
         const typeUpper = typeLower === 'tcp' ? 'TCP' : 'HTTP';
         const badgeClass = typeLower === 'tcp' ? 'badge-tcp' : 'badge-http';
         const mwJson = JSON.stringify(mw).replace(/'/g, '&#39;');
-        return `<div class="card p-4 mw-card" data-mwname="${_esc(mw.name.toLowerCase())}" data-mwtype="${typeLower}"><div class="flex justify-between items-start mb-3"><div><span class="badge ${badgeClass} mb-1.5 block w-fit">${typeUpper}</span><h3 class="font-bold text-sm" style="color:var(--text)">${_esc(mw.name)}</h3></div><div class="flex gap-0.5"><button type="button" data-mw='${mwJson}' onclick="handleMwEdit(this)" class="btn-icon" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button><button type="button" onclick="deleteMw('${_esc(mw.name)}')" class="btn-danger"><i class="ph-bold ph-trash text-sm"></i></button></div></div><div class="rounded-md p-3 overflow-x-auto" style="background:var(--input-bg);border:1px solid var(--border)"><pre class="text-xs font-mono leading-relaxed" style="color:var(--green)">${_esc(mw.yaml)}</pre></div></div>`;
+        const mwCfArg = mw.configFile ? `,'${_esc(mw.configFile)}'` : ',\'\'';
+        const mwCfBadge = MULTI_CONFIG && mw.configFile ? `<span class="badge badge-muted text-xs" style="font-size:9px">${_esc(mw.configFile)}</span>` : '';
+        return `<div class="card p-4 mw-card" data-mwname="${_esc(mw.name.toLowerCase())}" data-mwtype="${typeLower}"><div class="flex justify-between items-start mb-3"><div><div class="flex items-center gap-1.5 mb-1.5"><span class="badge ${badgeClass} w-fit">${typeUpper}</span>${mwCfBadge}</div><h3 class="font-bold text-sm" style="color:var(--text)">${_esc(mw.name)}</h3></div><div class="flex gap-0.5"><button type="button" data-mw='${mwJson}' onclick="handleMwEdit(this)" class="btn-icon" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button><button type="button" onclick="deleteMw('${_esc(mw.name)}'${mwCfArg})" class="btn-danger"><i class="ph-bold ph-trash text-sm"></i></button></div></div><div class="rounded-md p-3 overflow-x-auto" style="background:var(--input-bg);border:1px solid var(--border)"><pre class="text-xs font-mono leading-relaxed" style="color:var(--green)">${_esc(mw.yaml)}</pre></div></div>`;
     }).join('');
     filterMw();
 }
@@ -721,6 +738,14 @@ function renderMwGrid(middlewares) {
 });
 
 const availableDomains = {{ domains | tojson | safe }};
+const availableCertResolvers = {{ cert_resolvers | tojson | safe }};
+const MULTI_CONFIG = {{ multi_config | tojson }};
+const CONFIG_PATHS_LIST = {{ config_paths_list | tojson | safe }};
+
+function toggleTcpCertResolver(checked) {
+    const row = document.getElementById('tcpCertResolverRow');
+    if (row) row.style.display = checked ? '' : 'none';
+}
 
 function handleEdit(btn) {
     const app = JSON.parse(btn.getAttribute('data-app'));
@@ -728,6 +753,9 @@ function handleEdit(btn) {
     document.getElementById('originalId').value = app.id;
     document.getElementById('modalTitle').innerText = 'Edit ' + app.name;
     document.getElementById('serviceName').value = app.name;
+    document.getElementById('configFile').value = app.configFile || '';
+    const cfSel = document.getElementById('configFileSelect');
+    if (cfSel && app.configFile) cfSel.value = app.configFile;
 
     const proto = app.protocol || 'http';
     setProtocol(proto);
@@ -747,12 +775,17 @@ function handleEdit(btn) {
         document.getElementById('subdomain').value = subdomain;
         document.getElementById('domain').value = selectedDomain;
 
+        const targetScheme = (app.target || '').startsWith('https://') ? 'https' : 'http';
         let target = app.target.replace('http://','').replace('https://','');
         const parts = target.split(':');
         document.getElementById('targetIp').value = parts[0];
         document.getElementById('targetPort').value = parts[1] || '80';
         document.getElementById('middlewares').value = app.middlewares ? app.middlewares.join(', ') : '';
         document.getElementById('entryPoints').value = app.entryPoints ? app.entryPoints.join(', ') : 'https';
+        document.getElementById('scheme').value = targetScheme;
+        document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
+        const crHttp = document.getElementById('certResolver');
+        if (crHttp && app.certResolver) crHttp.value = app.certResolver;
 
     } else if (proto === 'tcp') {
         document.getElementById('tcpRule').value = app.rule || '';
@@ -760,6 +793,10 @@ function handleEdit(btn) {
         document.getElementById('targetIpTcp').value = target[0] || '';
         document.getElementById('targetPortTcp').value = target[1] || '';
         document.getElementById('entryPointsTcp').value = app.entryPoints ? app.entryPoints.join(', ') : '';
+        const useTlsChk = document.getElementById('useTls');
+        if (useTlsChk) { useTlsChk.checked = !!app.tls; toggleTcpCertResolver(!!app.tls); }
+        const crTcp = document.getElementById('certResolverTcp');
+        if (crTcp && app.certResolver) crTcp.value = app.certResolver;
 
     } else if (proto === 'udp') {
         const target = (app.target || '').split(':');
@@ -778,6 +815,9 @@ function handleMwEdit(btn) {
     document.getElementById('middlewareName').value = mw.name;
     document.getElementById('middlewareContent').value = mw.yaml.trim();
     document.getElementById('mwModalTitle').innerText = 'Edit ' + mw.name;
+    document.getElementById('mwConfigFile').value = mw.configFile || '';
+    const cfSel = document.getElementById('mwConfigFileSelect');
+    if (cfSel && mw.configFile) cfSel.value = mw.configFile;
     document.getElementById('mwModal').style.display = 'flex';
 }
 

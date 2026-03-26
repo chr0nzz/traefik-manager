@@ -63,14 +63,16 @@ domains:
 
 ### `cert_resolver`
 
-**Type:** string
+**Type:** string (comma-separated)
 **Default:** `"cloudflare"`
 **Env override:** `CERT_RESOLVER`
 
-The ACME cert resolver name from your `traefik.yml`. Pre-filled in the **Add Route** form as the default TLS resolver.
+One or more ACME cert resolver names from your `traefik.yml`, comma-separated. The first resolver is the default for new routes. Each route can override the resolver individually via the Add/Edit Route form.
 
 ```yaml
 cert_resolver: letsencrypt
+
+cert_resolver: letsencrypt, cloudflare
 ```
 
 ---
@@ -150,7 +152,7 @@ When `true`, the user is redirected to a forced password-change screen after log
 Whether the initial setup wizard has been completed. Set to `true` automatically at the end of the wizard. Set it manually to `true` to skip the wizard on first start.
 
 !!! tip "Bypass the setup wizard"
-    Pre-populate `manager.yml` with `setup_complete: true`, a valid `password_hash`, and your connection details before starting the container — the wizard will be skipped entirely.
+    Pre-populate `manager.yml` with `setup_complete: true`, a valid `password_hash`, and your connection details before starting the container - the wizard will be skipped entirely.
 
 ---
 
@@ -184,7 +186,7 @@ The encryption key is loaded from the `OTP_ENCRYPTION_KEY` environment variable 
 
 Stores the full configuration of routes that have been disabled via the enable/disable toggle in the Routes tab. When a route is disabled, its router and service entries are removed from `dynamic.yml` (so Traefik stops routing it) and saved here.
 
-This field is managed entirely by the UI — do not edit it by hand.
+This field is managed entirely by the UI - do not edit it by hand.
 
 ---
 
