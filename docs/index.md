@@ -223,7 +223,7 @@ Minimal additions to your `traefik.yml` to enable each provider tab.
 
 ## Mobile App
 
-A companion Android app for managing Traefik Manager on the go. Requires **v0.5.0 or higher**.
+A companion Android app for managing Traefik Manager on the go. Requires **v0.6.0 or higher**.
 
 <div class="grid cards" markdown>
 
@@ -235,7 +235,7 @@ A companion Android app for managing Traefik Manager on the go. Requires **v0.5.
 
     Authenticates via the API key from **Settings → Authentication**.
 
-    [:octicons-download-24: Download APK (v0.1.0)](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.1.0/traefik-manager-v0.1.0.apk) · [:octicons-arrow-right-24: Mobile docs](mobile.md)
+    [:octicons-download-24: Download APK (v0.2.0)](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.2.0/traefik-manager-v0.2.0.apk) · [:octicons-arrow-right-24: Mobile docs](mobile.md)
 
 </div>
 

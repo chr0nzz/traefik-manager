@@ -2,14 +2,14 @@
 
 **traefik-manager-mobile** is a React Native companion app for managing Traefik Manager from your phone.
 
-!!! warning "Requires Traefik Manager v0.5.0 or higher"
-    The mobile app authenticates via the API key feature introduced in v0.5.0. Earlier versions are not supported.
+!!! warning "Requires Traefik Manager v0.6.0 or higher"
+    The mobile app authenticates via the API key feature introduced in v0.6.0. Earlier versions are not supported.
 
 ---
 
 ## Download
 
-[:simple-android: Download APK (v0.1.0)](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.1.0/traefik-manager-v0.1.0.apk){ .md-button .md-button--primary }
+[:simple-android: Download APK (v0.2.0)](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.2.0/traefik-manager-v0.2.0.apk){ .md-button .md-button--primary }
 [:fontawesome-brands-github: Source on GitHub](https://github.com/chr0nzz/traefik-manager-mobile){ .md-button }
 
 ---
@@ -90,7 +90,7 @@ Buttons are hidden when not in edit mode to keep the list clean.
 
 | | |
 |---|---|
-| Traefik Manager (server) | **v0.5.0 or higher** |
+| Traefik Manager (server) | **v0.6.0 or higher** |
 | Android | 7.0+ (API 24+) |
 | iOS | 16+ (build from source required) |
 
