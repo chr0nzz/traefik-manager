@@ -342,7 +342,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 | | |
 |---|---|
 | Repo | [github.com/chr0nzz/traefik-manager-mobile](https://github.com/chr0nzz/traefik-manager-mobile) |
-| Download | [traefik-manager-v0.2.0.apk](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.2.0/traefik-manager-v0.2.0.apk) |
+| Download | [traefik-manager-v0.3.0.apk](https://github.com/chr0nzz/traefik-manager/releases/download/v0.7.0/traefik-manager-v0.3.0.apk) |
 | Auth | API key - generate one in **Settings → Authentication** |
 
 Features: browse routes, middlewares, and services · enable/disable routes · add and edit routes and middlewares (12 middleware templates) · backend scheme + pass host header controls · multi-config file picker · edit mode for bulk actions · system light/dark theme.
