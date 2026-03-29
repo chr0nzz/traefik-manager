@@ -9,7 +9,7 @@ from datetime import datetime, timezone, timedelta
 from functools import wraps
 import click
 from flask import (Flask, render_template, request, redirect,
-                   url_for, flash, jsonify, abort, session)
+                   url_for, flash, jsonify, abort, session, send_file)
 from ruamel.yaml import YAML
 from ruamel.yaml import YAML as SafeYAML
 from io import StringIO
@@ -99,12 +99,18 @@ safe_yaml = SafeYAML(typ='safe')
 
 
 BACKUP_DIR    = os.environ.get('BACKUP_DIR',    '/app/backups')
-SETTINGS_PATH = os.environ.get('SETTINGS_PATH', '/app/config/manager.yml')
+SETTINGS_PATH      = os.environ.get('SETTINGS_PATH', '/app/config/manager.yml')
+_CONFIG_DIR        = os.path.dirname(os.path.abspath(SETTINGS_PATH))
+GROUPS_CACHE_DIR   = os.path.join(_CONFIG_DIR, 'cache')
+GROUPS_CONFIG_FILE = os.path.join(_CONFIG_DIR, 'dashboard.yml')
+os.makedirs(GROUPS_CACHE_DIR, exist_ok=True)
 
 _config_dir = os.environ.get('CONFIG_DIR', '').strip()
 if _config_dir:
     import glob as _glob
-    CONFIG_PATHS = sorted(_glob.glob(os.path.join(_config_dir, '*.yml'))) or [os.path.join(_config_dir, 'dynamic.yml')]
+    _ymls  = _glob.glob(os.path.join(_config_dir, '**', '*.yml'),  recursive=True)
+    _yamls = _glob.glob(os.path.join(_config_dir, '**', '*.yaml'), recursive=True)
+    CONFIG_PATHS = sorted(_ymls + _yamls) or [os.path.join(_config_dir, 'dynamic.yml')]
 else:
     _raw_paths = os.environ.get('CONFIG_PATHS', '').strip()
     if _raw_paths:
@@ -155,7 +161,7 @@ ACME_JSON_PATH     = '/app/acme.json'
 STATIC_CONFIG_PATH = '/app/traefik.yml'
 
 
-OPTIONAL_TABS = ['docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs']
+OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs']
 
 def load_settings() -> dict:
     defaults = {
@@ -223,6 +229,7 @@ def save_settings(domains, cert_resolver, traefik_api_url,
                   must_change_password=None, setup_complete=None,
                   otp_secret=None, otp_enabled=None,
                   api_key_hash=None, api_key_enabled=None,
+                  api_key_preview=None,
                   disabled_routes=None):
     if visible_tabs is None:
         visible_tabs = {t: False for t in OPTIONAL_TABS}
@@ -239,6 +246,8 @@ def save_settings(domains, cert_resolver, traefik_api_url,
         api_key_hash = _cur.get('api_key_hash', '')
     if api_key_enabled is None:
         api_key_enabled = _cur.get('api_key_enabled', False)
+    if api_key_preview is None:
+        api_key_preview = _cur.get('api_key_preview', '')
     if disabled_routes is None:
         disabled_routes = _cur.get('disabled_routes', {})
     otp_secret = _encrypt_otp_secret(otp_secret)
@@ -259,6 +268,7 @@ def save_settings(domains, cert_resolver, traefik_api_url,
             'disabled_routes':      disabled_routes,
             'api_key_hash':         api_key_hash,
             'api_key_enabled':      api_key_enabled,
+            'api_key_preview':      api_key_preview,
         }, f)
     os.replace(tmp, SETTINGS_PATH)
     logger.info("Manager settings saved")
@@ -286,7 +296,7 @@ def _ensure_password():
         return
     password = secrets.token_urlsafe(16)
     logger.warning("=" * 60)
-    logger.warning("  TRAEFIK MANAGER — AUTO-GENERATED PASSWORD")
+    logger.warning("  TRAEFIK MANAGER - AUTO-GENERATED PASSWORD")
     logger.warning(f"  Password: {password}")
     logger.warning("  Log in with this password, complete setup, then")
     logger.warning("  you will be prompted to set a permanent password.")
@@ -641,7 +651,7 @@ def reset_password_cli(disable_otp):
         otp_enabled=False if disable_otp else None,
     )
     print("=" * 60)
-    print("TRAEFIK MANAGER — PASSWORD RESET")
+    print("TRAEFIK MANAGER - PASSWORD RESET")
     print(f"New temporary password: {password}")
     if disable_otp:
         print("Two-factor authentication has been DISABLED.")
@@ -771,7 +781,7 @@ def api_otp_enable():
     code   = (request.get_json() or {}).get('code', '').strip()
     secret = session.pop('otp_pending_secret', '')
     if not secret or not pyotp.TOTP(secret).verify(code, valid_window=1):
-        return jsonify({'error': 'Invalid code — please try again.'}), 400
+        return jsonify({'error': 'Invalid code - please try again.'}), 400
     settings = load_settings()
     save_settings(
         domains=settings['domains'],
@@ -819,6 +829,7 @@ def api_otp_status():
 @login_required
 def api_apikey_generate():
     key = secrets.token_urlsafe(32)
+    preview = key[:8] + '...' + key[-4:]
     settings = load_settings()
     save_settings(
         domains=settings['domains'],
@@ -831,6 +842,7 @@ def api_apikey_generate():
         otp_enabled=settings['otp_enabled'],
         api_key_hash=_hash_password(key),
         api_key_enabled=True,
+        api_key_preview=preview,
     )
     logger.info(f"API key generated by {request.remote_addr}")
     return jsonify({'ok': True, 'key': key})
@@ -852,6 +864,7 @@ def api_apikey_revoke():
         otp_enabled=settings['otp_enabled'],
         api_key_hash='',
         api_key_enabled=False,
+        api_key_preview='',
     )
     logger.info(f"API key revoked by {request.remote_addr}")
     return jsonify({'ok': True})
@@ -864,6 +877,7 @@ def api_apikey_status():
     return jsonify({
         'enabled': bool(settings.get('api_key_enabled', False)),
         'has_key': bool(settings.get('api_key_hash', '')),
+        'key_preview': settings.get('api_key_preview', '') or None,
     })
 
 
@@ -1197,7 +1211,7 @@ def api_save_settings():
         cert_resolver   = str(data.get('cert_resolver', 'cloudflare')).strip()
         traefik_api_url = _safe_api_url(str(data.get('traefik_api_url', 'http://traefik:8080')))
         if not traefik_api_url:
-            return jsonify({'error': 'Invalid traefik_api_url — must start with http:// or https://'}), 400
+            return jsonify({'error': 'Invalid traefik_api_url - must start with http:// or https://'}), 400
         existing = load_settings()
         save_settings(domains, cert_resolver, traefik_api_url,
                       auth_enabled=existing['auth_enabled'],
@@ -1284,7 +1298,7 @@ def _build_apps(config, config_file=''):
                      'tls': bool(tls_http), 'enabled': True,
                      'passHostHeader': lb.get('passHostHeader', True),
                      'certResolver': tls_http.get('certResolver', '') if isinstance(tls_http, dict) else '',
-                     'configFile': config_file})
+                     'configFile': config_file, 'provider': 'file'})
     for rname, rdata in config.get('tcp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
         target = 'N/A'
@@ -1300,7 +1314,7 @@ def _build_apps(config, config_file=''):
                      'middlewares': [], 'entryPoints': rdata.get('entryPoints', []),
                      'protocol': 'tcp', 'tls': bool(tls_tcp), 'enabled': True,
                      'certResolver': tls_tcp.get('certResolver', '') if isinstance(tls_tcp, dict) else '',
-                     'configFile': config_file})
+                     'configFile': config_file, 'provider': 'file'})
     for rname, rdata in config.get('udp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
         target = 'N/A'
@@ -1314,7 +1328,7 @@ def _build_apps(config, config_file=''):
                      'service_name': svc_name, 'target': target,
                      'middlewares': [], 'entryPoints': rdata.get('entryPoints', []),
                      'protocol': 'udp', 'tls': False, 'enabled': True,
-                     'configFile': config_file})
+                     'configFile': config_file, 'provider': 'file'})
     return apps
 
 
@@ -1327,7 +1341,37 @@ def _build_middlewares(config, config_file=''):
     return middlewares
 
 
-def _build_all_apps():
+def _build_external_routes(include_internal=False):
+    routes = []
+    for proto in ('http', 'tcp', 'udp'):
+        data = traefik_api_get(f'/api/{proto}/routers') or []
+        for r in data:
+            provider = r.get('provider', '')
+            if not provider or provider == 'file':
+                continue
+            if not include_internal and provider == 'internal':
+                continue
+            name = r.get('name', '')
+            display_name = name.split('@')[0] if '@' in name else name
+            tls = r.get('tls', {})
+            routes.append({
+                'id':           name,
+                'name':         display_name,
+                'rule':         r.get('rule', ''),
+                'service_name': r.get('service', ''),
+                'target':       r.get('service', 'N/A'),
+                'middlewares':  r.get('middlewares') or [],
+                'entryPoints':  r.get('entryPoints') or [],
+                'protocol':     proto,
+                'tls':          bool(tls),
+                'enabled':      r.get('status', 'enabled') == 'enabled',
+                'provider':     provider,
+                'configFile':   '',
+            })
+    return routes
+
+
+def _build_all_apps(include_external=True, include_internal=False):
     """Build combined apps and middlewares from all config files, plus disabled routes."""
     all_apps = []
     all_middlewares = []
@@ -1336,6 +1380,8 @@ def _build_all_apps():
         config = load_config(p)
         all_apps.extend(_build_apps(config, cf))
         all_middlewares.extend(_build_middlewares(config, cf))
+    if include_external:
+        all_apps.extend(_build_external_routes(include_internal=include_internal))
     settings = load_settings()
     for rname, rdata in settings.get('disabled_routes', {}).items():
         proto    = rdata.get('protocol', 'http')
@@ -1352,7 +1398,7 @@ def _build_all_apps():
                              'entryPoints': router.get('entryPoints', []),
                              'protocol': 'http', 'tls': bool(router.get('tls')), 'enabled': False,
                              'passHostHeader': svc.get('loadBalancer', {}).get('passHostHeader', True),
-                             'configFile': cf})
+                             'configFile': cf, 'provider': 'file'})
         elif proto == 'tcp':
             servers = svc.get('loadBalancer', {}).get('servers', [])
             target  = servers[0].get('address', 'N/A') if servers else 'N/A'
@@ -1360,7 +1406,7 @@ def _build_all_apps():
                              'service_name': svc_name, 'target': target,
                              'middlewares': [], 'entryPoints': router.get('entryPoints', []),
                              'protocol': 'tcp', 'tls': bool(router.get('tls')), 'enabled': False,
-                             'configFile': cf})
+                             'configFile': cf, 'provider': 'file'})
         else:
             servers = svc.get('loadBalancer', {}).get('servers', [])
             target  = servers[0].get('address', 'N/A') if servers else 'N/A'
@@ -1368,7 +1414,7 @@ def _build_all_apps():
                              'service_name': svc_name, 'target': target,
                              'middlewares': [], 'entryPoints': router.get('entryPoints', []),
                              'protocol': 'udp', 'tls': False, 'enabled': False,
-                             'configFile': cf})
+                             'configFile': cf, 'provider': 'file'})
     return all_apps, all_middlewares
 
 
@@ -1432,7 +1478,15 @@ def _toggle_route(route_id: str, enable: bool):
 @app.route('/api/routes')
 @login_required
 def api_routes():
-    apps, middlewares = _build_all_apps()
+    apps, middlewares = _build_all_apps(include_external=False)
+    apps = [a for a in apps if not (a.get('service_name') or '').endswith('@internal')]
+    return jsonify({'apps': apps, 'middlewares': middlewares})
+
+
+@app.route('/api/routes/all')
+@login_required
+def api_routes_all():
+    apps, middlewares = _build_all_apps(include_external=True, include_internal=True)
     return jsonify({'apps': apps, 'middlewares': middlewares})
 
 
@@ -1440,6 +1494,62 @@ def api_routes():
 @login_required
 def api_configs():
     return jsonify([{'label': os.path.basename(p), 'path': p} for p in CONFIG_PATHS])
+
+
+def _read_groups_config():
+    if not os.path.exists(GROUPS_CONFIG_FILE):
+        return {'custom_groups': [], 'route_overrides': {}}
+    with open(GROUPS_CONFIG_FILE, 'r') as f:
+        data = safe_yaml.load(f)
+    if not data:
+        return {'custom_groups': [], 'route_overrides': {}}
+    return {
+        'custom_groups':   list(data.get('custom_groups', []) or []),
+        'route_overrides': dict(data.get('route_overrides', {}) or {}),
+    }
+
+def _write_groups_config(data):
+    with open(GROUPS_CONFIG_FILE, 'w') as f:
+        safe_yaml.dump({
+            'custom_groups':   list(data.get('custom_groups', []) or []),
+            'route_overrides': dict(data.get('route_overrides', {}) or {}),
+        }, f)
+
+@app.route('/api/dashboard/config', methods=['GET'])
+@login_required
+def dashboard_config_get():
+    return jsonify(_read_groups_config())
+
+@app.route('/api/dashboard/config', methods=['POST'])
+@login_required
+@csrf_protect
+def dashboard_config_post():
+    data = request.get_json() or {}
+    _write_groups_config(data)
+    return jsonify({'ok': True})
+
+@app.route('/api/dashboard/icon/<slug>')
+@login_required
+def dashboard_icon(slug):
+    slug = re.sub(r'[^a-z0-9-]', '', slug.lower())
+    if not slug:
+        return ('', 404)
+    cache_path = os.path.join(GROUPS_CACHE_DIR, slug + '.png')
+    miss_path  = os.path.join(GROUPS_CACHE_DIR, slug + '.404')
+    if os.path.exists(cache_path):
+        return send_file(cache_path, mimetype='image/png', max_age=86400, conditional=True)
+    if os.path.exists(miss_path):
+        return ('', 404)
+    try:
+        r = requests.get(f'https://cdn.jsdelivr.net/gh/selfhst/icons/png/{slug}.png', timeout=2)
+        if r.status_code == 200 and 'image' in r.headers.get('content-type', ''):
+            with open(cache_path, 'wb') as wf:
+                wf.write(r.content)
+            return send_file(cache_path, mimetype='image/png', max_age=86400, conditional=True)
+        open(miss_path, 'w').close()
+    except Exception:
+        pass
+    return ('', 404)
 
 
 @app.route('/api/routes/<path:route_id>/toggle', methods=['POST'])
@@ -1459,7 +1569,8 @@ def api_toggle_route(route_id):
 @login_required
 def index():
     settings    = load_settings()
-    apps, middlewares = _build_all_apps()
+    apps, middlewares = _build_all_apps(include_external=False)
+    apps = [a for a in apps if not (a.get('service_name') or '').endswith('@internal')]
     auth_on    = _auth_enabled()
     login_time = session.get('login_time', '')
     config_paths_list = [{'label': os.path.basename(p), 'path': p} for p in CONFIG_PATHS]
@@ -1496,6 +1607,9 @@ def save_entry():
         tcp_rule       = request.form.get('tcpRule', '').strip()
         scheme         = request.form.get('scheme', 'http').strip().lower()
         pass_host      = request.form.get('passHostHeader') == 'true'
+        _all_eps       = request.form.getlist('entryPoints')
+        http_eps       = [ep.strip() for ep in (_all_eps[0] if _all_eps else 'https').split(',') if ep.strip()] or ['https']
+        tcp_eps        = [ep.strip() for ep in (_all_eps[1] if len(_all_eps) > 1 else '').split(',') if ep.strip()] or ['https']
         resolvers      = [r.strip() for r in settings['cert_resolver'].split(',') if r.strip()]
         cert_resolver  = request.form.get('certResolver', '').strip() or (resolvers[0] if resolvers else 'cloudflare')
         config_file_raw = request.form.get('configFile', '').strip()
@@ -1533,7 +1647,7 @@ def save_entry():
             mws        = [m.strip() for m in middlewares_in.split(',')] if middlewares_in else []
             config.setdefault('http', {}).setdefault('routers', {})
             config['http'].setdefault('services', {})
-            r = {'rule': rule, 'entryPoints': ['https'], 'tls': {'certResolver': cert_resolver}, 'service': service_name}
+            r = {'rule': rule, 'entryPoints': http_eps, 'tls': {'certResolver': cert_resolver}, 'service': service_name}
             if mws:
                 r['middlewares'] = mws
             lb = {'servers': [{'url': target_url}]}
@@ -1546,7 +1660,7 @@ def save_entry():
             rule = tcp_rule or (f"HostSNI(`{subdomain}.{domain}`)" if subdomain else "HostSNI(`*`)")
             config.setdefault('tcp', {}).setdefault('routers', {})
             config['tcp'].setdefault('services', {})
-            config['tcp']['routers'][router_name]   = {'rule': rule, 'entryPoints': ['https'], 'tls': {'certResolver': cert_resolver}, 'service': service_name}
+            config['tcp']['routers'][router_name]   = {'rule': rule, 'entryPoints': tcp_eps, 'tls': {'certResolver': cert_resolver}, 'service': service_name}
             config['tcp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
 
         elif protocol == 'udp':

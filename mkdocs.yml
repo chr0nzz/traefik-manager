@@ -71,6 +71,9 @@ nav:
     - Routes: tab-routes.md
     - Middlewares: tab-middlewares.md
     - Services: tab-services.md
+  - Visualizations:
+    - Dashboard: tab-dashboard.md
+    - Route Map: tab-routemap.md
   - Monitoring:
     - Certificates: tab-certs.md
     - Plugins: tab-plugins.md

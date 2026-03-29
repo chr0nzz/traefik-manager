@@ -20,11 +20,11 @@
                     <span class="badge {% if mw.type == 'tcp' %}badge-tcp{% else %}badge-http{% endif %} mb-1.5 block w-fit">{{ mw.type | default('HTTP') | upper }}</span>
                     <h3 class="font-bold text-sm" style="color:var(--text)">{{ mw.name }}</h3>
                 </div>
-                <div class="flex gap-0.5">
-                    <button type="button" data-mw='{{ mw|tojson|safe }}' onclick="handleMwEdit(this)" class="btn-icon" title="Edit">
+                <div class="flex gap-1.5">
+                    <button type="button" onclick="deleteMw('{{ mw.name }}')" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button>
+                    <button type="button" data-mw='{{ mw|tojson|safe }}' onclick="handleMwEdit(this)" class="pill-btn pill-btn-blue" title="Edit">
                         <i class="ph-bold ph-pencil-simple text-sm"></i>
                     </button>
-                    <button type="button" onclick="deleteMw('{{ mw.name }}')" class="btn-danger"><i class="ph-bold ph-trash text-sm"></i></button>
                 </div>
             </div>
             <div class="rounded-md p-3 overflow-x-auto" style="background:var(--input-bg); border:1px solid var(--border)">

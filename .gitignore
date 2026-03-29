@@ -13,6 +13,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+build.sh
 
 # Logs and databases
 *.log

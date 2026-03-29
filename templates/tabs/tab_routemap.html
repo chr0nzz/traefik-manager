@@ -1,0 +1,647 @@
+<div id="tab-routemap" class="tab-content">
+
+    <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
+        <div class="relative flex-1 min-w-48">
+            <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
+            <input type="text" id="rmSearch" oninput="rmApplyFilter()" placeholder="Search routes..." class="input-field pl-9">
+        </div>
+        <div class="relative" id="rmFilterWrap">
+            <button id="rmFilterBtn" onclick="rmToggleFilterPanel()" class="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);color:var(--text)">
+                <i class="ph-bold ph-funnel-simple"></i>
+                <span>Filters</span>
+                <span id="rmFilterBadge" class="hidden text-xs font-bold px-1.5 rounded-full" style="background:var(--blue);color:#fff;min-width:18px;text-align:center;line-height:1.6"></span>
+            </button>
+            <div id="rmFilterPanel" class="hidden absolute top-full right-0 mt-1 z-50 rounded-xl p-3" style="min-width:240px;background:var(--card);border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,0.3)">
+                <div class="rm-fp-section">
+                    <div class="rm-fp-label">PROTOCOL</div>
+                    <div class="flex flex-wrap gap-1">
+                        <button class="proto-btn text-xs px-2.5 py-1 active-http" id="rmf-all"  onclick="rmFilterProto('all')">All</button>
+                        <button class="proto-btn text-xs px-2.5 py-1" id="rmf-http" onclick="rmFilterProto('http')">HTTP</button>
+                        <button class="proto-btn text-xs px-2.5 py-1" id="rmf-tcp"  onclick="rmFilterProto('tcp')">TCP</button>
+                        <button class="proto-btn text-xs px-2.5 py-1" id="rmf-udp"  onclick="rmFilterProto('udp')">UDP</button>
+                    </div>
+                </div>
+                <div id="rmFpProviders" class="rm-fp-section hidden">
+                    <div class="rm-fp-label">PROVIDER</div>
+                    <div id="rmFpProviderBtns" class="flex flex-wrap gap-1"></div>
+                </div>
+                <div id="rmFpEps" class="rm-fp-section hidden">
+                    <div class="rm-fp-label">ENTRY POINT</div>
+                    <div id="rmFpEpBtns" class="flex flex-wrap gap-1"></div>
+                </div>
+                <div class="rm-fp-section">
+                    <div class="rm-fp-label">GROUP BY</div>
+                    <div class="flex flex-wrap gap-1">
+                        <button class="proto-btn text-xs px-2.5 py-1 active-http" id="rmfg-name"       onclick="rmSetGroupBy('name')">Name</button>
+                        <button class="proto-btn text-xs px-2.5 py-1"             id="rmfg-domain"     onclick="rmSetGroupBy('domain')">Domain</button>
+                        <button class="proto-btn text-xs px-2.5 py-1"             id="rmfg-middleware" onclick="rmSetGroupBy('middleware')">Middleware</button>
+                        <button class="proto-btn text-xs px-2.5 py-1"             id="rmfg-none"       onclick="rmSetGroupBy('none')">None</button>
+                    </div>
+                </div>
+                <button onclick="rmClearFilters()" class="w-full mt-2 text-xs py-1.5 rounded-lg font-medium" style="background:var(--input-bg);border:1px solid var(--border);color:var(--muted)">Clear filters</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rmLoading" class="text-center py-20 hidden" style="color:var(--muted)">
+        <i class="ph-light ph-graph text-6xl block mb-4 opacity-30" style="animation:pulse 1.5s ease-in-out infinite"></i>
+        <p class="text-sm">Loading topology...</p>
+    </div>
+    <div id="rmEmpty" class="text-center py-20 hidden" style="color:var(--muted)">
+        <i class="ph-light ph-graph text-6xl block mb-4 opacity-30"></i>
+        <p class="text-base font-medium">No routes to map</p>
+    </div>
+
+    <div id="rmTopoContainer" class="routemap-container hidden">
+        <svg id="rmSvg" class="routemap-svg"></svg>
+        <div id="rmCols" class="routemap-cols"></div>
+    </div>
+
+</div>
+
+<script>
+const RM_GROUP_COLORS = ['#f0883e','#a371f7','#24a1de','#3fb950','#e2c041','#58a6ff','#ff7b72'];
+const RM_ICON_CDN = 'https://cdn.jsdelivr.net/gh/selfhst/icons/png';
+
+let _rmConfig    = { custom_groups: [], route_overrides: {} };
+let _rmAllRoutes = [];
+let _rmAllEps    = {};
+let _rmDataLoaded = false;
+
+window.rmGetCustomGroups = function() { return _rmConfig.custom_groups || []; };
+
+window.rmIconFallback = function(img) {
+    const slug = img.dataset.slug;
+    if (!slug) { img.style.display = 'none'; return; }
+    const shorter = slug.split('-')[0];
+    if (shorter !== slug) {
+        img.dataset.slug = shorter;
+        img.src = `${RM_ICON_CDN}/${shorter}.png`;
+    } else {
+        img.style.display = 'none';
+    }
+};
+
+async function rmSaveConfig() {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    await fetch('/api/dashboard/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+        body: JSON.stringify(_rmConfig)
+    });
+}
+
+window.rmEnsureData = async function() {
+    if (_rmDataLoaded) return;
+    try {
+        const [routeRes, epRes, cfgRes] = await Promise.all([
+            fetch('/api/routes/all'),
+            fetch('/api/traefik/entrypoints'),
+            fetch('/api/dashboard/config')
+        ]);
+        const routeData = await routeRes.json();
+        _rmAllRoutes = routeData.apps || [];
+        try {
+            const epData = await epRes.json();
+            _rmAllEps = Array.isArray(epData)
+                ? Object.fromEntries(epData.map(ep => [ep.name, ep]))
+                : (epData || {});
+        } catch(_) { _rmAllEps = {}; }
+        try { _rmConfig = await cfgRes.json() || { custom_groups: [], route_overrides: {} }; } catch(_) {}
+    } catch(e) {
+        _rmAllRoutes = [];
+        _rmAllEps    = {};
+    }
+    _rmDataLoaded = true;
+};
+
+window.rmInvalidateData = function() {
+    _rmDataLoaded = false;
+    if (typeof window.rmInvalidateDashboard === 'function') window.rmInvalidateDashboard();
+};
+
+(function() {
+
+let _rmProto          = 'all';
+let _rmProvider       = 'all';
+let _rmEpFilter       = 'all';
+let _rmGroupBy        = 'name';
+let _rmSearch         = '';
+let _rmDrawn          = false;
+let _rmTopoSelected   = null;
+const _rmExpandedGroups = new Set();
+let _rmRouteGroupKey  = new Map();
+
+function _esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+const _rmPfx = name => name.split(/[-_\s]/)[0].replace(/\d+$/, '');
+
+const _rmDomain = r => {
+    if (!r.rule) return '';
+    const m = r.rule.match(/Host\(`([^`]+)`\)/i);
+    return m ? m[1] : '';
+};
+
+function _rmMakeGroupResult(byKey) {
+    const groups = Object.fromEntries(Object.entries(byKey).filter(([,v]) => v.length >= 2));
+    const grouped = new Set(Object.values(groups).flat().map(r => r.id));
+    const routeGroupKey = new Map();
+    Object.entries(groups).forEach(([k, members]) => members.forEach(r => routeGroupKey.set(r.id, k)));
+    return { groups, grouped, routeGroupKey };
+}
+
+function rmGroupRoutes(routes) {
+    const byPfx = {};
+    routes.forEach(r => {
+        const p = _rmPfx(r.name);
+        if (p.length >= 2) (byPfx[p] = byPfx[p] || []).push(r);
+    });
+    return _rmMakeGroupResult(byPfx);
+}
+
+function rmGroupByDomain(routes) {
+    const by = {};
+    routes.forEach(r => {
+        const d = _rmDomain(r);
+        if (d) (by[d] = by[d] || []).push(r);
+    });
+    return _rmMakeGroupResult(by);
+}
+
+function rmGroupByMw(routes) {
+    const by = {};
+    routes.forEach(r => {
+        const mws = (r.middlewares||[]).slice().sort();
+        if (!mws.length) return;
+        const k = mws[0].split('@')[0];
+        (by[k] = by[k] || []).push(r);
+    });
+    return _rmMakeGroupResult(by);
+}
+
+function rmGetGroups(routes, mode) {
+    if (mode === 'domain')     return rmGroupByDomain(routes);
+    if (mode === 'middleware') return rmGroupByMw(routes);
+    if (mode === 'none')       return { groups: {}, grouped: new Set(), routeGroupKey: new Map() };
+    return rmGroupRoutes(routes);
+}
+
+function _rmFilteredRoutes() {
+    return _rmAllRoutes.filter(r => {
+        if (r.enabled === false) return false;
+        if (_rmProto !== 'all' && r.protocol !== _rmProto) return false;
+        if (_rmProvider !== 'all' && (r.provider || 'file') !== _rmProvider) return false;
+        if (_rmEpFilter !== 'all' && !(r.entryPoints||[]).includes(_rmEpFilter)) return false;
+        if (_rmSearch && !(r.name||'').toLowerCase().includes(_rmSearch)) return false;
+        return true;
+    });
+}
+
+window.rmFilterProvider = function(p) {
+    _rmProvider = p;
+    document.querySelectorAll('#rmFpProviderBtns .proto-btn').forEach(b => b.classList.remove('active-http'));
+    document.getElementById('rmpf-' + p)?.classList.add('active-http');
+    rmUpdateFilterBtn();
+    rmRender();
+};
+
+window.rmFilterEp = function(ep) {
+    _rmEpFilter = ep;
+    document.querySelectorAll('#rmFpEpBtns .proto-btn').forEach(b => b.classList.remove('active-http'));
+    document.getElementById('rmepf-' + ep)?.classList.add('active-http');
+    rmUpdateFilterBtn();
+    rmRender();
+};
+
+function rmRenderEpFilters() {
+    const epNames   = Object.keys(_rmAllEps).sort();
+    const section   = document.getElementById('rmFpEps');
+    const container = document.getElementById('rmFpEpBtns');
+    if (!section || !container) return;
+    if (epNames.length <= 1) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    container.innerHTML = '';
+    ['all', ...epNames].forEach(ep => {
+        const btn = document.createElement('button');
+        btn.id = 'rmepf-' + ep;
+        btn.className = 'proto-btn text-xs px-2.5 py-1' + (ep === _rmEpFilter ? ' active-http' : '');
+        btn.textContent = ep === 'all' ? 'All' : ep;
+        btn.onclick = () => window.rmFilterEp(ep);
+        container.appendChild(btn);
+    });
+}
+
+function rmRenderProviderFilters() {
+    const providers = [...new Set(_rmAllRoutes.map(r => r.provider || 'file'))].sort();
+    const section   = document.getElementById('rmFpProviders');
+    const container = document.getElementById('rmFpProviderBtns');
+    if (!section || !container) return;
+    if (providers.length <= 1) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    container.innerHTML = '';
+    ['all', ...providers].forEach(p => {
+        const btn = document.createElement('button');
+        btn.id = 'rmpf-' + p;
+        btn.className = 'proto-btn text-xs px-2.5 py-1' + (p === _rmProvider ? ' active-http' : '');
+        btn.textContent = p === 'all' ? 'All' : p;
+        btn.onclick = () => window.rmFilterProvider(p);
+        container.appendChild(btn);
+    });
+}
+
+function rmUpdateFilterBtn() {
+    let count = 0;
+    if (_rmProto !== 'all') count++;
+    if (_rmProvider !== 'all') count++;
+    if (_rmEpFilter !== 'all') count++;
+    if (_rmGroupBy !== 'name') count++;
+    const badge = document.getElementById('rmFilterBadge');
+    if (badge) { badge.textContent = count; badge.classList.toggle('hidden', count === 0); }
+}
+
+window.rmToggleFilterPanel = function() {
+    document.getElementById('rmFilterPanel')?.classList.toggle('hidden');
+};
+
+window.rmSetGroupBy = function(mode) {
+    _rmGroupBy = mode;
+    ['name','domain','middleware','none'].forEach(m => {
+        document.getElementById('rmfg-' + m)?.classList.toggle('active-http', m === mode);
+    });
+    rmUpdateFilterBtn();
+    rmRender();
+};
+
+window.rmClearFilters = function() {
+    _rmProto = 'all'; _rmProvider = 'all'; _rmEpFilter = 'all'; _rmGroupBy = 'name'; _rmSearch = '';
+    const s = document.getElementById('rmSearch'); if (s) s.value = '';
+    ['all','http','tcp','udp'].forEach(p => document.getElementById('rmf-'+p)?.classList.toggle('active-http', p==='all'));
+    document.querySelectorAll('#rmFpProviderBtns .proto-btn').forEach(b => b.classList.remove('active-http'));
+    document.getElementById('rmpf-all')?.classList.add('active-http');
+    document.querySelectorAll('#rmFpEpBtns .proto-btn').forEach(b => b.classList.remove('active-http'));
+    document.getElementById('rmepf-all')?.classList.add('active-http');
+    ['name','domain','middleware','none'].forEach(m => document.getElementById('rmfg-'+m)?.classList.toggle('active-http', m==='name'));
+    rmUpdateFilterBtn();
+    rmRender();
+};
+
+window.refreshRoutemapTab = async function() {
+    if (_rmDrawn) { rmRender(); return; }
+    document.getElementById('rmLoading').classList.remove('hidden');
+    document.getElementById('rmTopoContainer').classList.add('hidden');
+    document.getElementById('rmEmpty').classList.add('hidden');
+
+    await window.rmEnsureData();
+
+    document.getElementById('rmLoading').classList.add('hidden');
+    _rmDrawn = true;
+    rmRenderProviderFilters();
+    rmRenderEpFilters();
+    rmUpdateFilterBtn();
+    rmRender();
+};
+
+window.rmFilterProto = function(proto) {
+    _rmProto = proto;
+    ['all','http','tcp','udp'].forEach(p => document.getElementById('rmf-'+p)?.classList.toggle('active-http', p===proto));
+    rmUpdateFilterBtn();
+    rmRender();
+};
+
+window.rmApplyFilter = function() {
+    _rmSearch = document.getElementById('rmSearch').value.toLowerCase();
+    rmRender();
+};
+
+function rmRender() {
+    const routes = _rmFilteredRoutes();
+    const topo   = document.getElementById('rmTopoContainer');
+    const empty  = document.getElementById('rmEmpty');
+
+    if (!routes.length) {
+        topo.classList.add('hidden');
+        empty.classList.remove('hidden');
+        return;
+    }
+    empty.classList.add('hidden');
+    topo.classList.remove('hidden');
+    rmRenderTopology(routes);
+}
+
+window.rmResetHighlight = function() {
+    _rmTopoSelected = null;
+    document.querySelectorAll('#rmCols .rm-node-mw, #rmCols .rm-node-ep, #rmCols .rm-node-svc').forEach(n => { n.style.transform = ''; });
+    document.querySelectorAll('#rmCols .rm-node').forEach(n => n.classList.remove('rm-node-dim','rm-node-active'));
+    rmDrawCurves(_rmFilteredRoutes());
+};
+
+function rmRenderTopology(routes) {
+    _rmExpandedGroups.clear();
+
+    const allEpNames   = Object.keys(_rmAllEps);
+    const routeEpNames = [...new Set(routes.flatMap(r => r.entryPoints || []))];
+    const epNames      = routeEpNames.length ? routeEpNames : allEpNames;
+
+    const hasMws = routes.some(r => (r.middlewares||[]).length > 0);
+
+    const svcMap = new Map();
+    routes.forEach(r => { if (r.service_name) svcMap.set(r.service_name, r.target || r.service_name); });
+
+    const mwUsage = {};
+    routes.forEach(r => (r.middlewares||[]).forEach(mw => { mwUsage[mw] = (mwUsage[mw]||0)+1; }));
+
+    const colsEl = document.getElementById('rmCols');
+    colsEl.innerHTML = '';
+
+    if (epNames.length) {
+        colsEl.appendChild(rmBuildCol('ENTRY POINTS', 'ep', epNames,
+            name => rmNode('ep', name, `<i class="ph-bold ph-arrows-in" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(name)}</span>`)
+        ));
+    }
+
+    colsEl.appendChild(rmBuildRouteCol(routes));
+
+    if (hasMws) {
+        const mwCol = document.createElement('div');
+        mwCol.className = 'routemap-col';
+        mwCol.dataset.coltype = 'mw';
+        mwCol.id = 'rmMwCol';
+        mwCol.innerHTML = `<div class="routemap-col-header"><i class="ph-bold ph-funnel" style="font-size:13px"></i>MIDDLEWARES</div>`;
+        colsEl.appendChild(mwCol);
+    }
+
+    colsEl.appendChild(rmBuildCol('SERVICES', 'svc', [...svcMap.entries()],
+        ([svcName, target]) => rmNode('svc', svcName,
+            `<i class="ph-bold ph-cube" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(svcName.split('@')[0])}</span>`,
+            null, target
+        )
+    ));
+
+    requestAnimationFrame(() => {
+        const colsEl2 = document.getElementById('rmCols');
+        const cont    = document.getElementById('rmTopoContainer');
+
+        if (hasMws) {
+            const mwCol = document.getElementById('rmMwCol');
+            const mwOrder = new Map();
+            routes.forEach(r => {
+                const rEl = colsEl2.querySelector(`[data-rmid="route:${CSS.escape(r.id)}"]`);
+                const top = rEl ? rEl.offsetTop : 0;
+                (r.middlewares || []).forEach(mw => {
+                    if (!mwOrder.has(mw) || top < mwOrder.get(mw)) mwOrder.set(mw, top);
+                });
+            });
+
+            const sortedMws = [...mwOrder.entries()].sort((a, b) => a[1] - b[1]).map(e => e[0]);
+
+            sortedMws.forEach(name => {
+                const count = mwUsage[name] || 0;
+                const badge = count > 1 ? `<span class="rm-mw-count">${count}×</span>` : '';
+                mwCol.insertAdjacentHTML('beforeend',
+                    rmNode('mw', name, `<i class="ph-bold ph-shield-check" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(name.split('@')[0])}</span>${badge}`)
+                );
+            });
+        }
+
+        cont.style.height = colsEl2.offsetHeight + 'px';
+
+        colsEl2.querySelectorAll('[data-routeid]').forEach(el => {
+            el.addEventListener('mouseenter', function() {
+                _rmTopoSelected = this.dataset.routeid;
+                rmHighlightRoute(_rmTopoSelected, routes);
+                rmShowTooltip(this, _rmTopoSelected, routes);
+            });
+            el.addEventListener('mouseleave', function() {
+                _rmTopoSelected = null;
+                window.rmResetHighlight();
+                rmHideTooltip();
+            });
+        });
+
+        colsEl2.querySelectorAll('.rm-group[data-groupid]').forEach(el => {
+            el.addEventListener('mouseenter', function() {
+                _rmExpandedGroups.add(this.dataset.groupid);
+                this.classList.add('rm-group-expanded');
+                rmDrawCurves(_rmFilteredRoutes());
+            });
+            el.addEventListener('mouseleave', function() {
+                _rmExpandedGroups.delete(this.dataset.groupid);
+                this.classList.remove('rm-group-expanded');
+                rmDrawCurves(_rmFilteredRoutes());
+            });
+        });
+
+        requestAnimationFrame(() => rmDrawCurves(routes));
+    });
+}
+
+const _rmColIcons = { ep: 'ph-arrows-in', route: 'ph-git-branch', mw: 'ph-funnel', svc: 'ph-cube' };
+
+function rmBuildCol(header, type, items, renderFn) {
+    const col = document.createElement('div');
+    col.className = 'routemap-col';
+    col.dataset.coltype = type;
+    const icon = _rmColIcons[type] || '';
+    const hdrInner = icon ? `<i class="ph-bold ${icon}" style="font-size:13px"></i>${header}` : header;
+    col.innerHTML = `<div class="routemap-col-header">${hdrInner}</div>`;
+    items.forEach(item => col.insertAdjacentHTML('beforeend', renderFn(item)));
+    return col;
+}
+
+function rmBuildRouteCol(routes) {
+    const col = document.createElement('div');
+    col.className = 'routemap-col';
+    col.dataset.coltype = 'route';
+    col.innerHTML = `<div class="routemap-col-header"><i class="ph-bold ph-git-branch" style="font-size:13px"></i>ROUTES</div>`;
+    const { groups, grouped, routeGroupKey } = rmGetGroups(routes, _rmGroupBy);
+    _rmRouteGroupKey = routeGroupKey;
+    const renderRoute = r => {
+        const proto = (r.protocol||'http').toLowerCase();
+        return rmNode('route ' + proto, r.id,
+            `<span class="rm-proto-badge rm-proto-${_esc(proto)}">${proto.toUpperCase()}</span><span class="rm-node-label">${_esc(r.name)}</span>`,
+            r.id);
+    };
+    routes.forEach(r => { if (!grouped.has(r.id)) col.insertAdjacentHTML('beforeend', renderRoute(r)); });
+    Object.entries(groups).forEach(([prefix, members]) => {
+        const proto = (members[0].protocol||'http').toLowerCase();
+        const groupEl = document.createElement('div');
+        groupEl.className = 'rm-group';
+        groupEl.dataset.groupid = prefix;
+        groupEl.innerHTML = `<div class="rm-node rm-node-${_esc(proto)} rm-node-group" data-groupid="${_esc(prefix)}"><span class="rm-proto-badge" style="background:rgba(255,255,255,0.35)">×${members.length}</span><span class="rm-node-label">${_esc(prefix)}</span><i class="ph-bold ph-caret-down rm-group-caret"></i></div><div class="rm-group-children">${members.map(renderRoute).join('')}</div>`;
+        col.appendChild(groupEl);
+    });
+    return col;
+}
+
+function rmNode(typeClass, id, inner, routeId, title) {
+    const parts   = typeClass.split(' ');
+    const base    = parts[0];
+    const classes = ['rm-node', ...parts.map(p => 'rm-node-' + p)].join(' ');
+    const rid     = routeId ? ` data-routeid="${_esc(routeId)}"` : '';
+    const tip     = title ? ` title="${_esc(title)}"` : ` title="${_esc(String(id))}"`;
+    return `<div class="${classes}" data-rmid="${_esc(base+':'+id)}"${rid}${tip}>${inner}</div>`;
+}
+
+function rmHighlightRoute(routeId, routes) {
+    const route = routes.find(r => r.id === routeId);
+    if (!route) return;
+    document.querySelectorAll('#rmCols .rm-node').forEach(n => {
+        const id = n.dataset.rmid || '';
+        let active = false;
+        if (id === `route:${routeId}`)               active = true;
+        else if (id.startsWith('ep:'))               active = (route.entryPoints||[]).includes(id.slice(3));
+        else if (id.startsWith('mw:'))               active = (route.middlewares||[]).includes(id.slice(3));
+        else if (id === `svc:${route.service_name}`) active = true;
+        n.classList.toggle('rm-node-active', active);
+        n.classList.toggle('rm-node-dim', !active);
+    });
+    const cont = document.getElementById('rmTopoContainer');
+    const rEl  = cont.querySelector(`[data-rmid="route:${CSS.escape(routeId)}"]`);
+    if (rEl) {
+        const routeCenterY = rEl.offsetTop + rEl.offsetHeight / 2;
+        const gap = 6;
+        const mws = route.middlewares || [];
+        mws.forEach((mw, i) => {
+            const mwEl = cont.querySelector(`[data-rmid="mw:${CSS.escape(mw)}"]`);
+            if (mwEl) {
+                const offset = (i - (mws.length - 1) / 2) * (mwEl.offsetHeight + gap);
+                const currentCenter = mwEl.offsetTop + mwEl.offsetHeight / 2;
+                mwEl.style.transform = `translateY(${routeCenterY + offset - currentCenter}px)`;
+            }
+        });
+        const eps = route.entryPoints || [];
+        eps.forEach((ep, i) => {
+            const epEl = cont.querySelector(`[data-rmid="ep:${CSS.escape(ep)}"]`);
+            if (epEl) {
+                const offset = (i - (eps.length - 1) / 2) * (epEl.offsetHeight + gap);
+                const currentCenter = epEl.offsetTop + epEl.offsetHeight / 2;
+                epEl.style.transform = `translateY(${routeCenterY + offset - currentCenter}px)`;
+            }
+        });
+        if (route.service_name) {
+            const svcEl = cont.querySelector(`[data-rmid="svc:${CSS.escape(route.service_name)}"]`);
+            if (svcEl) {
+                const currentCenter = svcEl.offsetTop + svcEl.offsetHeight / 2;
+                svcEl.style.transform = `translateY(${routeCenterY - currentCenter}px)`;
+            }
+        }
+    }
+    rmDrawCurves([route]);
+    setTimeout(() => { if (_rmTopoSelected === routeId) rmDrawCurves([route]); }, 210);
+}
+
+function rmDrawCurves(routes) {
+    const svg  = document.getElementById('rmSvg');
+    const cont = document.getElementById('rmTopoContainer');
+    if (!svg || !cont || cont.classList.contains('hidden')) return;
+
+    const cr   = cont.getBoundingClientRect();
+    svg.setAttribute('viewBox', `0 0 ${cr.width} ${cr.height}`);
+    svg.setAttribute('width',  cr.width);
+    svg.setAttribute('height', cr.height);
+    svg.innerHTML = '';
+
+    const get = id => cont.querySelector(`[data-rmid="${CSS.escape(id)}"]`);
+
+    const curve = (fromEl, toEl, color, opacity) => {
+        if (!fromEl || !toEl) return;
+        const f  = fromEl.getBoundingClientRect();
+        const t  = toEl.getBoundingClientRect();
+        const x1 = f.right - cr.left;
+        const y1 = f.top + f.height / 2 - cr.top;
+        const x2 = t.left  - cr.left;
+        const y2 = t.top + t.height / 2 - cr.top;
+        const cx = x1 + (x2 - x1) * 0.5;
+        const p  = document.createElementNS('http://www.w3.org/2000/svg','path');
+        p.setAttribute('d', `M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}`);
+        p.setAttribute('fill','none');
+        p.setAttribute('stroke', color);
+        p.setAttribute('stroke-width', '1.5');
+        p.setAttribute('stroke-opacity', opacity);
+        svg.appendChild(p);
+    };
+
+    const hl = _rmTopoSelected !== null;
+    const DC = 'var(--border)';
+    const DO = '0.25';
+
+    const { grouped: _grpd } = rmGetGroups(routes, _rmGroupBy);
+
+    routes.forEach(r => {
+        if (_grpd.has(r.id) && !_rmExpandedGroups.has(_rmRouteGroupKey.get(r.id))) return;
+        const active = !hl || r.id === _rmTopoSelected;
+        const rEl    = get(`route:${r.id}`);
+        const mws    = r.middlewares || [];
+
+        (r.entryPoints||[]).forEach(ep => {
+            curve(get(`ep:${ep}`), rEl, active ? 'var(--blue)' : DC, active ? '0.6' : DO);
+        });
+
+        if (mws.length) {
+            mws.forEach(mw => curve(rEl, get(`mw:${mw}`), active ? 'var(--purple)' : DC, active ? '0.6' : DO));
+            if (r.service_name) {
+                mws.forEach(mw => curve(get(`mw:${mw}`), get(`svc:${r.service_name}`), active ? 'var(--green)' : DC, active ? '0.5' : DO));
+            }
+        } else if (r.service_name) {
+            curve(rEl, get(`svc:${r.service_name}`), active ? 'var(--green)' : DC, active ? '0.6' : DO);
+        }
+    });
+}
+
+let _rmTipEl = null;
+
+function rmShowTooltip(anchorEl, routeId, routes) {
+    const route = routes.find(r => r.id === routeId);
+    if (!route) return;
+
+    if (!_rmTipEl) {
+        _rmTipEl = document.createElement('div');
+        _rmTipEl.className = 'rm-tooltip';
+        document.body.appendChild(_rmTipEl);
+    }
+
+    const mws    = route.middlewares || [];
+    const eps    = route.entryPoints || [];
+    const mwHtml = mws.length
+        ? mws.map(m => `<span class="rm-mw-pill">${_esc(m.split('@')[0])}</span>`).join('')
+        : `<span style="color:var(--muted);font-size:10px">none</span>`;
+    const epHtml = eps.length
+        ? eps.map(e => `<span class="rm-shield-pill">${_esc(e)}</span>`).join('')
+        : `<span style="color:var(--muted);font-size:10px">none</span>`;
+
+    _rmTipEl.innerHTML = `
+        <div class="rm-tooltip-name">${_esc(route.name)}</div>
+        ${route.target ? `<div class="rm-tooltip-row"><span class="rm-tooltip-label">Target</span><code>${_esc(route.target)}</code></div>` : ''}
+        <div class="rm-tooltip-row"><span class="rm-tooltip-label">Entry points</span><div class="rm-mw-pills">${epHtml}</div></div>
+        <div class="rm-tooltip-row"><span class="rm-tooltip-label">Middlewares</span><div class="rm-mw-pills">${mwHtml}</div></div>
+    `;
+
+    const rect = anchorEl.getBoundingClientRect();
+    _rmTipEl.style.display = 'block';
+    const tipH = _rmTipEl.offsetHeight;
+    const top  = rect.top + window.scrollY - tipH - 8;
+    _rmTipEl.style.left = rect.left + window.scrollX + 'px';
+    _rmTipEl.style.top  = (top < 8 ? rect.bottom + window.scrollY + 8 : top) + 'px';
+}
+
+function rmHideTooltip() {
+    if (_rmTipEl) _rmTipEl.style.display = 'none';
+}
+
+window.addEventListener('resize', () => {
+    if (!document.getElementById('tab-routemap')?.classList.contains('active')) return;
+    const cont   = document.getElementById('rmTopoContainer');
+    const colsEl = document.getElementById('rmCols');
+    if (cont && colsEl) cont.style.height = colsEl.offsetHeight + 'px';
+    rmDrawCurves(_rmFilteredRoutes());
+});
+
+document.addEventListener('click', e => {
+    const wrap = document.getElementById('rmFilterWrap');
+    if (wrap && !wrap.contains(e.target)) document.getElementById('rmFilterPanel')?.classList.add('hidden');
+});
+
+})();
+</script>

@@ -37,23 +37,23 @@
                     <h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">{{ app.name }}</h3>
                     <div class="text-xs font-mono truncate" style="color:var(--muted)">{{ app.service_name }}</div>
                 </div>
-                <div class="flex items-center gap-0.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()">
-                    <button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="btn-icon" title="View details">
+                <div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()">
+                    <button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="pill-btn pill-btn-blue" title="View details">
                         <i class="ph-bold ph-info text-sm"></i>
                     </button>
                     {% if app.protocol == 'http' and domain and '{' not in domain and '*' not in domain and 'HostRegexp' not in domain %}
-                    <a href="https://{{ domain }}" target="_blank" class="btn-icon" title="Open site">
+                    <a href="https://{{ domain }}" target="_blank" class="pill-btn pill-btn-blue" title="Open site">
                         <i class="ph-bold ph-arrow-square-out text-sm"></i>
                     </a>
                     {% endif %}
-                    <button type="button" data-app='{{ app|tojson|safe }}' onclick="handleEdit(this)" class="btn-icon" title="Edit">
+                    <button type="button" onclick="deleteRoute('{{ app.id }}')" class="pill-btn pill-btn-red" title="Delete">
+                        <i class="ph-bold ph-trash text-sm"></i>
+                    </button>
+                    <button type="button" data-app='{{ app|tojson|safe }}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit">
                         <i class="ph-bold ph-pencil-simple text-sm"></i>
                     </button>
-                    <button type="button" onclick="toggleRoute('{{ app.id }}', {{ app.enabled | tojson }})" class="btn-icon" title="{{ 'Disable route' if app.enabled else 'Enable route' }}">
-                        <i class="ph-bold {{ 'ph-toggle-right' if app.enabled else 'ph-toggle-left' }} text-sm" style="color:{{ 'var(--green)' if app.enabled else 'var(--muted)' }}"></i>
-                    </button>
-                    <button type="button" onclick="deleteRoute('{{ app.id }}')" class="btn-danger" title="Delete">
-                        <i class="ph-bold ph-trash text-sm"></i>
+                    <button type="button" onclick="toggleRoute('{{ app.id }}', {{ app.enabled | tojson }})" class="pill-btn {{ 'pill-btn-green' if app.enabled else 'pill-btn-muted' }}" title="{{ 'Disable route' if app.enabled else 'Enable route' }}">
+                        <i class="ph-bold {{ 'ph-toggle-right' if app.enabled else 'ph-toggle-left' }} text-sm"></i>
                     </button>
                 </div>
             </div>

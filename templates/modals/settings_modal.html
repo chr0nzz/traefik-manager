@@ -67,7 +67,7 @@
                 <div class="modal-panel" id="mpanel-routes">
                     <div>
                         <span class="settings-section-label">Route Monitoring</span>
-                        <div class="text-xs mb-3" style="color:var(--muted)">Provider tabs pulled live from the Traefik API — no file mounts needed.</div>
+                        <div class="text-xs mb-3" style="color:var(--muted)">Provider tabs pulled live from the Traefik API - no file mounts needed.</div>
                         <div class="grid grid-cols-2 gap-2">
                             <label class="tab-toggle-row" onclick="toggleTabVisibility('docker')">
                                 <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-cube" style="color:var(--muted)"></i> Docker</span>
@@ -124,7 +124,7 @@
                 <div class="modal-panel" id="mpanel-system">
                     <div>
                         <span class="settings-section-label">System Monitoring</span>
-                        <div class="text-xs mb-3" style="color:var(--muted)">These tabs require a file mount in your compose file — each tab shows the exact volume line to add if not yet mounted.</div>
+                        <div class="text-xs mb-3" style="color:var(--muted)">These tabs require a file mount in your compose file - each tab shows the exact volume line to add if not yet mounted.</div>
                         <div class="grid grid-cols-2 gap-2">
                             <label class="tab-toggle-row" onclick="toggleTabVisibility('certs')">
                                 <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-check" style="color:var(--muted)"></i> Certs</span>
@@ -144,19 +144,20 @@
 
                 <div class="modal-panel" id="mpanel-auth">
                     <div id="authSection">
-                        <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
                             <div>
-                                <span class="settings-section-label" style="margin:0;">Built-in Authentication</span>
+                                <div class="text-xs font-medium" style="color:var(--text);display:flex;align-items:center;gap:6px;"><i class="ph-bold ph-lock-simple"></i> Built-in Authentication</div>
                                 <div id="authEnabledNotice" class="text-xs mt-1" style="color:var(--muted)">
-                                    Built-in auth is <strong id="authStateLabel" style="color:var(--green)">enabled</strong>.
-                                    <span id="authEnvForcedNote" class="hidden"> Controlled by the <code>AUTH_ENABLED</code> env var.</span>
+                                    Auth is <strong id="authStateLabel" style="color:var(--green)">enabled</strong>
+                                    <span id="authEnvForcedNote" class="hidden"> - controlled by <code>AUTH_ENABLED</code> env var</span>
                                 </div>
                             </div>
                             <button id="authToggleBtn" onclick="toggleAuth()" class="nav-btn text-xs hidden" title="Enable or disable built-in auth">
                                 <span id="authToggleLabel">Disable</span>
                             </button>
                         </div>
-                        <div id="changePwForm" style="display:flex;flex-direction:column;gap:10px;">
+
+                        <div id="changePwForm" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px;">
                             <span class="settings-section-label">Change Password</span>
                             <input type="password" id="pwCurrent" class="input-field" placeholder="Current password" autocomplete="current-password">
                             <input type="password" id="pwNew"     class="input-field" placeholder="New password (min 8 chars)" autocomplete="new-password">
@@ -169,11 +170,11 @@
                             </div>
                         </div>
 
-                        <div id="otpSection" style="display:flex;flex-direction:column;gap:10px;margin-top:8px;padding-top:12px;border-top:1px solid var(--border)">
-                            <div class="flex items-center justify-between">
+                        <div id="otpSection" style="padding-top:10px;border-top:1px solid var(--border);">
+                            <div class="flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
                                 <div>
-                                    <span class="settings-section-label" style="margin:0;">Two-Factor Authentication</span>
-                                    <div class="text-xs mt-1" style="color:var(--muted)">
+                                    <div class="text-xs font-medium" style="color:var(--text);display:flex;align-items:center;gap:6px;"><i class="ph-bold ph-shield-check"></i> Two-Factor Authentication</div>
+                                    <div class="text-xs mt-1">
                                         Status: <strong id="otpStatusLabel" style="color:var(--muted)">Disabled</strong>
                                     </div>
                                 </div>
@@ -200,29 +201,34 @@
                         </div>
                     </div>
                     <div id="authHiddenMsg" class="hidden text-xs" style="color:var(--muted);padding:8px 0;">
-                        Authentication settings are not available — no password has been configured.
+                        Authentication settings are not available - no password has been configured.
                     </div>
 
                     <div class="settings-divider"></div>
 
                     <div>
-                        <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center justify-between mb-2">
                             <div>
                                 <span class="settings-section-label" style="margin:0;">App / Mobile API Key</span>
-                                <div class="text-xs mt-1" style="color:var(--muted)">
-                                    Status: <strong id="apikeyStatusLabel" style="color:var(--muted)">Loading...</strong>
-                                </div>
-                                <div class="text-xs mt-1" style="color:var(--muted)">Send via <code>X-Api-Key</code> header. Revoke instantly without changing your password or 2FA.</div>
+                                <div class="text-xs mt-1" style="color:var(--muted)">Used by the mobile app via <code>X-Api-Key</code> header.</div>
                             </div>
-                            <div class="flex gap-2">
-                                <button onclick="generateApiKey()" id="btnGenerateApiKey" class="nav-btn text-xs"><i class="ph-bold ph-key"></i> Generate Key</button>
-                                <button onclick="revokeApiKey()" id="btnRevokeApiKey" class="nav-btn text-xs hidden"><i class="ph-bold ph-x"></i> Revoke</button>
-                            </div>
+                            <button onclick="generateApiKey()" id="btnGenerateApiKey" class="nav-btn text-xs"><i class="ph-bold ph-key"></i> Generate Key</button>
                         </div>
+
+                        <div id="apikeyInactiveRow" class="text-xs" style="color:var(--muted);padding:8px 0;">No active key</div>
+
+                        <div id="apikeyActiveRow" class="hidden flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+                            <div class="flex items-center gap-2" style="color:var(--text);">
+                                <i class="ph-bold ph-key" style="color:var(--muted)"></i>
+                                <code id="apikeyPreview" class="text-xs font-mono" style="letter-spacing:.05em"></code>
+                            </div>
+                            <button onclick="revokeApiKey()" id="btnRevokeApiKey" class="nav-btn text-xs" style="color:var(--red);border-color:rgba(248,81,73,0.3);"><i class="ph-bold ph-x"></i> Revoke</button>
+                        </div>
+
                         <div id="apikeyDisplay" class="hidden mt-3">
-                            <div class="rounded-md p-3 mb-2" style="background:rgba(250,173,20,0.08);border:1px solid rgba(250,173,20,0.25)">
-                                <div class="text-xs font-semibold mb-1" style="color:var(--yellow)"><i class="ph-bold ph-warning"></i> Copy this key now — it will not be shown again.</div>
-                                <div class="flex gap-2 items-center mt-2">
+                            <div class="rounded-md p-3" style="background:rgba(250,173,20,0.08);border:1px solid rgba(250,173,20,0.25)">
+                                <div class="text-xs font-semibold mb-2" style="color:var(--yellow)"><i class="ph-bold ph-warning"></i> Copy this key now - it will not be shown again.</div>
+                                <div class="flex gap-2 items-center">
                                     <input type="text" id="apikeyValue" readonly class="input-field text-xs font-mono flex-1" style="font-size:11px">
                                     <button onclick="copyApiKey()" class="nav-btn text-xs"><i class="ph-bold ph-copy"></i> Copy</button>
                                 </div>
@@ -253,25 +259,24 @@
                 </div>
 
                 <div class="modal-panel" id="mpanel-ui">
-                    <div>
-                        <span class="settings-section-label">Dashboard</span>
-                        <div class="text-xs mb-3" style="color:var(--muted)">Show or hide sections of the dashboard. Preferences are saved locally.</div>
-                        <div style="display:flex;flex-direction:column;gap:2px;">
-                            <div class="flex items-center justify-between py-2.5" style="border-bottom:1px solid var(--border)">
+                    <div style="margin-bottom:12px;">
+                        <div class="text-xs font-medium mb-2" style="color:var(--muted);display:flex;align-items:center;gap:5px;"><i class="ph-bold ph-squares-four"></i> DASHBOARD</div>
+                        <div style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+                            <div class="flex items-center justify-between" style="padding:10px 12px;border-bottom:1px solid var(--border)">
                                 <div>
                                     <div class="text-xs font-medium" style="color:var(--text)">Show stat cards</div>
                                     <div class="text-xs" style="color:var(--muted)">HTTP Routers, TCP/UDP, Services and Middlewares overview</div>
                                 </div>
                                 <div class="toggle-switch" id="toggle-ui-statcards" onclick="toggleUiPref('showStatCards')"><div class="toggle-knob"></div></div>
                             </div>
-                            <div class="flex items-center justify-between py-2.5" style="border-bottom:1px solid var(--border)">
+                            <div class="flex items-center justify-between" style="padding:10px 12px;border-bottom:1px solid var(--border)">
                                 <div>
                                     <div class="text-xs font-medium" style="color:var(--text)">Compact stat cards</div>
                                     <div class="text-xs" style="color:var(--muted)">Smaller count with status breakdown (ok / warn / error)</div>
                                 </div>
                                 <div class="toggle-switch" id="toggle-ui-compact-stats" onclick="toggleUiPref('compactStatCards')"><div class="toggle-knob"></div></div>
                             </div>
-                            <div class="flex items-center justify-between py-2.5" style="border-bottom:1px solid var(--border)">
+                            <div class="flex items-center justify-between" style="padding:10px 12px;">
                                 <div>
                                     <div class="text-xs font-medium" style="color:var(--text)">Show entry points bar</div>
                                     <div class="text-xs" style="color:var(--muted)">Traefik entry point badges below the stat cards</div>
@@ -280,14 +285,35 @@
                             </div>
                         </div>
                     </div>
-                    <div style="margin-top:12px;">
-                        <span class="settings-section-label">Navbar</span>
-                        <div class="flex items-center justify-between py-2.5" style="border-bottom:1px solid var(--border)">
-                            <div>
-                                <div class="text-xs font-medium" style="color:var(--text)">Show version badge in navbar</div>
-                                <div class="text-xs" style="color:var(--muted)">Traefik version shown next to the logo</div>
+                    <div style="margin-bottom:12px;">
+                        <div class="text-xs font-medium mb-2" style="color:var(--muted);display:flex;align-items:center;gap:5px;"><i class="ph-bold ph-navigation-arrow"></i> NAVBAR</div>
+                        <div style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+                            <div class="flex items-center justify-between" style="padding:10px 12px;">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Show version badge in navbar</div>
+                                    <div class="text-xs" style="color:var(--muted)">Traefik version shown next to the logo</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-traefik-badge" onclick="toggleTraefikBadge()"><div class="toggle-knob"></div></div>
                             </div>
-                            <div class="toggle-switch" id="toggle-traefik-badge" onclick="toggleTraefikBadge()"><div class="toggle-knob"></div></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs font-medium mb-2" style="color:var(--muted);display:flex;align-items:center;gap:5px;"><i class="ph-bold ph-tabs"></i> TABS</div>
+                        <div style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+                            <div class="flex items-center justify-between" style="padding:10px 12px;border-bottom:1px solid var(--border)">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Dashboard</div>
+                                    <div class="text-xs" style="color:var(--muted)">Routes grouped by category with app icons and per-card editing</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-dashboard" onclick="toggleTabVisibility('dashboard')"><div class="toggle-knob"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between" style="padding:10px 12px;">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Route Map</div>
+                                    <div class="text-xs" style="color:var(--muted)">Topology connection map (Entry Points - Routes - Middlewares - Services)</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-routemap" onclick="toggleTabVisibility('routemap')"><div class="toggle-knob"></div></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -310,10 +336,10 @@
                             <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--muted)">Traefik Manager</div>
                             <div class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs mb-2" style="background:var(--input-bg);border:1px solid var(--border)">
                                 <span style="color:var(--muted)">Installed</span>
-                                <span class="font-mono font-semibold" id="mgrUpdateCurrentVer" style="color:var(--text)">—</span>
+                                <span class="font-mono font-semibold" id="mgrUpdateCurrentVer" style="color:var(--text)">-</span>
                                 <span style="color:var(--border)">·</span>
                                 <span style="color:var(--muted)">Latest</span>
-                                <span class="font-mono font-semibold" style="color:var(--green)" id="mgrUpdateLatestVer">—</span>
+                                <span class="font-mono font-semibold" style="color:var(--green)" id="mgrUpdateLatestVer">-</span>
                             </div>
                             <div id="sm-mgr-update-notice" class="hidden text-xs px-3 py-2 rounded-md mb-2" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)">
                                 <i class="ph-bold ph-arrow-circle-up mr-1"></i><span id="sm-mgr-update-text"></span>
@@ -332,10 +358,10 @@
                             <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--muted)">Traefik</div>
                             <div class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs mb-2" style="background:var(--input-bg);border:1px solid var(--border)">
                                 <span style="color:var(--muted)">Installed</span>
-                                <span class="font-mono font-semibold" id="updateCurrentVer" style="color:var(--text)">—</span>
+                                <span class="font-mono font-semibold" id="updateCurrentVer" style="color:var(--text)">-</span>
                                 <span style="color:var(--border)">·</span>
                                 <span style="color:var(--muted)">Latest</span>
-                                <span class="font-mono font-semibold" style="color:var(--green)" id="updateLatestVer">—</span>
+                                <span class="font-mono font-semibold" style="color:var(--green)" id="updateLatestVer">-</span>
                             </div>
                             <div id="sm-traefik-update-notice" class="hidden text-xs px-3 py-2 rounded-md mb-2" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)">
                                 <i class="ph-bold ph-arrow-circle-up mr-1"></i><span id="sm-traefik-update-text"></span>
@@ -381,6 +407,10 @@ async function openSettingsModal(panel) {
     ['pwCurrent','pwNew','pwConfirm'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     const msg = document.getElementById('pwChangeMsg');
     if (msg) { msg.classList.add('hidden'); msg.textContent = ''; }
+    const apikeyDisplay = document.getElementById('apikeyDisplay');
+    if (apikeyDisplay) apikeyDisplay.classList.add('hidden');
+    const apikeyValue = document.getElementById('apikeyValue');
+    if (apikeyValue) apikeyValue.value = '';
     try {
         const res  = await fetch('/api/settings');
         const data = await res.json();
@@ -531,7 +561,7 @@ async function testTraefikApi() {
         const res = await fetch('/api/traefik/version');
         const d   = await res.json();
         if (d && d.Version) {
-            result.textContent = `✓ Connected — Traefik v${d.Version}`;
+            result.textContent = `✓ Connected - Traefik v${d.Version}`;
             result.style.color = 'var(--green)';
         } else {
             result.textContent = '✗ No response from API';
@@ -625,7 +655,7 @@ function toggleTraefikBadge() {
 
 function _applyTraefikBadgeVisibility() {
     const show = localStorage.getItem('showTraefikBadge') !== 'false';
-    const hasVersion = (document.getElementById('versionText').textContent || '').trim() !== '—';
+    const hasVersion = (document.getElementById('versionText').textContent || '').trim() !== '-';
     const badge  = document.getElementById('versionBadge');
     const badgeM = document.getElementById('versionBadgeMobile');
     if (badge)  badge.classList.toggle('hidden', !show || !hasVersion);
@@ -657,7 +687,7 @@ function renderReleaseNotes(md) {
     while (i < lines.length) {
         const line = lines[i].trimEnd();
 
-        // Table — collect all consecutive table rows
+        // Table - collect all consecutive table rows
         if (isTableRow(line)) {
             if (inList) { html += '</ul>'; inList = false; }
             const block = [];
@@ -726,8 +756,6 @@ function renderReleaseNotes(md) {
     return html;
 }
 
-// ── UI Preferences ────────────────────────────────────────────────────────────
-
 function _uiPref(key) { return localStorage.getItem(key) !== 'false'; }
 
 function _applyEntrypointsVisibility() {
@@ -764,8 +792,6 @@ function toggleUiPref(key) {
     applyUiPrefs();
     loadUiTogglesIntoModal();
 }
-
-// ── OTP Setup ─────────────────────────────────────────────────────────────────
 
 let _otpEnabled = false;
 

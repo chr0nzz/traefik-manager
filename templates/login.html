@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if setup_mode %}Set Up Traefik Manager{% elif force_change_mode %}Change Password — Traefik Manager{% else %}Sign In — Traefik Manager{% endif %}</title>
-    <link rel="icon" type="image/x-icon" href="https://user.fm/files/v2-1b91adfdc6068ede7e20f5fe6bc80e41/fav.ico">
+    <title>{% if setup_mode %}Set Up Traefik Manager{% elif force_change_mode %}Change Password - Traefik Manager{% else %}Sign In - Traefik Manager{% endif %}</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
@@ -197,6 +197,27 @@
         .footer a:hover { color: var(--text); }
 
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        details.reset-hint { margin-top: 16px; }
+        details.reset-hint summary {
+            font-size: 12px; color: var(--muted); cursor: pointer;
+            list-style: none; display: flex; align-items: center; gap: 5px;
+            user-select: none;
+        }
+        details.reset-hint summary::-webkit-details-marker { display: none; }
+        details.reset-hint summary:hover { color: var(--text); }
+        details.reset-hint[open] summary { color: var(--text); }
+        .reset-hint-body {
+            margin-top: 10px; padding: 12px;
+            background: rgba(36,161,222,0.05); border: 1px solid rgba(36,161,222,0.15);
+            border-radius: 8px; font-size: 12px; color: var(--muted); line-height: 1.6;
+        }
+        .reset-hint-body code {
+            display: block; margin-top: 8px; padding: 8px 10px;
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 6px; font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; color: var(--blue); word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -287,6 +308,15 @@
                 </button>
             </div>
         </form>
+        <details class="reset-hint">
+            <summary><i class="ph-bold ph-lock-key" style="font-size:11px"></i> Reset 2FA</summary>
+            <div class="reset-hint-body">
+                Run this command to disable 2FA:
+                <code>docker exec -it traefik-manager flask reset-password --disable-otp</code>
+                <code>podman exec -it traefik-manager flask reset-password --disable-otp</code>
+                <code>flask reset-password --disable-otp</code>
+            </div>
+        </details>
     </div>
     <div class="footer">
         <a href="{{ url_for('login') }}">← Back to sign in</a>
@@ -311,7 +341,7 @@
         {% if temp_password_hint %}
         <div class="banner banner-info">
             <i class="ph-bold ph-info" style="flex-shrink:0;margin-top:1px"></i>
-            A temporary password was generated at startup — check your container logs.
+            A temporary password was generated at startup - check your container logs.
         </div>
         {% endif %}
         {% if error %}
@@ -338,6 +368,16 @@
                 </button>
             </div>
         </form>
+        <details class="reset-hint">
+            <summary><i class="ph-bold ph-lock-key" style="font-size:11px"></i> Reset password</summary>
+            <div class="reset-hint-body">
+                Run this command to generate a new temporary password, then log in with it:
+                <code>docker exec -it traefik-manager flask reset-password</code>
+                <code>podman exec -it traefik-manager flask reset-password</code>
+                <code>flask reset-password</code>
+                The new password is printed to the terminal. You'll be prompted to set a permanent one on next login.
+            </div>
+        </details>
     </div>
     <div class="footer">
         <a href="https://github.com/traefik/traefik" target="_blank">Traefik</a>
@@ -439,7 +479,19 @@
         
         <div class="step-panel" id="panel-2">
             <div class="step-title">Optional monitoring</div>
-            <p class="step-subtitle">Enable extra views for deeper insight into your Traefik setup. All of these are optional — you can turn them on or off anytime in Settings.</p>
+            <p class="step-subtitle">Enable extra views for deeper insight into your Traefik setup. All of these are optional - you can turn them on or off anytime in Settings.</p>
+
+            <div class="text-xs font-semibold mb-2" style="color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Visualizations</div>
+            <div class="tab-grid" style="margin-bottom:16px">
+                <div class="tab-toggle-row" onclick="toggleSetupTab('dashboard')">
+                    <span class="tab-toggle-label"><i class="ph-bold ph-squares-four"></i> Dashboard</span>
+                    <div class="toggle-switch" id="sw-dashboard"><div class="toggle-knob"></div></div>
+                </div>
+                <div class="tab-toggle-row" onclick="toggleSetupTab('routemap')">
+                    <span class="tab-toggle-label"><i class="ph-bold ph-graph"></i> Route Map</span>
+                    <div class="toggle-switch" id="sw-routemap"><div class="toggle-knob"></div></div>
+                </div>
+            </div>
 
             <div class="text-xs font-semibold mb-2" style="color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Route Monitoring</div>
             <div class="tab-grid" style="margin-bottom:16px">
@@ -599,7 +651,7 @@ applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 
 const TEMP_PW_MODE = {{ 'true' if temp_password_mode else 'false' }};
 let currentStep = 0;
-const setupTabs = { docker: false, certs: false, plugins: false, logs: false };
+const setupTabs = { dashboard: false, routemap: false, docker: false, certs: false, plugins: false, logs: false };
 const MAX_STEP   = TEMP_PW_MODE ? 2 : 3;
 
 function goTo(step) {
@@ -677,7 +729,7 @@ async function testApi() {
         });
         const d = await res.json();
         if (d.ok) {
-            result.textContent = '✓ Connected — Traefik v' + d.version;
+            result.textContent = '✓ Connected - Traefik v' + d.version;
             result.style.color = 'var(--green)';
         } else {
             result.textContent = '✗ ' + (d.error || 'Connection failed');

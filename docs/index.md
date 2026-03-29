@@ -50,6 +50,17 @@ These tabs are always visible. They let you read and write your Traefik dynamic 
 
 ---
 
+## Visualizations
+
+Optional tabs - toggle on in **Settings - Interface - Tabs** or during the setup wizard. No extra mounts needed.
+
+| Tab | Description |
+|-----|-------------|
+| [Dashboard](tab-dashboard.md) | Routes grouped by category with app icons, custom groups, and per-card editing |
+| [Route Map](tab-routemap.md) | Topology connection map - entry points → routes → middlewares → services |
+
+---
+
 ## Monitoring
 
 Optional tabs - each requires a file mounted into the container.

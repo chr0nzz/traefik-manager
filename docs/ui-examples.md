@@ -55,28 +55,79 @@ if (typeof document$ !== 'undefined') {
 
 When first launching Traefik Manager you are guided through a short setup wizard.
 
-> **Screenshots coming soon** - setup screen is currently in development.
+### Step 1 - Temporary password
+
+<img class="ui-img-light" src="../images/light-setup-temp-pass-1.png" alt="Step 1 – Temporary password (light)">
+<img class="ui-img-dark"  src="../images/dark-setup-temp-pass-1.png"  alt="Step 1 – Temporary password (dark)">
+
+### Step 2 - Welcome
+
+<img class="ui-img-light" src="../images/light-setup-welcome-2.png" alt="Step 2 – Welcome (light)">
+<img class="ui-img-dark"  src="../images/dark-setup-welcome-2.png"  alt="Step 2 – Welcome (dark)">
+
+### Step 3 - Connection &amp; domains
+
+<img class="ui-img-light" src="../images/light-setup-conn-dom-3.png" alt="Step 3 – Connection and domains (light)">
+<img class="ui-img-dark"  src="../images/dark-setup-conn-dom-3.png"  alt="Step 3 – Connection and domains (dark)">
+
+### Step 4 - Optional tabs
+
+<img class="ui-img-light" src="../images/light-setup-opt-tabs-4.png" alt="Step 4 – Optional tabs (light)">
+<img class="ui-img-dark"  src="../images/dark-setup-opt-tabs-4.png"  alt="Step 4 – Optional tabs (dark)">
+
+### Step 5 - Set password
+
+<img class="ui-img-light" src="../images/light-setup-set-pass-5.png" alt="Step 5 – Set password (light)">
+<img class="ui-img-dark"  src="../images/dark-setup-set-pass-5.png"  alt="Step 5 – Set password (dark)">
 
 ---
 
 ## Dashboard
 
-The dashboard shows a live overview of your Traefik instance with stat cards, entrypoints bar, and quick-navigate links.
+The dashboard shows app cards grouped by category with app icons, stat widgets, and quick-access controls. Cards can be customised per-route with a display name, icon override, and group override.
 
-### Expanded Stats
+### Main View
 
-<img class="ui-img-light" src="../images/light-routes.png" alt="Dashboard – expanded stats (light)">
-<img class="ui-img-dark"  src="../images/dark-routes.png"  alt="Dashboard – expanded stats (dark)">
+<img class="ui-img-light" src="../images/light-dashboard.png" alt="Dashboard (light)">
+<img class="ui-img-dark"  src="../images/dark-dashboard.png"  alt="Dashboard (dark)">
 
 ### Compact Stats
 
-<img class="ui-img-light" src="../images/light-compact-stats.png" alt="Dashboard – expanded stats (light)">
-<img class="ui-img-dark"  src="../images/dark-compact-stats.png"  alt="Dashboard – expanded stats (dark)">
+<img class="ui-img-light" src="../images/light-dashboard-compact.png" alt="Dashboard – compact stats (light)">
+<img class="ui-img-dark"  src="../images/dark-dashboard-compact.png"  alt="Dashboard – compact stats (dark)">
 
-### Hidden Stats
+### No Widgets
 
-<img class="ui-img-light" src="../images/light-hidden-stats.png" alt="Dashboard – stats hidden (light)">
-<img class="ui-img-dark"  src="../images/dark-hidden-stats.png"  alt="Dashboard – stats hidden (dark)">
+<img class="ui-img-light" src="../images/light-dashboard-no-widgets.png" alt="Dashboard – no widgets (light)">
+<img class="ui-img-dark"  src="../images/dark-dashboard-no-widgets.png"  alt="Dashboard – no widgets (dark)">
+
+### Edit Group
+
+<img class="ui-img-light" src="../images/light-dashboard-edit-gorup.png" alt="Dashboard – edit group (light)">
+<img class="ui-img-dark"  src="../images/dark-dashboard-edit-group.png"  alt="Dashboard – edit group (dark)">
+
+### Edit Route Card
+
+<img class="ui-img-light" src="../images/light-dashboard-edit route.png" alt="Dashboard – edit route card (light)">
+<img class="ui-img-dark"  src="../images/dark-dashboard-edit-route.png"  alt="Dashboard – edit route card (dark)">
+
+---
+
+## Route Map
+
+The Route Map tab shows a 4-column topology view of your Traefik setup - Entry Points, Routes, Middlewares, and Services - connected by Bezier curves.
+
+### Topology View
+
+<img class="ui-img-light" src="../images/light-route-map.png" alt="Route Map (light)">
+<img class="ui-img-dark"  src="../images/dark-route-map.png"  alt="Route Map (dark)">
+
+### Hover Highlight
+
+Hovering a route dims all unrelated nodes and animates the connected entry point, middlewares, and service into alignment.
+
+<img class="ui-img-light" src="../images/light-route-map-hover.png" alt="Route Map – hover highlight (light)">
+<img class="ui-img-dark"  src="../images/dark-route-map-hover.png"  alt="Route Map – hover highlight (dark)">
 
 ---
 

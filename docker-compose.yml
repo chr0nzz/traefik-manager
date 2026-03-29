@@ -15,11 +15,11 @@ services:
       - /path/to/traefik-manager/config:/app/config
       - /path/to/traefik-manager/backups:/app/backups
 
-      # Optional — mount to enable the Certs tab
+      # Optional - mount to enable the Certs tab
       # - /path/to/traefik/acme.json:/app/acme.json:ro
 
-      # Optional — mount to enable the Plugins tab
+      # Optional - mount to enable the Plugins tab
       # - /path/to/traefik/traefik.yml:/app/traefik.yml:ro
 
-      # Optional — mount to enable the Logs tab
+      # Optional - mount to enable the Logs tab
       # - /path/to/traefik/logs/access.log:/app/logs/access.log:ro

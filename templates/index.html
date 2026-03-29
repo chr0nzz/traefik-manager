@@ -47,7 +47,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/css/app.css?v=0.7.0">
 </head>
 <body class="min-h-screen font-sans">
 
@@ -77,123 +77,135 @@
     {% include 'sections/stats.html' %}
 
     <div class="tab-bar mb-6" id="tabBar">
+        <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn tab-optional" data-tab="dashboard">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-squares-four"></i>
+                Dashboard
+            </span>
+        </button>
         <button onclick="switchTab('services')" id="btn-services" class="tab-btn active">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-arrows-left-right"></i>
                 Routes
-                <span class="badge badge-muted" id="countRoutes">—</span>
+                <span class="badge badge-muted" id="countRoutes">-</span>
             </span>
         </button>
         <button onclick="switchTab('middlewares')" id="btn-middlewares" class="tab-btn">
             <span class="flex items-center gap-2 ">
                 <i class="ph-bold ph-shield-check"></i>
                 Middlewares
-                <span class="badge badge-muted" id="countMw">—</span>
+                <span class="badge badge-muted" id="countMw">-</span>
+            </span>
+        </button>
+        <button onclick="switchTab('routemap')" id="btn-routemap" class="tab-btn tab-optional" data-tab="routemap">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-graph"></i>
+                Route Map
             </span>
         </button>
         <button onclick="switchTab('live')" id="btn-live" class="tab-btn">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-lightning"></i>
                 Services
-                <span class="badge badge-muted" id="svcTabCount">—</span>
+                <span class="badge badge-muted" id="svcTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('docker')" id="btn-docker" class="tab-btn tab-optional" data-tab="docker">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-cube"></i>
                 Docker
-                <span class="badge badge-muted" id="dockerTabCount">—</span>
+                <span class="badge badge-muted" id="dockerTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('kubernetes')" id="btn-kubernetes" class="tab-btn tab-optional" data-tab="kubernetes">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-circles-three"></i>
                 Kubernetes
-                <span class="badge badge-muted" id="kubernetesTabCount">—</span>
+                <span class="badge badge-muted" id="kubernetesTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('swarm')" id="btn-swarm" class="tab-btn tab-optional" data-tab="swarm">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-graph"></i>
                 Swarm
-                <span class="badge badge-muted" id="swarmTabCount">—</span>
+                <span class="badge badge-muted" id="swarmTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('nomad')" id="btn-nomad" class="tab-btn tab-optional" data-tab="nomad">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-circles-four"></i>
                 Nomad
-                <span class="badge badge-muted" id="nomadTabCount">—</span>
+                <span class="badge badge-muted" id="nomadTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('ecs')" id="btn-ecs" class="tab-btn tab-optional" data-tab="ecs">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-cloud"></i>
                 ECS
-                <span class="badge badge-muted" id="ecsTabCount">—</span>
+                <span class="badge badge-muted" id="ecsTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('consulcatalog')" id="btn-consulcatalog" class="tab-btn tab-optional" data-tab="consulcatalog">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-address-book"></i>
                 Consul Catalog
-                <span class="badge badge-muted" id="consulcatalogTabCount">—</span>
+                <span class="badge badge-muted" id="consulcatalogTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('redis')" id="btn-redis" class="tab-btn tab-optional" data-tab="redis">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-database"></i>
                 Redis
-                <span class="badge badge-muted" id="redisTabCount">—</span>
+                <span class="badge badge-muted" id="redisTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('etcd')" id="btn-etcd" class="tab-btn tab-optional" data-tab="etcd">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-database"></i>
                 etcd
-                <span class="badge badge-muted" id="etcdTabCount">—</span>
+                <span class="badge badge-muted" id="etcdTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('consul')" id="btn-consul" class="tab-btn tab-optional" data-tab="consul">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-database"></i>
                 Consul KV
-                <span class="badge badge-muted" id="consulTabCount">—</span>
+                <span class="badge badge-muted" id="consulTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('zookeeper')" id="btn-zookeeper" class="tab-btn tab-optional" data-tab="zookeeper">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-database"></i>
                 ZooKeeper
-                <span class="badge badge-muted" id="zookeeperTabCount">—</span>
+                <span class="badge badge-muted" id="zookeeperTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('http_provider')" id="btn-http_provider" class="tab-btn tab-optional" data-tab="http_provider">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-link"></i>
                 HTTP Provider
-                <span class="badge badge-muted" id="httpProviderTabCount">—</span>
+                <span class="badge badge-muted" id="httpProviderTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('file_external')" id="btn-file_external" class="tab-btn tab-optional" data-tab="file_external">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-file-text"></i>
                 File (external)
-                <span class="badge badge-muted" id="fileExternalTabCount">—</span>
+                <span class="badge badge-muted" id="fileExternalTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('certs')" id="btn-certs" class="tab-btn tab-optional" data-tab="certs">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-shield-check"></i>
                 Certs
-                <span class="badge badge-muted" id="certsTabCount">—</span>
+                <span class="badge badge-muted" id="certsTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('plugins')" id="btn-plugins" class="tab-btn tab-optional" data-tab="plugins">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-puzzle-piece"></i>
                 Plugins
-                <span class="badge badge-muted" id="pluginsTabCount">—</span>
+                <span class="badge badge-muted" id="pluginsTabCount">-</span>
             </span>
         </button>
         <button onclick="switchTab('logs')" id="btn-logs" class="tab-btn tab-optional" data-tab="logs">
@@ -209,6 +221,12 @@
 
     
     {% include 'tabs/tab_middlewares.html' %}
+
+
+    {% include 'tabs/tab_routemap.html' %}
+
+
+    {% include 'tabs/tab_dashboard.html' %}
 
 
     {% include 'tabs/tab_live.html' %}
@@ -284,7 +302,7 @@ function showToast(msg, type='success') {
     setTimeout(() => { el.style.animation='slideOut 0.3s ease forwards'; setTimeout(()=>el.remove(),300); }, 4000);
 }
 
-const OPTIONAL_TABS = ['docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs'];
+const OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs'];
 
 let _visibleTabsCache = {};
 
@@ -337,6 +355,8 @@ function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.add('active');
     document.getElementById('btn-' + tab).classList.add('active');
+    if (tab === 'dashboard')     refreshDashboardTab();
+    if (tab === 'routemap')      refreshRoutemapTab();
     if (tab === 'live')          refreshLiveView();
     if (tab === 'docker')        refreshDockerTab();
     if (tab === 'kubernetes')    refreshKubernetesTab();
@@ -375,13 +395,13 @@ function renderProviderCard(r, opts = {}) {
     const isHTTP    = proto === 'HTTP';
 
     const externalBtn = (domain && isHTTP)
-        ? `<a href="https://${domain}" target="_blank" class="btn-icon" title="Open site"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>`
+        ? `<a href="https://${domain}" target="_blank" class="pill-btn pill-btn-blue" title="Open site"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>`
         : '';
 
     const domainBlock = isHTTP
         ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
                <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div>
-               <div class="text-xs font-mono truncate" style="color:var(--blue)" title="${r.rule || '—'}">${domain || r.rule || '—'}</div>
+               <div class="text-xs font-mono truncate" style="color:var(--blue)" title="${r.rule || '-'}">${domain || r.rule || '-'}</div>
            </div>`
         : (r.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
                <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div>
@@ -414,9 +434,9 @@ function renderProviderCard(r, opts = {}) {
                     <h3 class="font-bold text-sm mt-1.5 truncate" style="color:var(--text)" title="${name}">${name}</h3>
                     <div class="text-xs font-mono truncate" style="color:var(--muted)">${svc}</div>
                 </div>
-                <div class="flex items-center gap-0.5 ml-2 flex-shrink-0">
+                <div class="flex items-center gap-1.5 ml-2 flex-shrink-0">
                     ${opts.extraBadges || ''}${externalBtn}
-                    ${opts.onDetailClick ? `<button onclick="${opts.onDetailClick}" class="btn-icon" title="View details"><i class="ph-bold ph-info text-sm"></i></button>` : ''}
+                    ${opts.onDetailClick ? `<button onclick="${opts.onDetailClick}" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>` : ''}
                 </div>
             </div>
             <div class="space-y-2">
@@ -604,6 +624,7 @@ async function toggleRoute(id, currentlyEnabled) {
         if (json.ok) {
             showToast(currentlyEnabled ? 'Route disabled.' : 'Route enabled.', 'success');
             refreshRoutes();
+            if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData();
         } else {
             showToast(json.message || 'Failed to toggle route.', 'error');
         }
@@ -630,11 +651,13 @@ async function generateApiKey() {
         });
         const json = await res.json();
         if (json.ok) {
+            const preview = json.key.slice(0, 8) + '...' + json.key.slice(-4);
+            const previewEl = document.getElementById('apikeyPreview');
+            if (previewEl) previewEl.textContent = preview;
+            document.getElementById('apikeyActiveRow').classList.remove('hidden');
+            document.getElementById('apikeyInactiveRow').classList.add('hidden');
             document.getElementById('apikeyValue').value = json.key;
             document.getElementById('apikeyDisplay').classList.remove('hidden');
-            document.getElementById('apikeyStatusLabel').textContent = 'Active';
-            document.getElementById('apikeyStatusLabel').style.color = 'var(--green)';
-            document.getElementById('btnRevokeApiKey').classList.remove('hidden');
             showToast('API key generated. Copy it now.', 'success');
         } else {
             showToast('Failed to generate key.', 'error');
@@ -653,10 +676,11 @@ async function revokeApiKey() {
         });
         const json = await res.json();
         if (json.ok) {
-            document.getElementById('apikeyStatusLabel').textContent = 'Inactive';
-            document.getElementById('apikeyStatusLabel').style.color = 'var(--muted)';
+            document.getElementById('apikeyActiveRow').classList.add('hidden');
+            document.getElementById('apikeyInactiveRow').classList.remove('hidden');
             document.getElementById('apikeyDisplay').classList.add('hidden');
-            document.getElementById('btnRevokeApiKey').classList.add('hidden');
+            const previewEl = document.getElementById('apikeyPreview');
+            if (previewEl) previewEl.textContent = '';
             showToast('API key revoked.', 'success');
         }
     } catch(e) { showToast('Error revoking key.', 'error'); }
@@ -671,13 +695,18 @@ async function loadApiKeyStatus() {
     try {
         const res = await fetch('/api/auth/apikey/status');
         const json = await res.json();
-        const label = document.getElementById('apikeyStatusLabel');
-        const revokeBtn = document.getElementById('btnRevokeApiKey');
-        if (label) {
-            label.textContent = json.has_key ? 'Active' : 'Inactive';
-            label.style.color = json.has_key ? 'var(--green)' : 'var(--muted)';
+        const activeRow = document.getElementById('apikeyActiveRow');
+        const inactiveRow = document.getElementById('apikeyInactiveRow');
+        const previewEl = document.getElementById('apikeyPreview');
+        if (json.has_key) {
+            if (activeRow) activeRow.classList.remove('hidden');
+            if (inactiveRow) inactiveRow.classList.add('hidden');
+            if (previewEl && json.key_preview) previewEl.textContent = json.key_preview;
+        } else {
+            if (activeRow) activeRow.classList.add('hidden');
+            if (inactiveRow) inactiveRow.classList.remove('hidden');
+            if (previewEl) previewEl.textContent = '';
         }
-        if (revokeBtn) revokeBtn.classList.toggle('hidden', !json.has_key);
     } catch(e) {}
 }
 
@@ -698,19 +727,18 @@ function renderRouteGrid(apps) {
         const badgeClass = proto === 'http' ? 'badge-http' : (proto === 'tcp' ? 'badge-tcp' : 'badge-udp');
         const tlsBadge = app.tls ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS</span>` : '';
         const openLink = (proto === 'http' && domain && !domain.includes('{') && !domain.includes('*') && !domain.includes('HostRegexp'))
-            ? `<a href="https://${domain}" target="_blank" class="btn-icon" title="Open site"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : '';
+            ? `<a href="https://${domain}" target="_blank" class="pill-btn pill-btn-blue" title="Open site"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : '';
         const epBadges = (app.entryPoints || []).map(ep => `<span class="badge badge-muted text-xs">${_esc(ep)}</span>`).join('');
         const mwBadges = (app.middlewares || []).map(mw => `<span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">${_esc(mw)}</span>`).join('');
         const enabled = app.enabled !== false;
         const appJson = JSON.stringify(app).replace(/'/g, '&#39;');
         const toggleIcon = enabled ? 'ph-toggle-right' : 'ph-toggle-left';
-        const toggleColor = enabled ? 'var(--green)' : 'var(--muted)';
         const toggleTitle = enabled ? 'Disable route' : 'Enable route';
-        const toggleBtn = `<button type="button" onclick="toggleRoute('${_esc(app.id)}',${enabled})" class="btn-icon" title="${toggleTitle}"><i class="ph-bold ${toggleIcon} text-sm" style="color:${toggleColor}"></i></button>`;
+        const toggleBtn = `<button type="button" onclick="toggleRoute('${_esc(app.id)}',${enabled})" class="pill-btn ${enabled ? 'pill-btn-green' : 'pill-btn-muted'}" title="${toggleTitle}"><i class="ph-bold ${toggleIcon} text-sm"></i></button>`;
         const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div><div class="text-xs font-mono truncate" style="color:var(--blue)" title="${_esc(app.rule)}">${_esc(domain || app.rule)}</div></div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>${epBadges ? `<div class="flex flex-wrap gap-1">${epBadges}</div>` : ''}${mwBadges ? `<div class="flex flex-wrap gap-1">${mwBadges}</div>` : ''}`;
         const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>${epBadges ? `<div class="flex flex-wrap gap-1">${epBadges}</div>` : ''}`;
         const cfArg = app.configFile ? `,'${_esc(app.configFile)}'` : ',\'\'';
-        return `<div class="card route-card${enabled ? '' : ' opacity-50'}" data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}"><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${MULTI_CONFIG && app.configFile ? `<span class="badge badge-muted text-xs" style="font-size:9px">${_esc(app.configFile)}</span>` : ''}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-0.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="btn-icon" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="btn-icon" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="btn-danger" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button></div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div></div></div>`;
+        return `<div class="card route-card${enabled ? '' : ' opacity-50'}" data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}"><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${MULTI_CONFIG && app.configFile ? `<span class="badge badge-muted text-xs" style="font-size:9px">${_esc(app.configFile)}</span>` : ''}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div></div></div>`;
     }).join('');
 }
 
@@ -726,7 +754,7 @@ function renderMwGrid(middlewares) {
         const mwJson = JSON.stringify(mw).replace(/'/g, '&#39;');
         const mwCfArg = mw.configFile ? `,'${_esc(mw.configFile)}'` : ',\'\'';
         const mwCfBadge = MULTI_CONFIG && mw.configFile ? `<span class="badge badge-muted text-xs" style="font-size:9px">${_esc(mw.configFile)}</span>` : '';
-        return `<div class="card p-4 mw-card" data-mwname="${_esc(mw.name.toLowerCase())}" data-mwtype="${typeLower}"><div class="flex justify-between items-start mb-3"><div><div class="flex items-center gap-1.5 mb-1.5"><span class="badge ${badgeClass} w-fit">${typeUpper}</span>${mwCfBadge}</div><h3 class="font-bold text-sm" style="color:var(--text)">${_esc(mw.name)}</h3></div><div class="flex gap-0.5"><button type="button" data-mw='${mwJson}' onclick="handleMwEdit(this)" class="btn-icon" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button><button type="button" onclick="deleteMw('${_esc(mw.name)}'${mwCfArg})" class="btn-danger"><i class="ph-bold ph-trash text-sm"></i></button></div></div><div class="rounded-md p-3 overflow-x-auto" style="background:var(--input-bg);border:1px solid var(--border)"><pre class="text-xs font-mono leading-relaxed" style="color:var(--green)">${_esc(mw.yaml)}</pre></div></div>`;
+        return `<div class="card p-4 mw-card" data-mwname="${_esc(mw.name.toLowerCase())}" data-mwtype="${typeLower}"><div class="flex justify-between items-start mb-3"><div><div class="flex items-center gap-1.5 mb-1.5"><span class="badge ${badgeClass} w-fit">${typeUpper}</span>${mwCfBadge}</div><h3 class="font-bold text-sm" style="color:var(--text)">${_esc(mw.name)}</h3></div><div class="flex gap-1.5"><button type="button" onclick="deleteMw('${_esc(mw.name)}'${mwCfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-mw='${mwJson}' onclick="handleMwEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button></div></div><div class="rounded-md p-3 overflow-x-auto" style="background:var(--input-bg);border:1px solid var(--border)"><pre class="text-xs font-mono leading-relaxed" style="color:var(--green)">${_esc(mw.yaml)}</pre></div></div>`;
     }).join('');
     filterMw();
 }
@@ -957,7 +985,7 @@ async function loadOverviewStats() {
             document.getElementById('countRoutes').textContent = http.length + tcpAll.length;
 
             const dockerCount = [...http, ...tcpAll].filter(r => (r.provider || (r.name||'').split('@')[1]||'') === 'docker').length;
-            document.getElementById('dockerTabCount').textContent = dockerCount || '—';
+            document.getElementById('dockerTabCount').textContent = dockerCount || '-';
 
             const tc = statusCounts(tcpAll);
             document.getElementById('statTcpUdp').textContent     = tcpAll.length;
@@ -1080,12 +1108,12 @@ async function loadOverviewStats() {
     
     fetch('/api/traefik/certs').then(r => r.json()).then(res => {
         const n = (res.certs || []).length;
-        document.getElementById('certsTabCount').textContent = n || '—';
+        document.getElementById('certsTabCount').textContent = n || '-';
     }).catch(() => {});
 
     fetch('/api/traefik/plugins').then(r => r.json()).then(res => {
         const n = (res.plugins || []).length;
-        document.getElementById('pluginsTabCount').textContent = n || '—';
+        document.getElementById('pluginsTabCount').textContent = n || '-';
     }).catch(() => {});
 }
 
@@ -1103,7 +1131,7 @@ async function checkForUpdate(currentVersion) {
         const latEl    = document.getElementById('updateLatestVer');
         const linkEl   = document.getElementById('updateReleaseLink');
         if (curEl) curEl.textContent = 'v' + current;
-        if (latEl) latEl.textContent = 'v' + (latestTag || '—');
+        if (latEl) latEl.textContent = 'v' + (latestTag || '-');
         if (linkEl && data.html_url) linkEl.href = data.html_url;
 
         if (latestTag && latestTag !== current && compareVersions(latestTag, current) > 0) {
@@ -1426,7 +1454,7 @@ function openSvcDetail(idx) {
     document.getElementById('svcDetailTitle').textContent = (s.name || '').split('@')[0];
 
     const provider = (s.name || '').includes('@') ? s.name.split('@').pop() : 'file';
-    const type = s.loadBalancer ? 'loadbalancer' : s.mirroring ? 'mirroring' : s.weighted ? 'weighted' : s.failover ? 'failover' : '—';
+    const type = s.loadBalancer ? 'loadbalancer' : s.mirroring ? 'mirroring' : s.weighted ? 'weighted' : s.failover ? 'failover' : '-';
     const status = s.status || 'unknown';
     const statusBadge = status === 'enabled'
         ? `<span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-400">Success</span></span>`
@@ -1453,7 +1481,7 @@ function openSvcDetail(idx) {
                     <td class="px-3 py-2.5">
                         <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-400 text-xs">Active</span></span>
                     </td>
-                    <td class="px-3 py-2.5 font-mono text-xs break-all" style="color:var(--text)">${sv.url || sv.address || '—'}</td>
+                    <td class="px-3 py-2.5 font-mono text-xs break-all" style="color:var(--text)">${sv.url || sv.address || '-'}</td>
                 </tr>`).join('')}
             </tbody>
         </table>` : `<div class="text-xs mt-2" style="color:var(--muted)">No servers configured</div>`;
@@ -1462,7 +1490,7 @@ function openSvcDetail(idx) {
     const usedBy = s.usedBy || [];
     const usedByHtml = usedBy.length > 0
         ? usedBy.map(r => `<span class="badge badge-muted mr-1 mb-1">${r}</span>`).join('')
-        : `<span class="text-xs" style="color:var(--muted)">—</span>`;
+        : `<span class="text-xs" style="color:var(--muted)">-</span>`;
 
     const kv = (label, val, isHtml = false) => `
         <div class="flex items-start py-2.5" style="border-bottom:1px solid var(--border)">
@@ -1545,13 +1573,16 @@ async function openRouteDetail(name, protocol, appData) {
     title.textContent = name;
 
     
-    editBtn.style.display = '';
-    editBtn.onclick = () => {
-        closeRouteDetail();
-        const fakeBtn = document.createElement('button');
-        fakeBtn.setAttribute('data-app', JSON.stringify(appData));
-        handleEdit(fakeBtn);
-    };
+    const isFileRoute = !appData.provider || appData.provider === 'file';
+    editBtn.style.display = isFileRoute ? '' : 'none';
+    if (isFileRoute) {
+        editBtn.onclick = () => {
+            closeRouteDetail();
+            const fakeBtn = document.createElement('button');
+            fakeBtn.setAttribute('data-app', JSON.stringify(appData));
+            handleEdit(fakeBtn);
+        };
+    }
 
     
     panel.classList.add('open');
@@ -1635,7 +1666,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
 
     const apiNote = liveRouter
         ? `<div class="flex items-center gap-1.5 text-xs mb-5" style="color:var(--muted)"><div style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block"></div> Live data from Traefik API</div>`
-        : `<div class="flex items-center gap-1.5 text-xs mb-5 p-2 rounded" style="color:var(--yellow);background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.2)"><i class="ph-bold ph-warning text-xs"></i> Traefik API unavailable — showing config file data only</div>`;
+        : `<div class="flex items-center gap-1.5 text-xs mb-5 p-2 rounded" style="color:var(--yellow);background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.2)"><i class="ph-bold ph-warning text-xs"></i> Traefik API unavailable - showing config file data only</div>`;
 
     
     const routerEPs = (liveRouter ? liveRouter.entryPoints : app.entryPoints) || [];
@@ -1652,14 +1683,14 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
             ${addr ? `<div class="font-mono text-xs mt-1" style="color:var(--muted)">${addr}</div>` : ''}
             ${isHttps ? `<div class="mt-1"><span class="badge badge-green text-xs" style="font-size:9px">TLS</span></div>` : ''}
         </div>`;
-    }).join('') || `<div class="flow-box text-center"><div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">Entry Point</div><div class="text-sm" style="color:var(--muted)">—</div></div>`;
+    }).join('') || `<div class="flow-box text-center"><div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">Entry Point</div><div class="text-sm" style="color:var(--muted)">-</div></div>`;
 
     const hasTls = liveRouter ? !!(liveRouter.tls) : !!(app.entryPoints && app.entryPoints.includes('https'));
     const tlsInfo = hasTls ? `<div class="mt-1.5"><span class="badge badge-green text-xs" style="font-size:9px"><i class="ph-bold ph-shield-check"></i> TLS</span></div>` : '';
 
     const serversList = liveService ? (liveService.loadBalancer?.servers || []) : [];
     const serversHtml = serversList.length > 0
-        ? serversList.map(s => `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:var(--green);background:var(--input-bg);word-break:break-all">${s.url || s.address || '—'}</div>`).join('')
+        ? serversList.map(s => `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:var(--green);background:var(--input-bg);word-break:break-all">${s.url || s.address || '-'}</div>`).join('')
         : `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:var(--green);background:var(--input-bg);word-break:break-all">${app.target}</div>`;
 
     const flowHtml = `
@@ -1686,15 +1717,15 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
     
     const rule = liveRouter ? liveRouter.rule : app.rule;
     const provider = liveRouter ? (liveRouter.provider || 'file') : 'file';
-    const priority = liveRouter ? (liveRouter.priority ?? '—') : '—';
+    const priority = liveRouter ? (liveRouter.priority ?? '-') : '-';
 
     const routerRows = [
         ['Status', statusBadge, true],
         ['Provider', `<span class="badge badge-muted">${provider}</span>`, true],
-        ['Rule', rule || '—', false],
-        ['Name', (liveRouter ? liveRouter.name : app.name) || '—', false],
-        ['Entry Points', routerEPs.map(ep => `<span class="badge badge-muted mr-1">${ep}</span>`).join('') || '—', true],
-        ['Service', app.service_name || '—', false],
+        ['Rule', rule || '-', false],
+        ['Name', (liveRouter ? liveRouter.name : app.name) || '-', false],
+        ['Entry Points', routerEPs.map(ep => `<span class="badge badge-muted mr-1">${ep}</span>`).join('') || '-', true],
+        ['Service', app.service_name || '-', false],
         ['Priority', String(priority), false],
     ];
 
@@ -1704,8 +1735,8 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
     if (protocol === 'http' || protocol === 'tcp') {
         const tlsRows = [
             ['TLS', tlsData ? `<span class="badge badge-green">True</span>` : `<span class="badge badge-red">False</span>`, true],
-            ['Certificate Resolver', tlsData ? (tlsData.certResolver || '—') : '—', false],
-            ['Options', tlsData ? (tlsData.options || 'default') : '—', false],
+            ['Certificate Resolver', tlsData ? (tlsData.certResolver || '-') : '-', false],
+            ['Options', tlsData ? (tlsData.options || 'default') : '-', false],
             ['Passthrough', (protocol === 'tcp' && tlsData && tlsData.passthrough) ? `<span class="badge badge-green">True</span>` : `<span class="badge badge-red">False</span>`, true],
         ];
         tlsSection = renderSection('TLS', 'ph-shield', tlsRows);
@@ -1740,19 +1771,19 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
     
     const svcLoadBalancer = liveService ? liveService.loadBalancer : null;
     const svcServers = svcLoadBalancer ? (svcLoadBalancer.servers || []) : [{ url: app.target }];
-    const svcPassHostHeader = svcLoadBalancer ? (svcLoadBalancer.passHostHeader !== false ? 'true' : 'false') : '—';
-    const svcStatus = liveService ? (liveService.status || '—') : '—';
+    const svcPassHostHeader = svcLoadBalancer ? (svcLoadBalancer.passHostHeader !== false ? 'true' : 'false') : '-';
+    const svcStatus = liveService ? (liveService.status || '-') : '-';
 
     const svcServerRows = svcServers.map((s, i) => [
         `Server ${i + 1}`,
-        s.url || s.address || '—',
+        s.url || s.address || '-',
         false
     ]);
 
     const svcRows = [
         ['Status', svcStatus === 'enabled'
             ? `<span class="badge badge-green">Enabled</span>`
-            : svcStatus !== '—' ? `<span class="badge badge-muted">${svcStatus}</span>` : '—', svcStatus !== '—'],
+            : svcStatus !== '-' ? `<span class="badge badge-muted">${svcStatus}</span>` : '-', svcStatus !== '-'],
         ['Type', 'Load Balancer', false],
         ['Pass Host Header', svcPassHostHeader, false],
         ...(app.containerAddr ? [['Container', app.containerAddr, false]] : []),
@@ -1959,7 +1990,7 @@ async function refreshPluginsTab() {
                     { label: 'Add this volume to the <code class="font-mono">traefik-manager</code> service in your <code class="font-mono">docker-compose.yml</code>:',
                       code: '- /path/to/traefik/traefik.yml:/app/traefik.yml:ro' },
                 ],
-                note: 'No Traefik restart needed — only traefik-manager needs to be updated.'
+                note: 'No Traefik restart needed - only traefik-manager needs to be updated.'
             });
             document.getElementById('pluginsTabCount').textContent = '0';
             return;
@@ -1998,7 +2029,7 @@ function renderPluginCards() {
     const cards = items.map(p => {
         const idx        = _allPlugins.indexOf(p);
         const name       = p.name || 'Unknown';
-        const version    = p.version || '—';
+        const version    = p.version || '-';
         const moduleName = p.moduleName || '';
         const repoUrl    = moduleName.startsWith('github.com/') ? 'https://' + moduleName : '';
         return `
@@ -2033,7 +2064,7 @@ function openPluginDetail(idx) {
     if (!p) return;
 
     const name       = p.name || 'Unknown';
-    const version    = p.version || '—';
+    const version    = p.version || '-';
     const moduleName = p.moduleName || '';
     const repoUrl    = moduleName.startsWith('github.com/') ? 'https://' + moduleName : '';
 
@@ -2042,7 +2073,7 @@ function openPluginDetail(idx) {
     const rows = [
         ['Name',        name],
         ['Version',     version],
-        ['Module',      moduleName || '—'],
+        ['Module',      moduleName || '-'],
         ...(repoUrl ? [['Repository', `<a href="${repoUrl}" target="_blank" style="color:var(--blue)">${repoUrl} <i class="ph-bold ph-arrow-square-out text-xs"></i></a>`]] : []),
     ];
 
@@ -2096,8 +2127,8 @@ function renderCertCards() {
     const cards = items.map(cert => {
         const main     = cert.main || 'Unknown';
         const sans     = cert.sans || [];
-        const resolver = cert.resolver || '—';
-        let daysLeft = null, expiryStr = '—';
+        const resolver = cert.resolver || '-';
+        let daysLeft = null, expiryStr = '-';
         if (cert.not_after) {
             const expiry = new Date(cert.not_after);
             if (!isNaN(expiry)) {
@@ -2144,7 +2175,7 @@ async function refreshCertsTab() {
                     { label: 'Add this volume to the <code class="font-mono">traefik-manager</code> service in your <code class="font-mono">docker-compose.yml</code>:',
                       code: '- /path/to/traefik/acme.json:/app/acme.json:ro' },
                 ],
-                note: 'No Traefik restart needed — only traefik-manager needs to be updated.'
+                note: 'No Traefik restart needed - only traefik-manager needs to be updated.'
             });
             document.getElementById('certsTabCount').textContent = '0';
             return;
@@ -2154,7 +2185,7 @@ async function refreshCertsTab() {
             container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">
                 <i class="ph-light ph-shield text-5xl block mb-3 opacity-30"></i>
                 <p class="font-medium">No certificates found</p>
-                <p class="text-xs mt-1">acme.json may be empty — certs are issued on first request.</p>
+                <p class="text-xs mt-1">acme.json may be empty - certs are issued on first request.</p>
             </div>`;
             document.getElementById('certsTabCount').textContent = '0';
             return;
@@ -2244,7 +2275,9 @@ function renderLogs() {
     try {
         const res  = await fetch('/api/settings');
         const data = await res.json();
-        applyTabVisibility(data.visible_tabs || {});
+        const tabs = data.visible_tabs || {};
+        applyTabVisibility(tabs);
+        if (tabs.dashboard) switchTab('dashboard');
     } catch(e) {
         applyTabVisibility({});
     }
@@ -2269,7 +2302,7 @@ if (document.getElementById('toastContainer') && document.getElementById('toastC
     <a href="https://github.com/chr0nzz/traefik-manager" target="_blank"
        style="color:var(--muted);text-decoration:none" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Traefik Manager</a>
     &nbsp;·&nbsp;
-    <span id="footerManagerVer" style="cursor:pointer" title="About" onclick="openSettingsModal('about')">—</span>
+    <span id="footerManagerVer" style="cursor:pointer" title="About" onclick="openSettingsModal('about')">-</span>
 </footer>
 
 </body>

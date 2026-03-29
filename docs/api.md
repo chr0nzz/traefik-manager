@@ -481,6 +481,70 @@ Delete a managed middleware.
 
 ---
 
+## Dashboard
+
+#### `GET /api/dashboard/config`
+
+Get the saved Dashboard configuration - custom groups and per-route overrides.
+
+**Auth:** Session or API key
+
+**Response**
+```json
+{
+  "custom_groups": [
+    { "name": "My Apps", "keywords": ["myapp", "internal"] }
+  ],
+  "route_overrides": {
+    "plex": {
+      "display_name": "Plex Media Server",
+      "icon_type": "slug",
+      "icon_slug": "plex",
+      "group": "Media"
+    }
+  }
+}
+```
+
+---
+
+#### `POST /api/dashboard/config`
+
+Save the Dashboard configuration. Replaces the full config in `dashboard.yml`.
+
+**Auth:** Session or API key · **CSRF:** required (session only)
+
+**Request**
+```json
+{
+  "custom_groups": [
+    { "name": "My Apps", "keywords": ["myapp", "internal"] }
+  ],
+  "route_overrides": {
+    "plex": { "display_name": "Plex", "icon_type": "auto" }
+  }
+}
+```
+
+**Response**
+```json
+{ "ok": true }
+```
+
+---
+
+#### `GET /api/dashboard/icon/<slug>`
+
+Serve a cached app icon by slug. On cache miss, fetches from the selfh.st CDN (`https://cdn.jsdelivr.net/gh/selfhst/icons/png/{slug}.png`) and stores it in `/config/cache/{slug}.png`. Subsequent requests are served from disk with a 24-hour browser cache (`Cache-Control: max-age=86400`).
+
+**Auth:** Session or API key
+
+**Path params:** `slug` - icon name (lowercase alphanumeric and hyphens only, e.g. `plex`, `grafana`, `home-assistant`)
+
+**Response:** PNG image or `404` if the icon is not found on the CDN.
+
+---
+
 ## Settings
 
 #### `GET /api/settings`
@@ -496,7 +560,7 @@ Get current application settings. Password hash is never included.
   "cert_resolver": "letsencrypt",
   "traefik_api_url": "http://traefik:8080",
   "auth_enabled": true,
-  "visible_tabs": { "docker": true, "kubernetes": false, ... }
+  "visible_tabs": { "dashboard": true, "routemap": false, "docker": true, "kubernetes": false, ... }
 }
 ```
 
@@ -529,7 +593,7 @@ Show or hide optional provider tabs in the UI.
 
 **Request**
 ```json
-{ "docker": true, "kubernetes": false, "nomad": false }
+{ "dashboard": true, "routemap": true, "docker": false, "kubernetes": false }
 ```
 
 **Response**

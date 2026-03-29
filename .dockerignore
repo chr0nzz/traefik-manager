@@ -14,6 +14,7 @@ build/
 dist/
 images/
 docs/
+build.sh
 
 # Docker
 docker-compose.yml
