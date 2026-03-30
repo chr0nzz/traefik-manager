@@ -416,6 +416,16 @@ Full documentation at **[traefik-manager.xyzlab.dev](https://traefik-manager.xyz
 
 Pull requests are welcome. For larger changes please open an issue first.
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=chr0nzz%2Ftraefik-manager&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=chr0nzz/traefik-manager&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=chr0nzz/traefik-manager&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=chr0nzz/traefik-manager&type=date&legend=top-left" />
+ </picture>
+</a>
+
 ## License
 
 [GPL-3.0](LICENSE)
