@@ -580,6 +580,21 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 .svc-card-usedby { display: flex; flex-wrap: wrap; gap: 4px; }
 .svc-used-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--purple) 35%, transparent); background: color-mix(in srgb, var(--purple) 10%, transparent); color: var(--purple); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Live/services list view */
+.svc-list { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.svc-list-header,
+.svc-list-row { display: grid; grid-template-columns: 20px 120px 1fr 120px 90px 80px; align-items: center; gap: 12px; padding: 9px 16px; }
+.svc-list-header { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); background: var(--input-bg); }
+.svc-list-row { cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.15s; }
+.svc-list-row:last-child { border-bottom: none; }
+.svc-list-row:hover { background: var(--input-bg); }
+.svc-list-col-status { display: flex; align-items: center; justify-content: center; }
+.svc-list-col-proto { display: flex; align-items: center; gap: 5px; }
+.svc-list-col-name { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.svc-list-col-provider,
+.svc-list-col-servers,
+.svc-list-col-usedby { display: flex; align-items: center; }
+
 /* Responsive */
 @media (max-width: 640px) {
     .desktop-only { display: none !important; }

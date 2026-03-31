@@ -1239,6 +1239,14 @@ let _allServices = [];
 let _svcFilter = 'all';
 let _protoLiveFilter = 'all';
 let _providerFilter = 'all';
+let _svcViewMode = 'grid';
+
+function toggleSvcView() {
+    _svcViewMode = _svcViewMode === 'grid' ? 'list' : 'grid';
+    const icon = document.getElementById('svcViewIcon');
+    if (icon) icon.className = _svcViewMode === 'grid' ? 'ph-bold ph-list' : 'ph-bold ph-squares-four';
+    renderServicesTable();
+}
 
 function toggleLiveDd(id) {
     const menu = document.getElementById(id + '-menu');
@@ -1433,8 +1441,45 @@ function renderServicesTable() {
         ? `<div class="text-center py-12" style="color:var(--muted)">No services match filter</div>`
         : '';
 
-    document.getElementById('liveContent').innerHTML =
-        `<div class="svc-card-grid">${cards}${empty}</div>`;
+    if (_svcViewMode === 'list') {
+        const rows = items.map(s => {
+            const globalIdx = _allServices.indexOf(s);
+            const proto     = s._proto || 'HTTP';
+            const name      = (s.name || '').split('@')[0];
+            const provider  = providerOf(s);
+            const type      = typeOf(s);
+            const st        = statusOf(s);
+            const stColor   = st === 'success' ? 'var(--green)' : st === 'error' ? 'var(--red)' : 'var(--yellow)';
+            const serverStatus  = s.serverStatus || {};
+            const serverEntries = Object.entries(serverStatus);
+            const activeCount   = serverEntries.filter(([,v]) => (v||'').toLowerCase() === 'up').length;
+            const serverSummary = serverEntries.length > 0 ? `${activeCount}/${serverEntries.length}` : null;
+            const srvColor      = serverEntries.length > 0 && activeCount === serverEntries.length ? 'var(--green)' : 'var(--orange)';
+            const usedBy        = s.usedBy || [];
+            return `<div class="svc-list-row" onclick="openSvcDetail(${globalIdx})">
+                <div class="svc-list-col-status"><span class="svc-status-dot" style="background:${stColor}"></span></div>
+                <div class="svc-list-col-proto">
+                    <span class="badge badge-${proto.toLowerCase()}" style="font-size:9px">${proto}</span>
+                    ${type ? `<span class="svc-type-badge">${type}</span>` : ''}
+                </div>
+                <div class="svc-list-col-name">${_esc(name)}</div>
+                <div class="svc-list-col-provider"><span class="svc-meta-chip"><i class="ph-bold ph-database" style="font-size:10px"></i>${_esc(provider)}</span></div>
+                <div class="svc-list-col-servers">${serverSummary ? `<span class="svc-meta-chip" style="color:${srvColor};background:color-mix(in srgb,${srvColor} 10%,transparent);border-color:color-mix(in srgb,${srvColor} 35%,transparent)"><i class="ph-bold ph-server" style="font-size:10px"></i>${serverSummary}</span>` : '<span style="color:var(--muted);font-size:11px">-</span>'}</div>
+                <div class="svc-list-col-usedby">${usedBy.length > 0 ? `<span class="svc-used-chip"><i class="ph-bold ph-git-branch" style="font-size:9px"></i>${usedBy.length}</span>` : '<span style="color:var(--muted);font-size:11px">-</span>'}</div>
+            </div>`;
+        }).join('');
+        const header = `<div class="svc-list-header">
+            <div class="svc-list-col-status"></div>
+            <div class="svc-list-col-proto">Protocol</div>
+            <div class="svc-list-col-name">Name</div>
+            <div class="svc-list-col-provider">Provider</div>
+            <div class="svc-list-col-servers">Servers</div>
+            <div class="svc-list-col-usedby">Used By</div>
+        </div>`;
+        document.getElementById('liveContent').innerHTML = `<div class="svc-list">${header}${rows}${empty}</div>`;
+    } else {
+        document.getElementById('liveContent').innerHTML = `<div class="svc-card-grid">${cards}${empty}</div>`;
+    }
 
     document.getElementById('svcTabCount').textContent = _allServices.filter(s => s._proto === 'HTTP').length;
 }
