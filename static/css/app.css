@@ -594,6 +594,8 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 .svc-list-col-provider,
 .svc-list-col-servers,
 .svc-list-col-usedby { display: flex; align-items: center; }
+.route-list-grid { grid-template-columns: 20px 110px 1fr 200px 160px 100px 160px; }
+.mw-list-grid { grid-template-columns: 80px 1fr 120px 70px; }
 
 /* Responsive */
 @media (max-width: 640px) {

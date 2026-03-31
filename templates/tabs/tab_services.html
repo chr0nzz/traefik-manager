@@ -11,6 +11,11 @@
             <button onclick="filterProto('tcp')" id="filterTCP" class="proto-btn text-xs px-3 py-1.5">TCP</button>
             <button onclick="filterProto('udp')" id="filterUDP" class="proto-btn text-xs px-3 py-1.5">UDP</button>
         </div>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="toggleRouteView()" id="routeViewToggle" class="proto-btn text-xs px-3 py-1.5" title="Toggle view">
+                <i class="ph-bold ph-list" id="routeViewIcon"></i>
+            </button>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="routeGrid">
