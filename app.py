@@ -106,6 +106,7 @@ GROUPS_CONFIG_FILE = os.path.join(_CONFIG_DIR, 'dashboard.yml')
 os.makedirs(GROUPS_CACHE_DIR, exist_ok=True)
 
 _config_dir = os.environ.get('CONFIG_DIR', '').strip()
+ACTIVE_CONFIG_DIR = _config_dir
 if _config_dir:
     import glob as _glob
     _ymls  = _glob.glob(os.path.join(_config_dir, '**', '*.yml'),  recursive=True)
@@ -138,15 +139,28 @@ def _safe_file_path(path: str) -> str:
 
 def _resolve_config_path(s: str) -> str:
     """Validate a config file given a basename or full path against CONFIG_PATHS.
-    Returns the canonical path if valid, '' otherwise."""
+    Returns the canonical path if valid, '' otherwise.
+    If ACTIVE_CONFIG_DIR is set and s is a plain filename, allows new files in CONFIG_DIR."""
     if not s:
         return CONFIG_PATH
     s = s.strip()
     for p in CONFIG_PATHS:
         if s == p or s == os.path.basename(p):
             return p
+    if ACTIVE_CONFIG_DIR and '/' not in s and '\\' not in s and s.endswith(('.yml', '.yaml')):
+        candidate = os.path.join(ACTIVE_CONFIG_DIR, s)
+        if _is_safe_path(candidate):
+            return candidate
     logger.warning(f"Config file not in CONFIG_PATHS: {s!r}")
     return ''
+
+def _register_config_path(path: str):
+    """Add a newly created config file to CONFIG_PATHS if not already present."""
+    global CONFIG_PATHS, CONFIG_PATH, MULTI_CONFIG
+    if path and path not in CONFIG_PATHS:
+        CONFIG_PATHS = sorted(CONFIG_PATHS + [path])
+        CONFIG_PATH  = CONFIG_PATHS[0]
+        MULTI_CONFIG = len(CONFIG_PATHS) > 1
 
 def _safe_api_url(url: str) -> str:
     url = url.strip()
@@ -1581,6 +1595,7 @@ def index():
                            auth_enabled=auth_on, login_time=login_time,
                            multi_config=MULTI_CONFIG,
                            config_paths_list=config_paths_list,
+                           config_dir_set=bool(ACTIVE_CONFIG_DIR),
                            cert_resolvers=cert_resolvers)
 
 
@@ -1671,6 +1686,7 @@ def save_entry():
             config['udp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
 
         save_config(config, target_path)
+        _register_config_path(target_path)
         msg = f"Successfully saved {svc_name}"
         if fetch:
             return jsonify({'ok': True, 'message': msg})
@@ -1747,6 +1763,7 @@ def save_middleware():
             config['http']['middlewares'].pop(original_id, None)
         config['http']['middlewares'][mw_name] = safe_yaml.load(mw_content)
         save_config(config, target_path)
+        _register_config_path(target_path)
         msg = f"Successfully saved middleware {mw_name}"
         if fetch:
             return jsonify({'ok': True, 'message': msg})

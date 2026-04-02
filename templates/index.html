@@ -520,7 +520,10 @@ function openModal() {
     // Init config file to first option (multi-config mode)
     const cfSel = document.getElementById('configFileSelect');
     const cfHid = document.getElementById('configFile');
-    if (cfSel && cfHid) cfHid.value = cfSel.value;
+    if (cfSel) cfSel.value = cfSel.options[0]?.value || '';
+    const newRouteInput = document.getElementById('newRouteFileName');
+    if (newRouteInput) { newRouteInput.style.display = 'none'; newRouteInput.value = ''; }
+    if (cfSel && cfHid && cfSel.value !== '__new__') cfHid.value = cfSel.value;
     document.getElementById('appModal').style.display = 'flex';
 }
 
@@ -539,11 +542,42 @@ function openMwModal() {
     if (titleEl) titleEl.innerText = 'Add Middleware';
     const mwCfSel = document.getElementById('mwConfigFileSelect');
     const mwCfHid = document.getElementById('mwConfigFile');
-    if (mwCfSel && mwCfHid) mwCfHid.value = mwCfSel.value;
+    if (mwCfSel) mwCfSel.value = mwCfSel.options[0]?.value || '';
+    const newMwInput = document.getElementById('newMwFileName');
+    if (newMwInput) { newMwInput.style.display = 'none'; newMwInput.value = ''; }
+    if (mwCfSel && mwCfHid && mwCfSel.value !== '__new__') mwCfHid.value = mwCfSel.value;
     modal.style.display = 'flex';
 }
 
 function closeMwModal() { document.getElementById('mwModal').style.display = 'none'; }
+
+function onRouteConfigFileChange(sel) {
+    const newInput = document.getElementById('newRouteFileName');
+    const cfHid    = document.getElementById('configFile');
+    if (sel.value === '__new__') {
+        if (newInput) newInput.style.display = '';
+        const svcName = (document.getElementById('serviceName')?.value || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        if (newInput && !newInput.value && svcName) newInput.value = `app-${svcName}.yml`;
+        if (cfHid) cfHid.value = newInput?.value || '';
+    } else {
+        if (newInput) { newInput.style.display = 'none'; newInput.value = ''; }
+        if (cfHid) cfHid.value = sel.value;
+    }
+}
+
+function onMwConfigFileChange(sel) {
+    const newInput = document.getElementById('newMwFileName');
+    const cfHid    = document.getElementById('mwConfigFile');
+    if (sel.value === '__new__') {
+        if (newInput) newInput.style.display = '';
+        const mwName = (document.getElementById('middlewareName')?.value || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        if (newInput && !newInput.value && mwName) newInput.value = `middlewares-${mwName}.yml`;
+        if (cfHid) cfHid.value = newInput?.value || '';
+    } else {
+        if (newInput) { newInput.style.display = 'none'; newInput.value = ''; }
+        if (cfHid) cfHid.value = sel.value;
+    }
+}
 
 function _esc(s) {
     return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -813,6 +847,8 @@ function handleEdit(btn) {
     document.getElementById('configFile').value = app.configFile || '';
     const cfSel = document.getElementById('configFileSelect');
     if (cfSel && app.configFile) cfSel.value = app.configFile;
+    const newRouteInput = document.getElementById('newRouteFileName');
+    if (newRouteInput) { newRouteInput.style.display = 'none'; newRouteInput.value = ''; }
 
     const proto = app.protocol || 'http';
     setProtocol(proto);
@@ -875,6 +911,8 @@ function handleMwEdit(btn) {
     document.getElementById('mwConfigFile').value = mw.configFile || '';
     const cfSel = document.getElementById('mwConfigFileSelect');
     if (cfSel && mw.configFile) cfSel.value = mw.configFile;
+    const newMwInput = document.getElementById('newMwFileName');
+    if (newMwInput) { newMwInput.style.display = 'none'; newMwInput.value = ''; }
     document.getElementById('mwModal').style.display = 'flex';
 }
 

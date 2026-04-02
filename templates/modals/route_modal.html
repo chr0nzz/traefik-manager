@@ -16,14 +16,20 @@
             </div>
 
             <div class="px-5 py-4 space-y-4">
-                {% if multi_config %}
+                {% if multi_config or config_dir_set %}
                 <div>
                     <label>Config File</label>
-                    <select id="configFileSelect" class="input-field" onchange="document.getElementById('configFile').value=this.value">
+                    <select id="configFileSelect" class="input-field" onchange="onRouteConfigFileChange(this)">
                         {% for cp in config_paths_list %}
                         <option value="{{ cp.label }}">{{ cp.label }}</option>
                         {% endfor %}
+                        {% if config_dir_set %}
+                        <option value="__new__">+ New file...</option>
+                        {% endif %}
                     </select>
+                    {% if config_dir_set %}
+                    <input type="text" id="newRouteFileName" class="input-field mt-2" placeholder="app-myservice.yml" style="display:none" oninput="document.getElementById('configFile').value=this.value">
+                    {% endif %}
                 </div>
                 {% endif %}
                 <div>
