@@ -8,6 +8,7 @@
             <button onclick="filterEcs('all')"  id="ecs-all"  class="proto-btn active-http text-xs px-3 py-1.5">All</button>
             <button onclick="filterEcs('http')" id="ecs-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
             <button onclick="filterEcs('tcp')"  id="ecs-tcp"  class="proto-btn text-xs px-3 py-1.5">TCP</button>
+            <button onclick="filterEcs('udp')"  id="ecs-udp"  class="proto-btn text-xs px-3 py-1.5">UDP</button>
         </div>
         <button onclick="refreshEcsTab()" class="btn-secondary text-xs">
             <i class="ph-bold ph-arrows-clockwise"></i> Refresh
@@ -66,7 +67,7 @@ async function refreshEcsTab() {
 function filterEcs(f) {
     if (f) {
         _ecsFilter = f;
-        ['all', 'http', 'tcp'].forEach(k => {
+        ['all', 'http', 'tcp', 'udp'].forEach(k => {
             const btn = document.getElementById('ecs-' + k);
             if (btn) btn.classList.toggle('active-http', k === f);
         });

@@ -8,6 +8,7 @@
             <button onclick="filterFileExternal('all')"  id="fe-all"  class="proto-btn active-http text-xs px-3 py-1.5">All</button>
             <button onclick="filterFileExternal('http')" id="fe-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
             <button onclick="filterFileExternal('tcp')"  id="fe-tcp"  class="proto-btn text-xs px-3 py-1.5">TCP</button>
+            <button onclick="filterFileExternal('udp')"  id="fe-udp"  class="proto-btn text-xs px-3 py-1.5">UDP</button>
         </div>
         <button onclick="refreshFileExternalTab()" class="btn-secondary text-xs">
             <i class="ph-bold ph-arrows-clockwise"></i> Refresh
@@ -72,7 +73,7 @@ async function refreshFileExternalTab() {
 function filterFileExternal(f) {
     if (f) {
         _fileExternalFilter = f;
-        ['all', 'http', 'tcp'].forEach(k => {
+        ['all', 'http', 'tcp', 'udp'].forEach(k => {
             const btn = document.getElementById('fe-' + k);
             if (btn) btn.classList.toggle('active-http', k === f);
         });

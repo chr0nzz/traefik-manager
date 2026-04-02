@@ -8,6 +8,7 @@
             <button onclick="filterConsul('all')"  id="ck-all"  class="proto-btn active-http text-xs px-3 py-1.5">All</button>
             <button onclick="filterConsul('http')" id="ck-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
             <button onclick="filterConsul('tcp')"  id="ck-tcp"  class="proto-btn text-xs px-3 py-1.5">TCP</button>
+            <button onclick="filterConsul('udp')"  id="ck-udp"  class="proto-btn text-xs px-3 py-1.5">UDP</button>
         </div>
         <button onclick="refreshConsulTab()" class="btn-secondary text-xs">
             <i class="ph-bold ph-arrows-clockwise"></i> Refresh
@@ -66,7 +67,7 @@ async function refreshConsulTab() {
 function filterConsul(f) {
     if (f) {
         _consulFilter = f;
-        ['all', 'http', 'tcp'].forEach(k => {
+        ['all', 'http', 'tcp', 'udp'].forEach(k => {
             const btn = document.getElementById('ck-' + k);
             if (btn) btn.classList.toggle('active-http', k === f);
         });

@@ -8,6 +8,7 @@
             <button onclick="filterDocker('all')"   id="dk-all"   class="proto-btn active-http text-xs px-3 py-1.5">All</button>
             <button onclick="filterDocker('http')"  id="dk-http"  class="proto-btn text-xs px-3 py-1.5">HTTP</button>
             <button onclick="filterDocker('tcp')"   id="dk-tcp"   class="proto-btn text-xs px-3 py-1.5">TCP</button>
+            <button onclick="filterDocker('udp')"   id="dk-udp"   class="proto-btn text-xs px-3 py-1.5">UDP</button>
         </div>
         <button onclick="refreshDockerTab()" class="btn-secondary text-xs">
             <i class="ph-bold ph-arrows-clockwise"></i> Refresh
@@ -89,7 +90,7 @@ async function refreshDockerTab() {
 function filterDocker(f) {
     if (f) {
         _dockerFilter = f;
-        ['all','http','tcp'].forEach(k => {
+        ['all','http','tcp','udp'].forEach(k => {
             const btn = document.getElementById('dk-'+k);
             if (btn) btn.classList.toggle('active-http', k === f);
         });
