@@ -4,26 +4,30 @@
 .ui-img-dark { display: none; }
 .ui-theme-dark .ui-img-light { display: none; }
 .ui-theme-dark .ui-img-dark { display: block; }
+#ui-theme-toggle-wrap {
+  display: flex; justify-content: center; margin-top: 24px; margin-bottom: 24px;
+}
 #ui-theme-toggle {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 14px; border-radius: 6px; border: 1px solid #888;
+  padding: 8px 20px; border-radius: 6px; border: 1px solid #888;
   background: transparent; cursor: pointer; font-size: 14px;
-  margin-bottom: 20px;
 }
 #ui-theme-toggle:hover { background: rgba(128,128,128,0.15); }
 </style>
 
-<button id="ui-theme-toggle" onclick="uiToggleTheme()">🌙 Switch to Dark</button>
+<div id="ui-theme-toggle-wrap">
+  <button id="ui-theme-toggle" onclick="uiToggleTheme()">🌙 View Dark Theme</button>
+</div>
 
 <script>
-function uiToggleTheme() {
+window.uiToggleTheme = function() {
   const el = document.getElementById('ui-examples-wrap');
   const btn = document.getElementById('ui-theme-toggle');
   if (!el || !btn) return;
   const isDark = el.classList.toggle('ui-theme-dark');
-  btn.textContent = isDark ? '☀️ Switch to Light' : '🌙 Switch to Dark';
+  btn.textContent = isDark ? '☀️ View Light Theme' : '🌙 View Dark Theme';
   localStorage.setItem('ui-ex-theme', isDark ? 'dark' : 'light');
-}
+};
 
 function uiInitTheme() {
   const saved = localStorage.getItem('ui-ex-theme');
@@ -32,24 +36,20 @@ function uiInitTheme() {
   if (!el || !btn) return;
   if (saved === 'dark') {
     el.classList.add('ui-theme-dark');
-    btn.textContent = '☀️ Switch to Light';
+    btn.textContent = '☀️ View Light Theme';
   } else {
     el.classList.remove('ui-theme-dark');
-    btn.textContent = '🌙 Switch to Dark';
+    btn.textContent = '🌙 View Dark Theme';
   }
 }
 
-// MkDocs Material instant navigation - fires on every page load/navigation
-if (typeof document$ !== 'undefined') {
-  document$.subscribe(uiInitTheme);
-} else {
-  document.addEventListener('DOMContentLoaded', uiInitTheme);
-}
+setTimeout(uiInitTheme, 0);
 </script>
 
-<div id="ui-examples-wrap" markdown="1">
+<div id="ui-examples-wrap">
 
 ---
+
 
 ## Initial Setup
 

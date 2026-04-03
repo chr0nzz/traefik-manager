@@ -22,6 +22,11 @@ Dockerfile
 manager.yml
 mkdocs.yml
 
+# Node
+node_modules/
+package.json
+package-lock.json
+
 # Metadata
 .DS_Store
 Thumbs.db

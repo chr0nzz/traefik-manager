@@ -1,0 +1,96 @@
+:root {
+  --vp-c-brand-1: #0969da;
+  --vp-c-brand-2: #0550ae;
+  --vp-c-brand-3: #1a8bc4;
+  --vp-c-brand-soft: rgba(9, 105, 218, 0.1);
+
+  --vp-c-bg: #f6f8fa;
+  --vp-c-bg-soft: #ffffff;
+  --vp-c-bg-alt: #eaeef2;
+  --vp-c-divider: #d0d7de;
+  --vp-c-text-1: #1f2328;
+  --vp-c-text-2: #636c76;
+}
+
+.dark {
+  --vp-c-brand-1: #24a1de;
+  --vp-c-brand-2: #58bcf5;
+  --vp-c-brand-3: #1a8bc4;
+  --vp-c-brand-soft: rgba(36, 161, 222, 0.1);
+
+  --vp-c-bg: #0d1117;
+  --vp-c-bg-soft: #161b22;
+  --vp-c-bg-alt: #0d1117;
+  --vp-c-divider: #30363d;
+  --vp-c-text-1: #e6edf3;
+  --vp-c-text-2: #8b949e;
+}
+
+.vp-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.vp-card {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  padding: 16px 20px;
+  background: var(--vp-c-bg-soft);
+}
+
+.vp-card p { margin: 0 0 8px; }
+.vp-card p:last-child { margin: 0; }
+.vp-card hr { margin: 10px 0; border-color: var(--vp-c-divider); }
+
+.vp-btn {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--vp-c-divider);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none !important;
+  color: var(--vp-c-text-1) !important;
+  background: var(--vp-c-bg-soft);
+  margin-right: 8px;
+  margin-bottom: 8px;
+  transition: opacity 0.15s;
+}
+
+.vp-btn--primary {
+  background: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+  color: #ffffff !important;
+}
+
+.vp-btn:hover { opacity: 0.8; }
+
+.mobile-release { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+
+.gh-stars {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--vp-c-divider);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vp-c-text-1) !important;
+  text-decoration: none !important;
+  transition: border-color 0.2s;
+  margin-left: 8px;
+}
+
+.gh-stars:hover { border-color: var(--vp-c-brand-1); }
+
+.gh-stars-count {
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+  line-height: 18px;
+}

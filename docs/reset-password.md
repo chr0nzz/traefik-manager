@@ -8,27 +8,30 @@ This page covers all methods for recovering access to Traefik Manager.
 
 This is the fastest method when you can exec into the container.
 
-=== "Docker"
-    ```bash
-    docker exec traefik-manager flask reset-password
-    ```
+:::tabs
+== Docker
+```bash
+docker exec traefik-manager flask reset-password
+```
 
-=== "Podman"
-    ```bash
-    podman exec traefik-manager flask reset-password
-    ```
+== Podman
+```bash
+podman exec traefik-manager flask reset-password
+```
 
-=== "Linux (native)"
-    ```bash
-    cd /opt/traefik-manager
-    SETTINGS_PATH=/var/lib/traefik-manager/manager.yml \
-      venv/bin/flask reset-password
-    ```
+== Linux (native)
+```bash
+cd /opt/traefik-manager
+SETTINGS_PATH=/var/lib/traefik-manager/manager.yml \
+  venv/bin/flask reset-password
+```
+:::
 
 A new temporary password is printed to the terminal. On your next login you will be redirected to a forced password-change screen before you can access the dashboard.
 
-!!! note
-    Two-factor authentication is **preserved** by default. Your existing TOTP setup remains active.
+::: info
+Two-factor authentication is **preserved** by default. Your existing TOTP setup remains active.
+:::
 
 ---
 
@@ -36,22 +39,24 @@ A new temporary password is printed to the terminal. On your next login you will
 
 If you have also lost access to your TOTP authenticator app, add `--disable-otp` to reset both the password and 2FA in one step:
 
-=== "Docker"
-    ```bash
-    docker exec traefik-manager flask reset-password --disable-otp
-    ```
+:::tabs
+== Docker
+```bash
+docker exec traefik-manager flask reset-password --disable-otp
+```
 
-=== "Podman"
-    ```bash
-    podman exec traefik-manager flask reset-password --disable-otp
-    ```
+== Podman
+```bash
+podman exec traefik-manager flask reset-password --disable-otp
+```
 
-=== "Linux (native)"
-    ```bash
-    cd /opt/traefik-manager
-    SETTINGS_PATH=/var/lib/traefik-manager/manager.yml \
-      venv/bin/flask reset-password --disable-otp
-    ```
+== Linux (native)
+```bash
+cd /opt/traefik-manager
+SETTINGS_PATH=/var/lib/traefik-manager/manager.yml \
+  venv/bin/flask reset-password --disable-otp
+```
+:::
 
 This will:
 
@@ -82,40 +87,45 @@ setup_complete: false
 
 **3. Restart:**
 
-=== "Docker"
-    ```bash
-    docker restart traefik-manager
-    ```
+:::tabs
+== Docker
+```bash
+docker restart traefik-manager
+```
 
-=== "Podman"
-    ```bash
-    podman restart traefik-manager
-    ```
+== Podman
+```bash
+podman restart traefik-manager
+```
 
-=== "Linux (native)"
-    ```bash
-    systemctl restart traefik-manager
-    ```
+== Linux (native)
+```bash
+systemctl restart traefik-manager
+```
+:::
 
 A new temporary password is auto-generated and printed to the logs:
 
-=== "Docker"
-    ```bash
-    docker compose logs traefik-manager | grep -A3 "AUTO-GENERATED"
-    ```
+:::tabs
+== Docker
+```bash
+docker compose logs traefik-manager | grep -A3 "AUTO-GENERATED"
+```
 
-=== "Podman"
-    ```bash
-    podman logs traefik-manager | grep -A3 "AUTO-GENERATED"
-    ```
+== Podman
+```bash
+podman logs traefik-manager | grep -A3 "AUTO-GENERATED"
+```
 
-=== "Linux (native)"
-    ```bash
-    journalctl -u traefik-manager | grep -A3 "AUTO-GENERATED"
-    ```
+== Linux (native)
+```bash
+journalctl -u traefik-manager | grep -A3 "AUTO-GENERATED"
+```
+:::
 
-!!! warning
-    Setting `setup_complete: false` will re-run the setup wizard after login. Your existing routes and settings are not affected - just complete the wizard again.
+::: warning
+Setting `setup_complete: false` will re-run the setup wizard after login. Your existing routes and settings are not affected - just complete the wizard again.
+:::
 
 ---
 

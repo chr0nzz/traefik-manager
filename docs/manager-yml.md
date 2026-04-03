@@ -2,8 +2,9 @@
 
 `manager.yml` is Traefik Manager's settings file. It is stored inside the config volume at `/app/config/manager.yml` by default.
 
-!!! note
-    You do not normally need to edit this file by hand. All settings are managed through the **Settings** panel in the UI. This page is a reference for advanced use, scripted deployments, or bypassing the setup wizard.
+::: info
+You do not normally need to edit this file by hand. All settings are managed through the **Settings** panel in the UI. This page is a reference for advanced use, scripted deployments, or bypassing the setup wizard.
+:::
 
 The file path can be overridden with the [`SETTINGS_PATH`](env-vars.md) environment variable.
 
@@ -89,8 +90,9 @@ The internal URL of your Traefik API. Must be reachable from inside the Traefik 
 traefik_api_url: http://traefik:8080
 ```
 
-!!! warning
-    Only `http://` and `https://` URLs are accepted. Any other value is rejected and the default is used.
+::: warning
+Only `http://` and `https://` URLs are accepted. Any other value is rejected and the default is used.
+:::
 
 ---
 
@@ -106,8 +108,9 @@ Controls whether the built-in username/password login is active. Set to `false` 
 auth_enabled: false
 ```
 
-!!! warning
-    When `auth_enabled` is `false`, the UI is completely unauthenticated. Only disable if you have another auth layer in front.
+::: warning
+When `auth_enabled` is `false`, the UI is completely unauthenticated. Only disable if you have another auth layer in front.
+:::
 
 The environment variable takes priority over this field. See [`AUTH_ENABLED`](env-vars.md#auth_enabled).
 
@@ -130,8 +133,9 @@ python3 -c "import bcrypt; print(bcrypt.hashpw(b'yourpassword', bcrypt.gensalt()
 password_hash: "$2b$12$abcdefghij..."
 ```
 
-!!! note
-    The `ADMIN_PASSWORD` environment variable takes priority over this field if set. See [env-vars](env-vars.md#admin_password).
+::: info
+The `ADMIN_PASSWORD` environment variable takes priority over this field if set. See [env-vars](env-vars.md#admin_password).
+:::
 
 ---
 
@@ -151,8 +155,9 @@ When `true`, the user is redirected to a forced password-change screen after log
 
 Whether the initial setup wizard has been completed. Set to `true` automatically at the end of the wizard. Set it manually to `true` to skip the wizard on first start.
 
-!!! tip "Bypass the setup wizard"
-    Pre-populate `manager.yml` with `setup_complete: true`, a valid `password_hash`, and your connection details before starting the container - the wizard will be skipped entirely.
+::: tip Bypass the setup wizard
+Pre-populate `manager.yml` with `setup_complete: true`, a valid `password_hash`, and your connection details before starting the container - the wizard will be skipped entirely.
+:::
 
 ---
 
@@ -174,8 +179,9 @@ The TOTP secret used to generate and verify 6-digit codes. Stored **encrypted at
 
 The encryption key is loaded from the `OTP_ENCRYPTION_KEY` environment variable or auto-generated to `/app/config/.otp_key`. Do not share or commit this value.
 
-!!! note "Migration"
-    Existing plaintext secrets from pre-v0.5.0 are automatically encrypted on the next settings save. No manual migration is needed.
+::: info Migration
+Existing plaintext secrets from pre-v0.5.0 are automatically encrypted on the next settings save. No manual migration is needed.
+:::
 
 ---
 

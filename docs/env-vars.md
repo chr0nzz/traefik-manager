@@ -31,19 +31,22 @@ All supported environment variables for Traefik Manager. Variables marked **Over
 
 Set to `true` when Traefik Manager is served over HTTPS. Marks the session cookie as `Secure`, which is required by browsers for cookies on HTTPS origins.
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - COOKIE_SECURE=true
-    ```
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - COOKIE_SECURE=true
+```
 
-=== "Linux (systemd)"
-    ```ini
-    Environment=COOKIE_SECURE=true
-    ```
+== Linux (systemd)
+```ini
+Environment=COOKIE_SECURE=true
+```
+:::
 
-!!! warning
-    If you are behind a reverse proxy with HTTPS and do not set this, logins will fail silently - the session cookie will not be sent by the browser.
+::: warning
+If you are behind a reverse proxy with HTTPS and do not set this, logins will fail silently - the session cookie will not be sent by the browser.
+:::
 
 ---
 
@@ -54,19 +57,22 @@ Set to `true` when Traefik Manager is served over HTTPS. Marks the session cooki
 
 Set to `false` to disable the built-in login entirely. Use this when Traefik Manager is protected by an external auth provider (Authentik, Authelia, Traefik `basicAuth`, etc.).
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - AUTH_ENABLED=false
-    ```
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - AUTH_ENABLED=false
+```
 
-=== "Linux (systemd)"
-    ```ini
-    Environment=AUTH_ENABLED=false
-    ```
+== Linux (systemd)
+```ini
+Environment=AUTH_ENABLED=false
+```
+:::
 
-!!! danger
-    When disabled, the UI is fully open. Only use this behind another authentication layer.
+::: danger
+When disabled, the UI is fully open. Only use this behind another authentication layer.
+:::
 
 ---
 
@@ -77,19 +83,22 @@ Set to `false` to disable the built-in login entirely. Use this when Traefik Man
 
 Set the admin password in plain text. It is hashed with bcrypt at runtime. Useful for scripted deployments where you do not want to pre-generate a hash.
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - ADMIN_PASSWORD=mysecretpassword
-    ```
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - ADMIN_PASSWORD=mysecretpassword
+```
 
-=== "Linux (systemd)"
-    ```ini
-    Environment=ADMIN_PASSWORD=mysecretpassword
-    ```
+== Linux (systemd)
+```ini
+Environment=ADMIN_PASSWORD=mysecretpassword
+```
+:::
 
-!!! note
-    When this variable is set, the CLI `flask reset-password` command and the in-UI password change have no effect - the password always comes from this variable. Remove the variable to switch back to `manager.yml`-managed passwords.
+::: info
+When this variable is set, the CLI `flask reset-password` command and the in-UI password change have no effect - the password always comes from this variable. Remove the variable to switch back to `manager.yml`-managed passwords.
+:::
 
 ---
 
@@ -100,16 +109,18 @@ Set the admin password in plain text. It is hashed with bcrypt at runtime. Usefu
 
 Comma-separated list of base domains shown in the **Add Route** form.
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - DOMAINS=example.com,home.lab
-    ```
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - DOMAINS=example.com,home.lab
+```
 
-=== "Linux (systemd)"
-    ```ini
-    Environment=DOMAINS=example.com,home.lab
-    ```
+== Linux (systemd)
+```ini
+Environment=DOMAINS=example.com,home.lab
+```
+:::
 
 ---
 
@@ -120,18 +131,20 @@ Comma-separated list of base domains shown in the **Add Route** form.
 
 One or more ACME cert resolver names, comma-separated. The first resolver is used as the default for new routes. Each route can override this individually in the Add/Edit Route form.
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - CERT_RESOLVER=letsencrypt
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - CERT_RESOLVER=letsencrypt
 
-      - CERT_RESOLVER=letsencrypt, cloudflare
-    ```
+  - CERT_RESOLVER=letsencrypt, cloudflare
+```
 
-=== "Linux (systemd)"
-    ```ini
-    Environment=CERT_RESOLVER=letsencrypt, cloudflare
-    ```
+== Linux (systemd)
+```ini
+Environment=CERT_RESOLVER=letsencrypt, cloudflare
+```
+:::
 
 ---
 
@@ -142,16 +155,18 @@ One or more ACME cert resolver names, comma-separated. The first resolver is use
 
 The URL of the Traefik API. Must be reachable from the host running Traefik Manager.
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - TRAEFIK_API_URL=http://traefik:8080
-    ```
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - TRAEFIK_API_URL=http://traefik:8080
+```
 
-=== "Linux (systemd)"
-    ```ini
-    Environment=TRAEFIK_API_URL=http://localhost:8080
-    ```
+== Linux (systemd)
+```ini
+Environment=TRAEFIK_API_URL=http://localhost:8080
+```
+:::
 
 ---
 
@@ -173,14 +188,16 @@ Only one should be set. When multiple config files are loaded, a **Config File**
 
 Point to a directory and every `.yml` file inside it is loaded as a config file. Best for setups with many files where you don't want to list them all explicitly.
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - CONFIG_DIR=/app/config/traefik
-    volumes:
-      - /host/traefik/config:/app/config/traefik
-      # every *.yml in that directory is picked up automatically
-    ```
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - CONFIG_DIR=/app/config/traefik
+volumes:
+  - /host/traefik/config:/app/config/traefik
+  # every *.yml in that directory is picked up automatically
+```
+:::
 
 ---
 
@@ -188,16 +205,18 @@ Point to a directory and every `.yml` file inside it is loaded as a config file.
 
 **Default:** _(unset)_
 
-Comma-separated list of full config file paths. Good for 2–5 named files.
+Comma-separated list of full config file paths. Good for 2-5 named files.
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - CONFIG_PATHS=/app/config/routes.yml,/app/config/services.yml
-    volumes:
-      - /host/routes.yml:/app/config/routes.yml
-      - /host/services.yml:/app/config/services.yml
-    ```
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - CONFIG_PATHS=/app/config/routes.yml,/app/config/services.yml
+volumes:
+  - /host/routes.yml:/app/config/routes.yml
+  - /host/services.yml:/app/config/services.yml
+```
+:::
 
 ---
 
@@ -207,18 +226,20 @@ Comma-separated list of full config file paths. Good for 2–5 named files.
 
 Single config file. Existing behaviour - no changes needed for single-file setups.
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - CONFIG_PATH=/data/traefik/dynamic.yml
-    volumes:
-      - /path/to/traefik/dynamic.yml:/data/traefik/dynamic.yml
-    ```
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - CONFIG_PATH=/data/traefik/dynamic.yml
+volumes:
+  - /path/to/traefik/dynamic.yml:/data/traefik/dynamic.yml
+```
 
-=== "Linux (systemd)"
-    ```ini
-    Environment=CONFIG_PATH=/etc/traefik/dynamic.yml
-    ```
+== Linux (systemd)
+```ini
+Environment=CONFIG_PATH=/etc/traefik/dynamic.yml
+```
+:::
 
 ---
 
@@ -228,18 +249,20 @@ Single config file. Existing behaviour - no changes needed for single-file setup
 
 Directory where timestamped backups of `dynamic.yml` are stored before every save.
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - BACKUP_DIR=/data/backups
-    volumes:
-      - /path/to/backups:/data/backups
-    ```
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - BACKUP_DIR=/data/backups
+volumes:
+  - /path/to/backups:/data/backups
+```
 
-=== "Linux (systemd)"
-    ```ini
-    Environment=BACKUP_DIR=/var/lib/traefik-manager/backups
-    ```
+== Linux (systemd)
+```ini
+Environment=BACKUP_DIR=/var/lib/traefik-manager/backups
+```
+:::
 
 ---
 
@@ -249,18 +272,20 @@ Directory where timestamped backups of `dynamic.yml` are stored before every sav
 
 Path to the Traefik Manager settings file. Useful if you want to separate it from the dynamic config directory.
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - SETTINGS_PATH=/data/manager.yml
-    volumes:
-      - /path/to/manager.yml:/data/manager.yml
-    ```
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - SETTINGS_PATH=/data/manager.yml
+volumes:
+  - /path/to/manager.yml:/data/manager.yml
+```
 
-=== "Linux (systemd)"
-    ```ini
-    Environment=SETTINGS_PATH=/var/lib/traefik-manager/manager.yml
-    ```
+== Linux (systemd)
+```ini
+Environment=SETTINGS_PATH=/var/lib/traefik-manager/manager.yml
+```
+:::
 
 ---
 
@@ -272,21 +297,25 @@ Fernet symmetric key used to encrypt the TOTP secret at rest in `manager.yml`. I
 
 Set this variable if you want to manage the key yourself (e.g., from a secrets manager) or to ensure the key survives config volume replacement.
 
-=== "Docker / Podman"
-    ```yaml
-    environment:
-      - OTP_ENCRYPTION_KEY=your-32-byte-url-safe-base64-key
-    ```
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - OTP_ENCRYPTION_KEY=your-32-byte-url-safe-base64-key
+```
 
-=== "Linux (systemd)"
-    ```ini
-    Environment=OTP_ENCRYPTION_KEY=your-32-byte-url-safe-base64-key
-    ```
+== Linux (systemd)
+```ini
+Environment=OTP_ENCRYPTION_KEY=your-32-byte-url-safe-base64-key
+```
+:::
 
-!!! tip "Generating a key"
-    ```bash
-    python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-    ```
+::: tip Generating a key
+```bash
+python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+:::
 
-!!! note
-    If you lose this key, existing TOTP secrets become unreadable and 2FA will need to be re-enrolled. The `.otp_key` file is separate from `manager.yml` - back it up alongside your config volume.
+::: info
+If you lose this key, existing TOTP secrets become unreadable and 2FA will need to be re-enrolled. The `.otp_key` file is separate from `manager.yml` - back it up alongside your config volume.
+:::

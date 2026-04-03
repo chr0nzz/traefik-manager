@@ -167,31 +167,33 @@ Environment=CONFIG_PATH=/etc/traefik/dynamic.yml
 
 Mount more than one Traefik dynamic config and manage them all from one UI. A **Config File** picker appears automatically in the route and middleware forms when more than one file is loaded.
 
-=== "CONFIG_PATHS (explicit list)"
-    Comma-separated list of config file paths. Use this when you want to name exactly which files are managed.
+:::tabs
+== CONFIG_PATHS (explicit list)
+Comma-separated list of config file paths. Use this when you want to name exactly which files are managed.
 
-    ```ini
-    # In the [Service] section of the systemd unit:
-    # Single config file (default):
-    # Environment=CONFIG_PATH=/etc/traefik/dynamic.yml
-    # Multiple config files:
-    Environment=CONFIG_PATHS=/etc/traefik/routes.yml,/etc/traefik/services.yml
-    ```
+```ini
+# In the [Service] section of the systemd unit:
+# Single config file (default):
+# Environment=CONFIG_PATH=/etc/traefik/dynamic.yml
+# Multiple config files:
+Environment=CONFIG_PATHS=/etc/traefik/routes.yml,/etc/traefik/services.yml
+```
 
-    Make sure `traefik-manager` user has read/write access to each file.
+Make sure `traefik-manager` user has read/write access to each file.
 
-=== "CONFIG_DIR (auto-discover from directory)"
-    Point at a directory and every `.yml` file inside it is picked up automatically. Useful when the number of config files changes over time.
+== CONFIG_DIR (auto-discover from directory)
+Point at a directory and every `.yml` file inside it is picked up automatically. Useful when the number of config files changes over time.
 
-    ```ini
-    # In the [Service] section of the systemd unit:
-    # Single config file (default):
-    # Environment=CONFIG_PATH=/etc/traefik/dynamic.yml
-    # Multiple config files (auto-discover):
-    Environment=CONFIG_DIR=/etc/traefik/conf.d
-    ```
+```ini
+# In the [Service] section of the systemd unit:
+# Single config file (default):
+# Environment=CONFIG_PATH=/etc/traefik/dynamic.yml
+# Multiple config files (auto-discover):
+Environment=CONFIG_DIR=/etc/traefik/conf.d
+```
 
-    Make sure `traefik-manager` user has read/write access to the directory and all `.yml` files in it.
+Make sure `traefik-manager` user has read/write access to the directory and all `.yml` files in it.
+:::
 
 See the [Environment Variables](env-vars.md) reference for the full priority order.
 

@@ -129,36 +129,38 @@ If you mount your file to `/app/config/dynamic.yml` and do not set `CONFIG_PATH`
 
 Mount more than one Traefik dynamic config and manage them all from one UI. A **Config File** picker appears automatically in the route and middleware forms when more than one file is loaded.
 
-=== "CONFIG_PATHS (explicit list)"
-    Comma-separated list of config file paths inside the container. Use this when you want to name exactly which files are managed.
+:::tabs
+== CONFIG_PATHS (explicit list)
+Comma-separated list of config file paths inside the container. Use this when you want to name exactly which files are managed.
 
-    ```yaml
-    environment:
-      # Single config file (default):
-      # - CONFIG_PATH=/app/config/dynamic.yml
-      # Multiple config files:
-      - CONFIG_PATHS=/app/config/routes.yml,/app/config/services.yml
-    volumes:
-      - /path/to/traefik-manager/config:/app/config
-      - /path/to/traefik/routes.yml:/app/config/routes.yml
-      - /path/to/traefik/services.yml:/app/config/services.yml
-      - /path/to/traefik-manager/backups:/app/backups
-    ```
+```yaml
+environment:
+  # Single config file (default):
+  # - CONFIG_PATH=/app/config/dynamic.yml
+  # Multiple config files:
+  - CONFIG_PATHS=/app/config/routes.yml,/app/config/services.yml
+volumes:
+  - /path/to/traefik-manager/config:/app/config
+  - /path/to/traefik/routes.yml:/app/config/routes.yml
+  - /path/to/traefik/services.yml:/app/config/services.yml
+  - /path/to/traefik-manager/backups:/app/backups
+```
 
-=== "CONFIG_DIR (auto-discover from directory)"
-    Point at a directory and every `.yml` file inside it is picked up automatically. Useful when the number of config files changes over time.
+== CONFIG_DIR (auto-discover from directory)
+Point at a directory and every `.yml` file inside it is picked up automatically. Useful when the number of config files changes over time.
 
-    ```yaml
-    environment:
-      # Single config file (default):
-      # - CONFIG_PATH=/app/config/dynamic.yml
-      # Multiple config files (auto-discover):
-      - CONFIG_DIR=/app/config/traefik
-    volumes:
-      - /path/to/traefik-manager/config:/app/config
-      - /path/to/traefik/config:/app/config/traefik
-      - /path/to/traefik-manager/backups:/app/backups
-    ```
+```yaml
+environment:
+  # Single config file (default):
+  # - CONFIG_PATH=/app/config/dynamic.yml
+  # Multiple config files (auto-discover):
+  - CONFIG_DIR=/app/config/traefik
+volumes:
+  - /path/to/traefik-manager/config:/app/config
+  - /path/to/traefik/config:/app/config/traefik
+  - /path/to/traefik-manager/backups:/app/backups
+```
+:::
 
 See the [Environment Variables](env-vars.md) reference for the full priority order.
 

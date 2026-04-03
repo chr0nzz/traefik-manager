@@ -1,0 +1,15 @@
+{
+  "name": "traefik-manager-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev docs --host",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "medium-zoom": "^1.1.0",
+    "vitepress": "^1.6.3",
+    "vitepress-plugin-tabs": "^0.5.0"
+  }
+}
