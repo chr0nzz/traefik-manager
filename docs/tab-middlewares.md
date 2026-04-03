@@ -9,6 +9,10 @@ The **Middlewares** tab manages all middleware definitions stored in `dynamic.ym
 - Protocol badge (HTTP / TCP)
 - Edit and delete controls
 
+## Views
+
+Toggle between **grid** (default) and **list** view using the button in the filter bar. List view shows Protocol, Name, Config File, and action buttons in a compact table.
+
 ## Creating a middleware 
 
 Click **Add Middleware** in the top bar. Two fields:
@@ -18,7 +22,7 @@ Click **Add Middleware** in the top bar. Two fields:
 | Name | Unique identifier - referenced in routes as `name@file` |
 | Template | Pick a preset or choose Custom to write raw YAML |
 | Configuration | YAML body for the middleware (auto-filled when a template is chosen) |
-| Config File | Shown only when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Select which file the middleware is saved to. |
+| Config File | Shown when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Select an existing file or choose **+ New file...** to type a filename - the file is created automatically in `CONFIG_DIR`. Auto-suggests `middlewares-<name>.yml`. |
 
 ### Available templates
 

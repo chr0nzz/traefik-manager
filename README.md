@@ -307,13 +307,14 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 **Routing & Middleware**
 - Add, edit, delete, and **enable/disable** HTTP, TCP, and UDP routes - no YAML editing required
 - Create middlewares with built-in templates (Basic Auth, Forward Auth, Redirect, Strip Prefix)
-- **Multi-config file support** - mount several dynamic config files with `CONFIG_DIR` or `CONFIG_PATHS`; a dropdown selects which file each route or middleware is saved to
+- **Multi-config file support** - mount several dynamic config files with `CONFIG_DIR` or `CONFIG_PATHS`; a dropdown selects which file each route or middleware is saved to; **create new files on the fly** when `CONFIG_DIR` is set
 - Timestamped backups before every change; one-click restore from Settings
 
 **Live Dashboard**
 - Real-time stats: router counts, service health, entrypoints, Traefik version
 - Provider tabs: Docker, Kubernetes, Swarm, Nomad, ECS, Consul Catalog, Redis, etcd, Consul KV, ZooKeeper, HTTP Provider, File - all API-based, no extra mounts
 - **Filter live services** by protocol (HTTP/TCP/UDP) and provider (docker, file, kubernetes…)
+- **List view toggle** on Routes, Middlewares, and Services tabs - switch between card grid and compact table
 
 **Visualizations** *(optional, toggle in Settings)*
 - **Dashboard tab** - routes grouped by category (Media, Monitoring, Infrastructure, etc.) with app icons sourced from [selfh.st/icons](https://selfh.st/icons/), cached locally, and per-card editing (display name, icon override, group override)
@@ -339,11 +340,11 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 
 **traefik-manager-mobile** is a React Native companion app for managing Traefik Manager from your phone. Requires **Traefik Manager v0.6.0 or higher**.
 
-| | |
-|---|---|
-| Repo | [github.com/chr0nzz/traefik-manager-mobile](https://github.com/chr0nzz/traefik-manager-mobile) |
-| Download | [traefik-manager-v0.3.0.apk](https://github.com/chr0nzz/traefik-manager/releases/download/v0.7.0/traefik-manager-v0.3.0.apk) |
-| Auth | API key - generate one in **Settings → Authentication** |
+|          |                                                                                                                              |
+| ----------| ------------------------------------------------------------------------------------------------------------------------------|
+| Repo     | [github.com/chr0nzz/traefik-manager-mobile](https://github.com/chr0nzz/traefik-manager-mobile)                               |
+| Download | [traefik-manager-v0.4.0.apk](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.4.0/traefik-manager-v0.4.0.apk) |
+| Auth     | API key - generate one in **Settings → Authentication**                                                                      |
 
 Features: browse routes, middlewares, and services · enable/disable routes · add and edit routes and middlewares (12 middleware templates) · backend scheme + pass host header controls · multi-config file picker · edit mode for bulk actions · system light/dark theme.
 

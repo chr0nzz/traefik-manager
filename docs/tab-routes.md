@@ -10,6 +10,10 @@ The **Routes** tab (also called Services) is the main management interface. It d
 - Status badge from the Traefik API (enabled / warning / error)
 - Full detail view via the info button - shows live Traefik status, service health, and raw config
 
+## Views
+
+Toggle between **grid** (default) and **list** view using the button in the filter bar. List view shows a compact table with Status, Protocol, Name, Domain/Rule, Target, Entry Points, and action buttons.
+
 ## Creating a route 
 
 Click **Add Route** in the top bar. Fill in:
@@ -25,7 +29,7 @@ Click **Add Route** in the top bar. Fill in:
 | Backend Scheme | `HTTP` or `HTTPS` - the scheme Traefik uses to connect to your backend. Use `HTTPS` when the backend serves TLS internally. |
 | Pass Host Header | Enabled by default. Disable if the backend needs to see its own hostname instead of the original request `Host` header. Writes `passHostHeader: false` to the service in `dynamic.yml`. |
 | Cert Resolver | Shown for HTTP and TCP routes. Select which ACME cert resolver to use. Defaults to the first resolver configured in Settings. Only appears when at least one resolver is configured. |
-| Config File | Shown only when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Select which file the route is saved to. |
+| Config File | Shown when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Select an existing file or choose **+ New file...** to type a filename - the file is created automatically in `CONFIG_DIR`. Auto-suggests `app-<name>.yml`. |
 
 For TCP routes, enter a raw SNI rule (`HostSNI(\`*\`)` for passthrough). UDP routes route by entry point only - no rule needed.
 

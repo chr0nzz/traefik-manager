@@ -246,7 +246,7 @@ A companion Android app for managing Traefik Manager on the go. Requires **v0.6.
 
     Authenticates via the API key from **Settings → Authentication**.
 
-    [:octicons-download-24: Download APK (v0.3.0)](https://github.com/chr0nzz/traefik-manager/releases/download/v0.7.0/traefik-manager-v0.3.0.apk) · [:octicons-arrow-right-24: Mobile docs](mobile.md)
+    [:octicons-download-24: Download APK (v0.4.0)](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.4.0/traefik-manager-v0.4.0.apk) · [:octicons-arrow-right-24: Mobile docs](mobile.md)
 
 </div>
 

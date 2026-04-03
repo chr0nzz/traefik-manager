@@ -8,6 +8,10 @@ The **Services** tab shows all services registered in Traefik across every provi
 - Status badge: Success, Warning, or Error
 - HTTP, TCP, and UDP services
 
+## Views
+
+Toggle between **grid** (default) and **list** view using the button in the filter bar. List view shows a compact table with Status, Protocol, Name, Provider, Servers, and Used By columns.
+
 ## Filtering 
 
 - **Search** - filter by service name

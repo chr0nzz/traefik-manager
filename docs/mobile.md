@@ -9,7 +9,7 @@
 
 ## Download
 
-[:simple-android: Download APK (v0.3.0)](https://github.com/chr0nzz/traefik-manager/releases/download/v0.7.0/traefik-manager-v0.3.0.apk){ .md-button .md-button--primary }
+[:simple-android: Download APK (v0.4.0)](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.4.0/traefik-manager-v0.4.0.apk){ .md-button .md-button--primary }
 [:fontawesome-brands-github: Source on GitHub](https://github.com/chr0nzz/traefik-manager-mobile){ .md-button }
 
 ---

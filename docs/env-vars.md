@@ -163,7 +163,7 @@ Traefik Manager can manage one or many dynamic config files. Three variables con
 CONFIG_DIR  >  CONFIG_PATHS  >  CONFIG_PATH
 ```
 
-Only one should be set. When multiple config files are loaded, a **Config File** dropdown appears in the Add/Edit Route and Middleware modals, and each route card shows a small file badge.
+Only one should be set. When multiple config files are loaded, a **Config File** dropdown appears in the Add/Edit Route and Middleware modals, and each route card shows a small file badge. When `CONFIG_DIR` is set, the dropdown also includes a **+ New file...** option - type a filename and the app creates the file automatically in `CONFIG_DIR`.
 
 ---
 
