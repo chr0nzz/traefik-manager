@@ -20,30 +20,32 @@
 </div>
 
 <script>
-window.uiToggleTheme = function() {
-  const el = document.getElementById('ui-examples-wrap');
-  const btn = document.getElementById('ui-theme-toggle');
-  if (!el || !btn) return;
-  const isDark = el.classList.toggle('ui-theme-dark');
-  btn.textContent = isDark ? '☀️ View Light Theme' : '🌙 View Dark Theme';
-  localStorage.setItem('ui-ex-theme', isDark ? 'dark' : 'light');
-};
+if (typeof window !== 'undefined') {
+  window.uiToggleTheme = function() {
+    const el = document.getElementById('ui-examples-wrap');
+    const btn = document.getElementById('ui-theme-toggle');
+    if (!el || !btn) return;
+    const isDark = el.classList.toggle('ui-theme-dark');
+    btn.textContent = isDark ? '☀️ View Light Theme' : '🌙 View Dark Theme';
+    localStorage.setItem('ui-ex-theme', isDark ? 'dark' : 'light');
+  };
 
-function uiInitTheme() {
-  const saved = localStorage.getItem('ui-ex-theme');
-  const el = document.getElementById('ui-examples-wrap');
-  const btn = document.getElementById('ui-theme-toggle');
-  if (!el || !btn) return;
-  if (saved === 'dark') {
-    el.classList.add('ui-theme-dark');
-    btn.textContent = '☀️ View Light Theme';
-  } else {
-    el.classList.remove('ui-theme-dark');
-    btn.textContent = '🌙 View Dark Theme';
+  function uiInitTheme() {
+    const saved = localStorage.getItem('ui-ex-theme');
+    const el = document.getElementById('ui-examples-wrap');
+    const btn = document.getElementById('ui-theme-toggle');
+    if (!el || !btn) return;
+    if (saved === 'dark') {
+      el.classList.add('ui-theme-dark');
+      btn.textContent = '☀️ View Light Theme';
+    } else {
+      el.classList.remove('ui-theme-dark');
+      btn.textContent = '🌙 View Dark Theme';
+    }
   }
-}
 
-setTimeout(uiInitTheme, 0);
+  setTimeout(uiInitTheme, 0);
+}
 </script>
 
 <div id="ui-examples-wrap">
