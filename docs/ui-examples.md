@@ -57,28 +57,28 @@ When first launching Traefik Manager you are guided through a short setup wizard
 
 ### Step 1 - Temporary password
 
-<img class="ui-img-light" src="../images/light-setup-temp-pass-1.png" alt="Step 1 – Temporary password (light)">
-<img class="ui-img-dark"  src="../images/dark-setup-temp-pass-1.png"  alt="Step 1 – Temporary password (dark)">
+<img class="ui-img-light" src="/images/light-setup-temp-pass-1.png" alt="Step 1 – Temporary password (light)">
+<img class="ui-img-dark"  src="/images/dark-setup-temp-pass-1.png"  alt="Step 1 – Temporary password (dark)">
 
 ### Step 2 - Welcome
 
-<img class="ui-img-light" src="../images/light-setup-welcome-2.png" alt="Step 2 – Welcome (light)">
-<img class="ui-img-dark"  src="../images/dark-setup-welcome-2.png"  alt="Step 2 – Welcome (dark)">
+<img class="ui-img-light" src="/images/light-setup-welcome-2.png" alt="Step 2 – Welcome (light)">
+<img class="ui-img-dark"  src="/images/dark-setup-welcome-2.png"  alt="Step 2 – Welcome (dark)">
 
 ### Step 3 - Connection &amp; domains
 
-<img class="ui-img-light" src="../images/light-setup-conn-dom-3.png" alt="Step 3 – Connection and domains (light)">
-<img class="ui-img-dark"  src="../images/dark-setup-conn-dom-3.png"  alt="Step 3 – Connection and domains (dark)">
+<img class="ui-img-light" src="/images/light-setup-conn-dom-3.png" alt="Step 3 – Connection and domains (light)">
+<img class="ui-img-dark"  src="/images/dark-setup-conn-dom-3.png"  alt="Step 3 – Connection and domains (dark)">
 
 ### Step 4 - Optional tabs
 
-<img class="ui-img-light" src="../images/light-setup-opt-tabs-4.png" alt="Step 4 – Optional tabs (light)">
-<img class="ui-img-dark"  src="../images/dark-setup-opt-tabs-4.png"  alt="Step 4 – Optional tabs (dark)">
+<img class="ui-img-light" src="/images/light-setup-opt-tabs-4.png" alt="Step 4 – Optional tabs (light)">
+<img class="ui-img-dark"  src="/images/dark-setup-opt-tabs-4.png"  alt="Step 4 – Optional tabs (dark)">
 
 ### Step 5 - Set password
 
-<img class="ui-img-light" src="../images/light-setup-set-pass-5.png" alt="Step 5 – Set password (light)">
-<img class="ui-img-dark"  src="../images/dark-setup-set-pass-5.png"  alt="Step 5 – Set password (dark)">
+<img class="ui-img-light" src="/images/light-setup-set-pass-5.png" alt="Step 5 – Set password (light)">
+<img class="ui-img-dark"  src="/images/dark-setup-set-pass-5.png"  alt="Step 5 – Set password (dark)">
 
 ---
 
@@ -88,28 +88,28 @@ The dashboard shows app cards grouped by category with app icons, stat widgets, 
 
 ### Main View
 
-<img class="ui-img-light" src="../images/light-dashboard.png" alt="Dashboard (light)">
-<img class="ui-img-dark"  src="../images/dark-dashboard.png"  alt="Dashboard (dark)">
+<img class="ui-img-light" src="/images/light-dashboard.png" alt="Dashboard (light)">
+<img class="ui-img-dark"  src="/images/dark-dashboard.png"  alt="Dashboard (dark)">
 
 ### Compact Stats
 
-<img class="ui-img-light" src="../images/light-dashboard-compact.png" alt="Dashboard – compact stats (light)">
-<img class="ui-img-dark"  src="../images/dark-dashboard-compact.png"  alt="Dashboard – compact stats (dark)">
+<img class="ui-img-light" src="/images/light-dashboard-compact.png" alt="Dashboard – compact stats (light)">
+<img class="ui-img-dark"  src="/images/dark-dashboard-compact.png"  alt="Dashboard – compact stats (dark)">
 
 ### No Widgets
 
-<img class="ui-img-light" src="../images/light-dashboard-no-widgets.png" alt="Dashboard – no widgets (light)">
-<img class="ui-img-dark"  src="../images/dark-dashboard-no-widgets.png"  alt="Dashboard – no widgets (dark)">
+<img class="ui-img-light" src="/images/light-dashboard-no-widgets.png" alt="Dashboard – no widgets (light)">
+<img class="ui-img-dark"  src="/images/dark-dashboard-no-widgets.png"  alt="Dashboard – no widgets (dark)">
 
 ### Edit Group
 
-<img class="ui-img-light" src="../images/light-dashboard-edit-gorup.png" alt="Dashboard – edit group (light)">
-<img class="ui-img-dark"  src="../images/dark-dashboard-edit-group.png"  alt="Dashboard – edit group (dark)">
+<img class="ui-img-light" src="/images/light-dashboard-edit-gorup.png" alt="Dashboard – edit group (light)">
+<img class="ui-img-dark"  src="/images/dark-dashboard-edit-group.png"  alt="Dashboard – edit group (dark)">
 
 ### Edit Route Card
 
-<img class="ui-img-light" src="../images/light-dashboard-edit route.png" alt="Dashboard – edit route card (light)">
-<img class="ui-img-dark"  src="../images/dark-dashboard-edit-route.png"  alt="Dashboard – edit route card (dark)">
+<img class="ui-img-light" src="/images/light-dashboard-edit route.png" alt="Dashboard – edit route card (light)">
+<img class="ui-img-dark"  src="/images/dark-dashboard-edit-route.png"  alt="Dashboard – edit route card (dark)">
 
 ---
 
@@ -119,15 +119,15 @@ The Route Map tab shows a 4-column topology view of your Traefik setup - Entry P
 
 ### Topology View
 
-<img class="ui-img-light" src="../images/light-route-map.png" alt="Route Map (light)">
-<img class="ui-img-dark"  src="../images/dark-route-map.png"  alt="Route Map (dark)">
+<img class="ui-img-light" src="/images/light-route-map.png" alt="Route Map (light)">
+<img class="ui-img-dark"  src="/images/dark-route-map.png"  alt="Route Map (dark)">
 
 ### Hover Highlight
 
 Hovering a route dims all unrelated nodes and animates the connected entry point, middlewares, and service into alignment.
 
-<img class="ui-img-light" src="../images/light-route-map-hover.png" alt="Route Map – hover highlight (light)">
-<img class="ui-img-dark"  src="../images/dark-route-map-hover.png"  alt="Route Map – hover highlight (dark)">
+<img class="ui-img-light" src="/images/light-route-map-hover.png" alt="Route Map – hover highlight (light)">
+<img class="ui-img-dark"  src="/images/dark-route-map-hover.png"  alt="Route Map – hover highlight (dark)">
 
 ---
 
@@ -137,33 +137,33 @@ Routes define how incoming traffic is forwarded to backend services.
 
 ### Routes Overview
 
-<img class="ui-img-light" src="../images/light-routes.png" alt="Routes overview (light)">
-<img class="ui-img-dark"  src="../images/dark-routes.png"  alt="Routes overview (dark)">
+<img class="ui-img-light" src="/images/light-routes.png" alt="Routes overview (light)">
+<img class="ui-img-dark"  src="/images/dark-routes.png"  alt="Routes overview (dark)">
 
 ### Route Details
 
-<img class="ui-img-light" src="../images/light-route-details.png" alt="Route details (light)">
-<img class="ui-img-dark"  src="../images/dark-route-details.png"  alt="Route details (dark)">
+<img class="ui-img-light" src="/images/light-route-details.png" alt="Route details (light)">
+<img class="ui-img-dark"  src="/images/dark-route-details.png"  alt="Route details (dark)">
 
 ### Editing a Route
 
-<img class="ui-img-light" src="../images/light-route-edit.png" alt="Route edit (light)">
-<img class="ui-img-dark"  src="../images/dark-route-edit.png"  alt="Route edit (dark)">
+<img class="ui-img-light" src="/images/light-route-edit.png" alt="Route edit (light)">
+<img class="ui-img-dark"  src="/images/dark-route-edit.png"  alt="Route edit (dark)">
 
 ### Adding an HTTP Route
 
-<img class="ui-img-light" src="../images/light-route-add-http.png" alt="Add HTTP route (light)">
-<img class="ui-img-dark"  src="../images/dark-route-add-http.png"  alt="Add HTTP route (dark)">
+<img class="ui-img-light" src="/images/light-route-add-http.png" alt="Add HTTP route (light)">
+<img class="ui-img-dark"  src="/images/dark-route-add-http.png"  alt="Add HTTP route (dark)">
 
 ### Adding a TCP Route
 
-<img class="ui-img-light" src="../images/light-route-add-tcp.png" alt="Add TCP route (light)">
-<img class="ui-img-dark"  src="../images/dark-route-add-tcp.png"  alt="Add TCP route (dark)">
+<img class="ui-img-light" src="/images/light-route-add-tcp.png" alt="Add TCP route (light)">
+<img class="ui-img-dark"  src="/images/dark-route-add-tcp.png"  alt="Add TCP route (dark)">
 
 ### Adding a UDP Route
 
-<img class="ui-img-light" src="../images/light-route-add-udp.png" alt="Add UDP route (light)">
-<img class="ui-img-dark"  src="../images/dark-route-add-udp.png"  alt="Add UDP route (dark)">
+<img class="ui-img-light" src="/images/light-route-add-udp.png" alt="Add UDP route (light)">
+<img class="ui-img-dark"  src="/images/dark-route-add-udp.png"  alt="Add UDP route (dark)">
 
 ---
 
@@ -173,13 +173,13 @@ Services represent the backend targets that Traefik forwards traffic to.
 
 ### Services Overview
 
-<img class="ui-img-light" src="../images/light-services.png" alt="Services overview (light)">
-<img class="ui-img-dark"  src="../images/dark-services.png"  alt="Services overview (dark)">
+<img class="ui-img-light" src="/images/light-services.png" alt="Services overview (light)">
+<img class="ui-img-dark"  src="/images/dark-services.png"  alt="Services overview (dark)">
 
 ### Service Details
 
-<img class="ui-img-light" src="../images/light-services-details.png" alt="Service details (light)">
-<img class="ui-img-dark"  src="../images/dark-services-details.png"  alt="Service details (dark)">
+<img class="ui-img-light" src="/images/light-services-details.png" alt="Service details (light)">
+<img class="ui-img-dark"  src="/images/dark-services-details.png"  alt="Service details (dark)">
 
 ---
 
@@ -189,18 +189,18 @@ Middlewares modify requests before they reach your services - authentication, ra
 
 ### Middleware List
 
-<img class="ui-img-light" src="../images/light-middleware.png" alt="Middleware list (light)">
-<img class="ui-img-dark"  src="../images/dark-middleware.png"  alt="Middleware list (dark)">
+<img class="ui-img-light" src="/images/light-middleware.png" alt="Middleware list (light)">
+<img class="ui-img-dark"  src="/images/dark-middleware.png"  alt="Middleware list (dark)">
 
 ### Editing Middleware
 
-<img class="ui-img-light" src="../images/light-middleware-edit.png" alt="Middleware edit (light)">
-<img class="ui-img-dark"  src="../images/dark-middleware-edit.png"  alt="Middleware edit (dark)">
+<img class="ui-img-light" src="/images/light-middleware-edit.png" alt="Middleware edit (light)">
+<img class="ui-img-dark"  src="/images/dark-middleware-edit.png"  alt="Middleware edit (dark)">
 
 ### Adding Middleware
 
-<img class="ui-img-light" src="../images/light-middleware-add.png" alt="Add middleware (light)">
-<img class="ui-img-dark"  src="../images/dark-middleware-add.png"  alt="Add middleware (dark)">
+<img class="ui-img-light" src="/images/light-middleware-add.png" alt="Add middleware (light)">
+<img class="ui-img-dark"  src="/images/dark-middleware-add.png"  alt="Add middleware (dark)">
 
 ---
 
@@ -210,13 +210,13 @@ View and monitor active Traefik plugins.
 
 ### Plugin List
 
-<img class="ui-img-light" src="../images/light-plugins.png" alt="Plugin list (light)">
-<img class="ui-img-dark"  src="../images/dark-plugins.png"  alt="Plugin list (dark)">
+<img class="ui-img-light" src="/images/light-plugins.png" alt="Plugin list (light)">
+<img class="ui-img-dark"  src="/images/dark-plugins.png"  alt="Plugin list (dark)">
 
 ### Plugin Details
 
-<img class="ui-img-light" src="../images/light-plugins-details.png" alt="Plugin details (light)">
-<img class="ui-img-dark"  src="../images/dark-plugins-details.png"  alt="Plugin details (dark)">
+<img class="ui-img-light" src="/images/light-plugins-details.png" alt="Plugin details (light)">
+<img class="ui-img-dark"  src="/images/dark-plugins-details.png"  alt="Plugin details (dark)">
 
 ---
 
@@ -226,8 +226,8 @@ View and monitor TLS certificates managed by Traefik.
 
 ### Certificates View
 
-<img class="ui-img-light" src="../images/light-certs.png" alt="Certificates (light)">
-<img class="ui-img-dark"  src="../images/dark-certs.png"  alt="Certificates (dark)">
+<img class="ui-img-light" src="/images/light-certs.png" alt="Certificates (light)">
+<img class="ui-img-dark"  src="/images/dark-certs.png"  alt="Certificates (dark)">
 
 ---
 
@@ -237,13 +237,13 @@ Inspect routes and services discovered via the Docker provider, including contai
 
 ### Docker Routes
 
-<img class="ui-img-light" src="../images/light-docker.png" alt="Docker routes (light)">
-<img class="ui-img-dark"  src="../images/dark-docker.png"  alt="Docker routes (dark)">
+<img class="ui-img-light" src="/images/light-docker.png" alt="Docker routes (light)">
+<img class="ui-img-dark"  src="/images/dark-docker.png"  alt="Docker routes (dark)">
 
 ### Docker Route Details
 
-<img class="ui-img-light" src="../images/light-docker-details.png" alt="Docker route details (light)">
-<img class="ui-img-dark"  src="../images/dark-docker-details.png"  alt="Docker route details (dark)">
+<img class="ui-img-light" src="/images/light-docker-details.png" alt="Docker route details (light)">
+<img class="ui-img-dark"  src="/images/dark-docker-details.png"  alt="Docker route details (dark)">
 
 ---
 
@@ -253,8 +253,8 @@ Live and historical Traefik access logs with line-count control and filtering.
 
 ### Logs View
 
-<img class="ui-img-light" src="../images/light-logs.png" alt="Logs (light)">
-<img class="ui-img-dark"  src="../images/dark-logs.png"  alt="Logs (dark)">
+<img class="ui-img-light" src="/images/light-logs.png" alt="Logs (light)">
+<img class="ui-img-dark"  src="/images/dark-logs.png"  alt="Logs (dark)">
 
 ---
 
@@ -262,32 +262,32 @@ Live and historical Traefik access logs with line-count control and filtering.
 
 ### Authentication
 
-<img class="ui-img-light" src="../images/light-settings-auth.png" alt="Settings – authentication (light)">
-<img class="ui-img-dark"  src="../images/dark-settins-auth.png"  alt="Settings – authentication (dark)">
+<img class="ui-img-light" src="/images/light-settings-auth.png" alt="Settings – authentication (light)">
+<img class="ui-img-dark"  src="/images/dark-settins-auth.png"  alt="Settings – authentication (dark)">
 
 ### Connections
 
-<img class="ui-img-light" src="../images/light-settings-connections.png" alt="Settings – connections (light)">
-<img class="ui-img-dark"  src="../images/dark-settins-connections.png"  alt="Settings – connections (dark)">
+<img class="ui-img-light" src="/images/light-settings-connections.png" alt="Settings – connections (light)">
+<img class="ui-img-dark"  src="/images/dark-settins-connections.png"  alt="Settings – connections (dark)">
 
 ### Routes Config
 
-<img class="ui-img-light" src="../images/light-settings-routes.png" alt="Settings – routes (light)">
-<img class="ui-img-dark"  src="../images/dark-settins-routes.png"  alt="Settings – routes (dark)">
+<img class="ui-img-light" src="/images/light-settings-routes.png" alt="Settings – routes (light)">
+<img class="ui-img-dark"  src="/images/dark-settins-routes.png"  alt="Settings – routes (dark)">
 
 ### Backups
 
-<img class="ui-img-light" src="../images/light-settings-backups.png" alt="Settings – backups (light)">
-<img class="ui-img-dark"  src="../images/dark-settins-backups.png"  alt="Settings – backups (dark)">
+<img class="ui-img-light" src="/images/light-settings-backups.png" alt="Settings – backups (light)">
+<img class="ui-img-dark"  src="/images/dark-settins-backups.png"  alt="Settings – backups (dark)">
 
 ### System
 
-<img class="ui-img-light" src="../images/light-settings-system.png" alt="Settings – system (light)">
-<img class="ui-img-dark"  src="../images/dark-settins-system.png"  alt="Settings – system (dark)">
+<img class="ui-img-light" src="/images/light-settings-system.png" alt="Settings – system (light)">
+<img class="ui-img-dark"  src="/images/dark-settins-system.png"  alt="Settings – system (dark)">
 
 ### UI Preferences
 
-<img class="ui-img-light" src="../images/light-settings-ui.png" alt="Settings – UI preferences (light)">
-<img class="ui-img-dark"  src="../images/dark-settins-ui.png"  alt="Settings – UI preferences (dark)">
+<img class="ui-img-light" src="/images/light-settings-ui.png" alt="Settings – UI preferences (light)">
+<img class="ui-img-dark"  src="/images/dark-settins-ui.png"  alt="Settings – UI preferences (dark)">
 
 </div>
