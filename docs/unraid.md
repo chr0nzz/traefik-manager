@@ -10,12 +10,6 @@ Traefik Manager is available as a Community Applications template for Unraid.
 2. Search for **Traefik Manager**
 3. Click **Install**
 
-If the template does not appear yet, add the template repository manually:
-
-- Go to **Apps → Settings → Add another Template Repository**
-- Enter: `https://raw.githubusercontent.com/chr0nzz/traefik-manager/main/unraid/`
-- Click **Save** and search again
-
 ---
 
 ## Configuration
