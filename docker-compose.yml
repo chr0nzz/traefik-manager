@@ -7,7 +7,8 @@ services:
     ports:
       - "5000:5000"
     environment:
-      # Set true when running behind HTTPS PROXY
+      # Set to true when accessing via HTTPS (e.g. behind Traefik with TLS)
+      # Required for session cookies to work correctly over HTTPS
       - COOKIE_SECURE=false
     volumes:
       # Required

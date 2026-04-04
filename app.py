@@ -451,6 +451,22 @@ def _get_csrf_token() -> str:
         session['csrf_token'] = secrets.token_hex(32)
     return session['csrf_token']
 
+def _get_login_csrf_token() -> str:
+    import hmac as _hmac
+    window = int(time.time()) // 300
+    return _hmac.new(app.secret_key if isinstance(app.secret_key, bytes) else app.secret_key.encode(),
+                     f'login-csrf:{window}'.encode(), 'sha256').hexdigest()
+
+def _check_login_csrf(token: str) -> bool:
+    import hmac as _hmac
+    window = int(time.time()) // 300
+    for w in (window, window - 1):
+        expected = _hmac.new(app.secret_key if isinstance(app.secret_key, bytes) else app.secret_key.encode(),
+                             f'login-csrf:{w}'.encode(), 'sha256').hexdigest()
+        if _hmac.compare_digest(token, expected):
+            return True
+    return False
+
 def _check_csrf():
     token = request.form.get('csrf_token', '') or request.headers.get('X-CSRF-Token', '')
     if request.is_json:
@@ -581,14 +597,12 @@ def login():
 
     error = None
     if request.method == 'POST':
-        token    = request.form.get('csrf_token', '')
-        expected = session.get('csrf_token', '')
-        if not expected or not secrets.compare_digest(str(token), str(expected)):
+        token = request.form.get('csrf_token', '')
+        if not _check_login_csrf(token):
             logger.warning(
                 f"CSRF check failed on login from {request.remote_addr} "
-                f"(session_has_token={bool(expected)}, cookies={list(request.cookies.keys())})"
+                f"(cookies={list(request.cookies.keys())})"
             )
-            session.clear()
             return redirect(url_for('login', next=request.form.get('next', '')))
         password = request.form.get('password', '')
         pw_hash  = settings.get('password_hash', '')
@@ -635,7 +649,7 @@ def login():
 
     next_url = request.args.get('next', '')
     resp = make_response(render_template('login.html', error=error, next=next_url,
-                                         csrf_token=_get_csrf_token(),
+                                         csrf_token=_get_login_csrf_token(),
                                          temp_password_hint=temp_password_hint))
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     resp.headers['Pragma'] = 'no-cache'
@@ -667,7 +681,10 @@ def setup():
 
     error = None
     if request.method == 'POST':
-        _check_csrf()
+        token = request.form.get('csrf_token', '')
+        if not _check_login_csrf(token):
+            logger.warning(f"CSRF check failed on setup from {request.remote_addr}")
+            return redirect(url_for('setup'))
 
         domains_raw       = request.form.get('domains', '').strip()
         cert_resolver     = request.form.get('cert_resolver', '').strip()
@@ -728,7 +745,7 @@ def setup():
             return redirect(url_for('index'))
 
     resp = make_response(render_template('login.html', setup_mode=True, error=error,
-                                         defaults=defaults, csrf_token=_get_csrf_token(),
+                                         defaults=defaults, csrf_token=_get_login_csrf_token(),
                                          temp_password_mode=temp_password_mode))
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     resp.headers['Pragma'] = 'no-cache'
