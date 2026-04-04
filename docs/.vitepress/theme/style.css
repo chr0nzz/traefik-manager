@@ -26,6 +26,17 @@
   --vp-c-text-2: #8b949e;
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--vp-c-divider) transparent;
+}
+
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--vp-c-divider); border-radius: 99px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--vp-c-text-2); }
+*::-webkit-scrollbar-corner { background: transparent; }
+
 .vp-grid-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
