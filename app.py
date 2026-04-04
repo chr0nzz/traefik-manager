@@ -9,8 +9,7 @@ from datetime import datetime, timezone, timedelta
 from functools import wraps
 import click
 from flask import (Flask, render_template, request, redirect,
-                   url_for, flash, jsonify, abort, session, send_file, make_response)
-from werkzeug.middleware.proxy_fix import ProxyFix
+                   url_for, flash, jsonify, abort, session, send_file)
 from ruamel.yaml import YAML
 from ruamel.yaml import YAML as SafeYAML
 from io import StringIO
@@ -28,7 +27,6 @@ logger = logging.getLogger("traefik-manager")
 
 
 app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 _SECRET_KEY_PATH = '/app/config/.secret_key'
 
@@ -451,22 +449,6 @@ def _get_csrf_token() -> str:
         session['csrf_token'] = secrets.token_hex(32)
     return session['csrf_token']
 
-def _get_login_csrf_token() -> str:
-    import hmac as _hmac
-    window = int(time.time()) // 300
-    return _hmac.new(app.secret_key if isinstance(app.secret_key, bytes) else app.secret_key.encode(),
-                     f'login-csrf:{window}'.encode(), 'sha256').hexdigest()
-
-def _check_login_csrf(token: str) -> bool:
-    import hmac as _hmac
-    window = int(time.time()) // 300
-    for w in (window, window - 1):
-        expected = _hmac.new(app.secret_key if isinstance(app.secret_key, bytes) else app.secret_key.encode(),
-                             f'login-csrf:{w}'.encode(), 'sha256').hexdigest()
-        if _hmac.compare_digest(token, expected):
-            return True
-    return False
-
 def _check_csrf():
     token = request.form.get('csrf_token', '') or request.headers.get('X-CSRF-Token', '')
     if request.is_json:
@@ -556,15 +538,6 @@ def _get_effective_hash() -> str:
 @app.before_request
 def log_request_info():
     logger.info(f"{request.remote_addr} → {request.method} {request.path}")
-    if request.method == 'POST' and request.path in ('/login', '/setup', '/force-change-password'):
-        cookie_names = list(request.cookies.keys())
-        has_session  = 'session' in request.cookies
-        has_token    = bool(session.get('csrf_token'))
-        if has_session and not has_token:
-            logger.warning(
-                f"Session cookie present but empty/undecodable on POST {request.path} "
-                f"(likely stale cookie from previous install - secret key mismatch)"
-            )
 
 
 @app.after_request
@@ -597,13 +570,7 @@ def login():
 
     error = None
     if request.method == 'POST':
-        token = request.form.get('csrf_token', '')
-        if not _check_login_csrf(token):
-            logger.warning(
-                f"CSRF check failed on login from {request.remote_addr} "
-                f"(cookies={list(request.cookies.keys())})"
-            )
-            return redirect(url_for('login', next=request.form.get('next', '')))
+        _check_csrf()
         password = request.form.get('password', '')
         pw_hash  = settings.get('password_hash', '')
         admin_pw = os.environ.get('ADMIN_PASSWORD', '').strip()
@@ -648,12 +615,9 @@ def login():
             logger.warning(f"Failed login attempt from {request.remote_addr}")
 
     next_url = request.args.get('next', '')
-    resp = make_response(render_template('login.html', error=error, next=next_url,
-                                         csrf_token=_get_login_csrf_token(),
-                                         temp_password_hint=temp_password_hint))
-    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    resp.headers['Pragma'] = 'no-cache'
-    return resp
+    return render_template('login.html', error=error, next=next_url,
+                           csrf_token=_get_csrf_token(),
+                           temp_password_hint=temp_password_hint)
 
 
 @app.route('/setup', methods=['GET', 'POST'])
@@ -681,10 +645,7 @@ def setup():
 
     error = None
     if request.method == 'POST':
-        token = request.form.get('csrf_token', '')
-        if not _check_login_csrf(token):
-            logger.warning(f"CSRF check failed on setup from {request.remote_addr}")
-            return redirect(url_for('setup'))
+        _check_csrf()
 
         domains_raw       = request.form.get('domains', '').strip()
         cert_resolver     = request.form.get('cert_resolver', '').strip()
@@ -744,12 +705,9 @@ def setup():
             session['login_time']    = datetime.now(timezone.utc).isoformat()
             return redirect(url_for('index'))
 
-    resp = make_response(render_template('login.html', setup_mode=True, error=error,
-                                         defaults=defaults, csrf_token=_get_login_csrf_token(),
-                                         temp_password_mode=temp_password_mode))
-    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    resp.headers['Pragma'] = 'no-cache'
-    return resp
+    return render_template('login.html', setup_mode=True, error=error,
+                           defaults=defaults, csrf_token=_get_csrf_token(),
+                           temp_password_mode=temp_password_mode)
 
 
 @app.route('/logout', methods=['POST'])
