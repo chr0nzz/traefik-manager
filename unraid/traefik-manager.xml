@@ -12,6 +12,7 @@
   <Category>Tools: Network:Management</Category>
   <WebUI>http://[IP]:[PORT:5000]</WebUI>
   <Icon>https://raw.githubusercontent.com/chr0nzz/traefik-manager/main/static/icons/icon.png</Icon>
+  <TemplateURL>https://raw.githubusercontent.com/chr0nzz/traefik-manager/main/unraid/traefik-manager.xml</TemplateURL>
   <ExtraParams>--restart=unless-stopped</ExtraParams>
   <DateInstalled></DateInstalled>
   <DonateText></DonateText>
