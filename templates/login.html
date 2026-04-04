@@ -476,8 +476,37 @@
             </div>
         </div>
 
-        
+
         <div class="step-panel" id="panel-2">
+            <div class="step-title">Self route <span class="text-xs font-normal" style="color:var(--muted)">(optional)</span></div>
+            <p class="step-subtitle">Let Traefik route traffic to this Traefik Manager instance. Creates a <code style="font-family:monospace">traefik-manager-self.yml</code> in your config directory.</p>
+
+            <div class="field">
+                <label for="s_self_domain">Traefik Manager URL</label>
+                <input type="text" id="s_self_domain" placeholder="manager.example.com">
+                <p class="field-hint">The hostname you want to use to access Traefik Manager. Leave blank to skip.</p>
+            </div>
+            <div class="field">
+                <label for="s_self_service">Internal service URL</label>
+                <input type="text" id="s_self_service" placeholder="http://traefik-manager:5000" value="http://traefik-manager:5000">
+                <p class="field-hint">Internal URL Docker/Traefik uses to reach this container. Usually the service name on the same network.</p>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-secondary" onclick="goTo(1)">
+                    <i class="ph-bold ph-arrow-left"></i> Back
+                </button>
+                <button class="btn-secondary" onclick="goTo(3)" style="margin-left:auto;margin-right:8px;">
+                    Skip
+                </button>
+                <button class="btn-primary" onclick="goTo(3)">
+                    Next <i class="ph-bold ph-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+
+        <div class="step-panel" id="panel-3">
             <div class="step-title">Optional monitoring</div>
             <p class="step-subtitle">Enable extra views for deeper insight into your Traefik setup. All of these are optional - you can turn them on or off anytime in Settings.</p>
 
@@ -567,7 +596,7 @@
             </div>
 
             <div class="btn-row">
-                <button class="btn-secondary" onclick="goTo(1)">
+                <button class="btn-secondary" onclick="goTo(2)">
                     <i class="ph-bold ph-arrow-left"></i> Back
                 </button>
                 {% if temp_password_mode %}
@@ -575,7 +604,7 @@
                     <i class="ph-bold ph-check"></i> Finish setup
                 </button>
                 {% else %}
-                <button class="btn-primary" onclick="goTo(3)">
+                <button class="btn-primary" onclick="goTo(4)">
                     Next <i class="ph-bold ph-arrow-right"></i>
                 </button>
                 {% endif %}
@@ -583,7 +612,7 @@
         </div>
 
         {% if not temp_password_mode %}
-        <div class="step-panel" id="panel-3">
+        <div class="step-panel" id="panel-4">
             <div class="step-title">Create your password</div>
             <p class="step-subtitle">Protects access to Traefik Manager. You can change it anytime from Settings.</p>
 
@@ -600,7 +629,7 @@
             </div>
 
             <div class="btn-row">
-                <button class="btn-secondary" onclick="goTo(2)">
+                <button class="btn-secondary" onclick="goTo(3)">
                     <i class="ph-bold ph-arrow-left"></i> Back
                 </button>
                 <button class="btn-primary" id="finishBtn" onclick="submitSetup()" disabled>
@@ -611,13 +640,15 @@
         {% endif %}
 
         <form method="POST" action="{{ url_for('setup') }}" id="setupForm" style="display:none">
-            <input type="hidden" name="csrf_token"      value="{{ csrf_token }}">
-            <input type="hidden" name="domains"         id="f_domains">
-            <input type="hidden" name="cert_resolver"   id="f_resolver">
-            <input type="hidden" name="traefik_api_url" id="f_apiurl">
-            <input type="hidden" name="visible_tabs"    id="f_visible_tabs">
-            <input type="hidden" name="password"        id="f_password">
-            <input type="hidden" name="confirm"         id="f_confirm">
+            <input type="hidden" name="csrf_token"        value="{{ csrf_token }}">
+            <input type="hidden" name="domains"           id="f_domains">
+            <input type="hidden" name="cert_resolver"     id="f_resolver">
+            <input type="hidden" name="traefik_api_url"   id="f_apiurl">
+            <input type="hidden" name="visible_tabs"      id="f_visible_tabs">
+            <input type="hidden" name="password"          id="f_password">
+            <input type="hidden" name="confirm"           id="f_confirm">
+            <input type="hidden" name="self_route_domain"  id="f_self_domain">
+            <input type="hidden" name="self_route_service" id="f_self_service">
         </form>
 
     </div>
@@ -652,7 +683,7 @@ applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 const TEMP_PW_MODE = {{ 'true' if temp_password_mode else 'false' }};
 let currentStep = 0;
 const setupTabs = { dashboard: false, routemap: false, docker: false, certs: false, plugins: false, logs: false };
-const MAX_STEP   = TEMP_PW_MODE ? 2 : 3;
+const MAX_STEP   = TEMP_PW_MODE ? 3 : 4;
 
 function goTo(step) {
     hideError();
@@ -675,13 +706,13 @@ function goTo(step) {
                 if (line) line.classList.add('done');
             } else if (i === step) {
                 dot.className = 'step-dot active';
-                dot.innerHTML = (!TEMP_PW_MODE && i === 4)
+                dot.innerHTML = (!TEMP_PW_MODE && i === MAX_STEP)
                     ? '<i class="ph-bold ph-lock-key" style="font-size:11px"></i>'
                     : String(i);
                 if (line) line.classList.remove('done');
             } else {
                 dot.className = 'step-dot';
-                dot.innerHTML = (!TEMP_PW_MODE && i === 4)
+                dot.innerHTML = (!TEMP_PW_MODE && i === MAX_STEP)
                     ? '<i class="ph-bold ph-lock-key" style="font-size:11px"></i>'
                     : String(i);
                 if (line) line.classList.remove('done');
@@ -777,6 +808,8 @@ function submitSetup() {
     document.getElementById('f_resolver').value     = document.getElementById('s_resolver').value.trim();
     document.getElementById('f_apiurl').value       = document.getElementById('s_apiurl').value.trim();
     document.getElementById('f_visible_tabs').value = JSON.stringify(setupTabs);
+    document.getElementById('f_self_domain').value  = (document.getElementById('s_self_domain')?.value || '').trim();
+    document.getElementById('f_self_service').value = (document.getElementById('s_self_service')?.value || '').trim();
 
     if (!TEMP_PW_MODE) {
         const pw      = document.getElementById('s_password').value;

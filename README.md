@@ -326,13 +326,14 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 - **Logs** - live Traefik access log tail
 
 **Security**
-- bcrypt passwords, CSRF protection, session management with session fixation protection
-- Optional TOTP 2FA · 7-day remember me · 2hr inactivity timeout for browser sessions
+- bcrypt passwords (cost 12), CSRF protection, session management with session fixation protection
+- Optional TOTP 2FA · 7-day remember me · configurable inactivity timeout
 - Auto-generated password on first start · CLI recovery with `flask reset-password`
-- **API key authentication** - scoped `X-Api-Key` for mobile/app access, revocable without touching your password or 2FA
+- **Per-device API keys** - up to 10 named keys (e.g. "My Phone"), each independently revocable via `X-Api-Key` header
 - **Rate limiting** on login and auth endpoints (Flask-Limiter)
 - **Atomic config writes** - crash-safe YAML saves via temp file + rename
 - **Encrypted OTP secret** - TOTP seed encrypted at rest with Fernet
+
 
 ---
 
@@ -340,11 +341,11 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 
 **traefik-manager-mobile** is a React Native companion app for managing Traefik Manager from your phone. Requires **Traefik Manager v0.6.0 or higher**.
 
-|          |                                                                                                                              |
-| ----------| ------------------------------------------------------------------------------------------------------------------------------|
-| Repo     | [github.com/chr0nzz/traefik-manager-mobile](https://github.com/chr0nzz/traefik-manager-mobile)                               |
-| Download | [traefik-manager-v0.4.0.apk](https://github.com/chr0nzz/traefik-manager-mobile/releases/download/v0.4.0/traefik-manager-v0.4.0.apk) |
-| Auth     | API key - generate one in **Settings → Authentication**                                                                      |
+|          |                                                                                                |
+| ----------| ------------------------------------------------------------------------------------------------|
+| Repo     | [github.com/chr0nzz/traefik-manager-mobile](https://github.com/chr0nzz/traefik-manager-mobile) |
+| Download | [Latest release](https://github.com/chr0nzz/traefik-manager-mobile/releases/latest)            |
+| Auth     | Per-device API key - generate one in **Settings → Authentication → App / Mobile API Keys**     |
 
 Features: browse routes, middlewares, and services · enable/disable routes · add and edit routes and middlewares (12 middleware templates) · backend scheme + pass host header controls · multi-config file picker · edit mode for bulk actions · system light/dark theme.
 
@@ -395,6 +396,9 @@ Full documentation at **[traefik-manager.xyzlab.dev](https://traefik-manager.xyz
 | [Get Started](https://traefik-manager.xyzlab.dev/docker/) | Deployment guides for Docker, Podman, and Linux |
 | [Configuration](https://traefik-manager.xyzlab.dev/manager-yml/) | `manager.yml` reference |
 | [Environment Variables](https://traefik-manager.xyzlab.dev/env-vars/) | `CONFIG_DIR`, `CONFIG_PATHS`, auth, domains, and more |
+| [Security](https://traefik-manager.xyzlab.dev/security/) | API keys, sessions, CSRF, rate limits, and hardening |
+| [API Reference](https://traefik-manager.xyzlab.dev/api/) | REST API for integrations and the mobile app |
+| [Mobile App](https://traefik-manager.xyzlab.dev/mobile/) | Android companion app setup and features |
 | [Reset Password](https://traefik-manager.xyzlab.dev/reset-password/) | CLI reset, TOTP recovery, manual reset |
 | [UI Examples](https://traefik-manager.xyzlab.dev/ui-examples/) | Screenshots and walkthroughs |
 | [Provider Tabs](https://traefik-manager.xyzlab.dev/) | Docker, Kubernetes, Swarm, Nomad, ECS, and more |

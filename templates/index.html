@@ -675,47 +675,72 @@ async function refreshRoutes() {
     } catch(e) {}
 }
 
+function showAddApiKeyForm() {
+    document.getElementById('apikeyAddForm').classList.remove('hidden');
+    document.getElementById('apikeyDeviceName').focus();
+}
+
+function hideAddApiKeyForm() {
+    document.getElementById('apikeyAddForm').classList.add('hidden');
+    document.getElementById('apikeyDeviceName').value = '';
+}
+
+function _renderApiKeyList(keys) {
+    const list = document.getElementById('apikeyList');
+    const addBtn = document.getElementById('btnAddApiKey');
+    if (!list) return;
+    if (!keys || keys.length === 0) {
+        list.innerHTML = '<div class="text-xs" style="color:var(--muted);padding:8px 0;">No active keys</div>';
+        if (addBtn) addBtn.style.display = '';
+        return;
+    }
+    if (addBtn) addBtn.style.display = keys.length >= 10 ? 'none' : '';
+    list.innerHTML = keys.map(k => `
+        <div class="flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+            <div class="flex flex-col" style="gap:2px;">
+                <span class="text-xs font-semibold" style="color:var(--text)">${k.name.replace(/</g,'&lt;')}</span>
+                <code class="text-xs font-mono" style="color:var(--muted);font-size:10px;letter-spacing:.05em">${k.preview}</code>
+            </div>
+            <button onclick="revokeApiKey('${k.preview.replace(/'/g,"\\'")}')" class="nav-btn text-xs" style="color:var(--red);border-color:rgba(248,81,73,0.3);flex-shrink:0;"><i class="ph-bold ph-x"></i> Revoke</button>
+        </div>`).join('');
+}
+
 async function generateApiKey() {
+    const deviceName = (document.getElementById('apikeyDeviceName')?.value || '').trim();
+    if (!deviceName) { showToast('Enter a device name first.', 'error'); return; }
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     try {
         const res = await fetch('/api/auth/apikey/generate', {
             method: 'POST',
             headers: { 'X-Requested-With': 'fetch', 'X-CSRF-Token': token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ csrf_token: token })
+            body: JSON.stringify({ device_name: deviceName })
         });
         const json = await res.json();
         if (json.ok) {
-            const preview = json.key.slice(0, 8) + '...' + json.key.slice(-4);
-            const previewEl = document.getElementById('apikeyPreview');
-            if (previewEl) previewEl.textContent = preview;
-            document.getElementById('apikeyActiveRow').classList.remove('hidden');
-            document.getElementById('apikeyInactiveRow').classList.add('hidden');
+            hideAddApiKeyForm();
             document.getElementById('apikeyValue').value = json.key;
             document.getElementById('apikeyDisplay').classList.remove('hidden');
             showToast('API key generated. Copy it now.', 'success');
+            loadApiKeyStatus();
         } else {
-            showToast('Failed to generate key.', 'error');
+            showToast(json.error || 'Failed to generate key.', 'error');
         }
     } catch(e) { showToast('Error generating key.', 'error'); }
 }
 
-async function revokeApiKey() {
-    if (!confirm('Revoke the current API key?')) return;
+async function revokeApiKey(preview) {
+    if (!confirm('Revoke this API key?')) return;
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     try {
         const res = await fetch('/api/auth/apikey/revoke', {
             method: 'POST',
             headers: { 'X-Requested-With': 'fetch', 'X-CSRF-Token': token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ csrf_token: token })
+            body: JSON.stringify({ preview })
         });
         const json = await res.json();
         if (json.ok) {
-            document.getElementById('apikeyActiveRow').classList.add('hidden');
-            document.getElementById('apikeyInactiveRow').classList.remove('hidden');
-            document.getElementById('apikeyDisplay').classList.add('hidden');
-            const previewEl = document.getElementById('apikeyPreview');
-            if (previewEl) previewEl.textContent = '';
             showToast('API key revoked.', 'success');
+            loadApiKeyStatus();
         }
     } catch(e) { showToast('Error revoking key.', 'error'); }
 }
@@ -729,19 +754,52 @@ async function loadApiKeyStatus() {
     try {
         const res = await fetch('/api/auth/apikey/status');
         const json = await res.json();
-        const activeRow = document.getElementById('apikeyActiveRow');
-        const inactiveRow = document.getElementById('apikeyInactiveRow');
-        const previewEl = document.getElementById('apikeyPreview');
-        if (json.has_key) {
-            if (activeRow) activeRow.classList.remove('hidden');
-            if (inactiveRow) inactiveRow.classList.add('hidden');
-            if (previewEl && json.key_preview) previewEl.textContent = json.key_preview;
-        } else {
-            if (activeRow) activeRow.classList.add('hidden');
-            if (inactiveRow) inactiveRow.classList.remove('hidden');
-            if (previewEl) previewEl.textContent = '';
-        }
+        _renderApiKeyList(json.keys || []);
     } catch(e) {}
+}
+
+let _selfRouteRouterName = 'traefik-manager';
+
+async function loadSelfRoute() {
+    try {
+        const hostname = window.location.hostname;
+        const res = await fetch('/api/settings/self-route?hostname=' + encodeURIComponent(hostname));
+        const json = await res.json();
+        const domainEl  = document.getElementById('selfRouteDomain');
+        const serviceEl = document.getElementById('selfRouteService');
+        const deleteBtn = document.getElementById('btnDeleteSelfRoute');
+        _selfRouteRouterName = json.router_name || 'traefik-manager';
+        if (domainEl)  domainEl.value  = json.domain      || hostname;
+        if (serviceEl) serviceEl.value = json.service_url || 'http://traefik-manager:5000';
+        if (deleteBtn) deleteBtn.classList.toggle('hidden', !json.domain && !json.found);
+    } catch(e) {}
+}
+
+async function saveSelfRoute() {
+    const domain     = (document.getElementById('selfRouteDomain')?.value  || '').trim();
+    const serviceUrl = (document.getElementById('selfRouteService')?.value || '').trim() || 'http://traefik-manager:5000';
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    try {
+        const res = await fetch('/api/settings/self-route', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch', 'X-CSRF-Token': token },
+            body: JSON.stringify({ domain, service_url: serviceUrl, router_name: _selfRouteRouterName })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            const notice    = document.getElementById('selfRouteSavedNotice');
+            const deleteBtn = document.getElementById('btnDeleteSelfRoute');
+            if (notice) { notice.classList.remove('hidden'); setTimeout(() => notice.classList.add('hidden'), 2500); }
+            if (deleteBtn) deleteBtn.classList.toggle('hidden', !domain);
+            showToast(domain ? 'Self route saved.' : 'Self route removed.', 'success');
+        }
+    } catch(e) { showToast('Error saving self route.', 'error'); }
+}
+
+async function deleteSelfRoute() {
+    if (!confirm('Remove the self route?')) return;
+    document.getElementById('selfRouteDomain').value = '';
+    await saveSelfRoute();
 }
 
 function renderRouteGrid(apps) {
@@ -1674,12 +1732,10 @@ function closeSvcDetail() {
 
 
 function openRouteDetailFromCard(card) {
-    const idx = parseInt(card.getAttribute('data-idx'), 10);
-    if (isNaN(idx) || !APP_DATA || !APP_DATA[idx]) {
-        console.error('No APP_DATA for idx', idx);
-        return;
-    }
-    const appData = APP_DATA[idx];
+    const routeKey = card.getAttribute('data-routekey');
+    if (!routeKey || !APP_DATA) return;
+    const appData = APP_DATA.find(a => a.name === routeKey);
+    if (!appData) return;
     openRouteDetail(appData.name, appData.protocol, appData);
 }
 let _liveRoutersCache = null;

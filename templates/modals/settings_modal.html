@@ -62,6 +62,28 @@
                     <div id="settingsSavedNotice" class="hidden text-xs px-3 py-2 rounded-md" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
                         <i class="ph-bold ph-check-circle mr-1"></i>Settings saved to <code>manager.yml</code>
                     </div>
+
+                    <div class="settings-divider"></div>
+
+                    <div>
+                        <span class="settings-section-label">Self Route</span>
+                        <div class="text-xs mb-3" style="color:var(--muted)">Create a Traefik route for this Traefik Manager instance. Added to your dynamic config file automatically - no changes needed to <code>traefik.yml</code>.</div>
+                        <div style="display:flex;flex-direction:column;gap:8px;">
+                            <div>
+                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Traefik Manager URL</label>
+                                <input type="text" id="selfRouteDomain" class="input-field text-xs" placeholder="manager.example.com">
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Internal service URL</label>
+                                <input type="text" id="selfRouteService" class="input-field text-xs" placeholder="http://traefik-manager:5000" value="http://traefik-manager:5000">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="saveSelfRoute()" class="nav-btn text-xs"><i class="ph-bold ph-floppy-disk"></i> Save Route</button>
+                                <button onclick="deleteSelfRoute()" id="btnDeleteSelfRoute" class="nav-btn text-xs hidden" style="color:var(--red);border-color:rgba(248,81,73,0.3);"><i class="ph-bold ph-trash"></i> Remove</button>
+                                <span id="selfRouteSavedNotice" class="hidden text-xs" style="color:var(--green)"><i class="ph-bold ph-check-circle"></i> Saved</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-panel" id="mpanel-routes">
@@ -209,20 +231,25 @@
                     <div>
                         <div class="flex items-center justify-between mb-2">
                             <div>
-                                <span class="settings-section-label" style="margin:0;">App / Mobile API Key</span>
-                                <div class="text-xs mt-1" style="color:var(--muted)">Used by the mobile app via <code>X-Api-Key</code> header.</div>
+                                <span class="settings-section-label" style="margin:0;">App / Mobile API Keys</span>
+                                <div class="text-xs mt-1" style="color:var(--muted)">Per-device keys used by the mobile app via <code>X-Api-Key</code> header. Up to 10 keys.</div>
                             </div>
-                            <button onclick="generateApiKey()" id="btnGenerateApiKey" class="nav-btn text-xs"><i class="ph-bold ph-key"></i> Generate Key</button>
+                            <button onclick="showAddApiKeyForm()" id="btnAddApiKey" class="nav-btn text-xs"><i class="ph-bold ph-plus"></i> Add Key</button>
                         </div>
 
-                        <div id="apikeyInactiveRow" class="text-xs" style="color:var(--muted);padding:8px 0;">No active key</div>
-
-                        <div id="apikeyActiveRow" class="hidden flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
-                            <div class="flex items-center gap-2" style="color:var(--text);">
-                                <i class="ph-bold ph-key" style="color:var(--muted)"></i>
-                                <code id="apikeyPreview" class="text-xs font-mono" style="letter-spacing:.05em"></code>
+                        <div id="apikeyAddForm" class="hidden mb-3">
+                            <div style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+                                <div class="text-xs font-semibold mb-2" style="color:var(--text)">Device name</div>
+                                <div class="flex gap-2">
+                                    <input type="text" id="apikeyDeviceName" placeholder="e.g. My Phone" maxlength="50" class="input-field text-xs flex-1">
+                                    <button onclick="generateApiKey()" class="nav-btn text-xs"><i class="ph-bold ph-key"></i> Generate</button>
+                                    <button onclick="hideAddApiKeyForm()" class="nav-btn text-xs" style="color:var(--muted)"><i class="ph-bold ph-x"></i></button>
+                                </div>
                             </div>
-                            <button onclick="revokeApiKey()" id="btnRevokeApiKey" class="nav-btn text-xs" style="color:var(--red);border-color:rgba(248,81,73,0.3);"><i class="ph-bold ph-x"></i> Revoke</button>
+                        </div>
+
+                        <div id="apikeyList" class="flex flex-col" style="gap:6px;">
+                            <div class="text-xs" style="color:var(--muted);padding:8px 0;">No active keys</div>
                         </div>
 
                         <div id="apikeyDisplay" class="hidden mt-3">
@@ -424,6 +451,7 @@ async function openSettingsModal(panel) {
         _applyTraefikBadgeVisibility();
         loadOtpStatus();
         loadApiKeyStatus();
+        loadSelfRoute();
 
         const authSection   = document.getElementById('authSection');
         const toggleBtn     = document.getElementById('authToggleBtn');

@@ -190,8 +190,9 @@ def load_settings() -> dict:
         'otp_secret':           '',
         'otp_enabled':          False,
         'disabled_routes':      {},
-        'api_key_hash':         '',
+        'api_keys':             [],
         'api_key_enabled':      False,
+        'self_route':           {'domain': '', 'service_url': ''},
     }
     if not os.path.exists(SETTINGS_PATH):
         return defaults
@@ -228,10 +229,31 @@ def load_settings() -> dict:
                 merged['setup_complete'] = True
         if 'disabled_routes' in data and isinstance(data['disabled_routes'], dict):
             merged['disabled_routes'] = dict(data['disabled_routes'])
-        if 'api_key_hash' in data:
-            merged['api_key_hash'] = str(data['api_key_hash']).strip()
-        if 'api_key_enabled' in data:
-            merged['api_key_enabled'] = bool(data['api_key_enabled'])
+        if 'api_keys' in data and isinstance(data['api_keys'], list):
+            keys = []
+            for k in data['api_keys']:
+                if isinstance(k, dict) and k.get('name') and k.get('hash') and k.get('preview'):
+                    keys.append({
+                        'name':       str(k['name'])[:50],
+                        'hash':       str(k['hash']),
+                        'preview':    str(k['preview']),
+                        'created_at': str(k.get('created_at', '')),
+                    })
+            merged['api_keys'] = keys
+        elif 'api_key_hash' in data and str(data['api_key_hash']).strip():
+            merged['api_keys'] = [{
+                'name':       'Default',
+                'hash':       str(data['api_key_hash']).strip(),
+                'preview':    str(data.get('api_key_preview', '')).strip(),
+                'created_at': '',
+            }]
+        merged['api_key_enabled'] = len(merged['api_keys']) > 0
+        if 'self_route' in data and isinstance(data['self_route'], dict):
+            sr = data['self_route']
+            merged['self_route'] = {
+                'domain':      str(sr.get('domain', '')).strip(),
+                'service_url': str(sr.get('service_url', '')).strip(),
+            }
         return merged
     except Exception as e:
         logger.warning(f"Could not load manager.yml, using defaults: {e}")
@@ -242,9 +264,9 @@ def save_settings(domains, cert_resolver, traefik_api_url,
                   auth_enabled=True, password_hash='', visible_tabs=None,
                   must_change_password=None, setup_complete=None,
                   otp_secret=None, otp_enabled=None,
-                  api_key_hash=None, api_key_enabled=None,
-                  api_key_preview=None,
-                  disabled_routes=None):
+                  api_keys=None,
+                  disabled_routes=None,
+                  self_route=None):
     if visible_tabs is None:
         visible_tabs = {t: False for t in OPTIONAL_TABS}
     _cur = load_settings()
@@ -256,12 +278,10 @@ def save_settings(domains, cert_resolver, traefik_api_url,
         otp_secret = _cur.get('otp_secret', '')
     if otp_enabled is None:
         otp_enabled = _cur.get('otp_enabled', False)
-    if api_key_hash is None:
-        api_key_hash = _cur.get('api_key_hash', '')
-    if api_key_enabled is None:
-        api_key_enabled = _cur.get('api_key_enabled', False)
-    if api_key_preview is None:
-        api_key_preview = _cur.get('api_key_preview', '')
+    if api_keys is None:
+        api_keys = _cur.get('api_keys', [])
+    if self_route is None:
+        self_route = _cur.get('self_route', {'domain': '', 'service_url': ''})
     if disabled_routes is None:
         disabled_routes = _cur.get('disabled_routes', {})
     otp_secret = _encrypt_otp_secret(otp_secret)
@@ -280,13 +300,91 @@ def save_settings(domains, cert_resolver, traefik_api_url,
             'otp_secret':           otp_secret,
             'otp_enabled':          otp_enabled,
             'disabled_routes':      disabled_routes,
-            'api_key_hash':         api_key_hash,
-            'api_key_enabled':      api_key_enabled,
-            'api_key_preview':      api_key_preview,
+            'api_keys':             api_keys,
+            'api_key_enabled':      len(api_keys) > 0,
+            'self_route':           self_route,
         }, f)
     os.replace(tmp, SETTINGS_PATH)
     logger.info("Manager settings saved")
 
+
+SELF_ROUTE_FILENAME = 'traefik-manager-self.yml'
+
+def _self_route_path() -> str:
+    if ACTIVE_CONFIG_DIR:
+        return os.path.join(ACTIVE_CONFIG_DIR, SELF_ROUTE_FILENAME)
+    return os.path.join(os.path.dirname(os.path.abspath(CONFIG_PATH)), SELF_ROUTE_FILENAME)
+
+def _write_self_route(domain: str, service_url: str, cert_resolver: str, router_name: str = 'traefik-manager') -> None:
+    router_entry = {
+        'rule': f'Host(`{domain}`)',
+        'entryPoints': ['websecure'],
+        'service': router_name,
+        'tls': {'certResolver': cert_resolver or 'cloudflare'},
+    }
+    service_entry = {
+        'loadBalancer': {
+            'servers': [{'url': service_url}]
+        }
+    }
+    if ACTIVE_CONFIG_DIR:
+        path = _self_route_path()
+        content = {
+            'http': {
+                'routers': {router_name: router_entry},
+                'services': {router_name: service_entry},
+            }
+        }
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        tmp = path + '.tmp'
+        with open(tmp, 'w') as f:
+            yaml.dump(content, f)
+        os.replace(tmp, path)
+        logger.info(f"Self-route written to new file: {path}")
+    else:
+        cfg = load_config(CONFIG_PATH)
+        cfg.setdefault('http', {}).setdefault('routers', {})[router_name] = router_entry
+        cfg['http'].setdefault('services', {})[router_name] = service_entry
+        save_config(cfg, CONFIG_PATH)
+        logger.info(f"Self-route updated in existing config: {CONFIG_PATH} (router: {router_name})")
+
+def _delete_self_route(router_name: str = 'traefik-manager') -> None:
+    if ACTIVE_CONFIG_DIR:
+        path = _self_route_path()
+        if os.path.exists(path):
+            os.remove(path)
+            logger.info(f"Self-route file deleted: {path}")
+    else:
+        cfg = load_config(CONFIG_PATH)
+        http = cfg.get('http', {})
+        http.get('routers', {}).pop(router_name, None)
+        http.get('services', {}).pop(router_name, None)
+        save_config(cfg, CONFIG_PATH)
+        logger.info(f"Self-route '{router_name}' removed from config: {CONFIG_PATH}")
+
+def _detect_self_route_domain() -> str:
+    import re
+    for cfg_path in CONFIG_PATHS:
+        if not os.path.exists(cfg_path):
+            continue
+        try:
+            with open(cfg_path, 'r') as f:
+                data = yaml.load(f) or {}
+            routers = (data.get('http') or {}).get('routers') or {}
+            services = (data.get('http') or {}).get('services') or {}
+            for rname, rdata in routers.items():
+                svc_name = (rdata.get('service') or '').split('@')[0]
+                svc = services.get(svc_name) or {}
+                servers = ((svc.get('loadBalancer') or {}).get('servers') or [])
+                urls = [str(s.get('url', '')) for s in servers if s.get('url')]
+                if any('traefik-manager' in u or ':5000' in u for u in urls):
+                    rule = rdata.get('rule', '')
+                    m = re.search(r'Host\(`([^`]+)`\)', rule)
+                    if m:
+                        return m.group(1)
+        except Exception:
+            continue
+    return ''
 
 def _auth_enabled() -> bool:
     env = os.environ.get('AUTH_ENABLED', '').strip().lower()
@@ -405,9 +503,10 @@ def _check_api_key() -> bool:
     if not key:
         return False
     settings = load_settings()
-    if not settings.get('api_key_enabled') or not settings.get('api_key_hash'):
+    api_keys = settings.get('api_keys', [])
+    if not api_keys:
         return False
-    return _check_password(key, settings['api_key_hash'])
+    return any(_check_password(key, k['hash']) for k in api_keys if k.get('hash'))
 
 def login_required(f):
     @wraps(f)
@@ -487,7 +586,7 @@ def login():
             if settings.get('otp_enabled') and settings.get('otp_secret') and not admin_pw:
                 session.clear()
                 session['otp_pending']  = True
-                session['otp_remember'] = remember
+                session['otp_remember'] = bool(remember)
                 session['otp_next']     = request.form.get('next') or ''
                 session['otp_must_change'] = settings.get('must_change_password', False)
                 session['otp_setup_complete'] = settings.get('setup_complete', False)
@@ -548,12 +647,14 @@ def setup():
     if request.method == 'POST':
         _check_csrf()
 
-        domains_raw      = request.form.get('domains', '').strip()
-        cert_resolver    = request.form.get('cert_resolver', '').strip()
-        traefik_api_url  = request.form.get('traefik_api_url', '').strip()
-        visible_tabs_raw = request.form.get('visible_tabs', '{}')
-        pw               = request.form.get('password', '')
-        confirm          = request.form.get('confirm', '')
+        domains_raw       = request.form.get('domains', '').strip()
+        cert_resolver     = request.form.get('cert_resolver', '').strip()
+        traefik_api_url   = request.form.get('traefik_api_url', '').strip()
+        visible_tabs_raw  = request.form.get('visible_tabs', '{}')
+        pw                = request.form.get('password', '')
+        confirm           = request.form.get('confirm', '')
+        self_route_domain = request.form.get('self_route_domain', '').strip()
+        self_route_svc    = request.form.get('self_route_service', '').strip() or 'http://traefik-manager:5000'
 
         domains = [d.strip() for d in domains_raw.split(',') if d.strip()]
 
@@ -576,15 +677,21 @@ def setup():
                 visible_tabs = {t: False for t in OPTIONAL_TABS}
 
             pw_hash = current['password_hash'] if temp_password_mode else _hash_password(pw)
+            resolver = cert_resolver or 'cloudflare'
+            sr = {'domain': '', 'service_url': ''}
+            if self_route_domain:
+                sr = {'domain': self_route_domain, 'service_url': self_route_svc}
+                _write_self_route(self_route_domain, self_route_svc, resolver)
             save_settings(
                 domains=domains,
-                cert_resolver=cert_resolver or 'cloudflare',
+                cert_resolver=resolver,
                 traefik_api_url=traefik_api_url,
                 auth_enabled=True,
                 password_hash=pw_hash,
                 visible_tabs=visible_tabs,
                 must_change_password=current.get('must_change_password', False),
                 setup_complete=True,
+                self_route=sr,
             )
             logger.info(f"Setup wizard completed from {request.remote_addr}")
 
@@ -748,7 +855,7 @@ def login_otp():
         settings = load_settings()
         secret   = settings.get('otp_secret', '')
         if secret and pyotp.TOTP(secret).verify(code, valid_window=1):
-            remember       = session.get('otp_remember', False)
+            remember       = session.get('otp_remember', True)
             must_change    = session.get('otp_must_change', False)
             setup_complete = session.get('otp_setup_complete', False)
             next_url       = session.get('otp_next', '') or url_for('index')
@@ -842,9 +949,22 @@ def api_otp_status():
 @csrf_protect
 @login_required
 def api_apikey_generate():
+    data = request.get_json(silent=True) or {}
+    device_name = str(data.get('device_name', '')).strip()[:50]
+    if not device_name:
+        return jsonify({'ok': False, 'error': 'device_name is required'}), 400
+    settings = load_settings()
+    api_keys = settings.get('api_keys', [])
+    if len(api_keys) >= 10:
+        return jsonify({'ok': False, 'error': 'Maximum of 10 API keys reached'}), 400
     key = secrets.token_urlsafe(32)
     preview = key[:8] + '...' + key[-4:]
-    settings = load_settings()
+    api_keys.append({
+        'name':       device_name,
+        'hash':       _hash_password(key),
+        'preview':    preview,
+        'created_at': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M'),
+    })
     save_settings(
         domains=settings['domains'],
         cert_resolver=settings['cert_resolver'],
@@ -854,11 +974,9 @@ def api_apikey_generate():
         visible_tabs=settings['visible_tabs'],
         otp_secret=settings['otp_secret'],
         otp_enabled=settings['otp_enabled'],
-        api_key_hash=_hash_password(key),
-        api_key_enabled=True,
-        api_key_preview=preview,
+        api_keys=api_keys,
     )
-    logger.info(f"API key generated by {request.remote_addr}")
+    logger.info(f"API key '{device_name}' generated by {request.remote_addr}")
     return jsonify({'ok': True, 'key': key})
 
 
@@ -866,7 +984,12 @@ def api_apikey_generate():
 @csrf_protect
 @login_required
 def api_apikey_revoke():
+    data = request.get_json(silent=True) or {}
+    preview = str(data.get('preview', '')).strip()
+    if not preview:
+        return jsonify({'ok': False, 'error': 'preview is required'}), 400
     settings = load_settings()
+    api_keys = [k for k in settings.get('api_keys', []) if k.get('preview') != preview]
     save_settings(
         domains=settings['domains'],
         cert_resolver=settings['cert_resolver'],
@@ -876,9 +999,7 @@ def api_apikey_revoke():
         visible_tabs=settings['visible_tabs'],
         otp_secret=settings['otp_secret'],
         otp_enabled=settings['otp_enabled'],
-        api_key_hash='',
-        api_key_enabled=False,
-        api_key_preview='',
+        api_keys=api_keys,
     )
     logger.info(f"API key revoked by {request.remote_addr}")
     return jsonify({'ok': True})
@@ -888,10 +1009,11 @@ def api_apikey_revoke():
 @login_required
 def api_apikey_status():
     settings = load_settings()
+    api_keys = settings.get('api_keys', [])
     return jsonify({
-        'enabled': bool(settings.get('api_key_enabled', False)),
-        'has_key': bool(settings.get('api_key_hash', '')),
-        'key_preview': settings.get('api_key_preview', '') or None,
+        'enabled': len(api_keys) > 0,
+        'keys': [{'name': k['name'], 'preview': k['preview'], 'created_at': k.get('created_at', '')} for k in api_keys],
+        'count': len(api_keys),
     })
 
 
@@ -1263,6 +1385,69 @@ def api_save_tabs():
     except Exception as e:
         logger.exception("Tab settings save error")
         return jsonify({'error': str(e)}), 500
+
+
+def _find_existing_self_route(hostname: str) -> dict:
+    import re
+    for cfg_path in CONFIG_PATHS:
+        if not os.path.exists(cfg_path):
+            continue
+        try:
+            with open(cfg_path, 'r') as f:
+                data = yaml.load(f) or {}
+            routers  = (data.get('http') or {}).get('routers') or {}
+            services = (data.get('http') or {}).get('services') or {}
+            for rname, rdata in routers.items():
+                rule = rdata.get('rule', '')
+                m = re.search(r'Host\(`([^`]+)`\)', rule)
+                if m and m.group(1).lower() == hostname.lower():
+                    svc_name = (rdata.get('service') or '').split('@')[0]
+                    svc = services.get(svc_name) or {}
+                    servers = ((svc.get('loadBalancer') or {}).get('servers') or [])
+                    svc_url = next((str(s['url']) for s in servers if s.get('url')), '')
+                    return {'domain': hostname, 'service_url': svc_url, 'router_name': rname, 'found': True}
+        except Exception:
+            continue
+    return {}
+
+@app.route('/api/settings/self-route', methods=['GET'])
+@login_required
+def api_get_self_route():
+    settings = load_settings()
+    sr = settings.get('self_route', {'domain': '', 'service_url': ''})
+    if not sr.get('domain'):
+        hostname = request.args.get('hostname', '').strip().lower()
+        if hostname:
+            found = _find_existing_self_route(hostname)
+            if found:
+                return jsonify(found)
+    return jsonify(sr)
+
+@app.route('/api/settings/self-route', methods=['POST'])
+@csrf_protect
+@login_required
+def api_save_self_route():
+    data = request.get_json(silent=True) or {}
+    domain      = str(data.get('domain', '')).strip()
+    service_url = str(data.get('service_url', '')).strip() or 'http://traefik-manager:5000'
+    router_name = str(data.get('router_name', 'traefik-manager')).strip() or 'traefik-manager'
+    settings = load_settings()
+    if domain:
+        _write_self_route(domain, service_url, settings.get('cert_resolver', 'cloudflare'), router_name)
+        sr = {'domain': domain, 'service_url': service_url, 'router_name': router_name}
+    else:
+        _delete_self_route()
+        sr = {'domain': '', 'service_url': ''}
+    save_settings(
+        domains=settings['domains'],
+        cert_resolver=settings['cert_resolver'],
+        traefik_api_url=settings['traefik_api_url'],
+        auth_enabled=settings['auth_enabled'],
+        password_hash=settings['password_hash'],
+        visible_tabs=settings['visible_tabs'],
+        self_route=sr,
+    )
+    return jsonify({'ok': True})
 
 
 def load_config(path=None):
