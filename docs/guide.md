@@ -124,6 +124,23 @@ Read-only tabs that pull live data from the Traefik API. No extra mounts needed 
 | Page | Description |
 |------|-------------|
 | [Reset Password](reset-password.md) | CLI reset, TOTP recovery, and manual reset via manager.yml |
+| [Security](security.md) | Security controls, API keys, sessions, and hardening recommendations |
+
+---
+
+## Mobile App
+
+The [traefik-manager-mobile](mobile.md) companion app connects using an API key.
+
+Go to **Settings - Authentication - App / Mobile API Keys**, click **Add Key**, enter a device name, and copy the generated key. Each device gets its own key - you can revoke one without affecting others.
+
+---
+
+## Self Route
+
+Put Traefik Manager itself behind Traefik so you can access it via a domain with HTTPS.
+
+Go to **Settings - Connection - Self Route**. The URL field pre-fills from your current hostname and the service URL is detected from your existing config if a matching route is found. Click **Save Route** - TM writes the router and service entries into your dynamic config file. No changes to `traefik.yml` needed.
 
 ---
 

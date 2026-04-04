@@ -18,18 +18,22 @@ The mobile app authenticates via the API key feature introduced in v0.6.0. Earli
 
 ### 1. Generate an API key
 
-In the Traefik Manager web UI go to **Settings → Authentication** and generate an API key. Copy it - you will need it in the next step.
+In the Traefik Manager web UI go to **Settings → Authentication → App / Mobile API Keys** and click **Add Key**. Enter a device name (e.g. `My Phone`) and click **Generate**. Copy the full key - it is only shown once.
+
+::: tip One key per device
+Each device should have its own key. You can have up to 10 keys at once. Keys are identified by their device name in the settings list, so you can revoke a single device without affecting others.
+:::
 
 ### 2. Configure the app
 
-Open the **Settings** tab in the mobile app and enter:
+Open the mobile app and enter:
 
 | Field | Value |
 |---|---|
 | Server URL | Base URL of your Traefik Manager instance, e.g. `https://traefik-manager.example.com` |
 | API Key | The key generated in step 1 |
 
-Tap **Save** - the app connects immediately.
+Tap **Connect** - the app connects immediately.
 
 ---
 

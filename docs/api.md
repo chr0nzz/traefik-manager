@@ -149,35 +149,54 @@ Disable TOTP authentication.
 
 #### `GET /api/auth/apikey/status`
 
-Check whether an API key exists and is active.
+List all active API keys. Returns names and previews - full keys are never returned after generation.
 
 **Auth:** Session or API key
 
 **Response**
 ```json
-{ "enabled": true, "has_key": true }
+{
+  "enabled": true,
+  "count": 2,
+  "keys": [
+    { "name": "My Phone", "preview": "abcd1234...ef56", "created_at": "2026-04-03 12:00" },
+    { "name": "Tablet", "preview": "wxyz5678...gh90", "created_at": "2026-04-04 09:15" }
+  ]
+}
 ```
 
 ---
 
 #### `POST /api/auth/apikey/generate`
 
-Generate a new API key. Only one key exists at a time - generating a new one replaces the previous one.
+Generate a new API key for a named device. Up to 10 keys can exist at once.
 
 **Auth:** Session · **CSRF:** required · **Rate limit:** 5/hour
+
+**Request**
+```json
+{ "device_name": "My Phone" }
+```
 
 **Response**
 ```json
 { "ok": true, "key": "tm_abcdef123456..." }
 ```
 
+The full key is returned once. Store it securely - it cannot be retrieved again.
+
 ---
 
 #### `POST /api/auth/apikey/revoke`
 
-Revoke the current API key immediately.
+Revoke a specific API key by its preview string.
 
 **Auth:** Session · **CSRF:** required
+
+**Request**
+```json
+{ "preview": "abcd1234...ef56" }
+```
 
 **Response**
 ```json
@@ -581,6 +600,37 @@ Update application settings.
   "cert_resolver": "letsencrypt",
   "traefik_api_url": "http://traefik:8080"
 }
+```
+
+---
+
+#### `GET /api/settings/self-route`
+
+Get the current self-route configuration. If no domain is saved, TM scans config files for an existing route pointing to the TM service and returns it with `"detected": true`.
+
+**Auth:** Session or API key
+
+**Response**
+```json
+{ "domain": "manager.example.com", "service_url": "http://traefik-manager:5000" }
+```
+
+---
+
+#### `POST /api/settings/self-route`
+
+Save or remove the self-route. When a domain is provided, TM writes `traefik-manager-self.yml` to the config directory. When domain is empty, the file is deleted.
+
+**Auth:** Session or API key · **CSRF:** required (session only)
+
+**Request**
+```json
+{ "domain": "manager.example.com", "service_url": "http://traefik-manager:5000" }
+```
+
+**Response**
+```json
+{ "ok": true }
 ```
 
 ---

@@ -29,11 +29,13 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide' },
       { text: 'Mobile App', link: '/mobile' },
+      { text: 'Security', link: '/security' },
       { text: 'API Reference', link: '/api' },
       { text: 'UI Examples', link: '/ui-examples' },
       {
-        text: 'v0.8.0',
+        text: 'v0.9.0',
         items: [
+          { text: 'v0.9.0', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.9.0' },
           { text: 'v0.8.0', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.8.0' },
           { text: 'v0.7.0', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.7.0' },
           { text: 'v0.6.0', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.6.0' },
@@ -49,6 +51,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide' },
       { text: 'Mobile App', link: '/mobile' },
+      { text: 'Security', link: '/security' },
       { text: 'API Reference', link: '/api' },
       { text: 'UI Examples', link: '/ui-examples' },
       {
