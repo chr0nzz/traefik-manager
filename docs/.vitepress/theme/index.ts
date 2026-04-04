@@ -5,6 +5,7 @@ import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 import mediumZoom from 'medium-zoom'
 import GitHubStars from './components/GitHubStars.vue'
 import MobileRelease from './components/MobileRelease.vue'
+import UnraidCAStatus from './components/UnraidCAStatus.vue'
 import './style.css'
 
 export default {
@@ -28,5 +29,6 @@ export default {
   enhanceApp({ app }: { app: any }) {
     enhanceAppWithTabs(app)
     app.component('MobileRelease', MobileRelease)
+    app.component('UnraidCAStatus', UnraidCAStatus)
   },
 }

@@ -6,6 +6,8 @@ Traefik Manager is available as a Community Applications template for Unraid.
 
 ## Install via Community Applications
 
+<UnraidCAStatus />
+
 1. Open the **Apps** tab in your Unraid dashboard
 2. Search for **Traefik Manager**
 3. Click **Install**
