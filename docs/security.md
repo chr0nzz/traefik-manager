@@ -57,9 +57,19 @@ X-Api-Key: your-key-here
 
 ## CSRF protection
 
-All state-changing endpoints (POST, DELETE) require a CSRF token when using session authentication. The token is embedded in every HTML page as a `<meta name="csrf-token">` tag and rotates on each session.
+All state-changing endpoints (POST, DELETE) require a CSRF token when using session authentication. The token is embedded in every HTML page and rotates on each session.
 
 API key requests are exempt from CSRF checks.
+
+---
+
+## External auth providers
+
+Traefik Manager's built-in auth can be disabled when using an external provider such as Authentik, Authelia, or Keycloak via Traefik's `forwardAuth` middleware.
+
+::: warning Mobile app compatibility
+`forwardAuth` intercepts all requests including mobile app API calls. To use the mobile app alongside an external auth provider, split the Traefik route so `/api/*` bypasses `forwardAuth` and relies on Traefik Manager's built-in API key auth. See the [mobile app docs](mobile.md#external-auth-providers) for the full example.
+:::
 
 ---
 

@@ -6,6 +6,10 @@
 The mobile app authenticates via the API key feature introduced in v0.6.0. Earlier versions are not supported.
 :::
 
+::: info Using external auth (Authentik, Authelia, etc.)?
+See [connecting without an API key](#connecting-without-an-api-key) and [external auth providers](#external-auth-providers) below.
+:::
+
 ---
 
 ## Download
@@ -34,6 +38,12 @@ Open the mobile app and enter:
 | API Key | The key generated in step 1 |
 
 Tap **Connect** - the app connects immediately.
+
+::: tip API key is optional when built-in auth is disabled
+If you have disabled Traefik Manager's built-in authentication (e.g. you are using an external provider like Authentik), leave the API key field empty. The app will detect that auth is disabled and connect without a key.
+
+If built-in auth is enabled, an API key is required.
+:::
 
 ---
 
@@ -87,6 +97,53 @@ Tap the **pencil icon** in the top bar to enter edit mode. In edit mode, cards r
 - **Delete** - remove with confirmation
 
 Buttons are hidden when not in edit mode to keep the list clean.
+
+---
+
+## Connecting without an API key
+
+If Traefik Manager's built-in auth is disabled, leave the **API Key** field empty and tap **Connect**. The app will verify the server is reachable and connect without credentials.
+
+::: danger No auth means no protection
+If you disable built-in auth and expose Traefik Manager without any other protection, **anyone who can reach your instance can use the mobile app with no credentials**. Only disable built-in auth if you have an external auth provider (Authentik, Authelia, etc.) in front - and if so, read the [external auth providers](#external-auth-providers) section to ensure the mobile app still works correctly.
+:::
+
+---
+
+## External auth providers
+
+If you use an external auth provider (Authentik, Authelia, Keycloak, etc.) via Traefik's `forwardAuth` middleware, the middleware intercepts **all** requests - including the mobile app's API calls - and redirects unauthenticated requests to the provider's login page. The mobile app cannot complete that OAuth/OIDC flow.
+
+The solution is to split the Traefik route into two: one with `forwardAuth` for the web UI, and one without for `/api/*` that relies on Traefik Manager's own API key auth.
+
+```yaml
+http:
+  routers:
+    traefik-manager-web:
+      rule: Host(`manager.example.com`) && !PathPrefix(`/api`)
+      middlewares: [authentik]
+      entryPoints: [websecure]
+      service: traefik-manager
+      tls:
+        certResolver: cloudflare
+
+    traefik-manager-api:
+      rule: Host(`manager.example.com`) && PathPrefix(`/api`)
+      entryPoints: [websecure]
+      service: traefik-manager
+      tls:
+        certResolver: cloudflare
+
+  services:
+    traefik-manager:
+      loadBalancer:
+        servers:
+          - url: http://traefik-manager:5000
+```
+
+::: warning Keep built-in auth enabled
+When using this split-route pattern, keep Traefik Manager's built-in auth **enabled** and generate API keys for your mobile devices. Without built-in auth, the `/api/*` route has no protection.
+:::
 
 ---
 
