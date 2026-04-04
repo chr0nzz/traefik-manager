@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>traefik-manager</Name>
+  <Repository>ghcr.io/chr0nzz/traefik-manager:latest</Repository>
+  <Registry>https://ghcr.io/chr0nzz/traefik-manager</Registry>
+  <Network>bridge</Network>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/chr0nzz/traefik-manager/issues</Support>
+  <Project>https://github.com/chr0nzz/traefik-manager</Project>
+  <Overview>A web UI for managing Traefik routes, middlewares, services, and certificates. Supports multiple config files, API keys for mobile access, two-factor authentication, and config backups.&#xD;&#xD;Requires access to your Traefik dynamic config file and the Traefik API.</Overview>
+  <Category>Tools: Network:Management</Category>
+  <WebUI>http://[IP]:[PORT:5000]</WebUI>
+  <Icon>https://raw.githubusercontent.com/chr0nzz/traefik-manager/main/static/icons/icon.png</Icon>
+  <ExtraParams>--restart=unless-stopped</ExtraParams>
+  <DateInstalled></DateInstalled>
+  <DonateText></DonateText>
+  <DonateLink></DonateLink>
+  <Requires>Traefik must be running and its API must be reachable from this container.</Requires>
+
+  <!-- Port -->
+  <Config Name="Web UI Port" Target="5000" Default="5000" Mode="tcp"
+    Description="Port to access the Traefik Manager web UI."
+    Type="Port" Display="always" Required="true" Mask="false">5000</Config>
+
+  <!-- Required paths -->
+  <Config Name="Config Directory" Target="/app/config" Default="/mnt/user/appdata/traefik-manager/config"
+    Mode="rw"
+    Description="Stores manager.yml (settings, password, API keys) and the session signing key. Must be persistent."
+    Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/traefik-manager/config</Config>
+
+  <Config Name="Backups Directory" Target="/app/backups" Default="/mnt/user/appdata/traefik-manager/backups"
+    Mode="rw"
+    Description="Timestamped backups of your dynamic config are saved here before every change."
+    Type="Path" Display="always" Required="false" Mask="false">/mnt/user/appdata/traefik-manager/backups</Config>
+
+  <!-- Core env vars -->
+  <Config Name="Traefik API URL" Target="TRAEFIK_API_URL" Default="http://traefik:8080"
+    Description="URL of the Traefik API. Usually http://traefik:8080 when on the same Docker network."
+    Type="Variable" Display="always" Required="true" Mask="false">http://traefik:8080</Config>
+
+  <Config Name="Domains" Target="DOMAINS" Default="example.com"
+    Description="Comma-separated list of base domains shown in the Add Route form. Example: example.com,home.lab"
+    Type="Variable" Display="always" Required="true" Mask="false">example.com</Config>
+
+  <Config Name="Cert Resolver" Target="CERT_RESOLVER" Default="cloudflare"
+    Description="Default ACME certificate resolver name from your traefik.yml. Comma-separate multiple resolvers."
+    Type="Variable" Display="always" Required="false" Mask="false">cloudflare</Config>
+
+  <!-- Config file options (set only one) -->
+  <Config Name="Config File Path (single file)" Target="CONFIG_PATH" Default="/app/config/dynamic.yml"
+    Description="Path inside the container to your Traefik dynamic config file. Use this for a single config file. Mount the file via the path mapping below. Leave blank if using CONFIG_DIR or CONFIG_PATHS."
+    Type="Variable" Display="always" Required="false" Mask="false">/app/config/dynamic.yml</Config>
+
+  <Config Name="Config Directory Path (multi-file)" Target="CONFIG_DIR" Default=""
+    Description="Path inside the container to a directory containing multiple .yml config files. All .yml files in this directory will be loaded. Use instead of CONFIG_PATH when managing multiple files. Leave blank if using CONFIG_PATH."
+    Type="Variable" Display="always" Required="false" Mask="false"></Config>
+
+  <Config Name="Config Paths (explicit list)" Target="CONFIG_PATHS" Default=""
+    Description="Comma-separated list of full config file paths inside the container. Use instead of CONFIG_PATH for 2-5 named files. Example: /app/config/routes.yml,/app/config/services.yml. Leave blank if using CONFIG_PATH or CONFIG_DIR."
+    Type="Variable" Display="always" Required="false" Mask="false"></Config>
+
+  <!-- Auth -->
+  <Config Name="Admin Password" Target="ADMIN_PASSWORD" Default=""
+    Description="Optional: set a fixed admin password. If left empty a temporary password is generated on first start - check the container log for it."
+    Type="Variable" Display="always" Required="false" Mask="true"></Config>
+
+  <Config Name="Cookie Secure" Target="COOKIE_SECURE" Default="false"
+    Description="Set to true when accessing Traefik Manager over HTTPS (e.g. behind a Traefik reverse proxy with TLS). Required for session cookies to work correctly over HTTPS."
+    Type="Variable" Display="always" Required="false" Mask="false">false</Config>
+
+  <Config Name="Auth Enabled" Target="AUTH_ENABLED" Default="true"
+    Description="Set to false to disable built-in login. Only use this when Traefik Manager is protected by an external auth provider such as Authentik or Authelia."
+    Type="Variable" Display="advanced" Required="false" Mask="false">true</Config>
+
+  <!-- Advanced -->
+  <Config Name="Settings File Path" Target="SETTINGS_PATH" Default="/app/config/manager.yml"
+    Description="Path inside the container to the Traefik Manager settings file. Change this if you want to store it separately from the dynamic config."
+    Type="Variable" Display="advanced" Required="false" Mask="false">/app/config/manager.yml</Config>
+
+  <Config Name="Backup Directory Path" Target="BACKUP_DIR" Default="/app/backups"
+    Description="Path inside the container where backups are written. Change this if you mount a custom backup volume at a different path."
+    Type="Variable" Display="advanced" Required="false" Mask="false">/app/backups</Config>
+
+  <Config Name="Inactivity Timeout (minutes)" Target="INACTIVITY_TIMEOUT_MINUTES" Default="120"
+    Description="Minutes of inactivity before a non-remembered session is logged out."
+    Type="Variable" Display="advanced" Required="false" Mask="false">120</Config>
+
+  <Config Name="OTP Encryption Key" Target="OTP_ENCRYPTION_KEY" Default=""
+    Description="Fernet key for encrypting the 2FA TOTP secret at rest. Auto-generated on first start if not set. Set this if you want to manage the key yourself or ensure it survives config volume replacement. Generate with: python3 -c &quot;from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())&quot;"
+    Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+
+  <Config Name="Secret Key" Target="SECRET_KEY" Default=""
+    Description="Session signing key. Auto-generated on first start and saved to /app/config/.secret_key. Set this explicitly to ensure sessions survive a full config wipe, or to share a key across multiple instances."
+    Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+</Container>

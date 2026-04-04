@@ -384,6 +384,7 @@ Open **http://your-server:5000** - the setup wizard will guide you through the r
 | 🐳 Docker | [Docker Compose setup, networking, behind Traefik](https://traefik-manager.xyzlab.dev/docker/) |
 | 🦭 Podman | [Rootless, Quadlet/systemd, SELinux labels](https://traefik-manager.xyzlab.dev/podman/)        |
 | 🐧 Linux　| [Native Python + systemd, no container required](https://traefik-manager.xyzlab.dev/linux/)    |
+| 🟠 Unraid | [Community Applications template, networking, multi-config](https://traefik-manager.xyzlab.dev/unraid/) |
 
 ---
 

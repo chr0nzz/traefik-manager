@@ -61,6 +61,7 @@ export default defineConfig({
           { text: 'Docker', link: '/docker' },
           { text: 'Podman', link: '/podman' },
           { text: 'Linux (native)', link: '/linux' },
+          { text: 'Unraid', link: '/unraid' },
         ],
       },
       {

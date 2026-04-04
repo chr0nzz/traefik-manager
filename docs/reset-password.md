@@ -19,6 +19,12 @@ docker exec traefik-manager flask reset-password
 podman exec traefik-manager flask reset-password
 ```
 
+== Unraid
+Open the Unraid dashboard → Docker tab → click the Traefik Manager icon → **Console**, then run:
+```bash
+flask reset-password
+```
+
 == Linux (native)
 ```bash
 cd /opt/traefik-manager
@@ -48,6 +54,12 @@ docker exec traefik-manager flask reset-password --disable-otp
 == Podman
 ```bash
 podman exec traefik-manager flask reset-password --disable-otp
+```
+
+== Unraid
+Open the Unraid dashboard → Docker tab → click the Traefik Manager icon → **Console**, then run:
+```bash
+flask reset-password --disable-otp
 ```
 
 == Linux (native)
@@ -98,6 +110,9 @@ docker restart traefik-manager
 podman restart traefik-manager
 ```
 
+== Unraid
+Docker tab → click the Traefik Manager toggle to stop, then start it again.
+
 == Linux (native)
 ```bash
 systemctl restart traefik-manager
@@ -116,6 +131,9 @@ docker compose logs traefik-manager | grep -A3 "AUTO-GENERATED"
 ```bash
 podman logs traefik-manager | grep -A3 "AUTO-GENERATED"
 ```
+
+== Unraid
+Docker tab → click the Traefik Manager icon → **Log** to view the container output.
 
 == Linux (native)
 ```bash

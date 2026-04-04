@@ -27,6 +27,9 @@ node_modules/
 package.json
 package-lock.json
 
+# Unraid
+unraid/
+
 # Metadata
 .DS_Store
 Thumbs.db

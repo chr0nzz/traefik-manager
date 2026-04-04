@@ -34,6 +34,15 @@ Run directly on the host with Python + systemd. No container runtime needed.
 [Linux guide →](linux.md)
 
 </div>
+<div class="vp-card">
+
+**🟠 Unraid**
+
+Install from the Community Applications store with a pre-built template.
+
+[Unraid guide →](unraid.md)
+
+</div>
 </div>
 
 ---
