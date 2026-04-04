@@ -9,7 +9,7 @@ from datetime import datetime, timezone, timedelta
 from functools import wraps
 import click
 from flask import (Flask, render_template, request, redirect,
-                   url_for, flash, jsonify, abort, session, send_file)
+                   url_for, flash, jsonify, abort, session, send_file, make_response)
 from werkzeug.middleware.proxy_fix import ProxyFix
 from ruamel.yaml import YAML
 from ruamel.yaml import YAML as SafeYAML
@@ -540,6 +540,15 @@ def _get_effective_hash() -> str:
 @app.before_request
 def log_request_info():
     logger.info(f"{request.remote_addr} → {request.method} {request.path}")
+    if request.method == 'POST' and request.path in ('/login', '/setup', '/force-change-password'):
+        cookie_names = list(request.cookies.keys())
+        has_session  = 'session' in request.cookies
+        has_token    = bool(session.get('csrf_token'))
+        if has_session and not has_token:
+            logger.warning(
+                f"Session cookie present but empty/undecodable on POST {request.path} "
+                f"(likely stale cookie from previous install - secret key mismatch)"
+            )
 
 
 @app.after_request
@@ -572,7 +581,15 @@ def login():
 
     error = None
     if request.method == 'POST':
-        _check_csrf()
+        token    = request.form.get('csrf_token', '')
+        expected = session.get('csrf_token', '')
+        if not expected or not secrets.compare_digest(str(token), str(expected)):
+            logger.warning(
+                f"CSRF check failed on login from {request.remote_addr} "
+                f"(session_has_token={bool(expected)}, cookies={list(request.cookies.keys())})"
+            )
+            session.clear()
+            return redirect(url_for('login', next=request.form.get('next', '')))
         password = request.form.get('password', '')
         pw_hash  = settings.get('password_hash', '')
         admin_pw = os.environ.get('ADMIN_PASSWORD', '').strip()
@@ -617,9 +634,12 @@ def login():
             logger.warning(f"Failed login attempt from {request.remote_addr}")
 
     next_url = request.args.get('next', '')
-    return render_template('login.html', error=error, next=next_url,
-                           csrf_token=_get_csrf_token(),
-                           temp_password_hint=temp_password_hint)
+    resp = make_response(render_template('login.html', error=error, next=next_url,
+                                         csrf_token=_get_csrf_token(),
+                                         temp_password_hint=temp_password_hint))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    return resp
 
 
 @app.route('/setup', methods=['GET', 'POST'])
@@ -707,9 +727,12 @@ def setup():
             session['login_time']    = datetime.now(timezone.utc).isoformat()
             return redirect(url_for('index'))
 
-    return render_template('login.html', setup_mode=True, error=error,
-                           defaults=defaults, csrf_token=_get_csrf_token(),
-                           temp_password_mode=temp_password_mode)
+    resp = make_response(render_template('login.html', setup_mode=True, error=error,
+                                         defaults=defaults, csrf_token=_get_csrf_token(),
+                                         temp_password_mode=temp_password_mode))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    return resp
 
 
 @app.route('/logout', methods=['POST'])
