@@ -19,6 +19,9 @@ All supported environment variables for Traefik Manager. Variables marked **Over
 | `CONFIG_PATH` | `/app/config/dynamic.yml` | - | Single config file (legacy, backwards-compatible) |
 | `BACKUP_DIR` | `/app/backups` | - | Directory for timestamped config backups |
 | `SETTINGS_PATH` | `/app/config/manager.yml` | - | Path to the Traefik Manager settings file |
+| `ACME_JSON_PATH` | `/app/acme.json` | - | Path to Traefik's `acme.json` file for the Certificates tab |
+| `STATIC_CONFIG_PATH` | `/app/traefik.yml` | - | Path to Traefik's static config file for the Plugins tab |
+| `ACCESS_LOG_PATH` | `/app/logs/access.log` | - | Path to Traefik's access log file for the Logs tab |
 | `OTP_ENCRYPTION_KEY` | _(auto-generated)_ | - | Fernet key for encrypting the TOTP secret at rest |
 
 ---
@@ -284,6 +287,84 @@ volumes:
 == Linux (systemd)
 ```ini
 Environment=SETTINGS_PATH=/var/lib/traefik-manager/manager.yml
+```
+:::
+
+---
+
+### `ACME_JSON_PATH`
+
+**Default:** `/app/acme.json`
+
+Path to Traefik's `acme.json` file. Required for the **Certificates** tab to show TLS certificate status and expiry dates. On native Linux installs Traefik typically writes this to a path outside `/app` - set this variable to match your actual path.
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - ACME_JSON_PATH=/letsencrypt/acme.json
+volumes:
+  - /path/to/acme.json:/letsencrypt/acme.json:ro
+```
+
+== Linux (systemd)
+```ini
+Environment=ACME_JSON_PATH=/etc/traefik/acme.json
+```
+:::
+
+::: info
+If you use certificate files (e.g. `chain.pem` / `key.pem`) via a `tls.yml` instead of `acme.json`, the Certificates tab is not applicable - Traefik Manager can only read ACME-managed certificates from `acme.json`.
+:::
+
+---
+
+### `STATIC_CONFIG_PATH`
+
+**Default:** `/app/traefik.yml`
+
+Path to Traefik's static configuration file (`traefik.yml` or `traefik.toml`). Required for the **Plugins** tab to list installed experimental plugins.
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - STATIC_CONFIG_PATH=/etc/traefik/traefik.yml
+volumes:
+  - /path/to/traefik.yml:/etc/traefik/traefik.yml:ro
+```
+
+== Linux (systemd)
+```ini
+Environment=STATIC_CONFIG_PATH=/etc/traefik/traefik.yml
+```
+:::
+
+---
+
+### `ACCESS_LOG_PATH`
+
+**Default:** `/app/logs/access.log`
+
+Path to Traefik's access log file. Required for the **Logs** tab. Enable access logging in your Traefik static config first:
+
+```yaml
+accessLog:
+  filePath: /var/log/traefik/access.log
+```
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - ACCESS_LOG_PATH=/logs/access.log
+volumes:
+  - /path/to/access.log:/logs/access.log:ro
+```
+
+== Linux (systemd)
+```ini
+Environment=ACCESS_LOG_PATH=/var/log/traefik/access.log
 ```
 :::
 

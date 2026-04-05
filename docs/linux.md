@@ -89,6 +89,7 @@ After=network.target
 Type=simple
 User=traefik-manager
 WorkingDirectory=/opt/traefik-manager
+Environment=HOME=/opt/traefik-manager
 ExecStart=/opt/traefik-manager/venv/bin/gunicorn \
     --bind 0.0.0.0:5000 \
     --workers 1 \
@@ -148,6 +149,13 @@ Make sure `traefik-manager` user has read access to each file:
 ```bash
 chmod o+r /etc/traefik/acme.json
 chmod o+r /etc/traefik/traefik.yml
+chmod o+r /var/log/traefik/access.log
+```
+
+Access logs are often owned by `root` or a `adm`/`syslog` group. If `chmod o+r` is not appropriate for your setup, add the user to the owning group instead:
+
+```bash
+usermod -aG adm traefik-manager
 ```
 
 ---

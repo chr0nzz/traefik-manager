@@ -179,9 +179,9 @@ def _safe_api_url(url: str) -> str:
     return ''
 
 
-ACCESS_LOG_PATH    = '/app/logs/access.log'
-ACME_JSON_PATH     = '/app/acme.json'
-STATIC_CONFIG_PATH = '/app/traefik.yml'
+ACCESS_LOG_PATH    = os.environ.get('ACCESS_LOG_PATH',    '/app/logs/access.log')
+ACME_JSON_PATH     = os.environ.get('ACME_JSON_PATH',     '/app/acme.json')
+STATIC_CONFIG_PATH = os.environ.get('STATIC_CONFIG_PATH', '/app/traefik.yml')
 
 
 OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs']
@@ -1159,7 +1159,7 @@ def api_router_detail(protocol, name):
 @login_required
 def api_plugins():
     if not os.path.exists(STATIC_CONFIG_PATH):
-        return jsonify({'plugins': [], 'error': 'traefik.yml not mounted'})
+        return jsonify({'plugins': [], 'error': f'Static config not found at {STATIC_CONFIG_PATH}. Set STATIC_CONFIG_PATH to override.'})
     try:
         with open(STATIC_CONFIG_PATH, 'r') as f:
             static = yaml.load(f) or {}
@@ -1173,42 +1173,81 @@ def api_plugins():
         logger.exception("Error reading static config")
         return jsonify({'plugins': [], 'error': str(e)})
 
+def _parse_cert_expiry(pem_bytes):
+    try:
+        import base64
+        from cryptography import x509
+        from cryptography.hazmat.backends import default_backend
+        if isinstance(pem_bytes, str):
+            pem_bytes = base64.b64decode(pem_bytes)
+        cert_obj = x509.load_pem_x509_certificate(pem_bytes, default_backend())
+        return cert_obj.not_valid_after_utc.strftime('%b %d %H:%M:%S %Y GMT')
+    except Exception as ex:
+        logger.debug(f"Cert parse error: {ex}")
+        return None
+
+def _certs_from_tls_configs():
+    import base64
+    certs = []
+    for p in CONFIG_PATHS:
+        config = load_config(p)
+        for entry in (config.get('tls') or {}).get('certificates') or []:
+            cert_file = entry.get('certFile', '')
+            if not cert_file or not os.path.exists(cert_file):
+                continue
+            try:
+                pem_bytes = open(cert_file, 'rb').read()
+                not_after = _parse_cert_expiry(pem_bytes)
+                try:
+                    from cryptography import x509
+                    from cryptography.hazmat.backends import default_backend
+                    cert_obj = x509.load_pem_x509_certificate(pem_bytes, default_backend())
+                    sans = [n.value for n in cert_obj.subject_alternative_names(x509.SubjectAlternativeName).get_values_for_type(x509.DNSName)]
+                    main = sans[0] if sans else os.path.basename(cert_file)
+                except Exception:
+                    sans = []
+                    main = os.path.basename(cert_file)
+                certs.append({'resolver': 'file', 'main': main, 'sans': sans, 'not_after': not_after, 'certFile': cert_file})
+            except Exception as ex:
+                logger.debug(f"Error reading cert file {cert_file}: {ex}")
+    return certs
+
 @app.route('/api/traefik/certs')
 @login_required
 def api_certs():
     import json as _json
-    if not os.path.exists(ACME_JSON_PATH):
-        return jsonify({'certs': [], 'error': 'acme.json not mounted'})
-    try:
-        with open(ACME_JSON_PATH, 'r') as f:
-            acme_data = _json.load(f)
-        certs = []
-        for resolver_name, resolver_data in acme_data.items():
-            if not isinstance(resolver_data, dict):
-                continue
-            for c in (resolver_data.get('Certificates') or resolver_data.get('certificates') or []):
-                domain    = c.get('domain', {})
-                not_after = None
-                try:
-                    import base64
-                    from cryptography import x509
-                    from cryptography.hazmat.backends import default_backend
-                    cert_obj  = x509.load_pem_x509_certificate(base64.b64decode(c.get('certificate','')), default_backend())
-                    not_after = cert_obj.not_valid_after_utc.strftime('%b %d %H:%M:%S %Y GMT')
-                except Exception as ex:
-                    logger.debug(f"Cert parse error: {ex}")
-                certs.append({'resolver': resolver_name, 'main': domain.get('main',''), 'sans': domain.get('sans',[]) or [], 'not_after': not_after})
-        return jsonify({'certs': certs})
-    except Exception as e:
-        logger.exception("Error reading acme.json")
-        return jsonify({'certs': [], 'error': str(e)})
+    certs = []
+    errors = []
+
+    if os.path.exists(ACME_JSON_PATH):
+        try:
+            with open(ACME_JSON_PATH, 'r') as f:
+                acme_data = _json.load(f)
+            for resolver_name, resolver_data in acme_data.items():
+                if not isinstance(resolver_data, dict):
+                    continue
+                for c in (resolver_data.get('Certificates') or resolver_data.get('certificates') or []):
+                    domain    = c.get('domain', {})
+                    not_after = _parse_cert_expiry(c.get('certificate', ''))
+                    certs.append({'resolver': resolver_name, 'main': domain.get('main', ''), 'sans': domain.get('sans', []) or [], 'not_after': not_after})
+        except Exception as e:
+            logger.exception("Error reading acme.json")
+            errors.append(str(e))
+    else:
+        errors.append(f'acme.json not found at {ACME_JSON_PATH}. Set ACME_JSON_PATH to override.')
+
+    certs.extend(_certs_from_tls_configs())
+
+    if not certs and errors:
+        return jsonify({'certs': [], 'error': ' | '.join(errors)})
+    return jsonify({'certs': certs})
 
 @app.route('/api/traefik/logs')
 @login_required
 def api_logs():
     lines_req = min(int(request.args.get('lines', 100)), 1000)
     if not os.path.exists(ACCESS_LOG_PATH):
-        return jsonify({'error': 'Access log not mounted', 'lines': []})
+        return jsonify({'error': f'Access log not found at {ACCESS_LOG_PATH}. Set ACCESS_LOG_PATH to override.', 'lines': []})
     try:
         lines = []
         buf_size = 8192
