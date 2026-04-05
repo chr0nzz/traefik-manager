@@ -73,13 +73,6 @@
                     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
                     <div class="text-xs font-mono truncate" style="color:var(--green)">{{ app.target }}</div>
                 </div>
-                {% if app.entryPoints %}
-                <div class="flex flex-wrap gap-1">
-                    {% for ep in app.entryPoints %}
-                    <span class="badge badge-muted text-xs">{{ ep }}</span>
-                    {% endfor %}
-                </div>
-                {% endif %}
                 {% if app.middlewares %}
                 <div class="flex flex-wrap gap-1">
                     {% for mw in app.middlewares %}
@@ -100,12 +93,17 @@
                     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
                     <div class="text-xs font-mono truncate" style="color:var(--green)">{{ app.target }}</div>
                 </div>
-                {% if app.entryPoints %}
+            </div>
+            {% endif %}
+            {% if app.entryPoints or app.configFile %}
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;margin-top:8px">
                 <div class="flex flex-wrap gap-1">
                     {% for ep in app.entryPoints %}
-                    <span class="badge badge-muted text-xs">{{ ep }}</span>
+                    <span class="badge badge-muted" style="font-size:9px">{{ ep }}</span>
                     {% endfor %}
                 </div>
+                {% if app.configFile %}
+                <span class="badge badge-muted" style="font-size:9px">{{ app.configFile }}</span>
                 {% endif %}
             </div>
             {% endif %}

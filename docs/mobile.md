@@ -6,6 +6,10 @@
 The mobile app authenticates via the API key feature introduced in v0.6.0. Earlier versions are not supported.
 :::
 
+::: warning Mobile app v0.6.0+ requires Traefik Manager v0.10.0 or higher
+v0.10.0 includes the `CONFIG_DIR` multi-file API changes that the mobile app v0.6.0+ depends on. Connecting a v0.6.0+ mobile app to an older server will result in missing config file data.
+:::
+
 ::: info Using external auth (Authentik, Authelia, etc.)?
 See [connecting without an API key](#connecting-without-an-api-key) and [external auth providers](#external-auth-providers) below.
 :::
@@ -155,7 +159,7 @@ When using this split-route pattern, keep Traefik Manager's built-in auth **enab
 
 | | |
 |---|---|
-| Traefik Manager (server) | **v0.6.0 or higher** |
+| Traefik Manager (server) | **v0.10.0 or higher** (mobile v0.6.0+), v0.6.0+ for earlier mobile versions |
 | Android | 7.0+ (API 24+) |
 | iOS | 16+ (build from source required) |
 

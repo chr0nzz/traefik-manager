@@ -1575,7 +1575,7 @@ def _build_all_apps(include_external=True, include_internal=False):
     all_apps = []
     all_middlewares = []
     for p in CONFIG_PATHS:
-        cf = os.path.basename(p) if MULTI_CONFIG else ''
+        cf = os.path.basename(p) if (MULTI_CONFIG or ACTIVE_CONFIG_DIR) else ''
         config = load_config(p)
         all_apps.extend(_build_apps(config, cf))
         all_middlewares.extend(_build_middlewares(config, cf))
@@ -1658,7 +1658,7 @@ def _toggle_route(route_id: str, enable: bool):
                 break
         if proto is None:
             return
-        cf = os.path.basename(target_path) if MULTI_CONFIG else ''
+        cf = os.path.basename(target_path) if (MULTI_CONFIG or ACTIVE_CONFIG_DIR) else ''
         disabled[route_id] = {'protocol': proto, 'router': router, 'service': svc, 'configFile': cf}
         create_backup(target_path)
         save_config(config, target_path)
@@ -1692,7 +1692,10 @@ def api_routes_all():
 @app.route('/api/configs')
 @login_required
 def api_configs():
-    return jsonify([{'label': os.path.basename(p), 'path': p} for p in CONFIG_PATHS])
+    return jsonify({
+        'files': [{'label': os.path.basename(p), 'path': p} for p in CONFIG_PATHS],
+        'configDirSet': bool(ACTIVE_CONFIG_DIR),
+    })
 
 
 def _read_groups_config():
@@ -1831,13 +1834,14 @@ def save_entry():
         create_backup(target_path)
         config = load_config(target_path)
 
-        if is_edit and original_id and original_id != router_name:
+        plain_original_id = original_id.split('::', 1)[1] if '::' in original_id else original_id
+        if is_edit and plain_original_id and plain_original_id != router_name:
             for sec in ('http', 'tcp', 'udp'):
                 s = config.get(sec, {})
                 old_routers = s.get('routers', {})
-                old_svc = (old_routers.get(original_id, {}).get('service') or '').strip()
-                if original_id in old_routers:
-                    del old_routers[original_id]
+                old_svc = (old_routers.get(plain_original_id, {}).get('service') or '').strip()
+                if plain_original_id in old_routers:
+                    del old_routers[plain_original_id]
                 if old_svc and 'services' in s and old_svc in s['services']:
                     del s['services'][old_svc]
 
@@ -1891,6 +1895,8 @@ def delete_entry(router_id):
     fetch = _is_fetch()
     try:
         config_file_raw = request.form.get('configFile', '').strip()
+        # Strip configFile:: prefix from router_id (MULTI_CONFIG mode)
+        plain_id = router_id.split('::', 1)[1] if '::' in router_id else router_id
         # Find which config file contains this route
         if config_file_raw:
             search_paths = [_resolve_config_path(config_file_raw) or CONFIG_PATH]
@@ -1901,9 +1907,9 @@ def delete_entry(router_id):
             config = load_config(target_path)
             for sec in ('http', 'tcp', 'udp'):
                 s = config.get(sec, {})
-                if router_id in s.get('routers', {}):
-                    svc = (s['routers'][router_id].get('service') or '').strip()
-                    del s['routers'][router_id]
+                if plain_id in s.get('routers', {}):
+                    svc = (s['routers'][plain_id].get('service') or '').strip()
+                    del s['routers'][plain_id]
                     if svc and 'services' in s and svc in s['services']:
                         del s['services'][svc]
                     create_backup(target_path)
@@ -1912,7 +1918,12 @@ def delete_entry(router_id):
                     break
             if deleted:
                 break
-        msg = f"Deleted {router_id}"
+        if not deleted:
+            if fetch:
+                return jsonify({'ok': False, 'message': f'Route "{plain_id}" not found'}), 404
+            flash(f'Route "{plain_id}" not found', "error")
+            return redirect(url_for('index'))
+        msg = f"Deleted {plain_id}"
         if fetch:
             return jsonify({'ok': True, 'message': msg})
         flash(msg, "success")

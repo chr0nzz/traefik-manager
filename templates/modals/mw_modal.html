@@ -19,12 +19,13 @@
                 <div>
                     <label>Config File</label>
                     <select id="mwConfigFileSelect" class="input-field" onchange="onMwConfigFileChange(this)">
-                        {% for cp in config_paths_list %}
-                        <option value="{{ cp.label }}">{{ cp.label }}</option>
-                        {% endfor %}
+                        <option value="">Select a file...</option>
                         {% if config_dir_set %}
                         <option value="__new__">+ New file...</option>
                         {% endif %}
+                        {% for cp in config_paths_list %}
+                        <option value="{{ cp.label }}">{{ cp.label }}</option>
+                        {% endfor %}
                     </select>
                     {% if config_dir_set %}
                     <input type="text" id="newMwFileName" class="input-field mt-2" placeholder="middlewares-myauth.yml" style="display:none" oninput="document.getElementById('mwConfigFile').value=this.value">
