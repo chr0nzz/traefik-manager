@@ -292,4 +292,38 @@ Live and historical Traefik access logs with line-count control and filtering.
 <img class="ui-img-light" src="/images/light-settings-ui.png" alt="Settings – UI preferences (light)">
 <img class="ui-img-dark"  src="/images/dark-settins-ui.png"  alt="Settings – UI preferences (dark)">
 
+---
+
+## Mobile App
+
+### Connect
+
+<img class="ui-img-light" src="/images/light-mobile-connect-1.png" alt="Mobile – connect (light)">
+<img class="ui-img-dark"  src="/images/dark-mobile-connect-1.png"  alt="Mobile – connect (dark)">
+
+### Dashboard
+
+<img class="ui-img-light" src="/images/light-mobile-dashboard-2.png" alt="Mobile – dashboard (light)">
+<img class="ui-img-dark"  src="/images/dark-mobile-dashboard-2.png"  alt="Mobile – dashboard (dark)">
+
+### Routes
+
+<img class="ui-img-light" src="/images/light-mobile-routes-3.png" alt="Mobile – routes (light)">
+<img class="ui-img-dark"  src="/images/dark-mobile-routes-3.png"  alt="Mobile – routes (dark)">
+
+### Middlewares
+
+<img class="ui-img-light" src="/images/light-mobile-middleware-4.png" alt="Mobile – middlewares (light)">
+<img class="ui-img-dark"  src="/images/dark-mobile-middleware-4.png"  alt="Mobile – middlewares (dark)">
+
+### Services
+
+<img class="ui-img-light" src="/images/light-mobile-services-5.png" alt="Mobile – services (light)">
+<img class="ui-img-dark"  src="/images/dark-mobile-services-5.png"  alt="Mobile – services (dark)">
+
+### Settings
+
+<img class="ui-img-light" src="/images/light-mobile-settings-6.png" alt="Mobile – settings (light)">
+<img class="ui-img-dark"  src="/images/dark-mobile-settings-6.png"  alt="Mobile – settings (dark)">
+
 </div>
