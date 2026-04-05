@@ -380,12 +380,12 @@ Open **http://your-server:5000** - the setup wizard will guide you through the r
 
 ## Deployment
 
-| Runtime　 | Guide                                                                                          |
-| -----------| ------------------------------------------------------------------------------------------------|
-| 🐳 Docker | [Docker Compose setup, networking, behind Traefik](https://traefik-manager.xyzlab.dev/docker/) |
-| 🦭 Podman | [Rootless, Quadlet/systemd, SELinux labels](https://traefik-manager.xyzlab.dev/podman/)        |
-| 🐧 Linux　| [Native Python + systemd, no container required](https://traefik-manager.xyzlab.dev/linux/)    |
-| 🟠 Unraid | [Community Applications template, networking, multi-config](https://traefik-manager.xyzlab.dev/unraid/) |
+| Runtime　 | Guide                                                                                                       |
+| -----------| -------------------------------------------------------------------------------------------------------------|
+| 🐳 Docker | [Docker Compose setup, networking, behind Traefik](https://traefik-manager.xyzlab.dev/docker.html)          |
+| 🦭 Podman | [Rootless, Quadlet/systemd, SELinux labels](https://traefik-manager.xyzlab.dev/podman.html)                 |
+| 🐧 Linux　| [Native Python + systemd, no container required](https://traefik-manager.xyzlab.dev/linux.html)             |
+| 🟠 Unraid　| [Community Applications template, networking, multi-config](https://traefik-manager.xyzlab.dev/unraid.html) |
 
 ---
 
@@ -393,17 +393,17 @@ Open **http://your-server:5000** - the setup wizard will guide you through the r
 
 Full documentation at **[traefik-manager.xyzlab.dev](https://traefik-manager.xyzlab.dev/)**
 
-| | |
-|---|---|
-| [Get Started](https://traefik-manager.xyzlab.dev/docker/) | Deployment guides for Docker, Podman, and Linux |
-| [Configuration](https://traefik-manager.xyzlab.dev/manager-yml/) | `manager.yml` reference |
-| [Environment Variables](https://traefik-manager.xyzlab.dev/env-vars/) | `CONFIG_DIR`, `CONFIG_PATHS`, auth, domains, and more |
-| [Security](https://traefik-manager.xyzlab.dev/security/) | API keys, sessions, CSRF, rate limits, and hardening |
-| [API Reference](https://traefik-manager.xyzlab.dev/api/) | REST API for integrations and the mobile app |
-| [Mobile App](https://traefik-manager.xyzlab.dev/mobile/) | Android companion app setup and features |
-| [Reset Password](https://traefik-manager.xyzlab.dev/reset-password/) | CLI reset, TOTP recovery, manual reset |
-| [UI Examples](https://traefik-manager.xyzlab.dev/ui-examples/) | Screenshots and walkthroughs |
-| [Provider Tabs](https://traefik-manager.xyzlab.dev/) | Docker, Kubernetes, Swarm, Nomad, ECS, and more |
+|                                                                           |                                                       |
+| ---------------------------------------------------------------------------| -------------------------------------------------------|
+| [Get Started](https://traefik-manager.xyzlab.dev/guide.html)              | Deployment guides for Docker, Podman, and Linux       |
+| [Configuration](https://traefik-manager.xyzlab.dev/manager-yml.html)      | `manager.yml` reference                               |
+| [Environment Variables](https://traefik-manager.xyzlab.dev/env-vars.html) | `CONFIG_DIR`, `CONFIG_PATHS`, auth, domains, and more |
+| [Security](https://traefik-manager.xyzlab.dev/security.html)              | API keys, sessions, CSRF, rate limits, and hardening  |
+| [API Reference](https://traefik-manager.xyzlab.dev/api.html)              | REST API for integrations and the mobile app          |
+| [Mobile App](https://traefik-manager.xyzlab.dev/mobile.html)              | Android companion app setup and features              |
+| [Reset Password](https://traefik-manager.xyzlab.dev/reset-password.html)  | CLI reset, TOTP recovery, manual reset                |
+| [UI Examples](https://traefik-manager.xyzlab.dev/ui-examples.html)        | Screenshots and walkthroughs                          |
+| [Provider Tabs](https://traefik-manager.xyzlab.dev/tab-docker.html)                      | Docker, Kubernetes, Swarm, Nomad, ECS, and more       |
 
 ---
 
