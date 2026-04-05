@@ -345,6 +345,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 | ----------| ------------------------------------------------------------------------------------------------|
 | Repo     | [github.com/chr0nzz/traefik-manager-mobile](https://github.com/chr0nzz/traefik-manager-mobile) |
 | Download | [Latest release](https://github.com/chr0nzz/traefik-manager-mobile/releases/latest)            |
+| Beta     | [Sign up to beta test on Google Play](https://forms.gle/csituqc92sreNooZ8)                     |
 | Auth     | Per-device API key - generate one in **Settings → Authentication → App / Mobile API Keys**     |
 
 Features: browse routes, middlewares, and services · enable/disable routes · add and edit routes and middlewares (12 middleware templates) · backend scheme + pass host header controls · multi-config file picker · edit mode for bulk actions · system light/dark theme.

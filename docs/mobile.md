@@ -16,6 +16,10 @@ See [connecting without an API key](#connecting-without-an-api-key) and [externa
 
 <MobileRelease />
 
+<a href="https://forms.gle/csituqc92sreNooZ8" target="_blank" rel="noopener noreferrer" class="vp-btn vp-btn--brand" style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;">
+  🧪 Sign up to beta test on Google Play
+</a>
+
 ---
 
 ## Setup
