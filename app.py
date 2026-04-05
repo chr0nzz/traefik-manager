@@ -137,6 +137,15 @@ def _safe_file_path(path: str) -> str:
     logger.warning(f"Blocked unsafe file path: {path!r}")
     return ''
 
+def _is_safe_path(path: str) -> bool:
+    """Return True if path is inside ACTIVE_CONFIG_DIR (prevents path traversal)."""
+    if not ACTIVE_CONFIG_DIR:
+        return False
+    try:
+        return os.path.realpath(path).startswith(os.path.realpath(ACTIVE_CONFIG_DIR) + os.sep)
+    except Exception:
+        return False
+
 def _resolve_config_path(s: str) -> str:
     """Validate a config file given a basename or full path against CONFIG_PATHS.
     Returns the canonical path if valid, '' otherwise.
