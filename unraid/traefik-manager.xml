@@ -61,6 +61,22 @@
     Description="Comma-separated list of full config file paths inside the container. Use instead of CONFIG_PATH for 2-5 named files. Example: /app/config/routes.yml,/app/config/services.yml. Leave blank if using CONFIG_PATH or CONFIG_DIR."
     Type="Variable" Display="always" Required="false" Mask="false"></Config>
 
+  <!-- Optional monitoring mounts -->
+  <Config Name="Certs Tab - acme.json" Target="/app/acme.json" Default=""
+    Mode="ro"
+    Description="Optional: path to your Traefik acme.json file on the host. Required for the Certs tab. Mount read-only."
+    Type="Path" Display="advanced" Required="false" Mask="false"></Config>
+
+  <Config Name="Plugins Tab - traefik.yml" Target="/app/traefik.yml" Default=""
+    Mode="ro"
+    Description="Optional: path to your Traefik static config file (traefik.yml) on the host. Required for the Plugins tab. Mount read-only."
+    Type="Path" Display="advanced" Required="false" Mask="false"></Config>
+
+  <Config Name="Logs Tab - access.log" Target="/app/logs/access.log" Default=""
+    Mode="ro"
+    Description="Optional: path to your Traefik access log file on the host. Required for the Logs tab. Enable access logging in traefik.yml first: accessLog: filePath: /logs/access.log. Mount read-only."
+    Type="Path" Display="advanced" Required="false" Mask="false"></Config>
+
   <!-- Auth -->
   <Config Name="Admin Password" Target="ADMIN_PASSWORD" Default=""
     Description="Optional: set a fixed admin password. If left empty a temporary password is generated on first start - check the container log for it."

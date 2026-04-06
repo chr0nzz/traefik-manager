@@ -21,12 +21,20 @@ Go to **Settings → System Monitoring** and enable Plugins.
 
 ## Requirements
 
-Mount your Traefik static config file into the traefik-manager container at `/app/traefik.yml`:
+Point traefik-manager at your Traefik static config file via the `STATIC_CONFIG_PATH` environment variable (default: `/app/traefik.yml`).
 
+:::tabs
+== Docker / Podman
 ```yaml
 volumes:
   - /path/to/traefik/traefik.yml:/app/traefik.yml:ro
 ```
+
+== Linux (systemd)
+```ini
+Environment=STATIC_CONFIG_PATH=/etc/traefik/traefik.yml
+```
+:::
 
 Plugins must be declared in your `traefik.yml`:
 
@@ -38,6 +46,6 @@ experimental:
       version: "v1.2.3"
 ```
 
-If `traefik.yml` is not mounted, the Plugins tab will display an error message with the exact volume line to add to your compose file.
+If the file is not found, the Plugins tab will display an error showing the path it expected and the env var to set.
 
 > **Note:** The Plugins tab reads `experimental.plugins` from the static config. It shows what is *declared*, not what Traefik has loaded at runtime.

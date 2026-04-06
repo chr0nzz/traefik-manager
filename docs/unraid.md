@@ -63,6 +63,20 @@ All `.yml` files in that directory will be loaded. A file picker appears in the 
 
 ---
 
+## Optional monitoring mounts
+
+To enable the Certs, Plugins, and Logs tabs, add extra path mappings in the Unraid template under **Extra Parameters** or by editing the template's volume mappings:
+
+| Tab | Host path | Container path |
+|---|---|---|
+| Certs | `/mnt/user/appdata/traefik/acme.json` | `/app/acme.json` |
+| Plugins | `/mnt/user/appdata/traefik/traefik.yml` | `/app/traefik.yml` |
+| Logs | `/mnt/user/appdata/traefik/logs/access.log` | `/app/logs/access.log` |
+
+All three should be mounted read-only. Then enable each tab in **Settings → System Monitoring**.
+
+---
+
 ## First start
 
 1. Open the Unraid dashboard and click the Traefik Manager container icon to open the WebUI

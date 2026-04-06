@@ -19,9 +19,7 @@ Go to **Settings → System Monitoring** and enable Logs.
 
 ## Requirements
 
-Traefik must have access logging enabled and the log file must be accessible to traefik-manager.
-
-Enable access logging in `traefik.yml`:
+Traefik must have access logging enabled. Add this to your `traefik.yml`:
 
 ```yaml
 accessLog:
@@ -29,7 +27,11 @@ accessLog:
   format: common
 ```
 
-Mount the log directory into both the Traefik container and the traefik-manager container at the same path:
+Then point traefik-manager at the log file via the `ACCESS_LOG_PATH` environment variable (default: `/app/logs/access.log`).
+
+:::tabs
+== Docker / Podman
+Mount the log file into both containers at the same path:
 
 ```yaml
 services:
@@ -39,10 +41,31 @@ services:
 
   traefik-manager:
     volumes:
+      - ./logs:/app/logs:ro
+    # ACCESS_LOG_PATH defaults to /app/logs/access.log - no env var needed
+```
+
+Or use a custom path:
+```yaml
+  traefik-manager:
+    environment:
+      - ACCESS_LOG_PATH=/logs/access.log
+    volumes:
       - ./logs:/logs:ro
 ```
 
-traefik-manager reads the log file directly from disk (read-only mount). The path it reads from is configured via the `ACCESS_LOG_PATH` environment variable (default: `/logs/access.log`).
+== Linux (systemd)
+```ini
+Environment=ACCESS_LOG_PATH=/var/log/traefik/access.log
+```
+
+Make sure the `traefik-manager` user has read access:
+```bash
+chmod o+r /var/log/traefik/access.log
+# or add to the owning group:
+usermod -aG adm traefik-manager
+```
+:::
 
 ## Notes
 
