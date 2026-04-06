@@ -101,6 +101,7 @@
                             {% for r in cert_resolvers %}
                             <option value="{{ r }}">{{ r }}</option>
                             {% endfor %}
+                            <option value="__none__">None (custom cert / tls.yml)</option>
                         </select>
                     </div>
                     {% endif %}
@@ -137,6 +138,7 @@
                             {% for r in cert_resolvers %}
                             <option value="{{ r }}">{{ r }}</option>
                             {% endfor %}
+                            <option value="__none__">None (custom cert / tls.yml)</option>
                         </select>
                     </div>
                     {% endif %}

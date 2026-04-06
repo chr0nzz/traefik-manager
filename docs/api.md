@@ -318,33 +318,48 @@ Get details for a specific router.
 
 #### `GET /api/traefik/plugins`
 
-List plugins from `traefik.yml` if the file is mounted.
+List plugins defined under `experimental.plugins` in the Traefik static config file. Reads from `STATIC_CONFIG_PATH` (default `/app/traefik.yml`).
 
 **Auth:** Session or API key
 
 **Response**
 ```json
-{ "plugins": [ { "name": "...", "version": "..." } ] }
+{ "plugins": [ { "name": "...", "moduleName": "...", "version": "..." } ] }
+```
+
+On error (file not found or unreadable):
+```json
+{ "plugins": [], "error": "Static config not found at /app/traefik.yml. Set STATIC_CONFIG_PATH to override." }
 ```
 
 ---
 
 #### `GET /api/traefik/certs`
 
-List TLS certificates from `acme.json` if the file is mounted.
+List TLS certificates. Reads from two sources and merges results:
+
+1. **ACME (`acme.json`)** - reads from `ACME_JSON_PATH` (default `/app/acme.json`)
+2. **File-based (`tls.yml`)** - scans all loaded config files for `tls.certificates` entries and reads each `certFile` PEM directly
 
 **Auth:** Session or API key
 
 **Response**
 ```json
-{ "certs": [ { "domain": "example.com", "sans": [...], "expiry": "..." } ] }
+{
+  "certs": [
+    { "resolver": "cloudflare", "main": "example.com", "sans": ["*.example.com"], "not_after": "Apr 06 12:00:00 2027 GMT" },
+    { "resolver": "file", "main": "internal.lan", "sans": [], "not_after": "Jan 01 00:00:00 2028 GMT", "certFile": "/etc/traefik/certs/chain.pem" }
+  ]
+}
 ```
+
+`resolver` is the ACME resolver name for ACME certs, or `"file"` for PEM certs loaded from `tls.yml`.
 
 ---
 
 #### `GET /api/traefik/logs`
 
-Tail Traefik access logs if the log file is mounted.
+Tail Traefik access logs. Reads from `ACCESS_LOG_PATH` (default `/app/logs/access.log`).
 
 **Auth:** Session or API key
 
@@ -355,23 +370,33 @@ Tail Traefik access logs if the log file is mounted.
 { "lines": ["192.168.1.1 - - [24/Mar/2026] ..."] }
 ```
 
+On error:
+```json
+{ "lines": [], "error": "Access log not found at /app/logs/access.log. Set ACCESS_LOG_PATH to override." }
+```
+
 ---
 
 ## Routes & middlewares
 
 #### `GET /api/configs`
 
-List all loaded dynamic config files. Returns one entry when only `CONFIG_PATH` is set; multiple entries when `CONFIG_DIR` or `CONFIG_PATHS` is used.
+List all loaded dynamic config files.
 
 **Auth:** Session or API key
 
 **Response**
 ```json
-[
-  { "label": "routes.yml", "path": "/app/config/routes.yml" },
-  { "label": "services.yml", "path": "/app/config/services.yml" }
-]
+{
+  "files": [
+    { "label": "routes.yml", "path": "/app/config/routes.yml" },
+    { "label": "services.yml", "path": "/app/config/services.yml" }
+  ],
+  "configDirSet": true
+}
 ```
+
+`configDirSet` is `true` when `CONFIG_DIR` is set. The mobile app uses this to determine whether to show the "+ New file" option in add/edit forms.
 
 ---
 
@@ -405,9 +430,9 @@ Get all managed routes and middlewares from all loaded config files.
 }
 ```
 
-`configFile` is the basename of the config file the entry came from. Empty string when only one file is loaded.
+`configFile` is the basename of the config file the entry came from. Populated whenever `CONFIG_DIR` or `CONFIG_PATHS` is set, even with a single file.
 
-`id` is prefixed as `configFile::name` when multiple config files are loaded (e.g. `routes.yml::my-app`), to avoid collisions across files.
+`id` is prefixed as `configFile::name` when multiple config files are loaded (e.g. `routes.yml::my-app`), to avoid collisions across files. Strip the prefix before using the name as a YAML key.
 
 ---
 
@@ -447,7 +472,7 @@ Create a new route or update an existing one.
 | `middlewares` | Comma-separated middleware names |
 | `scheme` | Backend scheme: `http` or `https` (default `http`) |
 | `passHostHeader` | `true` to forward original `Host` header (default `true`) |
-| `certResolver` | ACME cert resolver name (HTTP/TCP with TLS only). Falls back to the first configured resolver when omitted. |
+| `certResolver` | ACME cert resolver name (HTTP/TCP with TLS only). Falls back to the first configured resolver when omitted. Pass `__none__` to use `tls: {}` without a resolver (for custom certs managed via `tls.yml`). |
 | `configFile` | Basename of the target config file (multi-config only) |
 | `isEdit` | `true` when updating an existing route |
 | `originalId` | ID of the route being replaced (edit only) |

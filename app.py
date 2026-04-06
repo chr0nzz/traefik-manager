@@ -1507,6 +1507,17 @@ def load_config(path=None):
         data = yaml.load(f)
     return data if data and isinstance(data, dict) else {"http": {"routers": {}, "services": {}, "middlewares": {}}}
 
+def _strip_empty_sections(config: dict) -> dict:
+    """Remove empty routers/services/middlewares dicts to avoid Traefik 'standalone element' errors."""
+    for proto in ('http', 'tcp', 'udp'):
+        if proto in config:
+            for section in ('routers', 'services', 'middlewares'):
+                if section in config[proto] and not config[proto][section]:
+                    del config[proto][section]
+            if not config[proto]:
+                del config[proto]
+    return config
+
 def save_config(data, path=None):
     if path is None:
         path = CONFIG_PATH
@@ -1862,7 +1873,8 @@ def save_entry():
         http_eps       = [ep.strip() for ep in (_all_eps[0] if _all_eps else 'https').split(',') if ep.strip()] or ['https']
         tcp_eps        = [ep.strip() for ep in (_all_eps[1] if len(_all_eps) > 1 else '').split(',') if ep.strip()] or ['https']
         resolvers      = [r.strip() for r in settings['cert_resolver'].split(',') if r.strip()]
-        cert_resolver  = request.form.get('certResolver', '').strip() or (resolvers[0] if resolvers else 'cloudflare')
+        cert_resolver_raw = request.form.get('certResolver', '').strip()
+        cert_resolver  = '' if cert_resolver_raw == '__none__' else (cert_resolver_raw or (resolvers[0] if resolvers else 'cloudflare'))
         config_file_raw = request.form.get('configFile', '').strip()
         target_path    = _resolve_config_path(config_file_raw) or CONFIG_PATH
 
@@ -1899,7 +1911,8 @@ def save_entry():
             mws        = [m.strip() for m in middlewares_in.split(',')] if middlewares_in else []
             config.setdefault('http', {}).setdefault('routers', {})
             config['http'].setdefault('services', {})
-            r = {'rule': rule, 'entryPoints': http_eps, 'tls': {'certResolver': cert_resolver}, 'service': service_name}
+            tls_val = {'certResolver': cert_resolver} if cert_resolver else {}
+            r = {'rule': rule, 'entryPoints': http_eps, 'tls': tls_val, 'service': service_name}
             if mws:
                 r['middlewares'] = mws
             lb = {'servers': [{'url': target_url}]}
@@ -1922,7 +1935,7 @@ def save_entry():
             config['udp']['routers'][router_name]   = {'entryPoints': [udp_ep] if udp_ep else [], 'service': service_name}
             config['udp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
 
-        save_config(config, target_path)
+        save_config(_strip_empty_sections(config), target_path)
         _register_config_path(target_path)
         msg = f"Successfully saved {svc_name}"
         if fetch:
@@ -2006,7 +2019,7 @@ def save_middleware():
         if is_edit and original_id and original_id != mw_name:
             config['http']['middlewares'].pop(original_id, None)
         config['http']['middlewares'][mw_name] = safe_yaml.load(mw_content)
-        save_config(config, target_path)
+        save_config(_strip_empty_sections(config), target_path)
         _register_config_path(target_path)
         msg = f"Successfully saved middleware {mw_name}"
         if fetch:
