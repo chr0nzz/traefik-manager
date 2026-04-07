@@ -6,6 +6,9 @@ import mediumZoom from 'medium-zoom'
 import GitHubStars from './components/GitHubStars.vue'
 import MobileRelease from './components/MobileRelease.vue'
 import UnraidCAStatus from './components/UnraidCAStatus.vue'
+import ImageCarousel from './components/ImageCarousel.vue'
+import DesktopScreenshots from './components/DesktopScreenshots.vue'
+import MobileScreenshots from './components/MobileScreenshots.vue'
 import './style.css'
 
 export default {
@@ -30,5 +33,8 @@ export default {
     enhanceAppWithTabs(app)
     app.component('MobileRelease', MobileRelease)
     app.component('UnraidCAStatus', UnraidCAStatus)
+    app.component('ImageCarousel', ImageCarousel)
+    app.component('DesktopScreenshots', DesktopScreenshots)
+    app.component('MobileScreenshots', MobileScreenshots)
   },
 }
