@@ -55,13 +55,38 @@ If built-in auth is enabled, an API key is required.
 
 ---
 
+## Navigation
+
+The app uses a bottom navigation bar with four tabs: **Home**, **Routes**, **Middleware**, and **Services**. An optional **Logs** tab appears when enabled.
+
+### Settings drawer
+
+Tap the **hamburger icon** (top-left of any screen) to open the navigation drawer. The drawer provides access to all settings pages:
+
+| Section | Items |
+|---|---|
+| General | Appearance, App Lock, Traefik, Server |
+| Tabs | Logs |
+| Data | Backups |
+| Info | About |
+
+---
+
 ## Features
+
+### Dashboard (Home)
+
+- Summary stat cards for HTTP Routers, TCP Routers, UDP Routers, Services, and Middlewares - each shows a ring chart with success / warning / error counts
+- Tap **Explore →** on any card to jump to the matching tab filtered to that protocol
+- Entrypoints listed at the bottom with name, address, and protocol badges
+- On tablets and larger screens, stat cards display in a 2-column grid
 
 ### Routes
 
 - List all HTTP, TCP, and UDP routes with status, domain, target, and attached middlewares
+- Filter by protocol using the segmented button bar
 - Enable / disable routes with a toggle - configuration is preserved, Traefik stops routing until re-enabled
-- Add new routes via a form (name, host/domain, target IP, port, protocol, middlewares)
+- Add new routes via a form (name, host/domain, target IP, port, protocol, middlewares, cert resolver)
 - Edit existing routes
 - Delete routes with confirmation
 - Tap a domain to open it in the browser
@@ -69,6 +94,7 @@ If built-in auth is enabled, an API key is required.
 ### Middlewares
 
 - List all middlewares with type, protocol, and YAML config preview
+- Filter by protocol
 - Add new middlewares - two-step flow: choose from 12 built-in templates then fill in the form
 
     | Template | Description |
@@ -96,6 +122,22 @@ If built-in auth is enabled, an API key is required.
 - Provider and linked router chips
 - Tap the info icon for a full detail sheet
 
+### Logs
+
+The Logs tab is hidden by default. To enable it, open the drawer and go to **Logs**, then toggle **Show Logs Tab**.
+
+::: warning Requires server-side configuration
+The Logs tab requires `ACCESS_LOG_PATH` to be set in your Traefik Manager server configuration pointing to a Traefik access log file.
+:::
+
+- Color-coded log entries by HTTP status (green 2xx/3xx, yellow 4xx, red 5xx) in a monospace font
+- Adjustable line count: 100, 500, or 1000 lines
+- Pull to refresh
+
+### Backups
+
+Access via the drawer under **Data → Backups**. Create and restore configuration backups.
+
 ### Edit Mode
 
 Tap the **pencil icon** in the top bar to enter edit mode. In edit mode, cards reveal:
@@ -105,6 +147,28 @@ Tap the **pencil icon** in the top bar to enter edit mode. In edit mode, cards r
 - **Delete** - remove with confirmation
 
 Buttons are hidden when not in edit mode to keep the list clean.
+
+---
+
+## Settings
+
+All settings are accessed from the navigation drawer (hamburger icon in the top bar).
+
+### Appearance
+
+Switch between Light, Dark, and System theme.
+
+### App Lock
+
+Require biometric or device PIN authentication when the app opens or returns from background.
+
+### Traefik
+
+Configure domains, cert resolvers, and the direct Traefik API URL. Includes a **Test Connection** button to verify connectivity to the Traefik API.
+
+### Server
+
+Change the Traefik Manager server URL and API key, or switch to Demo Mode.
 
 ---
 
@@ -167,4 +231,4 @@ When using this split-route pattern, keep Traefik Manager's built-in auth **enab
 
 ## Tech Stack
 
-Built with [Expo](https://expo.dev) SDK 54 / React Native 0.81, Expo Router, TanStack Query, and Zustand.
+Built with [Expo](https://expo.dev) SDK 54 / React Native 0.81, Expo Router, TanStack Query, Zustand, and React Native Paper (Material Design 3).
