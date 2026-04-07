@@ -1,6 +1,6 @@
 # Traefik Manager – UI Examples
 
-Images follow your site theme (light / dark toggle in the top-right corner).
+Switch (light / dark toggle in the top-right corner).
 
 <style>
 .ui-cards {
@@ -34,14 +34,14 @@ Images follow your site theme (light / dark toggle in the top-right corner).
 <div class="ui-cards">
 
   <div class="ui-card">
-    <div class="ui-card-header">🖥️ Desktop</div>
+    <div class="ui-card-header">🖥️ Desktop UI</div>
     <div class="ui-card-body">
       <DesktopScreenshots />
     </div>
   </div>
 
   <div class="ui-card">
-    <div class="ui-card-header">📱 Mobile</div>
+    <div class="ui-card-header">📱 Android UI</div>
     <div class="ui-card-body">
       <MobileScreenshots />
     </div>
