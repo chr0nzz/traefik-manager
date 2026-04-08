@@ -1222,7 +1222,8 @@ def api_certs():
     if os.path.exists(ACME_JSON_PATH):
         try:
             with open(ACME_JSON_PATH, 'r') as f:
-                acme_data = _json.load(f)
+                raw = f.read().strip()
+            acme_data = _json.loads(raw) if raw else {}
             for resolver_name, resolver_data in acme_data.items():
                 if not isinstance(resolver_data, dict):
                     continue
@@ -1407,6 +1408,25 @@ def api_save_settings():
     except Exception as e:
         logger.exception("Settings save error")
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/settings/test-connection', methods=['POST'])
+@csrf_protect
+@login_required
+def api_settings_test_connection():
+    data    = request.get_json(silent=True) or {}
+    raw_url = str(data.get('url', '')).strip()
+    url     = _safe_api_url(raw_url)
+    if not url:
+        return jsonify({'ok': False, 'error': 'Invalid URL'}), 400
+    try:
+        resp = requests.get(f"{url}/api/version", timeout=4)
+        if resp.status_code == 200:
+            info = resp.json()
+            return jsonify({'ok': True, 'version': info.get('Version', '?')})
+        return jsonify({'ok': False, 'error': f'HTTP {resp.status_code}'})
+    except Exception:
+        return jsonify({'ok': False, 'error': 'Connection failed'})
 
 
 @app.route('/api/settings/tabs', methods=['POST'])
@@ -1895,14 +1915,14 @@ def save_entry():
         config = load_config(target_path)
 
         plain_original_id = original_id.split('::', 1)[1] if '::' in original_id else original_id
-        if is_edit and plain_original_id and plain_original_id != router_name:
+        if is_edit and plain_original_id:
             for sec in ('http', 'tcp', 'udp'):
                 s = config.get(sec, {})
                 old_routers = s.get('routers', {})
                 old_svc = (old_routers.get(plain_original_id, {}).get('service') or '').strip()
-                if plain_original_id in old_routers:
+                if plain_original_id != router_name and plain_original_id in old_routers:
                     del old_routers[plain_original_id]
-                if old_svc and 'services' in s and old_svc in s['services']:
+                if old_svc and old_svc != service_name and 'services' in s and old_svc in s['services']:
                     del s['services'][old_svc]
 
         if protocol == 'http':
