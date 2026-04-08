@@ -9,6 +9,15 @@ A self-hosted web UI for managing and monitoring your [Traefik](https://traefik.
 <div class="vp-grid-cards">
 <div class="vp-card">
 
+**⚡ Traefik Stack**
+
+One command installs Traefik + Traefik Manager together, or Traefik Manager on its own via Docker or a native Linux service.
+
+[Traefik Stack guide →](traefik-stack.md)
+
+</div>
+<div class="vp-card">
+
 **🐳 Docker**
 
 Deploy with Docker Compose - minimal setup, pre-built image on GHCR.
