@@ -33,11 +33,11 @@ export default defineConfig({
       { text: 'API Reference', link: '/api' },
       { text: 'UI Examples', link: '/ui-examples' },
       {
-        text: 'v0.10.3',
+        text: 'v0.10.4',
         items: [
+          { text: 'v0.10.4', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.10.4' },
           { text: 'v0.10.3', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.10.3' },
           { text: 'v0.10.2', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.10.2' },
-          { text: 'v0.10.1', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.10.1' },
           { text: 'All releases', link: 'https://github.com/chr0nzz/traefik-manager/releases' },
         ],
       },
@@ -54,6 +54,7 @@ export default defineConfig({
         text: 'Getting Started',
         collapsed: false,
         items: [
+          { text: 'Traefik Stack', link: '/traefik-stack' },
           { text: 'Docker', link: '/docker' },
           { text: 'Podman', link: '/podman' },
           { text: 'Linux (native)', link: '/linux' },
