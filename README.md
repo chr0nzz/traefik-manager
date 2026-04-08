@@ -354,6 +354,14 @@ Features: browse routes, middlewares, and services · enable/disable routes · a
 
 ## Quick Start
 
+**One-liner installer** - installs Traefik + Traefik Manager together, or Traefik Manager on its own via Docker or a native Linux service:
+
+```bash
+curl -fsSL https://get-traefik.xyzlab.dev | bash
+```
+
+**Manual Docker Compose:**
+
 ```yaml
 services:
   traefik-manager:
@@ -380,12 +388,13 @@ Open **http://your-server:5000** - the setup wizard will guide you through the r
 
 ## Deployment
 
-| Runtime　 | Guide                                                                                                       |
-| -----------| -------------------------------------------------------------------------------------------------------------|
-| 🐳 Docker | [Docker Compose setup, networking, behind Traefik](https://traefik-manager.xyzlab.dev/docker.html)          |
-| 🦭 Podman | [Rootless, Quadlet/systemd, SELinux labels](https://traefik-manager.xyzlab.dev/podman.html)                 |
-| 🐧 Linux　| [Native Python + systemd, no container required](https://traefik-manager.xyzlab.dev/linux.html)             |
-| 🟠 Unraid　| [Community Applications template, networking, multi-config](https://traefik-manager.xyzlab.dev/unraid.html) |
+| Runtime　 | Guide                                                                                                                          |
+| -----------| --------------------------------------------------------------------------------------------------------------------------------|
+| ⚡ Installer | [One-liner: full stack, TM-only Docker, TM-only Linux service](https://traefik-manager.xyzlab.dev/traefik-stack.html)       |
+| 🐳 Docker | [Docker Compose setup, networking, behind Traefik](https://traefik-manager.xyzlab.dev/docker.html)                             |
+| 🦭 Podman | [Rootless, Quadlet/systemd, SELinux labels](https://traefik-manager.xyzlab.dev/podman.html)                                    |
+| 🐧 Linux　| [Native Python + systemd, no container required](https://traefik-manager.xyzlab.dev/linux.html)                                |
+| 🟠 Unraid　| [Community Applications template, networking, multi-config](https://traefik-manager.xyzlab.dev/unraid.html)                   |
 
 ---
 
@@ -396,6 +405,7 @@ Full documentation at **[traefik-manager.xyzlab.dev](https://traefik-manager.xyz
 |                                                                           |                                                       |
 | ---------------------------------------------------------------------------| -------------------------------------------------------|
 | [Get Started](https://traefik-manager.xyzlab.dev/guide.html)              | Deployment guides for Docker, Podman, and Linux       |
+| [Traefik Stack](https://traefik-manager.xyzlab.dev/traefik-stack.html)    | One-liner installer guide                             |
 | [Configuration](https://traefik-manager.xyzlab.dev/manager-yml.html)      | `manager.yml` reference                               |
 | [Environment Variables](https://traefik-manager.xyzlab.dev/env-vars.html) | `CONFIG_DIR`, `CONFIG_PATHS`, auth, domains, and more |
 | [Security](https://traefik-manager.xyzlab.dev/security.html)              | API keys, sessions, CSRF, rate limits, and hardening  |
