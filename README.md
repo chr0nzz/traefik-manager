@@ -306,6 +306,8 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 
 **Routing & Middleware**
 - Add, edit, delete, and **enable/disable** HTTP, TCP, and UDP routes - no YAML editing required
+- **Multiple domains per route** - select any combination of your configured domains; generates multi-host Traefik rules (`Host(\`sub.d1\`) || Host(\`sub.d2\`)`)
+- **Per-service insecureSkipVerify** - checkbox adds a named `serversTransport` for backends with self-signed certs (Proxmox, Kasm, etc.); yellow TLS skip badge shown on route cards
 - Create middlewares with built-in templates (Basic Auth, Forward Auth, Redirect, Strip Prefix)
 - **Multi-config file support** - mount several dynamic config files with `CONFIG_DIR` or `CONFIG_PATHS`; a dropdown selects which file each route or middleware is saved to; **create new files on the fly** when `CONFIG_DIR` is set
 - Timestamped backups before every change; one-click restore from Settings
@@ -323,12 +325,14 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 **System Monitoring** *(optional file mounts)*
 - **Certs** - `acme.json` certificates with expiry tracking
 - **Plugins** - plugins from your static `traefik.yml`
-- **Logs** - live Traefik access log tail
+- **Logs** - parsed access log cards showing method, status, path, IP, service, and duration; click any card for a full detail panel with all fields and the raw log line
+- **Configurable file paths** - set `acme.json`, access log, and static config paths from **Settings → File Paths** without a container restart; UI setting takes priority over env vars
 
 **Security**
 - bcrypt passwords (cost 12), CSRF protection, session management with session fixation protection
 - Optional TOTP 2FA · 7-day remember me · configurable inactivity timeout
 - Auto-generated password on first start · CLI recovery with `flask reset-password`
+- **OIDC / SSO** - sign in with Keycloak, Google, Authentik, or any OIDC-compliant provider alongside password login; access restricted to specific emails or groups; client secret stored encrypted at rest
 - **Per-device API keys** - up to 10 named keys (e.g. "My Phone"), each independently revocable via `X-Api-Key` header
 - **Rate limiting** on login and auth endpoints (Flask-Limiter)
 - **Atomic config writes** - crash-safe YAML saves via temp file + rename
@@ -348,7 +352,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 | Beta     | [Sign up to beta test on Google Play](https://forms.gle/csituqc92sreNooZ8)                     |
 | Auth     | Per-device API key - generate one in **Settings → Authentication → App / Mobile API Keys**     |
 
-Features: browse routes, middlewares, and services · enable/disable routes · add and edit routes and middlewares (12 middleware templates) · backend scheme + pass host header controls · multi-config file picker · edit mode for bulk actions · system light/dark theme.
+Features: browse routes, middlewares, and services · enable/disable routes · add and edit routes and middlewares (12 middleware templates) · multiple domains per route · per-service insecureSkipVerify · backend scheme + pass host header controls · multi-config file picker · edit mode for bulk actions · system light/dark theme.
 
 ---
 
@@ -410,6 +414,7 @@ Full documentation at **[traefik-manager.xyzlab.dev](https://traefik-manager.xyz
 | [Environment Variables](https://traefik-manager.xyzlab.dev/env-vars.html) | `CONFIG_DIR`, `CONFIG_PATHS`, auth, domains, and more |
 | [Security](https://traefik-manager.xyzlab.dev/security.html)              | API keys, sessions, CSRF, rate limits, and hardening  |
 | [API Reference](https://traefik-manager.xyzlab.dev/api.html)              | REST API for integrations and the mobile app          |
+| [OIDC / SSO](https://traefik-manager.xyzlab.dev/oidc.html)                | OIDC setup, provider examples, and access control     |
 | [Mobile App](https://traefik-manager.xyzlab.dev/mobile.html)              | Android companion app setup and features              |
 | [Reset Password](https://traefik-manager.xyzlab.dev/reset-password.html)  | CLI reset, TOTP recovery, manual reset                |
 | [UI Examples](https://traefik-manager.xyzlab.dev/ui-examples.html)        | Screenshots and walkthroughs                          |
