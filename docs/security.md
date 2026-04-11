@@ -27,6 +27,23 @@ The inactivity timeout is bypassed when "Remember me" is checked. Sessions are i
 
 ---
 
+## OIDC / SSO login
+
+TM supports OpenID Connect as an additional login method alongside the built-in password. When enabled, a "Sign in with [provider]" button appears on the login page. Password login continues to work alongside OIDC.
+
+Supported providers include Google, Keycloak, Authentik, and any OIDC-compliant identity provider. Access can be restricted to specific email addresses or groups.
+
+See the [OIDC setup guide](oidc.md) for full configuration details.
+
+| Setting | Detail |
+|---|---|
+| Client secret storage | Fernet-encrypted at rest (same key as TOTP secret) |
+| CSRF protection | `state` parameter validated on callback |
+| Rate limit on `/auth/oidc/login` | 10 / min per IP |
+| Token exchange | Server-side only - no tokens exposed to the browser |
+
+---
+
 ## Two-factor authentication (TOTP)
 
 TM supports TOTP-based 2FA compatible with any standard authenticator app (Google Authenticator, Authy, etc.).
@@ -78,6 +95,7 @@ Traefik Manager's built-in auth can be disabled when using an external provider 
 | Endpoint | Limit |
 |---|---|
 | Login, OTP verification | 5 / min per IP |
+| OIDC login initiation | 10 / min per IP |
 | Password change, OTP management | 10 / min per IP |
 | API key generation | 5 / hour per IP |
 | Backup restore | 10 / min per IP |

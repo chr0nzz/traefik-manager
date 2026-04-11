@@ -15,6 +15,9 @@
                 <button class="modal-sidebar-btn active" id="msb-connection" onclick="switchSettingsPanel('connection', this)">
                     <i class="ph-bold ph-plugs-connected"></i> Connection
                 </button>
+                <button class="modal-sidebar-btn" id="msb-paths" onclick="switchSettingsPanel('paths', this)">
+                    <i class="ph-bold ph-folder-open"></i> File Paths
+                </button>
                 <button class="modal-sidebar-btn" id="msb-routes" onclick="switchSettingsPanel('routes', this)">
                     <i class="ph-bold ph-path"></i> Route Monitoring
                 </button>
@@ -83,6 +86,30 @@
                                 <span id="selfRouteSavedNotice" class="hidden text-xs" style="color:var(--green)"><i class="ph-bold ph-check-circle"></i> Saved</span>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="modal-panel" id="mpanel-paths">
+                    <div class="text-xs px-3 py-2 rounded-md mb-4" style="background:rgba(58,130,246,0.08);border:1px solid rgba(58,130,246,0.2);color:var(--blue)">
+                        <i class="ph-bold ph-info mr-1"></i>These paths refer to files <strong>inside this container</strong>. To use a Docker named volume, mount it into Traefik Manager in your <code class="font-mono">docker-compose.yml</code> first, then set the path here - no restart needed after that.
+                    </div>
+                    <div>
+                        <span class="settings-section-label">acme.json Path</span>
+                        <div class="text-xs mb-2" style="color:var(--muted)">Path to Traefik's <code class="font-mono">acme.json</code> for the <strong>Certificates</strong> tab. Leave blank to use the <code class="font-mono">ACME_JSON_PATH</code> env var (default: <code class="font-mono">/app/acme.json</code>).</div>
+                        <input type="text" id="settingsAcmeJsonPath" class="input-field" placeholder="/letsencrypt/acme.json" onblur="saveSettings()">
+                    </div>
+                    <div>
+                        <span class="settings-section-label">Access Log Path</span>
+                        <div class="text-xs mb-2" style="color:var(--muted)">Path to Traefik's access log file for the <strong>Logs</strong> tab. Leave blank to use the <code class="font-mono">ACCESS_LOG_PATH</code> env var (default: <code class="font-mono">/app/logs/access.log</code>).</div>
+                        <input type="text" id="settingsAccessLogPath" class="input-field" placeholder="/var/log/traefik/access.log" onblur="saveSettings()">
+                    </div>
+                    <div>
+                        <span class="settings-section-label">Static Config Path</span>
+                        <div class="text-xs mb-2" style="color:var(--muted)">Path to Traefik's static config file (<code class="font-mono">traefik.yml</code>) for the <strong>Plugins</strong> tab. Leave blank to use the <code class="font-mono">STATIC_CONFIG_PATH</code> env var (default: <code class="font-mono">/app/traefik.yml</code>).</div>
+                        <input type="text" id="settingsStaticConfigPath" class="input-field" placeholder="/etc/traefik/traefik.yml" onblur="saveSettings()">
+                    </div>
+                    <div id="pathsSavedNotice" class="hidden text-xs px-3 py-2 rounded-md" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
+                        <i class="ph-bold ph-check-circle mr-1"></i>Paths saved to <code>manager.yml</code>
                     </div>
                 </div>
 
@@ -259,6 +286,61 @@
                                     <input type="text" id="apikeyValue" readonly class="input-field text-xs font-mono flex-1" style="font-size:11px">
                                     <button onclick="copyApiKey()" class="nav-btn text-xs"><i class="ph-bold ph-copy"></i> Copy</button>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-divider"></div>
+
+                    <div>
+                        <div class="flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+                            <div>
+                                <div class="text-xs font-medium" style="color:var(--text);display:flex;align-items:center;gap:6px;"><i class="ph-bold ph-fingerprint"></i> OIDC / SSO Login</div>
+                                <div class="text-xs mt-1" style="color:var(--muted)">Status: <strong id="oidcStatusLabel" style="color:var(--muted)">Disabled</strong></div>
+                            </div>
+                            <button onclick="oidcToggleEnabled()" id="oidcToggleBtn" class="nav-btn text-xs">Enable</button>
+                        </div>
+                        <div id="oidcConfigForm" style="display:flex;flex-direction:column;gap:10px;">
+                            <div>
+                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Provider URL</label>
+                                <div class="text-xs mb-1" style="color:var(--muted)">The base URL of your OIDC provider (without <code>/.well-known/...</code>). E.g. <code>https://accounts.google.com</code></div>
+                                <div class="flex gap-2">
+                                    <input type="text" id="oidcProviderUrl" class="input-field text-xs flex-1" placeholder="https://accounts.google.com">
+                                    <button onclick="testOidcProvider()" class="nav-btn text-xs" style="white-space:nowrap"><i class="ph-bold ph-plugs-connected"></i> Test</button>
+                                </div>
+                                <div id="oidcTestResult" class="text-xs mt-1" style="color:var(--muted)"></div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Client ID</label>
+                                <input type="text" id="oidcClientId" class="input-field text-xs" placeholder="your-client-id" autocomplete="off">
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Client Secret <span id="oidcSecretSetLabel" class="hidden" style="color:var(--green);font-weight:400">(set - leave blank to keep)</span></label>
+                                <input type="password" id="oidcClientSecret" class="input-field text-xs" placeholder="leave blank to keep existing" autocomplete="new-password">
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Display Name</label>
+                                <div class="text-xs mb-1" style="color:var(--muted)">Shown on the login page button: "Sign in with ..."</div>
+                                <input type="text" id="oidcDisplayName" class="input-field text-xs" placeholder="OIDC">
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Allowed Emails</label>
+                                <div class="text-xs mb-1" style="color:var(--muted)">Comma-separated list. Leave empty to allow any verified account.</div>
+                                <input type="text" id="oidcAllowedEmails" class="input-field text-xs" placeholder="admin@example.com, user@example.com">
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Allowed Groups</label>
+                                <div class="text-xs mb-1" style="color:var(--muted)">Comma-separated group names. Leave empty to skip group check.</div>
+                                <input type="text" id="oidcAllowedGroups" class="input-field text-xs" placeholder="admins, traefik-admins">
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Groups Claim Key</label>
+                                <div class="text-xs mb-1" style="color:var(--muted)">Claim name that contains groups. Keycloak uses <code>groups</code>; some providers use <code>roles</code>.</div>
+                                <input type="text" id="oidcGroupsClaim" class="input-field text-xs" placeholder="groups">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="saveOidcConfig()" class="nav-btn text-xs"><i class="ph-bold ph-floppy-disk"></i> Save OIDC Config</button>
+                                <span id="oidcSavedMsg" class="hidden text-xs" style="color:var(--green)"><i class="ph-bold ph-check-circle"></i> Saved</span>
                             </div>
                         </div>
                     </div>
@@ -441,9 +523,12 @@ async function openSettingsModal(panel) {
     try {
         const res  = await fetch('/api/settings');
         const data = await res.json();
-        document.getElementById('settingsDomains').value       = (data.domains || []).join(', ');
-        document.getElementById('settingsCertResolver').value  = data.cert_resolver || '';
-        document.getElementById('settingsApiUrl').value        = data.traefik_api_url || '';
+        document.getElementById('settingsDomains').value          = (data.domains || []).join(', ');
+        document.getElementById('settingsCertResolver').value     = data.cert_resolver || '';
+        document.getElementById('settingsApiUrl').value           = data.traefik_api_url || '';
+        document.getElementById('settingsAcmeJsonPath').value     = data.acme_json_path || '';
+        document.getElementById('settingsAccessLogPath').value    = data.access_log_path || '';
+        document.getElementById('settingsStaticConfigPath').value = data.static_config_path || '';
 
         if (data.visible_tabs) _visibleTabsCache = data.visible_tabs;
         loadTabTogglesIntoModal();
@@ -451,6 +536,7 @@ async function openSettingsModal(panel) {
         _applyTraefikBadgeVisibility();
         loadOtpStatus();
         loadApiKeyStatus();
+        loadOidcStatus();
         loadSelfRoute();
 
         const authSection   = document.getElementById('authSection');
@@ -553,19 +639,24 @@ async function toggleAuth() {
 }
 
 async function saveSettings() {
-    const domains        = document.getElementById('settingsDomains').value.split(',').map(d => d.trim()).filter(Boolean);
-    const resolver       = document.getElementById('settingsCertResolver').value.trim();
-    const apiUrl         = document.getElementById('settingsApiUrl').value.trim();
+    const domains          = document.getElementById('settingsDomains').value.split(',').map(d => d.trim()).filter(Boolean);
+    const resolver         = document.getElementById('settingsCertResolver').value.trim();
+    const apiUrl           = document.getElementById('settingsApiUrl').value.trim();
+    const acmeJsonPath     = document.getElementById('settingsAcmeJsonPath')?.value.trim() || '';
+    const accessLogPath    = document.getElementById('settingsAccessLogPath')?.value.trim() || '';
+    const staticConfigPath = document.getElementById('settingsStaticConfigPath')?.value.trim() || '';
     if (!domains.length) return;
     try {
         const res  = await fetch('/api/settings', {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token']},
-            body: JSON.stringify({ domains, cert_resolver: resolver, traefik_api_url: apiUrl })
+            body: JSON.stringify({ domains, cert_resolver: resolver, traefik_api_url: apiUrl, acme_json_path: acmeJsonPath, access_log_path: accessLogPath, static_config_path: staticConfigPath })
         });
         const data = await res.json();
         if (data.success) {
             document.getElementById('settingsSavedNotice').classList.remove('hidden');
+            document.getElementById('pathsSavedNotice')?.classList.remove('hidden');
+            setTimeout(() => document.getElementById('pathsSavedNotice')?.classList.add('hidden'), 3000);
             if (typeof availableDomains !== 'undefined') {
                 availableDomains.length = 0;
                 domains.forEach(d => availableDomains.push(d));
@@ -907,6 +998,97 @@ function otpCancelSetup() {
     const flow = document.getElementById('otpSetupFlow');
     flow.style.display = 'none';
     flow.classList.add('hidden');
+}
+
+async function loadOidcStatus() {
+    try {
+        const res  = await fetch('/api/auth/oidc');
+        const data = await res.json();
+        const label = document.getElementById('oidcStatusLabel');
+        const btn   = document.getElementById('oidcToggleBtn');
+        const isOn  = !!data.oidc_enabled;
+        if (label) { label.textContent = isOn ? 'Enabled' : 'Disabled'; label.style.color = isOn ? 'var(--green)' : 'var(--muted)'; }
+        if (btn)   btn.textContent = isOn ? 'Disable' : 'Enable';
+        const set = e => { const el = document.getElementById(e[0]); if (el) el.value = e[1] || ''; };
+        set(['oidcProviderUrl', data.oidc_provider_url]);
+        set(['oidcClientId',    data.oidc_client_id]);
+        set(['oidcDisplayName', data.oidc_display_name]);
+        set(['oidcAllowedEmails', data.oidc_allowed_emails]);
+        set(['oidcAllowedGroups', data.oidc_allowed_groups]);
+        set(['oidcGroupsClaim', data.oidc_groups_claim]);
+        document.getElementById('oidcClientSecret') && (document.getElementById('oidcClientSecret').value = '');
+        const secretLabel = document.getElementById('oidcSecretSetLabel');
+        if (secretLabel) secretLabel.classList.toggle('hidden', !data.oidc_client_secret_set);
+    } catch(e) {}
+}
+
+async function oidcToggleEnabled() {
+    const btn   = document.getElementById('oidcToggleBtn');
+    const label = document.getElementById('oidcStatusLabel');
+    const isOn  = label && label.textContent.trim() === 'Enabled';
+    const url   = document.getElementById('oidcProviderUrl')?.value.trim() || '';
+    const id    = document.getElementById('oidcClientId')?.value.trim() || '';
+    const sec   = document.getElementById('oidcClientSecret')?.value.trim() || '';
+    const disp  = document.getElementById('oidcDisplayName')?.value.trim() || 'OIDC';
+    const ae    = document.getElementById('oidcAllowedEmails')?.value.trim() || '';
+    const ag    = document.getElementById('oidcAllowedGroups')?.value.trim() || '';
+    const gc    = document.getElementById('oidcGroupsClaim')?.value.trim() || 'groups';
+    try {
+        const res = await fetch('/api/auth/oidc', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token']},
+            body: JSON.stringify({ oidc_enabled: !isOn, oidc_provider_url: url, oidc_client_id: id, oidc_client_secret: sec, oidc_display_name: disp, oidc_allowed_emails: ae, oidc_allowed_groups: ag, oidc_groups_claim: gc })
+        });
+        if ((await res.json()).ok) loadOidcStatus();
+    } catch(e) {}
+}
+
+async function saveOidcConfig() {
+    const url  = document.getElementById('oidcProviderUrl')?.value.trim() || '';
+    const id   = document.getElementById('oidcClientId')?.value.trim() || '';
+    const sec  = document.getElementById('oidcClientSecret')?.value.trim() || '';
+    const disp = document.getElementById('oidcDisplayName')?.value.trim() || 'OIDC';
+    const ae   = document.getElementById('oidcAllowedEmails')?.value.trim() || '';
+    const ag   = document.getElementById('oidcAllowedGroups')?.value.trim() || '';
+    const gc   = document.getElementById('oidcGroupsClaim')?.value.trim() || 'groups';
+    const label = document.getElementById('oidcStatusLabel');
+    const isOn  = label && label.textContent.trim() === 'Enabled';
+    try {
+        const res = await fetch('/api/auth/oidc', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token']},
+            body: JSON.stringify({ oidc_enabled: isOn, oidc_provider_url: url, oidc_client_id: id, oidc_client_secret: sec, oidc_display_name: disp, oidc_allowed_emails: ae, oidc_allowed_groups: ag, oidc_groups_claim: gc })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            const msg = document.getElementById('oidcSavedMsg');
+            if (msg) { msg.classList.remove('hidden'); setTimeout(() => msg.classList.add('hidden'), 2500); }
+            loadOidcStatus();
+        } else {
+            showToast(data.error || 'Failed to save OIDC config', 'error');
+        }
+    } catch(e) { showToast('Failed to save OIDC config', 'error'); }
+}
+
+async function testOidcProvider() {
+    const url    = document.getElementById('oidcProviderUrl')?.value.trim() || '';
+    const result = document.getElementById('oidcTestResult');
+    if (!url) return;
+    if (result) { result.textContent = 'Testing...'; result.style.color = 'var(--muted)'; }
+    try {
+        const res  = await fetch('/api/auth/oidc/test', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token']},
+            body: JSON.stringify({ provider_url: url })
+        });
+        const data = await res.json();
+        if (result) {
+            result.textContent = data.ok ? `Connected - issuer: ${data.issuer}` : `Error: ${data.error}`;
+            result.style.color = data.ok ? 'var(--green)' : 'var(--red)';
+        }
+    } catch(e) {
+        if (result) { result.textContent = 'Request failed'; result.style.color = 'var(--red)'; }
+    }
 }
 
 </script>

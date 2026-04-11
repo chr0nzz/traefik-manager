@@ -156,7 +156,9 @@ def _resolve_config_path(s: str) -> str:
     for p in CONFIG_PATHS:
         if s == p or s == os.path.basename(p):
             return p
-    if ACTIVE_CONFIG_DIR and '/' not in s and '\\' not in s and s.endswith(('.yml', '.yaml')):
+    if ACTIVE_CONFIG_DIR and '/' not in s and '\\' not in s:
+        if not s.endswith(('.yml', '.yaml')):
+            s = s + '.yml'
         candidate = os.path.join(ACTIVE_CONFIG_DIR, s)
         if _is_safe_path(candidate):
             return candidate
@@ -179,9 +181,17 @@ def _safe_api_url(url: str) -> str:
     return ''
 
 
-ACCESS_LOG_PATH    = os.environ.get('ACCESS_LOG_PATH',    '/app/logs/access.log')
-ACME_JSON_PATH     = os.environ.get('ACME_JSON_PATH',     '/app/acme.json')
-STATIC_CONFIG_PATH = os.environ.get('STATIC_CONFIG_PATH', '/app/traefik.yml')
+def _get_acme_json_path() -> str:
+    s = load_settings()
+    return s.get('acme_json_path', '').strip() or os.environ.get('ACME_JSON_PATH', '/app/acme.json')
+
+def _get_access_log_path() -> str:
+    s = load_settings()
+    return s.get('access_log_path', '').strip() or os.environ.get('ACCESS_LOG_PATH', '/app/logs/access.log')
+
+def _get_static_config_path() -> str:
+    s = load_settings()
+    return s.get('static_config_path', '').strip() or os.environ.get('STATIC_CONFIG_PATH', '/app/traefik.yml')
 
 
 OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs']
@@ -202,6 +212,17 @@ def load_settings() -> dict:
         'api_keys':             [],
         'api_key_enabled':      False,
         'self_route':           {'domain': '', 'service_url': ''},
+        'acme_json_path':       '',
+        'access_log_path':      '',
+        'static_config_path':   '',
+        'oidc_enabled':         False,
+        'oidc_provider_url':    '',
+        'oidc_client_id':       '',
+        'oidc_client_secret':   '',
+        'oidc_display_name':    'OIDC',
+        'oidc_allowed_emails':  '',
+        'oidc_allowed_groups':  '',
+        'oidc_groups_claim':    'groups',
     }
     if not os.path.exists(SETTINGS_PATH):
         return defaults
@@ -263,6 +284,28 @@ def load_settings() -> dict:
                 'domain':      str(sr.get('domain', '')).strip(),
                 'service_url': str(sr.get('service_url', '')).strip(),
             }
+        if 'acme_json_path' in data:
+            merged['acme_json_path'] = str(data['acme_json_path']).strip()
+        if 'access_log_path' in data:
+            merged['access_log_path'] = str(data['access_log_path']).strip()
+        if 'static_config_path' in data:
+            merged['static_config_path'] = str(data['static_config_path']).strip()
+        if 'oidc_enabled' in data:
+            merged['oidc_enabled'] = bool(data['oidc_enabled'])
+        if 'oidc_provider_url' in data:
+            merged['oidc_provider_url'] = str(data['oidc_provider_url']).strip()
+        if 'oidc_client_id' in data:
+            merged['oidc_client_id'] = str(data['oidc_client_id']).strip()
+        if 'oidc_client_secret' in data:
+            merged['oidc_client_secret'] = _decrypt_otp_secret(str(data['oidc_client_secret']).strip())
+        if 'oidc_display_name' in data:
+            merged['oidc_display_name'] = str(data['oidc_display_name']).strip()
+        if 'oidc_allowed_emails' in data:
+            merged['oidc_allowed_emails'] = str(data['oidc_allowed_emails']).strip()
+        if 'oidc_allowed_groups' in data:
+            merged['oidc_allowed_groups'] = str(data['oidc_allowed_groups']).strip()
+        if 'oidc_groups_claim' in data:
+            merged['oidc_groups_claim'] = str(data['oidc_groups_claim']).strip()
         return merged
     except Exception as e:
         logger.warning(f"Could not load manager.yml, using defaults: {e}")
@@ -275,7 +318,14 @@ def save_settings(domains, cert_resolver, traefik_api_url,
                   otp_secret=None, otp_enabled=None,
                   api_keys=None,
                   disabled_routes=None,
-                  self_route=None):
+                  self_route=None,
+                  acme_json_path=None,
+                  access_log_path=None,
+                  static_config_path=None,
+                  oidc_enabled=None, oidc_provider_url=None, oidc_client_id=None,
+                  oidc_client_secret=None, oidc_display_name=None,
+                  oidc_allowed_emails=None, oidc_allowed_groups=None,
+                  oidc_groups_claim=None):
     if visible_tabs is None:
         visible_tabs = {t: False for t in OPTIONAL_TABS}
     _cur = load_settings()
@@ -293,7 +343,30 @@ def save_settings(domains, cert_resolver, traefik_api_url,
         self_route = _cur.get('self_route', {'domain': '', 'service_url': ''})
     if disabled_routes is None:
         disabled_routes = _cur.get('disabled_routes', {})
+    if acme_json_path is None:
+        acme_json_path = _cur.get('acme_json_path', '')
+    if access_log_path is None:
+        access_log_path = _cur.get('access_log_path', '')
+    if static_config_path is None:
+        static_config_path = _cur.get('static_config_path', '')
+    if oidc_enabled is None:
+        oidc_enabled = _cur.get('oidc_enabled', False)
+    if oidc_provider_url is None:
+        oidc_provider_url = _cur.get('oidc_provider_url', '')
+    if oidc_client_id is None:
+        oidc_client_id = _cur.get('oidc_client_id', '')
+    if oidc_client_secret is None:
+        oidc_client_secret = _cur.get('oidc_client_secret', '')
+    if oidc_display_name is None:
+        oidc_display_name = _cur.get('oidc_display_name', 'OIDC')
+    if oidc_allowed_emails is None:
+        oidc_allowed_emails = _cur.get('oidc_allowed_emails', '')
+    if oidc_allowed_groups is None:
+        oidc_allowed_groups = _cur.get('oidc_allowed_groups', '')
+    if oidc_groups_claim is None:
+        oidc_groups_claim = _cur.get('oidc_groups_claim', 'groups')
     otp_secret = _encrypt_otp_secret(otp_secret)
+    oidc_client_secret_enc = _encrypt_otp_secret(oidc_client_secret) if oidc_client_secret else ''
     os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
     tmp = SETTINGS_PATH + '.tmp'
     with open(tmp, 'w') as f:
@@ -312,6 +385,17 @@ def save_settings(domains, cert_resolver, traefik_api_url,
             'api_keys':             api_keys,
             'api_key_enabled':      len(api_keys) > 0,
             'self_route':           self_route,
+            'acme_json_path':       acme_json_path,
+            'access_log_path':      access_log_path,
+            'static_config_path':   static_config_path,
+            'oidc_enabled':         oidc_enabled,
+            'oidc_provider_url':    oidc_provider_url,
+            'oidc_client_id':       oidc_client_id,
+            'oidc_client_secret':   oidc_client_secret_enc,
+            'oidc_display_name':    oidc_display_name,
+            'oidc_allowed_emails':  oidc_allowed_emails,
+            'oidc_allowed_groups':  oidc_allowed_groups,
+            'oidc_groups_claim':    oidc_groups_claim,
         }, f)
     os.replace(tmp, SETTINGS_PATH)
     logger.info("Manager settings saved")
@@ -626,7 +710,9 @@ def login():
     next_url = request.args.get('next', '')
     return render_template('login.html', error=error, next=next_url,
                            csrf_token=_get_csrf_token(),
-                           temp_password_hint=temp_password_hint)
+                           temp_password_hint=temp_password_hint,
+                           oidc_enabled=settings.get('oidc_enabled', False),
+                           oidc_display_name=settings.get('oidc_display_name', 'OIDC'))
 
 
 @app.route('/setup', methods=['GET', 'POST'])
@@ -1158,10 +1244,11 @@ def api_router_detail(protocol, name):
 @app.route('/api/traefik/plugins')
 @login_required
 def api_plugins():
-    if not os.path.exists(STATIC_CONFIG_PATH):
-        return jsonify({'plugins': [], 'error': f'Static config not found at {STATIC_CONFIG_PATH}. Set STATIC_CONFIG_PATH to override.'})
+    static_path = _get_static_config_path()
+    if not os.path.exists(static_path):
+        return jsonify({'plugins': [], 'error': f'Static config not found at {static_path}. Set STATIC_CONFIG_PATH env var or configure the path in Settings.'})
     try:
-        with open(STATIC_CONFIG_PATH, 'r') as f:
+        with open(static_path, 'r') as f:
             static = yaml.load(f) or {}
         raw = (static.get('experimental') or {}).get('plugins') or {}
         plugins = [
@@ -1219,9 +1306,10 @@ def api_certs():
     certs = []
     errors = []
 
-    if os.path.exists(ACME_JSON_PATH):
+    acme_path = _get_acme_json_path()
+    if os.path.exists(acme_path):
         try:
-            with open(ACME_JSON_PATH, 'r') as f:
+            with open(acme_path, 'r') as f:
                 raw = f.read().strip()
             acme_data = _json.loads(raw) if raw else {}
             for resolver_name, resolver_data in acme_data.items():
@@ -1235,7 +1323,7 @@ def api_certs():
             logger.exception("Error reading acme.json")
             errors.append(str(e))
     else:
-        errors.append(f'acme.json not found at {ACME_JSON_PATH}. Set ACME_JSON_PATH to override.')
+        errors.append(f'acme.json not found at {acme_path}. Set ACME_JSON_PATH env var or configure the path in Settings.')
 
     certs.extend(_certs_from_tls_configs())
 
@@ -1247,12 +1335,13 @@ def api_certs():
 @login_required
 def api_logs():
     lines_req = min(int(request.args.get('lines', 100)), 1000)
-    if not os.path.exists(ACCESS_LOG_PATH):
-        return jsonify({'error': f'Access log not found at {ACCESS_LOG_PATH}. Set ACCESS_LOG_PATH to override.', 'lines': []})
+    log_path = _get_access_log_path()
+    if not os.path.exists(log_path):
+        return jsonify({'error': f'Access log not found at {log_path}. Set ACCESS_LOG_PATH env var or configure the path in Settings.', 'lines': []})
     try:
         lines = []
         buf_size = 8192
-        with open(ACCESS_LOG_PATH, 'rb') as f:
+        with open(log_path, 'rb') as f:
             f.seek(0, 2)
             remaining = f.tell()
             partial = b''
@@ -1378,9 +1467,11 @@ def api_get_settings():
     s = load_settings()
 
     s.pop('password_hash', None)
-    s['auth_enabled']    = _auth_enabled()
-    s['has_password']    = _has_password_set()
-    s['auth_env_forced'] = os.environ.get('AUTH_ENABLED', '').strip().lower() in ('false', '0', 'no')
+    s.pop('oidc_client_secret', None)
+    s['auth_enabled']          = _auth_enabled()
+    s['has_password']          = _has_password_set()
+    s['auth_env_forced']       = os.environ.get('AUTH_ENABLED', '').strip().lower() in ('false', '0', 'no')
+    s['oidc_client_secret_set'] = bool(load_settings().get('oidc_client_secret', ''))
     return jsonify(s)
 
 @app.route('/api/settings', methods=['POST'])
@@ -1397,13 +1488,20 @@ def api_save_settings():
         traefik_api_url = _safe_api_url(str(data.get('traefik_api_url', 'http://traefik:8080')))
         if not traefik_api_url:
             return jsonify({'error': 'Invalid traefik_api_url - must start with http:// or https://'}), 400
+        acme_json_path    = str(data.get('acme_json_path', '')).strip()
+        access_log_path   = str(data.get('access_log_path', '')).strip()
+        static_config_path = str(data.get('static_config_path', '')).strip()
         existing = load_settings()
         save_settings(domains, cert_resolver, traefik_api_url,
                       auth_enabled=existing['auth_enabled'],
                       password_hash=existing['password_hash'],
-                      visible_tabs=existing['visible_tabs'])
+                      visible_tabs=existing['visible_tabs'],
+                      acme_json_path=acme_json_path,
+                      access_log_path=access_log_path,
+                      static_config_path=static_config_path)
         result = load_settings()
         result.pop('password_hash', None)
+        result.pop('oidc_client_secret', None)
         return jsonify({'success': True, 'settings': result})
     except Exception as e:
         logger.exception("Settings save error")
@@ -1569,6 +1667,9 @@ def _build_apps(config, config_file=''):
                 target_url = servers[0].get('url', 'Unknown')
         app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
         tls_http = rdata.get('tls', {})
+        transport_name = lb.get('serversTransport', '')
+        transports_cfg = http_config.get('serversTransports', {})
+        insecure = bool(transports_cfg.get(transport_name, {}).get('insecureSkipVerify', False)) if transport_name else False
         apps.append({'id': app_id, 'name': rname, 'rule': rdata.get('rule', ''),
                      'service_name': svc_name, 'target': target_url,
                      'middlewares': rdata.get('middlewares', []),
@@ -1576,6 +1677,7 @@ def _build_apps(config, config_file=''):
                      'tls': bool(tls_http), 'enabled': True,
                      'passHostHeader': lb.get('passHostHeader', True),
                      'certResolver': tls_http.get('certResolver', '') if isinstance(tls_http, dict) else '',
+                     'insecureSkipVerify': insecure,
                      'configFile': config_file, 'provider': 'file'})
     for rname, rdata in config.get('tcp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
@@ -1699,6 +1801,7 @@ def _build_all_apps(include_external=True, include_internal=False):
 def _toggle_route(route_id: str, enable: bool):
     settings = load_settings()
     disabled = settings.get('disabled_routes', {})
+    rname = route_id.split('::', 1)[1] if '::' in route_id else route_id
 
     if enable:
         if route_id not in disabled:
@@ -1706,13 +1809,18 @@ def _toggle_route(route_id: str, enable: bool):
         saved       = disabled.pop(route_id)
         proto       = saved.get('protocol', 'http')
         router      = saved.get('router', {})
-        svc_name    = router.get('service', route_id)
+        svc_name    = router.get('service', rname)
         svc         = saved.get('service', {})
         cf          = saved.get('configFile', '')
-        target_path = _resolve_config_path(cf) or CONFIG_PATH
+        target_path = _resolve_config_path(cf)
+        if not target_path and cf:
+            safe_cf     = cf if cf.endswith(('.yml', '.yaml')) else cf + '.yml'
+            target_path = os.path.join(os.path.dirname(CONFIG_PATH) or '.', safe_cf)
+            if not _is_safe_path(target_path):
+                target_path = CONFIG_PATH
         config      = load_config(target_path)
         section     = config.setdefault(proto, {})
-        section.setdefault('routers', {})[route_id]  = router
+        section.setdefault('routers', {})[rname]   = router
         section.setdefault('services', {})[svc_name] = svc
         create_backup(target_path)
         save_config(config, target_path)
@@ -1726,10 +1834,10 @@ def _toggle_route(route_id: str, enable: bool):
             config = load_config(p)
             for prot in ('http', 'tcp', 'udp'):
                 routers = config.get(prot, {}).get('routers', {})
-                if route_id in routers:
+                if rname in routers:
                     proto       = prot
-                    router      = dict(routers.pop(route_id))
-                    svc_name    = router.get('service', route_id)
+                    router      = dict(routers.pop(rname))
+                    svc_name    = router.get('service', rname)
                     svc         = dict(config.get(prot, {}).get('services', {}).pop(svc_name, {}))
                     target_path = p
                     break
@@ -1926,9 +2034,18 @@ def save_entry():
                     del s['services'][old_svc]
 
         if protocol == 'http':
-            rule       = f"Host(`{subdomain}`)" if '.' in subdomain else (f"Host(`{subdomain}.{domain}`)" if subdomain else f"Host(`{domain}`)")
+            selected_domains = request.form.getlist('domains') or [domain]
+            if subdomain and '.' in subdomain:
+                rule = f"Host(`{subdomain}`)"
+            elif subdomain:
+                hosts = [f"Host(`{subdomain}.{d}`)" for d in selected_domains]
+                rule  = " || ".join(hosts)
+            else:
+                hosts = [f"Host(`{d}`)" for d in selected_domains]
+                rule  = " || ".join(hosts)
             target_url = target_ip if target_ip.startswith('http') else f"{scheme}://{target_ip}:{target_port}"
             mws        = [m.strip() for m in middlewares_in.split(',')] if middlewares_in else []
+            insecure   = request.form.get('insecureSkipVerify') == 'true'
             config.setdefault('http', {}).setdefault('routers', {})
             config['http'].setdefault('services', {})
             tls_val = {'certResolver': cert_resolver} if cert_resolver else {}
@@ -1938,6 +2055,16 @@ def save_entry():
             lb = {'servers': [{'url': target_url}]}
             if not pass_host:
                 lb['passHostHeader'] = False
+            transport_name = f"{svc_name}-transport"
+            if insecure:
+                lb['serversTransport'] = transport_name
+                config['http'].setdefault('serversTransports', {})[transport_name] = {'insecureSkipVerify': True}
+            elif not insecure:
+                existing_transports = config.get('http', {}).get('serversTransports', {})
+                if transport_name in existing_transports:
+                    del existing_transports[transport_name]
+                    if not existing_transports:
+                        del config['http']['serversTransports']
             config['http']['routers'][router_name]   = r
             config['http']['services'][service_name] = {'loadBalancer': lb}
 
@@ -2082,6 +2209,175 @@ def delete_middleware(mw_name):
             return jsonify({'ok': False, 'message': 'Error deleting middleware'}), 500
         flash("Error deleting middleware", "error")
     return redirect(url_for('index'))
+
+
+@app.route('/auth/oidc/login')
+@limiter.limit("10 per minute")
+def oidc_login():
+    s = load_settings()
+    if not s.get('oidc_enabled'):
+        return redirect(url_for('login'))
+    provider_url = s.get('oidc_provider_url', '').rstrip('/')
+    if not provider_url:
+        return redirect(url_for('login'))
+    try:
+        disc = requests.get(f"{provider_url}/.well-known/openid-configuration", timeout=5)
+        disc.raise_for_status()
+        cfg = disc.json()
+    except Exception:
+        logger.exception("OIDC discovery failed")
+        flash("OIDC provider unavailable. Try again later.", "error")
+        return redirect(url_for('login'))
+    state = secrets.token_urlsafe(32)
+    nonce = secrets.token_urlsafe(32)
+    session['oidc_state'] = state
+    session['oidc_nonce'] = nonce
+    redirect_uri = url_for('oidc_callback', _external=True)
+    from urllib.parse import urlencode
+    params = urlencode({
+        'response_type': 'code',
+        'client_id':     s.get('oidc_client_id', ''),
+        'redirect_uri':  redirect_uri,
+        'scope':         'openid email profile',
+        'state':         state,
+        'nonce':         nonce,
+    })
+    return redirect(f"{cfg['authorization_endpoint']}?{params}")
+
+
+@app.route('/auth/oidc/callback')
+def oidc_callback():
+    s = load_settings()
+    if not s.get('oidc_enabled'):
+        return redirect(url_for('login'))
+    state = request.args.get('state', '')
+    if not state or not secrets.compare_digest(state, session.get('oidc_state', '')):
+        flash("Invalid OIDC state. Please try again.", "error")
+        return redirect(url_for('login'))
+    code = request.args.get('code', '')
+    if not code:
+        flash("OIDC login failed - no code returned.", "error")
+        return redirect(url_for('login'))
+    provider_url = s.get('oidc_provider_url', '').rstrip('/')
+    try:
+        disc = requests.get(f"{provider_url}/.well-known/openid-configuration", timeout=5)
+        disc.raise_for_status()
+        cfg = disc.json()
+    except Exception:
+        logger.exception("OIDC discovery failed in callback")
+        flash("OIDC provider unavailable.", "error")
+        return redirect(url_for('login'))
+    try:
+        token_resp = requests.post(cfg['token_endpoint'], data={
+            'grant_type':   'authorization_code',
+            'code':         code,
+            'redirect_uri': url_for('oidc_callback', _external=True),
+            'client_id':    s.get('oidc_client_id', ''),
+            'client_secret': s.get('oidc_client_secret', ''),
+        }, timeout=10)
+        token_resp.raise_for_status()
+        tokens = token_resp.json()
+    except Exception:
+        logger.exception("OIDC token exchange failed")
+        flash("OIDC login failed - token exchange error.", "error")
+        return redirect(url_for('login'))
+    access_token = tokens.get('access_token', '')
+    try:
+        userinfo_resp = requests.get(cfg['userinfo_endpoint'],
+                                     headers={'Authorization': f'Bearer {access_token}'}, timeout=10)
+        userinfo_resp.raise_for_status()
+        userinfo = userinfo_resp.json()
+    except Exception:
+        logger.exception("OIDC userinfo fetch failed")
+        flash("OIDC login failed - could not fetch user info.", "error")
+        return redirect(url_for('login'))
+    email  = str(userinfo.get('email', '')).strip().lower()
+    name   = str(userinfo.get('name', userinfo.get('preferred_username', email))).strip()
+    groups = userinfo.get(s.get('oidc_groups_claim', 'groups'), [])
+    if not isinstance(groups, list):
+        groups = [str(groups)]
+    allowed_emails = [e.strip().lower() for e in s.get('oidc_allowed_emails', '').split(',') if e.strip()]
+    allowed_groups = [g.strip() for g in s.get('oidc_allowed_groups', '').split(',') if g.strip()]
+    if allowed_emails and email not in allowed_emails:
+        logger.warning(f"OIDC login denied for {email!r} - not in allowed emails")
+        flash("Your account is not authorized to access this application.", "error")
+        return redirect(url_for('login'))
+    if allowed_groups and not any(g in allowed_groups for g in groups):
+        logger.warning(f"OIDC login denied for {email!r} - no matching group")
+        flash("Your account is not authorized to access this application.", "error")
+        return redirect(url_for('login'))
+    session.clear()
+    session.update({
+        'authenticated': True,
+        'last_active':   time.time(),
+        'login_time':    datetime.now(timezone.utc).isoformat(),
+        'oidc_email':    email,
+        'oidc_name':     name,
+    })
+    logger.info(f"OIDC login success for {email!r} from {request.remote_addr}")
+    return redirect(url_for('index'))
+
+
+@app.route('/api/auth/oidc', methods=['GET'])
+@login_required
+def api_get_oidc():
+    s = load_settings()
+    return jsonify({
+        'oidc_enabled':         s.get('oidc_enabled', False),
+        'oidc_provider_url':    s.get('oidc_provider_url', ''),
+        'oidc_client_id':       s.get('oidc_client_id', ''),
+        'oidc_client_secret_set': bool(s.get('oidc_client_secret', '')),
+        'oidc_display_name':    s.get('oidc_display_name', 'OIDC'),
+        'oidc_allowed_emails':  s.get('oidc_allowed_emails', ''),
+        'oidc_allowed_groups':  s.get('oidc_allowed_groups', ''),
+        'oidc_groups_claim':    s.get('oidc_groups_claim', 'groups'),
+    })
+
+
+@app.route('/api/auth/oidc', methods=['POST'])
+@csrf_protect
+@login_required
+def api_save_oidc():
+    try:
+        data = request.get_json(silent=True) or {}
+        s    = load_settings()
+        secret_raw = str(data.get('oidc_client_secret', '')).strip()
+        if not secret_raw:
+            secret_raw = s.get('oidc_client_secret', '')
+        save_settings(
+            domains=s['domains'],
+            cert_resolver=s['cert_resolver'],
+            traefik_api_url=s['traefik_api_url'],
+            oidc_enabled=bool(data.get('oidc_enabled', False)),
+            oidc_provider_url=str(data.get('oidc_provider_url', '')).strip(),
+            oidc_client_id=str(data.get('oidc_client_id', '')).strip(),
+            oidc_client_secret=secret_raw,
+            oidc_display_name=str(data.get('oidc_display_name', 'OIDC')).strip() or 'OIDC',
+            oidc_allowed_emails=str(data.get('oidc_allowed_emails', '')).strip(),
+            oidc_allowed_groups=str(data.get('oidc_allowed_groups', '')).strip(),
+            oidc_groups_claim=str(data.get('oidc_groups_claim', 'groups')).strip() or 'groups',
+        )
+        return jsonify({'ok': True})
+    except Exception:
+        logger.exception("OIDC save error")
+        return jsonify({'ok': False, 'error': 'Save failed'}), 500
+
+
+@app.route('/api/auth/oidc/test', methods=['POST'])
+@csrf_protect
+@login_required
+def api_test_oidc():
+    data = request.get_json(silent=True) or {}
+    url  = str(data.get('provider_url', '')).strip().rstrip('/')
+    if not url:
+        return jsonify({'ok': False, 'error': 'No provider URL'})
+    try:
+        resp = requests.get(f"{url}/.well-known/openid-configuration", timeout=5)
+        resp.raise_for_status()
+        cfg = resp.json()
+        return jsonify({'ok': True, 'issuer': cfg.get('issuer', url)})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)})
 
 
 if __name__ == '__main__':

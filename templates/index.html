@@ -586,6 +586,11 @@ function _esc(s) {
 async function saveRouteAjax(event) {
     event.preventDefault();
     const form = event.target;
+    const fn = document.getElementById('newRouteFileName');
+    if (fn && fn.style.display !== 'none' && fn.value && !/\.ya?ml$/.test(fn.value)) {
+        fn.value += '.yml';
+        document.getElementById('configFile').value = fn.value;
+    }
     const btn = form.querySelector('button[type=submit]');
     btn.disabled = true;
     try {
@@ -604,6 +609,11 @@ async function saveRouteAjax(event) {
 async function saveMwAjax(event) {
     event.preventDefault();
     const form = event.target;
+    const mwFn = document.getElementById('newMwFileName');
+    if (mwFn && mwFn.style.display !== 'none' && mwFn.value && !/\.ya?ml$/.test(mwFn.value)) {
+        mwFn.value += '.yml';
+        document.getElementById('mwConfigFile').value = mwFn.value;
+    }
     const btn = form.querySelector('button[type=submit]');
     btn.disabled = true;
     try {
@@ -820,15 +830,17 @@ function renderRouteGrid(apps) {
         const domain = rawRule.includes(' && ') ? rawRule.slice(0, rawRule.indexOf(' && ')) : rawRule;
         const badgeClass = proto === 'http' ? 'badge-http' : (proto === 'tcp' ? 'badge-tcp' : 'badge-udp');
         const tlsBadge = app.tls ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS</span>` : '';
+        const insecureBadge = app.insecureSkipVerify ? `<span class="badge" style="font-size:9px;background:rgba(240,180,0,0.12);color:#d4a017;border:1px solid rgba(240,180,0,0.3)" title="insecureSkipVerify enabled"><i class="ph-bold ph-warning"></i> TLS skip</span>` : '';
         const openLink = (proto === 'http' && domain && !domain.includes('{') && !domain.includes('*') && !domain.includes('HostRegexp'))
             ? `<a href="https://${domain}" target="_blank" class="pill-btn pill-btn-blue" title="Open site"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : '';
         const epBadges = (app.entryPoints || []).map(ep => '<span class="badge badge-muted" style="font-size:9px">' + _esc(ep) + '</span>').join('');
         const mwBadges = (app.middlewares || []).map(mw => `<span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">${_esc(mw)}</span>`).join('');
         const enabled = app.enabled !== false;
+        const isFileRoute = !app.provider || app.provider === 'file';
         const appJson = JSON.stringify(app).replace(/'/g, '&#39;');
         const toggleIcon = enabled ? 'ph-toggle-right' : 'ph-toggle-left';
         const toggleTitle = enabled ? 'Disable route' : 'Enable route';
-        const toggleBtn = `<button type="button" onclick="toggleRoute('${_esc(app.id)}',${enabled})" class="pill-btn ${enabled ? 'pill-btn-green' : 'pill-btn-muted'}" title="${toggleTitle}"><i class="ph-bold ${toggleIcon} text-sm"></i></button>`;
+        const toggleBtn = isFileRoute ? `<button type="button" onclick="toggleRoute('${_esc(app.id)}',${enabled})" class="pill-btn ${enabled ? 'pill-btn-green' : 'pill-btn-muted'}" title="${toggleTitle}"><i class="ph-bold ${toggleIcon} text-sm"></i></button>` : '';
         const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div><div class="text-xs font-mono truncate" style="color:var(--blue)" title="${_esc(app.rule)}">${_esc(domain || app.rule)}</div></div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>${mwBadges ? `<div class="flex flex-wrap gap-1">${mwBadges}</div>` : ''}`;
         const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>`;
         const cfArg = app.configFile ? `,'${_esc(app.configFile)}'` : ',\'\'';
@@ -836,9 +848,9 @@ function renderRouteGrid(apps) {
         const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}"`;
         if (_routeViewMode === 'list') {
             const epCompact = (app.entryPoints || []).slice(0, 2).map(ep => `<span class="badge badge-muted" style="font-size:9px">${_esc(ep)}</span>`).join('');
-            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" ${dataAttrs}><div class="svc-list-col-status"><span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span></div><div style="display:flex;align-items:center;gap:4px"><span class="badge ${badgeClass}" style="font-size:9px">${proto.toUpperCase()}</span>${tlsBadge}</div><div class="svc-list-col-name">${_esc(app.name)}<div class="text-xs font-mono truncate" style="color:var(--muted);margin-top:1px">${_esc(app.service_name)}</div></div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><div style="display:flex;align-items:center;gap:3px">${epCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('[data-routekey]'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
+            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" ${dataAttrs}><div class="svc-list-col-status"><span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span></div><div style="display:flex;align-items:center;gap:4px"><span class="badge ${badgeClass}" style="font-size:9px">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}</div><div class="svc-list-col-name">${_esc(app.name)}<div class="text-xs font-mono truncate" style="color:var(--muted);margin-top:1px">${_esc(app.service_name)}</div></div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><div style="display:flex;align-items:center;gap:3px">${epCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('[data-routekey]'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
         }
-        return `<div class="card route-card${enabled ? '' : ' opacity-50'}" ${dataAttrs}><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div>${cfBadge}</div></div>`;
+        return `<div class="card route-card${enabled ? '' : ' opacity-50'}" ${dataAttrs}><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div>${cfBadge}</div></div>`;
     }).join('');
 
     if (_routeViewMode === 'list') {
@@ -914,18 +926,26 @@ function handleEdit(btn) {
 
     if (proto === 'http') {
         let rule = app.rule || '';
-        let subdomain = '', selectedDomain = availableDomains[0] || '';
-        const hostMatch = rule.match(/Host\(`([^`]+)`\)/);
-        if (hostMatch) {
-            let fullHost = hostMatch[1];
+        let subdomain = '';
+        const hostMatches = [...rule.matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
+        const matchedDomains = [];
+        for (let fullHost of hostMatches) {
+            let found = false;
             for (let d of availableDomains) {
-                if (fullHost.endsWith('.' + d)) { subdomain = fullHost.replace('.' + d, ''); selectedDomain = d; break; }
-                else if (fullHost === d) { subdomain = ''; selectedDomain = d; break; }
+                if (fullHost.endsWith('.' + d)) { if (!subdomain) subdomain = fullHost.slice(0, -(d.length + 1)); matchedDomains.push(d); found = true; break; }
+                else if (fullHost === d) { matchedDomains.push(d); found = true; break; }
             }
-            if (!subdomain && !availableDomains.includes(fullHost)) subdomain = fullHost;
+            if (!found && !subdomain) subdomain = fullHost;
         }
         document.getElementById('subdomain').value = subdomain;
-        document.getElementById('domain').value = selectedDomain;
+        const checkboxes = document.querySelectorAll('input[name="domains"]');
+        if (checkboxes.length > 0) {
+            checkboxes.forEach(cb => { cb.checked = matchedDomains.includes(cb.value); });
+            if (matchedDomains.length === 0 && availableDomains.length > 0) checkboxes[0].checked = true;
+        } else {
+            const sel = document.getElementById('domainSelect');
+            if (sel && matchedDomains.length > 0) sel.value = matchedDomains[0];
+        }
 
         const targetScheme = (app.target || '').startsWith('https://') ? 'https' : 'http';
         let target = app.target.replace('http://','').replace('https://','');
@@ -938,6 +958,8 @@ function handleEdit(btn) {
         document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
         const crHttp = document.getElementById('certResolver');
         if (crHttp && app.certResolver) crHttp.value = app.certResolver;
+        const insecureChk = document.getElementById('insecureSkipVerify');
+        if (insecureChk) insecureChk.checked = !!app.insecureSkipVerify;
 
     } else if (proto === 'tcp') {
         document.getElementById('tcpRule').value = app.rule || '';
@@ -2423,6 +2445,26 @@ async function refreshLogs() {
     }
 }
 
+const HTTP_STATUS = {
+    200:'OK',201:'Created',202:'Accepted',204:'No Content',
+    301:'Moved Permanently',302:'Found',303:'See Other',304:'Not Modified',307:'Temporary Redirect',308:'Permanent Redirect',
+    400:'Bad Request',401:'Unauthorized',403:'Forbidden',404:'Not Found',405:'Method Not Allowed',
+    408:'Request Timeout',409:'Conflict',410:'Gone',422:'Unprocessable Entity',429:'Too Many Requests',
+    500:'Internal Server Error',501:'Not Implemented',502:'Bad Gateway',503:'Service Unavailable',504:'Gateway Timeout'
+};
+
+function parseLogLine(raw) {
+    const full = raw.match(
+        /^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) (\S+)[^"]*" (\d{3}) (\S+) "[^"]*" "[^"]*" \S+ "([^"]*)" "([^"]*)" (\S+)/
+    );
+    if (full) return { ip:full[1], date:full[2], method:full[3], path:full[4],
+        status:parseInt(full[5]), size:full[6], service:full[7], serviceUrl:full[8], duration:full[9], raw };
+    const basic = raw.match(/^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) (\S+)[^"]*" (\d{3}) (\S+)/);
+    if (basic) return { ip:basic[1], date:basic[2], method:basic[3], path:basic[4],
+        status:parseInt(basic[5]), size:basic[6], service:'', serviceUrl:'', duration:'', raw };
+    return null;
+}
+
 function filterLogs() { renderLogs(); }
 
 function renderLogs() {
@@ -2435,26 +2477,57 @@ function renderLogs() {
         return;
     }
 
-    
-    const colorize = line => {
-        const html = line.replace(/</g, '&lt;');
-        
-        return html
-            .replace(/\b(5\d{2})\b/g, '<span style="color:var(--red)">$1</span>')
-            .replace(/\b(4\d{2})\b/g, '<span style="color:var(--yellow)">$1</span>')
-            .replace(/\b(2\d{2}|3\d{2})\b/g, '<span style="color:var(--green)">$1</span>')
-            .replace(/"(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)"/g, '"<span style="color:var(--blue)">$1</span>"');
-    };
+    const statusColor = s => s >= 500 ? 'var(--red)' : s >= 400 ? 'var(--yellow)' : 'var(--green)';
+    const methodColor = m => ({ GET:'var(--blue)', POST:'var(--green)', PUT:'var(--yellow)', DELETE:'var(--red)', PATCH:'var(--purple)' }[m] || 'var(--muted)');
+
+    const cards = lines.map(raw => {
+        const e = parseLogLine(raw);
+        if (!e) return `<div class="px-4 py-2 text-xs font-mono border-b" style="color:var(--muted);border-color:var(--border);overflow-x:auto;white-space:nowrap">${_esc(raw)}</div>`;
+        const sc = statusColor(e.status);
+        const mc = methodColor(e.method);
+        const svcLabel = e.service && e.service !== '-' ? `<span class="text-xs font-mono truncate" style="color:var(--blue);max-width:180px">${_esc(e.service.replace(/@docker|@file/,''))}</span>` : '';
+        const durLabel = e.duration && e.duration !== '-' ? `<span class="text-xs" style="color:var(--muted)">${_esc(e.duration)}</span>` : '';
+        const entryObj = JSON.stringify(e).replace(/'/g,"&#39;");
+        return `<div class="flex items-center gap-3 px-4 py-2.5 border-b cursor-pointer hover:opacity-80 transition-opacity" style="border-color:var(--border)" onclick='openLogDetail(${entryObj})'>
+            <span class="text-xs font-mono font-bold flex-shrink-0" style="color:${mc};min-width:44px">${_esc(e.method)}</span>
+            <span class="inline-flex items-center gap-1 flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded" style="background:${sc}18;color:${sc};border:1px solid ${sc}44;min-width:52px">${e.status} <span style="font-weight:400;opacity:.8">${HTTP_STATUS[e.status]||''}</span></span>
+            <span class="text-xs font-mono flex-1 truncate" style="color:var(--text)" title="${_esc(e.path)}">${_esc(e.path)}</span>
+            <span class="text-xs flex-shrink-0 hidden sm:block" style="color:var(--muted)">${_esc(e.ip)}</span>
+            ${svcLabel}${durLabel}
+        </div>`;
+    }).join('');
 
     container.innerHTML = `<div class="rounded-xl overflow-hidden" style="border:1px solid var(--border)">
         <div class="flex items-center justify-between px-4 py-2 text-xs" style="background:var(--card);border-bottom:1px solid var(--border);color:var(--muted)">
             <span><i class="ph-bold ph-terminal mr-1"></i>Access Log</span>
-            <span>${lines.length} lines</span>
+            <span>${lines.length} entries</span>
         </div>
-        <div class="overflow-x-auto" style="max-height:600px;overflow-y:auto;background:var(--bg)">
-            <pre class="text-xs font-mono p-4 leading-relaxed" style="color:var(--muted)">${lines.map(colorize).join('\n')}</pre>
-        </div>
+        <div style="max-height:600px;overflow-y:auto;background:var(--bg)">${cards}</div>
     </div>`;
+}
+
+function openLogDetail(e) {
+    const sc = e.status >= 500 ? 'var(--red)' : e.status >= 400 ? 'var(--yellow)' : 'var(--green)';
+    const mc = { GET:'var(--blue)', POST:'var(--green)', PUT:'var(--yellow)', DELETE:'var(--red)', PATCH:'var(--purple)' }[e.method] || 'var(--muted)';
+    document.getElementById('ldBadges').innerHTML =
+        `<span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded" style="background:${sc}18;color:${sc};border:1px solid ${sc}44">${e.status} ${HTTP_STATUS[e.status]||''}</span>` +
+        `<span class="text-xs font-mono font-bold px-2 py-1 rounded" style="background:${mc}18;color:${mc};border:1px solid ${mc}44">${_esc(e.method)}</span>`;
+    const rows = [
+        ['Path', e.path], ['IP', e.ip], ['Date', e.date],
+        ...(e.size && e.size !== '-' ? [['Size', e.size]] : []),
+        ...(e.duration && e.duration !== '-' ? [['Duration', e.duration]] : []),
+        ...(e.service && e.service !== '-' ? [['Service', e.service]] : []),
+        ...(e.serviceUrl && e.serviceUrl !== '-' ? [['Backend URL', e.serviceUrl]] : []),
+    ];
+    document.getElementById('ldGrid').innerHTML = rows.map(([k,v],i) =>
+        `<div class="flex items-start gap-3 px-4 py-2.5" style="${i<rows.length-1?'border-bottom:1px solid var(--border)':''}"><span class="text-xs font-medium flex-shrink-0" style="color:var(--muted);min-width:80px">${k}</span><span class="text-xs font-mono break-all" style="color:var(--text)">${_esc(v)}</span></div>`
+    ).join('');
+    document.getElementById('ldRaw').textContent = e.raw;
+    document.getElementById('logDetailPanel').style.display = '';
+}
+
+function closeLogDetail() {
+    document.getElementById('logDetailPanel').style.display = 'none';
 }
 
 (async () => {

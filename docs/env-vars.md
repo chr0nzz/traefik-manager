@@ -298,6 +298,8 @@ Environment=SETTINGS_PATH=/var/lib/traefik-manager/manager.yml
 
 Path to Traefik's `acme.json` file. Required for the **Certificates** tab to show TLS certificate status and expiry dates. On native Linux installs Traefik typically writes this to a path outside `/app` - set this variable to match your actual path.
 
+This path can also be set via **Settings → Connection → acme.json Path** without a container restart. The UI setting takes priority over this environment variable. If Traefik stores `acme.json` in a Docker named volume, mount that volume into the Traefik Manager container in your `docker-compose.yml` first, then point this setting (or env var) at the mounted path.
+
 :::tabs
 == Docker / Podman
 ```yaml
@@ -323,7 +325,7 @@ If you use certificate files (e.g. `chain.pem` / `key.pem`) via a `tls.yml` inst
 
 **Default:** `/app/traefik.yml`
 
-Path to Traefik's static configuration file (`traefik.yml` or `traefik.toml`). Required for the **Plugins** tab to list installed experimental plugins.
+Path to Traefik's static configuration file (`traefik.yml` or `traefik.toml`). Required for the **Plugins** tab to list installed experimental plugins. Can also be set via **Settings → File Paths → Static Config Path** without a container restart; the UI setting takes priority over this variable.
 
 :::tabs
 == Docker / Podman
@@ -346,7 +348,7 @@ Environment=STATIC_CONFIG_PATH=/etc/traefik/traefik.yml
 
 **Default:** `/app/logs/access.log`
 
-Path to Traefik's access log file. Required for the **Logs** tab. Enable access logging in your Traefik static config first:
+Path to Traefik's access log file. Required for the **Logs** tab. Can also be set via **Settings → File Paths → Access Log Path** without a container restart; the UI setting takes priority over this variable. Enable access logging in your Traefik static config first:
 
 ```yaml
 accessLog:

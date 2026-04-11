@@ -19,3 +19,27 @@
         </div>
     </div>
 </div>
+
+<div id="logDetailPanel" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5)" onclick="if(event.target===this)closeLogDetail()">
+    <div style="position:absolute;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--card);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden">
+        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+            <div class="flex items-center gap-2">
+                <i class="ph-bold ph-file-text" style="color:var(--blue)"></i>
+                <h3 class="font-bold text-sm" style="color:var(--text)">Log Detail</h3>
+            </div>
+            <button onclick="closeLogDetail()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+        </div>
+        <div class="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+            <div class="flex gap-2 flex-wrap" id="ldBadges"></div>
+            <div class="rounded-lg overflow-hidden" style="border:1px solid var(--border)">
+                <div id="ldGrid" class="divide-y" style="border-color:var(--border)"></div>
+            </div>
+            <div>
+                <p class="text-xs font-medium mb-2" style="color:var(--muted)">Raw Line</p>
+                <div class="rounded-lg p-3 overflow-x-auto" style="background:var(--bg);border:1px solid var(--border)">
+                    <pre id="ldRaw" class="text-xs font-mono whitespace-pre" style="color:var(--muted);user-select:text"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

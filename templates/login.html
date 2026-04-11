@@ -368,6 +368,16 @@
                 </button>
             </div>
         </form>
+        {% if oidc_enabled %}
+        <div style="display:flex;align-items:center;gap:8px;margin:16px 0 12px;">
+            <div style="flex:1;height:1px;background:var(--border)"></div>
+            <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">or</span>
+            <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+        <a href="{{ url_for('oidc_login') }}" class="btn-secondary" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;border-radius:8px;padding:10px 0;font-size:14px;font-weight:600;">
+            <i class="ph-bold ph-key"></i> Sign in with {{ oidc_display_name }}
+        </a>
+        {% endif %}
         <details class="reset-hint">
             <summary><i class="ph-bold ph-lock-key" style="font-size:11px"></i> Reset password</summary>
             <div class="reset-hint-body">

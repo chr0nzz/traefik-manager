@@ -35,6 +35,7 @@ API key requests skip this requirement entirely.
 | Scope | Limit |
 |---|---|
 | Login, OTP verification | 5 / min per IP |
+| OIDC login initiation | 10 / min per IP |
 | Password change, OTP endpoints | 10 / min per IP |
 | API key generation | 5 / hour per IP |
 | All other endpoints | Unlimited |
@@ -205,6 +206,78 @@ Revoke a specific API key by its preview string.
 
 ---
 
+#### `GET /api/auth/oidc`
+
+Get current OIDC configuration. The client secret is never returned - `oidc_client_secret_set` indicates whether one is stored.
+
+**Auth:** Session
+
+**Response**
+```json
+{
+  "oidc_enabled": false,
+  "oidc_provider_url": "https://accounts.google.com",
+  "oidc_client_id": "my-client-id",
+  "oidc_client_secret_set": true,
+  "oidc_display_name": "Google",
+  "oidc_allowed_emails": "admin@example.com",
+  "oidc_allowed_groups": "",
+  "oidc_groups_claim": "groups"
+}
+```
+
+---
+
+#### `POST /api/auth/oidc`
+
+Save OIDC configuration. Leave `oidc_client_secret` blank to keep the existing secret.
+
+**Auth:** Session · **CSRF:** required
+
+**Request**
+```json
+{
+  "oidc_enabled": true,
+  "oidc_provider_url": "https://accounts.google.com",
+  "oidc_client_id": "my-client-id",
+  "oidc_client_secret": "my-secret",
+  "oidc_display_name": "Google",
+  "oidc_allowed_emails": "admin@example.com",
+  "oidc_allowed_groups": "",
+  "oidc_groups_claim": "groups"
+}
+```
+
+**Response**
+```json
+{ "ok": true }
+```
+
+---
+
+#### `POST /api/auth/oidc/test`
+
+Test connectivity to an OIDC provider's discovery endpoint.
+
+**Auth:** Session · **CSRF:** required
+
+**Request**
+```json
+{ "provider_url": "https://accounts.google.com" }
+```
+
+**Response**
+```json
+{ "ok": true, "issuer": "https://accounts.google.com" }
+```
+
+On error:
+```json
+{ "ok": false, "error": "Connection refused" }
+```
+
+---
+
 ## Traefik data
 
 These endpoints proxy directly to the Traefik API and return live data. They are read-only.
@@ -338,7 +411,7 @@ On error (file not found or unreadable):
 
 List TLS certificates. Reads from two sources and merges results:
 
-1. **ACME (`acme.json`)** - reads from `ACME_JSON_PATH` (default `/app/acme.json`)
+1. **ACME (`acme.json`)** - reads from the `acme_json_path` setting (if set), then the `ACME_JSON_PATH` env var, then the default `/app/acme.json`
 2. **File-based (`tls.yml`)** - scans all loaded config files for `tls.certificates` entries and reads each `certFile` PEM directly
 
 **Auth:** Session or API key
@@ -603,18 +676,29 @@ Get current application settings. Password hash is never included.
   "domains": ["example.com"],
   "cert_resolver": "letsencrypt",
   "traefik_api_url": "http://traefik:8080",
+  "acme_json_path": "",
+  "access_log_path": "",
+  "static_config_path": "",
   "auth_enabled": true,
+  "oidc_enabled": false,
+  "oidc_provider_url": "",
+  "oidc_client_id": "",
+  "oidc_client_secret_set": false,
+  "oidc_display_name": "OIDC",
+  "oidc_allowed_emails": "",
+  "oidc_allowed_groups": "",
+  "oidc_groups_claim": "groups",
   "visible_tabs": { "dashboard": true, "routemap": false, "docker": true, "kubernetes": false, ... }
 }
 ```
 
-`cert_resolver` is a comma-separated string when multiple resolvers are configured (e.g. `"letsencrypt, cloudflare"`). The first resolver is the default for new routes.
+`cert_resolver` is a comma-separated string when multiple resolvers are configured (e.g. `"letsencrypt, cloudflare"`). The first resolver is the default for new routes. `oidc_client_secret` is never returned; `oidc_client_secret_set` indicates whether one is stored.
 
 ---
 
 #### `POST /api/settings`
 
-Update application settings.
+Update application settings. `acme_json_path` overrides the `ACME_JSON_PATH` env var for the Certificates tab without a container restart.
 
 **Auth:** Session or API key · **CSRF:** required (session only)
 
@@ -623,7 +707,10 @@ Update application settings.
 {
   "domains": ["example.com", "internal.lan"],
   "cert_resolver": "letsencrypt",
-  "traefik_api_url": "http://traefik:8080"
+  "traefik_api_url": "http://traefik:8080",
+  "acme_json_path": "/letsencrypt/acme.json",
+  "access_log_path": "/var/log/traefik/access.log",
+  "static_config_path": "/etc/traefik/traefik.yml"
 }
 ```
 

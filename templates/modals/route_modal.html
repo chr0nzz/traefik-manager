@@ -54,12 +54,23 @@
                             <input type="text" name="subdomain" id="subdomain" class="input-field" placeholder="app">
                         </div>
                         <div>
-                            <label>Domain</label>
-                            <select name="domain" id="domain" class="input-field">
+                            <label>Domain{% if domains | length > 1 %}s{% endif %}</label>
+                            {% if domains | length > 1 %}
+                            <div id="domainCheckboxes" class="rounded-lg p-2 space-y-1" style="background:var(--input-bg);border:1px solid var(--border)">
+                                {% for d in domains %}
+                                <label class="flex items-center gap-2 px-1 py-0.5 rounded cursor-pointer hover:opacity-80">
+                                    <input type="checkbox" name="domains" value="{{ d }}" class="domain-checkbox rounded" style="accent-color:var(--blue)">
+                                    <span class="text-sm" style="color:var(--text)">{{ d }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <select name="domains" id="domainSelect" class="input-field">
                                 {% for d in domains %}
                                 <option value="{{ d }}">{{ d }}</option>
                                 {% endfor %}
                             </select>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
@@ -93,7 +104,12 @@
                             <span class="text-sm" style="color:var(--text)">Pass Host Header</span>
                         </div>
                     </div>
-                    <p class="text-xs -mt-2" style="color:var(--muted)">Pass Host Header forwards the original <code class="font-mono">Host</code> to the backend. Disable if the backend needs to see its own hostname.</p>
+                    <p class="text-xs -mt-2" style="color:var(--muted)">Forward the original Host header to the backend. Disable if the backend needs its own hostname.</p>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="insecureSkipVerify" id="insecureSkipVerify" value="true" class="rounded" style="accent-color:var(--blue)">
+                        <span class="text-sm" style="color:var(--text)">Skip TLS Verification (insecureSkipVerify)</span>
+                    </div>
+                    <p class="text-xs -mt-2" style="color:var(--muted)">For backends with self-signed certificates (e.g. Proxmox, Kasm).</p>
                     {% if cert_resolvers %}
                     <div>
                         <label>Cert Resolver</label>

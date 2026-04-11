@@ -4,10 +4,16 @@ The **Logs** tab displays Traefik's access log - a record of every HTTP request 
 
 ## What it shows
 
-- Recent access log entries (tail of the log file)
-- Color-coded HTTP status codes: green (2xx/3xx), yellow (4xx), red (5xx)
-- Method highlighting (GET, POST, PUT, DELETE, etc.)
-- Request path, upstream service, duration
+Each log entry is parsed into a card showing:
+
+- **Method badge** - color-coded HTTP verb (GET, POST, DELETE, etc.)
+- **Status badge** - status code with description (e.g. `404 Not Found`, `502 Bad Gateway`)
+- **Path** - request path, truncated if long
+- **IP** - client IP address
+- **Service name** - Traefik service that handled the request (when available)
+- **Duration** - response time
+
+Click any card to open a detail panel with all fields (path, IP, date, size, duration, service, backend URL) and the full raw log line.
 
 ## Enabling the tab
 

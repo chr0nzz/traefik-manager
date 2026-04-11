@@ -2,12 +2,12 @@
 
 **traefik-manager-mobile** is a React Native companion app for managing Traefik Manager from your phone.
 
-::: warning Requires Traefik Manager v0.6.0 or higher
-The mobile app authenticates via the API key feature introduced in v0.6.0. Earlier versions are not supported.
-:::
-
-::: warning Mobile app v0.6.0+ requires Traefik Manager v0.10.0 or higher
-v0.10.0 includes the `CONFIG_DIR` multi-file API changes that the mobile app v0.6.0+ depends on. Connecting a v0.6.0+ mobile app to an older server will result in missing config file data.
+::: warning Version Compatibility
+| Mobile App | Requires Server |
+|---|---|
+| v0.10.0+ | v0.11.0+ - adds multi-domain rules, `insecureSkipVerify`, and `.yml` auto-append |
+| v0.6.0 - v0.9.x | v0.10.0+ - adds `CONFIG_DIR` multi-file API support |
+| Earlier | v0.6.0+ - adds API key authentication |
 :::
 
 ::: info Using external auth (Authentik, Authelia, etc.)?
@@ -53,6 +53,10 @@ If you have disabled Traefik Manager's built-in authentication (e.g. you are usi
 If built-in auth is enabled, an API key is required.
 :::
 
+::: info Using OIDC to log in to the web UI?
+OIDC login applies to the web browser only. The mobile app always authenticates via API key. If you log in to the web UI via OIDC, generate an API key under **Settings → Authentication → App / Mobile API Keys**, then enter it in the mobile app - the process is the same as for password-based users.
+:::
+
 ---
 
 ## Navigation
@@ -86,7 +90,9 @@ Tap the **hamburger icon** (top-left of any screen) to open the navigation drawe
 - List all HTTP, TCP, and UDP routes with status, domain, target, and attached middlewares
 - Filter by protocol using the segmented button bar
 - Enable / disable routes with a toggle - configuration is preserved, Traefik stops routing until re-enabled
-- Add new routes via a form (name, host/domain, target IP, port, protocol, middlewares, cert resolver)
+- Add new routes via a form (name, subdomain, one or more domain chips, target IP, port, protocol, middlewares, cert resolver)
+- Select multiple domains when creating or editing an HTTP route - generates a multi-host rule (`Host(\`sub.d1\`) || Host(\`sub.d2\`)`)
+- Toggle **Skip TLS Verification** per route for backends with self-signed certificates (`insecureSkipVerify`)
 - Edit existing routes
 - Delete routes with confirmation
 - Tap a domain to open it in the browser
@@ -130,8 +136,9 @@ The Logs tab is hidden by default. To enable it, open the drawer and go to **Log
 The Logs tab requires `ACCESS_LOG_PATH` to be set in your Traefik Manager server configuration pointing to a Traefik access log file.
 :::
 
-- Color-coded log entries by HTTP status (green 2xx/3xx, yellow 4xx, red 5xx) in a monospace font
-- Adjustable line count: 100, 500, or 1000 lines
+- Each entry parsed into a card showing method, status code + description (e.g. `404 Not Found`), path, IP, service name, and duration
+- Tap any card to open a full detail screen with all fields and the raw log line
+- Adjustable line count: 100, 150, or 200 lines
 - Pull to refresh
 
 ### Backups
@@ -223,7 +230,7 @@ When using this split-route pattern, keep Traefik Manager's built-in auth **enab
 
 | | |
 |---|---|
-| Traefik Manager (server) | **v0.10.0 or higher** (mobile v0.6.0+), v0.6.0+ for earlier mobile versions |
+| Traefik Manager (server) | **v0.11.0 or higher** (mobile v0.10.0+), v0.10.0+ for mobile v0.6.0-v0.9.x, v0.6.0+ for earlier mobile versions |
 | Android | 7.0+ (API 24+) |
 | iOS | 16+ (build from source required) |
 

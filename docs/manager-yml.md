@@ -18,12 +18,23 @@ domains:
   - example.net
 cert_resolver: cloudflare
 traefik_api_url: http://traefik:8080
+acme_json_path: ""
+access_log_path: ""
+static_config_path: ""
 auth_enabled: true
 password_hash: "$2b$12$..."
 must_change_password: false
 setup_complete: true
 otp_enabled: false
 otp_secret: ""
+oidc_enabled: false
+oidc_provider_url: ""
+oidc_client_id: ""
+oidc_client_secret: ""
+oidc_display_name: "OIDC"
+oidc_allowed_emails: ""
+oidc_allowed_groups: ""
+oidc_groups_claim: "groups"
 visible_tabs:
   docker: true
   kubernetes: false
@@ -211,6 +222,131 @@ Bcrypt hash of the generated API key for mobile/app authentication. Set automati
 **Default:** `false`
 
 Whether API key authentication is active. Requests with a valid `X-Api-Key` header bypass the session login flow when this is `true` and `api_key_hash` is set.
+
+---
+
+### `acme_json_path`
+
+**Type:** string
+**Default:** `""` (falls back to `ACME_JSON_PATH` env var, then `/app/acme.json`)
+
+Path to Traefik's `acme.json` file inside the Traefik Manager container. When set here, it takes priority over the `ACME_JSON_PATH` environment variable and can be changed without restarting the container.
+
+If Traefik stores `acme.json` in a Docker named volume, mount that volume into the Traefik Manager container in your `docker-compose.yml` first (this requires a one-time restart), then set the mounted path here or via the Settings UI - no further restart needed.
+
+```yaml
+# docker-compose.yml - mount Traefik's letsencrypt volume into TM
+services:
+  traefik-manager:
+    volumes:
+      - letsencrypt:/letsencrypt:ro
+
+volumes:
+  letsencrypt:
+```
+
+```yaml
+# manager.yml
+acme_json_path: /letsencrypt/acme.json
+```
+
+---
+
+### `access_log_path`
+
+**Type:** string
+**Default:** `""` (falls back to `ACCESS_LOG_PATH` env var, then `/app/logs/access.log`)
+
+Path to Traefik's access log file for the Logs tab. When set here, takes priority over the `ACCESS_LOG_PATH` environment variable. Configure via **Settings → File Paths → Access Log Path**.
+
+```yaml
+access_log_path: /var/log/traefik/access.log
+```
+
+---
+
+### `static_config_path`
+
+**Type:** string
+**Default:** `""` (falls back to `STATIC_CONFIG_PATH` env var, then `/app/traefik.yml`)
+
+Path to Traefik's static configuration file for the Plugins tab. When set here, takes priority over the `STATIC_CONFIG_PATH` environment variable. Configure via **Settings → File Paths → Static Config Path**.
+
+```yaml
+static_config_path: /etc/traefik/traefik.yml
+```
+
+---
+
+### `oidc_enabled`
+
+**Type:** boolean
+**Default:** `false`
+
+Whether OIDC login is active. When `true`, a "Sign in with [oidc_display_name]" button appears on the login page. Managed via **Settings → Authentication → OIDC / SSO Login**.
+
+---
+
+### `oidc_provider_url`
+
+**Type:** string (URL)
+**Default:** `""`
+
+Base URL of the OIDC provider, without the `/.well-known/openid-configuration` suffix. Examples: `https://accounts.google.com`, `https://keycloak.example.com/realms/myrealm`.
+
+---
+
+### `oidc_client_id`
+
+**Type:** string
+**Default:** `""`
+
+The client ID registered with your OIDC provider.
+
+---
+
+### `oidc_client_secret`
+
+**Type:** string (Fernet-encrypted)
+**Default:** `""`
+
+The client secret. **Stored encrypted at rest** using the same Fernet key as `otp_secret`. Never store or share the plaintext value - always set it through the Settings UI.
+
+---
+
+### `oidc_display_name`
+
+**Type:** string
+**Default:** `"OIDC"`
+
+Label shown on the login button: "Sign in with [display name]". Set to your provider's name for clarity, e.g. `Keycloak` or `Google`.
+
+---
+
+### `oidc_allowed_emails`
+
+**Type:** string (comma-separated)
+**Default:** `""` (allow any verified account)
+
+Comma-separated list of email addresses allowed to log in via OIDC. Leave empty to allow any account that authenticates successfully with the provider.
+
+---
+
+### `oidc_allowed_groups`
+
+**Type:** string (comma-separated)
+**Default:** `""` (skip group check)
+
+Comma-separated list of group names. At least one must match a group in the user's token. Leave empty to skip the group check.
+
+---
+
+### `oidc_groups_claim`
+
+**Type:** string
+**Default:** `"groups"`
+
+The claim name in the userinfo response that contains the user's groups. Varies by provider: Keycloak uses `groups`, some providers use `roles`.
 
 ---
 
