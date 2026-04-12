@@ -1,16 +1,21 @@
 # Running on Unraid
 
-Traefik Manager is available as a Community Applications template for Unraid.
+Traefik Manager can be installed on Unraid using a custom template hosted at [unraid.xyzlab.dev/tm](https://unraid.xyzlab.dev/tm).
 
 ---
 
 ## Install via Community Applications
 
-<UnraidCAStatus />
-
 1. Open the **Apps** tab in your Unraid dashboard
-2. Search for **Traefik Manager**
-3. Click **Install**
+2. Click the **Settings** icon (top right) and go to **Template Repositories**
+3. Add the following URL to your repository list:
+   ```
+   https://unraid.xyzlab.dev/tm
+   ```
+4. Click **Save** and then **Done**
+5. Search for **Traefik Manager** in the Apps tab
+6. Click **Install**
+
 
 ---
 
