@@ -9,7 +9,7 @@ A self-hosted web UI for managing and monitoring your [Traefik](https://traefik.
 <div class="vp-grid-cards">
 <div class="vp-card">
 
-**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/windows-terminal.png" height="20" style="vertical-align: middle;">  Traefik Stack**
+**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/windows-terminal.png" style="height:24px;width:24px;vertical-align:middle;display:inline-block">  Traefik Stack**
 
 One command installs Traefik + Traefik Manager together, or Traefik Manager on its own via Docker or a native Linux service.
 
@@ -18,7 +18,7 @@ One command installs Traefik + Traefik Manager together, or Traefik Manager on i
 </div>
 <div class="vp-card">
 
-**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/docker.png" height="20" style="vertical-align: middle;"> Docker**
+**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/docker.png" style="height:24px;width:24px;vertical-align:middle;display:inline-block"> Docker**
 
 Deploy with Docker Compose - minimal setup, pre-built image on GHCR.
 
@@ -27,7 +27,7 @@ Deploy with Docker Compose - minimal setup, pre-built image on GHCR.
 </div>
 <div class="vp-card">
 
-**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/podman.png" height="20" style="vertical-align: middle;"> Podman**
+**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/podman.png" style="height:24px;width:24px;vertical-align:middle;display:inline-block"> Podman**
 
 Rootless containers, Quadlet/systemd, SELinux volume labels.
 
@@ -36,7 +36,7 @@ Rootless containers, Quadlet/systemd, SELinux volume labels.
 </div>
 <div class="vp-card">
 
-**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/linux.png" height="20" style="vertical-align: middle;"> Linux (native)**
+**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/linux.png" style="height:24px;width:24px;vertical-align:middle;display:inline-block"> Linux (native)**
 
 Run directly on the host with Python + systemd. No container runtime needed.
 
@@ -45,7 +45,7 @@ Run directly on the host with Python + systemd. No container runtime needed.
 </div>
 <div class="vp-card">
 
-**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/unraid.png" height="20" style="vertical-align: middle;"> Unraid**
+**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/unraid.png" style="height:24px;width:24px;vertical-align:middle;display:inline-block"> Unraid**
 
 Install on Unraid with a pre-built template.
 
@@ -280,7 +280,7 @@ A companion Android app for managing Traefik Manager on the go. Requires **v0.6.
 <div class="vp-grid-cards">
 <div class="vp-card">
 
-**<img src="/images/icon.png" height="20" style="vertical-align: middle;"> Traefik Manager Mobile**
+**<img src="/images/icon.png" style="height:24px;width:24px;vertical-align:middle;display:inline-block"> Traefik Manager Mobile**
 
 Browse routes, middlewares, and services. Enable/disable routes. Add and edit with built-in templates. Follows system light/dark theme.
 
