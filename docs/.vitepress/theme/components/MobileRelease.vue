@@ -23,12 +23,12 @@ onMounted(async () => {
       v-if="apkUrl"
       :href="apkUrl"
       class="vp-btn vp-btn--primary"
-    >🤖 Download APK {{ version }}</a>
+    ><img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/android.png" style="height:18px;width:18px;vertical-align:middle;display:inline-block;margin-right:6px">Download APK {{ version }}</a>
     <a
       v-else
       href="https://github.com/chr0nzz/traefik-manager-mobile/releases"
       class="vp-btn vp-btn--primary"
-    >🤖 Download APK</a>
+    ><img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/android.png" style="height:18px;width:18px;vertical-align:middle;display:inline-block;margin-right:6px">Download APK</a>
     <a
       :href="pageUrl"
       target="_blank"

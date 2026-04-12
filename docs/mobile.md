@@ -21,7 +21,7 @@ See [connecting without an API key](#connecting-without-an-api-key) and [externa
 <MobileRelease />
 
 <a href="https://forms.gle/csituqc92sreNooZ8" target="_blank" rel="noopener noreferrer" class="vp-btn vp-btn--brand" style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;">
-  🧪 Sign up to beta test on Google Play
+  <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/google-play.png" style="height:18px;width:18px;vertical-align:middle;display:inline-block;margin-right:4px"> Sign up to beta test on Google Play
 </a>
 
 ---
