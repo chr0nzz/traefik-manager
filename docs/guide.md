@@ -280,7 +280,7 @@ A companion Android app for managing Traefik Manager on the go. Requires **v0.6.
 <div class="vp-grid-cards">
 <div class="vp-card">
 
-**<img src="images/icon.png" height="20" style="vertical-align: middle;"> Traefik Manager Mobile**
+**<img src="/images/icon.png" height="20" style="vertical-align: middle;"> Traefik Manager Mobile**
 
 Browse routes, middlewares, and services. Enable/disable routes. Add and edit with built-in templates. Follows system light/dark theme.
 
