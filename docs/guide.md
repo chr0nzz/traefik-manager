@@ -9,7 +9,7 @@ A self-hosted web UI for managing and monitoring your [Traefik](https://traefik.
 <div class="vp-grid-cards">
 <div class="vp-card">
 
-**⚡ Traefik Stack**
+**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/windows-terminal.png" height="20" style="vertical-align: middle;">  Traefik Stack**
 
 One command installs Traefik + Traefik Manager together, or Traefik Manager on its own via Docker or a native Linux service.
 
@@ -18,7 +18,7 @@ One command installs Traefik + Traefik Manager together, or Traefik Manager on i
 </div>
 <div class="vp-card">
 
-**🐳 Docker**
+**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/docker.png" height="20" style="vertical-align: middle;"> Docker**
 
 Deploy with Docker Compose - minimal setup, pre-built image on GHCR.
 
@@ -27,7 +27,7 @@ Deploy with Docker Compose - minimal setup, pre-built image on GHCR.
 </div>
 <div class="vp-card">
 
-**🦭 Podman**
+**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/podman.png" height="20" style="vertical-align: middle;"> Podman**
 
 Rootless containers, Quadlet/systemd, SELinux volume labels.
 
@@ -36,7 +36,7 @@ Rootless containers, Quadlet/systemd, SELinux volume labels.
 </div>
 <div class="vp-card">
 
-**🐧 Linux (native)**
+**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/linux.png" height="20" style="vertical-align: middle;"> Linux (native)**
 
 Run directly on the host with Python + systemd. No container runtime needed.
 
@@ -45,9 +45,9 @@ Run directly on the host with Python + systemd. No container runtime needed.
 </div>
 <div class="vp-card">
 
-**🟠 Unraid**
+**<img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/unraid.png" height="20" style="vertical-align: middle;"> Unraid**
 
-Install from the Community Applications store with a pre-built template.
+Install on Unraid with a pre-built template.
 
 [Unraid guide →](unraid.md)
 
@@ -74,10 +74,10 @@ These tabs are always visible. They let you read and write your Traefik dynamic 
 
 Optional tabs - toggle on in **Settings - Interface - Tabs** or during the setup wizard. No extra mounts needed.
 
-| Tab | Description |
-|-----|-------------|
+| Tab                           | Description                                                                    |
+| -------------------------------| --------------------------------------------------------------------------------|
 | [Dashboard](tab-dashboard.md) | Routes grouped by category with app icons, custom groups, and per-card editing |
-| [Route Map](tab-routemap.md) | Topology connection map - entry points → routes → middlewares → services |
+| [Route Map](tab-routemap.md)  | Topology connection map - entry points → routes → middlewares → services       |
 
 ---
 
@@ -130,10 +130,11 @@ Read-only tabs that pull live data from the Traefik API. No extra mounts needed 
 
 ## Configuration
 
-| Page | Description |
-|------|-------------|
-| [manager.yml](manager-yml.md) | Full settings file reference - all keys, types, and defaults |
-| [Environment Variables](env-vars.md) | All supported environment variables with override behaviour |
+| Page                                 | Description                                                                                   |
+| --------------------------------------| -----------------------------------------------------------------------------------------------|
+| [manager.yml](manager-yml.md)        | Full settings file reference - all keys, types, and defaults                                  |
+| [Environment Variables](env-vars.md) | All supported environment variables with override behaviour                                   |
+| [OIDC / SSO Login](oidc.md)          | Supports OpenID Connect (OIDC) as an additional login method alongside the built-in password. |
 
 ---
 
@@ -279,7 +280,7 @@ A companion Android app for managing Traefik Manager on the go. Requires **v0.6.
 <div class="vp-grid-cards">
 <div class="vp-card">
 
-**🤖 traefik-manager-mobile**
+**<img src="images/icon.png" height="20" style="vertical-align: middle;"> Traefik Manager Mobile**
 
 Browse routes, middlewares, and services. Enable/disable routes. Add and edit with built-in templates. Follows system light/dark theme.
 
