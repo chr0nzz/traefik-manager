@@ -392,13 +392,13 @@ Open **http://your-server:5000** - the setup wizard will guide you through the r
 
 ## Deployment
 
-| Runtime　 | Guide                                                                                                                          |
-| -----------| --------------------------------------------------------------------------------------------------------------------------------|
-| ⚡ Installer | [One-liner: full stack, TM-only Docker, TM-only Linux service](https://traefik-manager.xyzlab.dev/traefik-stack.html)       |
-| 🐳 Docker | [Docker Compose setup, networking, behind Traefik](https://traefik-manager.xyzlab.dev/docker.html)                             |
-| 🦭 Podman | [Rootless, Quadlet/systemd, SELinux labels](https://traefik-manager.xyzlab.dev/podman.html)                                    |
-| 🐧 Linux　| [Native Python + systemd, no container required](https://traefik-manager.xyzlab.dev/linux.html)                                |
-| 🟠 Unraid　| [Community Applications template, networking, multi-config](https://traefik-manager.xyzlab.dev/unraid.html)                   |
+| Runtime                                                                                                              | Guide                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------| -----------------------------------------------------------------------------------------------------------------------|
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/windows-terminal.png" width="20" height="20"> Installer | [One-liner: full stack, TM-only Docker, TM-only Linux service](https://traefik-manager.xyzlab.dev/traefik-stack.html) |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/docker.png" width="20" height="20"> Docker              | [Docker Compose setup, networking, behind Traefik](https://traefik-manager.xyzlab.dev/docker.html)                    |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/podman.png" width="20" height="20"> Podman              | [Rootless, Quadlet/systemd, SELinux labels](https://traefik-manager.xyzlab.dev/podman.html)                           |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/linux.png" width="20" height="20"> Linux                | [Native Python + systemd, no container required](https://traefik-manager.xyzlab.dev/linux.html)                       |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/unraid.png" width="20" height="20"> Unraid              | [Community Applications template, networking, multi-config](https://traefik-manager.xyzlab.dev/unraid.html)           |
 
 ---
 
