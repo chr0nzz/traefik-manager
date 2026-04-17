@@ -33,11 +33,11 @@ export default defineConfig({
       { text: 'API Reference', link: '/api' },
       { text: 'UI Examples', link: '/ui-examples' },
       {
-        text: 'v0.11.0',
+        text: 'v0.12.0',
         items: [
+          { text: 'v0.12.0', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.12.0' },
           { text: 'v0.11.0', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.11.0' },
           { text: 'v0.10.4', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.10.4' },
-          { text: 'v0.10.3', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.10.3' },
           { text: 'All releases', link: 'https://github.com/chr0nzz/traefik-manager/releases' },
         ],
       },
