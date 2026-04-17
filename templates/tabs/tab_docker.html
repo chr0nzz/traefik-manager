@@ -10,9 +10,9 @@
             <button onclick="filterDocker('tcp')"   id="dk-tcp"   class="proto-btn text-xs px-3 py-1.5">TCP</button>
             <button onclick="filterDocker('udp')"   id="dk-udp"   class="proto-btn text-xs px-3 py-1.5">UDP</button>
         </div>
-        <button onclick="refreshDockerTab()" class="btn-secondary text-xs">
-            <i class="ph-bold ph-arrows-clockwise"></i> Refresh
-        </button>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="refreshDockerTab()" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+        </div>
     </div>
     <div class="mb-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(36,161,222,0.08);border:1px solid rgba(36,161,222,0.2);color:var(--blue)">
         <i class="ph-bold ph-info"></i>

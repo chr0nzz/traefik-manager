@@ -8,6 +8,7 @@ The **Routes** tab (also called Services) is the main management interface. It d
 - TLS / cert resolver status
 - Entry points and attached middlewares
 - Status badge from the Traefik API (enabled / warning / error)
+- Multi-domain routes show each domain as a separate pill badge; clicking a domain or target copies it to the clipboard
 - Full detail view via the info button - shows live Traefik status, service health, and raw config
 
 ## Views
@@ -22,10 +23,10 @@ Click **Add Route** in the top bar. Fill in:
 |---|---|
 | Protocol | HTTP, TCP, or UDP |
 | Name | Unique identifier (used as the router and service key in `dynamic.yml`) |
-| Subdomain + Domain(s) | Subdomain field plus one or more domain checkboxes. With multiple domains selected, generates a multi-host rule: `Host(\`sub.d1.com\`) \|\| Host(\`sub.d2.com\`)` |
+| Subdomain + Domain(s) | Subdomain field plus one or more domain chips. With multiple domains selected, generates a multi-host rule: `Host(\`sub.d1.com\`) \|\| Host(\`sub.d2.com\`)`. Long domain names are truncated in the chip display. |
 | Target IP / Port | Backend server to forward to |
-| Entry Points | Traefik entry points (e.g. `https`, `websecure`) |
-| Middlewares | Comma-separated list of middleware names (e.g. `auth@file`) |
+| Entry Points | Selectable chips fetched from the Traefik API - click to toggle. `websecure` is pre-selected for HTTP routes. UDP entry points are single-select. Falls back to a text input if the API returns no entry points. |
+| Middlewares | Selectable chips fetched from the Traefik API - click to toggle. Falls back to a text input if the API returns no middlewares. |
 | Backend Scheme | `HTTP` or `HTTPS` - the scheme Traefik uses to connect to your backend. Use `HTTPS` when the backend serves TLS internally. |
 | Pass Host Header | Enabled by default. Disable if the backend needs to see its own hostname instead of the original request `Host` header. Writes `passHostHeader: false` to the service in `dynamic.yml`. |
 | Cert Resolver | Shown for HTTP and TCP routes. Select which ACME cert resolver to use, or choose **None (custom cert / tls.yml)** to write `tls: {}` without a resolver - use this when your certificates are managed via a `tls.yml` file instead of ACME. Defaults to the first resolver configured in Settings. Only appears when at least one resolver is configured. |

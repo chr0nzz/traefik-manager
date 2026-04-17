@@ -1,10 +1,10 @@
-<nav class="sticky top-0 z-40">
+<nav class="sticky top-0 z-40" style="position:relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
         <div class="flex items-center justify-between h-14">
 
             <div class="flex items-center gap-3">
                 <div class="flex items-center gap-2">
-                    <img src="/static/icons/icon-72x72.png" alt="logo" style="width:24px;height:24px">
+                    <img src="/static/icons/icon.png" alt="logo" style="width:24px;height:24px">
                     <span class="font-bold text-base tracking-tight" style="color:var(--text)">Traefik <span style="color:var(--blue)">Manager</span></span>
                 </div>
             </div>
@@ -16,9 +16,19 @@
                     <span id="versionText">-</span>
                 </button>
                 <div id="updateBadge" class="hidden"></div>
-                <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="nav-btn" title="Documentation">
+                <button id="tmVersionBadge" class="hidden nav-btn font-mono" title="Traefik Manager version">
+                    <i class="ph-bold ph-package"></i>
+                    <span id="tmVersionText">-</span>
+                </button>
+                <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="nav-btn nav-docs-link" title="Documentation">
                     <i class="ph-bold ph-book-open"></i>
                 </a>
+                <div class="notif-bell-wrap" id="notifBellWrap">
+                    <button onclick="toggleNotifPanel()" class="nav-btn" id="notifBellBtn" title="Notifications">
+                        <i class="ph-bold ph-bell"></i>
+                        <span id="notifBadge" class="notif-badge hidden"></span>
+                    </button>
+                </div>
                 <button onclick="cycleTheme()" id="themeToggleBtn" class="nav-btn" title="Toggle theme">
                     <i class="ph-bold ph-moon" id="themeIcon"></i>
                 </button>
@@ -49,13 +59,36 @@
                     <i class="ph-bold ph-git-branch text-xs"></i>
                     <span id="versionTextMobile">-</span>
                 </div>
-                <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="btn-icon" title="Documentation">
+                <div id="tmVersionBadgeMobile" class="hidden items-center gap-1 px-2 py-1 rounded-md text-xs font-mono" style="background:var(--btn-secondary-bg); border:1px solid var(--border); color:var(--muted)">
+                    <i class="ph-bold ph-package text-xs"></i>
+                    <span id="tmVersionTextMobile">-</span>
+                </div>
+                <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="btn-icon nav-docs-link" title="Documentation">
                     <i class="ph-bold ph-book-open text-lg"></i>
                 </a>
+                <div class="notif-bell-wrap" id="notifBellWrapMobile">
+                    <button onclick="toggleNotifPanel()" class="btn-icon" id="notifBellBtnMobile" title="Notifications">
+                        <i class="ph-bold ph-bell text-lg"></i>
+                        <span id="notifBadgeMobile" class="notif-badge hidden"></span>
+                    </button>
+                </div>
                 <button onclick="toggleMobileMenu()" class="btn-icon" id="hamburgerBtn">
                     <i class="ph-bold ph-list text-xl" id="hamburgerIcon"></i>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <div class="notif-panel" id="notifPanel">
+        <div class="notif-panel-header">
+            <span class="notif-panel-title">Notifications</span>
+            <div class="flex items-center gap-2">
+                <button onclick="markNotifsRead()" class="notif-mark-read" id="notifMarkRead">Mark all read</button>
+                <button onclick="clearAllNotifications()" class="notif-mark-read notif-clear-all" id="notifClearAll" style="color:var(--muted);display:none">Clear all</button>
+            </div>
+        </div>
+        <div id="notifList" class="notif-list">
+            <div class="notif-empty"><i class="ph-light ph-bell-slash" style="font-size:32px;opacity:0.3;display:block;margin-bottom:8px"></i>No notifications yet</div>
         </div>
     </div>
 </nav>

@@ -15,9 +15,6 @@
                 <button class="modal-sidebar-btn active" id="msb-connection" onclick="switchSettingsPanel('connection', this)">
                     <i class="ph-bold ph-plugs-connected"></i> Connection
                 </button>
-                <button class="modal-sidebar-btn" id="msb-paths" onclick="switchSettingsPanel('paths', this)">
-                    <i class="ph-bold ph-folder-open"></i> File Paths
-                </button>
                 <button class="modal-sidebar-btn" id="msb-routes" onclick="switchSettingsPanel('routes', this)">
                     <i class="ph-bold ph-path"></i> Route Monitoring
                 </button>
@@ -70,7 +67,7 @@
 
                     <div>
                         <span class="settings-section-label">Self Route</span>
-                        <div class="text-xs mb-3" style="color:var(--muted)">Create a Traefik route for this Traefik Manager instance. Added to your dynamic config file automatically - no changes needed to <code>traefik.yml</code>.</div>
+                        <div class="text-xs mb-3" style="color:var(--muted)">Create a Traefik route for this Traefik Manager instance.</div>
                         <div style="display:flex;flex-direction:column;gap:8px;">
                             <div>
                                 <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Traefik Manager URL</label>
@@ -86,30 +83,6 @@
                                 <span id="selfRouteSavedNotice" class="hidden text-xs" style="color:var(--green)"><i class="ph-bold ph-check-circle"></i> Saved</span>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="modal-panel" id="mpanel-paths">
-                    <div class="text-xs px-3 py-2 rounded-md mb-4" style="background:rgba(58,130,246,0.08);border:1px solid rgba(58,130,246,0.2);color:var(--blue)">
-                        <i class="ph-bold ph-info mr-1"></i>These paths refer to files <strong>inside this container</strong>. To use a Docker named volume, mount it into Traefik Manager in your <code class="font-mono">docker-compose.yml</code> first, then set the path here - no restart needed after that.
-                    </div>
-                    <div>
-                        <span class="settings-section-label">acme.json Path</span>
-                        <div class="text-xs mb-2" style="color:var(--muted)">Path to Traefik's <code class="font-mono">acme.json</code> for the <strong>Certificates</strong> tab. Leave blank to use the <code class="font-mono">ACME_JSON_PATH</code> env var (default: <code class="font-mono">/app/acme.json</code>).</div>
-                        <input type="text" id="settingsAcmeJsonPath" class="input-field" placeholder="/letsencrypt/acme.json" onblur="saveSettings()">
-                    </div>
-                    <div>
-                        <span class="settings-section-label">Access Log Path</span>
-                        <div class="text-xs mb-2" style="color:var(--muted)">Path to Traefik's access log file for the <strong>Logs</strong> tab. Leave blank to use the <code class="font-mono">ACCESS_LOG_PATH</code> env var (default: <code class="font-mono">/app/logs/access.log</code>).</div>
-                        <input type="text" id="settingsAccessLogPath" class="input-field" placeholder="/var/log/traefik/access.log" onblur="saveSettings()">
-                    </div>
-                    <div>
-                        <span class="settings-section-label">Static Config Path</span>
-                        <div class="text-xs mb-2" style="color:var(--muted)">Path to Traefik's static config file (<code class="font-mono">traefik.yml</code>) for the <strong>Plugins</strong> tab. Leave blank to use the <code class="font-mono">STATIC_CONFIG_PATH</code> env var (default: <code class="font-mono">/app/traefik.yml</code>).</div>
-                        <input type="text" id="settingsStaticConfigPath" class="input-field" placeholder="/etc/traefik/traefik.yml" onblur="saveSettings()">
-                    </div>
-                    <div id="pathsSavedNotice" class="hidden text-xs px-3 py-2 rounded-md" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
-                        <i class="ph-bold ph-check-circle mr-1"></i>Paths saved to <code>manager.yml</code>
                     </div>
                 </div>
 
@@ -170,179 +143,248 @@
                     </div>
                 </div>
 
-                <div class="modal-panel" id="mpanel-system">
-                    <div>
-                        <span class="settings-section-label">System Monitoring</span>
-                        <div class="text-xs mb-3" style="color:var(--muted)">These tabs require a file mount in your compose file - each tab shows the exact volume line to add if not yet mounted.</div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <label class="tab-toggle-row" onclick="toggleTabVisibility('certs')">
-                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-check" style="color:var(--muted)"></i> Certs</span>
-                                <div class="toggle-switch" id="toggle-certs"><div class="toggle-knob"></div></div>
-                            </label>
-                            <label class="tab-toggle-row" onclick="toggleTabVisibility('plugins')">
-                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-puzzle-piece" style="color:var(--muted)"></i> Plugins</span>
-                                <div class="toggle-switch" id="toggle-plugins"><div class="toggle-knob"></div></div>
-                            </label>
-                            <label class="tab-toggle-row" onclick="toggleTabVisibility('logs')">
-                                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-terminal" style="color:var(--muted)"></i> Logs</span>
-                                <div class="toggle-switch" id="toggle-logs"><div class="toggle-knob"></div></div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+                <div class="modal-panel" id="mpanel-system" style="gap:0;padding:0;overflow:hidden;">
+                    <div style="display:flex;flex-direction:column;height:100%;min-height:0;">
 
-                <div class="modal-panel" id="mpanel-auth">
-                    <div id="authSection">
-                        <div class="flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
-                            <div>
-                                <div class="text-xs font-medium" style="color:var(--text);display:flex;align-items:center;gap:6px;"><i class="ph-bold ph-lock-simple"></i> Built-in Authentication</div>
-                                <div id="authEnabledNotice" class="text-xs mt-1" style="color:var(--muted)">
-                                    Auth is <strong id="authStateLabel" style="color:var(--green)">enabled</strong>
-                                    <span id="authEnvForcedNote" class="hidden"> - controlled by <code>AUTH_ENABLED</code> env var</span>
-                                </div>
-                            </div>
-                            <button id="authToggleBtn" onclick="toggleAuth()" class="nav-btn text-xs hidden" title="Enable or disable built-in auth">
-                                <span id="authToggleLabel">Disable</span>
+                        <div style="display:flex;gap:2px;padding:12px 16px 0;border-bottom:1px solid var(--border);flex-shrink:0;">
+                            <button class="auth-sub-tab active" id="system-tab-tabs" onclick="switchSystemTab('tabs', this)">
+                                <i class="ph-bold ph-monitor"></i> Tab Visibility
+                            </button>
+                            <button class="auth-sub-tab" id="system-tab-paths" onclick="switchSystemTab('paths', this)">
+                                <i class="ph-bold ph-folder-open"></i> File Paths
                             </button>
                         </div>
 
-                        <div id="changePwForm" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px;">
-                            <span class="settings-section-label">Change Password</span>
-                            <input type="password" id="pwCurrent" class="input-field" placeholder="Current password" autocomplete="current-password">
-                            <input type="password" id="pwNew"     class="input-field" placeholder="New password (min 8 chars)" autocomplete="new-password">
-                            <input type="password" id="pwConfirm" class="input-field" placeholder="Confirm new password" autocomplete="new-password">
-                            <div id="pwChangeMsg" class="hidden text-xs px-3 py-2 rounded-md"></div>
+                        <div id="system-sub-tabs" class="auth-sub-panel" style="display:flex;">
                             <div>
-                                <button onclick="changePassword()" class="nav-btn text-xs">
-                                    <i class="ph-bold ph-lock-key-open"></i> Update password
-                                </button>
+                                <span class="settings-section-label">System Monitoring</span>
+                                <div class="text-xs mb-3" style="color:var(--muted)">These tabs require a file mount in your compose file - each tab shows the exact volume line to add if not yet mounted.</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="tab-toggle-row" onclick="toggleTabVisibility('certs')">
+                                        <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-check" style="color:var(--muted)"></i> Certs</span>
+                                        <div class="toggle-switch" id="toggle-certs"><div class="toggle-knob"></div></div>
+                                    </label>
+                                    <label class="tab-toggle-row" onclick="toggleTabVisibility('plugins')">
+                                        <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-puzzle-piece" style="color:var(--muted)"></i> Plugins</span>
+                                        <div class="toggle-switch" id="toggle-plugins"><div class="toggle-knob"></div></div>
+                                    </label>
+                                    <label class="tab-toggle-row" onclick="toggleTabVisibility('logs')">
+                                        <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-terminal" style="color:var(--muted)"></i> Logs</span>
+                                        <div class="toggle-switch" id="toggle-logs"><div class="toggle-knob"></div></div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
-                        <div id="otpSection" style="padding-top:10px;border-top:1px solid var(--border);">
-                            <div class="flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
-                                <div>
-                                    <div class="text-xs font-medium" style="color:var(--text);display:flex;align-items:center;gap:6px;"><i class="ph-bold ph-shield-check"></i> Two-Factor Authentication</div>
-                                    <div class="text-xs mt-1">
-                                        Status: <strong id="otpStatusLabel" style="color:var(--muted)">Disabled</strong>
+                        <div id="system-sub-paths" class="auth-sub-panel" style="display:none;">
+                            <div class="text-xs px-3 py-2 rounded-md" style="background:rgba(58,130,246,0.08);border:1px solid rgba(58,130,246,0.2);color:var(--blue)">
+                                <i class="ph-bold ph-info mr-1"></i>These paths refer to files <strong>inside this container</strong>. Mount the file into Traefik Manager in your <code class="font-mono">docker-compose.yml</code> first, then set the path here.
+                            </div>
+                            <div>
+                                <span class="settings-section-label">acme.json Path</span>
+                                <div class="text-xs mb-2" style="color:var(--muted)">Path to Traefik's <code class="font-mono">acme.json</code> for the <strong>Certificates</strong> tab. Leave blank to use the <code class="font-mono">ACME_JSON_PATH</code> env var.</div>
+                                <input type="text" id="settingsAcmeJsonPath" class="input-field" placeholder="/letsencrypt/acme.json" onblur="saveSettings()">
+                            </div>
+                            <div>
+                                <span class="settings-section-label">Access Log Path</span>
+                                <div class="text-xs mb-2" style="color:var(--muted)">Path to Traefik's access log for the <strong>Logs</strong> tab. Leave blank to use the <code class="font-mono">ACCESS_LOG_PATH</code> env var.</div>
+                                <input type="text" id="settingsAccessLogPath" class="input-field" placeholder="/var/log/traefik/access.log" onblur="saveSettings()">
+                            </div>
+                            <div>
+                                <span class="settings-section-label">Static Config Path</span>
+                                <div class="text-xs mb-2" style="color:var(--muted)">Path to <code class="font-mono">traefik.yml</code> for the <strong>Plugins</strong> tab. Leave blank to use the <code class="font-mono">STATIC_CONFIG_PATH</code> env var.</div>
+                                <input type="text" id="settingsStaticConfigPath" class="input-field" placeholder="/etc/traefik/traefik.yml" onblur="saveSettings()">
+                            </div>
+                            <div id="pathsSavedNotice" class="hidden text-xs px-3 py-2 rounded-md" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
+                                <i class="ph-bold ph-check-circle mr-1"></i>Paths saved to <code>manager.yml</code>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-panel" id="mpanel-auth" style="gap:0;padding:0;overflow:hidden;">
+                    <div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+
+                        <div style="display:flex;gap:2px;padding:12px 16px 0;border-bottom:1px solid var(--border);flex-shrink:0;">
+                            <button class="auth-sub-tab active" id="auth-tab-password" onclick="switchAuthTab('password', this)">
+                                <i class="ph-bold ph-lock-key"></i> Password &amp; 2FA
+                            </button>
+                            <button class="auth-sub-tab" id="auth-tab-apikeys" onclick="switchAuthTab('apikeys', this)">
+                                <i class="ph-bold ph-key"></i> API Keys
+                            </button>
+                            <button class="auth-sub-tab" id="auth-tab-oidc" onclick="switchAuthTab('oidc', this)">
+                                <i class="ph-bold ph-fingerprint"></i> OIDC / SSO
+                            </button>
+                        </div>
+
+                        <div id="auth-sub-password" class="auth-sub-panel" style="display:flex;">
+                            <div id="authSection">
+                                <div class="flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+                                    <div>
+                                        <div class="text-xs font-medium" style="color:var(--text);display:flex;align-items:center;gap:6px;"><i class="ph-bold ph-lock-simple"></i> Built-in Authentication</div>
+                                        <div id="authEnabledNotice" class="text-xs mt-1" style="color:var(--muted)">
+                                            Auth is <strong id="authStateLabel" style="color:var(--green)">enabled</strong>
+                                            <span id="authEnvForcedNote" class="hidden"> - controlled by <code>AUTH_ENABLED</code> env var</span>
+                                        </div>
+                                    </div>
+                                    <button id="authToggleBtn" onclick="toggleAuth()" class="nav-btn text-xs hidden" title="Enable or disable built-in auth">
+                                        <span id="authToggleLabel">Disable</span>
+                                    </button>
+                                </div>
+
+                                <div id="changePwForm" style="display:flex;flex-direction:column;gap:10px;">
+                                    <span class="settings-section-label">Change Password</span>
+                                    <input type="password" id="pwCurrent" class="input-field" placeholder="Current password" autocomplete="current-password">
+                                    <input type="password" id="pwNew"     class="input-field" placeholder="New password (min 8 chars)" autocomplete="new-password">
+                                    <input type="password" id="pwConfirm" class="input-field" placeholder="Confirm new password" autocomplete="new-password">
+                                    <div id="pwChangeMsg" class="hidden text-xs px-3 py-2 rounded-md"></div>
+                                    <div>
+                                        <button onclick="changePassword()" class="nav-btn text-xs">
+                                            <i class="ph-bold ph-lock-key-open"></i> Update password
+                                        </button>
                                     </div>
                                 </div>
-                                <button id="otpToggleBtn" onclick="otpToggleFlow()" class="nav-btn text-xs">
-                                    <span id="otpToggleBtnLabel">Enable 2FA</span>
-                                </button>
+
+                                <div id="otpSection" style="padding-top:12px;border-top:1px solid var(--border);">
+                                    <div class="flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+                                        <div>
+                                            <div class="text-xs font-medium" style="color:var(--text);display:flex;align-items:center;gap:6px;"><i class="ph-bold ph-shield-check"></i> Two-Factor Authentication</div>
+                                            <div class="text-xs mt-1">
+                                                Status: <strong id="otpStatusLabel" style="color:var(--muted)">Disabled</strong>
+                                            </div>
+                                        </div>
+                                        <button id="otpToggleBtn" onclick="otpToggleFlow()" class="nav-btn text-xs">
+                                            <span id="otpToggleBtnLabel">Enable 2FA</span>
+                                        </button>
+                                    </div>
+                                    <div id="otpSetupFlow" class="hidden" style="display:none;flex-direction:column;gap:10px;">
+                                        <div class="text-xs px-3 py-2 rounded-md" style="background:rgba(58,130,246,0.08);border:1px solid rgba(58,130,246,0.2);color:var(--blue)">
+                                            <i class="ph-bold ph-info mr-1"></i>Scan the QR code with Google Authenticator or any TOTP app, then enter the 6-digit code to confirm.
+                                        </div>
+                                        <div id="otpQrCanvas" class="flex justify-center py-3"></div>
+                                        <div class="text-xs text-center" style="color:var(--muted)">
+                                            Or enter manually: <code id="otpManualSecret" style="background:var(--border);padding:2px 6px;border-radius:3px;font-family:monospace;user-select:all"></code>
+                                        </div>
+                                        <input type="text" id="otpVerifyCode" class="input-field" placeholder="Enter 6-digit code to confirm" inputmode="numeric" maxlength="6" style="text-align:center;letter-spacing:.2em;font-family:monospace">
+                                        <div id="otpSetupMsg" class="hidden text-xs px-3 py-2 rounded-md"></div>
+                                        <div class="flex gap-2">
+                                            <button onclick="otpConfirmEnable()" class="nav-btn text-xs"><i class="ph-bold ph-check"></i> Verify &amp; Enable</button>
+                                            <button onclick="otpCancelSetup()" class="nav-btn text-xs"><i class="ph-bold ph-x"></i> Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-
-                            <div id="otpSetupFlow" class="hidden" style="display:none;flex-direction:column;gap:10px;">
-                                <div class="text-xs px-3 py-2 rounded-md" style="background:rgba(58,130,246,0.08);border:1px solid rgba(58,130,246,0.2);color:var(--blue)">
-                                    <i class="ph-bold ph-info mr-1"></i>Scan the QR code with Google Authenticator or any TOTP app, then enter the 6-digit code to confirm.
-                                </div>
-                                <div id="otpQrCanvas" class="flex justify-center py-3"></div>
-                                <div class="text-xs text-center" style="color:var(--muted)">
-                                    Or enter manually: <code id="otpManualSecret" style="background:var(--border);padding:2px 6px;border-radius:3px;font-family:monospace;user-select:all"></code>
-                                </div>
-                                <input type="text" id="otpVerifyCode" class="input-field" placeholder="Enter 6-digit code to confirm" inputmode="numeric" maxlength="6" style="text-align:center;letter-spacing:.2em;font-family:monospace">
-                                <div id="otpSetupMsg" class="hidden text-xs px-3 py-2 rounded-md"></div>
-                                <div class="flex gap-2">
-                                    <button onclick="otpConfirmEnable()" class="nav-btn text-xs"><i class="ph-bold ph-check"></i> Verify &amp; Enable</button>
-                                    <button onclick="otpCancelSetup()" class="nav-btn text-xs"><i class="ph-bold ph-x"></i> Cancel</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="authHiddenMsg" class="hidden text-xs" style="color:var(--muted);padding:8px 0;">
-                        Authentication settings are not available - no password has been configured.
-                    </div>
-
-                    <div class="settings-divider"></div>
-
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <div>
-                                <span class="settings-section-label" style="margin:0;">App / Mobile API Keys</span>
-                                <div class="text-xs mt-1" style="color:var(--muted)">Per-device keys used by the mobile app via <code>X-Api-Key</code> header. Up to 10 keys.</div>
-                            </div>
-                            <button onclick="showAddApiKeyForm()" id="btnAddApiKey" class="nav-btn text-xs"><i class="ph-bold ph-plus"></i> Add Key</button>
-                        </div>
-
-                        <div id="apikeyAddForm" class="hidden mb-3">
-                            <div style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
-                                <div class="text-xs font-semibold mb-2" style="color:var(--text)">Device name</div>
-                                <div class="flex gap-2">
-                                    <input type="text" id="apikeyDeviceName" placeholder="e.g. My Phone" maxlength="50" class="input-field text-xs flex-1">
-                                    <button onclick="generateApiKey()" class="nav-btn text-xs"><i class="ph-bold ph-key"></i> Generate</button>
-                                    <button onclick="hideAddApiKeyForm()" class="nav-btn text-xs" style="color:var(--muted)"><i class="ph-bold ph-x"></i></button>
-                                </div>
+                            <div id="authHiddenMsg" class="hidden text-xs" style="color:var(--muted);padding:8px 0;">
+                                Authentication settings are not available - no password has been configured.
                             </div>
                         </div>
 
-                        <div id="apikeyList" class="flex flex-col" style="gap:6px;">
-                            <div class="text-xs" style="color:var(--muted);padding:8px 0;">No active keys</div>
-                        </div>
+                        <div id="auth-sub-apikeys" class="auth-sub-panel" style="display:none;">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <span class="settings-section-label" style="margin:0;">App / Mobile API Keys</span>
+                                    <div class="text-xs mt-1" style="color:var(--muted)">Per-device keys used by the mobile app via <code>X-Api-Key</code> header. Up to 10 keys.</div>
+                                </div>
+                                <button onclick="showAddApiKeyForm()" id="btnAddApiKey" class="nav-btn text-xs"><i class="ph-bold ph-plus"></i> Add Key</button>
+                            </div>
 
-                        <div id="apikeyDisplay" class="hidden mt-3">
-                            <div class="rounded-md p-3" style="background:rgba(250,173,20,0.08);border:1px solid rgba(250,173,20,0.25)">
-                                <div class="text-xs font-semibold mb-2" style="color:var(--yellow)"><i class="ph-bold ph-warning"></i> Copy this key now - it will not be shown again.</div>
-                                <div class="flex gap-2 items-center">
-                                    <input type="text" id="apikeyValue" readonly class="input-field text-xs font-mono flex-1" style="font-size:11px">
-                                    <button onclick="copyApiKey()" class="nav-btn text-xs"><i class="ph-bold ph-copy"></i> Copy</button>
+                            <div id="apikeyAddForm" class="hidden mb-3">
+                                <div style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+                                    <div class="text-xs font-semibold mb-2" style="color:var(--text)">Device name</div>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="apikeyDeviceName" placeholder="e.g. My Phone" maxlength="50" class="input-field text-xs flex-1">
+                                        <button onclick="generateApiKey()" class="nav-btn text-xs"><i class="ph-bold ph-key"></i> Generate</button>
+                                        <button onclick="hideAddApiKeyForm()" class="nav-btn text-xs" style="color:var(--muted)"><i class="ph-bold ph-x"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="apikeyList" class="flex flex-col" style="gap:6px;">
+                                <div class="text-xs" style="color:var(--muted);padding:8px 0;">No active keys</div>
+                            </div>
+
+                            <div id="apikeyDisplay" class="hidden mt-3">
+                                <div class="rounded-md p-3" style="background:rgba(250,173,20,0.08);border:1px solid rgba(250,173,20,0.25)">
+                                    <div class="text-xs font-semibold mb-2" style="color:var(--yellow)"><i class="ph-bold ph-warning"></i> Copy this key now - it will not be shown again.</div>
+                                    <div class="flex gap-2 items-center">
+                                        <input type="text" id="apikeyValue" readonly class="input-field text-xs font-mono flex-1" style="font-size:11px">
+                                        <button onclick="copyApiKey()" class="nav-btn text-xs"><i class="ph-bold ph-copy"></i> Copy</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="settings-divider"></div>
-
-                    <div>
-                        <div class="flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
-                            <div>
-                                <div class="text-xs font-medium" style="color:var(--text);display:flex;align-items:center;gap:6px;"><i class="ph-bold ph-fingerprint"></i> OIDC / SSO Login</div>
-                                <div class="text-xs mt-1" style="color:var(--muted)">Status: <strong id="oidcStatusLabel" style="color:var(--muted)">Disabled</strong></div>
-                            </div>
-                            <button onclick="oidcToggleEnabled()" id="oidcToggleBtn" class="nav-btn text-xs">Enable</button>
-                        </div>
-                        <div id="oidcConfigForm" style="display:flex;flex-direction:column;gap:10px;">
-                            <div>
-                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Provider URL</label>
-                                <div class="text-xs mb-1" style="color:var(--muted)">The base URL of your OIDC provider (without <code>/.well-known/...</code>). E.g. <code>https://accounts.google.com</code></div>
-                                <div class="flex gap-2">
-                                    <input type="text" id="oidcProviderUrl" class="input-field text-xs flex-1" placeholder="https://accounts.google.com">
-                                    <button onclick="testOidcProvider()" class="nav-btn text-xs" style="white-space:nowrap"><i class="ph-bold ph-plugs-connected"></i> Test</button>
+                        <div id="auth-sub-oidc" class="auth-sub-panel" style="display:none;">
+                            <div class="flex items-center justify-between" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text);display:flex;align-items:center;gap:6px;"><i class="ph-bold ph-fingerprint"></i> OIDC / SSO Login</div>
+                                    <div class="text-xs mt-1" style="color:var(--muted)">Status: <strong id="oidcStatusLabel" style="color:var(--muted)">Disabled</strong></div>
                                 </div>
-                                <div id="oidcTestResult" class="text-xs mt-1" style="color:var(--muted)"></div>
+                                <button onclick="oidcToggleEnabled()" id="oidcToggleBtn" class="nav-btn text-xs">Enable</button>
                             </div>
-                            <div>
-                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Client ID</label>
-                                <input type="text" id="oidcClientId" class="input-field text-xs" placeholder="your-client-id" autocomplete="off">
+
+                            <div style="border-top:1px solid var(--border);padding-top:14px;">
+                                <span class="settings-section-label">Provider</span>
+                                <div style="display:flex;flex-direction:column;gap:10px;">
+                                    <div>
+                                        <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Provider URL</label>
+                                        <div class="text-xs mb-1" style="color:var(--muted)">Base URL of your OIDC provider (without <code>/.well-known/...</code>)</div>
+                                        <div class="flex gap-2">
+                                            <input type="text" id="oidcProviderUrl" class="input-field text-xs flex-1" placeholder="https://accounts.google.com">
+                                            <button onclick="testOidcProvider()" class="nav-btn text-xs" style="white-space:nowrap"><i class="ph-bold ph-plugs-connected"></i> Test</button>
+                                        </div>
+                                        <div id="oidcTestResult" class="text-xs mt-1" style="color:var(--muted)"></div>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Display Name</label>
+                                        <div class="text-xs mb-1" style="color:var(--muted)">Shown on the login button: "Sign in with ..."</div>
+                                        <input type="text" id="oidcDisplayName" class="input-field text-xs" placeholder="OIDC">
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Client Secret <span id="oidcSecretSetLabel" class="hidden" style="color:var(--green);font-weight:400">(set - leave blank to keep)</span></label>
-                                <input type="password" id="oidcClientSecret" class="input-field text-xs" placeholder="leave blank to keep existing" autocomplete="new-password">
+
+                            <div style="border-top:1px solid var(--border);padding-top:14px;">
+                                <span class="settings-section-label">Credentials</span>
+                                <div style="display:flex;flex-direction:column;gap:10px;">
+                                    <div>
+                                        <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Client ID</label>
+                                        <input type="text" id="oidcClientId" class="input-field text-xs" placeholder="your-client-id" autocomplete="off">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Client Secret <span id="oidcSecretSetLabel" class="hidden" style="color:var(--green);font-weight:400">(set - leave blank to keep)</span></label>
+                                        <input type="password" id="oidcClientSecret" class="input-field text-xs" placeholder="leave blank to keep existing" autocomplete="new-password">
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Display Name</label>
-                                <div class="text-xs mb-1" style="color:var(--muted)">Shown on the login page button: "Sign in with ..."</div>
-                                <input type="text" id="oidcDisplayName" class="input-field text-xs" placeholder="OIDC">
+
+                            <div style="border-top:1px solid var(--border);padding-top:14px;">
+                                <span class="settings-section-label">Access Control</span>
+                                <div style="display:flex;flex-direction:column;gap:10px;">
+                                    <div>
+                                        <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Allowed Emails</label>
+                                        <div class="text-xs mb-1" style="color:var(--muted)">Comma-separated. Leave empty to allow any verified account.</div>
+                                        <input type="text" id="oidcAllowedEmails" class="input-field text-xs" placeholder="admin@example.com, user@example.com">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Allowed Groups</label>
+                                        <div class="text-xs mb-1" style="color:var(--muted)">Comma-separated group names. Leave empty to skip group check.</div>
+                                        <input type="text" id="oidcAllowedGroups" class="input-field text-xs" placeholder="admins, traefik-admins">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Groups Claim Key</label>
+                                        <div class="text-xs mb-1" style="color:var(--muted)">Claim name that contains groups. Keycloak: <code>groups</code>, some providers: <code>roles</code>.</div>
+                                        <input type="text" id="oidcGroupsClaim" class="input-field text-xs" placeholder="groups">
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Allowed Emails</label>
-                                <div class="text-xs mb-1" style="color:var(--muted)">Comma-separated list. Leave empty to allow any verified account.</div>
-                                <input type="text" id="oidcAllowedEmails" class="input-field text-xs" placeholder="admin@example.com, user@example.com">
-                            </div>
-                            <div>
-                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Allowed Groups</label>
-                                <div class="text-xs mb-1" style="color:var(--muted)">Comma-separated group names. Leave empty to skip group check.</div>
-                                <input type="text" id="oidcAllowedGroups" class="input-field text-xs" placeholder="admins, traefik-admins">
-                            </div>
-                            <div>
-                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Groups Claim Key</label>
-                                <div class="text-xs mb-1" style="color:var(--muted)">Claim name that contains groups. Keycloak uses <code>groups</code>; some providers use <code>roles</code>.</div>
-                                <input type="text" id="oidcGroupsClaim" class="input-field text-xs" placeholder="groups">
-                            </div>
+
                             <div class="flex items-center gap-2">
                                 <button onclick="saveOidcConfig()" class="nav-btn text-xs"><i class="ph-bold ph-floppy-disk"></i> Save OIDC Config</button>
                                 <span id="oidcSavedMsg" class="hidden text-xs" style="color:var(--green)"><i class="ph-bold ph-check-circle"></i> Saved</span>
                             </div>
                         </div>
+
                     </div>
                 </div>
 
@@ -397,12 +439,26 @@
                     <div style="margin-bottom:12px;">
                         <div class="text-xs font-medium mb-2" style="color:var(--muted);display:flex;align-items:center;gap:5px;"><i class="ph-bold ph-navigation-arrow"></i> NAVBAR</div>
                         <div style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
-                            <div class="flex items-center justify-between" style="padding:10px 12px;">
+                            <div class="flex items-center justify-between" style="padding:10px 12px;border-bottom:1px solid var(--border)">
                                 <div>
-                                    <div class="text-xs font-medium" style="color:var(--text)">Show version badge in navbar</div>
-                                    <div class="text-xs" style="color:var(--muted)">Traefik version shown next to the logo</div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Show Traefik version badge</div>
+                                    <div class="text-xs" style="color:var(--muted)">Traefik version badge, highlights when an update is available.</div>
                                 </div>
                                 <div class="toggle-switch" id="toggle-traefik-badge" onclick="toggleTraefikBadge()"><div class="toggle-knob"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between" style="padding:10px 12px;border-bottom:1px solid var(--border)">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Show Traefik Manager version badge</div>
+                                    <div class="text-xs" style="color:var(--muted)">Traefik Manager Version badge, highlights when an update is available.</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-tm-badge" onclick="toggleTmBadge()"><div class="toggle-knob"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between" style="padding:10px 12px;">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Show documentation link</div>
+                                    <div class="text-xs" style="color:var(--muted)">Traefik Manager documentation.</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-docs-link" onclick="toggleDocsLink()"><div class="toggle-knob"></div></div>
                             </div>
                         </div>
                     </div>
@@ -485,7 +541,7 @@
                             <a href="https://github.com/chr0nzz/traefik-manager" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
                                 <i class="ph-bold ph-github-logo"></i> GitHub
                             </a>
-                            <a href="https://chr0nzz.github.io/traefik-manager/" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
+                            <a href="https://traefik-manager.xyzlab.dev" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
                                 <i class="ph-bold ph-book-open"></i> Docs
                             </a>
                         </div>
@@ -500,6 +556,22 @@
 </div>
 
 <script>
+
+function switchAuthTab(id, btn) {
+    document.querySelectorAll('#mpanel-auth .auth-sub-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#mpanel-auth .auth-sub-panel').forEach(p => p.style.display = 'none');
+    if (btn) btn.classList.add('active');
+    const panel = document.getElementById('auth-sub-' + id);
+    if (panel) panel.style.display = 'flex';
+}
+
+function switchSystemTab(id, btn) {
+    document.querySelectorAll('#mpanel-system .auth-sub-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#mpanel-system .auth-sub-panel').forEach(p => p.style.display = 'none');
+    if (btn) btn.classList.add('active');
+    const panel = document.getElementById('system-sub-' + id);
+    if (panel) panel.style.display = 'flex';
+}
 
 function switchSettingsPanel(id, btn) {
     document.querySelectorAll('.modal-sidebar-btn').forEach(b => b.classList.remove('active'));
@@ -534,6 +606,8 @@ async function openSettingsModal(panel) {
         loadTabTogglesIntoModal();
         loadUiTogglesIntoModal();
         _applyTraefikBadgeVisibility();
+        _applyTmBadgeVisibility();
+        _applyDocsLinkVisibility();
         loadOtpStatus();
         loadApiKeyStatus();
         loadOidcStatus();
@@ -726,12 +800,22 @@ async function loadBackups() {
 }
 
 async function createAndLoadBackups() {
+    const btn = document.querySelector('[onclick="createAndLoadBackups()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ph-light ph-spinner-gap animate-spin"></i> Creating…'; }
     try {
         const res  = await fetch('/api/backup/create', { method: 'POST', headers: _csrfHeaders() });
         const data = await res.json();
-        if (data.success) { showToast('Backup created', 'success'); loadBackups(); }
-        else showToast('Backup failed: ' + (data.error || 'Unknown'), 'error');
+        if (data.success) {
+            const n = data.count || 1;
+            showToast(`Backup created (${n} file${n > 1 ? 's' : ''})`, 'success');
+            loadBackups();
+        } else {
+            showToast('Backup failed: ' + (data.error || 'Unknown'), 'error');
+        }
     } catch(e) { showToast('Backup failed', 'error'); }
+    finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ph-bold ph-plus"></i> Create Backup'; }
+    }
 }
 
 async function restoreBackup(name) {
@@ -783,6 +867,39 @@ function _applyTraefikBadgeVisibility() {
         if (show && hasVersion) badgeM.classList.add('flex');
     }
     const tog = document.getElementById('toggle-traefik-badge');
+    if (tog) tog.classList.toggle('on', show);
+}
+
+function toggleTmBadge() {
+    const show = localStorage.getItem('showTmBadge') !== 'false';
+    localStorage.setItem('showTmBadge', show ? 'false' : 'true');
+    _applyTmBadgeVisibility();
+}
+
+function _applyTmBadgeVisibility() {
+    const show = localStorage.getItem('showTmBadge') !== 'false';
+    const hasVersion = (document.getElementById('tmVersionText').textContent || '').trim() !== '-';
+    const badge  = document.getElementById('tmVersionBadge');
+    const badgeM = document.getElementById('tmVersionBadgeMobile');
+    if (badge)  badge.classList.toggle('hidden', !show || !hasVersion);
+    if (badgeM) {
+        badgeM.classList.toggle('hidden', !show || !hasVersion);
+        if (show && hasVersion) badgeM.classList.add('flex');
+    }
+    const tog = document.getElementById('toggle-tm-badge');
+    if (tog) tog.classList.toggle('on', show);
+}
+
+function toggleDocsLink() {
+    const show = localStorage.getItem('showDocsLink') !== 'false';
+    localStorage.setItem('showDocsLink', show ? 'false' : 'true');
+    _applyDocsLinkVisibility();
+}
+
+function _applyDocsLinkVisibility() {
+    const show = localStorage.getItem('showDocsLink') !== 'false';
+    document.querySelectorAll('.nav-docs-link').forEach(el => el.classList.toggle('hidden', !show));
+    const tog = document.getElementById('toggle-docs-link');
     if (tog) tog.classList.toggle('on', show);
 }
 

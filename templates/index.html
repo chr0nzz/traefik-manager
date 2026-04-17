@@ -11,7 +11,7 @@
     <meta name="theme-color" content="#0d1117">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Traefik">
+    <meta name="apple-mobile-web-app-title" content="Traefik Manager">
     <script>
         (function() {
             var t = localStorage.getItem('tm-theme') || 'dark';
@@ -51,6 +51,20 @@
 </head>
 <body class="min-h-screen font-sans">
 
+
+<div id="tmUpdatePopup" class="hidden" style="position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--card);border:1px solid var(--orange);border-radius:10px;padding:14px 16px;min-width:240px;max-width:300px;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
+    <div class="flex items-start gap-3">
+        <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange);font-size:20px;flex-shrink:0;margin-top:1px"></i>
+        <div style="flex:1;min-width:0;">
+            <div class="text-sm font-medium" style="color:var(--text)">Traefik Manager update available</div>
+            <div class="text-xs mt-0.5" style="color:var(--muted)"><span id="tmUpdatePopupVersion"></span></div>
+            <a id="tmUpdatePopupLink" href="#" target="_blank" rel="noopener" class="text-xs mt-2 inline-block" style="color:var(--blue)">View release notes</a>
+        </div>
+        <button onclick="dismissTmUpdatePopup()" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0;line-height:1;flex-shrink:0">
+            <i class="ph-bold ph-x text-sm"></i>
+        </button>
+    </div>
+</div>
 
 <div class="toast" id="toastContainer">
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -460,14 +474,32 @@ function filterProto(proto) {
     filterRoutes();
 }
 
+let currentRouteDomainFilter = '';
+
+function pickRouteDomain(val, label) {
+    currentRouteDomainFilter = val;
+    document.getElementById('dd-route-domain-label').textContent = label;
+    const btn = document.getElementById('dd-route-domain-btn');
+    if (btn) btn.classList.toggle('active', !!val);
+    document.querySelectorAll('#dd-route-domain-menu .live-dd-item').forEach(el => {
+        el.classList.toggle('active', el.textContent.trim() === label);
+    });
+    toggleLiveDd('dd-route-domain');
+    filterRoutes();
+}
+
 function filterRoutes() {
     const q = document.getElementById('searchRoutes').value.toLowerCase();
     document.querySelectorAll('.route-card').forEach(card => {
         const name = card.dataset.name || '';
         const proto = card.dataset.protocol || '';
+        const cardDomains = (card.dataset.domains || '').split('|').filter(Boolean);
         const matchSearch = !q || name.includes(q);
         const matchProto = currentProtoFilter === 'all' || proto === currentProtoFilter;
-        card.style.display = matchSearch && matchProto ? '' : 'none';
+        const matchDomain = !currentRouteDomainFilter || cardDomains.some(d =>
+            d === currentRouteDomainFilter || d.endsWith('.' + currentRouteDomainFilter)
+        );
+        card.style.display = matchSearch && matchProto && matchDomain ? '' : 'none';
     });
 }
 
@@ -509,7 +541,11 @@ function openModal() {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
-    document.getElementById('entryPoints').value = 'https';
+    _initDomainChips([]);
+    _initEntrypointChips('http', []);
+    _initEntrypointChips('tcp', []);
+    _initEntrypointChips('udp', []);
+    _initMiddlewareChips([]);
     document.getElementById('useTls') && (document.getElementById('useTls').checked = false);
     toggleTcpCertResolver(false);
     const crHttp = document.getElementById('certResolver');
@@ -598,7 +634,7 @@ async function saveRouteAjax(event) {
         const json = await res.json();
         closeModal();
         showToast(json.message, json.ok ? 'success' : 'error');
-        if (json.ok) refreshRoutes();
+        if (json.ok) { refreshRoutes(); fetchNotifications(); }
     } catch(e) {
         showToast('Error saving route', 'error');
     } finally {
@@ -621,7 +657,7 @@ async function saveMwAjax(event) {
         const json = await res.json();
         closeMwModal();
         showToast(json.message, json.ok ? 'success' : 'error');
-        if (json.ok) refreshRoutes();
+        if (json.ok) { refreshRoutes(); fetchNotifications(); }
     } catch(e) {
         showToast('Error saving middleware', 'error');
     } finally {
@@ -638,7 +674,7 @@ async function deleteRoute(id, configFile) {
         const res = await fetch('/delete/' + encodeURIComponent(id), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
         const json = await res.json();
         showToast(json.message, json.ok ? 'success' : 'error');
-        if (json.ok) refreshRoutes();
+        if (json.ok) { refreshRoutes(); fetchNotifications(); }
     } catch(e) { showToast('Error deleting route', 'error'); }
 }
 
@@ -651,7 +687,7 @@ async function deleteMw(name, configFile) {
         const res = await fetch('/delete-middleware/' + encodeURIComponent(name), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
         const json = await res.json();
         showToast(json.message, json.ok ? 'success' : 'error');
-        if (json.ok) refreshRoutes();
+        if (json.ok) { refreshRoutes(); fetchNotifications(); }
     } catch(e) { showToast('Error deleting middleware', 'error'); }
 }
 
@@ -826,8 +862,8 @@ function renderRouteGrid(apps) {
     const _allAppsForRender = apps;
     grid.innerHTML = apps.map((app, i) => {
         const proto = app.protocol || 'http';
-        const rawRule = (app.rule || '').replace(/Host\(`/g, '').replace(/`\)/g, '');
-        const domain = rawRule.includes(' && ') ? rawRule.slice(0, rawRule.indexOf(' && ')) : rawRule;
+        const allDomains = [...(app.rule || '').matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
+        const domain     = allDomains[0] || '';
         const badgeClass = proto === 'http' ? 'badge-http' : (proto === 'tcp' ? 'badge-tcp' : 'badge-udp');
         const tlsBadge = app.tls ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS</span>` : '';
         const insecureBadge = app.insecureSkipVerify ? `<span class="badge" style="font-size:9px;background:rgba(240,180,0,0.12);color:#d4a017;border:1px solid rgba(240,180,0,0.3)" title="insecureSkipVerify enabled"><i class="ph-bold ph-warning"></i> TLS skip</span>` : '';
@@ -841,14 +877,20 @@ function renderRouteGrid(apps) {
         const toggleIcon = enabled ? 'ph-toggle-right' : 'ph-toggle-left';
         const toggleTitle = enabled ? 'Disable route' : 'Enable route';
         const toggleBtn = isFileRoute ? `<button type="button" onclick="toggleRoute('${_esc(app.id)}',${enabled})" class="pill-btn ${enabled ? 'pill-btn-green' : 'pill-btn-muted'}" title="${toggleTitle}"><i class="ph-bold ${toggleIcon} text-sm"></i></button>` : '';
-        const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div><div class="text-xs font-mono truncate" style="color:var(--blue)" title="${_esc(app.rule)}">${_esc(domain || app.rule)}</div></div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>${mwBadges ? `<div class="flex flex-wrap gap-1">${mwBadges}</div>` : ''}`;
-        const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div></div>`;
+        const domainDisplay = allDomains.length > 1
+            ? `<div style="display:flex;flex-direction:column;gap:2px">${allDomains.map(d => `<div class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(d)}')">${_esc(d)}</div>`).join('')}</div>`
+            : `<div class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(domain || app.rule)}')">${_esc(domain || app.rule)}</div>`;
+        const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')">${_esc(app.target)}</div></div>${mwBadges ? `<div class="flex flex-wrap gap-1">${mwBadges}</div>` : ''}`;
+        const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')">${_esc(app.target)}</div></div>`;
         const cfArg = app.configFile ? `,'${_esc(app.configFile)}'` : ',\'\'';
         const cfBadge = (epBadges || app.configFile) ? '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;margin-top:8px"><div class="flex flex-wrap gap-1">' + epBadges + '</div>' + (app.configFile ? '<span class="badge badge-muted" style="font-size:9px">' + _esc(app.configFile) + '</span>' : '') + '</div>' : '';
-        const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}"`;
+        const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}"`;
+        const listDomainDisplay = allDomains.length > 1
+            ? `<div style="display:flex;flex-direction:column;gap:1px">${allDomains.map(d => `<span class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(d)}')">${_esc(d)}</span>`).join('')}</div>`
+            : `<span class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(domain || app.rule)}')">${_esc(domain || app.rule)}</span>`;
         if (_routeViewMode === 'list') {
             const epCompact = (app.entryPoints || []).slice(0, 2).map(ep => `<span class="badge badge-muted" style="font-size:9px">${_esc(ep)}</span>`).join('');
-            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" ${dataAttrs}><div class="svc-list-col-status"><span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span></div><div style="display:flex;align-items:center;gap:4px"><span class="badge ${badgeClass}" style="font-size:9px">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}</div><div class="svc-list-col-name">${_esc(app.name)}<div class="text-xs font-mono truncate" style="color:var(--muted);margin-top:1px">${_esc(app.service_name)}</div></div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</div><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><div style="display:flex;align-items:center;gap:3px">${epCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('[data-routekey]'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
+            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" ${dataAttrs}><div class="svc-list-col-status"><span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span></div><div style="display:flex;align-items:center;gap:4px"><span class="badge ${badgeClass}" style="font-size:9px">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}</div><div class="svc-list-col-name">${_esc(app.name)}<div class="text-xs font-mono truncate" style="color:var(--muted);margin-top:1px">${_esc(app.service_name)}</div></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div class="text-xs font-mono truncate" style="color:var(--green);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')">${_esc(app.target)}</div><div style="display:flex;align-items:center;gap:3px">${epCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('[data-routekey]'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
         }
         return `<div class="card route-card${enabled ? '' : ' opacity-50'}" ${dataAttrs}><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div>${cfBadge}</div></div>`;
     }).join('');
@@ -876,7 +918,7 @@ function renderMwGrid(middlewares) {
         const mwCfArg = mw.configFile ? `,'${_esc(mw.configFile)}'` : ',\'\'';
         const mwCfBadge = mw.configFile ? `<span class="badge badge-muted" style="font-size:9px;white-space:nowrap">${_esc(mw.configFile)}</span>` : '';
         const dataAttrs = `data-mwname="${_esc(mw.name.toLowerCase())}" data-mwtype="${typeLower}"`;
-        const actions = `<div class="flex gap-1.5"><button type="button" onclick="deleteMw('${_esc(mw.name)}'${mwCfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-mw='${mwJson}' onclick="handleMwEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button></div>`;
+        const actions = `<div class="flex gap-1.5"><button type="button" data-mw='${mwJson}' onclick="openMwDetail(this)" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button><button type="button" onclick="deleteMw('${_esc(mw.name)}'${mwCfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-mw='${mwJson}' onclick="handleMwEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button></div>`;
         if (_mwViewMode === 'list') {
             return `<div class="svc-list-row mw-list-grid mw-card" ${dataAttrs}><div style="display:flex;align-items:center"><span class="badge ${badgeClass}" style="font-size:9px">${typeUpper}</span></div><div class="svc-list-col-name">${_esc(mw.name)}</div><div>${mwCfBadge}</div>${actions}</div>`;
         }
@@ -901,6 +943,140 @@ function renderMwGrid(middlewares) {
 
 const availableDomains = {{ domains | tojson | safe }};
 const availableCertResolvers = {{ cert_resolvers | tojson | safe }};
+
+let _cachedEntrypoints = null;
+
+function _copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        const el = document.getElementById('_copyToast');
+        if (!el) return;
+        el.textContent = 'Copied!';
+        el.style.opacity = '1';
+        clearTimeout(el._t);
+        el._t = setTimeout(() => { el.style.opacity = '0'; }, 1500);
+    }).catch(() => {});
+}
+
+function _initDomainChips(selectedDomains) {
+    const container = document.getElementById('domainChips');
+    const hiddenContainer = document.getElementById('domainHiddenInputs');
+    if (!container || !hiddenContainer) return;
+    let selected = new Set(selectedDomains && selectedDomains.length ? selectedDomains : (availableDomains.length === 1 ? [availableDomains[0]] : []));
+    function render() {
+        hiddenContainer.innerHTML = [...selected].map(d => `<input type="hidden" name="domains" value="${_esc(d)}">`).join('');
+        container.innerHTML = availableDomains.map(d => {
+            const on = selected.has(d);
+            return `<button type="button" onclick="_toggleDomainChip(this,'${_esc(d)}')" style="padding:3px 10px;border-radius:9999px;border:1px solid ${on ? 'var(--blue)' : 'var(--border)'};background:${on ? 'rgba(59,130,246,0.15)' : 'transparent'};color:${on ? 'var(--blue)' : 'var(--muted)'};font-size:12px;font-family:monospace;cursor:pointer;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${_esc(d)}">${_esc(d)}</button>`;
+        }).join('');
+    }
+    render();
+    window._domainChipSelected = selected;
+    window._domainChipRender = render;
+}
+
+function _toggleDomainChip(btn, domain) {
+    const selected = window._domainChipSelected;
+    if (!selected) return;
+    if (selected.has(domain)) { if (selected.size > 1) selected.delete(domain); }
+    else selected.add(domain);
+    window._domainChipRender();
+}
+
+async function _initEntrypointChips(proto, selectedEntrypoints) {
+    const containerId = proto === 'http' ? 'httpEntrypointChips' : proto === 'tcp' ? 'tcpEntrypointChips' : 'udpEntrypointChips';
+    const hiddenId    = proto === 'http' ? 'entryPoints' : proto === 'tcp' ? 'entryPointsTcp' : 'entryPointsUdp';
+    const container   = document.getElementById(containerId);
+    const hidden      = document.getElementById(hiddenId);
+    if (!container || !hidden) return;
+
+    if (!_cachedEntrypoints) {
+        try {
+            const res = await fetch('/api/traefik/entrypoints');
+            _cachedEntrypoints = res.ok ? (await res.json()) : [];
+        } catch(e) { _cachedEntrypoints = []; }
+    }
+    const eps = (_cachedEntrypoints || []).map(e => e.name || e).filter(Boolean);
+    const isSingle = proto === 'udp';
+    if (!eps.length) {
+        container.innerHTML = `<input type="text" id="${hiddenId}_fallback" class="input-field" placeholder="${proto === 'http' ? 'https' : proto}" style="flex:1" oninput="document.getElementById('${hiddenId}').value=this.value">`;
+        hidden.value = selectedEntrypoints ? (isSingle ? (selectedEntrypoints[0] || '') : selectedEntrypoints.join(', ')) : (proto === 'http' ? 'https' : '');
+        return;
+    }
+
+    const defaults = proto === 'http' ? ['websecure','https'] : [];
+    let selected = new Set(selectedEntrypoints && selectedEntrypoints.length ? selectedEntrypoints : eps.filter(e => defaults.includes(e)));
+    if (proto === 'http' && selected.size === 0 && eps.length > 0) selected.add(eps.find(e => defaults.includes(e)) || eps[0]);
+
+    function render() {
+        hidden.value = isSingle ? ([...selected][0] || '') : [...selected].join(', ');
+        container.innerHTML = eps.map(ep => {
+            const on = selected.has(ep);
+            return `<button type="button" onclick="_toggleEpChip(this,'${_esc(ep)}','${proto}')" style="padding:3px 10px;border-radius:6px;border:1px solid ${on ? 'var(--green)' : 'var(--border)'};background:${on ? 'rgba(34,197,94,0.12)' : 'transparent'};color:${on ? 'var(--green)' : 'var(--muted)'};font-size:12px;font-family:monospace;cursor:pointer" title="${_esc(ep)}">${_esc(ep)}</button>`;
+        }).join('');
+    }
+    render();
+    if (!window._epChipState) window._epChipState = {};
+    window._epChipState[proto] = { selected, render, hiddenId, isSingle };
+}
+
+function _toggleEpChip(btn, ep, proto) {
+    const state = window._epChipState?.[proto];
+    if (!state) return;
+    if (state.isSingle) {
+        state.selected.clear();
+        state.selected.add(ep);
+    } else {
+        if (state.selected.has(ep)) state.selected.delete(ep);
+        else state.selected.add(ep);
+    }
+    state.render();
+}
+
+let _cachedMiddlewares = null;
+
+async function _initMiddlewareChips(selectedMiddlewares) {
+    const container = document.getElementById('middlewareChips');
+    const hidden    = document.getElementById('middlewares');
+    if (!container || !hidden) return;
+
+    if (!_cachedMiddlewares) {
+        try {
+            const res = await fetch('/api/traefik/middlewares');
+            const data = res.ok ? (await res.json()) : {};
+            _cachedMiddlewares = (data.http || []).map(m => m.name || m).filter(Boolean);
+        } catch(e) { _cachedMiddlewares = []; }
+    }
+    const mws = _cachedMiddlewares;
+    if (!mws.length) {
+        container.innerHTML = `<input type="text" class="input-field" style="flex:1" placeholder="auth@file, redirect-https" oninput="document.getElementById('middlewares').value=this.value">`;
+        hidden.value = selectedMiddlewares ? selectedMiddlewares.join(', ') : '';
+        return;
+    }
+
+    const routeBases = new Set((selectedMiddlewares || []).map(m => m.trim().split('@')[0]).filter(Boolean));
+    const baseToFull = Object.fromEntries(mws.map(mw => [mw.split('@')[0], mw]));
+    let selected = new Set([...routeBases].map(b => baseToFull[b]).filter(Boolean));
+
+    function render() {
+        hidden.value = [...selected].join(', ');
+        container.innerHTML = mws.map(mw => {
+            const on = selected.has(mw);
+            const label = mw.split('@')[0];
+            return `<button type="button" onclick="_toggleMwChip('${_esc(mw)}')" style="padding:3px 10px;border-radius:9999px;border:1px solid ${on ? 'var(--purple)' : 'var(--border)'};background:${on ? 'rgba(163,113,247,0.15)' : 'transparent'};color:${on ? 'var(--purple)' : 'var(--muted)'};font-size:12px;font-family:monospace;cursor:pointer" title="${_esc(mw)}">${_esc(label)}</button>`;
+        }).join('');
+    }
+    render();
+    window._mwChipState = { selected, render };
+}
+
+function _toggleMwChip(mw) {
+    const state = window._mwChipState;
+    if (!state) return;
+    if (state.selected.has(mw)) state.selected.delete(mw);
+    else state.selected.add(mw);
+    state.render();
+}
+
 const MULTI_CONFIG = {{ multi_config | tojson }};
 const CONFIG_PATHS_LIST = {{ config_paths_list | tojson | safe }};
 
@@ -938,10 +1114,8 @@ function handleEdit(btn) {
             if (!found && !subdomain) subdomain = fullHost;
         }
         document.getElementById('subdomain').value = subdomain;
-        const checkboxes = document.querySelectorAll('input[name="domains"]');
-        if (checkboxes.length > 0) {
-            checkboxes.forEach(cb => { cb.checked = matchedDomains.includes(cb.value); });
-            if (matchedDomains.length === 0 && availableDomains.length > 0) checkboxes[0].checked = true;
+        if (document.getElementById('domainChips')) {
+            _initDomainChips(matchedDomains.length ? matchedDomains : (availableDomains.length === 1 ? [availableDomains[0]] : []));
         } else {
             const sel = document.getElementById('domainSelect');
             if (sel && matchedDomains.length > 0) sel.value = matchedDomains[0];
@@ -952,8 +1126,8 @@ function handleEdit(btn) {
         const parts = target.split(':');
         document.getElementById('targetIp').value = parts[0];
         document.getElementById('targetPort').value = parts[1] || '80';
-        document.getElementById('middlewares').value = app.middlewares ? app.middlewares.join(', ') : '';
-        document.getElementById('entryPoints').value = app.entryPoints ? app.entryPoints.join(', ') : 'https';
+        _initMiddlewareChips(app.middlewares || []);
+        _initEntrypointChips('http', app.entryPoints || []);
         document.getElementById('scheme').value = targetScheme;
         document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
         const crHttp = document.getElementById('certResolver');
@@ -966,7 +1140,7 @@ function handleEdit(btn) {
         const target = (app.target || '').split(':');
         document.getElementById('targetIpTcp').value = target[0] || '';
         document.getElementById('targetPortTcp').value = target[1] || '';
-        document.getElementById('entryPointsTcp').value = app.entryPoints ? app.entryPoints.join(', ') : '';
+        _initEntrypointChips('tcp', app.entryPoints || []);
         const useTlsChk = document.getElementById('useTls');
         if (useTlsChk) { useTlsChk.checked = !!app.tls; toggleTcpCertResolver(!!app.tls); }
         const crTcp = document.getElementById('certResolverTcp');
@@ -976,7 +1150,7 @@ function handleEdit(btn) {
         const target = (app.target || '').split(':');
         document.getElementById('targetIpUdp').value = target[0] || '';
         document.getElementById('targetPortUdp').value = target[1] || '';
-        document.getElementById('entryPointsUdp').value = app.entryPoints ? app.entryPoints[0] || '' : '';
+        _initEntrypointChips('udp', app.entryPoints || []);
     }
 
     document.getElementById('appModal').style.display = 'flex';
@@ -1324,6 +1498,12 @@ async function checkManagerVersion() {
             footerEl.title = 'Traefik Manager v' + current;
         }
 
+        if (current) {
+            document.getElementById('tmVersionText').textContent     = 'v' + current;
+            document.getElementById('tmVersionTextMobile').textContent = 'v' + current;
+            _applyTmBadgeVisibility();
+        }
+
         const curEl = document.getElementById('mgrUpdateCurrentVer');
         if (curEl && current) curEl.textContent = 'v' + current;
 
@@ -1353,8 +1533,41 @@ async function checkManagerVersion() {
             const notice = document.getElementById('sm-mgr-update-notice');
             const text   = document.getElementById('sm-mgr-update-text');
             if (notice && text) { text.textContent = `v${latestTag} available`; notice.classList.remove('hidden'); }
+
+            const badge  = document.getElementById('tmVersionBadge');
+            const badgeM = document.getElementById('tmVersionBadgeMobile');
+            if (badge) {
+                badge.classList.add('update-available');
+                badge.title   = `Update available: v${latestTag}`;
+                badge.onclick = () => openSettingsModal('about');
+            }
+            document.getElementById('tmVersionText').innerHTML =
+                `v${current} <i class="ph-bold ph-arrow-circle-up" style="font-size:11px"></i>`;
+            if (badgeM) {
+                badgeM.style.color       = 'var(--orange)';
+                badgeM.style.borderColor = 'var(--orange)';
+            }
+
+            if (localStorage.getItem('tmUpdateDismissed') !== latestTag) {
+                const popup   = document.getElementById('tmUpdatePopup');
+                const popupV  = document.getElementById('tmUpdatePopupVersion');
+                const popupL  = document.getElementById('tmUpdatePopupLink');
+                if (popup && popupV) {
+                    popupV.textContent = `v${latestTag} is available (current: v${current})`;
+                    if (popupL && ghData.html_url) popupL.href = ghData.html_url;
+                    popup.classList.remove('hidden');
+                }
+            }
         }
     } catch(e) {}
+}
+
+function dismissTmUpdatePopup() {
+    const popup = document.getElementById('tmUpdatePopup');
+    if (popup) popup.classList.add('hidden');
+    const vEl = document.getElementById('tmUpdatePopupVersion');
+    const ver = (vEl?.textContent || '').match(/v([\d.]+)/)?.[1];
+    if (ver) localStorage.setItem('tmUpdateDismissed', ver);
 }
 
 let _mwFilter = 'all';
@@ -1621,6 +1834,19 @@ function renderServicesTable() {
             const serverSummary = serverEntries.length > 0 ? `${activeCount}/${serverEntries.length}` : null;
             const srvColor      = serverEntries.length > 0 && activeCount === serverEntries.length ? 'var(--green)' : 'var(--orange)';
             const usedBy        = s.usedBy || [];
+            const lbServers     = (s.loadBalancer?.servers || []);
+            const serverUrls    = lbServers.length > 0
+                ? lbServers
+                : serverEntries.map(([url]) => ({ url }));
+            const serverUrlHtml = serverUrls.length > 0
+                ? `<div style="display:flex;flex-direction:column;gap:2px">${serverUrls.map(sv => {
+                    const url = sv.url || sv.address || '';
+                    const isUp = (serverStatus[url] || '').toLowerCase() === 'up';
+                    const isDown = serverStatus[url] && !isUp;
+                    const color = isDown ? 'var(--red)' : 'var(--green)';
+                    return `<span class="text-xs font-mono truncate" style="color:${color}" title="${_esc(url)}">${_esc(url)}</span>`;
+                }).join('')}</div>`
+                : '<span style="color:var(--muted);font-size:11px">-</span>';
             return `<div class="svc-list-row" onclick="openSvcDetail(${globalIdx})">
                 <div class="svc-list-col-status"><span class="svc-status-dot" style="background:${stColor}"></span></div>
                 <div class="svc-list-col-proto">
@@ -1628,6 +1854,7 @@ function renderServicesTable() {
                     ${type ? `<span class="svc-type-badge">${type}</span>` : ''}
                 </div>
                 <div class="svc-list-col-name">${_esc(name)}</div>
+                <div class="svc-list-col-url overflow-hidden">${serverUrlHtml}</div>
                 <div class="svc-list-col-provider"><span class="svc-meta-chip"><i class="ph-bold ph-database" style="font-size:10px"></i>${_esc(provider)}</span></div>
                 <div class="svc-list-col-servers">${serverSummary ? `<span class="svc-meta-chip" style="color:${srvColor};background:color-mix(in srgb,${srvColor} 10%,transparent);border-color:color-mix(in srgb,${srvColor} 35%,transparent)"><i class="ph-bold ph-server" style="font-size:10px"></i>${serverSummary}</span>` : '<span style="color:var(--muted);font-size:11px">-</span>'}</div>
                 <div class="svc-list-col-usedby">${usedBy.length > 0 ? `<span class="svc-used-chip"><i class="ph-bold ph-git-branch" style="font-size:9px"></i>${usedBy.length}</span>` : '<span style="color:var(--muted);font-size:11px">-</span>'}</div>
@@ -1637,6 +1864,7 @@ function renderServicesTable() {
             <div class="svc-list-col-status"></div>
             <div class="svc-list-col-proto">Protocol</div>
             <div class="svc-list-col-name">Name</div>
+            <div class="svc-list-col-url">Backend URL</div>
             <div class="svc-list-col-provider">Provider</div>
             <div class="svc-list-col-servers">Servers</div>
             <div class="svc-list-col-usedby">Used By</div>
@@ -1846,15 +2074,70 @@ function closeRouteDetail() {
     document.getElementById('detailPanel').classList.remove('open');
     document.getElementById('detailBackdrop').classList.remove('open');
     document.getElementById('detailEditBtn').style.display = '';
-    
+
     document.getElementById('detailTitle').nextElementSibling?.classList.contains('badge') &&
         document.getElementById('detailTitle').nextElementSibling.remove();
     document.body.style.overflow = '';
 }
 
+function openMwDetail(btn) {
+    const mw = JSON.parse(btn.getAttribute('data-mw'));
+    const panel = document.getElementById('mwDetailPanel');
+    const backdrop = document.getElementById('mwDetailBackdrop');
+    const badge = document.getElementById('mwDetailProtoBadge');
+    const title = document.getElementById('mwDetailTitle');
+    const content = document.getElementById('mwDetailContent');
+    const editBtn = document.getElementById('mwDetailEditBtn');
+
+    const typeLower = (mw.type || 'http').toLowerCase();
+    badge.className = 'badge badge-' + (typeLower === 'tcp' ? 'tcp' : 'http');
+    badge.textContent = typeLower === 'tcp' ? 'TCP' : 'HTTP';
+    title.textContent = mw.name;
+
+    const isFileMw = !mw.provider || mw.provider === 'file';
+    editBtn.style.display = isFileMw ? '' : 'none';
+    if (isFileMw) {
+        editBtn.onclick = () => {
+            closeMwDetail();
+            const fakeBtn = document.createElement('button');
+            fakeBtn.setAttribute('data-mw', JSON.stringify(mw));
+            handleMwEdit(fakeBtn);
+        };
+    }
+
+    content.innerHTML = renderMwDetailPanel(mw);
+    panel.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMwDetail() {
+    document.getElementById('mwDetailPanel').classList.remove('open');
+    document.getElementById('mwDetailBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function renderMwDetailPanel(mw) {
+    const rows = [];
+
+    const row = (label, val) => val ? `<div class="flex gap-3 py-2.5" style="border-bottom:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider w-28 flex-shrink-0 pt-0.5" style="color:var(--muted)">${label}</div><div class="text-sm font-mono break-all" style="color:var(--text)">${val}</div></div>` : '';
+
+    rows.push(row('Name', _esc(mw.name)));
+    if (mw.type) rows.push(row('Protocol', (mw.type || '').toUpperCase()));
+    if (mw.configFile) rows.push(row('Config File', _esc(mw.configFile)));
+
+    let yamlHtml = '';
+    if (mw.yaml) {
+        yamlHtml = `<div class="mt-4"><div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--muted)">Configuration</div><div class="rounded-lg p-4 overflow-x-auto" style="background:var(--input-bg);border:1px solid var(--border)"><pre class="text-xs font-mono leading-relaxed whitespace-pre-wrap" style="color:var(--green)">${_esc(mw.yaml)}</pre></div></div>`;
+    }
+
+    return `<div>${rows.join('')}</div>${yamlHtml}`;
+}
+
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         closeRouteDetail();
+        closeMwDetail();
         closeSvcDetail();
         closePluginDetail();
     }
@@ -2455,13 +2738,13 @@ const HTTP_STATUS = {
 
 function parseLogLine(raw) {
     const full = raw.match(
-        /^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) (\S+)[^"]*" (\d{3}) (\S+) "[^"]*" "[^"]*" \S+ "([^"]*)" "([^"]*)" (\S+)/
+        /^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) (\S+)[^"]*" (\d+) (\S+) "[^"]*" "[^"]*" \S+ "([^"]*)" "([^"]*)" (\S+)/
     );
     if (full) return { ip:full[1], date:full[2], method:full[3], path:full[4],
-        status:parseInt(full[5]), size:full[6], service:full[7], serviceUrl:full[8], duration:full[9], raw };
-    const basic = raw.match(/^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) (\S+)[^"]*" (\d{3}) (\S+)/);
+        status:parseInt(full[5])||0, size:full[6], service:full[7], serviceUrl:full[8], duration:full[9], raw };
+    const basic = raw.match(/^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) (\S+)[^"]*" (\d+) (\S+)/);
     if (basic) return { ip:basic[1], date:basic[2], method:basic[3], path:basic[4],
-        status:parseInt(basic[5]), size:basic[6], service:'', serviceUrl:'', duration:'', raw };
+        status:parseInt(basic[5])||0, size:basic[6], service:'', serviceUrl:'', duration:'', raw };
     return null;
 }
 
@@ -2477,7 +2760,7 @@ function renderLogs() {
         return;
     }
 
-    const statusColor = s => s >= 500 ? 'var(--red)' : s >= 400 ? 'var(--yellow)' : 'var(--green)';
+    const statusColor = s => !s ? 'var(--muted)' : s >= 500 ? 'var(--red)' : s >= 400 ? 'var(--yellow)' : 'var(--green)';
     const methodColor = m => ({ GET:'var(--blue)', POST:'var(--green)', PUT:'var(--yellow)', DELETE:'var(--red)', PATCH:'var(--purple)' }[m] || 'var(--muted)');
 
     const cards = lines.map(raw => {
@@ -2490,7 +2773,7 @@ function renderLogs() {
         const entryObj = JSON.stringify(e).replace(/'/g,"&#39;");
         return `<div class="flex items-center gap-3 px-4 py-2.5 border-b cursor-pointer hover:opacity-80 transition-opacity" style="border-color:var(--border)" onclick='openLogDetail(${entryObj})'>
             <span class="text-xs font-mono font-bold flex-shrink-0" style="color:${mc};min-width:44px">${_esc(e.method)}</span>
-            <span class="inline-flex items-center gap-1 flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded" style="background:${sc}18;color:${sc};border:1px solid ${sc}44;min-width:52px">${e.status} <span style="font-weight:400;opacity:.8">${HTTP_STATUS[e.status]||''}</span></span>
+            <span class="inline-flex items-center gap-1 flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded" style="background:${sc}18;color:${sc};border:1px solid ${sc}44;min-width:52px">${e.status||'—'} <span style="font-weight:400;opacity:.8">${e.status ? (HTTP_STATUS[e.status]||'') : 'tunnel'}</span></span>
             <span class="text-xs font-mono flex-1 truncate" style="color:var(--text)" title="${_esc(e.path)}">${_esc(e.path)}</span>
             <span class="text-xs flex-shrink-0 hidden sm:block" style="color:var(--muted)">${_esc(e.ip)}</span>
             ${svcLabel}${durLabel}
@@ -2507,10 +2790,10 @@ function renderLogs() {
 }
 
 function openLogDetail(e) {
-    const sc = e.status >= 500 ? 'var(--red)' : e.status >= 400 ? 'var(--yellow)' : 'var(--green)';
+    const sc = !e.status ? 'var(--muted)' : e.status >= 500 ? 'var(--red)' : e.status >= 400 ? 'var(--yellow)' : 'var(--green)';
     const mc = { GET:'var(--blue)', POST:'var(--green)', PUT:'var(--yellow)', DELETE:'var(--red)', PATCH:'var(--purple)' }[e.method] || 'var(--muted)';
     document.getElementById('ldBadges').innerHTML =
-        `<span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded" style="background:${sc}18;color:${sc};border:1px solid ${sc}44">${e.status} ${HTTP_STATUS[e.status]||''}</span>` +
+        `<span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded" style="background:${sc}18;color:${sc};border:1px solid ${sc}44">${e.status||'—'} ${e.status ? (HTTP_STATUS[e.status]||'') : 'tunnel'}</span>` +
         `<span class="text-xs font-mono font-bold px-2 py-1 rounded" style="background:${mc}18;color:${mc};border:1px solid ${mc}44">${_esc(e.method)}</span>`;
     const rows = [
         ['Path', e.path], ['IP', e.ip], ['Date', e.date],
@@ -2523,11 +2806,15 @@ function openLogDetail(e) {
         `<div class="flex items-start gap-3 px-4 py-2.5" style="${i<rows.length-1?'border-bottom:1px solid var(--border)':''}"><span class="text-xs font-medium flex-shrink-0" style="color:var(--muted);min-width:80px">${k}</span><span class="text-xs font-mono break-all" style="color:var(--text)">${_esc(v)}</span></div>`
     ).join('');
     document.getElementById('ldRaw').textContent = e.raw;
-    document.getElementById('logDetailPanel').style.display = '';
+    document.getElementById('logDetailPanel').classList.add('open');
+    const bd = document.getElementById('logDetailBackdrop');
+    if (bd) { bd.style.opacity = '1'; bd.style.pointerEvents = 'auto'; }
 }
 
 function closeLogDetail() {
-    document.getElementById('logDetailPanel').style.display = 'none';
+    document.getElementById('logDetailPanel').classList.remove('open');
+    const bd = document.getElementById('logDetailBackdrop');
+    if (bd) { bd.style.opacity = ''; bd.style.pointerEvents = ''; }
 }
 
 (async () => {
@@ -2541,9 +2828,156 @@ function closeLogDetail() {
         applyTabVisibility({});
     }
     if (typeof applyUiPrefs === 'function') applyUiPrefs();
+    if (typeof _applyDocsLinkVisibility === 'function') _applyDocsLinkVisibility();
     loadOverviewStats();
     checkManagerVersion();
+    fetchNotifications();
+    setInterval(fetchNotifications, 60000);
 })();
+
+let _notifData       = [];
+let _notifLastRead   = parseInt(localStorage.getItem('notifLastRead') || '0', 10);
+let _notifPanelOpen  = false;
+
+const _NOTIF_ICONS = {
+    success: 'ph-check-circle',
+    warning: 'ph-warning',
+    error:   'ph-x-circle',
+    info:    'ph-info',
+};
+
+function _notifRelTime(ts) {
+    const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+    if (diff < 60)  return 'just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+}
+
+async function fetchNotifications() {
+    try {
+        const res  = await fetch('/api/notifications');
+        if (!res.ok) return;
+        _notifData = await res.json();
+        _renderNotifPanel();
+    } catch(e) {}
+}
+
+function _renderNotifPanel() {
+    const list  = document.getElementById('notifList');
+    const badge = document.getElementById('notifBadge');
+    const badgeM = document.getElementById('notifBadgeMobile');
+    const markReadBtn = document.getElementById('notifMarkRead');
+    if (!list || !badge) return;
+
+    const unreadCount = _notifData.filter((_, i) => i < (_notifData.length - _notifLastRead)).length;
+    const hasUnread = unreadCount > 0;
+
+    if (hasUnread) {
+        badge.classList.remove('hidden');
+        badgeM?.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+        badgeM?.classList.add('hidden');
+    }
+
+    if (markReadBtn) markReadBtn.style.display = hasUnread ? '' : 'none';
+
+    const clearAllBtn = document.getElementById('notifClearAll');
+    if (clearAllBtn) clearAllBtn.style.display = _notifData.length ? '' : 'none';
+
+    if (!_notifData.length) {
+        list.innerHTML = `<div class="notif-empty"><i class="ph-light ph-bell-slash" style="font-size:32px;opacity:0.3;display:block;margin-bottom:8px"></i>No notifications yet</div>`;
+        return;
+    }
+
+    list.innerHTML = _notifData.map((n, i) => {
+        const isUnread = i < (_notifData.length - _notifLastRead);
+        const type  = n.type || 'info';
+        const icon  = _NOTIF_ICONS[type] || 'ph-info';
+        return `<div class="notif-item${isUnread ? ' unread' : ''}">
+            <div class="notif-icon ${type}"><i class="ph-bold ${icon}"></i></div>
+            <div class="notif-body">
+                <div class="notif-msg">${_esc(n.msg)}</div>
+                <div class="notif-ts">${_notifRelTime(n.ts)}</div>
+            </div>
+            <button class="notif-delete-btn" onclick="deleteNotification('${_esc(n.ts)}')" title="Dismiss"><i class="ph-bold ph-x"></i></button>
+        </div>`;
+    }).join('');
+}
+
+function toggleNotifPanel() {
+    const panel = document.getElementById('notifPanel');
+    const btn   = document.getElementById('notifBellBtn');
+    const btnM  = document.getElementById('notifBellBtnMobile');
+    if (!panel) return;
+    _notifPanelOpen = !_notifPanelOpen;
+    panel.classList.toggle('open', _notifPanelOpen);
+    const color = _notifPanelOpen ? 'var(--blue)' : '';
+    if (btn)  btn.style.color  = color;
+    if (btnM) btnM.style.color = color;
+    if (_notifPanelOpen) {
+        const activeBtn = (btnM && btnM.offsetParent) ? btnM : btn;
+        if (activeBtn) {
+            const r = activeBtn.getBoundingClientRect();
+            const panelW = Math.min(360, window.innerWidth - 16);
+            let left = r.right - panelW;
+            if (left < 8) left = 8;
+            panel.style.position = 'fixed';
+            panel.style.top  = (r.bottom + 8) + 'px';
+            panel.style.left = left + 'px';
+            panel.style.right = 'auto';
+            panel.style.width = panelW + 'px';
+        }
+    } else {
+        markNotifsRead();
+    }
+}
+
+function markNotifsRead() {
+    _notifLastRead = _notifData.length;
+    localStorage.setItem('notifLastRead', _notifLastRead);
+    _renderNotifPanel();
+}
+
+async function deleteNotification(ts) {
+    try {
+        await fetch('/api/notifications/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+            body: JSON.stringify({ ts })
+        });
+        await fetchNotifications();
+        if (_notifLastRead > 0) _notifLastRead = Math.max(0, _notifLastRead - 1);
+        localStorage.setItem('notifLastRead', _notifLastRead);
+        _renderNotifPanel();
+    } catch(e) {}
+}
+
+async function clearAllNotifications() {
+    try {
+        await fetch('/api/notifications/clear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+            body: JSON.stringify({})
+        });
+        _notifLastRead = 0;
+        localStorage.setItem('notifLastRead', _notifLastRead);
+        await fetchNotifications();
+    } catch(e) {}
+}
+
+document.addEventListener('click', e => {
+    if (_notifPanelOpen && !e.target.closest('#notifBellWrap') && !e.target.closest('#notifBellWrapMobile')) {
+        _notifPanelOpen = false;
+        document.getElementById('notifPanel')?.classList.remove('open');
+        const btn  = document.getElementById('notifBellBtn');
+        const btnM = document.getElementById('notifBellBtnMobile');
+        if (btn)  btn.style.color  = '';
+        if (btnM) btnM.style.color = '';
+        markNotifsRead();
+    }
+});
 
 if (document.getElementById('toastContainer') && document.getElementById('toastContainer').children.length > 0) {
     setTimeout(loadOverviewStats, 2000);
@@ -2563,6 +2997,8 @@ if (document.getElementById('toastContainer') && document.getElementById('toastC
     &nbsp;·&nbsp;
     <span id="footerManagerVer" style="cursor:pointer" title="About" onclick="openSettingsModal('about')">-</span>
 </footer>
+
+<div id="_copyToast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:500;pointer-events:none;opacity:0;transition:opacity 0.2s;z-index:9999"></div>
 
 </body>
 </html>

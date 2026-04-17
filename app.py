@@ -4,7 +4,9 @@ import time
 import shutil
 import secrets
 import logging
+import threading
 import requests
+from collections import deque
 from datetime import datetime, timezone, timedelta
 from functools import wraps
 import click
@@ -15,7 +17,8 @@ from ruamel.yaml import YAML as SafeYAML
 from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
-GITHUB_REPO = "chr0nzz/traefik-manager"
+GITHUB_REPO  = "chr0nzz/traefik-manager"
+APP_VERSION  = "0.12.0"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -28,7 +31,8 @@ logger = logging.getLogger("traefik-manager")
 
 app = Flask(__name__)
 
-_SECRET_KEY_PATH = '/app/config/.secret_key'
+_CONFIG_DIR      = os.path.dirname(os.environ.get('SETTINGS_PATH', '/app/config/manager.yml'))
+_SECRET_KEY_PATH = os.path.join(_CONFIG_DIR, '.secret_key')
 
 def _load_or_create_secret_key() -> bytes:
     env_key = os.environ.get('SECRET_KEY', '').strip()
@@ -46,7 +50,7 @@ def _load_or_create_secret_key() -> bytes:
 
 app.secret_key = _load_or_create_secret_key()
 
-_OTP_KEY_PATH = os.path.join(os.path.dirname(os.environ.get('SETTINGS_PATH', '/app/config/manager.yml')), '.otp_key')
+_OTP_KEY_PATH = os.path.join(_CONFIG_DIR, '.otp_key')
 
 def _get_otp_fernet() -> Fernet:
     key = os.environ.get('OTP_ENCRYPTION_KEY', '').strip()
@@ -95,15 +99,46 @@ yaml.preserve_quotes = True
 yaml.indent(mapping=2, sequence=4, offset=2)
 yaml.width = 4096
 
-safe_yaml = SafeYAML(typ='safe')
-
 
 BACKUP_DIR    = os.environ.get('BACKUP_DIR',    '/app/backups')
 SETTINGS_PATH      = os.environ.get('SETTINGS_PATH', '/app/config/manager.yml')
 _CONFIG_DIR        = os.path.dirname(os.path.abspath(SETTINGS_PATH))
 GROUPS_CACHE_DIR   = os.path.join(_CONFIG_DIR, 'cache')
-GROUPS_CONFIG_FILE = os.path.join(_CONFIG_DIR, 'dashboard.yml')
+GROUPS_CONFIG_FILE  = os.path.join(_CONFIG_DIR, 'dashboard.yml')
+NOTIFICATIONS_PATH  = os.path.join(_CONFIG_DIR, 'notifications.yml')
 os.makedirs(GROUPS_CACHE_DIR, exist_ok=True)
+
+_notifications     = deque(maxlen=100)
+_notif_lock        = threading.Lock()
+
+def _load_notifications():
+    if os.path.exists(NOTIFICATIONS_PATH):
+        try:
+            _y = SafeYAML(typ='safe')
+            with open(NOTIFICATIONS_PATH, 'r') as f:
+                data = _y.load(f) or []
+            with _notif_lock:
+                _notifications.clear()
+                for entry in data[-100:]:
+                    _notifications.append(entry)
+        except Exception:
+            pass
+
+def _save_notifications_bg():
+    try:
+        _y = SafeYAML(typ='safe')
+        with _notif_lock:
+            data = list(_notifications)
+        with open(NOTIFICATIONS_PATH, 'w') as f:
+            _y.dump(data, f)
+    except Exception:
+        logger.exception("Failed to save notifications")
+
+def add_notification(type_, msg):
+    entry = {'ts': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': type_, 'msg': msg}
+    with _notif_lock:
+        _notifications.append(entry)
+    threading.Thread(target=_save_notifications_bg, daemon=True).start()
 
 _config_dir = os.environ.get('CONFIG_DIR', '').strip()
 ACTIVE_CONFIG_DIR = _config_dir
@@ -452,7 +487,7 @@ def _delete_self_route(router_name: str = 'traefik-manager') -> None:
         http = cfg.get('http', {})
         http.get('routers', {}).pop(router_name, None)
         http.get('services', {}).pop(router_name, None)
-        save_config(cfg, CONFIG_PATH)
+        save_config(_strip_empty_sections(cfg), CONFIG_PATH)
         logger.info(f"Self-route '{router_name}' removed from config: {CONFIG_PATH}")
 
 def _detect_self_route_domain() -> str:
@@ -628,6 +663,8 @@ def _get_effective_hash() -> str:
     return load_settings().get('password_hash', '')
 
 
+_load_notifications()
+
 @app.before_request
 def log_request_info():
     logger.info(f"{request.remote_addr} → {request.method} {request.path}")
@@ -692,6 +729,7 @@ def login():
             session.clear()
             session.update(_vals)
             logger.info(f"Successful login from {request.remote_addr}")
+            add_notification('info', f"Login from {request.remote_addr}")
 
             if settings.get('must_change_password', False) and not admin_pw:
                 if not settings.get('setup_complete', False):
@@ -1192,26 +1230,10 @@ def api_ping():
         logger.debug(f"Ping failed: {e}")
     return jsonify({'ok': False, 'latency_ms': None})
 
-_cached_manager_version = None
-
 @app.route('/api/manager/version')
 @login_required
 def api_manager_version():
-    global _cached_manager_version
-    if _cached_manager_version is None:
-        try:
-            resp = requests.get(
-                f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
-                headers={"Accept": "application/vnd.github.v3+json"},
-                timeout=5
-            )
-            if resp.status_code == 200:
-                tag = resp.json().get("tag_name", "").lstrip("v")
-                if tag:
-                    _cached_manager_version = tag
-        except Exception:
-            pass
-    return jsonify({"version": _cached_manager_version or "", "repo": GITHUB_REPO})
+    return jsonify({"version": APP_VERSION, "repo": GITHUB_REPO})
 
 
 @app.route('/api/setup/test-connection', methods=['POST'])
@@ -1381,15 +1403,19 @@ def create_backup(path=None):
 def list_backups():
     ensure_backup_dir()
     backups = []
-    for f in sorted(os.listdir(BACKUP_DIR), reverse=True):
+    for f in os.listdir(BACKUP_DIR):
         if f.endswith('.bak'):
             path = os.path.join(BACKUP_DIR, f)
             st   = os.stat(path)
             backups.append({
                 'name':     f,
                 'size':     st.st_size,
-                'modified': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(st.st_mtime))
+                'modified': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(st.st_mtime)),
+                'mtime':    st.st_mtime,
             })
+    backups.sort(key=lambda b: b['mtime'], reverse=True)
+    for b in backups:
+        del b['mtime']
     return backups
 
 _BACKUP_RE = re.compile(r'^[a-zA-Z0-9._-]+\.yml\.\d{8}_\d{6}\.bak$')
@@ -1403,6 +1429,37 @@ def _validated_backup_path(filename: str) -> str:
         logger.warning(f"Path traversal attempt blocked: {filename!r}")
         abort(400)
     return path
+
+@app.route('/api/notifications')
+@login_required
+def api_notifications():
+    with _notif_lock:
+        entries = list(reversed(list(_notifications)))
+    return jsonify(entries)
+
+@app.route('/api/notifications/delete', methods=['POST'])
+@login_required
+def api_notifications_delete():
+    _check_csrf()
+    ts = (request.get_json(silent=True) or {}).get('ts', '')
+    if not ts:
+        return jsonify({'ok': False, 'message': 'Missing ts'}), 400
+    with _notif_lock:
+        for i, entry in enumerate(list(_notifications)):
+            if entry.get('ts') == ts:
+                del _notifications[i]
+                break
+    threading.Thread(target=_save_notifications_bg, daemon=True).start()
+    return jsonify({'ok': True})
+
+@app.route('/api/notifications/clear', methods=['POST'])
+@login_required
+def api_notifications_clear():
+    _check_csrf()
+    with _notif_lock:
+        _notifications.clear()
+    threading.Thread(target=_save_notifications_bg, daemon=True).start()
+    return jsonify({'ok': True})
 
 @app.route('/api/backups')
 @login_required
@@ -1430,6 +1487,7 @@ def api_restore(filename):
         create_backup(target_path)
         shutil.copy2(path, target_path)
         logger.info(f"Restored: {filename} → {target_path}")
+        add_notification('warning', f"Backup restored: {filename}")
         return jsonify({'success': True})
     except Exception as e:
         logger.exception("Restore error")
@@ -1440,11 +1498,17 @@ def api_restore(filename):
 @login_required
 def api_backup_create():
     try:
-        dest = create_backup()
-        if dest:
-            return jsonify({'success': True, 'name': os.path.basename(dest)})
-        return jsonify({'error': 'No config file to backup'}), 400
+        created = []
+        for p in CONFIG_PATHS:
+            dest = create_backup(p)
+            if dest:
+                created.append(os.path.basename(dest))
+        if created:
+            add_notification('success', f"Backup created ({len(created)} file{'s' if len(created) > 1 else ''})")
+            return jsonify({'success': True, 'names': created, 'count': len(created)})
+        return jsonify({'error': 'No config files found to backup'}), 400
     except Exception as e:
+        logger.exception("Backup create error")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/backup/delete/<filename>', methods=['POST'])
@@ -1455,6 +1519,7 @@ def api_backup_delete(filename):
         path = _validated_backup_path(filename)
         if os.path.exists(path):
             os.remove(path)
+        add_notification('warning', f"Backup deleted: {filename}")
         return jsonify({'success': True})
     except Exception as e:
         logger.exception("Backup delete error")
@@ -1848,7 +1913,7 @@ def _toggle_route(route_id: str, enable: bool):
         cf = os.path.basename(target_path) if (MULTI_CONFIG or ACTIVE_CONFIG_DIR) else ''
         disabled[route_id] = {'protocol': proto, 'router': router, 'service': svc, 'configFile': cf}
         create_backup(target_path)
-        save_config(config, target_path)
+        save_config(_strip_empty_sections(config), target_path)
 
     save_settings(
         domains=settings['domains'],
@@ -1888,18 +1953,24 @@ def api_configs():
 def _read_groups_config():
     if not os.path.exists(GROUPS_CONFIG_FILE):
         return {'custom_groups': [], 'route_overrides': {}}
-    with open(GROUPS_CONFIG_FILE, 'r') as f:
-        data = safe_yaml.load(f)
-    if not data:
+    try:
+        _y = SafeYAML(typ='safe')
+        with open(GROUPS_CONFIG_FILE, 'r') as f:
+            data = _y.load(f)
+        if not data:
+            return {'custom_groups': [], 'route_overrides': {}}
+        return {
+            'custom_groups':   list(data.get('custom_groups', []) or []),
+            'route_overrides': dict(data.get('route_overrides', {}) or {}),
+        }
+    except Exception:
+        logger.exception("Failed to read dashboard config")
         return {'custom_groups': [], 'route_overrides': {}}
-    return {
-        'custom_groups':   list(data.get('custom_groups', []) or []),
-        'route_overrides': dict(data.get('route_overrides', {}) or {}),
-    }
 
 def _write_groups_config(data):
+    _y = SafeYAML(typ='safe')
     with open(GROUPS_CONFIG_FILE, 'w') as f:
-        safe_yaml.dump({
+        _y.dump({
             'custom_groups':   list(data.get('custom_groups', []) or []),
             'route_overrides': dict(data.get('route_overrides', {}) or {}),
         }, f)
@@ -2085,6 +2156,8 @@ def save_entry():
         save_config(_strip_empty_sections(config), target_path)
         _register_config_path(target_path)
         msg = f"Successfully saved {svc_name}"
+        action = "updated" if is_edit else "created"
+        add_notification('success', f"Route {svc_name} {action}")
         if fetch:
             return jsonify({'ok': True, 'message': msg})
         flash(msg, "success")
@@ -2121,7 +2194,7 @@ def delete_entry(router_id):
                     if svc and 'services' in s and svc in s['services']:
                         del s['services'][svc]
                     create_backup(target_path)
-                    save_config(config, target_path)
+                    save_config(_strip_empty_sections(config), target_path)
                     deleted = True
                     break
             if deleted:
@@ -2132,6 +2205,7 @@ def delete_entry(router_id):
             flash(f'Route "{plain_id}" not found', "error")
             return redirect(url_for('index'))
         msg = f"Deleted {plain_id}"
+        add_notification('warning', f"Route {plain_id} deleted")
         if fetch:
             return jsonify({'ok': True, 'message': msg})
         flash(msg, "success")
@@ -2165,10 +2239,12 @@ def save_middleware():
         config.setdefault('http', {}).setdefault('middlewares', {})
         if is_edit and original_id and original_id != mw_name:
             config['http']['middlewares'].pop(original_id, None)
-        config['http']['middlewares'][mw_name] = safe_yaml.load(mw_content)
+        config['http']['middlewares'][mw_name] = SafeYAML(typ='safe').load(mw_content)
         save_config(_strip_empty_sections(config), target_path)
         _register_config_path(target_path)
         msg = f"Successfully saved middleware {mw_name}"
+        action = "updated" if is_edit else "created"
+        add_notification('success', f"Middleware {mw_name} {action}")
         if fetch:
             return jsonify({'ok': True, 'message': msg})
         flash(msg, "success")
@@ -2197,9 +2273,10 @@ def delete_middleware(mw_name):
             if mw_name in mws:
                 mws.pop(mw_name, None)
                 create_backup(target_path)
-                save_config(config, target_path)
+                save_config(_strip_empty_sections(config), target_path)
                 break
         msg = f"Deleted middleware {mw_name}"
+        add_notification('warning', f"Middleware {mw_name} deleted")
         if fetch:
             return jsonify({'ok': True, 'message': msg})
         flash(msg, "success")

@@ -1,3 +1,23 @@
+<div class="detail-backdrop" id="mwDetailBackdrop" onclick="closeMwDetail()"></div>
+<div class="detail-panel" id="mwDetailPanel">
+    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card); border-bottom:1px solid var(--border)">
+        <div class="flex items-center gap-3">
+            <span id="mwDetailProtoBadge" class="badge badge-http">HTTP</span>
+            <h2 class="font-bold text-sm" style="color:var(--text)" id="mwDetailTitle">Middleware Details</h2>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="mwDetailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> Edit</button>
+            <button onclick="closeMwDetail()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
+        </div>
+    </div>
+    <div id="mwDetailContent" class="px-6 py-5 overflow-y-auto">
+        <div class="text-center py-12" style="color:var(--muted)">
+            <i class="ph-light ph-spinner-gap text-3xl animate-spin block mb-2"></i>
+            Loading...
+        </div>
+    </div>
+</div>
+
 <div class="detail-backdrop" id="svcDetailBackdrop" onclick="closeSvcDetail()"></div>
 <div class="detail-panel" id="svcDetailPanel">
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card); border-bottom:1px solid var(--border)">

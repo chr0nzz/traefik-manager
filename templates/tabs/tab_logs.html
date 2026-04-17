@@ -7,9 +7,9 @@
             <button onclick="setLogLines(1000)" id="log-1000" class="proto-btn text-xs px-3 py-1.5">1000</button>
         </div>
         <input type="text" id="logSearch" oninput="filterLogs()" placeholder="Filter logs..." class="input-field flex-1 min-w-48">
-        <button onclick="refreshLogs()" class="btn-secondary text-xs">
-            <i class="ph-bold ph-arrows-clockwise"></i> Refresh
-        </button>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="refreshLogs()" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+        </div>
     </div>
     <div id="logsContent">
         <div class="text-center py-16" style="color:var(--muted)">
@@ -20,25 +20,24 @@
     </div>
 </div>
 
-<div id="logDetailPanel" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5)" onclick="if(event.target===this)closeLogDetail()">
-    <div style="position:absolute;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--card);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden">
-        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
-            <div class="flex items-center gap-2">
-                <i class="ph-bold ph-file-text" style="color:var(--blue)"></i>
-                <h3 class="font-bold text-sm" style="color:var(--text)">Log Detail</h3>
-            </div>
-            <button onclick="closeLogDetail()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+<div class="detail-backdrop" id="logDetailBackdrop" onclick="closeLogDetail()"></div>
+<div class="detail-panel" id="logDetailPanel">
+    <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border);flex-shrink:0">
+        <div class="flex items-center gap-2">
+            <i class="ph-bold ph-file-text" style="color:var(--blue)"></i>
+            <h3 class="font-bold text-sm" style="color:var(--text)">Log Detail</h3>
         </div>
-        <div class="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-            <div class="flex gap-2 flex-wrap" id="ldBadges"></div>
-            <div class="rounded-lg overflow-hidden" style="border:1px solid var(--border)">
-                <div id="ldGrid" class="divide-y" style="border-color:var(--border)"></div>
-            </div>
-            <div>
-                <p class="text-xs font-medium mb-2" style="color:var(--muted)">Raw Line</p>
-                <div class="rounded-lg p-3 overflow-x-auto" style="background:var(--bg);border:1px solid var(--border)">
-                    <pre id="ldRaw" class="text-xs font-mono whitespace-pre" style="color:var(--muted);user-select:text"></pre>
-                </div>
+        <button onclick="closeLogDetail()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+    </div>
+    <div class="px-6 py-5 overflow-y-auto" style="display:flex;flex-direction:column;gap:16px">
+        <div class="flex gap-2 flex-wrap" id="ldBadges"></div>
+        <div class="rounded-lg overflow-hidden" style="border:1px solid var(--border)">
+            <div id="ldGrid"></div>
+        </div>
+        <div>
+            <p class="text-xs font-medium mb-2" style="color:var(--muted)">Raw Line</p>
+            <div class="rounded-lg p-3 overflow-x-auto" style="background:var(--input-bg);border:1px solid var(--border)">
+                <pre id="ldRaw" class="text-xs font-mono whitespace-pre" style="color:var(--muted);user-select:text"></pre>
             </div>
         </div>
     </div>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'traefik-manager-v0.8.0';
+const CACHE_NAME = 'traefik-manager-v0.12.0';
 
 const STATIC_ASSETS = [
     'https://cdn.tailwindcss.com',

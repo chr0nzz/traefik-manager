@@ -5,7 +5,8 @@
 ::: warning Version Compatibility
 | Mobile App | Requires Server |
 |---|---|
-| v0.10.0+ | v0.11.0+ - adds multi-domain rules, `insecureSkipVerify`, and `.yml` auto-append |
+| v0.11.0+ | v0.12.0+ - adds entrypoint and middleware chip APIs |
+| v0.10.0 | v0.11.0+ - adds multi-domain rules, `insecureSkipVerify`, and `.yml` auto-append |
 | v0.6.0 - v0.9.x | v0.10.0+ - adds `CONFIG_DIR` multi-file API support |
 | Earlier | v0.6.0+ - adds API key authentication |
 :::
@@ -90,8 +91,10 @@ Tap the **hamburger icon** (top-left of any screen) to open the navigation drawe
 - List all HTTP, TCP, and UDP routes with status, domain, target, and attached middlewares
 - Filter by protocol using the segmented button bar
 - Enable / disable routes with a toggle - configuration is preserved, Traefik stops routing until re-enabled
-- Add new routes via a form (name, subdomain, one or more domain chips, target IP, port, protocol, middlewares, cert resolver)
+- Add new routes via a form (name, subdomain, one or more domain chips, target IP, port, protocol, cert resolver)
 - Select multiple domains when creating or editing an HTTP route - generates a multi-host rule (`Host(\`sub.d1\`) || Host(\`sub.d2\`)`)
+- Entry points fetched from the Traefik API and shown as selectable chips for HTTP, TCP, and UDP; `websecure` is pre-selected for HTTP; UDP is single-select
+- Middlewares fetched from the Traefik API and shown as selectable chips
 - Toggle **Skip TLS Verification** per route for backends with self-signed certificates (`insecureSkipVerify`)
 - Edit existing routes
 - Delete routes with confirmation
@@ -163,7 +166,7 @@ All settings are accessed from the navigation drawer (hamburger icon in the top 
 
 ### Appearance
 
-Switch between Light, Dark, and System theme.
+Switch between Light, Dark, and System theme. On Android 12+, **Dynamic Color** adapts the app's UI chrome (backgrounds, cards, borders) to your wallpaper palette while keeping status colors (green/yellow/red) semantically distinct.
 
 ### App Lock
 
@@ -230,7 +233,7 @@ When using this split-route pattern, keep Traefik Manager's built-in auth **enab
 
 | | |
 |---|---|
-| Traefik Manager (server) | **v0.11.0 or higher** (mobile v0.10.0+), v0.10.0+ for mobile v0.6.0-v0.9.x, v0.6.0+ for earlier mobile versions |
+| Traefik Manager (server) | **v0.12.0 or higher** (mobile v0.11.0+), v0.11.0+ for mobile v0.10.0, v0.10.0+ for mobile v0.6.0-v0.9.x, v0.6.0+ for earlier mobile versions |
 | Android | 7.0+ (API 24+) |
 | iOS | 16+ (build from source required) |
 

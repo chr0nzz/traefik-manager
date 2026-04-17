@@ -56,14 +56,8 @@
                         <div>
                             <label>Domain{% if domains | length > 1 %}s{% endif %}</label>
                             {% if domains | length > 1 %}
-                            <div id="domainCheckboxes" class="rounded-lg p-2 space-y-1" style="background:var(--input-bg);border:1px solid var(--border)">
-                                {% for d in domains %}
-                                <label class="flex items-center gap-2 px-1 py-0.5 rounded cursor-pointer hover:opacity-80">
-                                    <input type="checkbox" name="domains" value="{{ d }}" class="domain-checkbox rounded" style="accent-color:var(--blue)">
-                                    <span class="text-sm" style="color:var(--text)">{{ d }}</span>
-                                </label>
-                                {% endfor %}
-                            </div>
+                            <div id="domainChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px"></div>
+                            <div id="domainHiddenInputs"></div>
                             {% else %}
                             <select name="domains" id="domainSelect" class="input-field">
                                 {% for d in domains %}
@@ -84,25 +78,29 @@
                         </div>
                     </div>
                     <div>
-                        <label>Entry Points (comma separated)</label>
-                        <input type="text" name="entryPoints" id="entryPoints" class="input-field" value="https" placeholder="https">
+                        <label>Entry Points</label>
+                        <div id="httpEntrypointChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px">
+                            <span class="text-xs" style="color:var(--muted);align-self:center">Loading...</span>
+                        </div>
+                        <input type="hidden" name="entryPoints" id="entryPoints">
                     </div>
                     <div>
-                        <label>Middlewares (comma separated)</label>
-                        <input type="text" name="middlewares" id="middlewares" class="input-field" placeholder="auth@file, redirect-https">
+                        <label>Middlewares</label>
+                        <div id="middlewareChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px">
+                            <span class="text-xs" style="color:var(--muted);align-self:center">Loading...</span>
+                        </div>
+                        <input type="hidden" name="middlewares" id="middlewares">
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label>Backend Scheme</label>
-                            <select name="scheme" id="scheme" class="input-field">
-                                <option value="http">HTTP</option>
-                                <option value="https">HTTPS</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center gap-2 pt-5">
-                            <input type="checkbox" name="passHostHeader" id="passHostHeader" value="true" checked class="rounded" style="accent-color:var(--blue)">
-                            <span class="text-sm" style="color:var(--text)">Pass Host Header</span>
-                        </div>
+                    <div>
+                        <label>Backend Scheme</label>
+                        <select name="scheme" id="scheme" class="input-field">
+                            <option value="http">HTTP</option>
+                            <option value="https">HTTPS</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="passHostHeader" id="passHostHeader" value="true" checked class="rounded" style="accent-color:var(--blue)">
+                        <span class="text-sm" style="color:var(--text)">Pass Host Header</span>
                     </div>
                     <p class="text-xs -mt-2" style="color:var(--muted)">Forward the original Host header to the backend. Disable if the backend needs its own hostname.</p>
                     <div class="flex items-center gap-2">
@@ -141,7 +139,10 @@
                     </div>
                     <div>
                         <label>Entry Points</label>
-                        <input type="text" name="entryPoints" id="entryPointsTcp" class="input-field" placeholder="tcp, postgres">
+                        <div id="tcpEntrypointChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px">
+                            <span class="text-xs" style="color:var(--muted);align-self:center">Loading...</span>
+                        </div>
+                        <input type="hidden" name="entryPoints" id="entryPointsTcp">
                     </div>
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="useTls" id="useTls" value="true" class="rounded" style="accent-color:var(--blue)" onchange="toggleTcpCertResolver(this.checked)">
@@ -173,7 +174,8 @@
                     </div>
                     <div>
                         <label>Entry Point</label>
-                        <input type="text" name="udpEntryPoint" id="entryPointsUdp" class="input-field" placeholder="e.g. qbittorrent-udp">
+                        <input type="hidden" name="udpEntryPoint" id="entryPointsUdp">
+                        <div id="udpEntrypointChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px"></div>
                     </div>
                     <div class="rounded-md p-3 text-xs" style="background:rgba(240,136,62,0.08);border:1px solid rgba(240,136,62,0.25);color:#d29922">
                         <i class="ph-bold ph-info"></i> UDP routers don't support rules. Traffic is routed by entry point only.

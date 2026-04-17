@@ -821,6 +821,57 @@ Delete a backup file.
 
 ---
 
+## Notifications
+
+#### `GET /api/notifications`
+
+List all stored notifications, newest first.
+
+**Auth:** Session or API key
+
+**Response**
+```json
+[
+  { "ts": "2026-04-13 20:25:03", "type": "route_saved", "msg": "Route my-app saved" },
+  { "ts": "2026-04-13 19:10:41", "type": "route_deleted", "msg": "Route old-app deleted" }
+]
+```
+
+`type` indicates the event kind (e.g. `route_saved`, `route_deleted`, `middleware_saved`, `middleware_deleted`, `backup_created`, `restore`). `ts` is the UTC timestamp used as a unique identifier.
+
+---
+
+#### `POST /api/notifications/delete`
+
+Delete a single notification by timestamp.
+
+**Auth:** Session or API key · **CSRF:** required (session only)
+
+**Request**
+```json
+{ "ts": "2026-04-13 20:25:03" }
+```
+
+**Response**
+```json
+{ "ok": true }
+```
+
+---
+
+#### `POST /api/notifications/clear`
+
+Delete all stored notifications.
+
+**Auth:** Session or API key · **CSRF:** required (session only)
+
+**Response**
+```json
+{ "ok": true }
+```
+
+---
+
 ## Utility
 
 #### `GET /api/manager/version`

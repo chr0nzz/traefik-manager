@@ -22,6 +22,7 @@ All supported environment variables for Traefik Manager. Variables marked **Over
 | `ACME_JSON_PATH` | `/app/acme.json` | - | Path to Traefik's `acme.json` file for the Certificates tab |
 | `STATIC_CONFIG_PATH` | `/app/traefik.yml` | - | Path to Traefik's static config file for the Plugins tab |
 | `ACCESS_LOG_PATH` | `/app/logs/access.log` | - | Path to Traefik's access log file for the Logs tab |
+| `SECRET_KEY` | _(auto-generated)_ | - | Flask session signing secret - auto-generated and persisted alongside `SETTINGS_PATH` if not set |
 | `OTP_ENCRYPTION_KEY` | _(auto-generated)_ | - | Fernet key for encrypting the TOTP secret at rest |
 
 ---
@@ -372,11 +373,38 @@ Environment=ACCESS_LOG_PATH=/var/log/traefik/access.log
 
 ---
 
+### `SECRET_KEY`
+
+**Default:** _(auto-generated and persisted as `.secret_key` alongside `SETTINGS_PATH`)_
+
+Flask session signing key. If not set, a random 32-byte hex key is generated on first start and written to `.secret_key` in the same directory as `SETTINGS_PATH`. Set this variable to pin the key across restarts or deployments - useful if you want session cookies to survive container/service restarts without re-login.
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - SECRET_KEY=your-random-32-byte-hex-string
+```
+
+== Linux (systemd)
+```ini
+Environment=SECRET_KEY=your-random-32-byte-hex-string
+```
+:::
+
+::: tip Generating a key
+```bash
+python3 -c "import secrets; print(secrets.token_hex(32))"
+```
+:::
+
+---
+
 ### `OTP_ENCRYPTION_KEY`
 
-**Default:** _(auto-generated and stored at `/app/config/.otp_key`)_
+**Default:** _(auto-generated and stored as `.otp_key` alongside `SETTINGS_PATH`)_
 
-Fernet symmetric key used to encrypt the TOTP secret at rest in `manager.yml`. If not set, a key is automatically generated on first start and written to `.otp_key` inside the config directory.
+Fernet symmetric key used to encrypt the TOTP secret at rest in `manager.yml`. If not set, a key is automatically generated on first start and written to `.otp_key` in the same directory as `SETTINGS_PATH`.
 
 Set this variable if you want to manage the key yourself (e.g., from a secrets manager) or to ensure the key survives config volume replacement.
 

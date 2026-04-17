@@ -4,45 +4,51 @@
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
             <input type="text" id="svcSearch" oninput="filterServices()" placeholder="Search services..." class="input-field pl-9">
         </div>
-        <div class="live-dd" id="dd-status">
-            <button class="live-dd-btn" id="dd-status-btn" onclick="toggleLiveDd('dd-status')">
-                <span id="dd-status-label">All Status</span>
-                <i class="ph-bold ph-caret-down live-dd-caret"></i>
-            </button>
-            <div class="live-dd-menu" id="dd-status-menu">
-                <button class="live-dd-item active" onclick="pickLiveStatus('all','All Status')">All Status</button>
-                <button class="live-dd-item" onclick="pickLiveStatus('success','Success')">Success</button>
-                <button class="live-dd-item" onclick="pickLiveStatus('warning','Warnings')">Warnings</button>
-                <button class="live-dd-item" onclick="pickLiveStatus('error','Errors')">Errors</button>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <div class="live-dd" id="dd-status">
+                <button class="live-dd-btn-inner" id="dd-status-btn" onclick="toggleLiveDd('dd-status')">
+                    <span id="dd-status-label">All Status</span>
+                    <i class="ph-bold ph-caret-down live-dd-caret"></i>
+                </button>
+                <div class="live-dd-menu" id="dd-status-menu">
+                    <button class="live-dd-item active" onclick="pickLiveStatus('all','All Status')">All Status</button>
+                    <button class="live-dd-item" onclick="pickLiveStatus('success','Success')">Success</button>
+                    <button class="live-dd-item" onclick="pickLiveStatus('warning','Warnings')">Warnings</button>
+                    <button class="live-dd-item" onclick="pickLiveStatus('error','Errors')">Errors</button>
+                </div>
             </div>
         </div>
-        <div class="live-dd" id="dd-proto">
-            <button class="live-dd-btn" id="dd-proto-btn" onclick="toggleLiveDd('dd-proto')">
-                <span id="dd-proto-label">All Protocols</span>
-                <i class="ph-bold ph-caret-down live-dd-caret"></i>
-            </button>
-            <div class="live-dd-menu" id="dd-proto-menu">
-                <button class="live-dd-item active" onclick="pickLiveProto('all','All Protocols')">All Protocols</button>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <div class="live-dd" id="dd-proto">
+                <button class="live-dd-btn-inner" id="dd-proto-btn" onclick="toggleLiveDd('dd-proto')">
+                    <span id="dd-proto-label">All Protocols</span>
+                    <i class="ph-bold ph-caret-down live-dd-caret"></i>
+                </button>
+                <div class="live-dd-menu" id="dd-proto-menu">
+                    <button class="live-dd-item active" onclick="pickLiveProto('all','All Protocols')">All Protocols</button>
+                </div>
             </div>
         </div>
-        <div class="live-dd" id="dd-provider">
-            <button class="live-dd-btn" id="dd-provider-btn" onclick="toggleLiveDd('dd-provider')">
-                <span id="dd-provider-label">All Providers</span>
-                <i class="ph-bold ph-caret-down live-dd-caret"></i>
-            </button>
-            <div class="live-dd-menu" id="dd-provider-menu">
-                <button class="live-dd-item active" onclick="pickLiveProvider('all','All Providers')">All Providers</button>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <div class="live-dd" id="dd-provider">
+                <button class="live-dd-btn-inner" id="dd-provider-btn" onclick="toggleLiveDd('dd-provider')">
+                    <span id="dd-provider-label">All Providers</span>
+                    <i class="ph-bold ph-caret-down live-dd-caret"></i>
+                </button>
+                <div class="live-dd-menu" id="dd-provider-menu">
+                    <button class="live-dd-item active" onclick="pickLiveProvider('all','All Providers')">All Providers</button>
+                </div>
             </div>
         </div>
-        <button onclick="clearLiveFilters()" class="btn-secondary text-xs">
-            <i class="ph-bold ph-x-circle"></i> Clear
-        </button>
-        <button onclick="toggleSvcView()" id="svcViewToggle" class="btn-secondary text-xs" title="Toggle view">
-            <i class="ph-bold ph-list" id="svcViewIcon"></i>
-        </button>
-        <button onclick="refreshLiveView()" class="btn-secondary text-xs">
-            <i class="ph-bold ph-arrows-clockwise"></i> Refresh
-        </button>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="clearLiveFilters()" class="proto-btn text-xs px-3 py-1.5" title="Clear filters"><i class="ph-bold ph-x-circle"></i></button>
+        </div>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="toggleSvcView()" id="svcViewToggle" class="proto-btn text-xs px-3 py-1.5" title="Toggle view"><i class="ph-bold ph-list" id="svcViewIcon"></i></button>
+        </div>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="refreshLiveView()" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+        </div>
     </div>
 
     <div id="liveContent">

@@ -6,6 +6,20 @@
             <input type="text" id="searchRoutes" oninput="filterRoutes()" placeholder="Search routes..." class="input-field pl-9">
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <div class="live-dd" id="dd-route-domain">
+                <button class="live-dd-btn-inner" id="dd-route-domain-btn" onclick="toggleLiveDd('dd-route-domain')">
+                    <span id="dd-route-domain-label">All Domains</span>
+                    <i class="ph-bold ph-caret-down live-dd-caret"></i>
+                </button>
+                <div class="live-dd-menu" id="dd-route-domain-menu">
+                    <button class="live-dd-item active" onclick="pickRouteDomain('','All Domains')">All Domains</button>
+                    {% for d in domains %}
+                    <button class="live-dd-item" onclick="pickRouteDomain('{{ d }}','{{ d }}')">{{ d }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
             <button onclick="filterProto('all')" id="filterAll" class="proto-btn active-http text-xs px-3 py-1.5">All</button>
             <button onclick="filterProto('http')" id="filterHTTP" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
             <button onclick="filterProto('tcp')" id="filterTCP" class="proto-btn text-xs px-3 py-1.5">TCP</button>
@@ -22,12 +36,12 @@
         {% for app in apps %}
         {% set raw_rule = app.rule | replace("Host(`", "") | replace("`)", "") %}
         {% if " && " in raw_rule %}
-            {% set domain = raw_rule[:raw_rule.find(" && ")] %}
-        {% else %}
-            {% set domain = raw_rule %}
+            {% set raw_rule = raw_rule[:raw_rule.find(" && ")] %}
         {% endif %}
+        {% set route_domains = raw_rule.split(' || ') %}
+        {% set domain = route_domains[0] %}
 
-        <div class="card route-card{% if not app.enabled %} opacity-50{% endif %}" data-protocol="{{ app.protocol }}" data-name="{{ app.name | lower }}" data-routekey="{{ app.name }}" data-idx="{{ loop.index0 }}" data-enabled="{{ app.enabled | tojson }}">
+        <div class="card route-card{% if not app.enabled %} opacity-50{% endif %}" data-protocol="{{ app.protocol }}" data-name="{{ app.name | lower }}" data-routekey="{{ app.name }}" data-idx="{{ loop.index0 }}" data-enabled="{{ app.enabled | tojson }}" data-domains="{{ route_domains | join('|') }}">
 
             <div class="route-card-inner p-4 pb-2">
             <div class="flex justify-between items-start mb-3">
@@ -67,11 +81,19 @@
             <div class="space-y-2">
                 <div class="rounded-md p-2.5" style="background:var(--input-bg); border:1px solid var(--border)">
                     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div>
-                    <div class="text-xs font-mono truncate" style="color:var(--blue)" title="{{ app.rule }}">{{ domain or app.rule }}</div>
+                    {% if route_domains | length > 1 %}
+                    <div style="display:flex;flex-direction:column;gap:2px">
+                        {% for d in route_domains %}
+                        <div class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="_copyToClipboard('{{ d }}')">{{ d }}</div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="_copyToClipboard('{{ domain or app.rule }}')">{{ domain or app.rule }}</div>
+                    {% endif %}
                 </div>
                 <div class="rounded-md p-2.5" style="background:var(--input-bg); border:1px solid var(--border)">
                     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
-                    <div class="text-xs font-mono truncate" style="color:var(--green)">{{ app.target }}</div>
+                    <div class="text-xs font-mono truncate" style="color:var(--green);cursor:pointer" title="Click to copy" onclick="_copyToClipboard('{{ app.target }}')">{{ app.target }}</div>
                 </div>
                 {% if app.middlewares %}
                 <div class="flex flex-wrap gap-1">
@@ -91,7 +113,7 @@
                 {% endif %}
                 <div class="rounded-md p-2.5" style="background:var(--input-bg); border:1px solid var(--border)">
                     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
-                    <div class="text-xs font-mono truncate" style="color:var(--green)">{{ app.target }}</div>
+                    <div class="text-xs font-mono truncate" style="color:var(--green);cursor:pointer" title="Click to copy" onclick="_copyToClipboard('{{ app.target }}')">{{ app.target }}</div>
                 </div>
             </div>
             {% endif %}
