@@ -18,7 +18,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "0.12.0"
+APP_VERSION  = "0.12.1"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -443,10 +443,10 @@ def _self_route_path() -> str:
         return os.path.join(ACTIVE_CONFIG_DIR, SELF_ROUTE_FILENAME)
     return os.path.join(os.path.dirname(os.path.abspath(CONFIG_PATH)), SELF_ROUTE_FILENAME)
 
-def _write_self_route(domain: str, service_url: str, cert_resolver: str, router_name: str = 'traefik-manager') -> None:
+def _write_self_route(domain: str, service_url: str, cert_resolver: str, router_name: str = 'traefik-manager', entry_point: str = 'websecure') -> None:
     router_entry = {
         'rule': f'Host(`{domain}`)',
-        'entryPoints': ['websecure'],
+        'entryPoints': [entry_point or 'websecure'],
         'service': router_name,
         'tls': {'certResolver': cert_resolver or 'cloudflare'},
     }
@@ -1635,8 +1635,10 @@ def _find_existing_self_route(hostname: str) -> dict:
                     svc_name = (rdata.get('service') or '').split('@')[0]
                     svc = services.get(svc_name) or {}
                     servers = ((svc.get('loadBalancer') or {}).get('servers') or [])
-                    svc_url = next((str(s['url']) for s in servers if s.get('url')), '')
-                    return {'domain': hostname, 'service_url': svc_url, 'router_name': rname, 'found': True}
+                    svc_url     = next((str(s['url']) for s in servers if s.get('url')), '')
+                    eps         = rdata.get('entryPoints') or ['websecure']
+                    entry_point = eps[0] if eps else 'websecure'
+                    return {'domain': hostname, 'service_url': svc_url, 'router_name': rname, 'entry_point': entry_point, 'found': True}
         except Exception:
             continue
     return {}
@@ -1662,10 +1664,11 @@ def api_save_self_route():
     domain      = str(data.get('domain', '')).strip()
     service_url = str(data.get('service_url', '')).strip() or 'http://traefik-manager:5000'
     router_name = str(data.get('router_name', 'traefik-manager')).strip() or 'traefik-manager'
+    entry_point = str(data.get('entry_point', 'websecure')).strip() or 'websecure'
     settings = load_settings()
     if domain:
-        _write_self_route(domain, service_url, settings.get('cert_resolver', 'cloudflare'), router_name)
-        sr = {'domain': domain, 'service_url': service_url, 'router_name': router_name}
+        _write_self_route(domain, service_url, settings.get('cert_resolver', 'cloudflare'), router_name, entry_point)
+        sr = {'domain': domain, 'service_url': service_url, 'router_name': router_name, 'entry_point': entry_point}
     else:
         _delete_self_route()
         sr = {'domain': '', 'service_url': ''}

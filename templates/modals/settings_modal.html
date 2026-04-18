@@ -77,6 +77,10 @@
                                 <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Internal service URL</label>
                                 <input type="text" id="selfRouteService" class="input-field text-xs" placeholder="http://traefik-manager:5000" value="http://traefik-manager:5000">
                             </div>
+                            <div>
+                                <label class="text-xs font-semibold mb-1 block" style="color:var(--text)">Entry Point</label>
+                                <input type="text" id="selfRouteEntryPoint" class="input-field text-xs" placeholder="websecure" value="websecure">
+                            </div>
                             <div class="flex items-center gap-2">
                                 <button onclick="saveSelfRoute()" class="nav-btn text-xs"><i class="ph-bold ph-floppy-disk"></i> Save Route</button>
                                 <button onclick="deleteSelfRoute()" id="btnDeleteSelfRoute" class="nav-btn text-xs hidden" style="color:var(--red);border-color:rgba(248,81,73,0.3);"><i class="ph-bold ph-trash"></i> Remove</button>
