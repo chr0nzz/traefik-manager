@@ -817,19 +817,22 @@ async function loadSelfRoute() {
         _selfRouteRouterName = json.router_name || 'traefik-manager';
         if (domainEl)  domainEl.value  = json.domain      || hostname;
         if (serviceEl) serviceEl.value = json.service_url || 'http://traefik-manager:5000';
+        const epEl = document.getElementById('selfRouteEntryPoint');
+        if (epEl) epEl.value = json.entry_point || 'websecure';
         if (deleteBtn) deleteBtn.classList.toggle('hidden', !json.domain && !json.found);
     } catch(e) {}
 }
 
 async function saveSelfRoute() {
-    const domain     = (document.getElementById('selfRouteDomain')?.value  || '').trim();
-    const serviceUrl = (document.getElementById('selfRouteService')?.value || '').trim() || 'http://traefik-manager:5000';
+    const domain      = (document.getElementById('selfRouteDomain')?.value     || '').trim();
+    const serviceUrl  = (document.getElementById('selfRouteService')?.value    || '').trim() || 'http://traefik-manager:5000';
+    const entryPoint  = (document.getElementById('selfRouteEntryPoint')?.value || '').trim() || 'websecure';
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     try {
         const res = await fetch('/api/settings/self-route', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch', 'X-CSRF-Token': token },
-            body: JSON.stringify({ domain, service_url: serviceUrl, router_name: _selfRouteRouterName })
+            body: JSON.stringify({ domain, service_url: serviceUrl, router_name: _selfRouteRouterName, entry_point: entryPoint })
         });
         const json = await res.json();
         if (json.ok) {
