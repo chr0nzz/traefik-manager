@@ -13,6 +13,9 @@ hero:
       text: Get Started
       link: /guide
     - theme: alt
+      text: Join Beta
+      link: /beta
+    - theme: alt
       text: GitHub
       link: https://github.com/chr0nzz/traefik-manager
 
