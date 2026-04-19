@@ -26,7 +26,18 @@ This uses the `:beta` image tag automatically.
 
 ## Upgrade an existing install
 
-Use the tool below to upgrade your current `docker-compose.yml` to the beta version. Paste your compose file, choose a restart method, and click **Upgrade**.
+If you just want to test the beta without the Static Config editor, simply change your image tag to `:beta` and restart:
+
+```yaml
+image: ghcr.io/chr0nzz/traefik-manager:beta
+```
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+If you want to also enable the Static Config editor, use the tool below to upgrade your compose file with the correct restart method and volumes. Paste your compose file, choose a restart method, and click **Upgrade**.
 
 <ComposeUpgrader />
 
