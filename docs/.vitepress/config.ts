@@ -47,6 +47,7 @@ export default defineConfig({
     sidebar: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide' },
+      { text: 'Beta', link: '/beta' },
       { text: 'Mobile App', link: '/mobile' },
       { text: 'Security', link: '/security' },
       { text: 'API Reference', link: '/api' },

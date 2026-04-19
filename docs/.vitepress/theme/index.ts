@@ -9,6 +9,7 @@ import UnraidCAStatus from './components/UnraidCAStatus.vue'
 import ImageCarousel from './components/ImageCarousel.vue'
 import DesktopScreenshots from './components/DesktopScreenshots.vue'
 import MobileScreenshots from './components/MobileScreenshots.vue'
+import ComposeUpgrader from './components/ComposeUpgrader.vue'
 import './style.css'
 
 export default {
@@ -36,5 +37,6 @@ export default {
     app.component('ImageCarousel', ImageCarousel)
     app.component('DesktopScreenshots', DesktopScreenshots)
     app.component('MobileScreenshots', MobileScreenshots)
+    app.component('ComposeUpgrader', ComposeUpgrader)
   },
 }
