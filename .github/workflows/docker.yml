@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v*.*.*"
+    branches:
+      - v1
 
   workflow_dispatch:
 
@@ -17,6 +19,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      attestations: write
+      id-token: write
 
     steps:
       - name: Checkout
@@ -41,13 +45,14 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # v0.4.0 → 0.4.0, 0.4, 0, latest
-            type=raw,value=latest
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=raw,value=beta,enable=${{ github.ref == 'refs/heads/v1' || contains(github.ref, '-beta') }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
+            type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
+            type=semver,pattern={{major}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
 
       - name: Build and push (linux/amd64 + linux/arm64)
+        id: push
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -55,5 +60,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Attest image
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
