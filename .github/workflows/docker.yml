@@ -6,6 +6,10 @@ on:
       - "v*.*.*"
     branches:
       - v1
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'wrangler.toml'
 
   workflow_dispatch:
 
