@@ -105,13 +105,13 @@ function upgrade() {
       svc.environment['SIGNAL_FILE_PATH'] = '/signals/restart.sig'
 
       if (!svc.volumes) svc.volumes = []
-      if (!svc.volumes.includes('traefik-signals:/signals')) {
-        svc.volumes.push('traefik-signals:/signals')
+      if (!svc.volumes.includes('tm-signals:/signals')) {
+        svc.volumes.push('tm-signals:/signals')
       }
 
       if (!doc.volumes) doc.volumes = {}
-      if (!('traefik-signals' in doc.volumes)) {
-        doc.volumes['traefik-signals'] = null
+      if (!('tm-signals' in doc.volumes)) {
+        doc.volumes['tm-signals'] = null
       }
 
       traefixOutput.value = yaml.dump({
@@ -123,11 +123,11 @@ function upgrade() {
               timeout: '3s',
               retries: 1,
             },
-            volumes: ['traefik-signals:/signals'],
+            volumes: ['tm-signals:/signals'],
           },
         },
         volumes: {
-          'traefik-signals': null,
+          'tm-signals': null,
         },
       }, { indent: 2, lineWidth: -1, noRefs: true })
 
@@ -136,7 +136,7 @@ function upgrade() {
       svc.environment['TRAEFIK_CONTAINER'] = 'traefik'
 
       if (!svc.volumes) svc.volumes = []
-      const socketMount = '/var/run/docker.sock:/var/run/docker.sock:ro'
+      const socketMount = '/var/run/docker.sock:/var/run/docker.sock'
       if (!svc.volumes.includes(socketMount)) {
         svc.volumes.push(socketMount)
       }
