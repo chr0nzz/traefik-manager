@@ -4,11 +4,13 @@ import yaml from 'js-yaml'
 
 const input = ref('')
 const output = ref('')
+const traefixOutput = ref('')
 const restartMethod = ref('proxy')
 const enableStatic = ref(false)
 const staticHostPath = ref('')
 const error = ref('')
 const copied = ref(false)
+const copiedTraefik = ref(false)
 
 const needsStaticPath = computed(() => {
   if (!enableStatic.value || !input.value.trim()) return false
@@ -30,6 +32,7 @@ const needsStaticPath = computed(() => {
 function upgrade() {
   error.value = ''
   output.value = ''
+  traefixOutput.value = ''
 
   if (!input.value.trim()) {
     error.value = 'Paste your docker-compose content first.'
@@ -55,9 +58,11 @@ function upgrade() {
 
     const svc = doc.services[tmKey]
 
+    // Update image tag
     svc.image = svc.image.replace(/:(latest|\d+\.\d+\.\d+[\w.-]*)$/, ':beta')
     if (!svc.image.endsWith(':beta')) svc.image += ':beta'
 
+    // Normalize environment to object
     if (!svc.environment) {
       svc.environment = {}
     } else if (Array.isArray(svc.environment)) {
@@ -74,14 +79,70 @@ function upgrade() {
       svc.environment['RESTART_METHOD'] = 'proxy'
       svc.environment['DOCKER_HOST'] = 'tcp://socket-proxy:2375'
       svc.environment['TRAEFIK_CONTAINER'] = 'traefik'
+
+      if (!svc.networks) svc.networks = []
+      if (!svc.networks.includes('socket-proxy-net')) {
+        svc.networks.push('socket-proxy-net')
+      }
+
+      doc.services['socket-proxy'] = {
+        image: 'tecnativa/docker-socket-proxy',
+        container_name: 'socket-proxy',
+        restart: 'unless-stopped',
+        environment: {
+          CONTAINERS: 1,
+          POST: 1,
+        },
+        volumes: ['/var/run/docker.sock:/var/run/docker.sock:ro'],
+        networks: ['socket-proxy-net'],
+      }
+
+      if (!doc.networks) doc.networks = {}
+      doc.networks['socket-proxy-net'] = { internal: true }
+
     } else if (restartMethod.value === 'poison-pill') {
       svc.environment['RESTART_METHOD'] = 'poison-pill'
       svc.environment['SIGNAL_FILE_PATH'] = '/signals/restart.sig'
+
+      if (!svc.volumes) svc.volumes = []
+      if (!svc.volumes.includes('traefik-signals:/signals')) {
+        svc.volumes.push('traefik-signals:/signals')
+      }
+
+      if (!doc.volumes) doc.volumes = {}
+      if (!('traefik-signals' in doc.volumes)) {
+        doc.volumes['traefik-signals'] = null
+      }
+
+      traefixOutput.value = yaml.dump({
+        services: {
+          traefik: {
+            healthcheck: {
+              test: ['CMD-SHELL', '[ ! -f /signals/restart.sig ] || (rm /signals/restart.sig && kill -TERM 1)'],
+              interval: '5s',
+              timeout: '3s',
+              retries: 1,
+            },
+            volumes: ['traefik-signals:/signals'],
+          },
+        },
+        volumes: {
+          'traefik-signals': null,
+        },
+      }, { indent: 2, lineWidth: -1, noRefs: true })
+
     } else if (restartMethod.value === 'socket') {
       svc.environment['RESTART_METHOD'] = 'socket'
       svc.environment['TRAEFIK_CONTAINER'] = 'traefik'
+
+      if (!svc.volumes) svc.volumes = []
+      const socketMount = '/var/run/docker.sock:/var/run/docker.sock:ro'
+      if (!svc.volumes.includes(socketMount)) {
+        svc.volumes.push(socketMount)
+      }
     }
 
+    // Static config
     if (enableStatic.value) {
       svc.environment['STATIC_CONFIG_PATH'] = '/app/traefik.yml'
 
@@ -99,25 +160,6 @@ function upgrade() {
       }
     }
 
-    if (restartMethod.value === 'poison-pill') {
-      if (!svc.volumes) svc.volumes = []
-      if (!svc.volumes.includes('traefik-signals:/signals')) {
-        svc.volumes.push('traefik-signals:/signals')
-      }
-      if (!doc.volumes) doc.volumes = {}
-      if (!('traefik-signals' in doc.volumes)) {
-        doc.volumes['traefik-signals'] = null
-      }
-    }
-
-    if (restartMethod.value === 'socket') {
-      if (!svc.volumes) svc.volumes = []
-      const socketMount = '/var/run/docker.sock:/var/run/docker.sock:ro'
-      if (!svc.volumes.includes(socketMount)) {
-        svc.volumes.push(socketMount)
-      }
-    }
-
     output.value = yaml.dump(doc, { indent: 2, lineWidth: -1, noRefs: true })
   } catch (e: any) {
     error.value = `Failed to parse YAML: ${e.message}`
@@ -129,6 +171,13 @@ async function copy() {
   await navigator.clipboard.writeText(output.value)
   copied.value = true
   setTimeout(() => (copied.value = false), 2000)
+}
+
+async function copyTraefik() {
+  if (!traefixOutput.value) return
+  await navigator.clipboard.writeText(traefixOutput.value)
+  copiedTraefik.value = true
+  setTimeout(() => (copiedTraefik.value = false), 2000)
 }
 </script>
 
@@ -172,6 +221,15 @@ async function copy() {
         <button class="copy-btn" @click="copy">{{ copied ? 'Copied!' : 'Copy' }}</button>
       </div>
       <textarea :value="output" readonly rows="16" />
+    </div>
+
+    <div class="output-block traefik-block" v-if="traefixOutput">
+      <div class="output-header">
+        <label>Add to your Traefik compose</label>
+        <button class="copy-btn" @click="copyTraefik">{{ copiedTraefik ? 'Copied!' : 'Copy' }}</button>
+      </div>
+      <p class="hint">Merge these additions into your Traefik <code>docker-compose.yml</code> - the healthcheck and shared volume are required for poison pill to work.</p>
+      <textarea :value="traefixOutput" readonly rows="14" />
     </div>
   </div>
 </template>
@@ -245,6 +303,10 @@ async function copy() {
   flex-direction: column;
   gap: 6px;
 }
+.traefik-block {
+  border-top: 1px solid var(--vp-c-divider);
+  padding-top: 16px;
+}
 .output-header {
   display: flex;
   justify-content: space-between;
@@ -254,6 +316,11 @@ async function copy() {
   font-size: 14px;
   font-weight: 500;
   color: var(--vp-c-text-1);
+}
+.hint {
+  font-size: 13px;
+  color: var(--vp-c-text-2);
+  margin: 0;
 }
 .copy-btn {
   padding: 4px 12px;
