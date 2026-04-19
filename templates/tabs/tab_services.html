@@ -84,16 +84,16 @@
                     {% if route_domains | length > 1 %}
                     <div style="display:flex;flex-direction:column;gap:2px">
                         {% for d in route_domains %}
-                        <div class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="_copyToClipboard('{{ d }}')">{{ d }}</div>
+                        <div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">{{ d }}</div><button onclick="event.stopPropagation();_copyToClipboard('{{ d }}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>
                         {% endfor %}
                     </div>
                     {% else %}
-                    <div class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="_copyToClipboard('{{ domain or app.rule }}')">{{ domain or app.rule }}</div>
+                    <div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">{{ domain or app.rule }}</div><button onclick="event.stopPropagation();_copyToClipboard('{{ domain or app.rule }}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>
                     {% endif %}
                 </div>
                 <div class="rounded-md p-2.5" style="background:var(--input-bg); border:1px solid var(--border)">
                     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
-                    <div class="text-xs font-mono truncate" style="color:var(--green);cursor:pointer" title="Click to copy" onclick="_copyToClipboard('{{ app.target }}')">{{ app.target }}</div>
+                    <div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">{{ app.target }}</div><button onclick="event.stopPropagation();_copyToClipboard('{{ app.target }}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>
                 </div>
                 {% if app.middlewares %}
                 <div class="flex flex-wrap gap-1">
@@ -113,7 +113,7 @@
                 {% endif %}
                 <div class="rounded-md p-2.5" style="background:var(--input-bg); border:1px solid var(--border)">
                     <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
-                    <div class="text-xs font-mono truncate" style="color:var(--green);cursor:pointer" title="Click to copy" onclick="_copyToClipboard('{{ app.target }}')">{{ app.target }}</div>
+                    <div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">{{ app.target }}</div><button onclick="event.stopPropagation();_copyToClipboard('{{ app.target }}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>
                 </div>
             </div>
             {% endif %}

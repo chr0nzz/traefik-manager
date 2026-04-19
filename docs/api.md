@@ -872,6 +872,184 @@ Delete all stored notifications.
 
 ---
 
+## Static config
+
+These endpoints power the [Static Config tab](tab-static.md). All require `STATIC_CONFIG_PATH` to be set and the file to exist.
+
+#### `GET /api/static/available`
+
+Check whether the static config editor is available.
+
+**Auth:** Session or API key
+
+**Response**
+```json
+{ "available": true }
+```
+
+`available` is `false` if `STATIC_CONFIG_PATH` is not set or the file does not exist.
+
+---
+
+#### `GET /api/static/config`
+
+Read and parse the current static config file. Returns the full YAML as a string plus structured section data.
+
+**Auth:** Session or API key
+
+**Response**
+```json
+{
+  "raw": "entryPoints:\n  web:\n    address: ':80'\n",
+  "parsed": {
+    "entryPoints": { "web": { "address": ":80" } },
+    "certificatesResolvers": {},
+    "api": { "dashboard": true },
+    "log": { "level": "INFO" }
+  },
+  "path": "/app/traefik.yml"
+}
+```
+
+---
+
+#### `POST /api/static/config`
+
+Validate and write an updated static config. A timestamped backup of the current file is created before writing.
+
+**Auth:** Session or API key · **CSRF:** required (session only)
+
+**Request**
+```json
+{ "yaml": "entryPoints:\n  web:\n    address: ':80'\n" }
+```
+
+**Response**
+```json
+{ "ok": true }
+```
+
+Returns `400` with `{ "error": "..." }` if the YAML is invalid.
+
+---
+
+#### `POST /api/static/restart`
+
+Trigger a Traefik restart using the configured `RESTART_METHOD`.
+
+**Auth:** Session or API key · **CSRF:** required (session only)
+
+**Response**
+```json
+{ "ok": true }
+```
+
+Returns `500` with `{ "error": "..." }` if the restart method is not configured or the restart call fails.
+
+---
+
+#### `GET /api/static/status`
+
+Check whether Traefik is currently up. Polls `/api/overview` on the Traefik API URL.
+
+**Auth:** Session or API key
+
+**Response**
+```json
+{ "up": true }
+```
+
+Used by the reconnect overlay to detect when Traefik has finished restarting.
+
+---
+
+#### `POST /api/static/section`
+
+Update a single named item within the static config, or set a single-block section. Returns the updated raw YAML and parsed config so the UI can reflect the change without a full reload.
+
+**Auth:** Session or API key · **CSRF:** required (session only)
+
+**Request fields**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `action` | string | `add`, `edit`, `remove`, or `set` |
+| `section` | string | Target section - see table below |
+| `name` | string | Item name (required for `add`/`edit`/`remove`; omit or empty for `set`) |
+| `old_name` | string | Previous name when renaming an item during `edit` |
+| `data` | object | Section-specific fields (see below) |
+| `current_raw` | string | Current raw YAML from the client - used instead of reading from disk if provided |
+
+**Sections and actions**
+
+| `section` | Supported actions | `data` fields |
+|-----------|-------------------|---------------|
+| `entrypoints` | `add`, `edit`, `remove` | `address`, `redirect_to` |
+| `resolvers` | `add`, `edit`, `remove` | `email`, `storage`, `challenge_type` (`dnsChallenge`/`httpChallenge`/`tlsChallenge`), `provider`, `http_entrypoint` |
+| `plugins` | `add`, `edit`, `remove` | `moduleName`, `version` |
+| `api` | `set` | `enabled`, `dashboard`, `insecure`, `debug` |
+| `log` | `set` | `level` (`DEBUG`/`INFO`/`WARN`/`ERROR`), `accessLog`, `accessLogPath` |
+| `providers` | `set` | `docker`, `dockerEndpoint`, `dockerExposedByDefault`, `dockerWatch`, `file`, `fileDirectory`, `fileWatch` - updates the Docker and File providers only, leaving all other provider keys untouched |
+| `providers` | `add`, `edit`, `remove` | `name` = provider type key (e.g. `swarm`, `http`, `ecs`). For `swarm`: `endpoint`, `exposedByDefault`, `watch`. For `http`: `endpoint`, `pollInterval`. Other types: empty config (configure via Raw YAML). |
+
+**Example - add an entrypoint**
+```json
+{
+  "action": "add",
+  "section": "entrypoints",
+  "name": "websecure",
+  "data": { "address": ":443" }
+}
+```
+
+**Example - configure the API section**
+```json
+{
+  "action": "set",
+  "section": "api",
+  "data": { "enabled": true, "dashboard": true, "insecure": false, "debug": false }
+}
+```
+
+**Example - set log level and enable access log**
+```json
+{
+  "action": "set",
+  "section": "log",
+  "data": { "level": "INFO", "accessLog": true, "accessLogPath": "/var/log/traefik/access.log" }
+}
+```
+
+**Example - add a Swarm provider**
+```json
+{
+  "action": "add",
+  "section": "providers",
+  "name": "swarm",
+  "data": { "endpoint": "unix:///var/run/docker.sock", "exposedByDefault": false, "watch": true }
+}
+```
+
+**Example - remove a provider**
+```json
+{
+  "action": "remove",
+  "section": "providers",
+  "name": "swarm"
+}
+```
+
+**Response**
+```json
+{
+  "ok": true,
+  "raw": "entryPoints:\n  websecure:\n    address: ':443'\n",
+  "parsed": { "entryPoints": { "websecure": { "address": ":443" } } }
+}
+```
+
+---
+
 ## Utility
 
 #### `GET /api/manager/version`

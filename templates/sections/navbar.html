@@ -30,7 +30,9 @@
                     </button>
                 </div>
                 <button onclick="cycleTheme()" id="themeToggleBtn" class="nav-btn" title="Toggle theme">
-                    <i class="ph-bold ph-moon" id="themeIcon"></i>
+                    <i class="ph-bold ph-moon tm-theme-icon" data-pref="dark"></i>
+                    <i class="ph-bold ph-sun tm-theme-icon" data-pref="light"></i>
+                    <i class="ph-bold ph-desktop tm-theme-icon" data-pref="system"></i>
                 </button>
                 <button onclick="openSettingsModal()" class="nav-btn" title="Settings">
                     <i class="ph-bold ph-gear"></i>
@@ -54,18 +56,6 @@
             </div>
 
             <div class="flex sm:hidden items-center gap-2">
-                <div id="versionBadgeMobile" class="hidden items-center gap-1 px-2 py-1 rounded-md text-xs font-mono" style="background:var(--btn-secondary-bg); border:1px solid var(--border); color:var(--muted)">
-                    <span id="apiStatusDotMobile" style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>
-                    <i class="ph-bold ph-git-branch text-xs"></i>
-                    <span id="versionTextMobile">-</span>
-                </div>
-                <div id="tmVersionBadgeMobile" class="hidden items-center gap-1 px-2 py-1 rounded-md text-xs font-mono" style="background:var(--btn-secondary-bg); border:1px solid var(--border); color:var(--muted)">
-                    <i class="ph-bold ph-package text-xs"></i>
-                    <span id="tmVersionTextMobile">-</span>
-                </div>
-                <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="btn-icon nav-docs-link" title="Documentation">
-                    <i class="ph-bold ph-book-open text-lg"></i>
-                </a>
                 <div class="notif-bell-wrap" id="notifBellWrapMobile">
                     <button onclick="toggleNotifPanel()" class="btn-icon" id="notifBellBtnMobile" title="Notifications">
                         <i class="ph-bold ph-bell text-lg"></i>

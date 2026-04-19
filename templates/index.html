@@ -18,8 +18,30 @@
             var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             var isDark = t === 'dark' || (t === 'system' && prefersDark);
             document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-tm-pref', t);
+            if (localStorage.getItem('showStatCards') === 'false') document.documentElement.classList.add('tm-hide-stats');
+            if (localStorage.getItem('compactStatCards') === 'true') document.documentElement.classList.add('tm-compact-stats');
+            if (localStorage.getItem('showEntrypoints') === 'false') document.documentElement.classList.add('tm-hide-entrypoints');
+            if (localStorage.getItem('showDocsLink') === 'false') document.documentElement.classList.add('tm-hide-docs');
         })();
     </script>
+    <style>
+        html.tm-hide-stats #overviewSection { display: none !important; }
+        html.tm-hide-entrypoints #entrypointsBar { display: none !important; }
+        html.tm-hide-docs .nav-docs-link { display: none !important; }
+        html.tm-compact-stats #statsGrid .stat-exp-header,
+        html.tm-compact-stats #statsGrid .stat-exp-body,
+        html.tm-compact-stats #statsGrid .stat-count { display: none; }
+        html.tm-compact-stats #statsGrid .stat-cmp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        html.tm-compact-stats #statsGrid .stat-counts { display: flex; gap: 10px; font-size: 11px; font-family: monospace; margin-bottom: 8px; }
+        html.tm-compact-stats #statsGrid .stat-bar { display: flex !important; }
+        .tm-theme-icon { display: none; }
+        html[data-tm-pref="dark"] .tm-theme-icon[data-pref="dark"],
+        html[data-tm-pref="light"] .tm-theme-icon[data-pref="light"],
+        html[data-tm-pref="system"] .tm-theme-icon[data-pref="system"],
+        html:not([data-tm-pref]) .tm-theme-icon[data-pref="dark"] { display: inline; }
+        .tab-optional { display: none; }
+    </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -51,6 +73,40 @@
 </head>
 <body class="min-h-screen font-sans">
 
+
+<div id="customConfirmOverlay" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.5);backdrop-filter:blur(3px);align-items:center;justify-content:center;">
+    <div style="max-width:380px;width:90%;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:0 16px 48px rgba(0,0,0,0.4);">
+        <p class="font-semibold text-sm mb-1" style="color:var(--text)" id="customConfirmTitle"></p>
+        <p class="text-sm mb-6" style="color:var(--muted);line-height:1.6" id="customConfirmMsg"></p>
+        <div class="flex gap-2 justify-end">
+            <button id="customConfirmCancel" class="btn-secondary text-xs">Cancel</button>
+            <button id="customConfirmOk" class="btn-primary text-xs">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div id="staticYamlPopout" style="display:none;position:fixed;inset:0;z-index:9998;background:var(--bg);flex-direction:column;">
+    <div class="flex items-center justify-between px-6 py-3.5" style="border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div class="flex items-center gap-2">
+            <i class="ph-bold ph-code" style="color:var(--purple)"></i>
+            <span class="font-semibold text-sm">Raw YAML - traefik.yml</span>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="saveStaticPopout()" class="btn-primary text-xs"><i class="ph-bold ph-floppy-disk mr-1"></i>Save</button>
+            <button onclick="closeStaticYamlPopout()" class="btn-secondary text-xs"><i class="ph-bold ph-arrows-in mr-1"></i>Close</button>
+        </div>
+    </div>
+    <div id="staticYamlPopoutEditor" style="flex:1;min-height:0;"></div>
+</div>
+
+<div id="traefikRestartOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);flex-direction:column;align-items:center;justify-content:center;gap:16px">
+    <i class="ph-bold ph-arrows-clockwise text-5xl animate-spin" style="color:var(--blue);opacity:0.9"></i>
+    <div class="text-center">
+        <p class="text-lg font-semibold" style="color:var(--text)">Restarting Traefik...</p>
+        <p class="text-sm mt-1" style="color:var(--muted)">This page will reconnect automatically.</p>
+    </div>
+    <button id="traefikRestartManualReload" onclick="location.reload()" style="display:none;margin-top:8px;padding:8px 20px;border-radius:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:13px;cursor:pointer">Reload now</button>
+</div>
 
 <div id="tmUpdatePopup" class="hidden" style="position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--card);border:1px solid var(--orange);border-radius:10px;padding:14px 16px;min-width:240px;max-width:300px;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
     <div class="flex items-start gap-3">
@@ -228,6 +284,12 @@
                 Logs
             </span>
         </button>
+        <button onclick="switchTab('static')" id="btn-static" class="tab-btn" style="display:none;pointer-events:none;position:absolute;visibility:hidden">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-sliders"></i>
+                Static
+            </span>
+        </button>
     </div>
 
     
@@ -325,7 +387,7 @@ function applyTabVisibility(map) {
     OPTIONAL_TABS.forEach(tab => {
         const btn = document.getElementById('btn-' + tab);
         if (!btn) return;
-        btn.style.display = _visibleTabsCache[tab] ? '' : 'none';
+        btn.style.display = _visibleTabsCache[tab] ? 'block' : 'none';
     });
     
     const activeBtn = document.querySelector('.tab-btn.active');
@@ -583,6 +645,7 @@ function openMwModal() {
     if (newMwInput) { newMwInput.style.display = 'none'; newMwInput.value = ''; }
     if (mwCfSel && mwCfHid && mwCfSel.value !== '__new__') mwCfHid.value = mwCfSel.value;
     modal.style.display = 'flex';
+    _initMwMonaco('');
 }
 
 function closeMwModal() { document.getElementById('mwModal').style.display = 'none'; }
@@ -644,6 +707,9 @@ async function saveRouteAjax(event) {
 
 async function saveMwAjax(event) {
     event.preventDefault();
+    if (_mwMonacoEditor) {
+        document.getElementById('middlewareContent').value = _mwMonacoEditor.getValue();
+    }
     const form = event.target;
     const mwFn = document.getElementById('newMwFileName');
     if (mwFn && mwFn.style.display !== 'none' && mwFn.value && !/\.ya?ml$/.test(mwFn.value)) {
@@ -666,7 +732,7 @@ async function saveMwAjax(event) {
 }
 
 async function deleteRoute(id, configFile) {
-    if (!confirm('Delete route "' + id + '"?')) return;
+    if (!await _confirm('Delete route "' + id + '"?', 'Delete Route', 'Delete')) return;
     const data = new FormData();
     data.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
     if (configFile) data.append('configFile', configFile);
@@ -679,7 +745,7 @@ async function deleteRoute(id, configFile) {
 }
 
 async function deleteMw(name, configFile) {
-    if (!confirm('Delete middleware "' + name + '"?')) return;
+    if (!await _confirm('Delete middleware "' + name + '"?', 'Delete Middleware', 'Delete')) return;
     const data = new FormData();
     data.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
     if (configFile) data.append('configFile', configFile);
@@ -775,7 +841,7 @@ async function generateApiKey() {
 }
 
 async function revokeApiKey(preview) {
-    if (!confirm('Revoke this API key?')) return;
+    if (!await _confirm('Revoke this API key?', 'Revoke API Key', 'Revoke')) return;
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     try {
         const res = await fetch('/api/auth/apikey/revoke', {
@@ -846,7 +912,7 @@ async function saveSelfRoute() {
 }
 
 async function deleteSelfRoute() {
-    if (!confirm('Remove the self route?')) return;
+    if (!await _confirm('Remove the self route?', 'Remove Self Route', 'Remove')) return;
     document.getElementById('selfRouteDomain').value = '';
     await saveSelfRoute();
 }
@@ -881,19 +947,19 @@ function renderRouteGrid(apps) {
         const toggleTitle = enabled ? 'Disable route' : 'Enable route';
         const toggleBtn = isFileRoute ? `<button type="button" onclick="toggleRoute('${_esc(app.id)}',${enabled})" class="pill-btn ${enabled ? 'pill-btn-green' : 'pill-btn-muted'}" title="${toggleTitle}"><i class="ph-bold ${toggleIcon} text-sm"></i></button>` : '';
         const domainDisplay = allDomains.length > 1
-            ? `<div style="display:flex;flex-direction:column;gap:2px">${allDomains.map(d => `<div class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(d)}')">${_esc(d)}</div>`).join('')}</div>`
-            : `<div class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(domain || app.rule)}')">${_esc(domain || app.rule)}</div>`;
-        const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')">${_esc(app.target)}</div></div>${mwBadges ? `<div class="flex flex-wrap gap-1">${mwBadges}</div>` : ''}`;
-        const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div class="text-xs font-mono truncate" style="color:var(--green);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')">${_esc(app.target)}</div></div>`;
+            ? `<div style="display:flex;flex-direction:column;gap:2px">${allDomains.map(d => `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(d)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(d)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>`).join('')}</div>`
+            : `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(domain || app.rule)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>`;
+        const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>${mwBadges ? `<div class="flex flex-wrap gap-1">${mwBadges}</div>` : ''}`;
+        const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`;
         const cfArg = app.configFile ? `,'${_esc(app.configFile)}'` : ',\'\'';
         const cfBadge = (epBadges || app.configFile) ? '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;margin-top:8px"><div class="flex flex-wrap gap-1">' + epBadges + '</div>' + (app.configFile ? '<span class="badge badge-muted" style="font-size:9px">' + _esc(app.configFile) + '</span>' : '') + '</div>' : '';
         const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}"`;
         const listDomainDisplay = allDomains.length > 1
-            ? `<div style="display:flex;flex-direction:column;gap:1px">${allDomains.map(d => `<span class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(d)}')">${_esc(d)}</span>`).join('')}</div>`
-            : `<span class="text-xs font-mono truncate" style="color:var(--blue);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(domain || app.rule)}')">${_esc(domain || app.rule)}</span>`;
+            ? `<div style="display:flex;flex-direction:column;gap:1px">${allDomains.map(d => `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(d)}</span><button onclick="event.stopPropagation();_copyToClipboard('${_esc(d)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>`).join('')}</div>`
+            : `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</span><button onclick="event.stopPropagation();_copyToClipboard('${_esc(domain || app.rule)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>`;
         if (_routeViewMode === 'list') {
             const epCompact = (app.entryPoints || []).slice(0, 2).map(ep => `<span class="badge badge-muted" style="font-size:9px">${_esc(ep)}</span>`).join('');
-            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" ${dataAttrs}><div class="svc-list-col-status"><span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span></div><div style="display:flex;align-items:center;gap:4px"><span class="badge ${badgeClass}" style="font-size:9px">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}</div><div class="svc-list-col-name">${_esc(app.name)}<div class="text-xs font-mono truncate" style="color:var(--muted);margin-top:1px">${_esc(app.service_name)}</div></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div class="text-xs font-mono truncate" style="color:var(--green);cursor:pointer" title="Click to copy" onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')">${_esc(app.target)}</div><div style="display:flex;align-items:center;gap:3px">${epCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('[data-routekey]'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
+            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" ${dataAttrs}><div class="svc-list-col-status"><span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span></div><div style="display:flex;align-items:center;gap:4px"><span class="badge ${badgeClass}" style="font-size:9px">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}</div><div class="svc-list-col-name">${_esc(app.name)}<div class="text-xs font-mono truncate" style="color:var(--muted);margin-top:1px">${_esc(app.service_name)}</div></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div><div style="display:flex;align-items:center;gap:3px">${epCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('[data-routekey]'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
         }
         return `<div class="card route-card${enabled ? '' : ' opacity-50'}" ${dataAttrs}><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5"><span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div>${cfBadge}</div></div>`;
     }).join('');
@@ -1164,7 +1230,6 @@ function handleMwEdit(btn) {
     document.getElementById('isMwEdit').value = 'true';
     document.getElementById('originalMwId').value = mw.name;
     document.getElementById('middlewareName').value = mw.name;
-    document.getElementById('middlewareContent').value = mw.yaml.trim();
     document.getElementById('mwModalTitle').innerText = 'Edit ' + mw.name;
     document.getElementById('mwConfigFile').value = mw.configFile || '';
     const cfSel = document.getElementById('mwConfigFileSelect');
@@ -1172,6 +1237,7 @@ function handleMwEdit(btn) {
     const newMwInput = document.getElementById('newMwFileName');
     if (newMwInput) { newMwInput.style.display = 'none'; newMwInput.value = ''; }
     document.getElementById('mwModal').style.display = 'flex';
+    _initMwMonaco(mw.yaml.trim());
 }
 
 const mwTemplates = {
@@ -1200,7 +1266,12 @@ const mwTemplates = {
 
 function applyMwTemplate(select) {
     if (select.value && mwTemplates[select.value]) {
-        document.getElementById('middlewareContent').value = mwTemplates[select.value];
+        const val = mwTemplates[select.value];
+        if (_mwMonacoEditor) {
+            _mwMonacoEditor.setValue(val);
+        } else {
+            document.getElementById('middlewareContent').value = val;
+        }
     }
 }
 
@@ -1225,11 +1296,11 @@ async function loadOverviewStats() {
         if (dotEl)  dotEl.style.background  = dotColor;
         if (dotElM) dotElM.style.background = dotColor;
 
-        
         if (version.status === 'fulfilled' && version.value && version.value.Version) {
             _currentVersion = version.value.Version;
             document.getElementById('versionText').textContent = 'v' + _currentVersion;
-            document.getElementById('versionTextMobile').textContent = 'v' + _currentVersion;
+            const vtm = document.getElementById('versionTextMobile');
+            if (vtm) vtm.textContent = 'v' + _currentVersion;
             if (localStorage.getItem('showTraefikBadge') !== 'false') {
                 document.getElementById('versionBadge')?.classList.remove('hidden');
                 document.getElementById('versionBadgeMobile')?.classList.remove('hidden');
@@ -1502,8 +1573,9 @@ async function checkManagerVersion() {
         }
 
         if (current) {
-            document.getElementById('tmVersionText').textContent     = 'v' + current;
-            document.getElementById('tmVersionTextMobile').textContent = 'v' + current;
+            document.getElementById('tmVersionText').textContent = 'v' + current;
+            const vtmm = document.getElementById('tmVersionTextMobile');
+            if (vtmm) vtmm.textContent = 'v' + current;
             _applyTmBadgeVisibility();
         }
 
@@ -1538,7 +1610,6 @@ async function checkManagerVersion() {
             if (notice && text) { text.textContent = `v${latestTag} available`; notice.classList.remove('hidden'); }
 
             const badge  = document.getElementById('tmVersionBadge');
-            const badgeM = document.getElementById('tmVersionBadgeMobile');
             if (badge) {
                 badge.classList.add('update-available');
                 badge.title   = `Update available: v${latestTag}`;
@@ -1546,10 +1617,6 @@ async function checkManagerVersion() {
             }
             document.getElementById('tmVersionText').innerHTML =
                 `v${current} <i class="ph-bold ph-arrow-circle-up" style="font-size:11px"></i>`;
-            if (badgeM) {
-                badgeM.style.color       = 'var(--orange)';
-                badgeM.style.borderColor = 'var(--orange)';
-            }
 
             if (localStorage.getItem('tmUpdateDismissed') !== latestTag) {
                 const popup   = document.getElementById('tmUpdatePopup');
@@ -2336,15 +2403,12 @@ function renderSection(title, icon, rows) {
 }
 
 const THEMES = ['dark', 'light', 'system'];
-const THEME_ICONS = { dark: 'ph-moon', light: 'ph-sun', system: 'ph-desktop' };
 
 function applyTheme(theme) {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    
-    const icon = document.getElementById('themeIcon');
-    if (icon) icon.className = `ph-bold ${THEME_ICONS[theme]}`;
+    document.documentElement.setAttribute('data-tm-pref', theme);
     
     ['dark','light','system'].forEach(t => {
         document.getElementById('theme-'+t+'-m')?.classList.toggle('active', t === theme);
@@ -2468,33 +2532,55 @@ function _copyCode(btn, text) {
     });
 }
 
+let _pluginCanManage = false;
+let _pluginEditName  = null;
+let _pluginStaticMonaco = null;
+let _pluginMwMonaco = null;
+
 async function refreshPluginsTab() {
     const container = document.getElementById('pluginsContent');
     container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading plugins...</p></div>`;
     try {
-        const res = await fetch('/api/traefik/plugins').then(r => r.json());
+        const [res, avail] = await Promise.all([
+            fetch('/api/traefik/plugins').then(r => r.json()),
+            fetch('/api/static/available').then(r => r.json()),
+        ]);
+        _pluginCanManage = avail.available === true;
+        const addBtn = document.getElementById('pluginAddBtnWrap');
+        if (addBtn) addBtn.style.display = _pluginCanManage ? 'flex' : 'none';
+
         const plugins = Array.isArray(res.plugins) ? res.plugins : [];
 
         if (res.error && plugins.length === 0) {
-            container.innerHTML = _emptyMountState({
-                icon: 'ph-puzzle-piece',
-                title: 'traefik.yml not mounted',
-                description: 'Mount your Traefik static config (<code class="font-mono" style="color:var(--blue)">traefik.yml</code>) into this container read-only to view installed plugins.',
-                steps: [
-                    { label: 'Add this volume to the <code class="font-mono">traefik-manager</code> service in your <code class="font-mono">docker-compose.yml</code>:',
-                      code: '- /path/to/traefik/traefik.yml:/app/traefik.yml:ro' },
-                ],
-                note: 'No Traefik restart needed - only traefik-manager needs to be updated.'
-            });
+            container.innerHTML = `
+            <div class="text-center py-10 rounded-xl" style="border:1px solid var(--border);color:var(--muted)">
+                <i class="ph-light ph-puzzle-piece text-5xl block mb-3 opacity-30"></i>
+                <p class="font-semibold mb-1" style="color:var(--text)">Static config not configured</p>
+                <p class="text-xs max-w-xs mx-auto mb-5">To manage plugins here, mount your Traefik static config and set <code class="font-mono" style="color:var(--blue)">STATIC_CONFIG_PATH</code>.</p>
+                <div class="flex flex-col gap-2 items-center text-xs">
+                    <a href="https://get-traefik.xyzlab.dev" target="_blank" class="btn-secondary" style="text-decoration:none"><i class="ph-bold ph-terminal"></i> Install script</a>
+                    <a href="https://traefik-manager.xyzlab.dev/env-vars#static-config-path" target="_blank" class="btn-secondary" style="text-decoration:none"><i class="ph-bold ph-book-open"></i> Setup docs</a>
+                </div>
+                <div class="mt-5 mx-auto text-left rounded-lg p-3 text-xs font-mono" style="max-width:420px;background:var(--input-bg);border:1px solid var(--border);color:var(--muted)">
+                    <div style="color:var(--text);margin-bottom:4px">docker-compose.yml</div>
+                    environment:<br>
+                    &nbsp;&nbsp;- STATIC_CONFIG_PATH=/app/traefik.yml<br>
+                    volumes:<br>
+                    &nbsp;&nbsp;- /path/to/traefik.yml:/app/traefik.yml
+                </div>
+            </div>`;
             document.getElementById('pluginsTabCount').textContent = '0';
             return;
         }
 
         if (plugins.length === 0) {
+            const addHint = _pluginCanManage
+                ? `<button onclick="openPluginForm()" class="btn-primary text-xs mt-3"><i class="ph-bold ph-plus"></i> Add Plugin</button>`
+                : `<p class="text-xs max-w-sm mx-auto mt-1">Add plugins under <code class="font-mono">experimental.plugins</code> in your <code class="font-mono">traefik.yml</code>.</p>`;
             container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">
                 <i class="ph-light ph-puzzle-piece text-5xl block mb-3 opacity-30"></i>
                 <p class="font-medium mb-1">No plugins configured</p>
-                <p class="text-xs max-w-sm mx-auto mt-1">Add plugins under <code class="font-mono">experimental.plugins</code> in your <code class="font-mono">traefik.yml</code>.</p>
+                ${addHint}
             </div>`;
             document.getElementById('pluginsTabCount').textContent = '0';
             return;
@@ -2509,6 +2595,164 @@ async function refreshPluginsTab() {
 }
 
 function filterPlugins() { renderPluginCards(); }
+
+function _initPluginStaticMonaco(value) {
+    const container = document.getElementById('pluginStaticEditorContainer');
+    if (!container) return;
+    if (_pluginStaticMonaco) {
+        _pluginStaticMonaco.setValue(value);
+        setTimeout(() => _pluginStaticMonaco.layout(), 50);
+        return;
+    }
+    require(['vs/editor/editor.main'], function() {
+        _ensureMonacoThemes().then(() => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            _pluginStaticMonaco = monaco.editor.create(container, {
+                value: value,
+                language: 'yaml',
+                theme: _monacoThemeName(isDark),
+                minimap: { enabled: false },
+                fontSize: 13,
+                lineNumbers: 'off',
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                wordWrap: 'off',
+            });
+        });
+    });
+}
+
+function _initPluginMwMonaco(value) {
+    const container = document.getElementById('pluginMwEditorContainer');
+    if (!container) return;
+    if (_pluginMwMonaco) {
+        _pluginMwMonaco.setValue(value);
+        setTimeout(() => _pluginMwMonaco.layout(), 50);
+        return;
+    }
+    require(['vs/editor/editor.main'], function() {
+        _ensureMonacoThemes().then(() => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            _pluginMwMonaco = monaco.editor.create(container, {
+                value: value,
+                language: 'yaml',
+                theme: _monacoThemeName(isDark),
+                minimap: { enabled: false },
+                fontSize: 13,
+                lineNumbers: 'off',
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                wordWrap: 'off',
+            });
+        });
+    });
+}
+
+function openPluginForm(idx = -1) {
+    const form = document.getElementById('pluginForm');
+    const title = document.getElementById('pluginFormTitle');
+    const addSection = document.getElementById('pluginFormAdd');
+    const editSection = document.getElementById('pluginFormEdit');
+    if (!form) return;
+    if (idx >= 0 && idx < _allPlugins.length) {
+        const p = _allPlugins[idx];
+        document.getElementById('pluginFormName').value    = p.name || '';
+        document.getElementById('pluginFormModule').value  = p.moduleName || '';
+        document.getElementById('pluginFormVersion').value = p.version || '';
+        _pluginEditName = p.name;
+        if (title) title.textContent = 'Edit Plugin';
+        if (addSection) addSection.style.display = 'none';
+        if (editSection) editSection.style.display = 'block';
+        form.style.display = 'block';
+        document.getElementById('pluginFormName').focus();
+    } else {
+        _pluginEditName = null;
+        if (title) title.textContent = 'Add Plugin';
+        if (addSection) addSection.style.display = 'block';
+        if (editSection) editSection.style.display = 'none';
+        const rb = document.getElementById('pluginRestartBanner');
+        if (rb) rb.style.display = 'none';
+        form.style.display = 'block';
+        setTimeout(() => {
+            _initPluginStaticMonaco('experimental:\n  plugins:\n    myPlugin:\n      moduleName: github.com/author/plugin\n      version: v0.1.0');
+            _initPluginMwMonaco('http:\n  middlewares:\n    my-myPlugin:\n      plugin:\n        myPlugin:\n          setting: value');
+        }, 50);
+    }
+}
+
+function closePluginForm() {
+    const form = document.getElementById('pluginForm');
+    if (form) form.style.display = 'none';
+    _pluginEditName = null;
+}
+
+async function savePlugin() {
+    if (_pluginEditName) {
+        const name       = document.getElementById('pluginFormName').value.trim();
+        const moduleName = document.getElementById('pluginFormModule').value.trim();
+        const version    = document.getElementById('pluginFormVersion').value.trim();
+        if (!name || !moduleName || !version) { showToast('Name, module, and version are required', 'error'); return; }
+        const r1 = await fetch('/api/static/section', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+            body: JSON.stringify({ section: 'plugins', action: 'edit', name, old_name: _pluginEditName, payload: { moduleName, version } }),
+        });
+        const d1 = await r1.json();
+        if (!d1.ok) { showToast(d1.error || 'Failed', 'error'); return; }
+        const r2 = await fetch('/api/static/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+            body: JSON.stringify({ content: d1.raw }),
+        });
+        const d2 = await r2.json();
+        if (!d2.ok) { showToast(d2.error || 'Failed to save', 'error'); return; }
+        closePluginForm();
+        showToast('Plugin saved - restart Traefik to apply', 'success');
+        refreshPluginsTab();
+    } else {
+        const staticYaml = _pluginStaticMonaco ? _pluginStaticMonaco.getValue().trim() : '';
+        const mwYaml = _pluginMwMonaco ? _pluginMwMonaco.getValue().trim() : '';
+        if (!staticYaml) { showToast('Paste the static config snippet', 'error'); return; }
+        const res = await fetch('/api/plugins/install', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+            body: JSON.stringify({ static_yaml: staticYaml, middleware_yaml: mwYaml }),
+        });
+        const data = await res.json();
+        if (!data.ok) { showToast(data.error || 'Failed to install plugin', 'error'); return; }
+        closePluginForm();
+        const banner = document.getElementById('pluginRestartBanner');
+        const detail = document.getElementById('pluginRestartBannerDetail');
+        if (banner) {
+            const names = (data.plugins || []).join(', ');
+            const hasMw = mwYaml.length > 0 && !data.warning;
+            if (detail) detail.textContent = `Plugin${data.plugins?.length > 1 ? 's' : ''} "${names}" saved to traefik.yml${hasMw ? ' and middleware saved to plugin-middlewares.yml' : ''}.`;
+            banner.style.display = 'block';
+        }
+        if (data.warning) showToast(data.warning, 'warning');
+        refreshPluginsTab();
+    }
+}
+
+async function deletePlugin(name) {
+    if (!await _confirm(`Remove plugin "${name}"?`, 'Remove Plugin', 'Remove')) return;
+    const r1 = await fetch('/api/static/section', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+        body: JSON.stringify({ section: 'plugins', action: 'remove', name, old_name: name, payload: {} }),
+    });
+    const d1 = await r1.json();
+    if (!d1.ok) { showToast(d1.error || 'Failed', 'error'); return; }
+    const r2 = await fetch('/api/static/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+        body: JSON.stringify({ content: d1.raw }),
+    });
+    const d2 = await r2.json();
+    if (!d2.ok) { showToast(d2.error || 'Failed to save', 'error'); return; }
+    showToast('Plugin removed - restart Traefik to apply', 'success');
+    refreshPluginsTab();
+}
 
 function renderPluginCards() {
     const q = (document.getElementById('pluginsSearch')?.value || '').toLowerCase();
@@ -2526,6 +2770,9 @@ function renderPluginCards() {
         const version    = p.version || '-';
         const moduleName = p.moduleName || '';
         const repoUrl    = moduleName.startsWith('github.com/') ? 'https://' + moduleName : '';
+        const mgmtBtns   = _pluginCanManage ? `
+            <button onclick="openPluginForm(${idx})" class="btn-icon" title="Edit" style="padding:4px 6px"><i class="ph-bold ph-pencil text-sm"></i></button>
+            <button onclick="deletePlugin('${_esc(name)}')" class="btn-icon" title="Remove" style="padding:4px 6px;color:var(--red)"><i class="ph-bold ph-trash text-sm"></i></button>` : '';
         return `
         <div class="card p-4 hover:border-blue-500/40 transition-all">
             <div class="flex items-start justify-between gap-3 mb-3">
@@ -2535,9 +2782,8 @@ function renderPluginCards() {
                 </div>
                 <div class="flex items-center gap-1 shrink-0">
                     ${repoUrl ? `<a href="${repoUrl}" target="_blank" class="btn-icon" title="View on GitHub" style="padding:4px 6px;text-decoration:none"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : ''}
-                    <button onclick="openPluginDetail(${idx})" class="btn-icon" title="View details" style="padding:4px 6px">
-                        <i class="ph-bold ph-info text-sm"></i>
-                    </button>
+                    <button onclick="openPluginDetail(${idx})" class="btn-icon" title="View details" style="padding:4px 6px"><i class="ph-bold ph-info text-sm"></i></button>
+                    ${mgmtBtns}
                 </div>
             </div>
             <div class="space-y-2 text-xs">
@@ -2830,6 +3076,14 @@ function closeLogDetail() {
     } catch(e) {
         applyTabVisibility({});
     }
+    try {
+        const res  = await fetch('/api/static/available');
+        const data = await res.json();
+        const sidebarBtn = document.getElementById('msb-static');
+        if (sidebarBtn) sidebarBtn.style.display = data.available ? '' : 'none';
+        const mobileStaticRow = document.getElementById('msb-static-mobile');
+        if (mobileStaticRow) mobileStaticRow.style.display = data.available ? '' : 'none';
+    } catch(e) {}
     if (typeof applyUiPrefs === 'function') applyUiPrefs();
     if (typeof _applyDocsLinkVisibility === 'function') _applyDocsLinkVisibility();
     loadOverviewStats();
@@ -3002,6 +3256,1051 @@ if (document.getElementById('toastContainer') && document.getElementById('toastC
 </footer>
 
 <div id="_copyToast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:500;pointer-events:none;opacity:0;transition:opacity 0.2s;z-index:9999"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
+<script>
+require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs' } });
+
+let _staticMonaco          = null;
+let _staticRawContent      = '';
+let _staticOriginalContent = '';
+let _staticPendingChanges  = false;
+let _staticSaved           = false;
+
+function _confirm(message, title, okLabel) {
+    return new Promise(resolve => {
+        const overlay = document.getElementById('customConfirmOverlay');
+        const msg     = document.getElementById('customConfirmMsg');
+        const ttl     = document.getElementById('customConfirmTitle');
+        const ok      = document.getElementById('customConfirmOk');
+        const cancel  = document.getElementById('customConfirmCancel');
+        if (msg)    msg.textContent = message;
+        if (ttl)    ttl.textContent = title || '';
+        if (ok)     ok.textContent  = okLabel || 'Confirm';
+        if (overlay) overlay.style.display = 'flex';
+        const done = (val) => {
+            if (overlay) overlay.style.display = 'none';
+            if (ok)     ok.onclick     = null;
+            if (cancel) cancel.onclick = null;
+            resolve(val);
+        };
+        if (ok)     ok.onclick     = () => done(true);
+        if (cancel) cancel.onclick = () => done(false);
+    });
+}
+
+let _mwMonacoEditor = null;
+let _monacoThemesPromise = null;
+
+function _monacoThemeName(isDark) { return isDark ? 'github-dark' : 'github-light'; }
+
+function _ensureMonacoThemes() {
+    if (_monacoThemesPromise) return _monacoThemesPromise;
+    _monacoThemesPromise = Promise.all([
+        fetch('https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Light.json').then(r => r.json()),
+        fetch('https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Dark.json').then(r => r.json()),
+    ]).then(([light, dark]) => {
+        monaco.editor.defineTheme('github-light', light);
+        monaco.editor.defineTheme('github-dark', dark);
+    }).catch(() => { _monacoThemesPromise = null; });
+    return _monacoThemesPromise;
+}
+
+function _initMwMonaco(value) {
+    const container = document.getElementById('mwEditorContainer');
+    if (!container) return;
+    if (_mwMonacoEditor) {
+        _mwMonacoEditor.setValue(value);
+        setTimeout(() => _mwMonacoEditor.layout(), 50);
+        return;
+    }
+    require(['vs/editor/editor.main'], function() {
+        _ensureMonacoThemes().then(() => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            _mwMonacoEditor = monaco.editor.create(container, {
+                value: value,
+                language: 'yaml',
+                theme: _monacoThemeName(isDark),
+                minimap: { enabled: false },
+                fontSize: 13,
+                lineNumbers: 'off',
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                wordWrap: 'off',
+            });
+        });
+    });
+}
+
+function _initStaticMonaco(content) {
+    const container = document.getElementById('staticYamlPopoutEditor');
+    if (!container) return;
+    if (_staticMonaco) {
+        _staticMonaco.setValue(content);
+        _staticOriginalContent = content;
+        return;
+    }
+    require(['vs/editor/editor.main'], function() {
+        _ensureMonacoThemes().then(() => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            _staticMonaco = monaco.editor.create(container, {
+                value: content,
+                language: 'yaml',
+                theme: _monacoThemeName(isDark),
+                minimap: { enabled: true },
+                fontSize: 13,
+                lineNumbers: 'on',
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                wordWrap: 'off',
+            });
+            _staticOriginalContent = content;
+            _staticMonaco.onDidChangeModelContent(() => {
+                if (_staticMonaco.getValue() !== _staticOriginalContent) {
+                    _markStaticPending();
+                } else {
+                    _clearStaticPending();
+                }
+            });
+        });
+    });
+}
+
+function openStaticYamlPopout() {
+    const overlay = document.getElementById('staticYamlPopout');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    if (_staticMonaco) {
+        setTimeout(() => _staticMonaco.layout(), 50);
+    } else {
+        _initStaticMonaco(_staticRawContent);
+    }
+}
+
+function closeStaticYamlPopout() {
+    const overlay = document.getElementById('staticYamlPopout');
+    if (overlay) overlay.style.display = 'none';
+}
+
+async function saveStaticPopout() {
+    await saveStaticConfig();
+    closeStaticYamlPopout();
+}
+
+function _markStaticPending() {
+    if (_staticPendingChanges) return;
+    _staticPendingChanges = true;
+    const b = document.getElementById('staticPendingBanner');
+    if (b) b.style.display = 'flex';
+}
+
+function _clearStaticPending() {
+    _staticPendingChanges = false;
+    const b = document.getElementById('staticPendingBanner');
+    if (b) b.style.display = 'none';
+}
+
+function _showStaticRestartBanner() {
+    const b = document.getElementById('staticRestartBanner');
+    if (b) {
+        b.style.display = 'flex';
+        b.style.background = 'rgba(239,68,68,0.08)';
+        b.style.border = '1px solid rgba(239,68,68,0.25)';
+    }
+}
+
+function _hideStaticRestartBanner() {
+    const b = document.getElementById('staticRestartBanner');
+    if (b) b.style.display = 'none';
+}
+
+async function discardStaticChanges() {
+    await _loadStaticFromDisk();
+}
+
+async function saveStaticConfig() {
+    const content = _staticMonaco ? _staticMonaco.getValue() : _staticRawContent;
+    try {
+        const res  = await fetch('/api/static/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+            body: JSON.stringify({ content }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+            _staticRawContent = content;
+            _staticOriginalContent = content;
+            _staticSaved = true;
+            _clearStaticPending();
+            _showStaticRestartBanner();
+            showToast('Static config saved', 'success');
+            try {
+                const r2 = await fetch('/api/static/config');
+                const d2 = await r2.json();
+                _renderStaticSections(d2.parsed);
+            } catch(e) {}
+        } else {
+            showToast(data.error || 'Save failed', 'error');
+        }
+    } catch(e) {
+        showToast('Save failed', 'error');
+    }
+}
+
+function _showRestartOverlay() {
+    const el = document.getElementById('traefikRestartOverlay');
+    if (el) el.style.display = 'flex';
+}
+
+function _hideRestartOverlay() {
+    const el = document.getElementById('traefikRestartOverlay');
+    if (el) el.style.display = 'none';
+}
+
+async function _waitForReconnect(immediate = false) {
+    setTimeout(() => {
+        const btn = document.getElementById('traefikRestartManualReload');
+        if (btn) btn.style.display = 'inline-block';
+    }, 8000);
+    if (!immediate) {
+        await new Promise(r => setTimeout(r, 1500));
+        let wentDown = false;
+        for (let i = 0; i < 8 && !wentDown; i++) {
+            await new Promise(r => setTimeout(r, 1000));
+            try { await fetch('/api/health', { signal: AbortSignal.timeout(1000) }); }
+            catch(e) { wentDown = true; }
+        }
+    }
+    while (true) {
+        await new Promise(r => setTimeout(r, 1500));
+        try {
+            const r = await fetch('/api/health', { signal: AbortSignal.timeout(3000) });
+            if (r.ok) { location.reload(); return; }
+        } catch(e) {}
+    }
+}
+
+async function triggerTraefikRestart() {
+    _showRestartOverlay();
+    try {
+        const res  = await fetch('/api/static/restart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+        });
+        const data = await res.json();
+        if (data.ok) {
+            _hideStaticRestartBanner();
+            _staticSaved = false;
+            _waitForReconnect(false);
+        } else {
+            _hideRestartOverlay();
+            showToast(data.error || 'Restart failed', 'error');
+        }
+    } catch(e) {
+        _hideStaticRestartBanner();
+        _waitForReconnect(true);
+    }
+}
+
+let _staticParsedData    = {};
+let _staticEditState     = { section: null, name: null };
+let _staticActiveSection = 'entrypoints';
+let _traefikRuntime      = null;
+
+function _sfFormKey(s)   { return {entrypoints:'Ep', resolvers:'Res', plugins:'Plugin', providers:'Provider'}[s]||''; }
+function _sfFormLabel(s) { return {entrypoints:'Entrypoint', resolvers:'Resolver', plugins:'Plugin', providers:'Provider'}[s]||''; }
+
+function _updateStaticTabArrows() {
+    const bar = document.getElementById('staticTabBar');
+    const lBtn = document.getElementById('staticTabArrowL');
+    const rBtn = document.getElementById('staticTabArrowR');
+    if (!bar || !lBtn || !rBtn) return;
+    const overflow = bar.scrollWidth > bar.clientWidth + 2;
+    lBtn.style.display = overflow && bar.scrollLeft > 2 ? '' : 'none';
+    rBtn.style.display = overflow && bar.scrollLeft < bar.scrollWidth - bar.clientWidth - 2 ? '' : 'none';
+}
+
+function _scrollStaticTabs(dir) {
+    const bar = document.getElementById('staticTabBar');
+    if (bar) bar.scrollBy({ left: dir * 160, behavior: 'smooth' });
+}
+
+function switchStaticSection(section) {
+    _staticActiveSection = section;
+    const sectionColors  = { entrypoints: 'var(--blue)', resolvers: 'var(--green)', plugins: 'var(--purple)', providers: 'var(--teal)' };
+    const sectionLabels  = { entrypoints: 'Entrypoint', resolvers: 'Resolver', plugins: 'Plugin', providers: 'Provider' };
+    const hdrIcon   = document.getElementById('staticHdrAddIcon');
+    const hdrLabel  = document.getElementById('staticHdrAddLabel');
+    const hdrAddBtn = document.getElementById('staticHdrAddBtn');
+    if (hdrIcon)  hdrIcon.style.color = sectionColors[section] || 'var(--blue)';
+    if (hdrLabel) hdrLabel.textContent = sectionLabels[section] || 'Add';
+    const isSingleBlock = ['api','log'].includes(section);
+    if (hdrAddBtn) hdrAddBtn.style.display = isSingleBlock ? 'none' : '';
+    ['entrypoints','resolvers','plugins','api','log','providers'].forEach(s => {
+        const panel = document.getElementById('staticPanel-' + s);
+        const btn   = document.getElementById('ssnBtn-' + s);
+        if (panel) panel.style.display = s === section ? '' : 'none';
+        if (btn) {
+            btn.classList.toggle('active', s === section);
+            if (s === section) btn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        }
+    });
+    requestAnimationFrame(_updateStaticTabArrows);
+}
+
+function openStaticAddForm(section) {
+    if (_staticEditState.section) closeStaticForm(_staticEditState.section);
+    _staticEditState = { section, name: null };
+    _resetStaticForm(section);
+    const f = document.getElementById('staticForm-' + section);
+    if (f) f.style.display = 'block';
+    const btn = document.getElementById('sf' + _sfFormKey(section) + 'Btn');
+    if (btn) btn.textContent = 'Add ' + _sfFormLabel(section);
+    if (section === 'entrypoints') document.getElementById('sfEpName')?.focus();
+    if (section === 'resolvers')   document.getElementById('sfResName')?.focus();
+    if (section === 'plugins')     document.getElementById('sfPluginName')?.focus();
+    if (section === 'providers')   document.getElementById('sfProviderType')?.focus();
+}
+
+function openStaticEditForm(section, name) {
+    if (_staticEditState.section) closeStaticForm(_staticEditState.section);
+    _staticEditState = { section, name };
+    _prefillStaticForm(section, name);
+    const f = document.getElementById('staticForm-' + section);
+    if (f) f.style.display = 'block';
+    const btn = document.getElementById('sf' + _sfFormKey(section) + 'Btn');
+    if (btn) btn.textContent = 'Save Changes';
+}
+
+function closeStaticForm(section) {
+    if (!section) return;
+    const f = document.getElementById('staticForm-' + section);
+    if (f) f.style.display = 'none';
+    _staticEditState = { section: null, name: null };
+}
+
+function _resetStaticForm(section) {
+    if (section === 'entrypoints') {
+        ['sfEpName','sfEpAddr','sfEpRedirect'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+    } else if (section === 'resolvers') {
+        ['sfResName','sfResEmail','sfResProvider'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+        const st = document.getElementById('sfResStorage'); if (st) st.value = '/acme.json';
+        const ch = document.getElementById('sfResChallenge'); if (ch) ch.value = 'dnsChallenge';
+        onStaticChallengeChange();
+    } else if (section === 'plugins') {
+        ['sfPluginName','sfPluginModule','sfPluginVersion'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+    } else if (section === 'providers') {
+        const t = document.getElementById('sfProviderType'); if (t) t.value = '';
+        ['sfProviderEndpoint','sfProviderHttpEndpoint','sfProviderPollInterval'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+        _setStaticToggle('providerExposedByDefault', false);
+        _setStaticToggle('providerWatch', true);
+        ['sfProviderSwarmFields','sfProviderHttpFields','sfProviderOtherNote'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+    }
+}
+
+function _prefillStaticForm(section, name) {
+    _resetStaticForm(section);
+    const d = _staticParsedData || {};
+    if (section === 'entrypoints') {
+        const ep = (d.entryPoints || d.entrypoints || {})[name] || {};
+        document.getElementById('sfEpName').value    = name;
+        document.getElementById('sfEpAddr').value    = ep.address || '';
+        document.getElementById('sfEpRedirect').value = ep.http?.redirections?.entryPoint?.to || '';
+    } else if (section === 'resolvers') {
+        const acme = ((d.certificatesResolvers || {})[name] || {}).acme || {};
+        document.getElementById('sfResName').value    = name;
+        document.getElementById('sfResEmail').value   = acme.email || '';
+        document.getElementById('sfResStorage').value = acme.storage || '/acme.json';
+        const ct = acme.dnsChallenge ? 'dnsChallenge' : acme.httpChallenge ? 'httpChallenge' : 'tlsChallenge';
+        document.getElementById('sfResChallenge').value = ct;
+        document.getElementById('sfResProvider').value  = (acme.dnsChallenge || {}).provider || '';
+        document.getElementById('sfResHttpEp').value    = (acme.httpChallenge || {}).entryPoint || 'web';
+        onStaticChallengeChange();
+    } else if (section === 'plugins') {
+        const p = ((d.experimental || {}).plugins || {})[name] || {};
+        document.getElementById('sfPluginName').value    = name;
+        document.getElementById('sfPluginModule').value  = p.moduleName || '';
+        document.getElementById('sfPluginVersion').value = p.version || '';
+    }
+}
+
+function onStaticChallengeChange() {
+    const ct   = document.getElementById('sfResChallenge')?.value;
+    const dns  = document.getElementById('sfResDnsRow');
+    const http = document.getElementById('sfResHttpRow');
+    if (dns)  dns.style.display  = ct === 'dnsChallenge'  ? '' : 'none';
+    if (http) http.style.display = ct === 'httpChallenge' ? '' : 'none';
+}
+
+async function _applyStaticSectionChange(body) {
+    const res  = await fetch('/api/static/section', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+        body: JSON.stringify({ ...body, current_raw: _staticRawContent }),
+    });
+    const data = await res.json();
+    if (!data.ok) { showToast(data.error || 'Failed', 'error'); return; }
+    _staticParsedData = data.parsed || {};
+    _staticRawContent = data.raw || '';
+    _renderStaticSections(_staticParsedData);
+    if (_staticMonaco) _staticMonaco.setValue(_staticRawContent);
+    _markStaticPending();
+}
+
+async function submitStaticSection(section) {
+    const action   = _staticEditState.name ? 'edit' : 'add';
+    const old_name = _staticEditState.name || '';
+    let name, payload;
+    if (section === 'entrypoints') {
+        name    = document.getElementById('sfEpName').value.trim();
+        payload = { address: document.getElementById('sfEpAddr').value.trim(), redirect_to: document.getElementById('sfEpRedirect').value.trim() };
+    } else if (section === 'resolvers') {
+        name    = document.getElementById('sfResName').value.trim();
+        payload = { email: document.getElementById('sfResEmail').value.trim(), storage: document.getElementById('sfResStorage').value.trim(), challenge_type: document.getElementById('sfResChallenge').value, provider: document.getElementById('sfResProvider').value.trim(), http_entrypoint: document.getElementById('sfResHttpEp').value.trim() };
+    } else if (section === 'plugins') {
+        name    = document.getElementById('sfPluginName').value.trim();
+        payload = { moduleName: document.getElementById('sfPluginModule').value.trim(), version: document.getElementById('sfPluginVersion').value.trim() };
+    }
+    if (!name) { showToast('Name is required', 'error'); return; }
+    try {
+        await _applyStaticSectionChange({ action, section, name, old_name, data: payload });
+        closeStaticForm(section);
+    } catch(e) { showToast('Request failed', 'error'); }
+}
+
+async function removeStaticItem(section, name) {
+    if (!await _confirm(`Remove "${name}"?`, 'Remove Item', 'Remove')) return;
+    try {
+        await _applyStaticSectionChange({ action: 'remove', section, name, data: {} });
+    } catch(e) { showToast('Request failed', 'error'); }
+}
+
+function _renderStaticEntrypoints(eps) {
+    const keys = Object.keys(eps || {});
+    const cnt  = document.getElementById('staticEpCount');
+    if (cnt) cnt.textContent = keys.length;
+    const el = document.getElementById('staticEpList');
+    if (!el) return;
+    if (!keys.length) {
+        el.innerHTML = `<div class="px-5 py-8 text-center text-sm" style="color:var(--muted)">No entrypoints configured</div>`;
+        return;
+    }
+    const rows = keys.map((name, i) => {
+        const ep    = eps[name] || {};
+        const addr  = ep.address || '';
+        const redir = ep.http?.redirections?.entryPoint?.to || '';
+        const port  = addr.replace(/^.*:/, '');
+        const proto = port === '443' ? 'HTTPS' : port === '80' ? 'HTTP' : port ? port : '';
+        const nd    = JSON.stringify(name);
+        const sep   = i < keys.length - 1 ? `border-bottom:1px solid var(--border);` : '';
+        return `<div class="flex items-center gap-4 px-4 py-3" style="${sep}">
+            <div class="flex-1 flex items-center gap-2 min-w-0 flex-wrap">
+                <span class="text-sm font-mono font-semibold" style="color:var(--text)">${_esc(name)}</span>
+                <span class="text-xs font-mono px-2 py-0.5 rounded-md flex-shrink-0" style="background:rgba(36,161,222,0.1);color:var(--blue)">${_esc(addr)}</span>
+                ${proto ? `<span class="text-xs px-1.5 py-0.5 rounded font-semibold flex-shrink-0" style="background:rgba(36,161,222,0.07);color:var(--blue)">${proto}</span>` : ''}
+                ${redir ? `<span class="text-xs flex-shrink-0" style="color:var(--muted)">→ <span class="font-mono" style="color:var(--text)">${_esc(redir)}</span></span>` : ''}
+            </div>
+            <div class="flex gap-1 flex-shrink-0">
+                <button onclick='openStaticEditForm("entrypoints",${nd})' class="btn-icon text-xs" title="Edit"><i class="ph-bold ph-pencil-simple"></i></button>
+                <button onclick='removeStaticItem("entrypoints",${nd})' class="btn-icon text-xs" title="Delete" style="color:var(--red)"><i class="ph-bold ph-trash"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+    el.innerHTML = `<div style="margin:12px 16px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">${rows}</div>`;
+}
+
+function _renderStaticResolvers(resolvers) {
+    const keys = Object.keys(resolvers || {});
+    const cnt  = document.getElementById('staticResolverCount');
+    if (cnt) cnt.textContent = keys.length;
+    const el = document.getElementById('staticResolverList');
+    if (!el) return;
+    if (!keys.length) {
+        el.innerHTML = `<div class="px-5 py-8 text-center text-sm" style="color:var(--muted)">No certificate resolvers configured</div>`;
+        return;
+    }
+    const rows = keys.map((name, i) => {
+        const acme  = (resolvers[name] || {}).acme || {};
+        const email = acme.email || '';
+        const isDns  = !!acme.dnsChallenge;
+        const isHttp = !!acme.httpChallenge;
+        const chLabel = isDns  ? `DNS · ${acme.dnsChallenge.provider || '?'}`
+                      : isHttp ? 'HTTP'
+                      : 'TLS';
+        const chColor = isDns  ? 'var(--blue)' : isHttp ? '#f59e0b' : 'var(--green)';
+        const chBg    = isDns  ? 'rgba(36,161,222,0.1)' : isHttp ? 'rgba(245,158,11,0.1)' : 'rgba(34,197,94,0.1)';
+        const nd  = JSON.stringify(name);
+        const sep = i < keys.length - 1 ? `border-bottom:1px solid var(--border);` : '';
+        return `<div class="flex items-center gap-4 px-4 py-3" style="${sep}">
+            <div class="flex-1 flex items-center gap-2 min-w-0 flex-wrap">
+                <span class="text-sm font-mono font-semibold" style="color:var(--text)">${_esc(name)}</span>
+                <span class="text-xs font-mono px-2 py-0.5 rounded-md flex-shrink-0" style="background:${chBg};color:${chColor}">${_esc(chLabel)}</span>
+                ${email ? `<span class="text-xs truncate" style="color:var(--muted)">${_esc(email)}</span>` : ''}
+            </div>
+            <div class="flex gap-1 flex-shrink-0">
+                <button onclick='openStaticEditForm("resolvers",${nd})' class="btn-icon text-xs" title="Edit"><i class="ph-bold ph-pencil-simple"></i></button>
+                <button onclick='removeStaticItem("resolvers",${nd})' class="btn-icon text-xs" title="Delete" style="color:var(--red)"><i class="ph-bold ph-trash"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+    el.innerHTML = `<div style="margin:12px 16px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">${rows}</div>`;
+}
+
+function _renderStaticPlugins(plugins) {
+    const keys = Object.keys(plugins || {});
+    const cnt  = document.getElementById('staticPluginCount');
+    if (cnt) cnt.textContent = keys.length;
+    const el = document.getElementById('staticPluginList');
+    if (!el) return;
+    if (!keys.length) {
+        el.innerHTML = `<div class="px-5 py-8 text-center text-sm" style="color:var(--muted)">No plugins installed</div>`;
+        return;
+    }
+    const rows = keys.map((name, i) => {
+        const p   = plugins[name] || {};
+        const nd  = JSON.stringify(name);
+        const sep = i < keys.length - 1 ? `border-bottom:1px solid var(--border);` : '';
+        return `<div class="flex items-center gap-4 px-4 py-3" style="${sep}">
+            <div class="flex-1 flex items-center gap-2 min-w-0">
+                <span class="text-sm font-mono font-semibold flex-shrink-0" style="color:var(--text)">${_esc(name)}</span>
+                ${p.moduleName ? `<span class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(p.moduleName)}</span>` : ''}
+                ${p.version    ? `<span class="text-xs font-mono px-2 py-0.5 rounded-md flex-shrink-0" style="background:rgba(168,85,247,0.1);color:var(--purple)">${_esc(p.version)}</span>` : ''}
+            </div>
+            <div class="flex gap-1 flex-shrink-0">
+                <button onclick='openStaticEditForm("plugins",${nd})' class="btn-icon text-xs" title="Edit"><i class="ph-bold ph-pencil-simple"></i></button>
+                <button onclick='removeStaticItem("plugins",${nd})' class="btn-icon text-xs" title="Delete" style="color:var(--red)"><i class="ph-bold ph-trash"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+    el.innerHTML = `<div style="margin:12px 16px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">${rows}</div>`;
+}
+
+function _renderStaticSections(parsed) {
+    _staticParsedData = parsed || {};
+    _renderStaticEntrypoints(_staticParsedData.entryPoints || _staticParsedData.entrypoints || {});
+    _renderStaticResolvers(_staticParsedData.certificatesResolvers || {});
+    _renderStaticPlugins((_staticParsedData.experimental || {}).plugins || {});
+    _renderStaticApi(_staticParsedData.api);
+    _renderStaticLog(_staticParsedData.log, _staticParsedData.accessLog);
+    _renderStaticProviders(_staticParsedData.providers);
+}
+
+function staticToggle(id) {
+    const el = document.getElementById('staticT-' + id);
+    if (el) el.classList.toggle('on');
+}
+function _staticToggleState(id) {
+    const el = document.getElementById('staticT-' + id);
+    return el ? el.classList.contains('on') : false;
+}
+function _setStaticToggle(id, on) {
+    const el = document.getElementById('staticT-' + id);
+    if (el) el.classList.toggle('on', !!on);
+}
+
+function onAccessLogToggle() {
+    staticToggle('accessLog');
+    const row = document.getElementById('accessLogPathRow');
+    if (row) row.style.display = _staticToggleState('accessLog') ? '' : 'none';
+}
+function onDockerProviderToggle() {
+    staticToggle('dockerEnabled');
+    const fields = document.getElementById('dockerProviderFields');
+    if (fields) fields.style.display = _staticToggleState('dockerEnabled') ? '' : 'none';
+}
+function onFileProviderToggle() {
+    staticToggle('fileEnabled');
+    const fields = document.getElementById('fileProviderFields');
+    if (fields) fields.style.display = _staticToggleState('fileEnabled') ? '' : 'none';
+}
+
+function _renderStaticApi(apiData) {
+    const enabled = apiData !== undefined && apiData !== null;
+    _setStaticToggle('apiEnabled', enabled);
+    const api = apiData || {};
+    _setStaticToggle('dashboardEnabled', api.dashboard !== false);
+    _setStaticToggle('insecure', !!api.insecure);
+    _setStaticToggle('debugMode', !!api.debug);
+}
+
+function _renderStaticLog(logData, accessLogData) {
+    const log = logData || {};
+    const sel = document.getElementById('sfLogLevel');
+    if (sel) sel.value = (log.level || 'ERROR').toUpperCase();
+    const hasAL = accessLogData !== undefined && accessLogData !== null;
+    _setStaticToggle('accessLog', hasAL);
+    const inp = document.getElementById('sfAccessLogPath');
+    if (inp) inp.value = (accessLogData || {}).filePath || '';
+    const row = document.getElementById('accessLogPathRow');
+    if (row) row.style.display = hasAL ? '' : 'none';
+}
+
+function _renderStaticProviders(providersData) {
+    const prov = providersData || {};
+    const hasDocker = prov.docker !== undefined && prov.docker !== null;
+    _setStaticToggle('dockerEnabled', hasDocker);
+    const dockerFields = document.getElementById('dockerProviderFields');
+    if (dockerFields) dockerFields.style.display = hasDocker ? '' : 'none';
+    if (hasDocker) {
+        const ep = document.getElementById('sfDockerEndpoint');
+        if (ep) ep.value = (prov.docker || {}).endpoint || 'unix:///var/run/docker.sock';
+        _setStaticToggle('dockerExposedByDefault', !!(prov.docker || {}).exposedByDefault);
+        _setStaticToggle('dockerWatch', (prov.docker || {}).watch !== false);
+    }
+    const hasFile = prov.file !== undefined && prov.file !== null;
+    _setStaticToggle('fileEnabled', hasFile);
+    const fileFields = document.getElementById('fileProviderFields');
+    if (fileFields) fileFields.style.display = hasFile ? '' : 'none';
+    if (hasFile) {
+        const dir = document.getElementById('sfFileDirectory');
+        if (dir) dir.value = (prov.file || {}).directory || '';
+        _setStaticToggle('fileWatch', (prov.file || {}).watch !== false);
+    }
+    const otherEl = document.getElementById('staticOtherProvidersList');
+    if (otherEl) {
+        const others = Object.keys(prov).filter(k => k !== 'docker' && k !== 'file');
+        if (others.length) {
+            otherEl.innerHTML = `<div style="margin:0 16px 8px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">` +
+                others.map((k, i) => `
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;${i > 0 ? 'border-top:1px solid var(--border)' : ''}">
+                        <div class="flex items-center gap-2 text-sm">
+                            <i class="ph-bold ph-cloud" style="color:var(--teal)"></i>
+                            <span class="font-medium">${_esc(k)}</span>
+                        </div>
+                        <button onclick="removeStaticItem('providers','${_esc(k)}')" class="btn-secondary text-xs flex items-center gap-1" style="height:24px;padding:0 8px;color:var(--red)">
+                            <i class="ph-bold ph-trash text-xs"></i>
+                        </button>
+                    </div>`).join('') +
+                `</div>`;
+        } else {
+            otherEl.innerHTML = '';
+        }
+    }
+}
+
+function onProviderTypeInput(val) {
+    const type = val.toLowerCase();
+    const swarm = document.getElementById('sfProviderSwarmFields');
+    const http  = document.getElementById('sfProviderHttpFields');
+    const note  = document.getElementById('sfProviderOtherNote');
+    const isSwarm = type === 'swarm';
+    const isHttp  = type === 'http';
+    if (swarm) swarm.style.display = isSwarm ? '' : 'none';
+    if (http)  http.style.display  = isHttp  ? '' : 'none';
+    if (note)  note.style.display  = (!isSwarm && !isHttp && type.length > 0) ? '' : 'none';
+}
+
+async function submitStaticProvider() {
+    const type = (document.getElementById('sfProviderType')?.value || '').trim().toLowerCase();
+    if (!type) { showToast('Provider type is required', 'error'); return; }
+    if (type === 'docker' || type === 'file') { showToast('Use the Docker / File toggles above to configure these providers', 'error'); return; }
+    const action   = _staticEditState.name ? 'edit' : 'add';
+    const old_name = _staticEditState.name || '';
+    let data = {};
+    if (type === 'swarm') {
+        data = {
+            endpoint: document.getElementById('sfProviderEndpoint')?.value.trim() || '',
+            exposedByDefault: _staticToggleState('providerExposedByDefault'),
+            watch: _staticToggleState('providerWatch'),
+        };
+    } else if (type === 'http') {
+        data = {
+            endpoint: document.getElementById('sfProviderHttpEndpoint')?.value.trim() || '',
+            pollInterval: document.getElementById('sfProviderPollInterval')?.value.trim() || '10s',
+        };
+    }
+    try {
+        await _applyStaticSectionChange({ action, section: 'providers', name: type, old_name, data });
+        closeStaticForm('providers');
+    } catch(e) { showToast('Request failed', 'error'); }
+}
+
+async function saveStaticSingleSection(section) {
+    let data = {};
+    if (section === 'api') {
+        data = {
+            enabled: _staticToggleState('apiEnabled'),
+            dashboard: _staticToggleState('dashboardEnabled'),
+            insecure: _staticToggleState('insecure'),
+            debug: _staticToggleState('debugMode'),
+        };
+    } else if (section === 'log') {
+        data = {
+            level: document.getElementById('sfLogLevel')?.value || 'ERROR',
+            accessLog: _staticToggleState('accessLog'),
+            accessLogPath: document.getElementById('sfAccessLogPath')?.value.trim() || '',
+        };
+    } else if (section === 'providers') {
+        data = {
+            docker: _staticToggleState('dockerEnabled'),
+            dockerEndpoint: document.getElementById('sfDockerEndpoint')?.value.trim() || '',
+            dockerExposedByDefault: _staticToggleState('dockerExposedByDefault'),
+            dockerWatch: _staticToggleState('dockerWatch'),
+            file: _staticToggleState('fileEnabled'),
+            fileDirectory: document.getElementById('sfFileDirectory')?.value.trim() || '',
+            fileWatch: _staticToggleState('fileWatch'),
+        };
+    }
+    try {
+        await _applyStaticSectionChange({ action: 'set', section, name: '', data });
+    } catch(e) { showToast('Request failed', 'error'); }
+}
+
+function _buildStaticTabHTML() {
+    return `
+    <div style="border-bottom:1px solid var(--border);flex-shrink:0;padding:12px 16px 0;display:flex;align-items:flex-end;gap:2px;">
+        <button id="staticTabArrowL" onclick="_scrollStaticTabs(-1)" style="display:none;flex-shrink:0;background:none;border:none;cursor:pointer;padding:4px 3px 6px;color:var(--muted)" title="Scroll left"><i class="ph-bold ph-caret-left text-xs"></i></button>
+        <div id="staticTabBar" style="display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex:1;" onscroll="_updateStaticTabArrows()">
+            <button onclick="switchStaticSection('entrypoints')" id="ssnBtn-entrypoints" class="auth-sub-tab active">
+                <i class="ph-bold ph-plugs" style="color:var(--blue)"></i>
+                Entrypoints
+                <span id="staticEpCount" style="display:inline-flex;align-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(36,161,222,0.15);color:var(--blue)">0</span>
+            </button>
+            <button onclick="switchStaticSection('resolvers')" id="ssnBtn-resolvers" class="auth-sub-tab">
+                <i class="ph-bold ph-seal-check" style="color:var(--green)"></i>
+                Cert Resolvers
+                <span id="staticResolverCount" style="display:inline-flex;align-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(34,197,94,0.15);color:var(--green)">0</span>
+            </button>
+            <button onclick="switchStaticSection('plugins')" id="ssnBtn-plugins" class="auth-sub-tab">
+                <i class="ph-bold ph-puzzle-piece" style="color:var(--purple)"></i>
+                Plugins
+                <span id="staticPluginCount" style="display:inline-flex;align-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(168,85,247,0.15);color:var(--purple)">0</span>
+            </button>
+            <button onclick="switchStaticSection('api')" id="ssnBtn-api" class="auth-sub-tab">
+                <i class="ph-bold ph-gauge" style="color:var(--orange)"></i>
+                API
+            </button>
+            <button onclick="switchStaticSection('log')" id="ssnBtn-log" class="auth-sub-tab">
+                <i class="ph-bold ph-scroll" style="color:#ca8a04"></i>
+                Logging
+            </button>
+            <button onclick="switchStaticSection('providers')" id="ssnBtn-providers" class="auth-sub-tab">
+                <i class="ph-bold ph-cloud" style="color:var(--teal)"></i>
+                Providers
+            </button>
+        </div>
+        <button id="staticTabArrowR" onclick="_scrollStaticTabs(1)" style="display:none;flex-shrink:0;background:none;border:none;cursor:pointer;padding:4px 3px 6px;color:var(--muted)" title="Scroll right"><i class="ph-bold ph-caret-right text-xs"></i></button>
+    </div>
+
+    <div id="staticPanel-entrypoints">
+        <div id="staticEpWarning"></div>
+        <div id="staticEpList"></div>
+        <div id="staticForm-entrypoints" style="display:none;border-top:1px solid var(--border);background:var(--input-bg)" class="px-5 py-4 space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfEpFormTitle">New Entrypoint</p>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Name</label>
+                    <input id="sfEpName" type="text" class="input-field text-sm" placeholder="websecure">
+                </div>
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Address</label>
+                    <input id="sfEpAddr" type="text" class="input-field text-sm" placeholder=":443">
+                </div>
+            </div>
+            <div>
+                <label class="text-xs block mb-1" style="color:var(--muted)">HTTP → HTTPS redirect <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+                <input id="sfEpRedirect" type="text" class="input-field text-sm" placeholder="Name of the HTTPS entrypoint to redirect to, e.g. websecure">
+            </div>
+            <div class="flex gap-2 justify-end pt-1">
+                <button onclick="closeStaticForm('entrypoints')" class="btn-secondary text-xs">Cancel</button>
+                <button onclick="submitStaticSection('entrypoints')" class="btn-primary text-xs" id="sfEpBtn">Add Entrypoint</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="staticPanel-resolvers" style="display:none">
+        <div id="staticResolverList"></div>
+        <div id="staticForm-resolvers" style="display:none;border-top:1px solid var(--border);background:var(--input-bg)" class="px-5 py-4 space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfResFormTitle">New Resolver</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Name</label>
+                    <input id="sfResName" type="text" class="input-field text-sm" placeholder="cloudflare">
+                </div>
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Email</label>
+                    <input id="sfResEmail" type="email" class="input-field text-sm" placeholder="you@example.com">
+                </div>
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Storage path</label>
+                    <input id="sfResStorage" type="text" class="input-field text-sm" placeholder="/acme.json" value="/acme.json">
+                </div>
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Challenge type</label>
+                    <select id="sfResChallenge" class="input-field text-sm" onchange="onStaticChallengeChange()">
+                        <option value="dnsChallenge">DNS Challenge</option>
+                        <option value="httpChallenge">HTTP Challenge</option>
+                        <option value="tlsChallenge">TLS Challenge</option>
+                    </select>
+                </div>
+                <div id="sfResDnsRow">
+                    <label class="text-xs block mb-1" style="color:var(--muted)">DNS Provider</label>
+                    <input id="sfResProvider" type="text" class="input-field text-sm" placeholder="cloudflare">
+                </div>
+                <div id="sfResHttpRow" style="display:none">
+                    <label class="text-xs block mb-1" style="color:var(--muted)">HTTP Entrypoint</label>
+                    <input id="sfResHttpEp" type="text" class="input-field text-sm" placeholder="web" value="web">
+                </div>
+            </div>
+            <div class="flex gap-2 justify-end pt-1">
+                <button onclick="closeStaticForm('resolvers')" class="btn-secondary text-xs">Cancel</button>
+                <button onclick="submitStaticSection('resolvers')" class="btn-primary text-xs" id="sfResBtn">Add Resolver</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="staticPanel-plugins" style="display:none">
+        <div class="mx-5 mt-4 mb-2 rounded-lg p-3 text-xs flex items-center gap-2" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);color:var(--text)">
+            <i class="ph-bold ph-info text-sm shrink-0" style="color:var(--blue)"></i>
+            <span>Use the <button onclick="closeSettingsModal();switchTab('plugins')" class="font-semibold" style="color:var(--blue);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline">Plugins tab</button> for an interactive way to install and manage plugins.</span>
+        </div>
+        <div id="staticPluginList"></div>
+        <div id="staticForm-plugins" style="display:none;border-top:1px solid var(--border);background:var(--input-bg)" class="px-5 py-4 space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfPluginFormTitle">New Plugin</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Name</label>
+                    <input id="sfPluginName" type="text" class="input-field text-sm" placeholder="my-plugin">
+                </div>
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Module</label>
+                    <input id="sfPluginModule" type="text" class="input-field text-sm" placeholder="github.com/user/plugin">
+                </div>
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Version</label>
+                    <input id="sfPluginVersion" type="text" class="input-field text-sm" placeholder="v1.0.0">
+                </div>
+            </div>
+            <div class="flex gap-2 justify-end pt-1">
+                <button onclick="closeStaticForm('plugins')" class="btn-secondary text-xs">Cancel</button>
+                <button onclick="submitStaticSection('plugins')" class="btn-primary text-xs" id="sfPluginBtn">Add Plugin</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="staticPanel-api" style="display:none">
+        <div class="px-4 py-4 space-y-1.5">
+            <div class="mb-3 rounded-lg px-3 py-2.5 flex items-start gap-2.5 text-xs" style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);color:#ca8a04">
+                <i class="ph-bold ph-warning text-sm shrink-0 mt-0.5"></i>
+                <span>Disabling the Traefik API will prevent Traefik Manager from reading routes, services, and middleware. Keep it enabled while using TM.</span>
+            </div>
+            <div class="tab-toggle-row" onclick="staticToggle('apiEnabled')">
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-terminal-window" style="color:var(--muted)"></i> API Enabled</span>
+                <div class="toggle-switch" id="staticT-apiEnabled"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="tab-toggle-row" onclick="staticToggle('dashboardEnabled')">
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-layout" style="color:var(--muted)"></i> Dashboard</span>
+                <div class="toggle-switch" id="staticT-dashboardEnabled"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="tab-toggle-row" onclick="staticToggle('insecure')">
+                <span class="flex items-center gap-2 text-sm">
+                    <i class="ph-bold ph-lock-open" style="color:var(--red)"></i>
+                    <span>Insecure Mode</span>
+                    <span class="text-xs" style="color:var(--muted)">(exposes API without auth)</span>
+                </span>
+                <div class="toggle-switch" id="staticT-insecure"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="tab-toggle-row" onclick="staticToggle('debugMode')">
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-bug" style="color:var(--muted)"></i> Debug Mode</span>
+                <div class="toggle-switch" id="staticT-debugMode"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="saveStaticSingleSection('api')" class="btn-primary text-xs">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="staticPanel-log" style="display:none">
+        <div class="px-4 py-4 space-y-3">
+            <div>
+                <label class="text-xs block mb-1" style="color:var(--muted)">Log Level</label>
+                <select id="sfLogLevel" class="input-field text-sm">
+                    <option value="DEBUG">DEBUG</option>
+                    <option value="INFO">INFO</option>
+                    <option value="WARN">WARN</option>
+                    <option value="ERROR" selected>ERROR</option>
+                </select>
+            </div>
+            <div class="tab-toggle-row" onclick="onAccessLogToggle()">
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-file-text" style="color:var(--muted)"></i> Access Log</span>
+                <div class="toggle-switch" id="staticT-accessLog"><div class="toggle-knob"></div></div>
+            </div>
+            <div id="accessLogPathRow" style="display:none">
+                <label class="text-xs block mb-1" style="color:var(--muted)">Log File Path <span style="font-weight:400">(leave empty for stdout)</span></label>
+                <input id="sfAccessLogPath" type="text" class="input-field text-sm" placeholder="/var/log/traefik/access.log">
+            </div>
+            <div class="flex justify-end pt-1">
+                <button onclick="saveStaticSingleSection('log')" class="btn-primary text-xs">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="staticPanel-providers" style="display:none">
+        <div id="staticOtherProvidersList" class="pt-3"></div>
+        <div class="px-4 pb-4 space-y-4">
+            <div>
+                <div class="tab-toggle-row" onclick="onDockerProviderToggle()">
+                    <span class="flex items-center gap-2 text-sm font-medium"><i class="ph-bold ph-cube" style="color:var(--blue)"></i> Docker</span>
+                    <div class="toggle-switch" id="staticT-dockerEnabled"><div class="toggle-knob"></div></div>
+                </div>
+                <div id="dockerProviderFields" class="mt-2 space-y-2 pl-1" style="display:none">
+                    <div>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">Endpoint</label>
+                        <input id="sfDockerEndpoint" type="text" class="input-field text-sm" placeholder="unix:///var/run/docker.sock">
+                    </div>
+                    <div class="tab-toggle-row" onclick="staticToggle('dockerExposedByDefault')">
+                        <span class="text-sm" style="color:var(--muted)">Expose by default</span>
+                        <div class="toggle-switch" id="staticT-dockerExposedByDefault"><div class="toggle-knob"></div></div>
+                    </div>
+                    <div class="tab-toggle-row" onclick="staticToggle('dockerWatch')">
+                        <span class="text-sm" style="color:var(--muted)">Watch</span>
+                        <div class="toggle-switch" id="staticT-dockerWatch"><div class="toggle-knob"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="tab-toggle-row" onclick="onFileProviderToggle()">
+                    <span class="flex items-center gap-2 text-sm font-medium"><i class="ph-bold ph-file-code" style="color:var(--green)"></i> File</span>
+                    <div class="toggle-switch" id="staticT-fileEnabled"><div class="toggle-knob"></div></div>
+                </div>
+                <div id="fileProviderFields" class="mt-2 space-y-2 pl-1" style="display:none">
+                    <div>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">Directory</label>
+                        <input id="sfFileDirectory" type="text" class="input-field text-sm" placeholder="/etc/traefik/dynamic">
+                    </div>
+                    <div class="tab-toggle-row" onclick="staticToggle('fileWatch')">
+                        <span class="text-sm" style="color:var(--muted)">Watch</span>
+                        <div class="toggle-switch" id="staticT-fileWatch"><div class="toggle-knob"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end pt-1">
+                <button onclick="saveStaticSingleSection('providers')" class="btn-primary text-xs">Save Changes</button>
+            </div>
+        </div>
+        <div id="staticForm-providers" style="display:none;border-top:1px solid var(--border);background:var(--input-bg)" class="px-5 py-4 space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfProviderFormTitle">Add Provider</p>
+            <div>
+                <label class="text-xs block mb-1" style="color:var(--muted)">Provider Type</label>
+                <input id="sfProviderType" type="text" class="input-field text-sm" placeholder="swarm, http, ecs, ..." oninput="onProviderTypeInput(this.value)">
+            </div>
+            <div id="sfProviderSwarmFields" style="display:none" class="space-y-2">
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Endpoint</label>
+                    <input id="sfProviderEndpoint" type="text" class="input-field text-sm" placeholder="unix:///var/run/docker.sock">
+                </div>
+                <div class="tab-toggle-row" onclick="staticToggle('providerExposedByDefault')">
+                    <span class="text-sm" style="color:var(--muted)">Expose by default</span>
+                    <div class="toggle-switch" id="staticT-providerExposedByDefault"><div class="toggle-knob"></div></div>
+                </div>
+                <div class="tab-toggle-row" onclick="staticToggle('providerWatch')">
+                    <span class="text-sm" style="color:var(--muted)">Watch</span>
+                    <div class="toggle-switch on" id="staticT-providerWatch"><div class="toggle-knob"></div></div>
+                </div>
+            </div>
+            <div id="sfProviderHttpFields" style="display:none" class="space-y-2">
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Endpoint URL</label>
+                    <input id="sfProviderHttpEndpoint" type="text" class="input-field text-sm" placeholder="http://your-config-server/config">
+                </div>
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Poll Interval</label>
+                    <input id="sfProviderPollInterval" type="text" class="input-field text-sm" placeholder="10s">
+                </div>
+            </div>
+            <div id="sfProviderOtherNote" style="display:none" class="text-xs rounded-lg px-3 py-2" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);color:var(--muted)">
+                The provider will be added with an empty config. Use the <strong>Raw YAML</strong> editor to configure its options after saving.
+            </div>
+            <div class="flex gap-2 justify-end pt-1">
+                <button onclick="closeStaticForm('providers')" class="btn-secondary text-xs">Cancel</button>
+                <button onclick="submitStaticProvider()" class="btn-primary text-xs" id="sfProviderBtn">Add Provider</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function _renderEpRuntimeWarning() {
+    const el = document.getElementById('staticEpWarning');
+    if (!el) return;
+    const rt = _traefikRuntime;
+    if (!rt) return;
+    const toggler = `onclick="const b=this.parentElement.querySelector('.ep-warn-body');b.classList.toggle('hidden');this.querySelector('i.caret').classList.toggle('ph-caret-down');this.querySelector('i.caret').classList.toggle('ph-caret-right')"`;
+    let title = '', body = '';
+    if (rt.runtime === 'docker') {
+        title = 'New entrypoints also need a port mapping in your compose file';
+        body  = `After adding an entrypoint here, open your <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">docker-compose.yml</code> and add the port under <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">ports:</code>, then run:
+                 <code class="font-mono block mt-1.5 mb-1 px-2 py-1 rounded" style="background:var(--input-bg);border:1px solid var(--border)">docker compose up -d</code>
+                 Without this the port will not be reachable outside the container even after restarting Traefik.`;
+    } else if (rt.runtime === 'native') {
+        title = 'New entrypoints need the port open on your system';
+        body  = `After adding an entrypoint and restarting Traefik, ensure the port is accessible:
+                 <code class="font-mono block mt-1.5 mb-1 px-2 py-1 rounded" style="background:var(--input-bg);border:1px solid var(--border)">sudo ufw allow PORT/tcp</code>
+                 For ports below 1024, Traefik needs <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">NET_BIND_SERVICE</code> capability or must run as root.`;
+    } else {
+        title = 'New entrypoints require additional steps after saving';
+        body  = `<span class="font-medium" style="color:var(--text)">Docker / Podman / Unraid:</span> add the port under <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">ports:</code> in your compose file and run <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">docker compose up -d</code>
+                 <span class="block mt-1"><span class="font-medium" style="color:var(--text)">Native Linux:</span> open the port in your firewall, e.g. <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">sudo ufw allow PORT/tcp</code></span>`;
+    }
+    el.innerHTML = `<div class="mx-4 mt-3 mb-1 rounded-lg" style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2)">
+        <button ${toggler} class="w-full px-4 py-2.5 flex items-center gap-2 text-left" style="background:none;border:none;cursor:pointer">
+            <i class="ph-bold ph-info text-sm shrink-0" style="color:var(--blue)"></i>
+            <span class="text-xs font-semibold flex-1" style="color:var(--text)">${title}</span>
+            <i class="ph-bold ph-caret-right caret text-xs" style="color:var(--muted)"></i>
+        </button>
+        <div class="ep-warn-body px-4 pb-3 text-xs hidden" style="color:var(--muted)">${body}</div>
+    </div>`;
+}
+
+async function _loadStaticFromDisk() {
+    const wrapper = document.getElementById('staticSettingsContent');
+    if (!wrapper) return;
+    try {
+        const fetches = [fetch('/api/static/config')];
+        if (!_traefikRuntime) fetches.push(fetch('/api/traefik/runtime').then(r => r.json()).catch(() => null));
+        const results = await Promise.all(fetches);
+        const res = results[0];
+        if (results[1]) _traefikRuntime = results[1];
+        const data = await res.json();
+        if (data.error) {
+            wrapper.innerHTML = `<div class="text-center py-16" style="color:var(--muted)">
+                <i class="ph-light ph-warning-circle text-4xl block mb-3 opacity-40"></i>
+                <p>${_esc(data.error)}</p></div>`;
+            return;
+        }
+        if (_staticMonaco) { _staticMonaco.dispose(); _staticMonaco = null; }
+        _staticRawContent = data.raw || '';
+        _staticOriginalContent = _staticRawContent;
+        wrapper.innerHTML = _buildStaticTabHTML();
+        _clearStaticPending();
+        _staticPendingChanges = false;
+        _hideStaticRestartBanner();
+        _renderStaticSections(data.parsed || {});
+        _renderEpRuntimeWarning();
+        switchStaticSection(_staticActiveSection);
+        requestAnimationFrame(_updateStaticTabArrows);
+    } catch(e) {
+        wrapper.innerHTML = `<div class="text-center py-16" style="color:var(--muted)">
+            <i class="ph-light ph-warning-circle text-4xl block mb-3 opacity-40"></i>
+            <p>Failed to load static config</p></div>`;
+    }
+}
+
+async function refreshStaticTab() {
+    if (_staticPendingChanges) {
+        if (!await _confirm('You have unsaved changes. Discard and reload?', 'Unsaved Changes', 'Discard')) return;
+    }
+    await _loadStaticFromDisk();
+}
+
+const _origSetTheme = setTheme;
+setTheme = function(theme) {
+    _origSetTheme(theme);
+    if (_staticMonaco || _mwMonacoEditor || _pluginStaticMonaco || _pluginMwMonaco) {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        _ensureMonacoThemes().then(() => monaco.editor.setTheme(_monacoThemeName(isDark)));
+    }
+};
+</script>
 
 </body>
 </html>

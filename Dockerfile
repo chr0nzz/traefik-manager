@@ -1,5 +1,11 @@
 FROM python:3.11-alpine
 
+LABEL org.opencontainers.image.title="Traefik Manager" \
+      org.opencontainers.image.description="Web UI to manage Traefik routes, middlewares, and services" \
+      org.opencontainers.image.url="https://github.com/chr0nzz/traefik-manager" \
+      org.opencontainers.image.source="https://github.com/chr0nzz/traefik-manager" \
+      org.opencontainers.image.licenses="GPL-3.0"
+
 RUN apk add --no-cache curl
 
 WORKDIR /app

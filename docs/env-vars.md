@@ -20,7 +20,11 @@ All supported environment variables for Traefik Manager. Variables marked **Over
 | `BACKUP_DIR` | `/app/backups` | - | Directory for timestamped config backups |
 | `SETTINGS_PATH` | `/app/config/manager.yml` | - | Path to the Traefik Manager settings file |
 | `ACME_JSON_PATH` | `/app/acme.json` | - | Path to Traefik's `acme.json` file for the Certificates tab |
-| `STATIC_CONFIG_PATH` | `/app/traefik.yml` | - | Path to Traefik's static config file for the Plugins tab |
+| `STATIC_CONFIG_PATH` | `/app/traefik.yml` | - | Path to Traefik's static config file; required for Plugins and Static Config tabs (mount read-write for editing) |
+| `RESTART_METHOD` | _(unset)_ | - | How TM restarts Traefik after static config changes: `proxy`, `socket`, or `poison-pill` |
+| `TRAEFIK_CONTAINER` | `traefik` | - | Container name to restart (used by `proxy` and `socket` methods) |
+| `DOCKER_HOST` | _(unset)_ | - | Docker socket URL - set to `tcp://socket-proxy:2375` for the proxy method |
+| `SIGNAL_FILE_PATH` | `/signals/restart.sig` | - | Signal file path for the `poison-pill` restart method |
 | `ACCESS_LOG_PATH` | `/app/logs/access.log` | - | Path to Traefik's access log file for the Logs tab |
 | `SECRET_KEY` | _(auto-generated)_ | - | Flask session signing secret - auto-generated and persisted alongside `SETTINGS_PATH` if not set |
 | `OTP_ENCRYPTION_KEY` | _(auto-generated)_ | - | Fernet key for encrypting the TOTP secret at rest |
@@ -326,20 +330,107 @@ If you use certificate files (e.g. `chain.pem` / `key.pem`) via a `tls.yml` inst
 
 **Default:** `/app/traefik.yml`
 
-Path to Traefik's static configuration file (`traefik.yml` or `traefik.toml`). Required for the **Plugins** tab to list installed experimental plugins. Can also be set via **Settings → File Paths → Static Config Path** without a container restart; the UI setting takes priority over this variable.
+Path to Traefik's static configuration file (`traefik.yml` or `traefik.toml`). Required for the **Plugins** tab and the **Static Config** tab. The file must be mounted **read-write** (no `:ro`) for the Static Config tab to allow editing. Can also be set via **Settings → File Paths → Static Config Path** without a container restart; the UI setting takes priority over this variable.
 
 :::tabs
 == Docker / Podman
 ```yaml
 environment:
-  - STATIC_CONFIG_PATH=/etc/traefik/traefik.yml
+  - STATIC_CONFIG_PATH=/app/traefik.yml
 volumes:
-  - /path/to/traefik.yml:/etc/traefik/traefik.yml:ro
+  - /path/to/traefik.yml:/app/traefik.yml
 ```
 
 == Linux (systemd)
 ```ini
 Environment=STATIC_CONFIG_PATH=/etc/traefik/traefik.yml
+```
+:::
+
+---
+
+### `RESTART_METHOD`
+
+**Default:** _(unset)_
+
+How TM should restart Traefik after static config changes are applied. Required for the Static Config tab's Restart button to work.
+
+| Value | Description |
+|-------|-------------|
+| `proxy` | Restart via a Docker socket proxy sidecar (recommended) |
+| `socket` | Restart via a directly mounted Docker socket |
+| `poison-pill` | Write a signal file; Traefik's healthcheck detects it and restarts itself |
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - RESTART_METHOD=proxy
+```
+
+== Linux (systemd)
+```ini
+Environment=RESTART_METHOD=poison-pill
+```
+:::
+
+See [Static Config Tab](tab-static.md#restart-methods) for full compose snippets for each method.
+
+---
+
+### `TRAEFIK_CONTAINER`
+
+**Default:** `traefik`
+
+The name of the Traefik container to restart. Used by the `proxy` and `socket` restart methods.
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - TRAEFIK_CONTAINER=traefik
+```
+
+== Linux (systemd)
+```ini
+Environment=TRAEFIK_CONTAINER=traefik
+```
+:::
+
+---
+
+### `DOCKER_HOST`
+
+**Default:** _(unset - uses `/var/run/docker.sock`)_
+
+Docker socket URL. Set this to `tcp://socket-proxy:2375` when using the `proxy` restart method so TM connects through the socket proxy instead of a direct socket mount.
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - DOCKER_HOST=tcp://socket-proxy:2375
+```
+:::
+
+---
+
+### `SIGNAL_FILE_PATH`
+
+**Default:** `/signals/restart.sig`
+
+Path to the signal file written by TM when using the `poison-pill` restart method. Must be on a volume shared between TM and Traefik.
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - SIGNAL_FILE_PATH=/signals/restart.sig
+```
+
+== Linux (systemd)
+```ini
+Environment=SIGNAL_FILE_PATH=/var/lib/traefik-manager/signals/restart.sig
 ```
 :::
 

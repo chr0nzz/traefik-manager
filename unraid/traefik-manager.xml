@@ -67,14 +67,36 @@
     Description="Optional: path to your Traefik acme.json file on the host. Required for the Certs tab. Mount read-only."
     Type="Path" Display="advanced" Required="false" Mask="false"></Config>
 
-  <Config Name="Plugins Tab - traefik.yml" Target="/app/traefik.yml" Default=""
-    Mode="ro"
-    Description="Optional: path to your Traefik static config file (traefik.yml) on the host. Required for the Plugins tab. Mount read-only."
+  <Config Name="Static Config / Plugins Tab - traefik.yml" Target="/app/traefik.yml" Default=""
+    Mode="rw"
+    Description="Optional: path to your Traefik static config file (traefik.yml) on the host. Required for the Plugins tab and the Static Config editor. Mount read-write to allow editing; read-only enables the Plugins tab only."
     Type="Path" Display="advanced" Required="false" Mask="false"></Config>
 
   <Config Name="Logs Tab - access.log" Target="/app/logs/access.log" Default=""
     Mode="ro"
     Description="Optional: path to your Traefik access log file on the host. Required for the Logs tab. Enable access logging in traefik.yml first: accessLog: filePath: /logs/access.log. Mount read-only."
+    Type="Path" Display="advanced" Required="false" Mask="false"></Config>
+
+  <!-- Static config editor -->
+  <Config Name="Restart Method" Target="RESTART_METHOD" Default="proxy"
+    Description="How Traefik Manager restarts Traefik after a static config change. Options: proxy (socket proxy - recommended), socket (direct Docker socket), poison-pill (signal file, requires watcher sidecar). Leave empty to disable automatic restart."
+    Type="Variable" Display="advanced" Required="false" Mask="false">proxy</Config>
+
+  <Config Name="Traefik Container Name" Target="TRAEFIK_CONTAINER" Default="traefik"
+    Description="Name of the Traefik Docker container to restart. Used by the proxy and socket restart methods."
+    Type="Variable" Display="advanced" Required="false" Mask="false">traefik</Config>
+
+  <Config Name="Docker Host (socket proxy)" Target="DOCKER_HOST" Default=""
+    Description="Docker host URL for the socket proxy restart method. Example: tcp://socket-proxy:2375. Only set when RESTART_METHOD=proxy."
+    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+
+  <Config Name="Signal File Path (poison pill)" Target="SIGNAL_FILE_PATH" Default="/signals/restart.sig"
+    Description="Path to the signal file written by Traefik Manager to trigger a Traefik restart. Only used when RESTART_METHOD=poison-pill. Mount a shared volume to /signals in both this container and the watcher sidecar."
+    Type="Variable" Display="advanced" Required="false" Mask="false">/signals/restart.sig</Config>
+
+  <Config Name="Docker Socket (direct)" Target="/var/run/docker.sock" Default=""
+    Mode="ro"
+    Description="Optional: mount the Docker socket for the direct socket restart method (RESTART_METHOD=socket). Host path: /var/run/docker.sock"
     Type="Path" Display="advanced" Required="false" Mask="false"></Config>
 
   <!-- Auth -->

@@ -237,13 +237,15 @@ select.input-field option { background: var(--card); color: var(--text); }
 
 
 .modal-inner { display: flex; flex: 1; overflow: hidden; min-height: 380px; }
-.modal-sidebar { width: 160px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; }
-.modal-sidebar-btn { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 7px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border: none; background: transparent; font-family: inherit; transition: all 0.15s; width: 100%; text-align: left; }
+.modal-sidebar { width: 180px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; }
+.modal-sidebar-btn { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 7px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border: none; background: transparent; font-family: inherit; transition: all 0.15s; width: 100%; text-align: left; white-space: nowrap; }
 .modal-sidebar-btn:hover { color: var(--text); background: var(--btn-secondary-bg); }
 .modal-sidebar-btn.active { color: var(--blue); background: rgba(36,161,222,0.1); }
 .modal-panel { display: none; flex: 1; padding: 20px; overflow-y: auto; min-width: 0; flex-direction: column; gap: 16px; }
 .modal-panel.active { display: flex; }
 .settings-section-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: block; }
+.settings-mobile-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 16px; border-bottom: 1px solid var(--border); background: none; border-left: none; border-right: none; border-top: none; cursor: pointer; color: var(--text); font-size: 14px; font-weight: 500; width: 100%; text-align: left; font-family: inherit; }
+.settings-mobile-row:active { background: var(--btn-secondary-bg); }
 .auth-sub-tab { display: flex; align-items: center; gap: 6px; padding: 7px 12px; font-size: 12px; font-weight: 600; color: var(--muted); border: none; background: none; cursor: pointer; font-family: inherit; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
 .auth-sub-tab:hover { color: var(--text); }
 .auth-sub-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
@@ -647,29 +649,12 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
     .modal-overlay { align-items: flex-end; padding: 0; }
     .modal-box { max-width: 100% !important; width: 100%; border-radius: 18px 18px 0 0; max-height: 92vh; }
 
-    /* Settings modal - mobile bottom sheet layout */
-    #settingsModal .modal-box { display: flex; flex-direction: column; }
-    #settingsModal .modal-inner { flex-direction: column; min-height: unset; overflow: visible; }
-    #settingsModal .modal-sidebar {
-        width: 100%; flex-direction: row; border-right: none;
-        border-bottom: 1px solid var(--border);
-        padding: 6px 8px; gap: 4px; overflow-x: auto;
-        scrollbar-width: none; flex-shrink: 0;
-    }
-    #settingsModal .modal-sidebar::-webkit-scrollbar { display: none; }
-    #settingsModal .modal-sidebar-btn {
-        flex-direction: column; gap: 4px; padding: 6px 10px;
-        font-size: 11px; white-space: nowrap; flex-shrink: 0; width: auto;
-        border-bottom: 2px solid transparent; border-radius: 0;
-        background: transparent !important;
-    }
-    #settingsModal .modal-sidebar-btn i { font-size: 16px; }
-    #settingsModal .modal-sidebar-btn.active {
-        color: var(--blue); border-bottom-color: var(--blue);
-        background: transparent !important;
-    }
-    #settingsModal .modal-sidebar > div { flex: 1; overflow-y: auto; }
-    #settingsModal .modal-panel { padding: 16px; max-height: 54vh; overflow-y: auto; }
+    #settingsModal { align-items: stretch !important; }
+    #settingsModal .modal-box { border-radius: 0 !important; max-height: 100% !important; height: 100% !important; overflow-x: hidden; }
+    #settingsModal .modal-inner { flex: 1; overflow: hidden; min-height: unset; }
+    #settingsModal .modal-sidebar { display: none !important; }
+    #settingsModal #settingsPanelWrapper { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    #settingsModal .modal-panel { padding: 16px; overflow-y: auto; flex: 1; max-height: unset; }
     #settingsModal #tabToggles { grid-template-columns: 1fr !important; }
     #settingsModal .tab-toggle-row { padding: 10px 12px; }
 

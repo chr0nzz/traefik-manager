@@ -137,7 +137,7 @@ The Certs, Plugins, and Logs tabs work the same as with Docker - just point the 
 # Certs tab - path to acme.json
 Environment=ACME_JSON_PATH=/etc/traefik/acme.json
 
-# Plugins tab - path to traefik.yml
+# Plugins + Static Config tab - path to traefik.yml
 Environment=STATIC_CONFIG_PATH=/etc/traefik/traefik.yml
 
 # Logs tab - path to access.log
@@ -148,7 +148,7 @@ Make sure `traefik-manager` user has read access to each file:
 
 ```bash
 chmod o+r /etc/traefik/acme.json
-chmod o+r /etc/traefik/traefik.yml
+chmod o+r /etc/traefik/traefik.yml   # use write access instead if using Static Config editor
 chmod o+r /var/log/traefik/access.log
 ```
 
@@ -157,6 +157,98 @@ Access logs are often owned by `root` or a `adm`/`syslog` group. If `chmod o+r` 
 ```bash
 usermod -aG adm traefik-manager
 ```
+
+---
+
+## Static config editor
+
+The Static Config tab lets you edit `traefik.yml` directly from the UI. After saving, Traefik Manager can restart Traefik automatically.
+
+### Requirements
+
+Give `traefik-manager` write access to `traefik.yml` and set `RESTART_METHOD` in the service unit.
+
+```bash
+chown traefik-manager: /etc/traefik/traefik.yml
+```
+
+### Method 1: Poison pill (recommended)
+
+Traefik Manager writes a signal file. A watcher script monitors it and restarts Traefik. No Docker socket access needed.
+
+Add to the `[Service]` section of your unit file:
+
+```ini
+Environment=RESTART_METHOD=poison-pill
+Environment=SIGNAL_FILE_PATH=/var/lib/traefik-manager/signals/restart.sig
+```
+
+Create a watcher script at `/usr/local/bin/traefik-restart-watcher.sh`:
+
+```bash
+#!/bin/sh
+SIGNAL=/var/lib/traefik-manager/signals/restart.sig
+mkdir -p "$(dirname "$SIGNAL")"
+while true; do
+  if [ -f "$SIGNAL" ]; then
+    systemctl restart traefik
+    rm -f "$SIGNAL"
+  fi
+  sleep 2
+done
+```
+
+Make it executable:
+
+```bash
+chmod +x /usr/local/bin/traefik-restart-watcher.sh
+```
+
+Create `/etc/systemd/system/traefik-restart-watcher.service`:
+
+```ini
+[Unit]
+Description=Traefik restart watcher
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/traefik-restart-watcher.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable it:
+
+```bash
+systemctl daemon-reload
+systemctl enable --now traefik-restart-watcher
+```
+
+### Method 2: Direct Docker socket
+
+If Traefik is running as a Docker container, mount the Docker socket and give `traefik-manager` access to it.
+
+```bash
+usermod -aG docker traefik-manager
+```
+
+Add to the `[Service]` section:
+
+```ini
+Environment=RESTART_METHOD=socket
+Environment=TRAEFIK_CONTAINER=traefik
+```
+
+### Environment variables
+
+| Variable | Values | Default | Description |
+|---|---|---|---|
+| `RESTART_METHOD` | `socket`, `poison-pill` | `proxy` | How to restart Traefik after a static config change |
+| `TRAEFIK_CONTAINER` | container name | `traefik` | Docker container name to restart (socket method) |
+| `SIGNAL_FILE_PATH` | path | `/signals/restart.sig` | Signal file path for the `poison-pill` method |
 
 ---
 

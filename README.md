@@ -322,9 +322,15 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 - **Dashboard tab** - routes grouped by category (Media, Monitoring, Infrastructure, etc.) with app icons sourced from [selfh.st/icons](https://selfh.st/icons/), cached locally, and per-card editing (display name, icon override, group override)
 - **Route Map tab** - 4-column topology view (Entry Points - Routes - Middlewares - Services) with Bezier curve connections, hover-to-highlight, and route tooltips
 
+**Static Config Editor** *(optional - mount `traefik.yml` read-write)*
+- Edit Traefik's static configuration directly from the UI - entrypoints, certificate resolvers, plugins, and a raw YAML editor (Monaco/VS Code engine) for anything else
+- Changes are staged with a pending banner, backed up before saving, and Traefik is restarted automatically
+- Three restart methods: **socket proxy** (recommended - sidecar with minimal socket exposure), **poison pill** (no socket needed - shared signal file), **direct socket**
+- Full-screen reconnect overlay polls until Traefik is back up and dismisses automatically
+
 **System Monitoring** *(optional file mounts)*
 - **Certs** - `acme.json` certificates with expiry tracking
-- **Plugins** - plugins from your static `traefik.yml`
+- **Plugins** - plugins from your static `traefik.yml`; add, edit, and remove plugins when static config editor is enabled
 - **Logs** - parsed access log cards showing method, status, path, IP, service, and duration; click any card for a full detail panel with all fields and the raw log line
 - **Configurable file paths** - set `acme.json`, access log, and static config paths from **Settings → File Paths** without a container restart; UI setting takes priority over env vars
 
@@ -349,7 +355,6 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 | ----------| ------------------------------------------------------------------------------------------------|
 | Repo     | [github.com/chr0nzz/traefik-manager-mobile](https://github.com/chr0nzz/traefik-manager-mobile) |
 | Download | [Latest release](https://github.com/chr0nzz/traefik-manager-mobile/releases/latest)            |
-| Beta     | [Sign up to beta test on Google Play](https://forms.gle/csituqc92sreNooZ8)                     |
 | Auth     | Per-device API key - generate one in **Settings → Authentication → App / Mobile API Keys**     |
 
 Features: browse routes, middlewares, and services · enable/disable routes · add and edit routes and middlewares (12 middleware templates) · multiple domains per route · per-service insecureSkipVerify · backend scheme + pass host header controls · multi-config file picker · edit mode for bulk actions · system light/dark theme.
