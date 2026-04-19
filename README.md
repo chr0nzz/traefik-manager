@@ -1,3 +1,6 @@
+> [!NOTE]
+> **You are on the v1 beta branch.** For the stable release see [main](https://github.com/chr0nzz/traefik-manager/tree/main). Beta docs: [beta-tm.xyzlab.dev](https://beta-tm.xyzlab.dev)
+
 <div align="center">
 
 <img src="docs/public/images/icon.png" width="128" height="128" alt="Traefik Manager">
