@@ -28,7 +28,7 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide' },
-      { text: 'Mobile App', link: '/mobile' },
+      { text: 'Beta', link: '/beta' },
       { text: 'Security', link: '/security' },
       { text: 'API Reference', link: '/api' },
       { text: 'UI Examples', link: '/ui-examples' },
