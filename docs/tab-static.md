@@ -1,8 +1,8 @@
-# Static Config Tab
+# Static Config Editor
 
-The **Static Config** tab lets you view and edit Traefik's static configuration (`traefik.yml`) directly from the Traefik Manager UI. Changes are staged, backed up before saving, and Traefik is restarted automatically using whichever restart method you configure.
+The **Static Config** editor lets you view and edit Traefik's static configuration (`traefik.yml`) directly from the Traefik Manager UI. Access it via **Settings → Static Config**. Changes are staged, backed up before saving, and Traefik is restarted automatically using whichever restart method you configure.
 
-The tab is only visible when `STATIC_CONFIG_PATH` is set and the file exists.
+The editor is only visible when `STATIC_CONFIG_PATH` is set and the file exists.
 
 ---
 
@@ -19,7 +19,7 @@ Traefik's static configuration controls settings that cannot be changed at runti
 
 ---
 
-## Tab sections
+## Sections
 
 | Section | Description |
 |---------|-------------|

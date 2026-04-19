@@ -69,7 +69,6 @@ export default defineConfig({
           { text: 'Routes', link: '/tab-routes' },
           { text: 'Middlewares', link: '/tab-middlewares' },
           { text: 'Services', link: '/tab-services' },
-          { text: 'Static Config', link: '/tab-static' },
         ],
       },
       {
@@ -107,6 +106,7 @@ export default defineConfig({
       {
         text: 'Configuration',
         items: [
+          { text: 'Static Config Editor', link: '/tab-static' },
           { text: 'manager.yml', link: '/manager-yml' },
           { text: 'Environment Variables', link: '/env-vars' },
           { text: 'OIDC / SSO Login', link: '/oidc' },

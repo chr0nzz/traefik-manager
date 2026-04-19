@@ -6,7 +6,7 @@ Traefik Manager v1 is currently in beta. This page explains how to join, test, a
 
 ## What's in beta
 
-- Static Config editor - view and edit `traefik.yml` directly in the UI
+- Static Config editor - view and edit `traefik.yml` directly from **Settings**
 - Restart method support - socket proxy, poison pill, and direct socket
 - UI and stability improvements across all tabs
 
