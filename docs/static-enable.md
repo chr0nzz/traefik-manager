@@ -172,7 +172,7 @@ sudo systemctl restart traefik-manager
 
 ## Verify
 
-Open Traefik Manager - the **Static** tab should appear in the navigation. If it does not appear, check that `STATIC_CONFIG_PATH` is set and the file exists at that path inside the container:
+Open Traefik Manager - the **Static Config** editor should appear under **Settings**. If it does not appear, check that `STATIC_CONFIG_PATH` is set and the file exists at that path inside the container:
 
 ```bash
 docker exec traefik-manager ls -la /app/traefik.yml
@@ -188,4 +188,4 @@ Remove the volume mount, env vars, and any compose additions you added, then res
 docker compose up -d --force-recreate traefik-manager
 ```
 
-The Static tab will disappear. Your `traefik.yml` is unchanged.
+The Static Config editor will disappear from Settings. Your `traefik.yml` is unchanged.
