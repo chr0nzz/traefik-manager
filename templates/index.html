@@ -378,6 +378,35 @@ function showToast(msg, type='success') {
     setTimeout(() => { el.style.animation='slideOut 0.3s ease forwards'; setTimeout(()=>el.remove(),300); }, 4000);
 }
 
+function _showSelfRouteEpWarning(badEp, fixEp) {
+    if (document.getElementById('selfRouteEpWarning')) return;
+    const el = document.createElement('div');
+    el.id = 'selfRouteEpWarning';
+    el.className = 'toast-item error';
+    el.style.cssText = 'animation:none;cursor:default;align-items:flex-start;gap:10px';
+    el.innerHTML = `<i class="ph-fill ph-warning-circle text-red-400 text-lg" style="margin-top:2px;flex-shrink:0"></i><span style="flex:1;line-height:1.5">Self-route entrypoint <b style="font-family:monospace">${_esc(badEp)}</b> does not exist in Traefik.<br><span style="font-size:12px;opacity:0.8">Your TM domain may not be accessible. Use <b style="font-family:monospace">${_esc(fixEp)}</b> instead?</span></span><div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px"><button onclick="_fixSelfRouteEp('${_esc(fixEp)}')" style="padding:3px 10px;border-radius:5px;background:var(--red);color:#fff;font-size:12px;border:none;cursor:pointer">Fix</button><button onclick="document.getElementById('selfRouteEpWarning').remove()" style="padding:3px 8px;border-radius:5px;background:transparent;color:var(--muted);font-size:12px;border:1px solid var(--border);cursor:pointer">Dismiss</button></div>`;
+    document.getElementById('toastContainer').appendChild(el);
+}
+
+async function _fixSelfRouteEp(fixEp) {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    try {
+        const srRes = await fetch('/api/settings/self-route');
+        const sr = await srRes.json();
+        if (!sr.domain) return;
+        const res = await fetch('/api/settings/self-route', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch', 'X-CSRF-Token': token },
+            body: JSON.stringify({ domain: sr.domain, service_url: sr.service_url, router_name: sr.router_name || 'traefik-manager', entry_point: fixEp })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            document.getElementById('selfRouteEpWarning')?.remove();
+            showToast('Self-route entrypoint updated to ' + fixEp);
+        }
+    } catch(e) { showToast('Failed to update self-route', 'error'); }
+}
+
 const OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs'];
 
 let _visibleTabsCache = {};
@@ -884,7 +913,7 @@ async function loadSelfRoute() {
         if (domainEl)  domainEl.value  = json.domain      || hostname;
         if (serviceEl) serviceEl.value = json.service_url || 'http://traefik-manager:5000';
         const epEl = document.getElementById('selfRouteEntryPoint');
-        if (epEl) epEl.value = json.entry_point || 'websecure';
+        if (epEl) epEl.value = json.entry_point || json.default_entry_point || 'websecure';
         if (deleteBtn) deleteBtn.classList.toggle('hidden', !json.domain && !json.found);
     } catch(e) {}
 }
@@ -1078,9 +1107,16 @@ async function _initEntrypointChips(proto, selectedEntrypoints) {
 
     function render() {
         hidden.value = isSingle ? ([...selected][0] || '') : [...selected].join(', ');
-        container.innerHTML = eps.map(ep => {
+        const orphans = [...selected].filter(ep => !eps.includes(ep));
+        const allEps = [...eps, ...orphans];
+        container.innerHTML = allEps.map(ep => {
             const on = selected.has(ep);
-            return `<button type="button" onclick="_toggleEpChip(this,'${_esc(ep)}','${proto}')" style="padding:3px 10px;border-radius:6px;border:1px solid ${on ? 'var(--green)' : 'var(--border)'};background:${on ? 'rgba(34,197,94,0.12)' : 'transparent'};color:${on ? 'var(--green)' : 'var(--muted)'};font-size:12px;font-family:monospace;cursor:pointer" title="${_esc(ep)}">${_esc(ep)}</button>`;
+            const isOrphan = !eps.includes(ep);
+            const borderColor = on ? (isOrphan ? 'var(--yellow,#eab308)' : 'var(--green)') : 'var(--border)';
+            const bgColor = on ? (isOrphan ? 'rgba(234,179,8,0.12)' : 'rgba(34,197,94,0.12)') : 'transparent';
+            const textColor = on ? (isOrphan ? 'var(--yellow,#eab308)' : 'var(--green)') : 'var(--muted)';
+            const titleAttr = isOrphan ? `${_esc(ep)} (not found in Traefik entrypoints - click to remove)` : _esc(ep);
+            return `<button type="button" onclick="_toggleEpChip(this,'${_esc(ep)}','${proto}')" style="padding:3px 10px;border-radius:6px;border:1px solid ${borderColor};background:${bgColor};color:${textColor};font-size:12px;font-family:monospace;cursor:pointer" title="${titleAttr}">${_esc(ep)}</button>`;
         }).join('');
     }
     render();
@@ -1495,6 +1531,14 @@ async function loadOverviewStats() {
                 </div>`;
             }).join('');
             _applyEntrypointsVisibility();
+            const epNames = entrypoints.value.map(e => e.name);
+            try {
+                const srRes = await fetch('/api/settings/self-route');
+                const sr = await srRes.json();
+                if (sr.domain && sr.entry_point && !epNames.includes(sr.entry_point)) {
+                    _showSelfRouteEpWarning(sr.entry_point, sr.default_entry_point || epNames[0]);
+                }
+            } catch(e) {}
         }
 
     } catch (e) {

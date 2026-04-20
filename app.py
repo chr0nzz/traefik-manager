@@ -18,7 +18,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.0.0-beta1"
+APP_VERSION  = "1.0.0-beta1.1"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -446,6 +446,16 @@ def save_settings(domains, cert_resolver, traefik_api_url,
 
 
 SELF_ROUTE_FILENAME = 'traefik-manager-self.yml'
+
+def _best_entrypoint() -> str:
+    eps = traefik_api_get('/api/entrypoints') or []
+    for ep in eps:
+        addr = ep.get('address', '')
+        if ':443' in addr or '/443' in addr:
+            return ep.get('name', 'websecure')
+    if eps:
+        return eps[0].get('name', 'websecure')
+    return 'websecure'
 
 def _self_route_path() -> str:
     if ACTIVE_CONFIG_DIR:
@@ -2059,13 +2069,14 @@ def _find_existing_self_route(hostname: str) -> dict:
 def api_get_self_route():
     settings = load_settings()
     sr = settings.get('self_route', {'domain': '', 'service_url': ''})
+    default_ep = _best_entrypoint()
     if not sr.get('domain'):
         hostname = request.args.get('hostname', '').strip().lower()
         if hostname:
             found = _find_existing_self_route(hostname)
             if found:
-                return jsonify(found)
-    return jsonify(sr)
+                return jsonify({**found, 'default_entry_point': default_ep})
+    return jsonify({**sr, 'default_entry_point': default_ep})
 
 @app.route('/api/settings/self-route', methods=['POST'])
 @csrf_protect
@@ -2075,7 +2086,7 @@ def api_save_self_route():
     domain      = str(data.get('domain', '')).strip()
     service_url = str(data.get('service_url', '')).strip() or 'http://traefik-manager:5000'
     router_name = str(data.get('router_name', 'traefik-manager')).strip() or 'traefik-manager'
-    entry_point = str(data.get('entry_point', 'websecure')).strip() or 'websecure'
+    entry_point = str(data.get('entry_point', '')).strip() or _best_entrypoint()
     settings = load_settings()
     if domain:
         _write_self_route(domain, service_url, settings.get('cert_resolver', 'cloudflare'), router_name, entry_point)
