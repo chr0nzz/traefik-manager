@@ -21,15 +21,15 @@ Traefik's static configuration controls settings that cannot be changed at runti
 
 ## Sections
 
-| Section | Description |
-|---------|-------------|
-| Entrypoints | Add, edit, and remove entrypoints - port, protocol, optional HTTP-to-HTTPS redirect |
-| Certificate Resolvers | ACME email, storage path, DNS or HTTP challenge type and credentials |
-| Plugins | Install and remove experimental plugins; view installed plugins |
-| API | Enable or disable the Traefik API and Dashboard, insecure mode, and debug mode |
-| Logging | Set the log level (DEBUG / INFO / WARN / ERROR) and toggle access logging with an optional file path |
-| Providers | Enable and configure Docker and File providers via dedicated toggles; add and remove other provider types (Swarm, HTTP, ECS, etc.) with the + button |
-| Advanced | Full raw YAML editor (Monaco) - for anything not covered by the form sections |
+| Section               | Description                                                                                                                                          |
+| -----------------------| ------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Entrypoints           | Add, edit, and remove entrypoints - port, protocol, optional HTTP-to-HTTPS redirect                                                                  |
+| Certificate Resolvers | ACME email, storage path, DNS or HTTP challenge type and credentials                                                                                 |
+| Plugins               | Install and remove experimental plugins; view installed plugins                                                                                      |
+| API                   | Enable or disable the Traefik API and Dashboard, insecure mode, and debug mode                                                                       |
+| Logging               | Set the log level (DEBUG / INFO / WARN / ERROR) and toggle access logging with an optional file path                                                 |
+| Providers             | Enable and configure Docker and File providers via dedicated toggles; add and remove other provider types (Swarm, HTTP, ECS, etc.) with the + button |
+| Advanced              | Full raw YAML editor (Monaco) - for anything not covered by the form sections                                                                        |
 
 ::: warning API section
 Disabling the Traefik API from the API section will prevent Traefik Manager from reading routes, services, and middleware. Keep it enabled while using TM.
