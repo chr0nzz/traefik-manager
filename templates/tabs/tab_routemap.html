@@ -57,6 +57,24 @@
         <div id="rmCols" class="routemap-cols"></div>
     </div>
 
+    <div id="rmPopupOverlay" style="display:none;position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px)" onclick="if(event.target===this)rmClosePopup()"></div>
+    <div id="rmPopup" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9991;width:min(1100px,94vw);max-height:90vh;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.5);flex-direction:column">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px;position:sticky;top:0;z-index:2;background:var(--card)">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                <span id="rmPopupTypeBadge" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em;flex-shrink:0;background:var(--input-bg);border:1px solid var(--border);color:var(--muted)"></span>
+                <span id="rmPopupTitle" style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span>
+                <span id="rmPopupMeta" style="font-size:11px;font-family:monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span>
+            </div>
+            <button onclick="rmClosePopup()" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px 6px;border-radius:6px;font-size:18px;line-height:1;flex-shrink:0" title="Close (Esc)">×</button>
+        </div>
+        <div style="padding:16px">
+            <div id="rmPopupTopoContainer" class="routemap-container" style="height:auto;min-height:80px">
+                <svg id="rmPopupSvg" class="routemap-svg"></svg>
+                <div id="rmPopupCols" class="routemap-cols"></div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -129,6 +147,7 @@ let _rmGroupBy        = 'name';
 let _rmSearch         = '';
 let _rmDrawn          = false;
 let _rmTopoSelected   = null;
+let _rmPopupOpen      = false;
 const _rmExpandedGroups = new Set();
 let _rmRouteGroupKey  = new Map();
 
@@ -332,7 +351,7 @@ function rmRender() {
 
 window.rmResetHighlight = function() {
     _rmTopoSelected = null;
-    document.querySelectorAll('#rmCols .rm-node').forEach(n => { n.style.transform = ''; n.classList.remove('rm-node-dim','rm-node-active'); });
+    document.querySelectorAll('#rmCols .rm-node').forEach(n => n.classList.remove('rm-node-dim','rm-node-active'));
     rmDrawCurves(_rmFilteredRoutes());
 };
 
@@ -408,14 +427,21 @@ function rmRenderTopology(routes) {
 
         colsEl2.querySelectorAll('[data-routeid]').forEach(el => {
             el.addEventListener('mouseenter', function() {
+                if (_rmPopupOpen) return;
                 _rmTopoSelected = this.dataset.routeid;
                 rmHighlightRoute(_rmTopoSelected, routes);
                 rmShowTooltip(this, _rmTopoSelected, routes);
             });
             el.addEventListener('mouseleave', function() {
+                if (_rmPopupOpen) return;
                 _rmTopoSelected = null;
                 window.rmResetHighlight();
                 rmHideTooltip();
+            });
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                rmHideTooltip();
+                rmOpenPopup('route', this.dataset.routeid, routes);
             });
         });
 
@@ -427,12 +453,19 @@ function rmRenderTopology(routes) {
             const type   = rmid.slice(0, colon);
             const nodeId = rmid.slice(colon + 1);
             el.addEventListener('mouseenter', function() {
+                if (_rmPopupOpen) return;
                 rmHighlightNode(type, nodeId, routes);
                 rmShowNodeTooltip(this, type, nodeId, routes);
             });
             el.addEventListener('mouseleave', function() {
+                if (_rmPopupOpen) return;
                 window.rmResetHighlight();
                 rmHideTooltip();
+            });
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                rmHideTooltip();
+                rmOpenPopup(type, nodeId, routes);
             });
         });
 
@@ -446,6 +479,16 @@ function rmRenderTopology(routes) {
                 _rmExpandedGroups.delete(this.dataset.groupid);
                 this.classList.remove('rm-group-expanded');
                 rmDrawCurves(_rmFilteredRoutes());
+            });
+        });
+
+        colsEl2.querySelectorAll('.rm-node-group[data-groupid]').forEach(el => {
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                rmHideTooltip();
+                const prefix = this.dataset.groupid;
+                const groupRoutes = routes.filter(r => _rmRouteGroupKey.get(r.id) === prefix);
+                if (groupRoutes.length) rmOpenPopup('group', prefix, routes, groupRoutes);
             });
         });
 
@@ -497,7 +540,24 @@ function rmNode(typeClass, id, inner, routeId, title) {
     const classes = ['rm-node', ...parts.map(p => 'rm-node-' + p)].join(' ');
     const rid     = routeId ? ` data-routeid="${_esc(routeId)}"` : '';
     const tip     = title ? ` title="${_esc(title)}"` : ` title="${_esc(String(id))}"`;
-    return `<div class="${classes}" data-rmid="${_esc(base+':'+id)}"${rid}${tip}>${inner}</div>`;
+    return `<div class="${classes}" data-rmid="${_esc(base+':'+id)}"${rid}${tip} style="cursor:pointer">${inner}</div>`;
+}
+
+function rmHighlightRoute(routeId, routes) {
+    const route = routes.find(r => r.id === routeId);
+    if (!route) return;
+    document.querySelectorAll('#rmCols .rm-node').forEach(n => {
+        const id = n.dataset.rmid || '';
+        let active = false;
+        if (id === `route:${routeId}`)               active = true;
+        else if (id.startsWith('ep:'))               active = (route.entryPoints||[]).includes(id.slice(3));
+        else if (id.startsWith('mw:'))               active = (route.middlewares||[]).includes(id.slice(3));
+        else if (id === `svc:${route.service_name}`) active = true;
+        n.classList.toggle('rm-node-active', active);
+        n.classList.toggle('rm-node-dim', !active);
+    });
+    rmDrawCurves([route]);
+    setTimeout(() => rmDrawCurves([route]), 210);
 }
 
 function rmHighlightNode(type, nodeId, routes) {
@@ -522,73 +582,156 @@ function rmHighlightNode(type, nodeId, routes) {
         n.classList.toggle('rm-node-active', active);
         n.classList.toggle('rm-node-dim', !active);
     });
-    const cont = document.getElementById('rmTopoContainer');
-    const nodeEl = cont.querySelector(`[data-rmid="${CSS.escape(type+':'+nodeId)}"]`);
-    if (nodeEl) {
-        const nodeCenterY = nodeEl.offsetTop + nodeEl.offsetHeight / 2;
-        const gap = 6;
-        connected.forEach((r, i) => {
-            const rEl = cont.querySelector(`[data-rmid="route:${CSS.escape(r.id)}"]`);
-            if (!rEl) return;
-            const offset      = (i - (connected.length - 1) / 2) * (rEl.offsetHeight + gap);
-            const routeTarget = nodeCenterY + offset;
-            rEl.style.transform = `translateY(${routeTarget - (rEl.offsetTop + rEl.offsetHeight / 2)}px)`;
-            if (type !== 'ep') {
-                (r.entryPoints || []).forEach((ep, j, arr) => {
-                    const el = cont.querySelector(`[data-rmid="ep:${CSS.escape(ep)}"]`);
-                    if (el) el.style.transform = `translateY(${routeTarget + (j - (arr.length-1)/2) * (el.offsetHeight+gap) - (el.offsetTop + el.offsetHeight/2)}px)`;
-                });
-            }
-            if (type !== 'mw') {
-                (r.middlewares || []).forEach((mw, j, arr) => {
-                    const el = cont.querySelector(`[data-rmid="mw:${CSS.escape(mw)}"]`);
-                    if (el) el.style.transform = `translateY(${routeTarget + (j - (arr.length-1)/2) * (el.offsetHeight+gap) - (el.offsetTop + el.offsetHeight/2)}px)`;
-                });
-            }
-            if (type !== 'svc' && r.service_name) {
-                const el = cont.querySelector(`[data-rmid="svc:${CSS.escape(r.service_name)}"]`);
-                if (el) el.style.transform = `translateY(${routeTarget - (el.offsetTop + el.offsetHeight/2)}px)`;
-            }
-        });
-    }
     rmDrawCurves(connected);
     setTimeout(() => rmDrawCurves(connected), 210);
 }
 
-function rmShowNodeTooltip(anchorEl, type, nodeId, routes) {
-    const connected = routes.filter(r => {
-        if (type === 'ep')  return (r.entryPoints || []).includes(nodeId);
-        if (type === 'mw')  return (r.middlewares  || []).includes(nodeId);
-        if (type === 'svc') return r.service_name === nodeId;
-        return false;
-    });
-    if (!_rmTipEl) {
-        _rmTipEl = document.createElement('div');
-        _rmTipEl.className = 'rm-tooltip';
-        document.body.appendChild(_rmTipEl);
+function rmOpenPopup(type, nodeId, allRoutes, preFiltered) {
+    _rmPopupOpen = true;
+    window.rmResetHighlight();
+
+    const overlay = document.getElementById('rmPopupOverlay');
+    const popup   = document.getElementById('rmPopup');
+    if (!popup) return;
+
+    const typeLabels = { ep: 'Entry Point', mw: 'Middleware', svc: 'Service', route: 'Route', group: 'Group' };
+    document.getElementById('rmPopupTypeBadge').textContent = typeLabels[type] || type;
+    document.getElementById('rmPopupTitle').textContent     = nodeId.split('@')[0];
+
+    let focusedRoutes = [];
+    if (type === 'group') {
+        focusedRoutes = preFiltered || [];
+        document.getElementById('rmPopupMeta').textContent = `${focusedRoutes.length} route${focusedRoutes.length !== 1 ? 's' : ''}`;
+    } else if (type === 'route') {
+        const r = allRoutes.find(r => r.id === nodeId);
+        if (!r) return;
+        focusedRoutes = [r];
+        const domain = _rmDomain(r);
+        document.getElementById('rmPopupMeta').textContent = domain || r.target || '';
+    } else {
+        focusedRoutes = allRoutes.filter(r => {
+            if (type === 'ep')  return (r.entryPoints||[]).includes(nodeId);
+            if (type === 'mw')  return (r.middlewares||[]).includes(nodeId);
+            if (type === 'svc') return r.service_name === nodeId;
+            return false;
+        });
+        const epAddr = type === 'ep' ? (_rmAllEps[nodeId]?.address || '') : '';
+        document.getElementById('rmPopupMeta').textContent = epAddr || `${focusedRoutes.length} route${focusedRoutes.length !== 1 ? 's' : ''}`;
     }
-    const label = type === 'ep' ? 'Entry Point' : type === 'mw' ? 'Middleware' : 'Service';
-    const routeList = connected.length
-        ? connected.map(r => `<span class="rm-shield-pill">${_esc(r.name)}</span>`).join('')
-        : `<span style="color:var(--muted);font-size:10px">none</span>`;
-    _rmTipEl.innerHTML = `
-        <div class="rm-tooltip-name">${_esc(nodeId.split('@')[0])}</div>
-        <div class="rm-tooltip-row"><span class="rm-tooltip-label">${label}</span></div>
-        <div class="rm-tooltip-row"><span class="rm-tooltip-label">Used by</span><div class="rm-mw-pills">${routeList}</div></div>
-    `;
-    const rect = anchorEl.getBoundingClientRect();
-    _rmTipEl.style.display = 'block';
-    const tipH = _rmTipEl.offsetHeight;
-    const top  = rect.top + window.scrollY - tipH - 8;
-    _rmTipEl.style.left = rect.left + window.scrollX + 'px';
-    _rmTipEl.style.top  = (top < 8 ? rect.bottom + window.scrollY + 8 : top) + 'px';
+
+    window._rmPopupAllRoutes = allRoutes;
+    window._rmPopupFocused   = focusedRoutes;
+
+    rmRenderPopupTopology(focusedRoutes, type, nodeId, allRoutes);
+
+    overlay.style.display = 'block';
+    popup.style.display   = 'flex';
 }
 
-function rmHighlightRoute(routeId, routes) {
+function rmRenderPopupTopology(focusedRoutes, activeType, activeNodeId, allRoutes) {
+    const cols = document.getElementById('rmPopupCols');
+    const cont = document.getElementById('rmPopupTopoContainer');
+    if (!cols || !cont) return;
+
+    const epNames  = [...new Set(focusedRoutes.flatMap(r => r.entryPoints||[]))];
+    const hasMws   = focusedRoutes.some(r => (r.middlewares||[]).length > 0);
+    const svcMap   = new Map();
+    const mwUsage  = {};
+    focusedRoutes.forEach(r => {
+        if (r.service_name) svcMap.set(r.service_name, r.target || r.service_name);
+        (r.middlewares||[]).forEach(mw => { mwUsage[mw] = (mwUsage[mw]||0)+1; });
+    });
+
+    cols.innerHTML = '';
+
+    if (epNames.length) {
+        cols.appendChild(rmBuildCol('ENTRY POINTS', 'ep', epNames,
+            name => rmPopupNode('ep', name,
+                `<i class="ph-bold ph-arrows-in" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(name)}</span>`,
+                activeType === 'ep' && name === activeNodeId, allRoutes)
+        ));
+    }
+
+    const routeCol = document.createElement('div');
+    routeCol.className = 'routemap-col';
+    routeCol.dataset.coltype = 'route';
+    routeCol.innerHTML = `<div class="routemap-col-header"><i class="ph-bold ph-git-branch" style="font-size:13px"></i>ROUTES</div>`;
+    focusedRoutes.forEach(r => {
+        const proto = (r.protocol||'http').toLowerCase();
+        routeCol.insertAdjacentHTML('beforeend', rmPopupNode('route ' + proto, r.id,
+            `<span class="rm-proto-badge rm-proto-${_esc(proto)}">${proto.toUpperCase()}</span><span class="rm-node-label">${_esc(r.name)}</span>`,
+            activeType === 'route' && r.id === activeNodeId, allRoutes, r.id));
+    });
+    cols.appendChild(routeCol);
+
+    if (hasMws) {
+        const mwOrder = new Map();
+        focusedRoutes.forEach(r => {
+            const rEl = cols.querySelector(`[data-poprmid="route:${CSS.escape(r.id)}"]`);
+            const top = rEl ? rEl.offsetTop : 0;
+            (r.middlewares||[]).forEach(mw => { if (!mwOrder.has(mw) || top < mwOrder.get(mw)) mwOrder.set(mw, top); });
+        });
+        const sortedMws = [...mwOrder.entries()].sort((a,b) => a[1]-b[1]).map(e => e[0]);
+        const mwCol = document.createElement('div');
+        mwCol.className = 'routemap-col';
+        mwCol.dataset.coltype = 'mw';
+        mwCol.innerHTML = `<div class="routemap-col-header"><i class="ph-bold ph-funnel" style="font-size:13px"></i>MIDDLEWARES</div>`;
+        sortedMws.forEach(name => {
+            const badge = (mwUsage[name]||0) > 1 ? `<span class="rm-mw-count">${mwUsage[name]}×</span>` : '';
+            mwCol.insertAdjacentHTML('beforeend', rmPopupNode('mw', name,
+                `<i class="ph-bold ph-shield-check" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(name.split('@')[0])}</span>${badge}`,
+                activeType === 'mw' && name === activeNodeId, allRoutes));
+        });
+        cols.appendChild(mwCol);
+    }
+
+    cols.appendChild(rmBuildCol('SERVICES', 'svc', [...svcMap.entries()],
+        ([svcName, target]) => rmPopupNode('svc', svcName,
+            `<i class="ph-bold ph-cube" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(svcName.split('@')[0])}</span>`,
+            activeType === 'svc' && svcName === activeNodeId, allRoutes, null, target)
+    ));
+
+    requestAnimationFrame(() => {
+        rmDrawPopupCurves(focusedRoutes);
+        setTimeout(() => rmDrawPopupCurves(focusedRoutes), 150);
+
+        cols.querySelectorAll('[data-poprmid]').forEach(el => {
+            const rmid   = el.dataset.poprmid || '';
+            const colon  = rmid.indexOf(':');
+            if (colon === -1) return;
+            const ntype  = rmid.slice(0, colon);
+            const nid    = rmid.slice(colon + 1);
+            el.addEventListener('mouseenter', function() {
+                if (ntype === 'route') rmPopupHighlightRoute(nid, focusedRoutes);
+                else rmPopupHighlightNode(ntype, nid, focusedRoutes);
+            });
+            el.addEventListener('mouseleave', function() {
+                cols.querySelectorAll('[data-poprmid]').forEach(n => n.classList.remove('rm-node-dim','rm-node-active'));
+                rmDrawPopupCurves(focusedRoutes);
+            });
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                rmClosePopup();
+                setTimeout(() => rmOpenPopup(ntype, nid, allRoutes), 50);
+            });
+        });
+    });
+}
+
+function rmPopupNode(typeClass, id, inner, isActive, allRoutes, routeId, title) {
+    const parts   = typeClass.split(' ');
+    const base    = parts[0];
+    const classes = ['rm-node', ...parts.map(p => 'rm-node-' + p), isActive ? 'rm-node-active' : ''].filter(Boolean).join(' ');
+    const rid     = routeId ? ` data-routeid="${_esc(routeId)}"` : '';
+    const tip     = title ? ` title="${_esc(title)}"` : ` title="${_esc(String(id))}"`;
+    return `<div class="${classes}" data-poprmid="${_esc(base+':'+id)}"${rid}${tip} style="cursor:pointer">${inner}</div>`;
+}
+
+function rmPopupHighlightRoute(routeId, routes) {
     const route = routes.find(r => r.id === routeId);
     if (!route) return;
-    document.querySelectorAll('#rmCols .rm-node').forEach(n => {
-        const id = n.dataset.rmid || '';
+    document.querySelectorAll('#rmPopupCols [data-poprmid]').forEach(n => {
+        const id = n.dataset.poprmid || '';
         let active = false;
         if (id === `route:${routeId}`)               active = true;
         else if (id.startsWith('ep:'))               active = (route.entryPoints||[]).includes(id.slice(3));
@@ -597,40 +740,87 @@ function rmHighlightRoute(routeId, routes) {
         n.classList.toggle('rm-node-active', active);
         n.classList.toggle('rm-node-dim', !active);
     });
-    const cont = document.getElementById('rmTopoContainer');
-    const rEl  = cont.querySelector(`[data-rmid="route:${CSS.escape(routeId)}"]`);
-    if (rEl) {
-        const routeCenterY = rEl.offsetTop + rEl.offsetHeight / 2;
-        const gap = 6;
-        const mws = route.middlewares || [];
-        mws.forEach((mw, i) => {
-            const mwEl = cont.querySelector(`[data-rmid="mw:${CSS.escape(mw)}"]`);
-            if (mwEl) {
-                const offset = (i - (mws.length - 1) / 2) * (mwEl.offsetHeight + gap);
-                const currentCenter = mwEl.offsetTop + mwEl.offsetHeight / 2;
-                mwEl.style.transform = `translateY(${routeCenterY + offset - currentCenter}px)`;
-            }
-        });
-        const eps = route.entryPoints || [];
-        eps.forEach((ep, i) => {
-            const epEl = cont.querySelector(`[data-rmid="ep:${CSS.escape(ep)}"]`);
-            if (epEl) {
-                const offset = (i - (eps.length - 1) / 2) * (epEl.offsetHeight + gap);
-                const currentCenter = epEl.offsetTop + epEl.offsetHeight / 2;
-                epEl.style.transform = `translateY(${routeCenterY + offset - currentCenter}px)`;
-            }
-        });
-        if (route.service_name) {
-            const svcEl = cont.querySelector(`[data-rmid="svc:${CSS.escape(route.service_name)}"]`);
-            if (svcEl) {
-                const currentCenter = svcEl.offsetTop + svcEl.offsetHeight / 2;
-                svcEl.style.transform = `translateY(${routeCenterY - currentCenter}px)`;
-            }
-        }
-    }
-    rmDrawCurves([route]);
-    setTimeout(() => { if (_rmTopoSelected === routeId) rmDrawCurves([route]); }, 210);
+    rmDrawPopupCurves([route]);
 }
+
+function rmPopupHighlightNode(type, nodeId, routes) {
+    const connected = routes.filter(r => {
+        if (type === 'ep')  return (r.entryPoints||[]).includes(nodeId);
+        if (type === 'mw')  return (r.middlewares||[]).includes(nodeId);
+        if (type === 'svc') return r.service_name === nodeId;
+        return false;
+    });
+    const activeRouteIds = new Set(connected.map(r => r.id));
+    const activeEps      = new Set(connected.flatMap(r => r.entryPoints||[]));
+    const activeMws      = new Set(connected.flatMap(r => r.middlewares||[]));
+    const activeSvcs     = new Set(connected.map(r => r.service_name).filter(Boolean));
+    document.querySelectorAll('#rmPopupCols [data-poprmid]').forEach(n => {
+        const id = n.dataset.poprmid || '';
+        let active = false;
+        if      (id.startsWith('route:')) active = activeRouteIds.has(id.slice(6));
+        else if (id.startsWith('ep:'))    active = activeEps.has(id.slice(3));
+        else if (id.startsWith('mw:'))    active = activeMws.has(id.slice(3));
+        else if (id.startsWith('svc:'))   active = activeSvcs.has(id.slice(4));
+        n.classList.toggle('rm-node-active', active);
+        n.classList.toggle('rm-node-dim', !active);
+    });
+    rmDrawPopupCurves(connected);
+}
+
+function rmDrawPopupCurves(routes) {
+    const svg  = document.getElementById('rmPopupSvg');
+    const cont = document.getElementById('rmPopupTopoContainer');
+    if (!svg || !cont) return;
+
+    const cr = cont.getBoundingClientRect();
+    svg.setAttribute('viewBox', `0 0 ${cr.width} ${cr.height}`);
+    svg.setAttribute('width',  cr.width);
+    svg.setAttribute('height', cr.height);
+    svg.innerHTML = '';
+
+    const get = id => cont.querySelector(`[data-poprmid="${CSS.escape(id)}"]`);
+
+    const allPopupRoutes = window._rmPopupFocused || [];
+    const hl = routes.length < allPopupRoutes.length;
+
+    const curve = (fromEl, toEl, color, opacity) => {
+        if (!fromEl || !toEl) return;
+        const f  = fromEl.getBoundingClientRect();
+        const t  = toEl.getBoundingClientRect();
+        const x1 = f.right - cr.left;
+        const y1 = f.top + f.height / 2 - cr.top;
+        const x2 = t.left  - cr.left;
+        const y2 = t.top + t.height / 2 - cr.top;
+        const cx = x1 + (x2 - x1) * 0.5;
+        const p  = document.createElementNS('http://www.w3.org/2000/svg','path');
+        p.setAttribute('d', `M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}`);
+        p.setAttribute('fill','none');
+        p.setAttribute('stroke', color);
+        p.setAttribute('stroke-width', '1.5');
+        p.setAttribute('stroke-opacity', opacity);
+        svg.appendChild(p);
+    };
+
+    allPopupRoutes.forEach(r => {
+        const active = !hl || routes.some(ar => ar.id === r.id);
+        const rEl = get(`route:${r.id}`);
+        const mws = r.middlewares || [];
+        (r.entryPoints||[]).forEach(ep => curve(get(`ep:${ep}`), rEl, active ? 'var(--blue)' : 'var(--border)', active ? '0.6' : '0.2'));
+        if (mws.length) {
+            mws.forEach(mw => curve(rEl, get(`mw:${mw}`), active ? 'var(--purple)' : 'var(--border)', active ? '0.6' : '0.2'));
+            if (r.service_name) mws.forEach(mw => curve(get(`mw:${mw}`), get(`svc:${r.service_name}`), active ? 'var(--green)' : 'var(--border)', active ? '0.5' : '0.2'));
+        } else if (r.service_name) {
+            curve(rEl, get(`svc:${r.service_name}`), active ? 'var(--green)' : 'var(--border)', active ? '0.6' : '0.2');
+        }
+    });
+}
+
+window.rmClosePopup = function() {
+    _rmPopupOpen = false;
+    document.getElementById('rmPopupOverlay').style.display = 'none';
+    document.getElementById('rmPopup').style.display        = 'none';
+    window.rmResetHighlight();
+};
 
 function rmDrawCurves(routes) {
     const svg  = document.getElementById('rmSvg');
@@ -667,25 +857,26 @@ function rmDrawCurves(routes) {
     const DC = 'var(--border)';
     const DO = '0.25';
 
-    const { grouped: _grpd } = rmGetGroups(routes, _rmGroupBy);
+    const allRoutes = _rmFilteredRoutes();
+    const { grouped: _grpd } = rmGetGroups(allRoutes, _rmGroupBy);
 
-    routes.forEach(r => {
+    allRoutes.forEach(r => {
         if (_grpd.has(r.id) && !_rmExpandedGroups.has(_rmRouteGroupKey.get(r.id))) return;
-        const active = !hl || r.id === _rmTopoSelected;
-        const rEl    = get(`route:${r.id}`);
-        const mws    = r.middlewares || [];
+        const isActive = !hl || routes.some(ar => ar.id === r.id);
+        const rEl = get(`route:${r.id}`);
+        const mws = r.middlewares || [];
 
         (r.entryPoints||[]).forEach(ep => {
-            curve(get(`ep:${ep}`), rEl, active ? 'var(--blue)' : DC, active ? '0.6' : DO);
+            curve(get(`ep:${ep}`), rEl, isActive ? 'var(--blue)' : DC, isActive ? '0.6' : DO);
         });
 
         if (mws.length) {
-            mws.forEach(mw => curve(rEl, get(`mw:${mw}`), active ? 'var(--purple)' : DC, active ? '0.6' : DO));
+            mws.forEach(mw => curve(rEl, get(`mw:${mw}`), isActive ? 'var(--purple)' : DC, isActive ? '0.6' : DO));
             if (r.service_name) {
-                mws.forEach(mw => curve(get(`mw:${mw}`), get(`svc:${r.service_name}`), active ? 'var(--green)' : DC, active ? '0.5' : DO));
+                mws.forEach(mw => curve(get(`mw:${mw}`), get(`svc:${r.service_name}`), isActive ? 'var(--green)' : DC, isActive ? '0.5' : DO));
             }
         } else if (r.service_name) {
-            curve(rEl, get(`svc:${r.service_name}`), active ? 'var(--green)' : DC, active ? '0.6' : DO);
+            curve(rEl, get(`svc:${r.service_name}`), isActive ? 'var(--green)' : DC, isActive ? '0.6' : DO);
         }
     });
 }
@@ -716,8 +907,39 @@ function rmShowTooltip(anchorEl, routeId, routes) {
         ${route.target ? `<div class="rm-tooltip-row"><span class="rm-tooltip-label">Target</span><code>${_esc(route.target)}</code></div>` : ''}
         <div class="rm-tooltip-row"><span class="rm-tooltip-label">Entry points</span><div class="rm-mw-pills">${epHtml}</div></div>
         <div class="rm-tooltip-row"><span class="rm-tooltip-label">Middlewares</span><div class="rm-mw-pills">${mwHtml}</div></div>
+        <div style="margin-top:6px;font-size:10px;color:var(--muted);opacity:0.7">Click to inspect</div>
     `;
 
+    const rect = anchorEl.getBoundingClientRect();
+    _rmTipEl.style.display = 'block';
+    const tipH = _rmTipEl.offsetHeight;
+    const top  = rect.top + window.scrollY - tipH - 8;
+    _rmTipEl.style.left = rect.left + window.scrollX + 'px';
+    _rmTipEl.style.top  = (top < 8 ? rect.bottom + window.scrollY + 8 : top) + 'px';
+}
+
+function rmShowNodeTooltip(anchorEl, type, nodeId, routes) {
+    const connected = routes.filter(r => {
+        if (type === 'ep')  return (r.entryPoints || []).includes(nodeId);
+        if (type === 'mw')  return (r.middlewares  || []).includes(nodeId);
+        if (type === 'svc') return r.service_name === nodeId;
+        return false;
+    });
+    if (!_rmTipEl) {
+        _rmTipEl = document.createElement('div');
+        _rmTipEl.className = 'rm-tooltip';
+        document.body.appendChild(_rmTipEl);
+    }
+    const label = type === 'ep' ? 'Entry Point' : type === 'mw' ? 'Middleware' : 'Service';
+    const routeList = connected.length
+        ? connected.map(r => `<span class="rm-shield-pill">${_esc(r.name)}</span>`).join('')
+        : `<span style="color:var(--muted);font-size:10px">none</span>`;
+    _rmTipEl.innerHTML = `
+        <div class="rm-tooltip-name">${_esc(nodeId.split('@')[0])}</div>
+        <div class="rm-tooltip-row"><span class="rm-tooltip-label">${label}</span></div>
+        <div class="rm-tooltip-row"><span class="rm-tooltip-label">Used by</span><div class="rm-mw-pills">${routeList}</div></div>
+        <div style="margin-top:6px;font-size:10px;color:var(--muted);opacity:0.7">Click to inspect</div>
+    `;
     const rect = anchorEl.getBoundingClientRect();
     _rmTipEl.style.display = 'block';
     const tipH = _rmTipEl.offsetHeight;
@@ -741,6 +963,10 @@ window.addEventListener('resize', () => {
 document.addEventListener('click', e => {
     const wrap = document.getElementById('rmFilterWrap');
     if (wrap && !wrap.contains(e.target)) document.getElementById('rmFilterPanel')?.classList.add('hidden');
+});
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && _rmPopupOpen) window.rmClosePopup();
 });
 
 })();

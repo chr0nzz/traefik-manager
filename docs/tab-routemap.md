@@ -26,11 +26,16 @@ Each column has a solid colored header and semi-transparent node cards:
 Bezier curves run between columns. Curves are drawn above column lane backgrounds but below node cards so they remain visible when crossing through intermediate columns (e.g. a direct route-to-service connection that passes through the middleware lane).
 
 **Hover** a route node to highlight its full path:
-- All unrelated nodes dim to 10 % opacity
-- The active route, its entry point(s), middleware(s), and service glow with a box shadow
-- Each highlighted node animates vertically to align with the hovered route, keeping connections easy to follow even when routes are near the bottom of a long list
+- All unrelated nodes dim to 10% opacity
+- The active route, its entry point(s), middleware(s), and service highlight with a box shadow
 - A tooltip shows the route's target, entry points, and middlewares
-- Move the mouse away to reset all positions and highlight
+- Move the mouse away to reset
+
+**Click** any node to open a focused popup:
+- The background dims and a mini route map appears centered on screen
+- The mini map uses the same 4-column layout and node styles, scoped to only the selected node's connections
+- Hover and click interactions work inside the popup - hover highlights a path, click drills into any connected node
+- Press **Esc** or click outside the popup to close it
 
 Middleware nodes show a usage count badge (e.g. `3x`) when they are used by more than one route, reducing visual noise from dense curve fans.
 

@@ -409,8 +409,8 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 
 .routemap-container { position: relative; min-height: 300px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .routemap-svg { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; }
-.routemap-cols { display: flex; gap: 12px; align-items: stretch; position: relative; }
-.routemap-col { position: relative; flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 6px; padding: 10px 8px 12px; border: 1px solid var(--border); border-radius: 10px; }
+.routemap-cols { display: flex; gap: 16px; align-items: stretch; position: relative; }
+.routemap-col { position: relative; flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 6px; padding: 12px 10px 14px; border: 1px solid var(--border); border-radius: 10px; }
 .routemap-col::before { content: ''; position: absolute; inset: 0; background: var(--input-bg); border-radius: 10px; z-index: 0; pointer-events: none; }
 .routemap-col-header { position: relative; z-index: 2; border-radius: 7px; padding: 9px 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-align: center; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px; flex-shrink: 0; }
 .routemap-col[data-coltype="ep"]    .routemap-col-header { background: var(--blue); }
