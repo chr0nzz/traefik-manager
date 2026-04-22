@@ -185,23 +185,26 @@ Mount `traefik.yml` read-write (no `:ro`) and set `RESTART_METHOD`.
 
 ### Method 1: Poison pill (recommended for Podman)
 
-Traefik Manager writes a signal file. A watcher sidecar monitors the file and restarts Traefik. No socket access needed for Traefik Manager.
+No socket access needed for Traefik Manager. Instead, Traefik Manager writes a signal file to a shared named volume. Traefik's own healthcheck detects the file, removes it, and kills itself (`kill -TERM 1`). Podman's `restart: always` policy immediately starts a fresh Traefik instance. No extra container needed.
+
+Add a `healthcheck` to your Traefik service and mount the shared volume on both containers:
 
 ```yaml
 services:
-  traefik-watcher:
-    image: alpine:latest
-    container_name: traefik-watcher
+  traefik:
+    image: traefik:latest
+    container_name: traefik
     restart: always
-    entrypoint: >
-      sh -c 'while true; do
-        if [ -f /signals/restart.sig ]; then
-          podman restart traefik && rm /signals/restart.sig;
-        fi;
-        sleep 2;
-      done'
+    healthcheck:
+      test: ["CMD-SHELL", "[ ! -f /signals/restart.sig ] || (rm /signals/restart.sig && kill -TERM 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 1
     volumes:
+      # your existing traefik volumes...
       - traefik-signals:/signals:z
+    networks:
+      - traefik
 
   traefik-manager:
     image: ghcr.io/chr0nzz/traefik-manager:latest
@@ -219,6 +222,8 @@ services:
       - /path/to/traefik-manager/backups:/app/backups:z
       - /path/to/traefik/traefik.yml:/app/traefik.yml:z
       - traefik-signals:/signals:z
+    networks:
+      - traefik
 
 volumes:
   traefik-signals:

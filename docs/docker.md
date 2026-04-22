@@ -165,26 +165,26 @@ networks:
 
 ### Method 2: Poison pill
 
-No Docker socket access for Traefik Manager. Instead, Traefik Manager writes a signal file to a shared volume. A watcher sidecar monitors that file and restarts Traefik when it appears.
+No Docker socket access for Traefik Manager. Instead, Traefik Manager writes a signal file to a shared named volume. Traefik's own healthcheck detects the file, removes it, and kills itself (`kill -TERM 1`). Docker's `restart: unless-stopped` policy immediately starts a fresh Traefik instance. No extra container needed.
+
+Add a `healthcheck` to your Traefik service and mount the shared volume on both containers:
 
 ```yaml
 services:
-  traefik-watcher:
-    image: alpine:latest
-    container_name: traefik-watcher
+  traefik:
+    image: traefik:latest
+    container_name: traefik
     restart: unless-stopped
-    entrypoint: >
-      sh -c 'while true; do
-        if [ -f /signals/restart.sig ]; then
-          docker restart traefik && rm /signals/restart.sig;
-        fi;
-        sleep 2;
-      done'
-    environment:
-      - TRAEFIK_CONTAINER=traefik
+    healthcheck:
+      test: ["CMD-SHELL", "[ ! -f /signals/restart.sig ] || (rm /signals/restart.sig && kill -TERM 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 1
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # your existing traefik volumes...
       - traefik-signals:/signals
+    networks:
+      - traefik
 
   traefik-manager:
     image: ghcr.io/chr0nzz/traefik-manager:latest
@@ -202,6 +202,8 @@ services:
       - /path/to/traefik-manager/backups:/app/backups
       - /path/to/traefik/traefik.yml:/app/traefik.yml
       - traefik-signals:/signals
+    networks:
+      - traefik
 
 volumes:
   traefik-signals:
