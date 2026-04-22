@@ -522,7 +522,6 @@ function rmBuildRouteCol(routes) {
             `<span class="rm-proto-badge rm-proto-${_esc(proto)}">${proto.toUpperCase()}</span><span class="rm-node-label">${_esc(r.name)}</span>`,
             r.id);
     };
-    routes.forEach(r => { if (!grouped.has(r.id)) col.insertAdjacentHTML('beforeend', renderRoute(r)); });
     Object.entries(groups).forEach(([prefix, members]) => {
         const proto = (members[0].protocol||'http').toLowerCase();
         const groupEl = document.createElement('div');
@@ -531,6 +530,7 @@ function rmBuildRouteCol(routes) {
         groupEl.innerHTML = `<div class="rm-node rm-node-${_esc(proto)} rm-node-group" data-groupid="${_esc(prefix)}"><span class="rm-proto-badge" style="background:rgba(255,255,255,0.35)">×${members.length}</span><span class="rm-node-label">${_esc(prefix)}</span><i class="ph-bold ph-caret-down rm-group-caret"></i></div><div class="rm-group-children">${members.map(renderRoute).join('')}</div>`;
         col.appendChild(groupEl);
     });
+    routes.forEach(r => { if (!grouped.has(r.id)) col.insertAdjacentHTML('beforeend', renderRoute(r)); });
     return col;
 }
 
@@ -574,16 +574,18 @@ function rmHighlightNode(type, nodeId, routes) {
     const activeSvcs     = new Set(connected.map(r => r.service_name).filter(Boolean));
     document.querySelectorAll('#rmCols .rm-node').forEach(n => {
         const id = n.dataset.rmid || '';
+        const gid = n.dataset.groupid || '';
         let active = false;
         if      (id.startsWith('route:')) active = activeRouteIds.has(id.slice(6));
         else if (id.startsWith('ep:'))    active = activeEps.has(id.slice(3));
         else if (id.startsWith('mw:'))    active = activeMws.has(id.slice(3));
         else if (id.startsWith('svc:'))   active = activeSvcs.has(id.slice(4));
+        else if (gid) active = connected.some(r => _rmRouteGroupKey.get(r.id) === gid);
         n.classList.toggle('rm-node-active', active);
         n.classList.toggle('rm-node-dim', !active);
     });
-    rmDrawCurves(connected);
-    setTimeout(() => rmDrawCurves(connected), 210);
+    rmDrawCurves(connected, true);
+    setTimeout(() => rmDrawCurves(connected, true), 210);
 }
 
 function rmOpenPopup(type, nodeId, allRoutes, preFiltered) {
@@ -822,7 +824,7 @@ window.rmClosePopup = function() {
     window.rmResetHighlight();
 };
 
-function rmDrawCurves(routes) {
+function rmDrawCurves(routes, forceHighlight) {
     const svg  = document.getElementById('rmSvg');
     const cont = document.getElementById('rmTopoContainer');
     if (!svg || !cont || cont.classList.contains('hidden')) return;
@@ -853,29 +855,51 @@ function rmDrawCurves(routes) {
         svg.appendChild(p);
     };
 
-    const hl = _rmTopoSelected !== null;
+    const hl = forceHighlight || _rmTopoSelected !== null;
     const DC = 'var(--border)';
     const DO = '0.25';
 
     const allRoutes = _rmFilteredRoutes();
     const { grouped: _grpd } = rmGetGroups(allRoutes, _rmGroupBy);
+    const drawnGroupCurves = new Set();
 
     allRoutes.forEach(r => {
-        if (_grpd.has(r.id) && !_rmExpandedGroups.has(_rmRouteGroupKey.get(r.id))) return;
+        const groupKey = _grpd.has(r.id) && !_rmExpandedGroups.has(_rmRouteGroupKey.get(r.id))
+            ? _rmRouteGroupKey.get(r.id) : null;
+        const rEl = groupKey
+            ? cont.querySelector(`.rm-node-group[data-groupid="${CSS.escape(groupKey)}"]`)
+            : get(`route:${r.id}`);
+        if (!rEl) return;
         const isActive = !hl || routes.some(ar => ar.id === r.id);
-        const rEl = get(`route:${r.id}`);
         const mws = r.middlewares || [];
 
+        const rKey = groupKey || r.id;
         (r.entryPoints||[]).forEach(ep => {
+            const k = `ep:${ep}->${rKey}`;
+            if (groupKey && drawnGroupCurves.has(k)) return;
+            if (groupKey) drawnGroupCurves.add(k);
             curve(get(`ep:${ep}`), rEl, isActive ? 'var(--blue)' : DC, isActive ? '0.6' : DO);
         });
 
         if (mws.length) {
-            mws.forEach(mw => curve(rEl, get(`mw:${mw}`), isActive ? 'var(--purple)' : DC, isActive ? '0.6' : DO));
+            mws.forEach(mw => {
+                const k = `${rKey}->mw:${mw}`;
+                if (groupKey && drawnGroupCurves.has(k)) return;
+                if (groupKey) drawnGroupCurves.add(k);
+                curve(rEl, get(`mw:${mw}`), isActive ? 'var(--purple)' : DC, isActive ? '0.6' : DO);
+            });
             if (r.service_name) {
-                mws.forEach(mw => curve(get(`mw:${mw}`), get(`svc:${r.service_name}`), isActive ? 'var(--green)' : DC, isActive ? '0.5' : DO));
+                mws.forEach(mw => {
+                    const k = `mw:${mw}->svc:${r.service_name}`;
+                    if (groupKey && drawnGroupCurves.has(k)) return;
+                    if (groupKey) drawnGroupCurves.add(k);
+                    curve(get(`mw:${mw}`), get(`svc:${r.service_name}`), isActive ? 'var(--green)' : DC, isActive ? '0.5' : DO);
+                });
             }
         } else if (r.service_name) {
+            const k = `${rKey}->svc:${r.service_name}`;
+            if (groupKey && drawnGroupCurves.has(k)) return;
+            if (groupKey) drawnGroupCurves.add(k);
             curve(rEl, get(`svc:${r.service_name}`), isActive ? 'var(--green)' : DC, isActive ? '0.6' : DO);
         }
     });
