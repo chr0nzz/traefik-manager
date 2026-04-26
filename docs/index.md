@@ -16,8 +16,8 @@ hero:
       text: Join Beta
       link: /beta
     - theme: alt
-      text: v1.0.0-beta2 release notes
-      link: https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta2
+      text: v1.0.0-beta3 release notes
+      link: https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta3
     - theme: alt
       text: GitHub
       link: https://github.com/chr0nzz/traefik-manager

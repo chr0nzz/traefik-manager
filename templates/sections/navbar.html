@@ -23,6 +23,11 @@
                 <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="nav-btn nav-docs-link" title="Documentation">
                     <i class="ph-bold ph-book-open"></i>
                 </a>
+                <div class="shortcuts-btn-wrap">
+                    <button onclick="toggleShortcutsPanel()" class="nav-btn" id="shortcutsBellBtn" title="Keyboard shortcuts">
+                        <i class="ph-bold ph-keyboard"></i>
+                    </button>
+                </div>
                 <div class="notif-bell-wrap" id="notifBellWrap">
                     <button onclick="toggleNotifPanel()" class="nav-btn" id="notifBellBtn" title="Notifications">
                         <i class="ph-bold ph-bell"></i>
@@ -65,6 +70,34 @@
                 <button onclick="toggleMobileMenu()" class="btn-icon" id="hamburgerBtn">
                     <i class="ph-bold ph-list text-xl" id="hamburgerIcon"></i>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notif-panel" id="shortcutsPanel">
+        <div class="notif-panel-header">
+            <span class="notif-panel-title"><i class="ph-bold ph-keyboard" style="margin-right:6px"></i>Keyboard Shortcuts</span>
+        </div>
+        <div class="notif-list" style="max-height:480px;padding:10px 12px;">
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Actions</div>
+            <div class="shortcuts-grid">
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>N</kbd><span>New Route</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>M</kbd><span>New Middleware</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>F</kbd><span>Focus search</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>X</kbd><span>Raw YAML editor</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>P</kbd><span>Settings</span></div>
+                <div class="shortcut-row"><kbd>Esc</kbd><span>Close panel</span></div>
+            </div>
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2 mt-4" style="color:var(--muted)">Navigation</div>
+            <div class="shortcuts-grid">
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>R</kbd><span>Routes</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>W</kbd><span>Middleware</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>S</kbd><span>Services</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>L</kbd><span>Logs</span></div>
+            </div>
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2 mt-4" style="color:var(--muted)">This panel</div>
+            <div class="shortcuts-grid">
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>?</kbd><span>Toggle shortcuts</span></div>
             </div>
         </div>
     </div>

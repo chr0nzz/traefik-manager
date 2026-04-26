@@ -18,7 +18,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.0.0-beta2"
+APP_VERSION  = "1.0.0-beta3"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -327,6 +327,8 @@ def load_settings() -> dict:
             merged['self_route'] = {
                 'domain':      str(sr.get('domain', '')).strip(),
                 'service_url': str(sr.get('service_url', '')).strip(),
+                'router_name': str(sr.get('router_name', 'traefik-manager')).strip() or 'traefik-manager',
+                'entry_point': str(sr.get('entry_point', '')).strip(),
             }
         if 'acme_json_path' in data:
             merged['acme_json_path'] = str(data['acme_json_path']).strip()
@@ -631,7 +633,7 @@ def csrf_protect(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):
-            if not request.headers.get('X-Api-Key'):
+            if not _check_api_key():
                 _check_csrf()
         return f(*args, **kwargs)
     return decorated
@@ -648,6 +650,18 @@ def _check_password(plaintext: str, hashed: str) -> bool:
     except Exception:
         return False
 
+def _hash_api_key(key: str) -> str:
+    import hashlib
+    return 'sha256:' + hashlib.sha256(key.encode()).hexdigest()
+
+def _verify_api_key(key: str, stored: str) -> bool:
+    import hashlib
+    if stored.startswith('sha256:'):
+        expected = 'sha256:' + hashlib.sha256(key.encode()).hexdigest()
+        return secrets.compare_digest(expected, stored)
+    return _check_password(key, stored)
+
+
 def _is_authenticated() -> bool:
 
     if not _auth_enabled():
@@ -657,12 +671,11 @@ def _is_authenticated() -> bool:
 def _check_inactivity():
     if not session.get('authenticated'):
         return
-    if session.permanent:
-        return
     last = session.get('last_active')
     now  = time.time()
-    if last and (now - last) > INACTIVITY_TIMEOUT * 60:
-        logger.info(f"Session expired due to inactivity ({INACTIVITY_TIMEOUT}m) for {request.remote_addr}")
+    timeout = INACTIVITY_TIMEOUT * 60 if not session.permanent else INACTIVITY_TIMEOUT * 60 * 24
+    if last and (now - last) > timeout:
+        logger.info(f"Session expired due to inactivity for {request.remote_addr}")
         session.clear()
         return
     session['last_active'] = now
@@ -675,7 +688,7 @@ def _check_api_key() -> bool:
     api_keys = settings.get('api_keys', [])
     if not api_keys:
         return False
-    return any(_check_password(key, k['hash']) for k in api_keys if k.get('hash'))
+    return any(_verify_api_key(key, k['hash']) for k in api_keys if k.get('hash'))
 
 def login_required(f):
     @wraps(f)
@@ -764,11 +777,12 @@ def login():
                 logger.info(f"OTP step required for login from {request.remote_addr}")
                 return redirect(url_for('login_otp'))
 
-            _vals = {'permanent': remember, 'authenticated': True,
+            _vals = {'authenticated': True,
                      'last_active': time.time(),
                      'login_time': datetime.now(timezone.utc).isoformat()}
             session.clear()
             session.update(_vals)
+            session.permanent = remember
             logger.info(f"Successful login from {request.remote_addr}")
             add_notification('info', f"Login from {request.remote_addr}")
 
@@ -1033,11 +1047,12 @@ def login_otp():
             must_change    = session.get('otp_must_change', False)
             setup_complete = session.get('otp_setup_complete', False)
             next_url       = session.get('otp_next', '') or url_for('index')
-            _vals = {'permanent': remember, 'authenticated': True,
+            _vals = {'authenticated': True,
                      'last_active': time.time(),
                      'login_time': datetime.now(timezone.utc).isoformat()}
             session.clear()
             session.update(_vals)
+            session.permanent = remember
             logger.info(f"Successful OTP login from {request.remote_addr}")
             if must_change:
                 if not setup_complete:
@@ -1135,7 +1150,7 @@ def api_apikey_generate():
     preview = key[:8] + '...' + key[-4:]
     api_keys.append({
         'name':       device_name,
-        'hash':       _hash_password(key),
+        'hash':       _hash_api_key(key),
         'preview':    preview,
         'created_at': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M'),
     })
@@ -1517,21 +1532,15 @@ def api_static_section_update():
                 if action == 'edit' and old_name and old_name != name:
                     providers.pop(old_name, None)
                 prov_cfg = {}
-                if name == 'swarm':
-                    endpoint = str(payload.get('endpoint', '')).strip()
-                    if endpoint:
-                        prov_cfg['endpoint'] = endpoint
-                    if payload.get('exposedByDefault'):
-                        prov_cfg['exposedByDefault'] = True
-                    if not payload.get('watch', True):
-                        prov_cfg['watch'] = False
-                elif name == 'http':
-                    endpoint = str(payload.get('endpoint', '')).strip()
-                    if endpoint:
-                        prov_cfg['endpoint'] = endpoint
-                    poll = str(payload.get('pollInterval', '')).strip()
-                    if poll and poll != '10s':
-                        prov_cfg['pollInterval'] = poll
+                yaml_config = str(payload.get('yaml_config', '')).strip()
+                if yaml_config:
+                    try:
+                        _yp = SafeYAML(typ='safe')
+                        parsed = _yp.load(yaml_config)
+                        if isinstance(parsed, dict):
+                            prov_cfg = parsed
+                    except Exception:
+                        pass
                 providers[name] = prov_cfg
             if not providers:
                 config.pop('providers', None)
@@ -1687,7 +1696,7 @@ def _parse_cert_expiry(pem_bytes):
         if isinstance(pem_bytes, str):
             pem_bytes = base64.b64decode(pem_bytes)
         cert_obj = x509.load_pem_x509_certificate(pem_bytes, default_backend())
-        return cert_obj.not_valid_after_utc.strftime('%b %d %H:%M:%S %Y GMT')
+        return cert_obj.not_valid_after_utc.strftime('%Y-%m-%dT%H:%M:%SZ')
     except Exception as ex:
         logger.debug(f"Cert parse error: {ex}")
         return None
@@ -2003,6 +2012,7 @@ def api_settings_test_connection():
     url     = _safe_api_url(raw_url)
     if not url:
         return jsonify({'ok': False, 'error': 'Invalid URL'}), 400
+    logger.info(f"Connection test to {url!r} by {request.remote_addr}")
     try:
         resp = requests.get(f"{url}/api/version", timeout=4)
         if resp.status_code == 200:
@@ -2142,16 +2152,25 @@ def save_config(data, path=None):
     logger.info(f"Configuration saved: {path}")
 
 
-def _build_apps(config, config_file=''):
+def _svc_key(name):
+    return name.split('@')[0] if '@' in name else name
+
+
+def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=None, extra_udp_svcs=None):
     apps = []
     http_config = config.get('http', {})
+    http_svcs = dict(http_config.get('services', {}))
+    if extra_http_svcs:
+        for k, v in extra_http_svcs.items():
+            if k not in http_svcs:
+                http_svcs[k] = v
     for rname, rdata in http_config.get('routers', {}).items():
         svc_name = rdata.get('service', '')
+        svc_key  = _svc_key(svc_name)
         target_url = 'N/A'
-        svcs = http_config.get('services', {})
         lb = {}
-        if svc_name in svcs:
-            lb = svcs[svc_name].get('loadBalancer', {})
+        if svc_key in http_svcs:
+            lb = http_svcs[svc_key].get('loadBalancer', {})
             servers = lb.get('servers', [])
             if servers:
                 target_url = servers[0].get('url', 'Unknown')
@@ -2169,12 +2188,17 @@ def _build_apps(config, config_file=''):
                      'certResolver': tls_http.get('certResolver', '') if isinstance(tls_http, dict) else '',
                      'insecureSkipVerify': insecure,
                      'configFile': config_file, 'provider': 'file'})
+    tcp_svcs = dict(config.get('tcp', {}).get('services', {}))
+    if extra_tcp_svcs:
+        for k, v in extra_tcp_svcs.items():
+            if k not in tcp_svcs:
+                tcp_svcs[k] = v
     for rname, rdata in config.get('tcp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
+        svc_key  = _svc_key(svc_name)
         target = 'N/A'
-        tcp_svcs = config.get('tcp', {}).get('services', {})
-        if svc_name in tcp_svcs:
-            servers = tcp_svcs[svc_name].get('loadBalancer', {}).get('servers', [])
+        if svc_key in tcp_svcs:
+            servers = tcp_svcs[svc_key].get('loadBalancer', {}).get('servers', [])
             if servers:
                 target = servers[0].get('address', 'N/A')
         app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
@@ -2185,12 +2209,17 @@ def _build_apps(config, config_file=''):
                      'protocol': 'tcp', 'tls': bool(tls_tcp), 'enabled': True,
                      'certResolver': tls_tcp.get('certResolver', '') if isinstance(tls_tcp, dict) else '',
                      'configFile': config_file, 'provider': 'file'})
+    udp_svcs = dict(config.get('udp', {}).get('services', {}))
+    if extra_udp_svcs:
+        for k, v in extra_udp_svcs.items():
+            if k not in udp_svcs:
+                udp_svcs[k] = v
     for rname, rdata in config.get('udp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
+        svc_key  = _svc_key(svc_name)
         target = 'N/A'
-        udp_svcs = config.get('udp', {}).get('services', {})
-        if svc_name in udp_svcs:
-            servers = udp_svcs[svc_name].get('loadBalancer', {}).get('servers', [])
+        if svc_key in udp_svcs:
+            servers = udp_svcs[svc_key].get('loadBalancer', {}).get('servers', [])
             if servers:
                 target = servers[0].get('address', 'N/A')
         app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
@@ -2211,7 +2240,19 @@ def _build_middlewares(config, config_file=''):
     return middlewares
 
 
+def _traefik_service_url_map():
+    url_map = {}
+    for proto, addr_key in (('http', 'url'), ('tcp', 'address'), ('udp', 'address')):
+        for svc in traefik_api_get(f'/api/{proto}/services') or []:
+            key = _svc_key(svc.get('name', ''))
+            servers = svc.get('loadBalancer', {}).get('servers', [])
+            if servers and addr_key in servers[0]:
+                url_map[f'{proto}:{key}'] = servers[0][addr_key]
+    return url_map
+
+
 def _build_external_routes(include_internal=False):
+    svc_urls = _traefik_service_url_map()
     routes = []
     for proto in ('http', 'tcp', 'udp'):
         data = traefik_api_get(f'/api/{proto}/routers') or []
@@ -2223,13 +2264,15 @@ def _build_external_routes(include_internal=False):
                 continue
             name = r.get('name', '')
             display_name = name.split('@')[0] if '@' in name else name
+            svc_name = r.get('service', '')
+            target = svc_urls.get(f'{proto}:{_svc_key(svc_name)}', svc_name or 'N/A')
             tls = r.get('tls', {})
             routes.append({
                 'id':           name,
                 'name':         display_name,
                 'rule':         r.get('rule', ''),
-                'service_name': r.get('service', ''),
-                'target':       r.get('service', 'N/A'),
+                'service_name': svc_name,
+                'target':       target,
                 'middlewares':  r.get('middlewares') or [],
                 'entryPoints':  r.get('entryPoints') or [],
                 'protocol':     proto,
@@ -2242,13 +2285,21 @@ def _build_external_routes(include_internal=False):
 
 
 def _build_all_apps(include_external=True, include_internal=False):
-    """Build combined apps and middlewares from all config files, plus disabled routes."""
     all_apps = []
     all_middlewares = []
-    for p in CONFIG_PATHS:
-        cf = os.path.basename(p) if (MULTI_CONFIG or ACTIVE_CONFIG_DIR) else ''
-        config = load_config(p)
-        all_apps.extend(_build_apps(config, cf))
+    loaded = [(os.path.basename(p) if (MULTI_CONFIG or ACTIVE_CONFIG_DIR) else '', load_config(p)) for p in CONFIG_PATHS]
+    combined_http = {}
+    combined_tcp  = {}
+    combined_udp  = {}
+    for _, cfg in loaded:
+        for k, v in cfg.get('http', {}).get('services', {}).items():
+            combined_http.setdefault(k, v)
+        for k, v in cfg.get('tcp', {}).get('services', {}).items():
+            combined_tcp.setdefault(k, v)
+        for k, v in cfg.get('udp', {}).get('services', {}).items():
+            combined_udp.setdefault(k, v)
+    for cf, config in loaded:
+        all_apps.extend(_build_apps(config, cf, combined_http, combined_tcp, combined_udp))
         all_middlewares.extend(_build_middlewares(config, cf))
     if include_external:
         all_apps.extend(_build_external_routes(include_internal=include_internal))
@@ -2403,7 +2454,10 @@ def _write_groups_config(data):
 @app.route('/api/dashboard/config', methods=['GET'])
 @login_required
 def dashboard_config_get():
-    return jsonify(_read_groups_config())
+    cfg = _read_groups_config()
+    sr  = load_settings().get('self_route', {})
+    cfg['tm_route_name'] = sr.get('router_name', 'traefik-manager') or 'traefik-manager'
+    return jsonify(cfg)
 
 @app.route('/api/dashboard/config', methods=['POST'])
 @login_required
@@ -2783,6 +2837,20 @@ def oidc_callback():
         logger.exception("OIDC token exchange failed")
         flash("OIDC login failed - token exchange error.", "error")
         return redirect(url_for('login'))
+    id_token = tokens.get('id_token', '')
+    expected_nonce = session.pop('oidc_nonce', '')
+    if id_token and expected_nonce:
+        try:
+            import base64, json as _json
+            payload_b64 = id_token.split('.')[1]
+            payload_b64 += '=' * (-len(payload_b64) % 4)
+            id_claims = _json.loads(base64.urlsafe_b64decode(payload_b64))
+            if not secrets.compare_digest(str(id_claims.get('nonce', '')), expected_nonce):
+                logger.warning(f"OIDC nonce mismatch from {request.remote_addr}")
+                flash("OIDC login failed - nonce mismatch.", "error")
+                return redirect(url_for('login'))
+        except Exception:
+            logger.warning("OIDC id_token nonce verification skipped - could not decode token")
     access_token = tokens.get('access_token', '')
     try:
         userinfo_resp = requests.get(cfg['userinfo_endpoint'],
@@ -2873,6 +2941,7 @@ def api_test_oidc():
     url  = str(data.get('provider_url', '')).strip().rstrip('/')
     if not url:
         return jsonify({'ok': False, 'error': 'No provider URL'})
+    logger.info(f"OIDC provider test to {url!r} by {request.remote_addr}")
     try:
         resp = requests.get(f"{url}/.well-known/openid-configuration", timeout=5)
         resp.raise_for_status()

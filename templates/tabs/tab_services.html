@@ -5,7 +5,7 @@
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
             <input type="text" id="searchRoutes" oninput="filterRoutes()" placeholder="Search routes..." class="input-field pl-9">
         </div>
-        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+        <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg); border:1px solid var(--border)">
             <div class="live-dd" id="dd-route-domain">
                 <button class="live-dd-btn-inner" id="dd-route-domain-btn" onclick="toggleLiveDd('dd-route-domain')">
                     <span id="dd-route-domain-label">All Domains</span>
@@ -18,6 +18,11 @@
                     {% endfor %}
                 </div>
             </div>
+        </div>
+        <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="filterRouteStatus('all')"      id="filterStatus-all"      class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+            <button onclick="filterRouteStatus('active')"   id="filterStatus-active"   class="proto-btn text-xs px-3 py-1.5">Active</button>
+            <button onclick="filterRouteStatus('inactive')" id="filterStatus-inactive" class="proto-btn text-xs px-3 py-1.5">Inactive</button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
             <button onclick="filterProto('all')" id="filterAll" class="proto-btn active-http text-xs px-3 py-1.5">All</button>

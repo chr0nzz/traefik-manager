@@ -28,12 +28,25 @@ Traefik's static configuration controls settings that cannot be changed at runti
 | Plugins               | Install and remove experimental plugins; view installed plugins                                                                                      |
 | API                   | Enable or disable the Traefik API and Dashboard, insecure mode, and debug mode                                                                       |
 | Logging               | Set the log level (DEBUG / INFO / WARN / ERROR) and toggle access logging with an optional file path                                                 |
-| Providers             | Enable and configure Docker and File providers via dedicated toggles; add and remove other provider types (Swarm, HTTP, ECS, etc.) with the + button |
+| Providers             | Enable and configure Docker and File providers via dedicated toggles; add other provider types via the **+ Provider** button which opens a template editor |
 | Advanced              | Full raw YAML editor (Monaco) - for anything not covered by the form sections                                                                        |
 
 ::: warning API section
 Disabling the Traefik API from the API section will prevent Traefik Manager from reading routes, services, and middleware. Keep it enabled while using TM.
 :::
+
+### Adding providers
+
+Docker and File providers have dedicated toggle cards with form fields (endpoint, directory, watch). For all other providers, click **+ Provider** to open the template editor:
+
+1. Select the provider type from the dropdown
+2. A Monaco YAML editor appears pre-filled with a working template for that provider
+3. Edit the values as needed
+4. Click **Add Provider**
+
+Supported provider types: Docker Swarm, HTTP, Kubernetes CRD, Kubernetes Ingress, Kubernetes Gateway, HashiCorp Nomad, AWS ECS, Consul Catalog, Consul KV, Redis KV, etcd KV, ZooKeeper KV.
+
+Clicking the edit button on an existing provider opens the same editor with its current configuration loaded.
 
 ### Pending changes and saving
 
@@ -105,6 +118,7 @@ Runs a `tecnativa/docker-socket-proxy` sidecar. TM connects to the proxy, which 
 services:
   traefik-manager:
     environment:
+      - STATIC_CONFIG_PATH=/app/traefik.yml
       - RESTART_METHOD=proxy
       - TRAEFIK_CONTAINER=traefik
       - DOCKER_HOST=tcp://socket-proxy:2375
@@ -154,6 +168,7 @@ services:
 
   traefik-manager:
     environment:
+      - STATIC_CONFIG_PATH=/app/traefik.yml
       - RESTART_METHOD=poison-pill
       - SIGNAL_FILE_PATH=/signals/restart.sig
     volumes:
@@ -177,6 +192,7 @@ Mount `/var/run/docker.sock` directly into TM. Simplest setup but full Docker da
 services:
   traefik-manager:
     environment:
+      - STATIC_CONFIG_PATH=/app/traefik.yml
       - RESTART_METHOD=socket
       - TRAEFIK_CONTAINER=traefik
     volumes:

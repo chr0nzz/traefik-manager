@@ -582,12 +582,19 @@
                                 </div>
                                 <div class="toggle-switch" id="toggle-tm-badge" onclick="toggleTmBadge()"><div class="toggle-knob"></div></div>
                             </div>
-                            <div class="flex items-center justify-between" style="padding:10px 12px;">
+                            <div class="flex items-center justify-between" style="padding:10px 12px;border-bottom:1px solid var(--border)">
                                 <div>
                                     <div class="text-xs font-medium" style="color:var(--text)">Show documentation link</div>
                                     <div class="text-xs" style="color:var(--muted)">Traefik Manager documentation.</div>
                                 </div>
                                 <div class="toggle-switch" id="toggle-docs-link" onclick="toggleDocsLink()"><div class="toggle-knob"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between" style="padding:10px 12px;">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Show keyboard shortcuts button</div>
+                                    <div class="text-xs" style="color:var(--muted)">Quick reference panel for keyboard shortcuts.</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-shortcuts-btn" onclick="toggleShortcutsBtn()"><div class="toggle-knob"></div></div>
                             </div>
                         </div>
                     </div>
@@ -1097,6 +1104,14 @@ function _applyTmBadgeVisibility() {
     if (tog) tog.classList.toggle('on', show);
 }
 
+function toggleShortcutsBtn() {
+    const show = localStorage.getItem('showShortcutsBtn') !== 'false';
+    localStorage.setItem('showShortcutsBtn', show ? 'false' : 'true');
+    document.documentElement.classList.toggle('tm-hide-shortcuts', show);
+    const t = document.getElementById('toggle-shortcuts-btn');
+    if (t) t.classList.toggle('on', !show);
+}
+
 function toggleDocsLink() {
     const show = localStorage.getItem('showDocsLink') !== 'false';
     localStorage.setItem('showDocsLink', show ? 'false' : 'true');
@@ -1228,9 +1243,11 @@ function loadUiTogglesIntoModal() {
     const sc = document.getElementById('toggle-ui-statcards');
     const ep = document.getElementById('toggle-ui-entrypoints');
     const cs = document.getElementById('toggle-ui-compact-stats');
+    const sh = document.getElementById('toggle-shortcuts-btn');
     if (sc) sc.classList.toggle('on', _uiPref('showStatCards'));
     if (ep) ep.classList.toggle('on', _uiPref('showEntrypoints'));
     if (cs) cs.classList.toggle('on', localStorage.getItem('compactStatCards') === 'true');
+    if (sh) sh.classList.toggle('on', localStorage.getItem('showShortcutsBtn') !== 'false');
 }
 
 function toggleUiPref(key) {

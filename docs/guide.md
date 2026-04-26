@@ -68,7 +68,7 @@ These tabs are always visible. They let you read and write your Traefik dynamic 
 
 **Multiple config files** - mount several Traefik dynamic config files using `CONFIG_DIR` or `CONFIG_PATHS`. A dropdown in the route/middleware modals lets you choose which file each entry is saved to. See [Environment Variables](env-vars.md) for setup.
 
-**Static Config** - mount `traefik.yml` read-write and set `RESTART_METHOD` to unlock the [Static Config tab](tab-static.md): edit entrypoints, cert resolvers, and plugins directly from the UI; changes are staged, backed up, and Traefik is restarted automatically. Optional - not required for route/middleware management.
+**Static Config** - mount `traefik.yml` read-write and set `RESTART_METHOD` to unlock the [Static Config tab](static.md): edit entrypoints, cert resolvers, and plugins directly from the UI; changes are staged, backed up, and Traefik is restarted automatically. Optional - not required for route/middleware management.
 
 ---
 

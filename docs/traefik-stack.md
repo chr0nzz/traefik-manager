@@ -95,7 +95,10 @@ The Static Config tab covers:
 | Providers | Toggle Docker and File providers; add and remove other provider types (Swarm, HTTP, ECS, etc.) |
 | Advanced | Full raw YAML editor (Monaco) for anything not covered by the sections above |
 
-For existing installs, see [Enable static config editor](static-enable.md).
+For existing installs that did not enable the static config editor during setup, you have two options:
+
+- **Re-run setup.sh** - answer the static config questions differently. The script regenerates `docker-compose.yml` from your answers. Your config files and backups are preserved but any manual edits to the compose file will be overwritten.
+- **Enable manually** - see [Enable static config editor](static-enable.md) to add just the required volume, env vars, and restart method to your existing compose without re-running setup.
 
 ### Directory structure
 
@@ -174,6 +177,8 @@ Installs just Traefik Manager as a Docker container. Use this when Traefik is al
 - Which restart method to use (socket proxy, poison pill, or direct socket)
 - The Traefik container name (default: `traefik`)
 
+To add static config support to an existing install, either re-run `setup.sh` (regenerates the compose file from your answers, preserving config/backups) or follow [Enable static config editor](static-enable.md) to add only the required changes manually.
+
 ### Directory structure
 
 ```
@@ -221,6 +226,9 @@ Installs Traefik Manager as a native systemd service. No Docker required. Use th
 | Traefik static config | No | Path to `traefik.yml` (default: `/etc/traefik/traefik.yml`) |
 
 **Static config editor** - if you mount the static config, the script also asks:
+
+To add static config support to an existing native install, either re-run `setup.sh` (clones/updates the repo and regenerates the systemd unit) or follow [Enable static config editor](static-enable.md) to add the env vars manually.
+
 - **Restart method** - two options for native installs:
   - *Poison pill* (recommended) - writes a signal file; no Docker socket needed
   - *Direct Docker socket* - requires the `traefik-manager` user to be in the `docker` group

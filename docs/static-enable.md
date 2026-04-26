@@ -2,7 +2,7 @@
 
 How to enable the static config editor for an existing Traefik Manager install without re-running the setup script.
 
-**Prerequisites:** path to your `traefik.yml` on the host, and a decision on which [restart method](tab-static.md#restart-methods) you want to use.
+**Prerequisites:** path to your `traefik.yml` on the host, and a decision on which [restart method](static.md#restart-methods) you want to use.
 
 ---
 
@@ -64,6 +64,7 @@ Add the `socket-proxy` service and set `DOCKER_HOST` on TM. You can do this with
 services:
   traefik-manager:
     environment:
+      - STATIC_CONFIG_PATH=/app/traefik.yml
       - RESTART_METHOD=proxy
       - TRAEFIK_CONTAINER=traefik
       - DOCKER_HOST=tcp://socket-proxy:2375
@@ -109,6 +110,7 @@ services:
 
   traefik-manager:
     environment:
+      - STATIC_CONFIG_PATH=/app/traefik.yml
       - RESTART_METHOD=poison-pill
       - SIGNAL_FILE_PATH=/signals/restart.sig
     volumes:
@@ -136,6 +138,7 @@ Add the socket mount to TM:
 services:
   traefik-manager:
     environment:
+      - STATIC_CONFIG_PATH=/app/traefik.yml
       - RESTART_METHOD=socket
       - TRAEFIK_CONTAINER=traefik
     volumes:

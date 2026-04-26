@@ -374,7 +374,7 @@ Environment=RESTART_METHOD=poison-pill
 ```
 :::
 
-See [Static Config Tab](tab-static.md#restart-methods) for full compose snippets for each method.
+See [Static Config Tab](static.md#restart-methods) for full compose snippets for each method.
 
 ---
 

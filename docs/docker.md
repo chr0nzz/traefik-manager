@@ -144,6 +144,7 @@ services:
       - "5000:5000"
     environment:
       - COOKIE_SECURE=false
+      - STATIC_CONFIG_PATH=/app/traefik.yml
       - RESTART_METHOD=proxy
       - DOCKER_HOST=tcp://socket-proxy:2375
       - TRAEFIK_CONTAINER=traefik
@@ -194,6 +195,7 @@ services:
       - "5000:5000"
     environment:
       - COOKIE_SECURE=false
+      - STATIC_CONFIG_PATH=/app/traefik.yml
       - RESTART_METHOD=poison-pill
       - SIGNAL_FILE_PATH=/signals/restart.sig
     volumes:
@@ -227,6 +229,7 @@ services:
       - "5000:5000"
     environment:
       - COOKIE_SECURE=false
+      - STATIC_CONFIG_PATH=/app/traefik.yml
       - RESTART_METHOD=socket
       - TRAEFIK_CONTAINER=traefik
     volumes:
@@ -245,7 +248,8 @@ networks:
 
 | Variable | Values | Default | Description |
 |---|---|---|---|
-| `RESTART_METHOD` | `proxy`, `socket`, `poison-pill` | `proxy` | How to restart Traefik after a static config change |
+| `STATIC_CONFIG_PATH` | path | - | Path to `traefik.yml` inside the container. Must be set for the Static Config and Plugins tabs to work. |
+| `RESTART_METHOD` | `proxy`, `socket`, `poison-pill` | - | How to restart Traefik after a static config change |
 | `TRAEFIK_CONTAINER` | container name | `traefik` | Name of the Traefik container to restart (`proxy` and `socket` methods) |
 | `DOCKER_HOST` | URL | - | Docker host URL for the socket proxy method (e.g. `tcp://socket-proxy:2375`) |
 | `SIGNAL_FILE_PATH` | path | `/signals/restart.sig` | Signal file path for the `poison-pill` method |

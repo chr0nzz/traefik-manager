@@ -23,12 +23,14 @@
             if (localStorage.getItem('compactStatCards') === 'true') document.documentElement.classList.add('tm-compact-stats');
             if (localStorage.getItem('showEntrypoints') === 'false') document.documentElement.classList.add('tm-hide-entrypoints');
             if (localStorage.getItem('showDocsLink') === 'false') document.documentElement.classList.add('tm-hide-docs');
+            if (localStorage.getItem('showShortcutsBtn') === 'false') document.documentElement.classList.add('tm-hide-shortcuts');
         })();
     </script>
     <style>
         html.tm-hide-stats #overviewSection { display: none !important; }
         html.tm-hide-entrypoints #entrypointsBar { display: none !important; }
         html.tm-hide-docs .nav-docs-link { display: none !important; }
+        html.tm-hide-shortcuts .shortcuts-btn-wrap { display: none !important; }
         html.tm-compact-stats #statsGrid .stat-exp-header,
         html.tm-compact-stats #statsGrid .stat-exp-body,
         html.tm-compact-stats #statsGrid .stat-count { display: none; }
@@ -162,7 +164,7 @@
         </button>
         <button onclick="switchTab('middlewares')" id="btn-middlewares" class="tab-btn">
             <span class="flex items-center gap-2 ">
-                <i class="ph-bold ph-shield-check"></i>
+                <i class="ph-bold ph-plugs-connected"></i>
                 Middlewares
                 <span class="badge badge-muted" id="countMw">-</span>
             </span>
@@ -266,7 +268,7 @@
         </button>
         <button onclick="switchTab('certs')" id="btn-certs" class="tab-btn tab-optional" data-tab="certs">
             <span class="flex items-center gap-2">
-                <i class="ph-bold ph-shield-check"></i>
+                <i class="ph-bold ph-certificate"></i>
                 Certs
                 <span class="badge badge-muted" id="certsTabCount">-</span>
             </span>
@@ -373,7 +375,7 @@ function showToast(msg, type='success') {
     const color = type === 'success' ? 'text-green-400' : 'text-red-400';
     const el = document.createElement('div');
     el.className = `toast-item ${type}`;
-    el.innerHTML = `<i class="ph-fill ${icon} ${color} text-lg"></i><span>${msg}</span>`;
+    el.innerHTML = `<i class="ph-fill ${icon} ${color} text-lg"></i><span>${_esc(msg)}</span>`;
     document.getElementById('toastContainer').appendChild(el);
     setTimeout(() => { el.style.animation='slideOut 0.3s ease forwards'; setTimeout(()=>el.remove(),300); }, 4000);
 }
@@ -440,7 +442,7 @@ async function toggleTabVisibility(tab) {
     const btn = document.getElementById('btn-' + tab);
     if (sw)  sw.classList.toggle('on', newVal);
     if (btn) {
-        btn.style.display = newVal ? '' : 'none';
+        btn.style.display = newVal ? 'block' : 'none';
         if (!newVal && btn.classList.contains('active')) switchTab('services');
     }
     
@@ -478,6 +480,7 @@ function switchTab(tab) {
     if (tab === 'certs')         refreshCertsTab();
     if (tab === 'plugins')       refreshPluginsTab();
     if (tab === 'logs')          refreshLogs();
+    _initMobileFilterBars();
 }
 
 // ── Shared provider card renderer (matches Routes tab card style) ─────────────
@@ -506,26 +509,26 @@ function renderProviderCard(r, opts = {}) {
     const domainBlock = isHTTP
         ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
                <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div>
-               <div class="text-xs font-mono truncate" style="color:var(--blue)" title="${r.rule || '-'}">${domain || r.rule || '-'}</div>
+               <div class="text-xs font-mono truncate" style="color:var(--blue)" title="${_esc(r.rule || '-')}">${_esc(domain || r.rule || '-')}</div>
            </div>`
         : (r.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
                <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div>
-               <div class="text-xs font-mono truncate" style="color:var(--blue)">${r.rule}</div>
+               <div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(r.rule)}</div>
            </div>` : '');
 
     const targetBlock = opts.target
         ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
                <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div>
-               <div class="text-xs font-mono truncate" style="color:var(--green)">${opts.target}</div>
+               <div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(opts.target)}</div>
            </div>`
         : '';
 
     const epHtml = (r.entryPoints || []).length
-        ? `<div class="flex flex-wrap gap-1">${(r.entryPoints || []).map(ep => `<span class="badge badge-muted text-xs">${ep}</span>`).join('')}</div>`
+        ? `<div class="flex flex-wrap gap-1">${(r.entryPoints || []).map(ep => `<span class="badge badge-muted text-xs">${_esc(ep)}</span>`).join('')}</div>`
         : '';
 
     const mwHtml = (r.middlewares || []).length
-        ? `<div class="flex flex-wrap gap-1">${(r.middlewares || []).map(mw => `<span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">${mw.split('@')[0]}</span>`).join('')}</div>`
+        ? `<div class="flex flex-wrap gap-1">${(r.middlewares || []).map(mw => `<span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">${_esc(mw.split('@')[0])}</span>`).join('')}</div>`
         : '';
 
     return `
@@ -536,8 +539,8 @@ function renderProviderCard(r, opts = {}) {
                     <div class="flex items-center gap-2 mb-0.5">
                         ${protoBadge}${tlsBadge}<span class="status-dot ${dotCls}"></span>
                     </div>
-                    <h3 class="font-bold text-sm mt-1.5 truncate" style="color:var(--text)" title="${name}">${name}</h3>
-                    <div class="text-xs font-mono truncate" style="color:var(--muted)">${svc}</div>
+                    <h3 class="font-bold text-sm mt-1.5 truncate" style="color:var(--text)" title="${_esc(name)}">${_esc(name)}</h3>
+                    <div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(svc)}</div>
                 </div>
                 <div class="flex items-center gap-1.5 ml-2 flex-shrink-0">
                     ${opts.extraBadges || ''}${externalBtn}
@@ -552,6 +555,7 @@ function renderProviderCard(r, opts = {}) {
 }
 
 let currentProtoFilter = 'all';
+let _routeCardEls = [];
 
 function filterProto(proto) {
     currentProtoFilter = proto;
@@ -566,6 +570,19 @@ function filterProto(proto) {
 }
 
 let currentRouteDomainFilter = '';
+let currentRouteStatusFilter = 'all';
+
+function filterRouteStatus(status) {
+    currentRouteStatusFilter = status;
+    ['all','active','inactive'].forEach(s => {
+        const btn = document.getElementById('filterStatus-' + s);
+        if (btn) btn.className = 'proto-btn text-xs px-3 py-1.5';
+    });
+    const cls = status === 'active' ? 'active-http' : status === 'inactive' ? 'active-muted' : 'active-http';
+    const btn = document.getElementById('filterStatus-' + status);
+    if (btn) btn.className = `proto-btn ${cls} text-xs px-3 py-1.5`;
+    filterRoutes();
+}
 
 function pickRouteDomain(val, label) {
     currentRouteDomainFilter = val;
@@ -581,17 +598,18 @@ function pickRouteDomain(val, label) {
 
 function filterRoutes() {
     const q = document.getElementById('searchRoutes').value.toLowerCase();
-    document.querySelectorAll('.route-card').forEach(card => {
-        const name = card.dataset.name || '';
-        const proto = card.dataset.protocol || '';
-        const cardDomains = (card.dataset.domains || '').split('|').filter(Boolean);
-        const matchSearch = !q || name.includes(q);
-        const matchProto = currentProtoFilter === 'all' || proto === currentProtoFilter;
-        const matchDomain = !currentRouteDomainFilter || cardDomains.some(d =>
-            d === currentRouteDomainFilter || d.endsWith('.' + currentRouteDomainFilter)
-        );
-        card.style.display = matchSearch && matchProto && matchDomain ? '' : 'none';
-    });
+    for (const card of _routeCardEls) {
+        const name    = card.dataset.name || '';
+        const proto   = card.dataset.protocol || '';
+        const domains = (card.dataset.domains || '').split('|').filter(Boolean);
+        const enabled = card.dataset.enabled !== 'false';
+        const show =
+            (!q || name.includes(q)) &&
+            (currentProtoFilter === 'all' || proto === currentProtoFilter) &&
+            (!currentRouteDomainFilter || domains.some(d => d === currentRouteDomainFilter || d.endsWith('.' + currentRouteDomainFilter))) &&
+            (currentRouteStatusFilter === 'all' || (currentRouteStatusFilter === 'active' && enabled) || (currentRouteStatusFilter === 'inactive' && !enabled));
+        card.style.display = show ? '' : 'none';
+    }
 }
 
 let currentProto = 'http';
@@ -708,7 +726,7 @@ function onMwConfigFileChange(sel) {
 }
 
 function _esc(s) {
-    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 async function saveRouteAjax(event) {
@@ -1000,6 +1018,7 @@ function renderRouteGrid(apps) {
     } else {
         grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4';
     }
+    _routeCardEls = Array.from(grid.querySelectorAll('.route-card'));
 }
 
 function renderMwGrid(middlewares) {
@@ -1030,6 +1049,7 @@ function renderMwGrid(middlewares) {
     } else {
         grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4';
     }
+    _mwCardEls = Array.from(grid.querySelectorAll('.mw-card'));
     filterMw();
 }
 
@@ -1685,6 +1705,7 @@ function dismissTmUpdatePopup() {
 }
 
 let _mwFilter = 'all';
+let _mwCardEls = [];
 function filterMw(f) {
     if (f) {
         _mwFilter = f;
@@ -1693,19 +1714,16 @@ function filterMw(f) {
         });
     }
     const search = (document.getElementById('searchMw')?.value || '').toLowerCase();
-    const cards = document.querySelectorAll('.mw-card');
     let visible = 0;
-    cards.forEach(card => {
-        const nameMatch = card.dataset.mwname.includes(search);
-        const typeMatch = _mwFilter === 'all' || card.dataset.mwtype === _mwFilter;
-        const show = nameMatch && typeMatch;
+    for (const card of _mwCardEls) {
+        const show = card.dataset.mwname.includes(search) && (_mwFilter === 'all' || card.dataset.mwtype === _mwFilter);
         card.style.display = show ? '' : 'none';
         if (show) visible++;
-    });
+    }
     const emptyEl = document.getElementById('mwEmpty');
     const emptyText = document.getElementById('mwEmptyText');
     if (emptyEl) {
-        emptyEl.classList.toggle('hidden', visible > 0 || cards.length === 0);
+        emptyEl.classList.toggle('hidden', visible > 0 || _mwCardEls.length === 0);
         if (emptyText) emptyText.textContent = search ? `No middlewares match "${search}"` : 'No middlewares found';
     }
 }
@@ -1745,14 +1763,14 @@ function toggleLiveDd(id) {
     const btn  = document.getElementById(id + '-btn');
     const isOpen = menu.classList.contains('open');
     document.querySelectorAll('.live-dd-menu.open').forEach(m => m.classList.remove('open'));
-    document.querySelectorAll('.live-dd-btn.open').forEach(b => b.classList.remove('open'));
+    document.querySelectorAll('.live-dd-btn-inner.open').forEach(b => b.classList.remove('open'));
     if (!isOpen) { menu.classList.add('open'); btn.classList.add('open'); }
 }
 
 document.addEventListener('click', e => {
     if (!e.target.closest('.live-dd')) {
         document.querySelectorAll('.live-dd-menu.open').forEach(m => m.classList.remove('open'));
-        document.querySelectorAll('.live-dd-btn.open').forEach(b => b.classList.remove('open'));
+        document.querySelectorAll('.live-dd-btn-inner.open').forEach(b => b.classList.remove('open'));
     }
 });
 
@@ -1797,6 +1815,8 @@ function clearLiveFilters() {
     pickLiveStatus('all', 'All Status');
     pickLiveProto('all', 'All Protocols');
     pickLiveProvider('all', 'All Providers');
+    document.querySelectorAll('.live-dd-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.live-dd-btn-inner.open').forEach(b => b.classList.remove('open'));
     const s = document.getElementById('svcSearch');
     if (s) { s.value = ''; }
     renderServicesTable();
@@ -1864,13 +1884,15 @@ function renderServicesTable() {
         }).join('');
     }
 
-    let items = _allServices.filter(s => {
-        if (_svcFilter !== 'all' && statusOf(s) !== _svcFilter) return false;
-        if (_protoLiveFilter !== 'all' && s._proto !== _protoLiveFilter) return false;
-        if (_providerFilter !== 'all' && providerOf(s) !== _providerFilter) return false;
-        if (search && !(s.name||'').toLowerCase().includes(search)) return false;
-        return true;
-    });
+    let items = [];
+    for (let i = 0; i < _allServices.length; i++) {
+        const s = _allServices[i];
+        if (_svcFilter !== 'all' && statusOf(s) !== _svcFilter) continue;
+        if (_protoLiveFilter !== 'all' && s._proto !== _protoLiveFilter) continue;
+        if (_providerFilter !== 'all' && providerOf(s) !== _providerFilter) continue;
+        if (search && !(s.name||'').toLowerCase().includes(search)) continue;
+        items.push({s, globalIdx: i});
+    }
 
     const typeOf = s => {
         if (s.loadBalancer) return 'loadbalancer';
@@ -1880,8 +1902,7 @@ function renderServicesTable() {
         return null;
     };
 
-    const cards = items.map(s => {
-        const globalIdx = _allServices.indexOf(s);
+    const cards = items.map(({s, globalIdx}) => {
         const proto     = s._proto || 'HTTP';
         const name      = (s.name || '').split('@')[0];
         const provider  = providerOf(s);
@@ -1934,8 +1955,7 @@ function renderServicesTable() {
         : '';
 
     if (_svcViewMode === 'list') {
-        const rows = items.map(s => {
-            const globalIdx = _allServices.indexOf(s);
+        const rows = items.map(({s, globalIdx}) => {
             const proto     = s._proto || 'HTTP';
             const name      = (s.name || '').split('@')[0];
             const provider  = providerOf(s);
@@ -2033,7 +2053,7 @@ function openSvcDetail(idx) {
                     <td class="px-3 py-2.5">
                         <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-400 text-xs">Active</span></span>
                     </td>
-                    <td class="px-3 py-2.5 font-mono text-xs break-all" style="color:var(--text)">${sv.url || sv.address || '-'}</td>
+                    <td class="px-3 py-2.5 font-mono text-xs break-all" style="color:var(--text)">${_esc(sv.url || sv.address || '-')}</td>
                 </tr>`).join('')}
             </tbody>
         </table>` : `<div class="text-xs mt-2" style="color:var(--muted)">No servers configured</div>`;
@@ -2041,7 +2061,7 @@ function openSvcDetail(idx) {
     
     const usedBy = s.usedBy || [];
     const usedByHtml = usedBy.length > 0
-        ? usedBy.map(r => `<span class="badge badge-muted mr-1 mb-1">${r}</span>`).join('')
+        ? usedBy.map(r => `<span class="badge badge-muted mr-1 mb-1">${_esc(r)}</span>`).join('')
         : `<span class="text-xs" style="color:var(--muted)">-</span>`;
 
     const kv = (label, val, isHtml = false) => `
@@ -2248,12 +2268,67 @@ function renderMwDetailPanel(mw) {
     return `<div>${rows.join('')}</div>${yamlHtml}`;
 }
 
+let _shortcutsPanelOpen = false;
+
+function toggleShortcutsPanel() {
+    const panel = document.getElementById('shortcutsPanel');
+    const btn   = document.getElementById('shortcutsBellBtn');
+    if (!panel) return;
+    _shortcutsPanelOpen = !_shortcutsPanelOpen;
+    panel.classList.toggle('open', _shortcutsPanelOpen);
+    if (btn) btn.style.color = _shortcutsPanelOpen ? 'var(--blue)' : '';
+    if (_shortcutsPanelOpen) {
+        const r = btn.getBoundingClientRect();
+        const panelW = Math.min(320, window.innerWidth - 16);
+        let left = r.right - panelW;
+        if (left < 8) left = 8;
+        panel.style.position = 'fixed';
+        panel.style.top  = (r.bottom + 8) + 'px';
+        panel.style.left = left + 'px';
+        panel.style.width = panelW + 'px';
+    }
+}
+
+function _isTyping() {
+    const t = document.activeElement?.tagName;
+    return t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || document.activeElement?.isContentEditable;
+}
+
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         closeRouteDetail();
         closeMwDetail();
         closeSvcDetail();
         closePluginDetail();
+        if (_shortcutsPanelOpen) { _shortcutsPanelOpen = false; document.getElementById('shortcutsPanel')?.classList.remove('open'); const b = document.getElementById('shortcutsBellBtn'); if (b) b.style.color = ''; }
+    }
+    if (_isTyping() || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.shiftKey) {
+        switch (e.key) {
+            case 'N': e.preventDefault(); openModal(); break;
+            case 'M': e.preventDefault(); openMwModal(); break;
+            case 'F': {
+                const el = document.querySelector('.tab-content.active input[type="text"]');
+                if (el) { e.preventDefault(); el.focus(); }
+                break;
+            }
+            case 'R': e.preventDefault(); switchTab('services'); break;
+            case 'W': e.preventDefault(); switchTab('middlewares'); break;
+            case 'S': e.preventDefault(); switchTab('live'); break;
+            case 'L': e.preventDefault(); switchTab('logs'); break;
+            case 'X': e.preventDefault(); openStaticYamlPopoutFromShortcut(); break;
+            case 'P': e.preventDefault(); openSettingsModal(); break;
+            case '?': e.preventDefault(); toggleShortcutsPanel(); break;
+        }
+    }
+});
+
+document.addEventListener('click', e => {
+    if (_shortcutsPanelOpen && !e.target.closest('#shortcutsPanel') && !e.target.closest('.shortcuts-btn-wrap')) {
+        _shortcutsPanelOpen = false;
+        document.getElementById('shortcutsPanel')?.classList.remove('open');
+        const b = document.getElementById('shortcutsBellBtn');
+        if (b) b.style.color = '';
     }
 });
 
@@ -2266,7 +2341,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
         ? `<span class="badge badge-red"><i class="ph-fill ph-warning-circle text-xs"></i> ${status}</span>`
         : `<span class="badge badge-muted">Unknown</span>`;
     const errorBanner = routerError
-        ? `<div class="mt-4 p-3 rounded-lg text-xs font-mono leading-relaxed" style="color:var(--red);background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.25);word-break:break-word"><i class="ph-bold ph-warning-circle" style="margin-right:6px"></i>${routerError}</div>`
+        ? `<div class="mt-4 p-3 rounded-lg text-xs font-mono leading-relaxed" style="color:var(--red);background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.25);word-break:break-word"><i class="ph-bold ph-warning-circle" style="margin-right:6px"></i>${_esc(routerError)}</div>`
         : '';
 
     const apiNote = liveRouter
@@ -2822,18 +2897,18 @@ function renderPluginCards() {
             <div class="flex items-start justify-between gap-3 mb-3">
                 <div class="flex items-center gap-2 min-w-0">
                     <i class="ph-bold ph-puzzle-piece text-sm shrink-0" style="color:var(--blue)"></i>
-                    <span class="font-bold text-sm truncate" style="color:var(--text)" title="${name}">${name}</span>
+                    <span class="font-bold text-sm truncate" style="color:var(--text)" title="${_esc(name)}">${_esc(name)}</span>
                 </div>
                 <div class="flex items-center gap-1 shrink-0">
-                    ${repoUrl ? `<a href="${repoUrl}" target="_blank" class="btn-icon" title="View on GitHub" style="padding:4px 6px;text-decoration:none"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : ''}
+                    ${repoUrl ? `<a href="${_esc(repoUrl)}" target="_blank" class="btn-icon" title="View on GitHub" style="padding:4px 6px;text-decoration:none"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : ''}
                     <button onclick="openPluginDetail(${idx})" class="btn-icon" title="View details" style="padding:4px 6px"><i class="ph-bold ph-info text-sm"></i></button>
                     ${mgmtBtns}
                 </div>
             </div>
             <div class="space-y-2 text-xs">
-                <div class="font-mono truncate" style="color:var(--muted)" title="${moduleName}">${moduleName}</div>
+                <div class="font-mono truncate" style="color:var(--muted)" title="${_esc(moduleName)}">${_esc(moduleName)}</div>
                 <div class="flex items-center justify-between pt-1">
-                    <span class="badge badge-muted" style="font-size:9px">v${version}</span>
+                    <span class="badge badge-muted" style="font-size:9px">v${_esc(version)}</span>
                     <span class="badge badge-muted" style="font-size:9px">plugin</span>
                 </div>
             </div>
@@ -2855,14 +2930,14 @@ function openPluginDetail(idx) {
     document.getElementById('pluginDetailTitle').textContent = name;
 
     const rows = [
-        ['Name',        name],
-        ['Version',     version],
-        ['Module',      moduleName || '-'],
-        ...(repoUrl ? [['Repository', `<a href="${repoUrl}" target="_blank" style="color:var(--blue)">${repoUrl} <i class="ph-bold ph-arrow-square-out text-xs"></i></a>`]] : []),
+        ['Name',        _esc(name)],
+        ['Version',     _esc(version)],
+        ['Module',      _esc(moduleName || '-')],
+        ...(repoUrl ? [['Repository', `<a href="${_esc(repoUrl)}" target="_blank" style="color:var(--blue)">${_esc(repoUrl)} <i class="ph-bold ph-arrow-square-out text-xs"></i></a>`]] : []),
     ];
 
     const rowsHtml = rows.map(([k, v]) =>
-        `<div class="detail-key">${k}</div><div class="detail-val"><span class="font-mono" style="color:var(--text)">${v}</span></div>`
+        `<div class="detail-key">${_esc(k)}</div><div class="detail-val"><span class="font-mono" style="color:var(--text)">${v}</span></div>`
     ).join('');
 
     const settingsSection = p.settings ? `
@@ -2928,13 +3003,13 @@ function renderCertCards() {
             <div class="flex items-start justify-between mb-3">
                 <div class="flex items-center gap-2 min-w-0">
                     <i class="ph-bold ph-shield-check text-sm shrink-0" style="color:var(--green)"></i>
-                    <span class="font-bold text-sm truncate" style="color:var(--text)" title="${main}">${main}</span>
+                    <span class="font-bold text-sm truncate" style="color:var(--text)" title="${_esc(main)}">${_esc(main)}</span>
                 </div>
                 ${expiryBadge}
             </div>
-            ${sans.length ? `<div class="flex flex-wrap gap-1 mb-3">${sans.map(d=>`<span class="badge badge-muted" style="font-size:9px">${d}</span>`).join('')}</div>` : ''}
+            ${sans.length ? `<div class="flex flex-wrap gap-1 mb-3">${sans.map(d=>`<span class="badge badge-muted" style="font-size:9px">${_esc(d)}</span>`).join('')}</div>` : ''}
             <div class="grid grid-cols-2 gap-2 text-xs">
-                <div><span style="color:var(--muted)">Resolver</span><div class="font-mono mt-0.5" style="color:var(--text)">${resolver}</div></div>
+                <div><span style="color:var(--muted)">Resolver</span><div class="font-mono mt-0.5" style="color:var(--text)">${_esc(resolver)}</div></div>
                 <div><span style="color:var(--muted)">Expires</span><div class="font-mono mt-0.5" style="color:${expiryColor}">${expiryStr}</div></div>
             </div>
         </div>`;
@@ -3110,6 +3185,43 @@ function closeLogDetail() {
     if (bd) { bd.style.opacity = ''; bd.style.pointerEvents = ''; }
 }
 
+function _initMobileFilterBars() {
+    if (window.innerWidth > 640) return;
+    document.querySelectorAll('.filter-bar:not([data-fb-init])').forEach(bar => {
+        bar.dataset.fbInit = '1';
+        const searchBtn = document.createElement('button');
+        searchBtn.className = 'fb-search-icon';
+        searchBtn.title = 'Search';
+        searchBtn.innerHTML = '<i class="ph-bold ph-magnifying-glass" style="font-size:13px"></i>';
+        searchBtn.onclick = () => {
+            bar.classList.add('fb-open');
+            bar.querySelector('input[type=text]')?.focus();
+        };
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'fb-cancel-icon';
+        cancelBtn.title = 'Cancel';
+        cancelBtn.innerHTML = '<i class="ph-bold ph-arrow-left" style="font-size:13px"></i>';
+        cancelBtn.onclick = () => {
+            bar.classList.remove('fb-open');
+            const inp = bar.querySelector('input[type=text]');
+            if (inp) { inp.value = ''; inp.dispatchEvent(new Event('input')); }
+        };
+        bar.insertBefore(cancelBtn, bar.firstChild);
+        bar.insertBefore(searchBtn, bar.firstChild);
+        if (bar.querySelector('.fb-secondary')) {
+            const filterBtn = document.createElement('button');
+            filterBtn.className = 'fb-filter-icon';
+            filterBtn.title = 'More filters';
+            filterBtn.innerHTML = '<i class="ph-bold ph-sliders" style="font-size:13px"></i>';
+            filterBtn.onclick = () => {
+                const open = bar.classList.toggle('fb-filter-open');
+                filterBtn.classList.toggle('active', open);
+            };
+            bar.appendChild(filterBtn);
+        }
+    });
+}
+
 (async () => {
     try {
         const res  = await fetch('/api/settings');
@@ -3130,6 +3242,11 @@ function closeLogDetail() {
     } catch(e) {}
     if (typeof applyUiPrefs === 'function') applyUiPrefs();
     if (typeof _applyDocsLinkVisibility === 'function') _applyDocsLinkVisibility();
+    _initMobileFilterBars();
+    const _rg = document.getElementById('routeGrid');
+    if (_rg) _routeCardEls = Array.from(_rg.querySelectorAll('.route-card'));
+    const _mg = document.getElementById('mwGrid');
+    if (_mg) _mwCardEls = Array.from(_mg.querySelectorAll('.mw-card'));
     loadOverviewStats();
     checkManagerVersion();
     fetchNotifications();
@@ -3301,6 +3418,7 @@ if (document.getElementById('toastContainer') && document.getElementById('toastC
 
 <div id="_copyToast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:500;pointer-events:none;opacity:0;transition:opacity 0.2s;z-index:9999"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
 <script>
 require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs' } });
@@ -3419,6 +3537,20 @@ function openStaticYamlPopout() {
     } else {
         _initStaticMonaco(_staticRawContent);
     }
+}
+
+async function openStaticYamlPopoutFromShortcut() {
+    if (!_staticRawContent) {
+        try {
+            const res  = await fetch('/api/static/config');
+            const data = await res.json();
+            if (data.raw) {
+                _staticRawContent = data.raw;
+                _staticOriginalContent = data.raw;
+            }
+        } catch(e) {}
+    }
+    openStaticYamlPopout();
 }
 
 function closeStaticYamlPopout() {
@@ -3603,7 +3735,6 @@ function openStaticAddForm(section) {
     if (section === 'entrypoints') document.getElementById('sfEpName')?.focus();
     if (section === 'resolvers')   document.getElementById('sfResName')?.focus();
     if (section === 'plugins')     document.getElementById('sfPluginName')?.focus();
-    if (section === 'providers')   document.getElementById('sfProviderType')?.focus();
 }
 
 function openStaticEditForm(section, name) {
@@ -3635,10 +3766,8 @@ function _resetStaticForm(section) {
         ['sfPluginName','sfPluginModule','sfPluginVersion'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
     } else if (section === 'providers') {
         const t = document.getElementById('sfProviderType'); if (t) t.value = '';
-        ['sfProviderEndpoint','sfProviderHttpEndpoint','sfProviderPollInterval'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
-        _setStaticToggle('providerExposedByDefault', false);
-        _setStaticToggle('providerWatch', true);
-        ['sfProviderSwarmFields','sfProviderHttpFields','sfProviderOtherNote'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+        const w = document.getElementById('sfProviderEditorWrap'); if (w) w.style.display = 'none';
+        if (_providerMonaco) _providerMonaco.setValue('');
     }
 }
 
@@ -3665,6 +3794,15 @@ function _prefillStaticForm(section, name) {
         document.getElementById('sfPluginName').value    = name;
         document.getElementById('sfPluginModule').value  = p.moduleName || '';
         document.getElementById('sfPluginVersion').value = p.version || '';
+    } else if (section === 'providers') {
+        const sel = document.getElementById('sfProviderType');
+        if (sel) sel.value = name;
+        const wrap = document.getElementById('sfProviderEditorWrap');
+        if (wrap) wrap.style.display = '';
+        const existing = ((d.providers || {})[name] || {});
+        const yamlLines = Object.entries(existing).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n');
+        const initialYaml = yamlLines || (PROVIDER_TEMPLATES[name] || '');
+        _initProviderMonaco(initialYaml);
     }
 }
 
@@ -3922,39 +4060,65 @@ function _renderStaticProviders(providersData) {
     }
 }
 
-function onProviderTypeInput(val) {
-    const type = val.toLowerCase();
-    const swarm = document.getElementById('sfProviderSwarmFields');
-    const http  = document.getElementById('sfProviderHttpFields');
-    const note  = document.getElementById('sfProviderOtherNote');
-    const isSwarm = type === 'swarm';
-    const isHttp  = type === 'http';
-    if (swarm) swarm.style.display = isSwarm ? '' : 'none';
-    if (http)  http.style.display  = isHttp  ? '' : 'none';
-    if (note)  note.style.display  = (!isSwarm && !isHttp && type.length > 0) ? '' : 'none';
+const PROVIDER_TEMPLATES = {
+    swarm:              `endpoint: "unix:///var/run/docker.sock"\nexposedByDefault: false\nwatch: true`,
+    http:               `endpoint: "http://your-config-server/api/config"\npollInterval: "5s"\npollTimeout: "5s"`,
+    kubernetes:         `endpoint: ""\ntoken: ""\ncertAuthFilePath: ""\nnamespaces: []\nlabelselector: ""`,
+    kubernetesIngress:  `endpoint: ""\ntoken: ""\nnamespaces: []\ningressClass: ""\ningressEndpoint:\n  publishedService: ""`,
+    kubernetesGateway:  `endpoint: ""\nexperimentalChannel: false`,
+    nomad:              `endpoint: "http://localhost:4646"\nprefix: "traefik"\nstale: false\nnamespaces: []`,
+    ecs:                `clusters:\n  - default\nautoDiscoverClusters: false\nregion: "us-east-1"\nexposedByDefault: true`,
+    consulCatalog:      `prefix: "traefik"\nrefreshInterval: "15s"\nendpoint:\n  address: "127.0.0.1:8500"\n  scheme: ""\n  datacenter: ""\n  token: ""\nexposedByDefault: true`,
+    consul:             `endpoints:\n  - "127.0.0.1:8500"\nrootKey: "traefik"\nnamespace: ""\ntoken: ""`,
+    redis:              `endpoints:\n  - "127.0.0.1:6379"\nrootKey: "traefik"\npassword: ""\ndb: 0`,
+    etcd:               `endpoints:\n  - "127.0.0.1:2379"\nrootKey: "traefik"\nusername: ""\npassword: ""`,
+    zooKeeper:          `endpoints:\n  - "127.0.0.1:2181"\nrootKey: "traefik"\nusername: ""\npassword: ""`,
+};
+
+let _providerMonaco = null;
+
+function _initProviderMonaco(value) {
+    const container = document.getElementById('sfProviderEditorContainer');
+    if (!container) return;
+    if (_providerMonaco) {
+        _providerMonaco.setValue(value);
+        setTimeout(() => _providerMonaco.layout(), 50);
+        return;
+    }
+    require(['vs/editor/editor.main'], function() {
+        _ensureMonacoThemes().then(() => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            _providerMonaco = monaco.editor.create(container, {
+                value: value,
+                language: 'yaml',
+                theme: _monacoThemeName(isDark),
+                minimap: { enabled: false },
+                fontSize: 13,
+                lineNumbers: 'off',
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                wordWrap: 'off',
+            });
+        });
+    });
+}
+
+function onProviderTypeSelect(val) {
+    const wrap = document.getElementById('sfProviderEditorWrap');
+    if (!val) { if (wrap) wrap.style.display = 'none'; return; }
+    if (wrap) wrap.style.display = '';
+    const tpl = PROVIDER_TEMPLATES[val] || '';
+    _initProviderMonaco(tpl);
 }
 
 async function submitStaticProvider() {
-    const type = (document.getElementById('sfProviderType')?.value || '').trim().toLowerCase();
-    if (!type) { showToast('Provider type is required', 'error'); return; }
-    if (type === 'docker' || type === 'file') { showToast('Use the Docker / File toggles above to configure these providers', 'error'); return; }
+    const type = (document.getElementById('sfProviderType')?.value || '').trim();
+    if (!type) { showToast('Select a provider type', 'error'); return; }
+    const yaml_config = _providerMonaco ? _providerMonaco.getValue() : '';
     const action   = _staticEditState.name ? 'edit' : 'add';
     const old_name = _staticEditState.name || '';
-    let data = {};
-    if (type === 'swarm') {
-        data = {
-            endpoint: document.getElementById('sfProviderEndpoint')?.value.trim() || '',
-            exposedByDefault: _staticToggleState('providerExposedByDefault'),
-            watch: _staticToggleState('providerWatch'),
-        };
-    } else if (type === 'http') {
-        data = {
-            endpoint: document.getElementById('sfProviderHttpEndpoint')?.value.trim() || '',
-            pollInterval: document.getElementById('sfProviderPollInterval')?.value.trim() || '10s',
-        };
-    }
     try {
-        await _applyStaticSectionChange({ action, section: 'providers', name: type, old_name, data });
+        await _applyStaticSectionChange({ action, section: 'providers', name: type, old_name, data: { yaml_config } });
         closeStaticForm('providers');
     } catch(e) { showToast('Request failed', 'error'); }
 }
@@ -4181,13 +4345,13 @@ function _buildStaticTabHTML() {
 
     <div id="staticPanel-providers" style="display:none">
         <div id="staticOtherProvidersList" class="pt-3"></div>
-        <div class="px-4 pb-4 space-y-4">
-            <div>
+        <div class="px-4 pb-4 space-y-3">
+            <div class="rounded-lg p-3" style="border:1px solid var(--border)">
                 <div class="tab-toggle-row" onclick="onDockerProviderToggle()">
                     <span class="flex items-center gap-2 text-sm font-medium"><i class="ph-bold ph-cube" style="color:var(--blue)"></i> Docker</span>
                     <div class="toggle-switch" id="staticT-dockerEnabled"><div class="toggle-knob"></div></div>
                 </div>
-                <div id="dockerProviderFields" class="mt-2 space-y-2 pl-1" style="display:none">
+                <div id="dockerProviderFields" class="mt-3 space-y-2" style="display:none">
                     <div>
                         <label class="text-xs block mb-1" style="color:var(--muted)">Endpoint</label>
                         <input id="sfDockerEndpoint" type="text" class="input-field text-sm" placeholder="unix:///var/run/docker.sock">
@@ -4202,12 +4366,12 @@ function _buildStaticTabHTML() {
                     </div>
                 </div>
             </div>
-            <div>
+            <div class="rounded-lg p-3" style="border:1px solid var(--border)">
                 <div class="tab-toggle-row" onclick="onFileProviderToggle()">
                     <span class="flex items-center gap-2 text-sm font-medium"><i class="ph-bold ph-file-code" style="color:var(--green)"></i> File</span>
                     <div class="toggle-switch" id="staticT-fileEnabled"><div class="toggle-knob"></div></div>
                 </div>
-                <div id="fileProviderFields" class="mt-2 space-y-2 pl-1" style="display:none">
+                <div id="fileProviderFields" class="mt-3 space-y-2" style="display:none">
                     <div>
                         <label class="text-xs block mb-1" style="color:var(--muted)">Directory</label>
                         <input id="sfFileDirectory" type="text" class="input-field text-sm" placeholder="/etc/traefik/dynamic">
@@ -4226,34 +4390,25 @@ function _buildStaticTabHTML() {
             <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfProviderFormTitle">Add Provider</p>
             <div>
                 <label class="text-xs block mb-1" style="color:var(--muted)">Provider Type</label>
-                <input id="sfProviderType" type="text" class="input-field text-sm" placeholder="swarm, http, ecs, ..." oninput="onProviderTypeInput(this.value)">
+                <select id="sfProviderType" class="input-field text-sm" onchange="onProviderTypeSelect(this.value)">
+                    <option value="">Select provider...</option>
+                    <option value="swarm">Docker Swarm</option>
+                    <option value="http">HTTP</option>
+                    <option value="kubernetes">Kubernetes (CRD)</option>
+                    <option value="kubernetesIngress">Kubernetes Ingress</option>
+                    <option value="kubernetesGateway">Kubernetes Gateway</option>
+                    <option value="nomad">HashiCorp Nomad</option>
+                    <option value="ecs">AWS ECS</option>
+                    <option value="consulCatalog">Consul Catalog</option>
+                    <option value="consul">Consul KV</option>
+                    <option value="redis">Redis KV</option>
+                    <option value="etcd">etcd KV</option>
+                    <option value="zooKeeper">ZooKeeper KV</option>
+                </select>
             </div>
-            <div id="sfProviderSwarmFields" style="display:none" class="space-y-2">
-                <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Endpoint</label>
-                    <input id="sfProviderEndpoint" type="text" class="input-field text-sm" placeholder="unix:///var/run/docker.sock">
-                </div>
-                <div class="tab-toggle-row" onclick="staticToggle('providerExposedByDefault')">
-                    <span class="text-sm" style="color:var(--muted)">Expose by default</span>
-                    <div class="toggle-switch" id="staticT-providerExposedByDefault"><div class="toggle-knob"></div></div>
-                </div>
-                <div class="tab-toggle-row" onclick="staticToggle('providerWatch')">
-                    <span class="text-sm" style="color:var(--muted)">Watch</span>
-                    <div class="toggle-switch on" id="staticT-providerWatch"><div class="toggle-knob"></div></div>
-                </div>
-            </div>
-            <div id="sfProviderHttpFields" style="display:none" class="space-y-2">
-                <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Endpoint URL</label>
-                    <input id="sfProviderHttpEndpoint" type="text" class="input-field text-sm" placeholder="http://your-config-server/config">
-                </div>
-                <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Poll Interval</label>
-                    <input id="sfProviderPollInterval" type="text" class="input-field text-sm" placeholder="10s">
-                </div>
-            </div>
-            <div id="sfProviderOtherNote" style="display:none" class="text-xs rounded-lg px-3 py-2" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);color:var(--muted)">
-                The provider will be added with an empty config. Use the <strong>Raw YAML</strong> editor to configure its options after saving.
+            <div id="sfProviderEditorWrap" style="display:none">
+                <label class="text-xs block mb-1" style="color:var(--muted)">Configuration</label>
+                <div id="sfProviderEditorContainer" style="height:220px;border:1px solid var(--border);border-radius:8px;overflow:hidden;"></div>
             </div>
             <div class="flex gap-2 justify-end pt-1">
                 <button onclick="closeStaticForm('providers')" class="btn-secondary text-xs">Cancel</button>
@@ -4312,6 +4467,7 @@ async function _loadStaticFromDisk() {
             return;
         }
         if (_staticMonaco) { _staticMonaco.dispose(); _staticMonaco = null; }
+        if (_providerMonaco) { _providerMonaco.dispose(); _providerMonaco = null; }
         _staticRawContent = data.raw || '';
         _staticOriginalContent = _staticRawContent;
         wrapper.innerHTML = _buildStaticTabHTML();
@@ -4339,7 +4495,7 @@ async function refreshStaticTab() {
 const _origSetTheme = setTheme;
 setTheme = function(theme) {
     _origSetTheme(theme);
-    if (_staticMonaco || _mwMonacoEditor || _pluginStaticMonaco || _pluginMwMonaco) {
+    if (_staticMonaco || _mwMonacoEditor || _pluginStaticMonaco || _pluginMwMonaco || _providerMonaco) {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         _ensureMonacoThemes().then(() => monaco.editor.setTheme(_monacoThemeName(isDark)));
     }

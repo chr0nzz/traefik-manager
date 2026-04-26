@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>API Reference – Traefik Manager</title>
+  <style>
+    :root {
+      --scalar-color-1: #1f2328;
+      --scalar-color-2: #636c76;
+      --scalar-color-3: #8b949e;
+      --scalar-background-1: #f6f8fa;
+      --scalar-background-2: #ffffff;
+      --scalar-background-3: #eaeef2;
+      --scalar-border-color: #d0d7de;
+      --scalar-color-accent: #0969da;
+      --scalar-sidebar-background-1: #ffffff;
+      --scalar-sidebar-border-color: #d0d7de;
+      --scalar-color-green: #1a7f37;
+      --scalar-color-red: #cf222e;
+      --scalar-color-yellow: #9a6700;
+      --scalar-color-blue: #0969da;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --scalar-color-1: #e6edf3;
+        --scalar-color-2: #8b949e;
+        --scalar-color-3: #636c76;
+        --scalar-background-1: #0d1117;
+        --scalar-background-2: #161b22;
+        --scalar-background-3: #1c2128;
+        --scalar-border-color: #30363d;
+        --scalar-color-accent: #24a1de;
+        --scalar-sidebar-background-1: #161b22;
+        --scalar-sidebar-border-color: #30363d;
+        --scalar-color-green: #22c55e;
+        --scalar-color-red: #ef4444;
+        --scalar-color-yellow: #f59e0b;
+        --scalar-color-blue: #24a1de;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { padding-top: 40px; }
+    #topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 40px;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      background: var(--scalar-background-2);
+      border-bottom: 1px solid var(--scalar-border-color);
+      gap: 12px;
+    }
+    #topbar a {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--scalar-color-2);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    #topbar a:hover { color: var(--scalar-color-1); }
+    #topbar span {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      color: var(--scalar-color-3);
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <a href="/index.html">← Docs</a>
+    <span>/</span>
+    <span>API Reference</span>
+  </div>
+  <script
+    id="api-reference"
+    data-url="/openapi.yaml"
+    data-configuration='{"theme":"none"}'
+  ></script>
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+</body>
+</html>

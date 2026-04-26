@@ -30,11 +30,11 @@ export default defineConfig({
       { text: 'Guide', link: '/guide' },
       { text: 'Beta', link: '/beta' },
       { text: 'Security', link: '/security' },
-      { text: 'API Reference', link: '/api' },
-      { text: 'UI Examples', link: '/ui-examples' },
+      { text: 'API', link: '/api.html' },
       {
-        text: 'v1.0.0-beta2',
+        text: 'v1.0.0-beta3',
         items: [
+          { text: 'v1.0.0-beta3', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta3' },
           { text: 'v1.0.0-beta2', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta2' },
           { text: 'v1.0.0-beta1.1', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta1.1' },
           { text: 'v1.0.0-beta1', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta1' },
@@ -52,7 +52,7 @@ export default defineConfig({
       { text: 'Beta', link: '/beta' },
       { text: 'Mobile App', link: '/mobile' },
       { text: 'Security', link: '/security' },
-      { text: 'API Reference', link: '/api' },
+      { text: 'API', link: '/api.html' },
       { text: 'UI Examples', link: '/ui-examples' },
       {
         text: 'Getting Started',
@@ -108,7 +108,7 @@ export default defineConfig({
       {
         text: 'Configuration',
         items: [
-          { text: 'Static Config Editor', link: '/tab-static' },
+          { text: 'Static Config Editor', link: '/static' },
           { text: 'manager.yml', link: '/manager-yml' },
           { text: 'Environment Variables', link: '/env-vars' },
           { text: 'OIDC / SSO Login', link: '/oidc' },
