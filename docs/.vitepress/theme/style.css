@@ -81,6 +81,28 @@
 .mobile-release { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 
 
+.shot-dark { display: none; }
+.dark .shot-dark { display: block; }
+.dark .shot-light { display: none; }
+
+.dark .browser {
+  background: #1c2128;
+  border-color: #30363d;
+}
+.dark .browser-bar { border-bottom-color: #30363d; }
+.dark .browser-dots span { background: #30363d; }
+.dark .browser-url {
+  background: #0d1117;
+  border-color: #30363d;
+  color: #8b949e;
+}
+.dark .phone {
+  background: #1c2128;
+  border-color: #30363d;
+}
+.dark .phone-notch { background: #30363d; }
+.dark .phone-home { background: #30363d; }
+
 .gh-stars {
   display: flex;
   align-items: center;
