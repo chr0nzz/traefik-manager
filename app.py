@@ -18,7 +18,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.0.0-beta3"
+APP_VERSION  = "1.0.0-beta3.1"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -2120,10 +2120,10 @@ def load_config(path=None):
     if path is None:
         path = CONFIG_PATH
     if not os.path.exists(path):
-        return {"http": {"routers": {}, "services": {}, "middlewares": {}}}
+        return {}
     with open(path, 'r') as f:
         data = yaml.load(f)
-    return data if data and isinstance(data, dict) else {"http": {"routers": {}, "services": {}, "middlewares": {}}}
+    return data if data and isinstance(data, dict) else {}
 
 def _strip_empty_sections(config: dict) -> dict:
     """Remove empty routers/services/middlewares dicts to avoid Traefik 'standalone element' errors."""
@@ -2364,7 +2364,7 @@ def _toggle_route(route_id: str, enable: bool):
         section.setdefault('routers', {})[rname]   = router
         section.setdefault('services', {})[svc_name] = svc
         create_backup(target_path)
-        save_config(config, target_path)
+        save_config(_strip_empty_sections(config), target_path)
     else:
         proto       = None
         router      = None
