@@ -30,7 +30,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide' },
       { text: 'Beta', link: '/beta' },
       { text: 'Security', link: '/security' },
-      { text: 'API', link: '/api.html' },
+      { text: 'API', link: '/api.html', target: '_self' },
       {
         text: 'v1.0.0-beta3',
         items: [
@@ -52,7 +52,7 @@ export default defineConfig({
       { text: 'Beta', link: '/beta' },
       { text: 'Mobile App', link: '/mobile' },
       { text: 'Security', link: '/security' },
-      { text: 'API', link: '/api.html' },
+      { text: 'API', link: '/api.html', target: '_self' },
       { text: 'UI Examples', link: '/ui-examples' },
       {
         text: 'Getting Started',
