@@ -144,6 +144,21 @@
 
 {% include 'sections/mobile_menu.html' %}
 
+<div id="staticSetupBanner" style="display:none">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2">
+        <div class="flex items-center gap-3 rounded-lg px-4 py-2.5" style="background:rgba(9,105,218,0.08);border:1px solid rgba(9,105,218,0.25)">
+            <i class="ph-bold ph-info text-sm shrink-0" style="color:var(--blue)"></i>
+            <p class="text-xs flex-1" style="color:var(--text)">
+                <strong>New in v1:</strong> Static Config Editor lets you manage your Traefik static config from the UI.
+                <a href="https://traefik-manager.xyzlab.dev/static" target="_blank" style="color:var(--blue);text-decoration:underline;margin-left:4px">Set it up →</a>
+            </p>
+            <button onclick="document.getElementById('staticSetupBanner').style.display='none';localStorage.setItem('tm-static-setup-v1','1')" class="shrink-0" style="color:var(--muted);line-height:1" aria-label="Dismiss">
+                <i class="ph-bold ph-x text-sm"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
 <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
 
     {% include 'sections/stats.html' %}
@@ -1645,6 +1660,11 @@ async function checkManagerVersion() {
 
         const curEl = document.getElementById('mgrUpdateCurrentVer');
         if (curEl && current) curEl.textContent = 'v' + current;
+
+        if (d.static_config_configured === false && !localStorage.getItem('tm-static-setup-v1')) {
+            const b = document.getElementById('staticSetupBanner');
+            if (b) b.style.display = 'block';
+        }
 
         const ghRes = await fetch(
             `https://api.github.com/repos/${d.repo}/releases/latest`,
