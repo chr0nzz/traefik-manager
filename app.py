@@ -18,7 +18,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.0.0-beta3.1"
+APP_VERSION  = "1.0.0-beta3.2"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -1289,7 +1289,11 @@ def api_ping():
 @app.route('/api/manager/version')
 @login_required
 def api_manager_version():
-    return jsonify({"version": APP_VERSION, "repo": GITHUB_REPO})
+    return jsonify({
+        "version": APP_VERSION,
+        "repo": GITHUB_REPO,
+        "static_config_configured": bool(_get_static_config_path()),
+    })
 
 @app.route('/api/health')
 def api_health():
@@ -2156,7 +2160,7 @@ def _svc_key(name):
     return name.split('@')[0] if '@' in name else name
 
 
-def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=None, extra_udp_svcs=None):
+def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=None, extra_udp_svcs=None, api_svc_urls=None):
     apps = []
     http_config = config.get('http', {})
     http_svcs = dict(http_config.get('services', {}))
@@ -2174,6 +2178,8 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
             servers = lb.get('servers', [])
             if servers:
                 target_url = servers[0].get('url', 'Unknown')
+        if target_url == 'N/A' and api_svc_urls:
+            target_url = api_svc_urls.get(f'http:{svc_key}', 'N/A')
         app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
         tls_http = rdata.get('tls', {})
         transport_name = lb.get('serversTransport', '')
@@ -2201,6 +2207,8 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
             servers = tcp_svcs[svc_key].get('loadBalancer', {}).get('servers', [])
             if servers:
                 target = servers[0].get('address', 'N/A')
+        if target == 'N/A' and api_svc_urls:
+            target = api_svc_urls.get(f'tcp:{svc_key}', 'N/A')
         app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
         tls_tcp = rdata.get('tls', {})
         apps.append({'id': app_id, 'name': rname, 'rule': rdata.get('rule', ''),
@@ -2222,6 +2230,8 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
             servers = udp_svcs[svc_key].get('loadBalancer', {}).get('servers', [])
             if servers:
                 target = servers[0].get('address', 'N/A')
+        if target == 'N/A' and api_svc_urls:
+            target = api_svc_urls.get(f'udp:{svc_key}', 'N/A')
         app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
         apps.append({'id': app_id, 'name': rname, 'rule': '',
                      'service_name': svc_name, 'target': target,
@@ -2298,8 +2308,9 @@ def _build_all_apps(include_external=True, include_internal=False):
             combined_tcp.setdefault(k, v)
         for k, v in cfg.get('udp', {}).get('services', {}).items():
             combined_udp.setdefault(k, v)
+    api_svc_urls = _traefik_service_url_map()
     for cf, config in loaded:
-        all_apps.extend(_build_apps(config, cf, combined_http, combined_tcp, combined_udp))
+        all_apps.extend(_build_apps(config, cf, combined_http, combined_tcp, combined_udp, api_svc_urls))
         all_middlewares.extend(_build_middlewares(config, cf))
     if include_external:
         all_apps.extend(_build_external_routes(include_internal=include_internal))
