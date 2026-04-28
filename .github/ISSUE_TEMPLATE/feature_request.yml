@@ -1,0 +1,60 @@
+name: Feature Request
+description: Suggest an idea or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check [existing issues](https://github.com/chr0nzz/traefik-manager/issues) first - your idea may already be tracked.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation or workflow that's painful or missing.
+      placeholder: "e.g. I often need to... but currently I have to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like to see? Be as specific as you can.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Any other approaches or workarounds you've tried.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this relate to?
+      options:
+        - Routes
+        - Middlewares
+        - Services
+        - Dashboard
+        - Route Map
+        - Certificates
+        - Plugins
+        - Logs
+        - Static Config Editor
+        - Providers
+        - Authentication / Security
+        - Mobile App
+        - API
+        - Docs
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, mockups, or links that help explain the request.

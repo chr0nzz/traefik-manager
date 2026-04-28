@@ -438,13 +438,15 @@ Full documentation at **[traefik-manager.xyzlab.dev](https://traefik-manager.xyz
 | Config    | ruamel.yaml (preserves comments)              |
 | Auth      | bcrypt · pyotp (TOTP) · Flask sessions · CSRF · Flask-Limiter · Fernet |
 | Frontend  | Vanilla JS · Tailwind CSS · Phosphor Icons    |
+| Editor    | Monaco Editor (VS Code engine)                |
+| Route Map | dagre (graph layout)                          |
 | Container | Docker · Alpine Linux                         |
 
 ---
 
 ## Contributing
 
-Pull requests are welcome. For larger changes please open an issue first.
+Pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to report bugs, suggest features, and run the project locally.
 
 ## Star History
 

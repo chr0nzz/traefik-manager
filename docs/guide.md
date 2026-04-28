@@ -68,7 +68,26 @@ These tabs are always visible. They let you read and write your Traefik dynamic 
 
 **Multiple config files** - mount several Traefik dynamic config files using `CONFIG_DIR` or `CONFIG_PATHS`. A dropdown in the route/middleware modals lets you choose which file each entry is saved to. See [Environment Variables](env-vars.md) for setup.
 
-**Static Config** - mount `traefik.yml` read-write and set `RESTART_METHOD` to unlock the [Static Config tab](static.md): edit entrypoints, cert resolvers, and plugins directly from the UI; changes are staged, backed up, and Traefik is restarted automatically. Optional - not required for route/middleware management.
+---
+
+## Static Config Editor
+
+Edit your Traefik static config (`traefik.yml`) directly from the UI - no SSH or file editor needed. Changes are staged, backed up automatically, and Traefik is restarted to apply them.
+
+**What you can manage:**
+- Entrypoints - add, edit, and remove
+- Certificate resolvers - ACME/Let's Encrypt configuration
+- Plugins - install and configure Traefik plugins
+- Raw YAML editor (Monaco/VS Code engine) for anything else
+
+**Setup required** - this feature needs two things configured:
+
+| Requirement | Details |
+|-------------|---------|
+| Mount `traefik.yml` read-write | `-v /path/to/traefik.yml:/app/traefik.yml` (no `:ro`) |
+| Set `RESTART_METHOD` | How TM restarts Traefik after a config change - `proxy`, `poison-pill`, or `socket` |
+
+See the [Static Config Editor](static.md) page for full setup instructions including how to configure each restart method.
 
 ---
 
