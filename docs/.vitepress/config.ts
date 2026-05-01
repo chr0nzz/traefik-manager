@@ -32,8 +32,9 @@ export default defineConfig({
       { text: 'Security', link: '/security' },
       { text: 'API', link: '/api.html', target: '_self' },
       {
-        text: 'v1.0.0-beta3.2',
+        text: 'v1.0.0-beta4',
         items: [
+          { text: 'v1.0.0-beta4', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta4' },
           { text: 'v1.0.0-beta3.2', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta3.2' },
           { text: 'v1.0.0-beta3.1', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta3.1' },
           { text: 'v1.0.0-beta3', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta3' },

@@ -80,7 +80,7 @@ components:
         target: { type: string, example: "http://192.168.1.10:8080" }
         middlewares: { type: array, items: { type: string } }
         tls: { type: boolean }
-        certResolver: { type: string }
+        certResolver: { type: string, description: "ACME resolver name, or empty if using external certs." }
         passHostHeader: { type: boolean }
         configFile: { type: string }
 
@@ -674,7 +674,7 @@ paths:
                 middlewares: { type: string, description: "Comma-separated middleware names" }
                 scheme: { type: string, enum: [http, https], default: "http" }
                 passHostHeader: { type: boolean, default: true }
-                certResolver: { type: string, description: "ACME resolver name. Use `__none__` for custom certs." }
+                certResolver: { type: string, description: "ACME resolver name. Use `none` or `__none__` for external/custom certs (writes `tls: {}` with no resolver)." }
                 configFile: { type: string, description: "Target config file basename (multi-config only)" }
                 isEdit: { type: boolean }
                 originalId: { type: string }

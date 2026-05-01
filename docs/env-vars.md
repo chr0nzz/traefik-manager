@@ -2,6 +2,10 @@
 
 All supported environment variables for Traefik Manager. Variables marked **Override** take priority over the corresponding [`manager.yml`](manager-yml.md) field.
 
+::: info First setup vs. subsequent restarts
+Override variables (marked ✅) are applied on **every start** and always win over `manager.yml`. However, variables with no override (marked -) are **env-only** and are never written to `manager.yml` at all. If you change an override variable after initial setup, the new value takes effect immediately on next restart. If you prefer to manage settings through the UI instead, remove the env var and the value saved in `manager.yml` via the Settings panel will be used.
+:::
+
 ---
 
 ## Quick reference
@@ -20,7 +24,7 @@ All supported environment variables for Traefik Manager. Variables marked **Over
 | `BACKUP_DIR` | `/app/backups` | - | Directory for timestamped config backups |
 | `SETTINGS_PATH` | `/app/config/manager.yml` | - | Path to the Traefik Manager settings file |
 | `ACME_JSON_PATH` | `/app/acme.json` | - | Path to Traefik's `acme.json` file for the Certificates tab |
-| `STATIC_CONFIG_PATH` | `/app/traefik.yml` | - | Path to Traefik's static config file; required for Plugins and Static Config tabs (mount read-write for editing) |
+| `STATIC_CONFIG_PATH` | `/app/traefik.yml` | - | Path to Traefik's static config file; required for Plugins tab and Static Config settings (mount read-write for editing) |
 | `RESTART_METHOD` | _(unset)_ | - | How TM restarts Traefik after static config changes: `proxy`, `socket`, or `poison-pill` |
 | `TRAEFIK_CONTAINER` | `traefik` | - | Container name to restart (used by `proxy` and `socket` methods) |
 | `DOCKER_HOST` | _(unset)_ | - | Docker socket URL - set to `tcp://socket-proxy:2375` for the proxy method |
@@ -36,6 +40,7 @@ All supported environment variables for Traefik Manager. Variables marked **Over
 ### `COOKIE_SECURE`
 
 **Default:** `false`
+**env-only** - not stored in `manager.yml`, must always be set via environment variable.
 
 Set to `true` when Traefik Manager is served over HTTPS. Marks the session cookie as `Secure`, which is required by browsers for cookies on HTTPS origins.
 
@@ -139,6 +144,8 @@ Environment=DOMAINS=example.com,home.lab
 
 One or more ACME cert resolver names, comma-separated. The first resolver is used as the default for new routes. Each route can override this individually in the Add/Edit Route form.
 
+If you manage certificates externally and don't use ACME (e.g. self-signed, internal CA, or cert files), set this to `none`. Routes will use `tls: {}` without a cert resolver, allowing Traefik to serve TLS using certificates defined in your dynamic config.
+
 :::tabs
 == Docker / Podman
 ```yaml
@@ -179,6 +186,8 @@ Environment=TRAEFIK_API_URL=http://localhost:8080
 ---
 
 ### Multi-config: `CONFIG_DIR`, `CONFIG_PATHS`, `CONFIG_PATH`
+
+**env-only** - these variables control which config files TM loads and are not stored in `manager.yml`. They must always be set via environment variable and take effect on every restart.
 
 Traefik Manager can manage one or many dynamic config files. Three variables control this in priority order:
 
@@ -330,7 +339,7 @@ If you use certificate files (e.g. `chain.pem` / `key.pem`) via a `tls.yml` inst
 
 **Default:** `/app/traefik.yml`
 
-Path to Traefik's static configuration file (`traefik.yml` or `traefik.toml`). Required for the **Plugins** tab and the **Static Config** tab. The file must be mounted **read-write** (no `:ro`) for the Static Config tab to allow editing. Can also be set via **Settings → File Paths → Static Config Path** without a container restart; the UI setting takes priority over this variable.
+Path to Traefik's static configuration file (`traefik.yml` or `traefik.toml`). Required for the **Plugins** tab and the **Static Config** settings. The file must be mounted **read-write** (no `:ro`) for the Static Config settings to allow editing. Can also be set via **Settings → System Monitoring → File Paths → Static Config Path** without a container restart; the UI setting takes priority over this variable.
 
 :::tabs
 == Docker / Podman
@@ -353,7 +362,7 @@ Environment=STATIC_CONFIG_PATH=/etc/traefik/traefik.yml
 
 **Default:** _(unset)_
 
-How TM should restart Traefik after static config changes are applied. Required for the Static Config tab's Restart button to work.
+How TM should restart Traefik after static config changes are applied. Required for the Static Config settings Restart button to work.
 
 | Value | Description |
 |-------|-------------|
@@ -374,7 +383,7 @@ Environment=RESTART_METHOD=poison-pill
 ```
 :::
 
-See [Static Config Tab](static.md#restart-methods) for full compose snippets for each method.
+See [Static Config](static.md#restart-methods) for full compose snippets for each method.
 
 ---
 
