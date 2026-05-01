@@ -12,7 +12,7 @@ import MobileScreenshots from './components/MobileScreenshots.vue'
 import ComposeUpgrader from './components/ComposeUpgrader.vue'
 import ShowcaseMockup from './components/ShowcaseMockup.vue'
 import InstallSection from './components/InstallSection.vue'
-import HeroTitle from './components/HeroTitle.vue'
+import KoFiButton from './components/KoFiButton.vue'
 import './style.css'
 
 export default {
@@ -30,7 +30,7 @@ export default {
     watch(() => route.path, () => nextTick(() => initZoom()))
 
     return h(DefaultTheme.Layout, null, {
-      'nav-bar-content-after': () => h(GitHubStars),
+      'nav-bar-content-after': () => [h(KoFiButton), h(GitHubStars)],
       'home-features-before': () => h(ShowcaseMockup),
       'home-features-after': () => h(InstallSection),
     })
