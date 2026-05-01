@@ -19,8 +19,8 @@ import { withBase } from 'vitepress'
 
         <div class="phone">
           <div class="phone-screen">
-            <img :src="withBase('/images/light-mobile-dashboard-2.png')" alt="Traefik Manager mobile app" class="phone-img shot-light" />
-            <img :src="withBase('/images/dark-mobile-dashboard-2.png')" alt="Traefik Manager mobile app" class="phone-img shot-dark" />
+            <img :src="withBase('/images/light-mobile-dashboard.png')" alt="Traefik Manager mobile app" class="phone-img shot-light" />
+            <img :src="withBase('/images/dark-mobile-dashboard.png')" alt="Traefik Manager mobile app" class="phone-img shot-dark" />
             <div class="phone-camera" />
           </div>
           <div class="phone-home" />
