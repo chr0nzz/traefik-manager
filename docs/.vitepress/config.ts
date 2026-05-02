@@ -30,7 +30,8 @@ export default defineConfig({
       { text: 'Guide', link: '/guide' },
       { text: 'Beta', link: '/beta' },
       { text: 'Security', link: '/security' },
-      { text: 'API', link: '/api.html', target: '_self' },
+      { text: 'API', link: '/api' },
+      { text: 'UI Examples', link: '/ui-examples' },
       {
         text: 'v1.0.0-beta4',
         items: [
@@ -38,12 +39,6 @@ export default defineConfig({
           { text: 'v1.0.0-beta3.2', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta3.2' },
           { text: 'v1.0.0-beta3.1', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta3.1' },
           { text: 'v1.0.0-beta3', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta3' },
-          { text: 'v1.0.0-beta2', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta2' },
-          { text: 'v1.0.0-beta1.1', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta1.1' },
-          { text: 'v1.0.0-beta1', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta1' },
-          { text: 'v0.12.0', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.12.0' },
-          { text: 'v0.11.0', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.11.0' },
-          { text: 'v0.10.4', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v0.10.4' },
           { text: 'All releases', link: 'https://github.com/chr0nzz/traefik-manager/releases' },
         ],
       },
@@ -55,11 +50,10 @@ export default defineConfig({
       { text: 'Beta', link: '/beta' },
       { text: 'Mobile App', link: '/mobile' },
       { text: 'Security', link: '/security' },
-      { text: 'API', link: '/api.html', target: '_self' },
+      { text: 'API', link: '/api' },
       { text: 'UI Examples', link: '/ui-examples' },
       {
         text: 'Getting Started',
-        collapsed: false,
         items: [
           { text: 'Traefik Stack', link: '/traefik-stack' },
           { text: 'Docker', link: '/docker' },
@@ -69,7 +63,18 @@ export default defineConfig({
         ],
       },
       {
+        text: 'Configuration',
+        items: [
+          { text: 'Static Config Editor', link: '/static' },
+          { text: 'manager.yml', link: '/manager-yml' },
+          { text: 'Environment Variables', link: '/env-vars' },
+          { text: 'OIDC / SSO Login', link: '/oidc' },
+          { text: 'Reset Password', link: '/reset-password' },
+        ],
+      },
+      {
         text: 'Management',
+        collapsed: true,
         items: [
           { text: 'Routes', link: '/tab-routes' },
           { text: 'Middlewares', link: '/tab-middlewares' },
@@ -78,6 +83,7 @@ export default defineConfig({
       },
       {
         text: 'Visualizations',
+        collapsed: true,
         items: [
           { text: 'Dashboard', link: '/tab-dashboard' },
           { text: 'Route Map', link: '/tab-routemap' },
@@ -85,6 +91,7 @@ export default defineConfig({
       },
       {
         text: 'Monitoring',
+        collapsed: true,
         items: [
           { text: 'Certificates', link: '/tab-certs' },
           { text: 'Plugins', link: '/tab-plugins' },
@@ -93,6 +100,7 @@ export default defineConfig({
       },
       {
         text: 'Providers',
+        collapsed: true,
         items: [
           { text: 'Docker', link: '/tab-docker' },
           { text: 'Kubernetes', link: '/tab-kubernetes' },
@@ -106,21 +114,6 @@ export default defineConfig({
           { text: 'ZooKeeper', link: '/tab-zookeeper' },
           { text: 'HTTP Provider', link: '/tab-http_provider' },
           { text: 'File (External)', link: '/tab-file_external' },
-        ],
-      },
-      {
-        text: 'Configuration',
-        items: [
-          { text: 'Static Config Editor', link: '/static' },
-          { text: 'manager.yml', link: '/manager-yml' },
-          { text: 'Environment Variables', link: '/env-vars' },
-          { text: 'OIDC / SSO Login', link: '/oidc' },
-        ],
-      },
-      {
-        text: 'Operations',
-        items: [
-          { text: 'Reset Password', link: '/reset-password' },
         ],
       },
     ],
