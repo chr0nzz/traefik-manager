@@ -77,13 +77,13 @@ Your base domain and subdomains for:
 |---|---|---|
 | Access logs | Yes | Logs tab in Traefik Manager |
 | SSL certs (`acme.json`) | Yes | Certs tab in Traefik Manager |
-| Traefik static config (`traefik.yml`) | No | Plugins tab + Static Config tab in Traefik Manager |
+| Traefik static config (`traefik.yml`) | No | Plugins tab + Static Config settings in Traefik Manager |
 
 **Docker network** - network name (default: `traefik-net`) and Traefik internal API port (default: `8080`)
 
-**Static config editor** - if you enable the static config mount, the script also asks which restart method to use (socket proxy, poison pill, or direct socket). It then adds all required compose additions automatically - socket proxy service, shared signal volume, Traefik healthcheck, env vars on TM - so the Static Config tab works out of the box.
+**Static config editor** - if you enable the static config mount, the script also asks which restart method to use (socket proxy, poison pill, or direct socket). It then adds all required compose additions automatically - socket proxy service, shared signal volume, Traefik healthcheck, env vars on TM - so the Static Config editor works out of the box.
 
-The Static Config tab covers:
+The Static Config settings covers:
 
 | Section | What you can do |
 |---------|-----------------|
