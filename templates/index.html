@@ -23,6 +23,7 @@
             if (localStorage.getItem('compactStatCards') === 'true') document.documentElement.classList.add('tm-compact-stats');
             if (localStorage.getItem('showEntrypoints') === 'false') document.documentElement.classList.add('tm-hide-entrypoints');
             if (localStorage.getItem('showDocsLink') === 'false') document.documentElement.classList.add('tm-hide-docs');
+            if (localStorage.getItem('showApiLink') !== 'true') document.documentElement.classList.add('tm-hide-api');
             if (localStorage.getItem('showShortcutsBtn') === 'false') document.documentElement.classList.add('tm-hide-shortcuts');
         })();
     </script>
@@ -30,6 +31,7 @@
         html.tm-hide-stats #overviewSection { display: none !important; }
         html.tm-hide-entrypoints #entrypointsBar { display: none !important; }
         html.tm-hide-docs .nav-docs-link { display: none !important; }
+        html.tm-hide-api .nav-api-link { display: none !important; }
         html.tm-hide-shortcuts .shortcuts-btn-wrap { display: none !important; }
         html.tm-compact-stats #statsGrid .stat-exp-header,
         html.tm-compact-stats #statsGrid .stat-exp-body,
@@ -3297,6 +3299,10 @@ async function fetchNotifications() {
         const res  = await fetch('/api/notifications');
         if (!res.ok) return;
         _notifData = await res.json();
+        if (_notifLastRead > _notifData.length) {
+            _notifLastRead = _notifData.length;
+            localStorage.setItem('notifLastRead', _notifLastRead);
+        }
         _renderNotifPanel();
     } catch(e) {}
 }

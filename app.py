@@ -18,7 +18,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.0.0-beta3.2"
+APP_VERSION  = "1.0.0-beta4"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -469,7 +469,7 @@ def _write_self_route(domain: str, service_url: str, cert_resolver: str, router_
         'rule': f'Host(`{domain}`)',
         'entryPoints': [entry_point or 'websecure'],
         'service': router_name,
-        'tls': {'certResolver': cert_resolver or 'cloudflare'},
+        'tls': {'certResolver': cert_resolver} if cert_resolver and cert_resolver.lower() != 'none' else {},
     }
     service_entry = {
         'loadBalancer': {
@@ -535,6 +535,43 @@ def _detect_self_route_domain() -> str:
             continue
     return ''
 
+
+def _detect_self_route_from_own_labels() -> tuple[str, str]:
+    import re
+    try:
+        import docker as _docker
+        client = _docker.from_env()
+        own_id = os.environ.get('HOSTNAME', '')
+        for c in client.containers.list():
+            if not (c.id.startswith(own_id) or 'traefik-manager' in c.name):
+                continue
+            labels = c.labels or {}
+            domain = ''
+            svc_url = ''
+            for k, v in labels.items():
+                if k.startswith('traefik.http.routers.') and k.endswith('.rule'):
+                    m = re.search(r'Host\(`([^`]+)`\)', v)
+                    if m:
+                        domain = m.group(1)
+                if k.startswith('traefik.http.services.') and k.endswith('.loadbalancer.server.url'):
+                    svc_url = v
+            if domain:
+                return domain, svc_url or 'http://traefik-manager:5000'
+    except Exception:
+        pass
+    return '', ''
+
+
+def _detect_setup_self_route() -> tuple[str, str]:
+    settings = load_settings()
+    saved = settings.get('self_route', {})
+    if saved.get('domain'):
+        return saved['domain'], saved.get('service_url', 'http://traefik-manager:5000')
+    domain = _detect_self_route_domain()
+    if domain:
+        return domain, 'http://traefik-manager:5000'
+    return _detect_self_route_from_own_labels()
+
 def _auth_enabled() -> bool:
     env = os.environ.get('AUTH_ENABLED', '').strip().lower()
     if env in ('false', '0', 'no'):
@@ -574,25 +611,6 @@ def _ensure_password():
     )
 
 
-_s = load_settings()
-logger.info("===========================================")
-logger.info("Starting Traefik Manager")
-if MULTI_CONFIG:
-    for _cp in CONFIG_PATHS:
-        logger.info(f"Config File:    {_cp}")
-else:
-    logger.info(f"Config Path:    {CONFIG_PATH}")
-logger.info(f"Settings Path:  {SETTINGS_PATH}")
-logger.info(f"Backup Dir:     {BACKUP_DIR}")
-logger.info(f"Domains:        {_s['domains']}")
-logger.info(f"Cert Resolver:  {_s['cert_resolver']}")
-logger.info(f"Traefik API:    {_s['traefik_api_url']}")
-logger.info(f"Auth Enabled:   {_auth_enabled()}")
-logger.info("===========================================")
-
-_ensure_password()
-
-
 def _read_traefik_labels():
     try:
         import docker as _docker
@@ -613,6 +631,33 @@ def _read_traefik_labels():
         pass
 
 _read_traefik_labels()
+
+_s = load_settings()
+_static_path  = _get_static_config_path()
+_restart_meth = _get_restart_method()
+_oidc_on      = bool(_s.get('oidc_issuer'))
+logger.info("===========================================")
+logger.info(f"Traefik Manager v{APP_VERSION}")
+if MULTI_CONFIG:
+    for _cp in CONFIG_PATHS:
+        logger.info(f"Config File:    {_cp}")
+elif ACTIVE_CONFIG_DIR:
+    logger.info(f"Config Dir:     {ACTIVE_CONFIG_DIR}")
+else:
+    logger.info(f"Config Path:    {CONFIG_PATH}")
+logger.info(f"Settings Path:  {SETTINGS_PATH}")
+logger.info(f"Backup Dir:     {BACKUP_DIR}")
+logger.info(f"Traefik API:    {_s['traefik_api_url']}")
+logger.info(f"Restart Method: {_restart_meth}")
+logger.info(f"Static Config:  {_static_path if _static_path else 'not configured'}")
+logger.info(f"Domains:        {_s['domains']}")
+logger.info(f"Cert Resolver:  {_s['cert_resolver'] or 'not set'}")
+logger.info(f"Auth Enabled:   {_auth_enabled()}")
+if _oidc_on:
+    logger.info(f"OIDC:           enabled ({_s.get('oidc_issuer', '')})")
+logger.info("===========================================")
+
+_ensure_password()
 
 
 def _get_csrf_token() -> str:
@@ -719,9 +764,28 @@ def _get_effective_hash() -> str:
 
 _load_notifications()
 
+_SILENT_PREFIXES = (
+    '/static/',
+    '/api/notifications',
+    '/api/traefik/',
+    '/api/routes',
+    '/api/dashboard/',
+    '/api/manager/version',
+    '/api/configs',
+    '/api/settings/tabs',
+)
+
 @app.before_request
 def log_request_info():
-    logger.info(f"{request.remote_addr} → {request.method} {request.path}")
+    path = request.path
+    method = request.method
+    if method == 'GET':
+        if request.remote_addr == '127.0.0.1':
+            return
+        if any(path.startswith(p) for p in _SILENT_PREFIXES):
+            logger.debug(f"{request.remote_addr} → {method} {path}")
+            return
+    logger.info(f"{request.remote_addr} → {method} {path}")
 
 
 @app.after_request
@@ -865,7 +929,7 @@ def setup():
                 visible_tabs = {t: False for t in OPTIONAL_TABS}
 
             pw_hash = current['password_hash'] if temp_password_mode else _hash_password(pw)
-            resolver = cert_resolver or 'cloudflare'
+            resolver = cert_resolver if cert_resolver.lower() not in ('none', '') else ''
             sr = {'domain': '', 'service_url': ''}
             if self_route_domain:
                 sr = {'domain': self_route_domain, 'service_url': self_route_svc}
@@ -893,9 +957,12 @@ def setup():
             session['login_time']    = datetime.now(timezone.utc).isoformat()
             return redirect(url_for('index'))
 
+    detected_domain, detected_svc = _detect_setup_self_route()
     return render_template('login.html', setup_mode=True, error=error,
                            defaults=defaults, csrf_token=_get_csrf_token(),
-                           temp_password_mode=temp_password_mode)
+                           temp_password_mode=temp_password_mode,
+                           detected_self_domain=detected_domain,
+                           detected_self_svc=detected_svc)
 
 
 @app.route('/logout', methods=['POST'])
@@ -1300,6 +1367,18 @@ def api_health():
     return jsonify({"ok": True}), 200
 
 
+@app.route('/api')
+def api_docs():
+    from flask import send_from_directory
+    return send_from_directory('static', 'api.html')
+
+
+@app.route('/openapi.yaml')
+def openapi_yaml():
+    from flask import send_from_directory
+    return send_from_directory('static', 'openapi.yaml')
+
+
 def _restart_via_docker() -> bool:
     try:
         import docker as _docker
@@ -1380,6 +1459,7 @@ def api_static_config_save():
         create_backup(safe_path)
         with open(safe_path, 'w') as f:
             f.write(content)
+        logger.info(f"Static config saved by {request.remote_addr}: {safe_path}")
         add_notification('success', 'Static config saved')
         return jsonify({'ok': True})
     except Exception as e:
@@ -1392,8 +1472,10 @@ def api_static_config_save():
 def api_static_restart():
     ok, err = trigger_traefik_restart()
     if ok:
+        logger.info(f"Traefik restarted via static config by {request.remote_addr}")
         add_notification('warning', 'Traefik restarted')
         return jsonify({'ok': True})
+    logger.error(f"Traefik restart failed for {request.remote_addr}: {err}")
     return jsonify({'ok': False, 'error': err}), 500
 
 @app.route('/api/static/status')
@@ -2563,7 +2645,7 @@ def save_entry():
         tcp_eps        = [ep.strip() for ep in (_all_eps[1] if len(_all_eps) > 1 else '').split(',') if ep.strip()] or ['https']
         resolvers      = [r.strip() for r in settings['cert_resolver'].split(',') if r.strip()]
         cert_resolver_raw = request.form.get('certResolver', '').strip()
-        cert_resolver  = '' if cert_resolver_raw == '__none__' else (cert_resolver_raw or (resolvers[0] if resolvers else 'cloudflare'))
+        cert_resolver  = '' if (cert_resolver_raw in ('__none__', 'none')) else (cert_resolver_raw or (resolvers[0] if resolvers else ''))
         config_file_raw = request.form.get('configFile', '').strip()
         target_path    = _resolve_config_path(config_file_raw) or CONFIG_PATH
 
@@ -2633,7 +2715,8 @@ def save_entry():
             rule = tcp_rule or (f"HostSNI(`{subdomain}.{domain}`)" if subdomain else "HostSNI(`*`)")
             config.setdefault('tcp', {}).setdefault('routers', {})
             config['tcp'].setdefault('services', {})
-            config['tcp']['routers'][router_name]   = {'rule': rule, 'entryPoints': tcp_eps, 'tls': {'certResolver': cert_resolver}, 'service': service_name}
+            tcp_tls = {'certResolver': cert_resolver} if cert_resolver else {}
+            config['tcp']['routers'][router_name]   = {'rule': rule, 'entryPoints': tcp_eps, 'tls': tcp_tls, 'service': service_name}
             config['tcp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
 
         elif protocol == 'udp':
@@ -2966,4 +3049,4 @@ if __name__ == '__main__':
     logger.info("Development server starting...")
     app.run(host='0.0.0.0', port=5000, debug=False)
 else:
-    logger.info("✅ Traefik Manager: Server is UP and Ready")
+    logger.info("🟢 Traefik Manager: Server is UP and Ready")

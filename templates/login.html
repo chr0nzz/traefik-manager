@@ -483,7 +483,7 @@
                 <label for="s_resolver">Certificate Resolver</label>
                 <input type="text" id="s_resolver" placeholder="cloudflare"
                        value="{{ defaults.cert_resolver }}">
-                <p class="field-hint">One or more resolver names from your <code style="font-family:monospace;color:var(--blue)">traefik.yml</code>, comma-separated - e.g. <code style="font-family:monospace;color:var(--blue)">cloudflare</code> or <code style="font-family:monospace;color:var(--blue)">letsencrypt, cloudflare</code>. The first is used as the default per route.</p>
+                <p class="field-hint">One or more resolver names from your <code style="font-family:monospace;color:var(--blue)">traefik.yml</code>, comma-separated - e.g. <code style="font-family:monospace;color:var(--blue)">cloudflare</code> or <code style="font-family:monospace;color:var(--blue)">letsencrypt, cloudflare</code>. The first is used as the default per route. If you manage certificates externally and don't use ACME, type <code style="font-family:monospace;color:var(--blue)">none</code>.</p>
             </div>
             <div class="field">
                 <label for="s_apiurl">Traefik API URL</label>
@@ -515,12 +515,12 @@
 
             <div class="field">
                 <label for="s_self_domain">Traefik Manager URL</label>
-                <input type="text" id="s_self_domain" placeholder="manager.example.com">
-                <p class="field-hint">The hostname you want to use to access Traefik Manager. Leave blank to skip.</p>
+                <input type="text" id="s_self_domain" placeholder="manager.example.com" value="{{ detected_self_domain or '' }}">
+                {% if detected_self_domain %}<p class="field-hint" style="color:var(--green)"><i class="ph-bold ph-check-circle"></i> Auto-detected from your configuration.</p>{% else %}<p class="field-hint">The hostname you want to use to access Traefik Manager. Leave blank to skip.</p>{% endif %}
             </div>
             <div class="field">
                 <label for="s_self_service">Internal service URL</label>
-                <input type="text" id="s_self_service" placeholder="http://traefik-manager:5000" value="http://traefik-manager:5000">
+                <input type="text" id="s_self_service" placeholder="http://traefik-manager:5000" value="{{ detected_self_svc or 'http://traefik-manager:5000' }}">
                 <p class="field-hint">Internal URL Docker/Traefik uses to reach this container. Usually the service name on the same network.</p>
             </div>
 

@@ -1,0 +1,1242 @@
+openapi: 3.1.0
+info:
+  title: Traefik Manager API
+  version: 1.0.0-beta4
+  description: |
+    REST API powering the Traefik Manager web UI and official mobile app.
+
+    All endpoints are relative to your Traefik Manager base URL (e.g. `https://manager.example.com`).
+
+    ## Authentication
+
+    Two methods are supported:
+
+    **API key** *(recommended for scripts and apps)* — generate a key in **Settings → Authentication → API Key** and send it as a header. API keys bypass CSRF checks.
+
+    **Session cookie** — log in via the web UI. The browser session is used automatically.
+
+    ## CSRF
+
+    State-changing endpoints (POST/DELETE) require a CSRF token when using session auth. Send it as `X-CSRF-Token`. API key requests skip this entirely.
+
+    ## Response format
+
+    All endpoints return JSON. Successful mutations return at minimum `{"ok": true}`. Errors return `{"ok": false, "message": "..."}` or `{"error": "..."}` with an appropriate HTTP status code.
+
+servers:
+  - url: '{protocol}://{host}'
+    description: Your Traefik Manager instance
+    variables:
+      protocol:
+        default: https
+        enum: [https, http]
+        description: HTTP or HTTPS
+      host:
+        default: manager.example.com
+        description: Hostname (and optional port) of your Traefik Manager
+
+security:
+  - ApiKey: []
+  - Session: []
+
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: Generate a key in Settings → Authentication → API Key.
+    Session:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Browser session cookie set after logging in via the web UI.
+
+  schemas:
+    OkResponse:
+      type: object
+      properties:
+        ok: { type: boolean, example: true }
+
+    SuccessResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+
+    ErrorResponse:
+      type: object
+      properties:
+        ok: { type: boolean, example: false }
+        message: { type: string, example: "Something went wrong" }
+
+    Route:
+      type: object
+      properties:
+        id: { type: string, example: "my-app" }
+        name: { type: string, example: "my-app" }
+        enabled: { type: boolean }
+        protocol: { type: string, enum: [http, tcp, udp] }
+        rule: { type: string, example: "Host(`app.example.com`)" }
+        target: { type: string, example: "http://192.168.1.10:8080" }
+        middlewares: { type: array, items: { type: string } }
+        tls: { type: boolean }
+        certResolver: { type: string, description: "ACME resolver name, or empty if using external certs." }
+        passHostHeader: { type: boolean }
+        configFile: { type: string }
+
+    Middleware:
+      type: object
+      properties:
+        name: { type: string }
+        type: { type: string, enum: [http, tcp] }
+        yaml: { type: string }
+        configFile: { type: string }
+
+    Notification:
+      type: object
+      properties:
+        ts: { type: string, example: "2026-04-13 20:25:03" }
+        type: { type: string, example: "route_saved" }
+        msg: { type: string, example: "Route my-app saved" }
+
+    BackupFile:
+      type: object
+      properties:
+        name: { type: string, example: "backup_2026-03-24T22-00-00.yml" }
+        size: { type: integer, example: 1024 }
+        modified: { type: string, example: "2026-03-24T22:00:00" }
+
+tags:
+  - name: Authentication
+    description: Password, TOTP 2FA, API keys, and OIDC.
+  - name: Traefik
+    description: Live read-only data proxied from the Traefik API.
+  - name: Routes & Middlewares
+    description: Create, edit, delete, and toggle managed routes and middlewares.
+  - name: Dashboard
+    description: Dashboard configuration — custom groups and per-route icon/name overrides.
+  - name: Settings
+    description: Application settings including domains, resolvers, file paths, and tabs.
+  - name: Backups
+    description: Create, list, restore, and delete configuration backups.
+  - name: Notifications
+    description: In-app event log.
+  - name: Static Config
+    description: Read and edit Traefik's static config (`traefik.yml`) via the Static Config editor.
+  - name: Utility
+    description: Version info, router names, and connection testing.
+
+paths:
+
+  # ─── Authentication ───────────────────────────────────────────────────────
+
+  /api/auth/change-password:
+    post:
+      tags: [Authentication]
+      summary: Change password
+      description: Change the login password. Rate-limited to 10/min.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, new_password, confirm_password]
+              properties:
+                current_password: { type: string }
+                new_password: { type: string }
+                confirm_password: { type: string }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+
+  /api/auth/toggle:
+    post:
+      tags: [Authentication]
+      summary: Toggle password authentication
+      description: Enable or disable password authentication entirely.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                auth_enabled: { type: boolean }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  auth_enabled: { type: boolean }
+
+  /api/auth/otp/status:
+    get:
+      tags: [Authentication]
+      summary: TOTP status
+      description: Check whether TOTP two-factor authentication is enabled.
+      responses:
+        "200":
+          description: TOTP status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  otp_enabled: { type: boolean, example: false }
+
+  /api/auth/otp/setup:
+    post:
+      tags: [Authentication]
+      summary: Generate TOTP secret
+      description: Generate a TOTP secret and QR code URI for scanning with an authenticator app.
+      responses:
+        "200":
+          description: Secret and QR URI
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secret: { type: string, example: "BASE32SECRET" }
+                  uri: { type: string, example: "otpauth://totp/TraefikManager?secret=..." }
+
+  /api/auth/otp/enable:
+    post:
+      tags: [Authentication]
+      summary: Enable TOTP
+      description: Confirm and activate TOTP using a code from the authenticator app.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, example: "123456" }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+
+  /api/auth/otp/disable:
+    post:
+      tags: [Authentication]
+      summary: Disable TOTP
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+
+  /api/auth/apikey/status:
+    get:
+      tags: [Authentication]
+      summary: List API keys
+      description: List all active API keys. Full keys are never returned after generation.
+      responses:
+        "200":
+          description: API key list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled: { type: boolean }
+                  count: { type: integer }
+                  keys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string, example: "My Phone" }
+                        preview: { type: string, example: "abcd1234...ef56" }
+                        created_at: { type: string, example: "2026-04-03 12:00" }
+
+  /api/auth/apikey/generate:
+    post:
+      tags: [Authentication]
+      summary: Generate API key
+      description: Generate a new API key for a named device. Up to 10 keys can exist. Rate-limited to 5/hour. The full key is returned once — store it securely.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [device_name]
+              properties:
+                device_name: { type: string, example: "My Phone" }
+      responses:
+        "200":
+          description: Generated key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  key: { type: string, example: "tm_abcdef123456..." }
+
+  /api/auth/apikey/revoke:
+    post:
+      tags: [Authentication]
+      summary: Revoke API key
+      description: Revoke a specific API key by its preview string.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [preview]
+              properties:
+                preview: { type: string, example: "abcd1234...ef56" }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /api/auth/oidc:
+    get:
+      tags: [Authentication]
+      summary: Get OIDC config
+      description: Get current OIDC configuration. The client secret is never returned.
+      responses:
+        "200":
+          description: OIDC config
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  oidc_enabled: { type: boolean }
+                  oidc_provider_url: { type: string }
+                  oidc_client_id: { type: string }
+                  oidc_client_secret_set: { type: boolean }
+                  oidc_display_name: { type: string }
+                  oidc_allowed_emails: { type: string }
+                  oidc_allowed_groups: { type: string }
+                  oidc_groups_claim: { type: string }
+    post:
+      tags: [Authentication]
+      summary: Save OIDC config
+      description: Save OIDC configuration. Leave `oidc_client_secret` blank to keep the existing secret.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oidc_enabled: { type: boolean }
+                oidc_provider_url: { type: string }
+                oidc_client_id: { type: string }
+                oidc_client_secret: { type: string }
+                oidc_display_name: { type: string }
+                oidc_allowed_emails: { type: string }
+                oidc_allowed_groups: { type: string }
+                oidc_groups_claim: { type: string }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /api/auth/oidc/test:
+    post:
+      tags: [Authentication]
+      summary: Test OIDC provider
+      description: Test connectivity to an OIDC provider's discovery endpoint.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider_url]
+              properties:
+                provider_url: { type: string, example: "https://accounts.google.com" }
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  issuer: { type: string }
+                  error: { type: string }
+
+  # ─── Traefik ──────────────────────────────────────────────────────────────
+
+  /api/traefik/overview:
+    get:
+      tags: [Traefik]
+      summary: Overview
+      description: Traefik dashboard overview — router/service/middleware counts, features, version.
+      responses:
+        "200":
+          description: Overview object from Traefik API
+
+  /api/traefik/routers:
+    get:
+      tags: [Traefik]
+      summary: All routers
+      description: All routers across HTTP, TCP, and UDP protocols.
+      responses:
+        "200":
+          description: Routers by protocol
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  http: { type: array, items: { type: object } }
+                  tcp:  { type: array, items: { type: object } }
+                  udp:  { type: array, items: { type: object } }
+
+  /api/traefik/services:
+    get:
+      tags: [Traefik]
+      summary: All services
+      description: All services across HTTP, TCP, and UDP protocols.
+      responses:
+        "200":
+          description: Services by protocol
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  http: { type: array, items: { type: object } }
+                  tcp:  { type: array, items: { type: object } }
+                  udp:  { type: array, items: { type: object } }
+
+  /api/traefik/middlewares:
+    get:
+      tags: [Traefik]
+      summary: All middlewares
+      description: All middlewares across HTTP and TCP.
+      responses:
+        "200":
+          description: Middlewares by protocol
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  http: { type: array, items: { type: object } }
+                  tcp:  { type: array, items: { type: object } }
+
+  /api/traefik/entrypoints:
+    get:
+      tags: [Traefik]
+      summary: Entrypoints
+      description: All configured entrypoints.
+      responses:
+        "200":
+          description: Entrypoint list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name: { type: string, example: "websecure" }
+                    address: { type: string, example: ":443" }
+
+  /api/traefik/version:
+    get:
+      tags: [Traefik]
+      summary: Version
+      responses:
+        "200":
+          description: Traefik version info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Version: { type: string, example: "3.2.0" }
+                  Codename: { type: string }
+                  startDate: { type: string }
+
+  /api/traefik/ping:
+    get:
+      tags: [Traefik]
+      summary: Ping
+      description: Ping the Traefik API and return latency.
+      responses:
+        "200":
+          description: Ping result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  latency_ms: { type: integer, example: 3 }
+
+  /api/traefik/router/{protocol}/{name}:
+    get:
+      tags: [Traefik]
+      summary: Router details
+      description: Get details for a specific router.
+      parameters:
+        - name: protocol
+          in: path
+          required: true
+          schema: { type: string, enum: [http, tcp, udp] }
+        - name: name
+          in: path
+          required: true
+          schema: { type: string }
+          description: Router name (URL-encoded)
+      responses:
+        "200":
+          description: Router object from Traefik API
+
+  /api/traefik/plugins:
+    get:
+      tags: [Traefik]
+      summary: Plugins
+      description: List plugins defined under `experimental.plugins` in the Traefik static config. Requires `STATIC_CONFIG_PATH` to be set.
+      responses:
+        "200":
+          description: Plugin list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plugins:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string }
+                        moduleName: { type: string }
+                        version: { type: string }
+                  error: { type: string }
+
+  /api/traefik/certs:
+    get:
+      tags: [Traefik]
+      summary: TLS certificates
+      description: List TLS certificates from ACME (`acme.json`) and file-based (`tls.yml`) sources.
+      responses:
+        "200":
+          description: Certificate list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  certs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        resolver: { type: string, example: "cloudflare" }
+                        main: { type: string, example: "example.com" }
+                        sans: { type: array, items: { type: string } }
+                        not_after: { type: string, example: "2026-04-06T12:00:00Z" }
+                        certFile: { type: string }
+
+  /api/traefik/logs:
+    get:
+      tags: [Traefik]
+      summary: Access logs
+      description: Tail Traefik access logs. Requires `ACCESS_LOG_PATH` to be set.
+      parameters:
+        - name: lines
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 100 }
+      responses:
+        "200":
+          description: Log lines
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lines: { type: array, items: { type: string } }
+                  error: { type: string }
+
+  # ─── Routes & Middlewares ─────────────────────────────────────────────────
+
+  /api/configs:
+    get:
+      tags: [Routes & Middlewares]
+      summary: List config files
+      description: List all loaded dynamic config files.
+      responses:
+        "200":
+          description: Config file list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        label: { type: string }
+                        path: { type: string }
+                  configDirSet: { type: boolean }
+
+  /api/routes:
+    get:
+      tags: [Routes & Middlewares]
+      summary: Get all routes and middlewares
+      description: |
+        Get all managed routes and middlewares from all loaded config files.
+
+        `id` is prefixed as `configFile::name` when multiple config files are loaded (e.g. `routes.yml::my-app`).
+        Strip the prefix before using the name as a YAML key.
+      responses:
+        "200":
+          description: Routes and middlewares
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apps:
+                    type: array
+                    items: { $ref: "#/components/schemas/Route" }
+                  middlewares:
+                    type: array
+                    items: { $ref: "#/components/schemas/Middleware" }
+
+  /api/routes/{route_id}/toggle:
+    post:
+      tags: [Routes & Middlewares]
+      summary: Enable / disable route
+      description: Enable or disable a route without deleting it. Configuration is preserved in `manager.yml`.
+      parameters:
+        - name: route_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enable]
+              properties:
+                enable: { type: boolean }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /save:
+    post:
+      tags: [Routes & Middlewares]
+      summary: Create or update route
+      description: Create a new route or update an existing one.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                serviceName: { type: string, description: "Route/service name" }
+                subdomain: { type: string, description: "Hostname (e.g. app.example.com)" }
+                targetIp: { type: string }
+                targetPort: { type: string }
+                protocol: { type: string, enum: [http, tcp, udp] }
+                middlewares: { type: string, description: "Comma-separated middleware names" }
+                scheme: { type: string, enum: [http, https], default: "http" }
+                passHostHeader: { type: boolean, default: true }
+                certResolver: { type: string, description: "ACME resolver name. Use `none` or `__none__` for external/custom certs (writes `tls: {}` with no resolver)." }
+                configFile: { type: string, description: "Target config file basename (multi-config only)" }
+                isEdit: { type: boolean }
+                originalId: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /delete/{route_id}:
+    post:
+      tags: [Routes & Middlewares]
+      summary: Delete route
+      parameters:
+        - name: route_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                configFile: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /save-middleware:
+    post:
+      tags: [Routes & Middlewares]
+      summary: Create or update middleware
+      description: Create or update a middleware. Config is provided as raw YAML.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                middlewareName: { type: string }
+                middlewareContent: { type: string, description: "YAML config body" }
+                configFile: { type: string }
+                isMwEdit: { type: boolean }
+                originalMwId: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /delete-middleware/{name}:
+    post:
+      tags: [Routes & Middlewares]
+      summary: Delete middleware
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                configFile: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  # ─── Dashboard ────────────────────────────────────────────────────────────
+
+  /api/dashboard/config:
+    get:
+      tags: [Dashboard]
+      summary: Get dashboard config
+      description: Get the saved Dashboard configuration — custom groups and per-route icon/name overrides.
+      responses:
+        "200":
+          description: Dashboard config
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  custom_groups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string }
+                  route_overrides:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        display_name: { type: string }
+                        icon_type: { type: string, enum: [auto, slug, url] }
+                        icon_slug: { type: string }
+                        icon_url: { type: string }
+                        group: { type: string }
+    post:
+      tags: [Dashboard]
+      summary: Save dashboard config
+      description: Save the Dashboard configuration. Replaces the full config in `dashboard.yml`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                custom_groups: { type: array, items: { type: object } }
+                route_overrides: { type: object }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /api/dashboard/icon/{slug}:
+    get:
+      tags: [Dashboard]
+      summary: Get app icon
+      description: |
+        Serve a cached app icon by slug. On cache miss, fetches from the selfh.st CDN and caches locally.
+        Responses are served with `Cache-Control: max-age=86400`.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+          description: Icon name — lowercase alphanumeric and hyphens (e.g. `plex`, `grafana`)
+      responses:
+        "200":
+          description: PNG image
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+        "404":
+          description: Icon not found on CDN
+
+  # ─── Settings ─────────────────────────────────────────────────────────────
+
+  /api/settings:
+    get:
+      tags: [Settings]
+      summary: Get settings
+      description: Get current application settings. Password hash is never included.
+      responses:
+        "200":
+          description: Settings object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  domains: { type: array, items: { type: string } }
+                  cert_resolver: { type: string }
+                  traefik_api_url: { type: string }
+                  acme_json_path: { type: string }
+                  access_log_path: { type: string }
+                  static_config_path: { type: string }
+                  auth_enabled: { type: boolean }
+                  oidc_enabled: { type: boolean }
+                  visible_tabs: { type: object }
+    post:
+      tags: [Settings]
+      summary: Update settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domains: { type: array, items: { type: string } }
+                cert_resolver: { type: string }
+                traefik_api_url: { type: string }
+                acme_json_path: { type: string }
+                access_log_path: { type: string }
+                static_config_path: { type: string }
+      responses:
+        "200":
+          description: Success
+
+  /api/settings/self-route:
+    get:
+      tags: [Settings]
+      summary: Get self-route
+      description: Get the current self-route configuration. If no domain is saved, TM scans config files for an existing route pointing to the TM service.
+      responses:
+        "200":
+          description: Self-route config
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  domain: { type: string }
+                  service_url: { type: string }
+    post:
+      tags: [Settings]
+      summary: Save self-route
+      description: Save or remove the self-route. When domain is empty, the self-route file is deleted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domain: { type: string }
+                service_url: { type: string }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /api/settings/tabs:
+    post:
+      tags: [Settings]
+      summary: Toggle UI tabs
+      description: Show or hide optional provider tabs in the UI.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: { type: boolean }
+              example:
+                dashboard: true
+                routemap: true
+                docker: false
+      responses:
+        "200":
+          description: Updated tab visibility
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  visible_tabs: { type: object }
+
+  # ─── Backups ──────────────────────────────────────────────────────────────
+
+  /api/backups:
+    get:
+      tags: [Backups]
+      summary: List backups
+      responses:
+        "200":
+          description: Backup file list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/BackupFile" }
+
+  /api/backup/create:
+    post:
+      tags: [Backups]
+      summary: Create backup
+      description: Create a manual backup of the current configuration.
+      responses:
+        "200":
+          description: Backup created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  name: { type: string, example: "backup_2026-03-24T22-05-00.yml" }
+
+  /api/restore/{filename}:
+    post:
+      tags: [Backups]
+      summary: Restore backup
+      description: Restore configuration from a backup file. Rate-limited to 10/min.
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+
+  /api/backup/delete/{filename}:
+    post:
+      tags: [Backups]
+      summary: Delete backup
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+
+  # ─── Notifications ────────────────────────────────────────────────────────
+
+  /api/notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications
+      description: List all stored notifications, newest first.
+      responses:
+        "200":
+          description: Notification list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Notification" }
+
+  /api/notifications/delete:
+    post:
+      tags: [Notifications]
+      summary: Delete notification
+      description: Delete a single notification by timestamp.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ts]
+              properties:
+                ts: { type: string, example: "2026-04-13 20:25:03" }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /api/notifications/clear:
+    post:
+      tags: [Notifications]
+      summary: Clear all notifications
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  # ─── Static Config ────────────────────────────────────────────────────────
+
+  /api/static/available:
+    get:
+      tags: [Static Config]
+      summary: Check availability
+      description: Check whether the static config editor is available (`STATIC_CONFIG_PATH` set and file exists).
+      responses:
+        "200":
+          description: Availability
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available: { type: boolean }
+
+  /api/static/config:
+    get:
+      tags: [Static Config]
+      summary: Read static config
+      description: Read and parse the current static config file.
+      responses:
+        "200":
+          description: Static config content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  raw: { type: string }
+                  parsed: { type: object }
+                  path: { type: string }
+    post:
+      tags: [Static Config]
+      summary: Write static config
+      description: Validate and write an updated static config. A timestamped backup is created before writing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [yaml]
+              properties:
+                yaml: { type: string }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+        "400":
+          description: Invalid YAML
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+
+  /api/static/restart:
+    post:
+      tags: [Static Config]
+      summary: Restart Traefik
+      description: Trigger a Traefik restart using the configured `RESTART_METHOD`.
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+        "500":
+          description: Restart failed or not configured
+
+  /api/static/status:
+    get:
+      tags: [Static Config]
+      summary: Traefik up?
+      description: Check whether Traefik is currently up. Used by the reconnect overlay after a restart.
+      responses:
+        "200":
+          description: Status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  up: { type: boolean }
+
+  /api/static/section:
+    post:
+      tags: [Static Config]
+      summary: Update config section
+      description: |
+        Update a single named item within the static config, or set a single-block section.
+
+        **Sections and actions**
+
+        | `section` | Supported actions | `data` fields |
+        |-----------|-------------------|---------------|
+        | `entrypoints` | `add`, `edit`, `remove` | `address`, `redirect_to` |
+        | `resolvers` | `add`, `edit`, `remove` | `email`, `storage`, `challenge_type`, `provider`, `http_entrypoint` |
+        | `plugins` | `add`, `edit`, `remove` | `moduleName`, `version` |
+        | `api` | `set` | `enabled`, `dashboard`, `insecure`, `debug` |
+        | `log` | `set` | `level`, `accessLog`, `accessLogPath` |
+        | `providers` | `set` | `docker`, `dockerEndpoint`, `dockerExposedByDefault`, `dockerWatch`, `file`, `fileDirectory`, `fileWatch` |
+        | `providers` | `add`, `edit`, `remove` | `name` = provider type key, `yaml_config` = YAML body for that provider |
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, section]
+              properties:
+                action: { type: string, enum: [add, edit, remove, set] }
+                section: { type: string, enum: [entrypoints, resolvers, plugins, api, log, providers] }
+                name: { type: string }
+                old_name: { type: string }
+                data: { type: object }
+                current_raw: { type: string }
+            examples:
+              add_entrypoint:
+                summary: Add entrypoint
+                value:
+                  action: add
+                  section: entrypoints
+                  name: websecure
+                  data: { address: ":443" }
+              set_api:
+                summary: Configure API section
+                value:
+                  action: set
+                  section: api
+                  data: { enabled: true, dashboard: true, insecure: false }
+      responses:
+        "200":
+          description: Updated config
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  raw: { type: string }
+                  parsed: { type: object }
+
+  # ─── Utility ──────────────────────────────────────────────────────────────
+
+  /api/manager/version:
+    get:
+      tags: [Utility]
+      summary: TM version
+      description: Get the deployed Traefik Manager version.
+      responses:
+        "200":
+          description: Version info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version: { type: string, example: "1.0.0-beta3" }
+                  repo: { type: string, example: "https://github.com/chr0nzz/traefik-manager" }
+
+  /api/manager/router-names:
+    get:
+      tags: [Utility]
+      summary: Router names
+      description: Get all router names across every protocol. Useful for autocomplete.
+      responses:
+        "200":
+          description: Router name list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+                example: ["my-app@file", "api@file"]
+
+  /api/setup/test-connection:
+    post:
+      tags: [Utility]
+      summary: Test Traefik connection
+      description: Test connectivity to a Traefik API URL. No authentication required.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url: { type: string, example: "http://traefik:8080" }
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  version: { type: string, example: "3.2.0" }

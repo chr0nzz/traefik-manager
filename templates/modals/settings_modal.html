@@ -88,7 +88,7 @@
                     </div>
                     <div>
                         <span class="settings-section-label">Certificate Resolver</span>
-                        <div class="text-xs mb-2" style="color:var(--muted)">One or more cert resolver names, comma-separated (e.g. <code class="font-mono">letsencrypt, cloudflare</code>). The first is the default - each route can override it individually.</div>
+                        <div class="text-xs mb-2" style="color:var(--muted)">One or more cert resolver names, comma-separated (e.g. <code class="font-mono">letsencrypt, cloudflare</code>). The first is the default - each route can override it individually. If you manage certificates externally and don't use ACME, type <code class="font-mono">none</code>.</div>
                         <input type="text" id="settingsCertResolver" class="input-field" placeholder="cloudflare" onblur="saveSettings()">
                     </div>
                     <div>
@@ -589,6 +589,13 @@
                                 </div>
                                 <div class="toggle-switch" id="toggle-docs-link" onclick="toggleDocsLink()"><div class="toggle-knob"></div></div>
                             </div>
+                            <div class="flex items-center justify-between" style="padding:10px 12px;border-bottom:1px solid var(--border)">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Show API reference link</div>
+                                    <div class="text-xs" style="color:var(--muted)">Opens the interactive API reference.</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-api-link" onclick="toggleApiLink()"><div class="toggle-knob"></div></div>
+                            </div>
                             <div class="flex items-center justify-between" style="padding:10px 12px;">
                                 <div>
                                     <div class="text-xs font-medium" style="color:var(--text)">Show keyboard shortcuts button</div>
@@ -628,7 +635,7 @@
                                 <div class="font-bold text-sm" style="color:var(--text)">Traefik Manager</div>
                                 <div class="text-xs mt-0.5" style="color:var(--muted)">
                                     GPL-3.0 licence ·
-                                    <a href="https://github.com/chr0nzz/traefik-manager" target="_blank" style="color:var(--blue);text-decoration:none">xyzlab.dev</a>
+                                    <a href="https://xyzlab.dev" target="_blank" style="color:var(--blue);text-decoration:none">xyzlab.dev</a>
                                 </div>
                             </div>
                         </div>
@@ -645,11 +652,20 @@
                             <div id="sm-mgr-update-notice" class="hidden text-xs px-3 py-2 rounded-md mb-2" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)">
                                 <i class="ph-bold ph-arrow-circle-up mr-1"></i><span id="sm-mgr-update-text"></span>
                             </div>
-                            <a id="mgrUpdateReleaseLink" href="https://github.com/chr0nzz/traefik-manager/releases" target="_blank"
-                               class="nav-btn text-xs" style="text-decoration:none;display:inline-flex">
-                                <i class="ph-bold ph-github-logo"></i> Release Notes
-                            </a>
+                            <div class="flex flex-wrap gap-2">
+                                <a href="https://github.com/chr0nzz/traefik-manager" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
+                                    <i class="ph-bold ph-github-logo"></i> GitHub
+                                </a>
+                                <a href="https://traefik-manager.xyzlab.dev" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
+                                    <i class="ph-bold ph-book-open"></i> Docs
+                                </a>
+                                <a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
+                                    <i class="ph-bold ph-google-play-logo"></i> Google Play
+                                </a>
+                            </div>
                         </div>
+
+                        <a id="mgrUpdateReleaseLink" href="https://github.com/chr0nzz/traefik-manager/releases" target="_blank" style="display:none"></a>
 
                         <div id="sm-about-release-notes" style="max-height:200px;overflow-y:auto;font-size:12px;line-height:1.6;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--input-bg)">
                             <span style="color:var(--muted)">Loading release notes…</span>
@@ -673,14 +689,6 @@
                             </a>
                         </div>
 
-                        <div class="flex gap-2" style="border-top:1px solid var(--border);padding-top:12px">
-                            <a href="https://github.com/chr0nzz/traefik-manager" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
-                                <i class="ph-bold ph-github-logo"></i> GitHub
-                            </a>
-                            <a href="https://traefik-manager.xyzlab.dev" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
-                                <i class="ph-bold ph-book-open"></i> Docs
-                            </a>
-                        </div>
 
                     </div>
                 </div>
@@ -803,6 +811,7 @@ async function openSettingsModal(panel) {
         _applyTraefikBadgeVisibility();
         _applyTmBadgeVisibility();
         _applyDocsLinkVisibility();
+        _applyApiLinkVisibility();
         loadOtpStatus();
         loadApiKeyStatus();
         loadOidcStatus();
@@ -1123,6 +1132,20 @@ function _applyDocsLinkVisibility() {
     document.documentElement.classList.toggle('tm-hide-docs', !show);
     document.querySelectorAll('.nav-docs-link').forEach(el => el.classList.toggle('hidden', !show));
     const tog = document.getElementById('toggle-docs-link');
+    if (tog) tog.classList.toggle('on', show);
+}
+
+function toggleApiLink() {
+    const show = localStorage.getItem('showApiLink') === 'true';
+    localStorage.setItem('showApiLink', show ? 'false' : 'true');
+    _applyApiLinkVisibility();
+}
+
+function _applyApiLinkVisibility() {
+    const show = localStorage.getItem('showApiLink') === 'true';
+    document.documentElement.classList.toggle('tm-hide-api', !show);
+    document.querySelectorAll('.nav-api-link').forEach(el => el.classList.toggle('hidden', !show));
+    const tog = document.getElementById('toggle-api-link');
     if (tog) tog.classList.toggle('on', show);
 }
 
