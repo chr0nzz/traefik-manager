@@ -20,6 +20,6 @@ Closes #
 
 ## Checklist
 
-- [ ] Targeted the correct branch (`v1` for beta changes, `main` for docs/stable fixes)
+- [ ] Targeted the correct branch (`dev` for new features/fixes, `main` for docs/stable fixes)
 - [ ] Updated relevant docs in `docs/` if behaviour changed
 - [ ] No commented-out code or debug statements left in

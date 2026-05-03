@@ -38,7 +38,7 @@ Open a [Feature Request](.github/ISSUE_TEMPLATE/feature_request.yml) issue befor
 
 ## Submitting a pull request
 
-1. Fork the repo and create your branch from `v1` (for beta/active development) or `main` (for docs or stable fixes).
+1. Fork the repo and create your branch from `dev` (for new features and active development) or `main` (for docs or stable fixes).
 2. Keep PRs focused - one fix or feature per PR.
 3. For anything beyond a small bug fix, open an issue first so we can align on approach.
 4. Test your changes with a real Traefik instance if possible.
@@ -60,7 +60,7 @@ Open a [Feature Request](.github/ISSUE_TEMPLATE/feature_request.yml) issue befor
 ```bash
 git clone https://github.com/chr0nzz/traefik-manager.git
 cd traefik-manager
-git checkout v1
+git checkout dev
 
 python3 -m venv venv
 source venv/bin/activate
@@ -150,7 +150,7 @@ docs/                         # VitePress documentation site
 
 | Branch | Purpose | PR target |
 |--------|---------|-----------|
-| `v1` | Active beta development - new features and bug fixes for the next release | `v1` |
+| `dev` | Active development - new features and bug fixes for the next release | `dev` |
 | `main` | Stable - docs fixes, security patches only | `main` |
 
-When v1 is ready for production release it will be merged to `main`. New features during that window go to `v1`.
+When `dev` is ready for release it is merged to `main`. New features go to `dev`.
