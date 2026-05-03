@@ -5,41 +5,36 @@
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
             <input type="text" id="rmSearch" oninput="rmApplyFilter()" placeholder="Search routes..." class="input-field pl-9">
         </div>
-        <div class="relative" id="rmFilterWrap">
-            <button id="rmFilterBtn" onclick="rmToggleFilterPanel()" class="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);color:var(--text)">
-                <i class="ph-bold ph-funnel-simple"></i>
-                <span>Filters</span>
-                <span id="rmFilterBadge" class="hidden text-xs font-bold px-1.5 rounded-full" style="background:var(--blue);color:#fff;min-width:18px;text-align:center;line-height:1.6"></span>
-            </button>
-            <div id="rmFilterPanel" class="hidden absolute top-full right-0 mt-1 z-50 rounded-xl p-3" style="min-width:240px;background:var(--card);border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,0.3)">
-                <div class="rm-fp-section">
-                    <div class="rm-fp-label">PROTOCOL</div>
-                    <div class="flex flex-wrap gap-1">
-                        <button class="proto-btn text-xs px-2.5 py-1 active-http" id="rmf-all"  onclick="rmFilterProto('all')">All</button>
-                        <button class="proto-btn text-xs px-2.5 py-1" id="rmf-http" onclick="rmFilterProto('http')">HTTP</button>
-                        <button class="proto-btn text-xs px-2.5 py-1" id="rmf-tcp"  onclick="rmFilterProto('tcp')">TCP</button>
-                        <button class="proto-btn text-xs px-2.5 py-1" id="rmf-udp"  onclick="rmFilterProto('udp')">UDP</button>
-                    </div>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">
+            <button onclick="rmFilterProto('all','All')"  id="rmf-all"  class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+            <button onclick="rmFilterProto('http','HTTP')" id="rmf-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
+            <button onclick="rmFilterProto('tcp','TCP')"  id="rmf-tcp"  class="proto-btn text-xs px-3 py-1.5">TCP</button>
+            <button onclick="rmFilterProto('udp','UDP')"  id="rmf-udp"  class="proto-btn text-xs px-3 py-1.5">UDP</button>
+        </div>
+        <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg);border:1px solid var(--border)">
+            <div class="live-dd" id="rm-dd-provider">
+                <button class="live-dd-btn-inner" id="rm-dd-provider-btn" onclick="toggleLiveDd('rm-dd-provider')">
+                    <span id="rm-provider-label">All Providers</span>
+                    <i class="ph-bold ph-caret-down live-dd-caret"></i>
+                </button>
+                <div class="live-dd-menu" id="rm-dd-provider-menu">
+                    <button class="live-dd-item active" onclick="rmPickProvider('all','All Providers')">All Providers</button>
                 </div>
-                <div id="rmFpProviders" class="rm-fp-section hidden">
-                    <div class="rm-fp-label">PROVIDER</div>
-                    <div id="rmFpProviderBtns" class="flex flex-wrap gap-1"></div>
-                </div>
-                <div id="rmFpEps" class="rm-fp-section hidden">
-                    <div class="rm-fp-label">ENTRY POINT</div>
-                    <div id="rmFpEpBtns" class="flex flex-wrap gap-1"></div>
-                </div>
-                <div class="rm-fp-section">
-                    <div class="rm-fp-label">GROUP BY</div>
-                    <div class="flex flex-wrap gap-1">
-                        <button class="proto-btn text-xs px-2.5 py-1 active-http" id="rmfg-name"       onclick="rmSetGroupBy('name')">Name</button>
-                        <button class="proto-btn text-xs px-2.5 py-1"             id="rmfg-domain"     onclick="rmSetGroupBy('domain')">Domain</button>
-                        <button class="proto-btn text-xs px-2.5 py-1"             id="rmfg-middleware" onclick="rmSetGroupBy('middleware')">Middleware</button>
-                        <button class="proto-btn text-xs px-2.5 py-1"             id="rmfg-none"       onclick="rmSetGroupBy('none')">None</button>
-                    </div>
-                </div>
-                <button onclick="rmClearFilters()" class="w-full mt-2 text-xs py-1.5 rounded-lg font-medium" style="background:var(--input-bg);border:1px solid var(--border);color:var(--muted)">Clear filters</button>
             </div>
+        </div>
+        <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg);border:1px solid var(--border)">
+            <div class="live-dd" id="rm-dd-ep">
+                <button class="live-dd-btn-inner" id="rm-dd-ep-btn" onclick="toggleLiveDd('rm-dd-ep')">
+                    <span id="rm-ep-label">All Entry Points</span>
+                    <i class="ph-bold ph-caret-down live-dd-caret"></i>
+                </button>
+                <div class="live-dd-menu" id="rm-dd-ep-menu">
+                    <button class="live-dd-item active" onclick="rmPickEp('all','All Entry Points')">All Entry Points</button>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg);border:1px solid var(--border)">
+            <button onclick="rmClearFilters()" class="proto-btn text-xs px-3 py-1.5" title="Clear filters"><i class="ph-bold ph-x-circle"></i></button>
         </div>
     </div>
 
@@ -55,6 +50,30 @@
     <div id="rmTopoContainer" class="routemap-container hidden">
         <svg id="rmSvg" class="routemap-svg"></svg>
         <div id="rmCols" class="routemap-cols"></div>
+    </div>
+    <div id="rmMobileZoomBar" class="hidden" style="position:fixed;bottom:84px;right:14px;z-index:300;display:flex;flex-direction:column;align-items:center;gap:5px">
+        <button onclick="rmZoomBy(1.3)"  class="rm-zoom-btn" title="Zoom in"><i class="ph-bold ph-plus"></i></button>
+        <span id="rmZoomPct" style="font-size:10px;font-weight:700;color:var(--muted);min-width:34px;text-align:center">100%</span>
+        <button onclick="rmZoomBy(1/1.3)" class="rm-zoom-btn" title="Zoom out"><i class="ph-bold ph-minus"></i></button>
+        <button onclick="rmZoomReset()" class="rm-zoom-btn" title="Fit to screen" style="margin-top:2px"><i class="ph-bold ph-arrows-in"></i></button>
+    </div>
+
+    <div id="rmPopupOverlay" style="display:none;position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px)" onclick="if(event.target===this)rmClosePopup()"></div>
+    <div id="rmPopup" class="rm-popup-panel" style="display:none">
+        <div class="rm-popup-header">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                <span id="rmPopupTypeBadge" class="rm-popup-type-badge"></span>
+                <span id="rmPopupTitle" style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span>
+            </div>
+            <button onclick="rmClosePopup()" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px 6px;border-radius:6px;font-size:18px;line-height:1;flex-shrink:0" title="Close (Esc)">×</button>
+        </div>
+        <div id="rmPopupDetails" class="rm-popup-details"></div>
+        <div style="padding:16px;overflow-x:auto;-webkit-overflow-scrolling:touch">
+            <div id="rmPopupTopoContainer" class="routemap-container" style="height:auto;min-height:80px;overflow-x:visible">
+                <svg id="rmPopupSvg" class="routemap-svg"></svg>
+                <div id="rmPopupCols" class="routemap-cols"></div>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -129,8 +148,77 @@ let _rmGroupBy        = 'name';
 let _rmSearch         = '';
 let _rmDrawn          = false;
 let _rmTopoSelected   = null;
+let _rmPopupOpen      = false;
 const _rmExpandedGroups = new Set();
 let _rmRouteGroupKey  = new Map();
+let _rmDagreGraph     = null;
+let _rmDagreRoutes    = null;
+let _rmDagreW         = 800;
+let _rmDagreH         = 600;
+
+const RM_NODE_DIMS = {
+    ep:    { width: 130, height: 30 },
+    route: { width: 160, height: 32 },
+    group: { width: 160, height: 32 },
+    mw:    { width: 144, height: 30 },
+    svc:   { width: 160, height: 30 },
+};
+
+function _rmSmoothPath(points) {
+    if (!points || points.length < 2) return '';
+    let d = `M${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
+    for (let i = 1; i < points.length; i++) {
+        const pp = points[i - 1], p = points[i];
+        const cx = ((pp.x + p.x) / 2).toFixed(1);
+        d += ` C${cx},${pp.y.toFixed(1)} ${cx},${p.y.toFixed(1)} ${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+    }
+    return d;
+}
+
+function _rmBuildDagre(routes) {
+    const g = new dagre.graphlib.Graph({ multigraph: true });
+    g.setGraph({ rankdir: 'LR', nodesep: 4, ranksep: 30, marginx: 12, marginy: 12, acyclicer: 'greedy' });
+    g.setDefaultEdgeLabel(() => ({}));
+
+    const mwUsage = {};
+    routes.forEach(r => (r.middlewares||[]).forEach(mw => { mwUsage[mw] = (mwUsage[mw]||0)+1; }));
+
+    const epNames = [...new Set(routes.flatMap(r => r.entryPoints||[]))];
+    const mwNames = [...new Set(routes.flatMap(r => r.middlewares||[]))];
+    const svcMap  = new Map();
+    routes.forEach(r => { if (r.service_name) svcMap.set(r.service_name, r.target||r.service_name); });
+
+    epNames.forEach(n => g.setNode(`ep:${n}`,  { ...RM_NODE_DIMS.ep,  type:'ep',  id:n }));
+    mwNames.forEach(n => g.setNode(`mw:${n}`,  { ...RM_NODE_DIMS.mw,  type:'mw',  id:n }));
+    svcMap.forEach((target, n) => g.setNode(`svc:${n}`, { ...RM_NODE_DIMS.svc, type:'svc', id:n, target }));
+    routes.forEach(r => g.setNode(`route:${r.id}`, { ...RM_NODE_DIMS.route, type:'route', id:r.id, route:r }));
+
+    routes.forEach(r => {
+        const rv = `route:${r.id}`;
+        (r.entryPoints||[]).forEach(ep => {
+            const k = `${ep}→${rv}`;
+            if (!g.hasEdge(`ep:${ep}`, rv, k)) g.setEdge(`ep:${ep}`, rv, { type:'ep-route' }, k);
+        });
+        if ((r.middlewares||[]).length) {
+            r.middlewares.forEach(mw => {
+                const k1 = `${rv}→mw:${mw}`;
+                if (!g.hasEdge(rv, `mw:${mw}`, k1)) g.setEdge(rv, `mw:${mw}`, { type:'route-mw' }, k1);
+                if (r.service_name) {
+                    const k2 = `mw:${mw}→svc:${r.service_name}`;
+                    if (!g.hasEdge(`mw:${mw}`, `svc:${r.service_name}`, k2))
+                        g.setEdge(`mw:${mw}`, `svc:${r.service_name}`, { type:'mw-svc' }, k2);
+                }
+            });
+        } else if (r.service_name) {
+            const k = `${rv}→svc:${r.service_name}`;
+            if (!g.hasEdge(rv, `svc:${r.service_name}`, k))
+                g.setEdge(rv, `svc:${r.service_name}`, { type:'route-svc' }, k);
+        }
+    });
+
+    dagre.layout(g);
+    return { g, mwUsage, svcMap, epNames, mwNames };
+}
 
 function _esc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -199,91 +287,73 @@ function _rmFilteredRoutes() {
     });
 }
 
-window.rmFilterProvider = function(p) {
+window.rmPickProvider = function(p, label) {
     _rmProvider = p;
-    document.querySelectorAll('#rmFpProviderBtns .proto-btn').forEach(b => b.classList.remove('active-http'));
-    document.getElementById('rmpf-' + p)?.classList.add('active-http');
-    rmUpdateFilterBtn();
+    document.getElementById('rm-provider-label').textContent = label;
+    document.getElementById('rm-dd-provider-btn').classList.toggle('active', p !== 'all');
+    document.querySelectorAll('#rm-dd-provider-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === label));
+    toggleLiveDd('rm-dd-provider');
     rmRender();
 };
 
-window.rmFilterEp = function(ep) {
+window.rmPickEp = function(ep, label) {
     _rmEpFilter = ep;
-    document.querySelectorAll('#rmFpEpBtns .proto-btn').forEach(b => b.classList.remove('active-http'));
-    document.getElementById('rmepf-' + ep)?.classList.add('active-http');
-    rmUpdateFilterBtn();
+    document.getElementById('rm-ep-label').textContent = label;
+    document.getElementById('rm-dd-ep-btn').classList.toggle('active', ep !== 'all');
+    document.querySelectorAll('#rm-dd-ep-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === label));
+    toggleLiveDd('rm-dd-ep');
     rmRender();
 };
 
 function rmRenderEpFilters() {
-    const epNames   = Object.keys(_rmAllEps).sort();
-    const section   = document.getElementById('rmFpEps');
-    const container = document.getElementById('rmFpEpBtns');
-    if (!section || !container) return;
-    if (epNames.length <= 1) { section.classList.add('hidden'); return; }
-    section.classList.remove('hidden');
-    container.innerHTML = '';
-    ['all', ...epNames].forEach(ep => {
+    const epNames = Object.keys(_rmAllEps).sort();
+    const menu = document.getElementById('rm-dd-ep-menu');
+    if (!menu) return;
+    menu.innerHTML = `<button class="live-dd-item${_rmEpFilter === 'all' ? ' active' : ''}" onclick="rmPickEp('all','All Entry Points')">All Entry Points</button>`;
+    epNames.forEach(ep => {
         const btn = document.createElement('button');
-        btn.id = 'rmepf-' + ep;
-        btn.className = 'proto-btn text-xs px-2.5 py-1' + (ep === _rmEpFilter ? ' active-http' : '');
-        btn.textContent = ep === 'all' ? 'All' : ep;
-        btn.onclick = () => window.rmFilterEp(ep);
-        container.appendChild(btn);
+        btn.className = 'live-dd-item' + (ep === _rmEpFilter ? ' active' : '');
+        btn.textContent = ep;
+        btn.onclick = () => window.rmPickEp(ep, ep);
+        menu.appendChild(btn);
     });
 }
 
 function rmRenderProviderFilters() {
     const providers = [...new Set(_rmAllRoutes.map(r => r.provider || 'file'))].sort();
-    const section   = document.getElementById('rmFpProviders');
-    const container = document.getElementById('rmFpProviderBtns');
-    if (!section || !container) return;
-    if (providers.length <= 1) { section.classList.add('hidden'); return; }
-    section.classList.remove('hidden');
-    container.innerHTML = '';
-    ['all', ...providers].forEach(p => {
-        const btn = document.createElement('button');
-        btn.id = 'rmpf-' + p;
-        btn.className = 'proto-btn text-xs px-2.5 py-1' + (p === _rmProvider ? ' active-http' : '');
-        btn.textContent = p === 'all' ? 'All' : p;
-        btn.onclick = () => window.rmFilterProvider(p);
-        container.appendChild(btn);
-    });
+    const menu = document.getElementById('rm-dd-provider-menu');
+    if (!menu) return;
+    menu.innerHTML = `<button class="live-dd-item${_rmProvider === 'all' ? ' active' : ''}" onclick="rmPickProvider('all','All Providers')">All Providers</button>`;
+    if (providers.length > 1) {
+        providers.forEach(p => {
+            const btn = document.createElement('button');
+            btn.className = 'live-dd-item' + (p === _rmProvider ? ' active' : '');
+            btn.textContent = p;
+            btn.onclick = () => window.rmPickProvider(p, p);
+            menu.appendChild(btn);
+        });
+    }
 }
 
-function rmUpdateFilterBtn() {
-    let count = 0;
-    if (_rmProto !== 'all') count++;
-    if (_rmProvider !== 'all') count++;
-    if (_rmEpFilter !== 'all') count++;
-    if (_rmGroupBy !== 'name') count++;
-    const badge = document.getElementById('rmFilterBadge');
-    if (badge) { badge.textContent = count; badge.classList.toggle('hidden', count === 0); }
-}
-
-window.rmToggleFilterPanel = function() {
-    document.getElementById('rmFilterPanel')?.classList.toggle('hidden');
-};
+window.rmToggleFilterPanel = function() {};
 
 window.rmSetGroupBy = function(mode) {
     _rmGroupBy = mode;
-    ['name','domain','middleware','none'].forEach(m => {
-        document.getElementById('rmfg-' + m)?.classList.toggle('active-http', m === mode);
-    });
-    rmUpdateFilterBtn();
     rmRender();
 };
 
 window.rmClearFilters = function() {
     _rmProto = 'all'; _rmProvider = 'all'; _rmEpFilter = 'all'; _rmGroupBy = 'name'; _rmSearch = '';
     const s = document.getElementById('rmSearch'); if (s) s.value = '';
-    ['all','http','tcp','udp'].forEach(p => document.getElementById('rmf-'+p)?.classList.toggle('active-http', p==='all'));
-    document.querySelectorAll('#rmFpProviderBtns .proto-btn').forEach(b => b.classList.remove('active-http'));
-    document.getElementById('rmpf-all')?.classList.add('active-http');
-    document.querySelectorAll('#rmFpEpBtns .proto-btn').forEach(b => b.classList.remove('active-http'));
-    document.getElementById('rmepf-all')?.classList.add('active-http');
-    ['name','domain','middleware','none'].forEach(m => document.getElementById('rmfg-'+m)?.classList.toggle('active-http', m==='name'));
-    rmUpdateFilterBtn();
+    ['all','http','tcp','udp'].forEach(p => {
+        const btn = document.getElementById('rmf-' + p);
+        if (btn) btn.className = 'proto-btn text-xs px-3 py-1.5' + (p === 'all' ? ' active-http' : '');
+    });
+    document.getElementById('rm-provider-label').textContent = 'All Providers';
+    document.getElementById('rm-ep-label').textContent = 'All Entry Points';
+    ['rm-dd-provider-btn','rm-dd-ep-btn'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+    document.querySelectorAll('#rm-dd-provider-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === 'All Providers'));
+    document.querySelectorAll('#rm-dd-ep-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === 'All Entry Points'));
     rmRender();
 };
 
@@ -299,14 +369,15 @@ window.refreshRoutemapTab = async function() {
     _rmDrawn = true;
     rmRenderProviderFilters();
     rmRenderEpFilters();
-    rmUpdateFilterBtn();
     rmRender();
 };
 
-window.rmFilterProto = function(proto) {
+window.rmFilterProto = function(proto, label) {
     _rmProto = proto;
-    ['all','http','tcp','udp'].forEach(p => document.getElementById('rmf-'+p)?.classList.toggle('active-http', p===proto));
-    rmUpdateFilterBtn();
+    ['all','http','tcp','udp'].forEach(p => {
+        const btn = document.getElementById('rmf-' + p);
+        if (btn) btn.className = 'proto-btn text-xs px-3 py-1.5' + (p === proto ? ' active-http' : '');
+    });
     rmRender();
 };
 
@@ -332,7 +403,6 @@ function rmRender() {
 
 window.rmResetHighlight = function() {
     _rmTopoSelected = null;
-    document.querySelectorAll('#rmCols .rm-node-mw, #rmCols .rm-node-ep, #rmCols .rm-node-svc').forEach(n => { n.style.transform = ''; });
     document.querySelectorAll('#rmCols .rm-node').forEach(n => n.classList.remove('rm-node-dim','rm-node-active'));
     rmDrawCurves(_rmFilteredRoutes());
 };
@@ -340,101 +410,115 @@ window.rmResetHighlight = function() {
 function rmRenderTopology(routes) {
     _rmExpandedGroups.clear();
 
-    const allEpNames   = Object.keys(_rmAllEps);
-    const routeEpNames = [...new Set(routes.flatMap(r => r.entryPoints || []))];
-    const epNames      = routeEpNames.length ? routeEpNames : allEpNames;
+    const { g, mwUsage } = _rmBuildDagre(routes);
+    _rmDagreGraph  = g;
+    _rmDagreRoutes = routes;
 
-    const hasMws = routes.some(r => (r.middlewares||[]).length > 0);
-
-    const svcMap = new Map();
-    routes.forEach(r => { if (r.service_name) svcMap.set(r.service_name, r.target || r.service_name); });
-
-    const mwUsage = {};
-    routes.forEach(r => (r.middlewares||[]).forEach(mw => { mwUsage[mw] = (mwUsage[mw]||0)+1; }));
-
+    const gl   = g.graph();
+    let   W    = Math.ceil(gl.width)  + 1;
+    const H    = Math.ceil(gl.height) + 1;
+    const cont   = document.getElementById('rmTopoContainer');
     const colsEl = document.getElementById('rmCols');
+    const svg    = document.getElementById('rmSvg');
+
+    const contW = cont.clientWidth || cont.offsetWidth || 800;
+    if (W < contW * 0.9) {
+        const sx = contW / W;
+        g.nodes().forEach(v => { const nd = g.node(v); if (nd) nd.x = nd.x * sx; });
+        // edge points no longer used for main map drawing - DOM positions used instead
+        W = Math.ceil(contW);
+    }
+    _rmDagreW = W;
+    _rmDagreH = H;
+
     colsEl.innerHTML = '';
+    colsEl.style.display        = 'block';
+    colsEl.style.position       = 'relative';
+    colsEl.style.height         = H + 'px';
+    colsEl.style.transform      = '';
+    cont.style.height   = H + 'px';
+    cont.style.overflow = 'visible';
 
-    if (epNames.length) {
-        colsEl.appendChild(rmBuildCol('ENTRY POINTS', 'ep', epNames,
-            name => rmNode('ep', name, `<i class="ph-bold ph-arrows-in" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(name)}</span>`)
-        ));
-    }
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('width',  W);
+    svg.setAttribute('height', H);
 
-    colsEl.appendChild(rmBuildRouteCol(routes));
+    g.nodes().forEach(v => {
+        const nd = g.node(v);
+        if (!nd) return;
+        const left = Math.round(nd.x - nd.width / 2);
+        const top  = Math.round(nd.y - nd.height / 2);
 
-    if (hasMws) {
-        const mwCol = document.createElement('div');
-        mwCol.className = 'routemap-col';
-        mwCol.dataset.coltype = 'mw';
-        mwCol.id = 'rmMwCol';
-        mwCol.innerHTML = `<div class="routemap-col-header"><i class="ph-bold ph-funnel" style="font-size:13px"></i>MIDDLEWARES</div>`;
-        colsEl.appendChild(mwCol);
-    }
+        const wrap = document.createElement('div');
+        wrap.style.cssText = `position:absolute;left:${left}px;top:${top}px;width:${nd.width}px`;
 
-    colsEl.appendChild(rmBuildCol('SERVICES', 'svc', [...svcMap.entries()],
-        ([svcName, target]) => rmNode('svc', svcName,
-            `<i class="ph-bold ph-cube" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(svcName.split('@')[0])}</span>`,
-            null, target
-        )
-    ));
-
-    requestAnimationFrame(() => {
-        const colsEl2 = document.getElementById('rmCols');
-        const cont    = document.getElementById('rmTopoContainer');
-
-        if (hasMws) {
-            const mwCol = document.getElementById('rmMwCol');
-            const mwOrder = new Map();
-            routes.forEach(r => {
-                const rEl = colsEl2.querySelector(`[data-rmid="route:${CSS.escape(r.id)}"]`);
-                const top = rEl ? rEl.offsetTop : 0;
-                (r.middlewares || []).forEach(mw => {
-                    if (!mwOrder.has(mw) || top < mwOrder.get(mw)) mwOrder.set(mw, top);
-                });
-            });
-
-            const sortedMws = [...mwOrder.entries()].sort((a, b) => a[1] - b[1]).map(e => e[0]);
-
-            sortedMws.forEach(name => {
-                const count = mwUsage[name] || 0;
-                const badge = count > 1 ? `<span class="rm-mw-count">${count}×</span>` : '';
-                mwCol.insertAdjacentHTML('beforeend',
-                    rmNode('mw', name, `<i class="ph-bold ph-shield-check" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(name.split('@')[0])}</span>${badge}`)
-                );
-            });
+        if (nd.type === 'ep') {
+            wrap.innerHTML = rmNode('ep', nd.id,
+                `<i class="ph-bold ph-arrows-in" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(nd.id)}</span>`);
+        } else if (nd.type === 'route') {
+            const r = nd.route;
+            const proto = (r.protocol||'http').toLowerCase();
+            wrap.innerHTML = rmNode('route ' + proto, r.id,
+                `<span class="rm-proto-badge rm-proto-${_esc(proto)}">${proto.toUpperCase()}</span><span class="rm-node-label">${_esc(r.name)}</span>`,
+                r.id);
+        } else if (nd.type === 'mw') {
+            const badge = (mwUsage[nd.id]||0) > 1 ? `<span class="rm-mw-count">${mwUsage[nd.id]}×</span>` : '';
+            wrap.innerHTML = rmNode('mw', nd.id,
+                `<i class="ph-bold ph-shield-check" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(nd.id.split('@')[0])}</span>${badge}`);
+        } else if (nd.type === 'svc') {
+            wrap.innerHTML = rmNode('svc', nd.id,
+                `<i class="ph-bold ph-cube" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(nd.id.split('@')[0])}</span>`,
+                null, nd.target);
         }
-
-        cont.style.height = colsEl2.offsetHeight + 'px';
-
-        colsEl2.querySelectorAll('[data-routeid]').forEach(el => {
-            el.addEventListener('mouseenter', function() {
-                _rmTopoSelected = this.dataset.routeid;
-                rmHighlightRoute(_rmTopoSelected, routes);
-                rmShowTooltip(this, _rmTopoSelected, routes);
-            });
-            el.addEventListener('mouseleave', function() {
-                _rmTopoSelected = null;
-                window.rmResetHighlight();
-                rmHideTooltip();
-            });
-        });
-
-        colsEl2.querySelectorAll('.rm-group[data-groupid]').forEach(el => {
-            el.addEventListener('mouseenter', function() {
-                _rmExpandedGroups.add(this.dataset.groupid);
-                this.classList.add('rm-group-expanded');
-                rmDrawCurves(_rmFilteredRoutes());
-            });
-            el.addEventListener('mouseleave', function() {
-                _rmExpandedGroups.delete(this.dataset.groupid);
-                this.classList.remove('rm-group-expanded');
-                rmDrawCurves(_rmFilteredRoutes());
-            });
-        });
-
-        requestAnimationFrame(() => rmDrawCurves(routes));
+        colsEl.appendChild(wrap);
     });
+
+    colsEl.querySelectorAll('[data-routeid]').forEach(el => {
+        el.addEventListener('mouseenter', function() {
+            if (_rmPopupOpen) return;
+            _rmTopoSelected = this.dataset.routeid;
+            rmHighlightRoute(_rmTopoSelected, routes);
+            rmShowTooltip(this, _rmTopoSelected, routes);
+        });
+        el.addEventListener('mouseleave', function() {
+            if (_rmPopupOpen) return;
+            _rmTopoSelected = null;
+            window.rmResetHighlight();
+            rmHideTooltip();
+        });
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            rmHideTooltip();
+            rmOpenPopup('route', this.dataset.routeid, routes);
+        });
+    });
+
+    colsEl.querySelectorAll('.rm-node-ep, .rm-node-mw, .rm-node-svc').forEach(el => {
+        if (el.dataset.routeid) return;
+        const rmid = el.dataset.rmid || '';
+        const colon = rmid.indexOf(':');
+        if (colon === -1) return;
+        const type   = rmid.slice(0, colon);
+        const nodeId = rmid.slice(colon + 1);
+        el.addEventListener('mouseenter', function() {
+            if (_rmPopupOpen) return;
+            rmHighlightNode(type, nodeId, routes);
+            rmShowNodeTooltip(this, type, nodeId, routes);
+        });
+        el.addEventListener('mouseleave', function() {
+            if (_rmPopupOpen) return;
+            window.rmResetHighlight();
+            rmHideTooltip();
+        });
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            rmHideTooltip();
+            rmOpenPopup(type, nodeId, routes);
+        });
+    });
+
+    rmDrawCurves(routes);
+    if (_rmIsMobile) rmInitMobilePan();
 }
 
 const _rmColIcons = { ep: 'ph-arrows-in', route: 'ph-git-branch', mw: 'ph-funnel', svc: 'ph-cube' };
@@ -463,7 +547,6 @@ function rmBuildRouteCol(routes) {
             `<span class="rm-proto-badge rm-proto-${_esc(proto)}">${proto.toUpperCase()}</span><span class="rm-node-label">${_esc(r.name)}</span>`,
             r.id);
     };
-    routes.forEach(r => { if (!grouped.has(r.id)) col.insertAdjacentHTML('beforeend', renderRoute(r)); });
     Object.entries(groups).forEach(([prefix, members]) => {
         const proto = (members[0].protocol||'http').toLowerCase();
         const groupEl = document.createElement('div');
@@ -472,6 +555,7 @@ function rmBuildRouteCol(routes) {
         groupEl.innerHTML = `<div class="rm-node rm-node-${_esc(proto)} rm-node-group" data-groupid="${_esc(prefix)}"><span class="rm-proto-badge" style="background:rgba(255,255,255,0.35)">×${members.length}</span><span class="rm-node-label">${_esc(prefix)}</span><i class="ph-bold ph-caret-down rm-group-caret"></i></div><div class="rm-group-children">${members.map(renderRoute).join('')}</div>`;
         col.appendChild(groupEl);
     });
+    routes.forEach(r => { if (!grouped.has(r.id)) col.insertAdjacentHTML('beforeend', renderRoute(r)); });
     return col;
 }
 
@@ -481,7 +565,7 @@ function rmNode(typeClass, id, inner, routeId, title) {
     const classes = ['rm-node', ...parts.map(p => 'rm-node-' + p)].join(' ');
     const rid     = routeId ? ` data-routeid="${_esc(routeId)}"` : '';
     const tip     = title ? ` title="${_esc(title)}"` : ` title="${_esc(String(id))}"`;
-    return `<div class="${classes}" data-rmid="${_esc(base+':'+id)}"${rid}${tip}>${inner}</div>`;
+    return `<div class="${classes}" data-rmid="${_esc(base+':'+id)}"${rid}${tip} style="cursor:pointer">${inner}</div>`;
 }
 
 function rmHighlightRoute(routeId, routes) {
@@ -497,53 +581,250 @@ function rmHighlightRoute(routeId, routes) {
         n.classList.toggle('rm-node-active', active);
         n.classList.toggle('rm-node-dim', !active);
     });
-    const cont = document.getElementById('rmTopoContainer');
-    const rEl  = cont.querySelector(`[data-rmid="route:${CSS.escape(routeId)}"]`);
-    if (rEl) {
-        const routeCenterY = rEl.offsetTop + rEl.offsetHeight / 2;
-        const gap = 6;
-        const mws = route.middlewares || [];
-        mws.forEach((mw, i) => {
-            const mwEl = cont.querySelector(`[data-rmid="mw:${CSS.escape(mw)}"]`);
-            if (mwEl) {
-                const offset = (i - (mws.length - 1) / 2) * (mwEl.offsetHeight + gap);
-                const currentCenter = mwEl.offsetTop + mwEl.offsetHeight / 2;
-                mwEl.style.transform = `translateY(${routeCenterY + offset - currentCenter}px)`;
-            }
-        });
-        const eps = route.entryPoints || [];
-        eps.forEach((ep, i) => {
-            const epEl = cont.querySelector(`[data-rmid="ep:${CSS.escape(ep)}"]`);
-            if (epEl) {
-                const offset = (i - (eps.length - 1) / 2) * (epEl.offsetHeight + gap);
-                const currentCenter = epEl.offsetTop + epEl.offsetHeight / 2;
-                epEl.style.transform = `translateY(${routeCenterY + offset - currentCenter}px)`;
-            }
-        });
-        if (route.service_name) {
-            const svcEl = cont.querySelector(`[data-rmid="svc:${CSS.escape(route.service_name)}"]`);
-            if (svcEl) {
-                const currentCenter = svcEl.offsetTop + svcEl.offsetHeight / 2;
-                svcEl.style.transform = `translateY(${routeCenterY - currentCenter}px)`;
-            }
-        }
-    }
     rmDrawCurves([route]);
-    setTimeout(() => { if (_rmTopoSelected === routeId) rmDrawCurves([route]); }, 210);
+    setTimeout(() => rmDrawCurves([route]), 210);
 }
 
-function rmDrawCurves(routes) {
-    const svg  = document.getElementById('rmSvg');
-    const cont = document.getElementById('rmTopoContainer');
-    if (!svg || !cont || cont.classList.contains('hidden')) return;
+function rmHighlightNode(type, nodeId, routes) {
+    const connected = routes.filter(r => {
+        if (type === 'ep')  return (r.entryPoints || []).includes(nodeId);
+        if (type === 'mw')  return (r.middlewares  || []).includes(nodeId);
+        if (type === 'svc') return r.service_name === nodeId;
+        return false;
+    });
+    if (!connected.length) return;
+    const activeRouteIds = new Set(connected.map(r => r.id));
+    const activeEps      = new Set(connected.flatMap(r => r.entryPoints || []));
+    const activeMws      = new Set(connected.flatMap(r => r.middlewares  || []));
+    const activeSvcs     = new Set(connected.map(r => r.service_name).filter(Boolean));
+    document.querySelectorAll('#rmCols .rm-node').forEach(n => {
+        const id = n.dataset.rmid || '';
+        const gid = n.dataset.groupid || '';
+        let active = false;
+        if      (id.startsWith('route:')) active = activeRouteIds.has(id.slice(6));
+        else if (id.startsWith('ep:'))    active = activeEps.has(id.slice(3));
+        else if (id.startsWith('mw:'))    active = activeMws.has(id.slice(3));
+        else if (id.startsWith('svc:'))   active = activeSvcs.has(id.slice(4));
+        else if (gid) active = connected.some(r => _rmRouteGroupKey.get(r.id) === gid);
+        n.classList.toggle('rm-node-active', active);
+        n.classList.toggle('rm-node-dim', !active);
+    });
+    rmDrawCurves(connected, true);
+    setTimeout(() => rmDrawCurves(connected, true), 210);
+}
 
-    const cr   = cont.getBoundingClientRect();
+function rmOpenPopup(type, nodeId, allRoutes, preFiltered) {
+    _rmPopupOpen = true;
+    window.rmResetHighlight();
+
+    const overlay = document.getElementById('rmPopupOverlay');
+    const popup   = document.getElementById('rmPopup');
+    if (!popup) return;
+
+    const typeLabels = { ep: 'Entry Point', mw: 'Middleware', svc: 'Service', route: 'Route', group: 'Group' };
+    document.getElementById('rmPopupTypeBadge').textContent = typeLabels[type] || type;
+    document.getElementById('rmPopupTitle').textContent     = nodeId.split('@')[0];
+
+    const chip = (icon, label, val, color) => {
+        if (!val) return '';
+        const c = color ? `style="color:${color};border-color:${color}44;background:${color}11"` : '';
+        return `<span class="rm-detail-chip" ${c}><i class="ph-bold ${icon}"></i><span>${label}</span><b>${_esc(String(val))}</b></span>`;
+    };
+
+    let focusedRoutes = [];
+    let detailsHtml   = '';
+
+    if (type === 'group') {
+        focusedRoutes = preFiltered || [];
+        detailsHtml   = chip('ph-git-branch', 'Routes', focusedRoutes.length);
+    } else if (type === 'route') {
+        const r = allRoutes.find(r => r.id === nodeId);
+        if (!r) return;
+        focusedRoutes = [r];
+        const allDomains = [...(r.rule||'').matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
+        allDomains.forEach(d => { detailsHtml += chip('ph-globe', 'Domain', d, 'var(--blue)'); });
+        if (r.target && r.target !== 'N/A') detailsHtml += chip('ph-cube', 'Target', r.target);
+        detailsHtml += chip('ph-arrows-left-right', 'Protocol', (r.protocol||'http').toUpperCase());
+        if (r.tls)          detailsHtml += chip('ph-lock', 'TLS', 'Enabled', 'var(--green)');
+        if (r.certResolver) detailsHtml += chip('ph-certificate', 'Resolver', r.certResolver, 'var(--green)');
+        if (!r.enabled)     detailsHtml += chip('ph-eye-slash', 'Status', 'Inactive', 'var(--muted)');
+        if (r.provider && r.provider !== 'file') detailsHtml += chip('ph-package', 'Provider', r.provider);
+    } else if (type === 'ep') {
+        focusedRoutes = allRoutes.filter(r => (r.entryPoints||[]).includes(nodeId));
+        const addr = _rmAllEps[nodeId]?.address || '';
+        if (addr) detailsHtml += chip('ph-plugs-connected', 'Address', addr, 'var(--blue)');
+        detailsHtml += chip('ph-git-branch', 'Routes', focusedRoutes.length);
+    } else if (type === 'mw') {
+        focusedRoutes = allRoutes.filter(r => (r.middlewares||[]).includes(nodeId));
+        detailsHtml   = chip('ph-git-branch', 'Routes', focusedRoutes.length);
+    } else if (type === 'svc') {
+        focusedRoutes = allRoutes.filter(r => r.service_name === nodeId);
+        const target  = focusedRoutes.find(r => r.target && r.target !== 'N/A')?.target || '';
+        if (target) detailsHtml += chip('ph-cube', 'Target', target);
+        detailsHtml += chip('ph-git-branch', 'Routes', focusedRoutes.length);
+    }
+
+    document.getElementById('rmPopupDetails').innerHTML = detailsHtml;
+
+    window._rmPopupAllRoutes = allRoutes;
+    window._rmPopupFocused   = focusedRoutes;
+
+    rmRenderPopupTopology(focusedRoutes, type, nodeId, allRoutes);
+
+    overlay.style.display = 'block';
+    popup.style.display   = 'flex';
+}
+
+function rmRenderPopupTopology(focusedRoutes, activeType, activeNodeId, allRoutes) {
+    const cols = document.getElementById('rmPopupCols');
+    const cont = document.getElementById('rmPopupTopoContainer');
+    if (!cols || !cont) return;
+
+    const { g, mwUsage } = _rmBuildDagre(focusedRoutes);
+    const gl = g.graph();
+    const W = Math.ceil(gl.width)  + 1;
+    const H = Math.ceil(gl.height) + 1;
+
+    const padding   = 32;
+    const maxW      = Math.floor(window.innerWidth * 0.92);
+    const popupW    = Math.min(W + padding * 2, maxW);
+    const popupEl   = document.getElementById('rmPopup');
+    if (popupEl) popupEl.style.width = popupW + 'px';
+
+    cols.innerHTML = '';
+    cols.style.display   = 'block';
+    cols.style.position  = 'relative';
+    cols.style.height    = H + 'px';
+    cont.style.height    = H + 'px';
+    cont.style.overflow  = 'visible';
+
+    const svg = document.getElementById('rmPopupSvg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('width',  W);
+    svg.setAttribute('height', H);
+
+    g.nodes().forEach(v => {
+        const nd = g.node(v);
+        if (!nd) return;
+        const left = Math.round(nd.x - nd.width / 2);
+        const top  = Math.round(nd.y - nd.height / 2);
+        const wrap = document.createElement('div');
+        wrap.style.cssText = `position:absolute;left:${left}px;top:${top}px;width:${nd.width}px`;
+
+        const isActive = activeType === nd.type && activeNodeId === nd.id;
+        const poprmid  = `${nd.type}:${nd.id}`;
+        let typeClass = nd.type, inner = '';
+
+        if (nd.type === 'ep') {
+            inner = `<i class="ph-bold ph-arrows-in" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(nd.id)}</span>`;
+        } else if (nd.type === 'route') {
+            const proto = (nd.route.protocol||'http').toLowerCase();
+            typeClass = `route ${proto}`;
+            inner = `<span class="rm-proto-badge rm-proto-${_esc(proto)}">${proto.toUpperCase()}</span><span class="rm-node-label">${_esc(nd.route.name)}</span>`;
+        } else if (nd.type === 'mw') {
+            const badge = (mwUsage[nd.id]||0) > 1 ? `<span class="rm-mw-count">${mwUsage[nd.id]}×</span>` : '';
+            inner = `<i class="ph-bold ph-shield-check" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(nd.id.split('@')[0])}</span>${badge}`;
+        } else if (nd.type === 'svc') {
+            inner = `<i class="ph-bold ph-cube" style="font-size:10px;margin-right:6px;opacity:0.7"></i><span class="rm-node-label">${_esc(nd.id.split('@')[0])}</span>`;
+        }
+
+        const classes = ['rm-node', ...typeClass.split(' ').map(p => 'rm-node-' + p), isActive ? 'rm-node-active' : ''].filter(Boolean).join(' ');
+        const rid = nd.type === 'route' ? ` data-routeid="${_esc(nd.route.id)}"` : '';
+        wrap.innerHTML = `<div class="${classes}" data-poprmid="${_esc(poprmid)}"${rid} style="cursor:pointer" title="${_esc(nd.id)}">${inner}</div>`;
+        cols.appendChild(wrap);
+    });
+
+    requestAnimationFrame(() => {
+        rmDrawPopupCurves(focusedRoutes);
+        setTimeout(() => rmDrawPopupCurves(focusedRoutes), 150);
+
+        cols.querySelectorAll('[data-poprmid]').forEach(el => {
+            const rmid   = el.dataset.poprmid || '';
+            const colon  = rmid.indexOf(':');
+            if (colon === -1) return;
+            const ntype  = rmid.slice(0, colon);
+            const nid    = rmid.slice(colon + 1);
+            el.addEventListener('mouseenter', function() {
+                if (ntype === 'route') rmPopupHighlightRoute(nid, focusedRoutes);
+                else rmPopupHighlightNode(ntype, nid, focusedRoutes);
+            });
+            el.addEventListener('mouseleave', function() {
+                cols.querySelectorAll('[data-poprmid]').forEach(n => n.classList.remove('rm-node-dim','rm-node-active'));
+                rmDrawPopupCurves(focusedRoutes);
+            });
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                rmClosePopup();
+                setTimeout(() => rmOpenPopup(ntype, nid, allRoutes), 50);
+            });
+        });
+    });
+}
+
+function rmPopupNode(typeClass, id, inner, isActive, allRoutes, routeId, title) {
+    const parts   = typeClass.split(' ');
+    const base    = parts[0];
+    const classes = ['rm-node', ...parts.map(p => 'rm-node-' + p), isActive ? 'rm-node-active' : ''].filter(Boolean).join(' ');
+    const rid     = routeId ? ` data-routeid="${_esc(routeId)}"` : '';
+    const tip     = title ? ` title="${_esc(title)}"` : ` title="${_esc(String(id))}"`;
+    return `<div class="${classes}" data-poprmid="${_esc(base+':'+id)}"${rid}${tip} style="cursor:pointer">${inner}</div>`;
+}
+
+function rmPopupHighlightRoute(routeId, routes) {
+    const route = routes.find(r => r.id === routeId);
+    if (!route) return;
+    document.querySelectorAll('#rmPopupCols [data-poprmid]').forEach(n => {
+        const id = n.dataset.poprmid || '';
+        let active = false;
+        if (id === `route:${routeId}`)               active = true;
+        else if (id.startsWith('ep:'))               active = (route.entryPoints||[]).includes(id.slice(3));
+        else if (id.startsWith('mw:'))               active = (route.middlewares||[]).includes(id.slice(3));
+        else if (id === `svc:${route.service_name}`) active = true;
+        n.classList.toggle('rm-node-active', active);
+        n.classList.toggle('rm-node-dim', !active);
+    });
+    rmDrawPopupCurves([route]);
+}
+
+function rmPopupHighlightNode(type, nodeId, routes) {
+    const connected = routes.filter(r => {
+        if (type === 'ep')  return (r.entryPoints||[]).includes(nodeId);
+        if (type === 'mw')  return (r.middlewares||[]).includes(nodeId);
+        if (type === 'svc') return r.service_name === nodeId;
+        return false;
+    });
+    const activeRouteIds = new Set(connected.map(r => r.id));
+    const activeEps      = new Set(connected.flatMap(r => r.entryPoints||[]));
+    const activeMws      = new Set(connected.flatMap(r => r.middlewares||[]));
+    const activeSvcs     = new Set(connected.map(r => r.service_name).filter(Boolean));
+    document.querySelectorAll('#rmPopupCols [data-poprmid]').forEach(n => {
+        const id = n.dataset.poprmid || '';
+        let active = false;
+        if      (id.startsWith('route:')) active = activeRouteIds.has(id.slice(6));
+        else if (id.startsWith('ep:'))    active = activeEps.has(id.slice(3));
+        else if (id.startsWith('mw:'))    active = activeMws.has(id.slice(3));
+        else if (id.startsWith('svc:'))   active = activeSvcs.has(id.slice(4));
+        n.classList.toggle('rm-node-active', active);
+        n.classList.toggle('rm-node-dim', !active);
+    });
+    rmDrawPopupCurves(connected);
+}
+
+function rmDrawPopupCurves(routes) {
+    const svg  = document.getElementById('rmPopupSvg');
+    const cont = document.getElementById('rmPopupTopoContainer');
+    if (!svg || !cont) return;
+
+    const cr = cont.getBoundingClientRect();
     svg.setAttribute('viewBox', `0 0 ${cr.width} ${cr.height}`);
     svg.setAttribute('width',  cr.width);
     svg.setAttribute('height', cr.height);
     svg.innerHTML = '';
 
-    const get = id => cont.querySelector(`[data-rmid="${CSS.escape(id)}"]`);
+    const get = id => cont.querySelector(`[data-poprmid="${CSS.escape(id)}"]`);
+
+    const allPopupRoutes = window._rmPopupFocused || [];
+    const hl = routes.length < allPopupRoutes.length;
 
     const curve = (fromEl, toEl, color, opacity) => {
         if (!fromEl || !toEl) return;
@@ -563,30 +844,148 @@ function rmDrawCurves(routes) {
         svg.appendChild(p);
     };
 
-    const hl = _rmTopoSelected !== null;
-    const DC = 'var(--border)';
-    const DO = '0.25';
+    const popProtoColor = proto => proto === 'tcp' ? 'var(--green)' : proto === 'udp' ? 'rgba(226,192,65,1)' : 'var(--blue)';
 
-    const { grouped: _grpd } = rmGetGroups(routes, _rmGroupBy);
-
-    routes.forEach(r => {
-        if (_grpd.has(r.id) && !_rmExpandedGroups.has(_rmRouteGroupKey.get(r.id))) return;
-        const active = !hl || r.id === _rmTopoSelected;
+    allPopupRoutes.forEach(r => {
+        const active = !hl || routes.some(ar => ar.id === r.id);
         const rEl    = get(`route:${r.id}`);
         const mws    = r.middlewares || [];
-
-        (r.entryPoints||[]).forEach(ep => {
-            curve(get(`ep:${ep}`), rEl, active ? 'var(--blue)' : DC, active ? '0.6' : DO);
-        });
-
+        const rc     = active ? popProtoColor(r.protocol) : 'var(--border)';
+        (r.entryPoints||[]).forEach(ep => curve(get(`ep:${ep}`), rEl, active ? 'var(--teal)' : 'var(--border)', active ? '0.6' : '0.2'));
         if (mws.length) {
-            mws.forEach(mw => curve(rEl, get(`mw:${mw}`), active ? 'var(--purple)' : DC, active ? '0.6' : DO));
-            if (r.service_name) {
-                mws.forEach(mw => curve(get(`mw:${mw}`), get(`svc:${r.service_name}`), active ? 'var(--green)' : DC, active ? '0.5' : DO));
-            }
+            mws.forEach(mw => curve(rEl, get(`mw:${mw}`), active ? 'var(--purple)' : 'var(--border)', active ? '0.6' : '0.2'));
+            if (r.service_name) mws.forEach(mw => curve(get(`mw:${mw}`), get(`svc:${r.service_name}`), rc, active ? '0.5' : '0.2'));
         } else if (r.service_name) {
-            curve(rEl, get(`svc:${r.service_name}`), active ? 'var(--green)' : DC, active ? '0.6' : DO);
+            curve(rEl, get(`svc:${r.service_name}`), rc, active ? '0.6' : '0.2');
         }
+    });
+}
+
+window.rmClosePopup = function() {
+    _rmPopupOpen = false;
+    document.getElementById('rmPopupOverlay').style.display = 'none';
+    const p = document.getElementById('rmPopup');
+    p.style.display = 'none';
+    p.style.width   = '';
+    window.rmResetHighlight();
+};
+
+function rmDrawCurves(routes, forceHighlight) {
+    const svg  = document.getElementById('rmSvg');
+    const cont = document.getElementById('rmTopoContainer');
+    const g    = _rmDagreGraph;
+    if (!svg || !cont || !g) return;
+
+    svg.innerHTML = '';
+
+    const useMobile = _rmIsMobile && !!document.getElementById('rmPanInner');
+    let getNodePos;
+    if (useMobile) {
+        const colsEl = document.getElementById('rmCols');
+        svg.setAttribute('width',   _rmDagreW);
+        svg.setAttribute('height',  _rmDagreH);
+        svg.setAttribute('viewBox', `0 0 ${_rmDagreW} ${_rmDagreH}`);
+        getNodePos = el => {
+            let x = 0, y = 0, node = el;
+            while (node && node !== colsEl && node !== cont) {
+                x += node.offsetLeft; y += node.offsetTop;
+                node = node.offsetParent;
+            }
+            return { x1: x + el.offsetWidth, yc: y + el.offsetHeight / 2,
+                     x2: x,                   yc2: y + el.offsetHeight / 2 };
+        };
+    } else {
+        const cr = cont.getBoundingClientRect();
+        svg.setAttribute('width',   cr.width);
+        svg.setAttribute('height',  cr.height);
+        svg.setAttribute('viewBox', `0 0 ${cr.width} ${cr.height}`);
+        getNodePos = el => {
+            const f = el.getBoundingClientRect();
+            return { x1: f.right - cr.left, yc:  f.top + f.height / 2 - cr.top,
+                     x2: f.left  - cr.left, yc2: f.top + f.height / 2 - cr.top };
+        };
+    }
+
+    const hl = forceHighlight || _rmTopoSelected !== null;
+    const DC = 'var(--border)';
+    const DO = '0.2';
+
+    const activeRouteIds = new Set(routes.map(r => r.id));
+    const activeEps  = new Set(routes.flatMap(r => r.entryPoints||[]));
+    const activeMws  = new Set(routes.flatMap(r => r.middlewares||[]));
+    const activeSvcs = new Set(routes.filter(r => r.service_name).map(r => r.service_name));
+
+    const protoColor = proto => {
+        if (proto === 'tcp') return 'var(--green)';
+        if (proto === 'udp') return 'rgba(226,192,65,1)';
+        return 'var(--blue)';
+    };
+    const routeById = new Map((_rmDagreRoutes || []).map(r => [r.id, r]));
+    const edgeColor = {
+        'ep-route':  'var(--teal)',
+        'route-mw':  'var(--purple)',
+        'mw-svc':    'var(--green)',
+        'route-svc': 'var(--green)',
+    };
+
+    const getEl = rmid => {
+        let el = cont.querySelector(`[data-rmid="${CSS.escape(rmid)}"]`);
+        if (!el && rmid.startsWith('route:')) {
+            const gk = _rmRouteGroupKey?.get(rmid.slice(6));
+            if (gk && !_rmExpandedGroups?.has(gk))
+                el = cont.querySelector(`.rm-node-group[data-groupid="${CSS.escape(gk)}"]`);
+        }
+        return el;
+    };
+
+    const drawn = new Set();
+
+    g.edges().forEach(e => {
+        const edge = g.edge(e);
+        if (!edge) return;
+        const type = edge.type || 'route-svc';
+
+        let isActive = !hl;
+        if (hl) {
+            if (type === 'ep-route')  isActive = activeEps.has(e.v.slice(3))  && activeRouteIds.has(e.w.slice(6));
+            if (type === 'route-mw')  isActive = activeMws.has(e.w.slice(3));
+            if (type === 'mw-svc')    isActive = activeMws.has(e.v.slice(3))  && activeSvcs.has(e.w.slice(4));
+            if (type === 'route-svc') isActive = activeSvcs.has(e.w.slice(4));
+        }
+
+        const fromEl = getEl(e.v);
+        const toEl   = getEl(e.w);
+        if (!fromEl || !toEl) return;
+
+        const key = (fromEl.dataset.rmid || fromEl.dataset.groupid || '') + '→' + (toEl.dataset.rmid || toEl.dataset.groupid || '');
+        if (drawn.has(key)) return;
+        drawn.add(key);
+
+        let activeColor = edgeColor[type];
+        if (type === 'route-svc') {
+            const r = routeById.get(e.v.slice(6));
+            if (r) activeColor = protoColor(r.protocol);
+        } else if (type === 'route-mw') {
+            const r = routeById.get(e.v.slice(6));
+            if (r) activeColor = protoColor(r.protocol);
+        } else if (type === 'mw-svc') {
+            const mwName = e.v.slice(3);
+            const r = (_rmDagreRoutes || []).find(r => (r.middlewares||[]).includes(mwName));
+            if (r) activeColor = protoColor(r.protocol);
+        }
+
+        const fp = getNodePos(fromEl);
+        const tp = getNodePos(toEl);
+        const x1 = fp.x1, y1 = fp.yc, x2 = tp.x2, y2 = tp.yc2;
+        const cx = x1 + (x2 - x1) * 0.5;
+
+        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        p.setAttribute('d', `M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}`);
+        p.setAttribute('fill',           'none');
+        p.setAttribute('stroke',         isActive ? activeColor : DC);
+        p.setAttribute('stroke-width',   '1.5');
+        p.setAttribute('stroke-opacity', isActive ? (type === 'mw-svc' ? '0.5' : '0.6') : DO);
+        svg.appendChild(p);
     });
 }
 
@@ -616,8 +1015,39 @@ function rmShowTooltip(anchorEl, routeId, routes) {
         ${route.target ? `<div class="rm-tooltip-row"><span class="rm-tooltip-label">Target</span><code>${_esc(route.target)}</code></div>` : ''}
         <div class="rm-tooltip-row"><span class="rm-tooltip-label">Entry points</span><div class="rm-mw-pills">${epHtml}</div></div>
         <div class="rm-tooltip-row"><span class="rm-tooltip-label">Middlewares</span><div class="rm-mw-pills">${mwHtml}</div></div>
+        <div style="margin-top:6px;font-size:10px;color:var(--muted);opacity:0.7">Click to inspect</div>
     `;
 
+    const rect = anchorEl.getBoundingClientRect();
+    _rmTipEl.style.display = 'block';
+    const tipH = _rmTipEl.offsetHeight;
+    const top  = rect.top + window.scrollY - tipH - 8;
+    _rmTipEl.style.left = rect.left + window.scrollX + 'px';
+    _rmTipEl.style.top  = (top < 8 ? rect.bottom + window.scrollY + 8 : top) + 'px';
+}
+
+function rmShowNodeTooltip(anchorEl, type, nodeId, routes) {
+    const connected = routes.filter(r => {
+        if (type === 'ep')  return (r.entryPoints || []).includes(nodeId);
+        if (type === 'mw')  return (r.middlewares  || []).includes(nodeId);
+        if (type === 'svc') return r.service_name === nodeId;
+        return false;
+    });
+    if (!_rmTipEl) {
+        _rmTipEl = document.createElement('div');
+        _rmTipEl.className = 'rm-tooltip';
+        document.body.appendChild(_rmTipEl);
+    }
+    const label = type === 'ep' ? 'Entry Point' : type === 'mw' ? 'Middleware' : 'Service';
+    const routeList = connected.length
+        ? connected.map(r => `<span class="rm-shield-pill">${_esc(r.name)}</span>`).join('')
+        : `<span style="color:var(--muted);font-size:10px">none</span>`;
+    _rmTipEl.innerHTML = `
+        <div class="rm-tooltip-name">${_esc(nodeId.split('@')[0])}</div>
+        <div class="rm-tooltip-row"><span class="rm-tooltip-label">${label}</span></div>
+        <div class="rm-tooltip-row"><span class="rm-tooltip-label">Used by</span><div class="rm-mw-pills">${routeList}</div></div>
+        <div style="margin-top:6px;font-size:10px;color:var(--muted);opacity:0.7">Click to inspect</div>
+    `;
     const rect = anchorEl.getBoundingClientRect();
     _rmTipEl.style.display = 'block';
     const tipH = _rmTipEl.offsetHeight;
@@ -630,17 +1060,132 @@ function rmHideTooltip() {
     if (_rmTipEl) _rmTipEl.style.display = 'none';
 }
 
+const _rmIsMobile = window.innerWidth <= 640;
+let _rmZScale = 1, _rmZPanX = 0, _rmZPanY = 0;
+let _rmZTouchX = 0, _rmZTouchY = 0, _rmZPinchDist = null;
+let _rmZoomInited = false;
+
+function rmApplyPanZoom() {
+    const inner = document.getElementById('rmPanInner');
+    if (inner) inner.style.transform = `translate(${_rmZPanX}px,${_rmZPanY}px) scale(${_rmZScale})`;
+    const pct = document.getElementById('rmZoomPct');
+    if (pct) pct.textContent = Math.round(_rmZScale * 100) + '%';
+}
+
+function rmZoomBy(factor) {
+    const cont = document.getElementById('rmTopoContainer');
+    if (!cont) return;
+    const cx = cont.clientWidth / 2, cy = cont.clientHeight / 2;
+    const ns = Math.max(0.15, Math.min(4, _rmZScale * factor));
+    _rmZPanX = cx - (cx - _rmZPanX) * (ns / _rmZScale);
+    _rmZPanY = cy - (cy - _rmZPanY) * (ns / _rmZScale);
+    _rmZScale = ns;
+    rmApplyPanZoom();
+}
+
+window.rmZoomBy = rmZoomBy;
+
+window.rmZoomReset = function() {
+    const cont = document.getElementById('rmTopoContainer');
+    const svg  = document.getElementById('rmSvg');
+    if (!cont || !svg) return;
+    const mapW = parseFloat(svg.getAttribute('width') || '0');
+    const mapH = parseFloat(svg.getAttribute('height') || '0');
+    if (!mapW || !mapH) { _rmZScale = 1; _rmZPanX = 0; _rmZPanY = 0; }
+    else {
+        const fitScale = Math.min(cont.clientWidth / mapW, cont.clientHeight / mapH, 1);
+        _rmZScale = fitScale;
+        _rmZPanX  = (cont.clientWidth  - mapW * fitScale) / 2;
+        _rmZPanY  = 12;
+    }
+    rmApplyPanZoom();
+};
+
+function rmInitMobilePan() {
+    if (!_rmIsMobile) return;
+    const cont = document.getElementById('rmTopoContainer');
+    const svg  = document.getElementById('rmSvg');
+    if (!cont || !svg) return;
+
+    const viewH = Math.round(window.innerHeight * 0.62);
+    cont.style.height   = viewH + 'px';
+    cont.style.overflow = 'hidden';
+    cont.style.cursor   = 'grab';
+    cont.style.minHeight = viewH + 'px';
+
+    if (!document.getElementById('rmPanInner')) {
+        const cols  = document.getElementById('rmCols');
+        const inner = document.createElement('div');
+        inner.id = 'rmPanInner';
+        inner.style.cssText = 'position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform';
+        cont.insertBefore(inner, svg);
+        inner.appendChild(svg);
+        inner.appendChild(cols);
+    }
+
+    window.rmZoomReset();
+
+    const bar = document.getElementById('rmMobileZoomBar');
+    if (bar) bar.classList.remove('hidden');
+
+    if (_rmZoomInited) return;
+    _rmZoomInited = true;
+
+    cont.addEventListener('touchstart', e => {
+        rmHideTooltip();
+        if (e.touches.length === 1) {
+            _rmZTouchX = e.touches[0].clientX - _rmZPanX;
+            _rmZTouchY = e.touches[0].clientY - _rmZPanY;
+            _rmZPinchDist = null;
+        } else if (e.touches.length === 2) {
+            _rmZPinchDist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+        }
+    }, { passive: true });
+
+    cont.addEventListener('touchmove', e => {
+        e.preventDefault();
+        if (e.touches.length === 1 && _rmZPinchDist === null) {
+            _rmZPanX = e.touches[0].clientX - _rmZTouchX;
+            _rmZPanY = e.touches[0].clientY - _rmZTouchY;
+        } else if (e.touches.length === 2 && _rmZPinchDist !== null) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            const rect = cont.getBoundingClientRect();
+            const ns = Math.max(0.15, Math.min(4, _rmZScale * (dist / _rmZPinchDist)));
+            _rmZPanX = (cx - rect.left) - ((cx - rect.left) - _rmZPanX) * (ns / _rmZScale);
+            _rmZPanY = (cy - rect.top)  - ((cy - rect.top)  - _rmZPanY) * (ns / _rmZScale);
+            _rmZScale = ns;
+            _rmZPinchDist = dist;
+        }
+        rmApplyPanZoom();
+    }, { passive: false });
+
+    cont.addEventListener('touchend', () => { _rmZPinchDist = null; });
+}
+
 window.addEventListener('resize', () => {
     if (!document.getElementById('tab-routemap')?.classList.contains('active')) return;
     const cont   = document.getElementById('rmTopoContainer');
     const colsEl = document.getElementById('rmCols');
     if (cont && colsEl) cont.style.height = colsEl.offsetHeight + 'px';
     rmDrawCurves(_rmFilteredRoutes());
+    if (_rmIsMobile && cont) cont.style.height = Math.round(window.innerHeight * 0.62) + 'px';
 });
 
 document.addEventListener('click', e => {
     const wrap = document.getElementById('rmFilterWrap');
-    if (wrap && !wrap.contains(e.target)) document.getElementById('rmFilterPanel')?.classList.add('hidden');
+    if (wrap && !wrap.contains(e.target)) {}
+});
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && _rmPopupOpen) window.rmClosePopup();
 });
 
 })();

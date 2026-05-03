@@ -6,7 +6,10 @@
             <button onclick="setLogLines(500)"  id="log-500"  class="proto-btn text-xs px-3 py-1.5">500</button>
             <button onclick="setLogLines(1000)" id="log-1000" class="proto-btn text-xs px-3 py-1.5">1000</button>
         </div>
-        <input type="text" id="logSearch" oninput="filterLogs()" placeholder="Filter logs..." class="input-field flex-1 min-w-48">
+        <div class="relative flex-1 min-w-48">
+            <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
+            <input type="text" id="logSearch" oninput="filterLogs()" placeholder="Filter logs..." class="input-field pl-9">
+        </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
             <button onclick="refreshLogs()" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>

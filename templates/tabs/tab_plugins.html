@@ -4,19 +4,81 @@
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
             <input type="text" id="pluginsSearch" oninput="filterPlugins()" placeholder="Search plugins..." class="input-field pl-9">
         </div>
-        <div class="flex items-center gap-2">
-            <a href="https://plugins.traefik.io/plugins" target="_blank" class="btn-secondary text-xs" style="text-decoration:none">
-                <i class="ph-bold ph-puzzle-piece"></i> Browse Plugins
-            </a>
-            <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-                <button onclick="refreshPluginsTab()" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <a href="https://plugins.traefik.io/plugins" target="_blank" class="proto-btn text-xs px-3 py-1.5" title="Browse Plugins" style="text-decoration:none"><i class="ph-bold ph-puzzle-piece"></i></a>
+        </div>
+        <div id="pluginAddBtnWrap" style="display:none;background:var(--input-bg);border:1px solid var(--border)" class="flex gap-1 p-1 rounded-lg">
+            <button onclick="openPluginForm()" class="proto-btn text-xs px-3 py-1.5" title="Add Plugin"><i class="ph-bold ph-plus"></i></button>
+        </div>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="refreshPluginsTab()" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+        </div>
+    </div>
+
+    <div id="pluginForm" style="display:none;margin-bottom:16px">
+        <div class="card p-4">
+            <p id="pluginFormTitle" class="text-sm font-semibold mb-3" style="color:var(--text)">Add Plugin</p>
+
+            <div id="pluginFormAdd">
+                <div class="rounded-lg mb-3" style="background:rgba(168,85,247,0.07);border:1px solid rgba(168,85,247,0.2)">
+                    <button onclick="const b=this.parentElement.querySelector('.plugin-warn-body');b.classList.toggle('hidden');this.querySelector('i.caret').classList.toggle('ph-caret-down');this.querySelector('i.caret').classList.toggle('ph-caret-right')" class="w-full px-4 py-2.5 flex items-center gap-2 text-left" style="background:none;border:none;cursor:pointer">
+                        <i class="ph-bold ph-shield-warning text-sm shrink-0" style="color:var(--purple)"></i>
+                        <span class="text-xs font-semibold flex-1" style="color:var(--text)">Only install plugins from trusted sources</span>
+                        <i class="ph-bold ph-caret-right caret text-xs" style="color:var(--muted)"></i>
+                    </button>
+                    <div class="plugin-warn-body px-4 pb-3 text-xs hidden" style="color:var(--muted)">
+                        Plugins run inside the Traefik process with full access to your traffic. Review the plugin source on GitHub before installing. A Traefik restart is required to activate the plugin after saving.
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-xs font-semibold mb-1.5 block" style="color:var(--muted)">Step 1 - Paste the static config snippet from the <a href="https://plugins.traefik.io/plugins" target="_blank" style="color:var(--blue)">Traefik plugin page</a></label>
+                    <div id="pluginStaticEditorContainer" style="height:130px;border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
+                </div>
+                <div class="mb-2">
+                    <label class="text-xs font-semibold mb-1.5 block" style="color:var(--muted)">Step 2 - Paste the middleware snippet and edit the settings for your needs</label>
+                    <div id="pluginMwEditorContainer" style="height:200px;border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
+                </div>
+                <p class="text-xs mb-3 flex items-center gap-1.5" style="color:var(--yellow)">
+                    <i class="ph-bold ph-warning-circle text-sm"></i>
+                    Edit the middleware before saving - replace all placeholder values and any <code style="font-family:monospace;background:rgba(234,179,8,0.15);padding:1px 4px;border-radius:3px">&#123;&#123; &#125;&#125;</code> template blocks with real values or Traefik will crash
+                </p>
+            </div>
+
+            <div id="pluginFormEdit" style="display:none">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                    <div>
+                        <label class="text-xs font-semibold mb-1 block" style="color:var(--muted)">Name</label>
+                        <input type="text" id="pluginFormName" class="input-field text-xs" placeholder="myPlugin">
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold mb-1 block" style="color:var(--muted)">Module</label>
+                        <input type="text" id="pluginFormModule" class="input-field text-xs" placeholder="github.com/author/plugin">
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold mb-1 block" style="color:var(--muted)">Version</label>
+                        <input type="text" id="pluginFormVersion" class="input-field text-xs" placeholder="v0.1.0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+                <button onclick="closePluginForm()" class="btn-secondary text-xs">Cancel</button>
+                <button onclick="savePlugin()" class="btn-primary text-xs">Save</button>
             </div>
         </div>
     </div>
-    <div class="mb-4 px-3 py-2 rounded-lg text-xs flex items-center gap-2" style="background:rgba(36,161,222,0.08);border:1px solid rgba(36,161,222,0.2);color:var(--blue)">
-        <i class="ph-bold ph-info"></i>
-        Plugins are managed in your static <code class="font-mono">traefik.yml</code> under <code class="font-mono">experimental.plugins</code> and must be edited there directly.
+
+    <div id="pluginRestartBanner" style="display:none;margin-bottom:16px">
+        <div class="rounded-xl p-4 flex items-start gap-3" style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.3)">
+            <i class="ph-bold ph-warning-circle text-base shrink-0 mt-0.5" style="color:var(--yellow)"></i>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold mb-0.5" style="color:var(--text)">Restart Traefik to activate</p>
+                <p id="pluginRestartBannerDetail" class="text-xs" style="color:var(--muted)"></p>
+            </div>
+            <button onclick="triggerTraefikRestart();document.getElementById('pluginRestartBanner').style.display='none'" class="btn-primary text-xs shrink-0">Restart now</button>
+        </div>
     </div>
+
     <div id="pluginsContent">
         <div class="text-center py-16" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>

@@ -23,6 +23,14 @@
                 <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="nav-btn nav-docs-link" title="Documentation">
                     <i class="ph-bold ph-book-open"></i>
                 </a>
+                <a href="/api" class="nav-btn nav-api-link" title="API Reference">
+                    <span style="font-size:11px;font-weight:700;font-family:monospace">API</span>
+                </a>
+                <div class="shortcuts-btn-wrap">
+                    <button onclick="toggleShortcutsPanel()" class="nav-btn" id="shortcutsBellBtn" title="Keyboard shortcuts">
+                        <i class="ph-bold ph-keyboard"></i>
+                    </button>
+                </div>
                 <div class="notif-bell-wrap" id="notifBellWrap">
                     <button onclick="toggleNotifPanel()" class="nav-btn" id="notifBellBtn" title="Notifications">
                         <i class="ph-bold ph-bell"></i>
@@ -30,7 +38,9 @@
                     </button>
                 </div>
                 <button onclick="cycleTheme()" id="themeToggleBtn" class="nav-btn" title="Toggle theme">
-                    <i class="ph-bold ph-moon" id="themeIcon"></i>
+                    <i class="ph-bold ph-moon tm-theme-icon" data-pref="dark"></i>
+                    <i class="ph-bold ph-sun tm-theme-icon" data-pref="light"></i>
+                    <i class="ph-bold ph-desktop tm-theme-icon" data-pref="system"></i>
                 </button>
                 <button onclick="openSettingsModal()" class="nav-btn" title="Settings">
                     <i class="ph-bold ph-gear"></i>
@@ -54,18 +64,6 @@
             </div>
 
             <div class="flex sm:hidden items-center gap-2">
-                <div id="versionBadgeMobile" class="hidden items-center gap-1 px-2 py-1 rounded-md text-xs font-mono" style="background:var(--btn-secondary-bg); border:1px solid var(--border); color:var(--muted)">
-                    <span id="apiStatusDotMobile" style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>
-                    <i class="ph-bold ph-git-branch text-xs"></i>
-                    <span id="versionTextMobile">-</span>
-                </div>
-                <div id="tmVersionBadgeMobile" class="hidden items-center gap-1 px-2 py-1 rounded-md text-xs font-mono" style="background:var(--btn-secondary-bg); border:1px solid var(--border); color:var(--muted)">
-                    <i class="ph-bold ph-package text-xs"></i>
-                    <span id="tmVersionTextMobile">-</span>
-                </div>
-                <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="btn-icon nav-docs-link" title="Documentation">
-                    <i class="ph-bold ph-book-open text-lg"></i>
-                </a>
                 <div class="notif-bell-wrap" id="notifBellWrapMobile">
                     <button onclick="toggleNotifPanel()" class="btn-icon" id="notifBellBtnMobile" title="Notifications">
                         <i class="ph-bold ph-bell text-lg"></i>
@@ -75,6 +73,34 @@
                 <button onclick="toggleMobileMenu()" class="btn-icon" id="hamburgerBtn">
                     <i class="ph-bold ph-list text-xl" id="hamburgerIcon"></i>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notif-panel" id="shortcutsPanel">
+        <div class="notif-panel-header">
+            <span class="notif-panel-title"><i class="ph-bold ph-keyboard" style="margin-right:6px"></i>Keyboard Shortcuts</span>
+        </div>
+        <div class="notif-list" style="max-height:480px;padding:10px 12px;">
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Actions</div>
+            <div class="shortcuts-grid">
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>N</kbd><span>New Route</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>M</kbd><span>New Middleware</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>F</kbd><span>Focus search</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>X</kbd><span>Raw YAML editor</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>P</kbd><span>Settings</span></div>
+                <div class="shortcut-row"><kbd>Esc</kbd><span>Close panel</span></div>
+            </div>
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2 mt-4" style="color:var(--muted)">Navigation</div>
+            <div class="shortcuts-grid">
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>R</kbd><span>Routes</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>W</kbd><span>Middleware</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>S</kbd><span>Services</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>L</kbd><span>Logs</span></div>
+            </div>
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2 mt-4" style="color:var(--muted)">This panel</div>
+            <div class="shortcuts-grid">
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>?</kbd><span>Toggle shortcuts</span></div>
             </div>
         </div>
     </div>

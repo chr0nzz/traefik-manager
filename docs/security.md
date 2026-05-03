@@ -19,11 +19,11 @@ Sessions use signed client-side cookies (Flask SecureCookieSession). The signing
 | Setting | Value |
 |---|---|
 | Max session lifetime | 7 days (when "Remember me" is checked) |
-| Inactivity timeout | 120 minutes (configurable via `INACTIVITY_TIMEOUT_MINUTES`) |
+| Inactivity timeout | 120 minutes for regular sessions (configurable via `INACTIVITY_TIMEOUT_MINUTES`); 24 hours for "Remember me" sessions |
 | Cookie flags | `HttpOnly`, `SameSite=Lax` |
 | Secure flag | Off by default - set `COOKIE_SECURE=true` when behind HTTPS |
 
-The inactivity timeout is bypassed when "Remember me" is checked. Sessions are invalidated immediately on logout.
+Sessions are invalidated immediately on logout.
 
 ---
 
@@ -59,9 +59,9 @@ The TOTP secret is encrypted at rest using Fernet symmetric encryption. The encr
 API keys are used by the mobile app and scripts to access the API without a browser session.
 
 - Up to **10 keys** can exist simultaneously, each with a **device name** for identification
-- Each key is **bcrypt-hashed at cost 12** - the plaintext is shown once at creation and never stored
+- Each key is **hashed with SHA-256** - the plaintext is shown once at creation and never stored
 - Keys are revoked individually by device name - revoking one device does not affect others
-- API key requests bypass CSRF checks by design (they carry the key in a header instead)
+- API key requests bypass CSRF checks only when the key is valid - an invalid or missing key still requires a CSRF token
 - Generation is rate-limited to **5 per hour per IP**
 
 Keys are passed via the `X-Api-Key` request header:
@@ -76,7 +76,7 @@ X-Api-Key: your-key-here
 
 All state-changing endpoints (POST, DELETE) require a CSRF token when using session authentication. The token is embedded in every HTML page and rotates on each session.
 
-API key requests are exempt from CSRF checks.
+API key requests are exempt from CSRF checks only when a **valid** key is provided. A request with a missing or invalid key still requires a CSRF token.
 
 ---
 
@@ -128,6 +128,25 @@ Recommended configuration:
 3. **Enable 2FA** via Settings → Authentication → Two-Factor Authentication
 4. **Use per-device API keys** - generate a separate key for each device/script, revoke individually if compromised
 5. **Mount config files read-only** where possible - TM only needs write access to `CONFIG_DIR` and `/app/config`
+
+---
+
+## Static config editor
+
+The Static Config tab lets you edit `traefik.yml` directly from the UI and restart Traefik automatically. This has security implications beyond the dynamic config:
+
+- **Read-write mount** - `traefik.yml` must be mounted without `:ro`, giving TM write access to Traefik's entire static configuration including entrypoints, providers, and TLS settings
+- **Restart access** - restarting Traefik requires one of three methods, each with different trust boundaries:
+
+| Method | Access granted |
+|---|---|
+| `proxy` (recommended) | TM connects to a socket proxy sidecar limited to container restart operations only |
+| `poison-pill` | TM writes a signal file to a shared volume - no Docker API access at all |
+| `socket` | TM has direct access to the Docker socket - broadest access |
+
+The socket proxy and poison-pill methods limit the blast radius if TM is compromised. Direct socket access allows TM to interact with any container on the host.
+
+If you do not use the Static Config editor, do not mount `traefik.yml` read-write and do not set `RESTART_METHOD`.
 
 ---
 

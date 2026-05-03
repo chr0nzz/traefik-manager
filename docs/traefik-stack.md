@@ -38,6 +38,8 @@ Installs both Traefik and Traefik Manager via Docker Compose. Best for a fresh s
 
 ### What the script configures
 
+**Install directory** - where all files are created (default: `~/traefik-stack`)
+
 **Deployment type**
 
 - **External** - internet-facing, requires ports 80/443 open and DNS A records
@@ -48,6 +50,7 @@ Installs both Traefik and Traefik Manager via Docker Compose. Best for a fresh s
 Your base domain and subdomains for:
 - Traefik dashboard (default: `traefik.yourdomain.com`)
 - Traefik Manager (default: `manager.yourdomain.com`)
+- Whether to enable the Traefik API dashboard UI
 
 **TLS / Certificates**
 
@@ -59,6 +62,7 @@ Your base domain and subdomains for:
 | Let's Encrypt - DNS: DigitalOcean | Requires a DigitalOcean API token. |
 | Let's Encrypt - DNS: Namecheap | Requires Namecheap API user and key. |
 | Let's Encrypt - DNS: DuckDNS | Requires a DuckDNS token. |
+| Let's Encrypt - DNS: deSEC | Requires a deSEC token. Works without port 80. |
 | No TLS (HTTP only) | Port 80 only. Suitable for internal LAN use. |
 
 **Dynamic config layout**
@@ -74,7 +78,28 @@ Your base domain and subdomains for:
 |---|---|---|
 | Access logs | Yes | Logs tab in Traefik Manager |
 | SSL certs (`acme.json`) | Yes | Certs tab in Traefik Manager |
-| Traefik static config (`traefik.yml`) | No | Plugins tab in Traefik Manager |
+| Traefik static config (`traefik.yml`) | No | Plugins tab + Static Config settings in Traefik Manager |
+
+**Docker network** - network name (default: `traefik-net`) and Traefik internal API port (default: `8080`)
+
+**Static config editor** - if you enable the static config mount, the script also asks which restart method to use (socket proxy, poison pill, or direct socket). It then adds all required compose additions automatically - socket proxy service, shared signal volume, Traefik healthcheck, env vars on TM - so the Static Config editor works out of the box.
+
+The Static Config settings covers:
+
+| Section | What you can do |
+|---------|-----------------|
+| Entrypoints | Add, edit, and remove entrypoints - port, protocol, optional HTTP-to-HTTPS redirect |
+| Certificate Resolvers | ACME email, storage path, DNS or HTTP challenge type |
+| Plugins | Install and remove `experimental.plugins` entries |
+| API | Enable/disable the Traefik API and Dashboard, insecure mode, and debug mode |
+| Logging | Set log level (DEBUG / INFO / WARN / ERROR) and toggle access logging |
+| Providers | Toggle Docker and File providers; add and remove other provider types (Swarm, HTTP, ECS, etc.) |
+| Advanced | Full raw YAML editor (Monaco) for anything not covered by the sections above |
+
+For existing installs that did not enable the static config editor during setup, you have two options:
+
+- **Re-run setup.sh** - answer the static config questions differently. The script regenerates `docker-compose.yml` from your answers. Your config files and backups are preserved but any manual edits to the compose file will be overwritten.
+- **Enable manually** - see [Enable static config editor](static-enable.md) to add just the required volume, env vars, and restart method to your existing compose without re-running setup.
 
 ### Directory structure
 
@@ -128,16 +153,32 @@ Installs just Traefik Manager as a Docker container. Use this when Traefik is al
 
 ### What the script configures
 
+**Install directory** - where files are created (default: `~/traefik-manager`)
+
 **Network**
 
 - Connect to an existing Traefik Docker network (e.g. `traefik-net`) or create a new one
 
 **Access**
 
-- **Via Traefik labels** - expose Traefik Manager through your existing Traefik instance with a domain and TLS
+- **Via Traefik labels** - expose Traefik Manager through your existing Traefik instance with a domain and TLS certificate (same TLS options as full stack mode)
 - **Direct port** - expose a host port (default: 5000) without needing Traefik labels
 
-**Dynamic config** and **optional mounts** - same options as the full stack mode, but you provide the paths to your existing Traefik files on the host.
+**Dynamic config layout** - single file or directory, same options as the full stack mode
+
+**Optional mounts** - you provide the host paths to your existing Traefik files:
+
+| Mount | Default | Path asked |
+|---|---|---|
+| Access logs | Yes | Path to Traefik access log (default: `/var/log/traefik/access.log`) |
+| SSL certs (`acme.json`) | Yes | Path to `acme.json` (default: `/etc/traefik/acme.json`) |
+| Traefik static config | No | Path to `traefik.yml` (default: `/etc/traefik/traefik.yml`) |
+
+**Static config editor** - if you mount the static config, the script also asks:
+- Which restart method to use (socket proxy, poison pill, or direct socket)
+- The Traefik container name (default: `traefik`)
+
+To add static config support to an existing install, either re-run `setup.sh` (regenerates the compose file from your answers, preserving config/backups) or follow [Enable static config editor](static-enable.md) to add only the required changes manually.
 
 ### Directory structure
 
@@ -175,8 +216,25 @@ Installs Traefik Manager as a native systemd service. No Docker required. Use th
 - **Data directory** - where config and backups are stored (default: `/var/lib/traefik-manager`)
 - **Port** - default: 5000
 - **Dedicated system user** - creates a `traefik-manager` system user to run the service (recommended)
-- **Dynamic config** - path to your Traefik `dynamic.yml` or config directory
-- **Optional mounts** - paths to `acme.json`, `access.log`, and `traefik.yml` on the host
+- **Dynamic config layout** - single file or directory; asks for the path to the file or directory
+
+**Optional mounts** - asks for host paths to each:
+
+| Mount | Default | Path asked |
+|---|---|---|
+| SSL certs (`acme.json`) | Yes | Path to `acme.json` (default: `/etc/traefik/acme.json`) |
+| Access logs | Yes | Path to Traefik access log (default: `/var/log/traefik/access.log`) |
+| Traefik static config | No | Path to `traefik.yml` (default: `/etc/traefik/traefik.yml`) |
+
+**Static config editor** - if you mount the static config, the script also asks:
+
+To add static config support to an existing native install, either re-run `setup.sh` (clones/updates the repo and regenerates the systemd unit) or follow [Enable static config editor](static-enable.md) to add the env vars manually.
+
+- **Restart method** - two options for native installs:
+  - *Poison pill* (recommended) - writes a signal file; no Docker socket needed
+  - *Direct Docker socket* - requires the `traefik-manager` user to be in the `docker` group
+- **Traefik container name** (default: `traefik`)
+- **Signal file path** if poison pill is chosen (default: `/var/lib/traefik-manager/signals/restart.sig`)
 
 The script clones the repository, creates a Python venv, installs dependencies, writes a systemd unit file, and enables the service.
 

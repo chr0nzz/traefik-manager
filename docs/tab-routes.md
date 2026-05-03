@@ -11,6 +11,15 @@ The **Routes** tab (also called Services) is the main management interface. It d
 - Multi-domain routes show each domain as a separate pill badge; clicking a domain or target copies it to the clipboard
 - Full detail view via the info button - shows live Traefik status, service health, and raw config
 
+## Filtering
+
+The filter bar above the grid lets you narrow routes by:
+
+- **Search** - matches against route name
+- **Domain** - dropdown of all unique domains extracted from route rules
+- **Status** - All / Active / Inactive. Inactive routes are disabled (greyed out) and can be shown or hidden independently of other filters
+- **Protocol** - All / HTTP / TCP / UDP
+
 ## Views
 
 Toggle between **grid** (default) and **list** view using the button in the filter bar. List view shows a compact table with Status, Protocol, Name, Domain/Rule, Target, Entry Points, and action buttons.

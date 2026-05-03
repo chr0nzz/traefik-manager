@@ -18,7 +18,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "0.12.1"
+APP_VERSION  = "1.0.0"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -226,7 +226,16 @@ def _get_access_log_path() -> str:
 
 def _get_static_config_path() -> str:
     s = load_settings()
-    return s.get('static_config_path', '').strip() or os.environ.get('STATIC_CONFIG_PATH', '/app/traefik.yml')
+    return s.get('static_config_path', '').strip() or os.environ.get('STATIC_CONFIG_PATH', '')
+
+def _get_restart_method() -> str:
+    return os.environ.get('RESTART_METHOD', 'proxy').lower()
+
+def _get_traefik_container() -> str:
+    return os.environ.get('TRAEFIK_CONTAINER', 'traefik')
+
+def _get_signal_file_path() -> str:
+    return os.environ.get('SIGNAL_FILE_PATH', '/signals/restart.sig')
 
 
 OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs']
@@ -318,6 +327,8 @@ def load_settings() -> dict:
             merged['self_route'] = {
                 'domain':      str(sr.get('domain', '')).strip(),
                 'service_url': str(sr.get('service_url', '')).strip(),
+                'router_name': str(sr.get('router_name', 'traefik-manager')).strip() or 'traefik-manager',
+                'entry_point': str(sr.get('entry_point', '')).strip(),
             }
         if 'acme_json_path' in data:
             merged['acme_json_path'] = str(data['acme_json_path']).strip()
@@ -438,6 +449,16 @@ def save_settings(domains, cert_resolver, traefik_api_url,
 
 SELF_ROUTE_FILENAME = 'traefik-manager-self.yml'
 
+def _best_entrypoint() -> str:
+    eps = traefik_api_get('/api/entrypoints') or []
+    for ep in eps:
+        addr = ep.get('address', '')
+        if ':443' in addr or '/443' in addr:
+            return ep.get('name', 'websecure')
+    if eps:
+        return eps[0].get('name', 'websecure')
+    return 'websecure'
+
 def _self_route_path() -> str:
     if ACTIVE_CONFIG_DIR:
         return os.path.join(ACTIVE_CONFIG_DIR, SELF_ROUTE_FILENAME)
@@ -448,7 +469,7 @@ def _write_self_route(domain: str, service_url: str, cert_resolver: str, router_
         'rule': f'Host(`{domain}`)',
         'entryPoints': [entry_point or 'websecure'],
         'service': router_name,
-        'tls': {'certResolver': cert_resolver or 'cloudflare'},
+        'tls': {'certResolver': cert_resolver} if cert_resolver and cert_resolver.lower() != 'none' else {},
     }
     service_entry = {
         'loadBalancer': {
@@ -514,6 +535,43 @@ def _detect_self_route_domain() -> str:
             continue
     return ''
 
+
+def _detect_self_route_from_own_labels() -> tuple[str, str]:
+    import re
+    try:
+        import docker as _docker
+        client = _docker.from_env()
+        own_id = os.environ.get('HOSTNAME', '')
+        for c in client.containers.list():
+            if not (c.id.startswith(own_id) or 'traefik-manager' in c.name):
+                continue
+            labels = c.labels or {}
+            domain = ''
+            svc_url = ''
+            for k, v in labels.items():
+                if k.startswith('traefik.http.routers.') and k.endswith('.rule'):
+                    m = re.search(r'Host\(`([^`]+)`\)', v)
+                    if m:
+                        domain = m.group(1)
+                if k.startswith('traefik.http.services.') and k.endswith('.loadbalancer.server.url'):
+                    svc_url = v
+            if domain:
+                return domain, svc_url or 'http://traefik-manager:5000'
+    except Exception:
+        pass
+    return '', ''
+
+
+def _detect_setup_self_route() -> tuple[str, str]:
+    settings = load_settings()
+    saved = settings.get('self_route', {})
+    if saved.get('domain'):
+        return saved['domain'], saved.get('service_url', 'http://traefik-manager:5000')
+    domain = _detect_self_route_domain()
+    if domain:
+        return domain, 'http://traefik-manager:5000'
+    return _detect_self_route_from_own_labels()
+
 def _auth_enabled() -> bool:
     env = os.environ.get('AUTH_ENABLED', '').strip().lower()
     if env in ('false', '0', 'no'):
@@ -553,20 +611,50 @@ def _ensure_password():
     )
 
 
+def _read_traefik_labels():
+    try:
+        import docker as _docker
+        client = _docker.from_env()
+        container_name = os.environ.get('TRAEFIK_CONTAINER', 'traefik')
+        for c in client.containers.list():
+            labels = c.labels or {}
+            if labels.get('traefik-manager.role') == 'traefik' or c.name == container_name:
+                if not os.environ.get('RESTART_METHOD') and labels.get('traefik-manager.restart-method'):
+                    os.environ['RESTART_METHOD'] = labels['traefik-manager.restart-method']
+                if not os.environ.get('STATIC_CONFIG_PATH') and labels.get('traefik-manager.static-config'):
+                    os.environ['STATIC_CONFIG_PATH'] = labels['traefik-manager.static-config']
+                if not os.environ.get('TRAEFIK_CONTAINER'):
+                    os.environ['TRAEFIK_CONTAINER'] = c.name
+                logger.info(f"Static config: read labels from Traefik container {c.name!r}")
+                break
+    except Exception:
+        pass
+
+_read_traefik_labels()
+
 _s = load_settings()
+_static_path  = _get_static_config_path()
+_restart_meth = _get_restart_method()
+_oidc_on      = bool(_s.get('oidc_issuer'))
 logger.info("===========================================")
-logger.info("Starting Traefik Manager")
+logger.info(f"Traefik Manager v{APP_VERSION}")
 if MULTI_CONFIG:
     for _cp in CONFIG_PATHS:
         logger.info(f"Config File:    {_cp}")
+elif ACTIVE_CONFIG_DIR:
+    logger.info(f"Config Dir:     {ACTIVE_CONFIG_DIR}")
 else:
     logger.info(f"Config Path:    {CONFIG_PATH}")
 logger.info(f"Settings Path:  {SETTINGS_PATH}")
 logger.info(f"Backup Dir:     {BACKUP_DIR}")
-logger.info(f"Domains:        {_s['domains']}")
-logger.info(f"Cert Resolver:  {_s['cert_resolver']}")
 logger.info(f"Traefik API:    {_s['traefik_api_url']}")
+logger.info(f"Restart Method: {_restart_meth}")
+logger.info(f"Static Config:  {_static_path if _static_path else 'not configured'}")
+logger.info(f"Domains:        {_s['domains']}")
+logger.info(f"Cert Resolver:  {_s['cert_resolver'] or 'not set'}")
 logger.info(f"Auth Enabled:   {_auth_enabled()}")
+if _oidc_on:
+    logger.info(f"OIDC:           enabled ({_s.get('oidc_issuer', '')})")
 logger.info("===========================================")
 
 _ensure_password()
@@ -590,7 +678,7 @@ def csrf_protect(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):
-            if not request.headers.get('X-Api-Key'):
+            if not _check_api_key():
                 _check_csrf()
         return f(*args, **kwargs)
     return decorated
@@ -607,6 +695,18 @@ def _check_password(plaintext: str, hashed: str) -> bool:
     except Exception:
         return False
 
+def _hash_api_key(key: str) -> str:
+    import hashlib
+    return 'sha256:' + hashlib.sha256(key.encode()).hexdigest()
+
+def _verify_api_key(key: str, stored: str) -> bool:
+    import hashlib
+    if stored.startswith('sha256:'):
+        expected = 'sha256:' + hashlib.sha256(key.encode()).hexdigest()
+        return secrets.compare_digest(expected, stored)
+    return _check_password(key, stored)
+
+
 def _is_authenticated() -> bool:
 
     if not _auth_enabled():
@@ -616,12 +716,11 @@ def _is_authenticated() -> bool:
 def _check_inactivity():
     if not session.get('authenticated'):
         return
-    if session.permanent:
-        return
     last = session.get('last_active')
     now  = time.time()
-    if last and (now - last) > INACTIVITY_TIMEOUT * 60:
-        logger.info(f"Session expired due to inactivity ({INACTIVITY_TIMEOUT}m) for {request.remote_addr}")
+    timeout = INACTIVITY_TIMEOUT * 60 if not session.permanent else INACTIVITY_TIMEOUT * 60 * 24
+    if last and (now - last) > timeout:
+        logger.info(f"Session expired due to inactivity for {request.remote_addr}")
         session.clear()
         return
     session['last_active'] = now
@@ -634,7 +733,7 @@ def _check_api_key() -> bool:
     api_keys = settings.get('api_keys', [])
     if not api_keys:
         return False
-    return any(_check_password(key, k['hash']) for k in api_keys if k.get('hash'))
+    return any(_verify_api_key(key, k['hash']) for k in api_keys if k.get('hash'))
 
 def login_required(f):
     @wraps(f)
@@ -665,9 +764,28 @@ def _get_effective_hash() -> str:
 
 _load_notifications()
 
+_SILENT_PREFIXES = (
+    '/static/',
+    '/api/notifications',
+    '/api/traefik/',
+    '/api/routes',
+    '/api/dashboard/',
+    '/api/manager/version',
+    '/api/configs',
+    '/api/settings/tabs',
+)
+
 @app.before_request
 def log_request_info():
-    logger.info(f"{request.remote_addr} → {request.method} {request.path}")
+    path = request.path
+    method = request.method
+    if method == 'GET':
+        if request.remote_addr == '127.0.0.1':
+            return
+        if any(path.startswith(p) for p in _SILENT_PREFIXES):
+            logger.debug(f"{request.remote_addr} → {method} {path}")
+            return
+    logger.info(f"{request.remote_addr} → {method} {path}")
 
 
 @app.after_request
@@ -723,11 +841,12 @@ def login():
                 logger.info(f"OTP step required for login from {request.remote_addr}")
                 return redirect(url_for('login_otp'))
 
-            _vals = {'permanent': remember, 'authenticated': True,
+            _vals = {'authenticated': True,
                      'last_active': time.time(),
                      'login_time': datetime.now(timezone.utc).isoformat()}
             session.clear()
             session.update(_vals)
+            session.permanent = remember
             logger.info(f"Successful login from {request.remote_addr}")
             add_notification('info', f"Login from {request.remote_addr}")
 
@@ -810,7 +929,7 @@ def setup():
                 visible_tabs = {t: False for t in OPTIONAL_TABS}
 
             pw_hash = current['password_hash'] if temp_password_mode else _hash_password(pw)
-            resolver = cert_resolver or 'cloudflare'
+            resolver = cert_resolver if cert_resolver.lower() not in ('none', '') else ''
             sr = {'domain': '', 'service_url': ''}
             if self_route_domain:
                 sr = {'domain': self_route_domain, 'service_url': self_route_svc}
@@ -838,9 +957,12 @@ def setup():
             session['login_time']    = datetime.now(timezone.utc).isoformat()
             return redirect(url_for('index'))
 
+    detected_domain, detected_svc = _detect_setup_self_route()
     return render_template('login.html', setup_mode=True, error=error,
                            defaults=defaults, csrf_token=_get_csrf_token(),
-                           temp_password_mode=temp_password_mode)
+                           temp_password_mode=temp_password_mode,
+                           detected_self_domain=detected_domain,
+                           detected_self_svc=detected_svc)
 
 
 @app.route('/logout', methods=['POST'])
@@ -992,11 +1114,12 @@ def login_otp():
             must_change    = session.get('otp_must_change', False)
             setup_complete = session.get('otp_setup_complete', False)
             next_url       = session.get('otp_next', '') or url_for('index')
-            _vals = {'permanent': remember, 'authenticated': True,
+            _vals = {'authenticated': True,
                      'last_active': time.time(),
                      'login_time': datetime.now(timezone.utc).isoformat()}
             session.clear()
             session.update(_vals)
+            session.permanent = remember
             logger.info(f"Successful OTP login from {request.remote_addr}")
             if must_change:
                 if not setup_complete:
@@ -1094,7 +1217,7 @@ def api_apikey_generate():
     preview = key[:8] + '...' + key[-4:]
     api_keys.append({
         'name':       device_name,
-        'hash':       _hash_password(key),
+        'hash':       _hash_api_key(key),
         'preview':    preview,
         'created_at': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M'),
     })
@@ -1228,12 +1351,296 @@ def api_ping():
             return jsonify({'ok': True, 'latency_ms': ms})
     except Exception as e:
         logger.debug(f"Ping failed: {e}")
-    return jsonify({'ok': False, 'latency_ms': None})
+    return jsonify({'ok': False, 'latency_ms': None}), 503
 
 @app.route('/api/manager/version')
 @login_required
 def api_manager_version():
-    return jsonify({"version": APP_VERSION, "repo": GITHUB_REPO})
+    return jsonify({
+        "version": APP_VERSION,
+        "repo": GITHUB_REPO,
+        "static_config_configured": bool(_get_static_config_path()),
+    })
+
+@app.route('/api/health')
+def api_health():
+    return jsonify({"ok": True}), 200
+
+
+@app.route('/api')
+def api_docs():
+    from flask import send_from_directory
+    return send_from_directory('static', 'api.html')
+
+
+@app.route('/openapi.yaml')
+def openapi_yaml():
+    from flask import send_from_directory
+    return send_from_directory('static', 'openapi.yaml')
+
+
+def _restart_via_docker() -> bool:
+    try:
+        import docker as _docker
+        client = _docker.from_env()
+        container = client.containers.get(_get_traefik_container())
+        container.restart()
+        logger.info(f"Restarted Traefik container: {_get_traefik_container()!r}")
+        return True
+    except Exception as e:
+        logger.error(f"Docker restart failed: {e}")
+        return False
+
+def _restart_via_signal_file() -> bool:
+    try:
+        sig_path = _get_signal_file_path()
+        os.makedirs(os.path.dirname(sig_path), exist_ok=True)
+        with open(sig_path, 'w') as f:
+            f.write('')
+        logger.info(f"Restart signal written: {sig_path}")
+        return True
+    except Exception as e:
+        logger.error(f"Signal file write failed: {e}")
+        return False
+
+def trigger_traefik_restart() -> tuple:
+    method = _get_restart_method()
+    if method in ('proxy', 'socket'):
+        ok = _restart_via_docker()
+        return ok, ('' if ok else f'Docker restart failed - check DOCKER_HOST and TRAEFIK_CONTAINER ({_get_traefik_container()!r})')
+    if method == 'poison-pill':
+        ok = _restart_via_signal_file()
+        return ok, ('' if ok else f'Signal file write failed - check SIGNAL_FILE_PATH ({_get_signal_file_path()!r})')
+    return False, f'Unknown RESTART_METHOD: {method!r}'
+
+
+@app.route('/api/static/available')
+@login_required
+def api_static_available():
+    path = _get_static_config_path()
+    return jsonify({'available': bool(path and os.path.exists(path))})
+
+@app.route('/api/static/config')
+@login_required
+def api_static_config_get():
+    path = _get_static_config_path()
+    if not path or not os.path.exists(path):
+        return jsonify({'error': 'Static config not found or STATIC_CONFIG_PATH not set'}), 404
+    try:
+        with open(path, 'r') as f:
+            raw = f.read()
+        _y = SafeYAML(typ='safe')
+        parsed = _y.load(raw) or {}
+        return jsonify({'raw': raw, 'parsed': parsed, 'path': path})
+    except Exception as e:
+        logger.exception("Failed to read static config")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/static/config', methods=['POST'])
+@csrf_protect
+@login_required
+def api_static_config_save():
+    path = _get_static_config_path()
+    if not path:
+        return jsonify({'error': 'STATIC_CONFIG_PATH not configured'}), 400
+    safe_path = _safe_file_path(path)
+    if not safe_path:
+        return jsonify({'error': 'Static config path is outside allowed directories'}), 403
+    data = request.get_json(silent=True) or {}
+    content = (data.get('content') or data.get('raw') or '').strip()
+    if not content:
+        return jsonify({'error': 'No content provided'}), 400
+    try:
+        _y = SafeYAML(typ='safe')
+        _y.load(content)
+    except Exception as e:
+        return jsonify({'error': f'Invalid YAML: {e}'}), 400
+    try:
+        create_backup(safe_path)
+        with open(safe_path, 'w') as f:
+            f.write(content)
+        logger.info(f"Static config saved by {request.remote_addr}: {safe_path}")
+        add_notification('success', 'Static config saved')
+        return jsonify({'ok': True})
+    except Exception as e:
+        logger.exception("Failed to write static config")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/static/restart', methods=['POST'])
+@csrf_protect
+@login_required
+def api_static_restart():
+    ok, err = trigger_traefik_restart()
+    if ok:
+        logger.info(f"Traefik restarted via static config by {request.remote_addr}")
+        add_notification('warning', 'Traefik restarted')
+        return jsonify({'ok': True})
+    logger.error(f"Traefik restart failed for {request.remote_addr}: {err}")
+    return jsonify({'ok': False, 'error': err}), 500
+
+@app.route('/api/static/status')
+@login_required
+def api_static_status():
+    data = traefik_api_get('/api/overview')
+    return jsonify({'up': data is not None})
+
+@app.route('/api/traefik/runtime')
+@login_required
+def api_traefik_runtime():
+    method = _get_restart_method()
+    container = _get_traefik_container()
+    if method in ('proxy', 'socket'):
+        return jsonify({'method': method, 'runtime': 'docker', 'container': container})
+    if method == 'poison-pill':
+        try:
+            import docker as _docker
+            client = _docker.from_env()
+            client.containers.get(container)
+            return jsonify({'method': method, 'runtime': 'docker', 'container': container})
+        except Exception:
+            return jsonify({'method': method, 'runtime': 'native', 'container': None})
+    return jsonify({'method': method, 'runtime': 'unknown', 'container': None})
+
+@app.route('/api/static/section', methods=['POST'])
+@csrf_protect
+@login_required
+def api_static_section_update():
+    path = _get_static_config_path()
+    if not path or not os.path.exists(path):
+        return jsonify({'error': 'Static config not found'}), 404
+    req      = request.get_json(silent=True) or {}
+    action   = req.get('action', '')
+    section  = req.get('section', '')
+    name     = str(req.get('name', '')).strip()
+    old_name = str(req.get('old_name', name)).strip()
+    payload  = req.get('data', {})
+    if not action or not section or (action not in ('set', 'remove') and not name):
+        return jsonify({'error': 'Missing required fields'}), 400
+    current_raw = req.get('current_raw', '')
+    try:
+        _y = YAML()
+        _y.preserve_quotes = True
+        if current_raw:
+            config = _y.load(StringIO(current_raw)) or {}
+        else:
+            with open(path, 'r') as f:
+                config = _y.load(f) or {}
+        if section == 'entrypoints':
+            eps = config.setdefault('entryPoints', {})
+            if action == 'remove':
+                eps.pop(name, None)
+            else:
+                if action == 'edit' and old_name != name:
+                    eps.pop(old_name, None)
+                ep = {'address': payload.get('address', '')}
+                redirect_to = str(payload.get('redirect_to', '')).strip()
+                if redirect_to:
+                    ep['http'] = {'redirections': {'entryPoint': {'to': redirect_to, 'scheme': 'https', 'permanent': True}}}
+                eps[name] = ep
+        elif section == 'resolvers':
+            resolvers = config.setdefault('certificatesResolvers', {})
+            if action == 'remove':
+                resolvers.pop(name, None)
+            else:
+                if action == 'edit' and old_name != name:
+                    resolvers.pop(old_name, None)
+                ct   = payload.get('challenge_type', 'dnsChallenge')
+                acme = {'email': payload.get('email', ''), 'storage': payload.get('storage', '/acme.json')}
+                if ct == 'dnsChallenge':
+                    acme['dnsChallenge'] = {'provider': payload.get('provider', '')}
+                elif ct == 'httpChallenge':
+                    acme['httpChallenge'] = {'entryPoint': payload.get('http_entrypoint', 'web')}
+                else:
+                    acme['tlsChallenge'] = {}
+                resolvers[name] = {'acme': acme}
+        elif section == 'plugins':
+            plugins = config.setdefault('experimental', {}).setdefault('plugins', {})
+            if action == 'remove':
+                plugins.pop(name, None)
+            else:
+                if action == 'edit' and old_name != name:
+                    plugins.pop(old_name, None)
+                plugins[name] = {'moduleName': payload.get('moduleName', ''), 'version': payload.get('version', '')}
+        elif section == 'api' and action == 'set':
+            if payload.get('enabled', True):
+                api_cfg = {}
+                if not payload.get('dashboard', True):
+                    api_cfg['dashboard'] = False
+                if payload.get('insecure'):
+                    api_cfg['insecure'] = True
+                if payload.get('debug'):
+                    api_cfg['debug'] = True
+                config['api'] = api_cfg
+            else:
+                config.pop('api', None)
+        elif section == 'log' and action == 'set':
+            level = str(payload.get('level', 'ERROR')).upper()
+            if level and level != 'ERROR':
+                config['log'] = {'level': level}
+            else:
+                config.pop('log', None)
+            if payload.get('accessLog'):
+                al_path = str(payload.get('accessLogPath', '')).strip()
+                config['accessLog'] = {'filePath': al_path} if al_path else {}
+            else:
+                config.pop('accessLog', None)
+        elif section == 'providers' and action == 'set':
+            providers = config.setdefault('providers', {})
+            if payload.get('docker'):
+                docker_cfg = {}
+                endpoint = str(payload.get('dockerEndpoint', '')).strip()
+                if endpoint and endpoint != 'unix:///var/run/docker.sock':
+                    docker_cfg['endpoint'] = endpoint
+                if payload.get('dockerExposedByDefault'):
+                    docker_cfg['exposedByDefault'] = True
+                if not payload.get('dockerWatch', True):
+                    docker_cfg['watch'] = False
+                providers['docker'] = docker_cfg
+            else:
+                providers.pop('docker', None)
+            if payload.get('file'):
+                file_cfg = {}
+                directory = str(payload.get('fileDirectory', '')).strip()
+                if directory:
+                    file_cfg['directory'] = directory
+                if not payload.get('fileWatch', True):
+                    file_cfg['watch'] = False
+                providers['file'] = file_cfg
+            else:
+                providers.pop('file', None)
+            if not providers:
+                config.pop('providers', None)
+        elif section == 'providers' and action in ('add', 'edit', 'remove'):
+            providers = config.setdefault('providers', {})
+            if action == 'remove':
+                providers.pop(name, None)
+            else:
+                if action == 'edit' and old_name and old_name != name:
+                    providers.pop(old_name, None)
+                prov_cfg = {}
+                yaml_config = str(payload.get('yaml_config', '')).strip()
+                if yaml_config:
+                    try:
+                        _yp = SafeYAML(typ='safe')
+                        parsed = _yp.load(yaml_config)
+                        if isinstance(parsed, dict):
+                            prov_cfg = parsed
+                    except Exception:
+                        pass
+                providers[name] = prov_cfg
+            if not providers:
+                config.pop('providers', None)
+        else:
+            return jsonify({'error': f'Unknown section: {section!r}'}), 400
+        stream = StringIO()
+        _y.dump(config, stream)
+        new_raw = stream.getvalue()
+        _y2 = SafeYAML(typ='safe')
+        parsed = _y2.load(new_raw) or {}
+        return jsonify({'ok': True, 'raw': new_raw, 'parsed': parsed})
+    except Exception as e:
+        logger.exception("Static section update failed")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/setup/test-connection', methods=['POST'])
@@ -1282,6 +1689,91 @@ def api_plugins():
         logger.exception("Error reading static config")
         return jsonify({'plugins': [], 'error': str(e)})
 
+@app.route('/api/plugins/install', methods=['POST'])
+@csrf_protect
+@login_required
+def api_plugins_install():
+    data = request.get_json(silent=True) or {}
+    static_yaml = (data.get('static_yaml') or '').strip()
+    middleware_yaml = (data.get('middleware_yaml') or '').strip()
+    if not static_yaml:
+        return jsonify({'ok': False, 'error': 'Paste the static config snippet'}), 400
+    try:
+        _ys = SafeYAML(typ='safe')
+        parsed_static = _ys.load(static_yaml) or {}
+    except Exception as e:
+        return jsonify({'ok': False, 'error': f'Invalid static config YAML: {e}'}), 400
+    plugins_block = None
+    if isinstance(parsed_static.get('experimental'), dict):
+        plugins_block = parsed_static['experimental'].get('plugins')
+    if not plugins_block and 'plugins' in parsed_static:
+        plugins_block = parsed_static['plugins']
+    if not plugins_block or not isinstance(plugins_block, dict):
+        return jsonify({'ok': False, 'error': 'Could not find plugins block - paste the experimental.plugins YAML from the Traefik plugin page'}), 400
+    static_path = _get_static_config_path()
+    if not static_path or not os.path.exists(static_path):
+        return jsonify({'ok': False, 'error': 'Static config not found'}), 404
+    try:
+        _ry = YAML()
+        _ry.preserve_quotes = True
+        with open(static_path, 'r') as f:
+            config = _ry.load(f) or {}
+        if 'experimental' not in config:
+            config['experimental'] = {}
+        if 'plugins' not in config['experimental']:
+            config['experimental']['plugins'] = {}
+        for plugin_name, plugin_data in plugins_block.items():
+            config['experimental']['plugins'][plugin_name] = {
+                'moduleName': plugin_data.get('moduleName', ''),
+                'version': plugin_data.get('version', ''),
+            }
+        create_backup(static_path)
+        stream = StringIO()
+        _ry.dump(config, stream)
+        with open(static_path, 'w') as f:
+            f.write(stream.getvalue())
+    except Exception as e:
+        logger.exception("Failed to save plugin to static config")
+        return jsonify({'ok': False, 'error': str(e)}), 500
+    warning = None
+    if middleware_yaml and ACTIVE_CONFIG_DIR:
+        if '{{' in middleware_yaml:
+            return jsonify({'ok': False, 'error': 'The middleware snippet contains template placeholders ({{ ... }}) that must be replaced with real values before saving. Edit the middleware in the editor and replace all {{ }} placeholders.'}), 400
+        try:
+            _ym = SafeYAML(typ='safe')
+            parsed_mw = _ym.load(middleware_yaml) or {}
+            if isinstance(parsed_mw.get('http'), dict):
+                middlewares = parsed_mw['http'].get('middlewares') or {}
+            elif 'middlewares' in parsed_mw:
+                middlewares = parsed_mw['middlewares']
+            else:
+                middlewares = {}
+            if middlewares and isinstance(middlewares, dict):
+                mw_file = os.path.join(ACTIVE_CONFIG_DIR, 'plugin-middlewares.yml')
+                existing = {}
+                if os.path.exists(mw_file):
+                    with open(mw_file, 'r') as f:
+                        existing = yaml.load(f) or {}
+                if 'http' not in existing:
+                    existing['http'] = {}
+                if 'middlewares' not in existing['http']:
+                    existing['http']['middlewares'] = {}
+                existing['http']['middlewares'].update(middlewares)
+                stream = StringIO()
+                yaml.dump(existing, stream)
+                with open(mw_file, 'w') as f:
+                    f.write(stream.getvalue())
+        except Exception as e:
+            logger.exception("Failed to save middleware")
+            warning = f'Plugin saved but middleware could not be written: {e}'
+    plugin_names = list(plugins_block.keys())
+    add_notification('success', f'Plugin installed: {", ".join(plugin_names)}')
+    result = {'ok': True, 'plugins': plugin_names}
+    if warning:
+        result['warning'] = warning
+    return jsonify(result)
+
+
 def _parse_cert_expiry(pem_bytes):
     try:
         import base64
@@ -1290,7 +1782,7 @@ def _parse_cert_expiry(pem_bytes):
         if isinstance(pem_bytes, str):
             pem_bytes = base64.b64decode(pem_bytes)
         cert_obj = x509.load_pem_x509_certificate(pem_bytes, default_backend())
-        return cert_obj.not_valid_after_utc.strftime('%b %d %H:%M:%S %Y GMT')
+        return cert_obj.not_valid_after_utc.strftime('%Y-%m-%dT%H:%M:%SZ')
     except Exception as ex:
         logger.debug(f"Cert parse error: {ex}")
         return None
@@ -1402,16 +1894,23 @@ def create_backup(path=None):
 
 def list_backups():
     ensure_backup_dir()
+    static_path = _get_static_config_path()
+    static_base = os.path.basename(static_path) if static_path else None
+    _name_re    = re.compile(r'^(.+)\.\d{8}_\d{6}\.bak$')
     backups = []
     for f in os.listdir(BACKUP_DIR):
         if f.endswith('.bak'):
             path = os.path.join(BACKUP_DIR, f)
             st   = os.stat(path)
+            m    = _name_re.match(f)
+            orig = m.group(1) if m else ''
+            kind = 'static' if static_base and orig == static_base else 'routes'
             backups.append({
                 'name':     f,
                 'size':     st.st_size,
                 'modified': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(st.st_mtime)),
                 'mtime':    st.st_mtime,
+                'kind':     kind,
             })
     backups.sort(key=lambda b: b['mtime'], reverse=True)
     for b in backups:
@@ -1511,6 +2010,23 @@ def api_backup_create():
         logger.exception("Backup create error")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/static/backup/create', methods=['POST'])
+@csrf_protect
+@login_required
+def api_static_backup_create():
+    path = _get_static_config_path()
+    if not path:
+        return jsonify({'error': 'STATIC_CONFIG_PATH not configured'}), 400
+    try:
+        dest = create_backup(path)
+        if dest:
+            add_notification('success', f"Static config backup created")
+            return jsonify({'success': True, 'name': os.path.basename(dest)})
+        return jsonify({'error': 'Static config file not found'}), 400
+    except Exception as e:
+        logger.exception("Static backup create error")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/backup/delete/<filename>', methods=['POST'])
 @csrf_protect
 @login_required
@@ -1582,6 +2098,7 @@ def api_settings_test_connection():
     url     = _safe_api_url(raw_url)
     if not url:
         return jsonify({'ok': False, 'error': 'Invalid URL'}), 400
+    logger.info(f"Connection test to {url!r} by {request.remote_addr}")
     try:
         resp = requests.get(f"{url}/api/version", timeout=4)
         if resp.status_code == 200:
@@ -1636,8 +2153,8 @@ def _find_existing_self_route(hostname: str) -> dict:
                     svc = services.get(svc_name) or {}
                     servers = ((svc.get('loadBalancer') or {}).get('servers') or [])
                     svc_url     = next((str(s['url']) for s in servers if s.get('url')), '')
-                    eps         = rdata.get('entryPoints') or ['websecure']
-                    entry_point = eps[0] if eps else 'websecure'
+                    entry_pts   = rdata.get('entryPoints') or ['websecure']
+                    entry_point = entry_pts[0] if entry_pts else 'websecure'
                     return {'domain': hostname, 'service_url': svc_url, 'router_name': rname, 'entry_point': entry_point, 'found': True}
         except Exception:
             continue
@@ -1648,13 +2165,14 @@ def _find_existing_self_route(hostname: str) -> dict:
 def api_get_self_route():
     settings = load_settings()
     sr = settings.get('self_route', {'domain': '', 'service_url': ''})
+    default_ep = _best_entrypoint()
     if not sr.get('domain'):
         hostname = request.args.get('hostname', '').strip().lower()
         if hostname:
             found = _find_existing_self_route(hostname)
             if found:
-                return jsonify(found)
-    return jsonify(sr)
+                return jsonify({**found, 'default_entry_point': default_ep})
+    return jsonify({**sr, 'default_entry_point': default_ep})
 
 @app.route('/api/settings/self-route', methods=['POST'])
 @csrf_protect
@@ -1664,7 +2182,7 @@ def api_save_self_route():
     domain      = str(data.get('domain', '')).strip()
     service_url = str(data.get('service_url', '')).strip() or 'http://traefik-manager:5000'
     router_name = str(data.get('router_name', 'traefik-manager')).strip() or 'traefik-manager'
-    entry_point = str(data.get('entry_point', 'websecure')).strip() or 'websecure'
+    entry_point = str(data.get('entry_point', '')).strip() or _best_entrypoint()
     settings = load_settings()
     if domain:
         _write_self_route(domain, service_url, settings.get('cert_resolver', 'cloudflare'), router_name, entry_point)
@@ -1688,10 +2206,10 @@ def load_config(path=None):
     if path is None:
         path = CONFIG_PATH
     if not os.path.exists(path):
-        return {"http": {"routers": {}, "services": {}, "middlewares": {}}}
+        return {}
     with open(path, 'r') as f:
         data = yaml.load(f)
-    return data if data and isinstance(data, dict) else {"http": {"routers": {}, "services": {}, "middlewares": {}}}
+    return data if data and isinstance(data, dict) else {}
 
 def _strip_empty_sections(config: dict) -> dict:
     """Remove empty routers/services/middlewares dicts to avoid Traefik 'standalone element' errors."""
@@ -1720,19 +2238,30 @@ def save_config(data, path=None):
     logger.info(f"Configuration saved: {path}")
 
 
-def _build_apps(config, config_file=''):
+def _svc_key(name):
+    return name.split('@')[0] if '@' in name else name
+
+
+def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=None, extra_udp_svcs=None, api_svc_urls=None):
     apps = []
     http_config = config.get('http', {})
+    http_svcs = dict(http_config.get('services', {}))
+    if extra_http_svcs:
+        for k, v in extra_http_svcs.items():
+            if k not in http_svcs:
+                http_svcs[k] = v
     for rname, rdata in http_config.get('routers', {}).items():
         svc_name = rdata.get('service', '')
+        svc_key  = _svc_key(svc_name)
         target_url = 'N/A'
-        svcs = http_config.get('services', {})
         lb = {}
-        if svc_name in svcs:
-            lb = svcs[svc_name].get('loadBalancer', {})
+        if svc_key in http_svcs:
+            lb = http_svcs[svc_key].get('loadBalancer', {})
             servers = lb.get('servers', [])
             if servers:
                 target_url = servers[0].get('url', 'Unknown')
+        if target_url == 'N/A' and api_svc_urls:
+            target_url = api_svc_urls.get(f'http:{svc_key}', 'N/A')
         app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
         tls_http = rdata.get('tls', {})
         transport_name = lb.get('serversTransport', '')
@@ -1747,14 +2276,21 @@ def _build_apps(config, config_file=''):
                      'certResolver': tls_http.get('certResolver', '') if isinstance(tls_http, dict) else '',
                      'insecureSkipVerify': insecure,
                      'configFile': config_file, 'provider': 'file'})
+    tcp_svcs = dict(config.get('tcp', {}).get('services', {}))
+    if extra_tcp_svcs:
+        for k, v in extra_tcp_svcs.items():
+            if k not in tcp_svcs:
+                tcp_svcs[k] = v
     for rname, rdata in config.get('tcp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
+        svc_key  = _svc_key(svc_name)
         target = 'N/A'
-        tcp_svcs = config.get('tcp', {}).get('services', {})
-        if svc_name in tcp_svcs:
-            servers = tcp_svcs[svc_name].get('loadBalancer', {}).get('servers', [])
+        if svc_key in tcp_svcs:
+            servers = tcp_svcs[svc_key].get('loadBalancer', {}).get('servers', [])
             if servers:
                 target = servers[0].get('address', 'N/A')
+        if target == 'N/A' and api_svc_urls:
+            target = api_svc_urls.get(f'tcp:{svc_key}', 'N/A')
         app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
         tls_tcp = rdata.get('tls', {})
         apps.append({'id': app_id, 'name': rname, 'rule': rdata.get('rule', ''),
@@ -1763,14 +2299,21 @@ def _build_apps(config, config_file=''):
                      'protocol': 'tcp', 'tls': bool(tls_tcp), 'enabled': True,
                      'certResolver': tls_tcp.get('certResolver', '') if isinstance(tls_tcp, dict) else '',
                      'configFile': config_file, 'provider': 'file'})
+    udp_svcs = dict(config.get('udp', {}).get('services', {}))
+    if extra_udp_svcs:
+        for k, v in extra_udp_svcs.items():
+            if k not in udp_svcs:
+                udp_svcs[k] = v
     for rname, rdata in config.get('udp', {}).get('routers', {}).items():
         svc_name = rdata.get('service', '')
+        svc_key  = _svc_key(svc_name)
         target = 'N/A'
-        udp_svcs = config.get('udp', {}).get('services', {})
-        if svc_name in udp_svcs:
-            servers = udp_svcs[svc_name].get('loadBalancer', {}).get('servers', [])
+        if svc_key in udp_svcs:
+            servers = udp_svcs[svc_key].get('loadBalancer', {}).get('servers', [])
             if servers:
                 target = servers[0].get('address', 'N/A')
+        if target == 'N/A' and api_svc_urls:
+            target = api_svc_urls.get(f'udp:{svc_key}', 'N/A')
         app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
         apps.append({'id': app_id, 'name': rname, 'rule': '',
                      'service_name': svc_name, 'target': target,
@@ -1789,7 +2332,19 @@ def _build_middlewares(config, config_file=''):
     return middlewares
 
 
+def _traefik_service_url_map():
+    url_map = {}
+    for proto, addr_key in (('http', 'url'), ('tcp', 'address'), ('udp', 'address')):
+        for svc in traefik_api_get(f'/api/{proto}/services') or []:
+            key = _svc_key(svc.get('name', ''))
+            servers = svc.get('loadBalancer', {}).get('servers', [])
+            if servers and addr_key in servers[0]:
+                url_map[f'{proto}:{key}'] = servers[0][addr_key]
+    return url_map
+
+
 def _build_external_routes(include_internal=False):
+    svc_urls = _traefik_service_url_map()
     routes = []
     for proto in ('http', 'tcp', 'udp'):
         data = traefik_api_get(f'/api/{proto}/routers') or []
@@ -1801,13 +2356,15 @@ def _build_external_routes(include_internal=False):
                 continue
             name = r.get('name', '')
             display_name = name.split('@')[0] if '@' in name else name
+            svc_name = r.get('service', '')
+            target = svc_urls.get(f'{proto}:{_svc_key(svc_name)}', svc_name or 'N/A')
             tls = r.get('tls', {})
             routes.append({
                 'id':           name,
                 'name':         display_name,
                 'rule':         r.get('rule', ''),
-                'service_name': r.get('service', ''),
-                'target':       r.get('service', 'N/A'),
+                'service_name': svc_name,
+                'target':       target,
                 'middlewares':  r.get('middlewares') or [],
                 'entryPoints':  r.get('entryPoints') or [],
                 'protocol':     proto,
@@ -1820,13 +2377,22 @@ def _build_external_routes(include_internal=False):
 
 
 def _build_all_apps(include_external=True, include_internal=False):
-    """Build combined apps and middlewares from all config files, plus disabled routes."""
     all_apps = []
     all_middlewares = []
-    for p in CONFIG_PATHS:
-        cf = os.path.basename(p) if (MULTI_CONFIG or ACTIVE_CONFIG_DIR) else ''
-        config = load_config(p)
-        all_apps.extend(_build_apps(config, cf))
+    loaded = [(os.path.basename(p) if (MULTI_CONFIG or ACTIVE_CONFIG_DIR) else '', load_config(p)) for p in CONFIG_PATHS]
+    combined_http = {}
+    combined_tcp  = {}
+    combined_udp  = {}
+    for _, cfg in loaded:
+        for k, v in cfg.get('http', {}).get('services', {}).items():
+            combined_http.setdefault(k, v)
+        for k, v in cfg.get('tcp', {}).get('services', {}).items():
+            combined_tcp.setdefault(k, v)
+        for k, v in cfg.get('udp', {}).get('services', {}).items():
+            combined_udp.setdefault(k, v)
+    api_svc_urls = _traefik_service_url_map()
+    for cf, config in loaded:
+        all_apps.extend(_build_apps(config, cf, combined_http, combined_tcp, combined_udp, api_svc_urls))
         all_middlewares.extend(_build_middlewares(config, cf))
     if include_external:
         all_apps.extend(_build_external_routes(include_internal=include_internal))
@@ -1891,7 +2457,7 @@ def _toggle_route(route_id: str, enable: bool):
         section.setdefault('routers', {})[rname]   = router
         section.setdefault('services', {})[svc_name] = svc
         create_backup(target_path)
-        save_config(config, target_path)
+        save_config(_strip_empty_sections(config), target_path)
     else:
         proto       = None
         router      = None
@@ -1981,7 +2547,10 @@ def _write_groups_config(data):
 @app.route('/api/dashboard/config', methods=['GET'])
 @login_required
 def dashboard_config_get():
-    return jsonify(_read_groups_config())
+    cfg = _read_groups_config()
+    sr  = load_settings().get('self_route', {})
+    cfg['tm_route_name'] = sr.get('router_name', 'traefik-manager') or 'traefik-manager'
+    return jsonify(cfg)
 
 @app.route('/api/dashboard/config', methods=['POST'])
 @login_required
@@ -2076,7 +2645,7 @@ def save_entry():
         tcp_eps        = [ep.strip() for ep in (_all_eps[1] if len(_all_eps) > 1 else '').split(',') if ep.strip()] or ['https']
         resolvers      = [r.strip() for r in settings['cert_resolver'].split(',') if r.strip()]
         cert_resolver_raw = request.form.get('certResolver', '').strip()
-        cert_resolver  = '' if cert_resolver_raw == '__none__' else (cert_resolver_raw or (resolvers[0] if resolvers else 'cloudflare'))
+        cert_resolver  = '' if (cert_resolver_raw in ('__none__', 'none')) else (cert_resolver_raw or (resolvers[0] if resolvers else ''))
         config_file_raw = request.form.get('configFile', '').strip()
         target_path    = _resolve_config_path(config_file_raw) or CONFIG_PATH
 
@@ -2146,7 +2715,8 @@ def save_entry():
             rule = tcp_rule or (f"HostSNI(`{subdomain}.{domain}`)" if subdomain else "HostSNI(`*`)")
             config.setdefault('tcp', {}).setdefault('routers', {})
             config['tcp'].setdefault('services', {})
-            config['tcp']['routers'][router_name]   = {'rule': rule, 'entryPoints': tcp_eps, 'tls': {'certResolver': cert_resolver}, 'service': service_name}
+            tcp_tls = {'certResolver': cert_resolver} if cert_resolver else {}
+            config['tcp']['routers'][router_name]   = {'rule': rule, 'entryPoints': tcp_eps, 'tls': tcp_tls, 'service': service_name}
             config['tcp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
 
         elif protocol == 'udp':
@@ -2361,6 +2931,20 @@ def oidc_callback():
         logger.exception("OIDC token exchange failed")
         flash("OIDC login failed - token exchange error.", "error")
         return redirect(url_for('login'))
+    id_token = tokens.get('id_token', '')
+    expected_nonce = session.pop('oidc_nonce', '')
+    if id_token and expected_nonce:
+        try:
+            import base64, json as _json
+            payload_b64 = id_token.split('.')[1]
+            payload_b64 += '=' * (-len(payload_b64) % 4)
+            id_claims = _json.loads(base64.urlsafe_b64decode(payload_b64))
+            if not secrets.compare_digest(str(id_claims.get('nonce', '')), expected_nonce):
+                logger.warning(f"OIDC nonce mismatch from {request.remote_addr}")
+                flash("OIDC login failed - nonce mismatch.", "error")
+                return redirect(url_for('login'))
+        except Exception:
+            logger.warning("OIDC id_token nonce verification skipped - could not decode token")
     access_token = tokens.get('access_token', '')
     try:
         userinfo_resp = requests.get(cfg['userinfo_endpoint'],
@@ -2451,6 +3035,7 @@ def api_test_oidc():
     url  = str(data.get('provider_url', '')).strip().rstrip('/')
     if not url:
         return jsonify({'ok': False, 'error': 'No provider URL'})
+    logger.info(f"OIDC provider test to {url!r} by {request.remote_addr}")
     try:
         resp = requests.get(f"{url}/.well-known/openid-configuration", timeout=5)
         resp.raise_for_status()
@@ -2464,4 +3049,4 @@ if __name__ == '__main__':
     logger.info("Development server starting...")
     app.run(host='0.0.0.0', port=5000, debug=False)
 else:
-    logger.info("✅ Traefik Manager: Server is UP and Ready")
+    logger.info("🟢 Traefik Manager: Server is UP and Ready")

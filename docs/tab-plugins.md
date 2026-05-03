@@ -9,7 +9,7 @@ The **Plugins** tab shows Traefik plugins declared in the static `traefik.yml` c
 - Version
 - Settings (if any are configured)
 
-Plugins are **read-only** here - they must be declared in `traefik.yml` under `experimental.plugins` and cannot be added or removed from the UI.
+When the [Static Config tab](static.md) is enabled (i.e. `STATIC_CONFIG_PATH` is set and the file is mounted read-write), the Plugins tab gains **Add**, **Edit**, and **Delete** actions. Without it, plugins are read-only and must be managed by hand in `traefik.yml`.
 
 ## Enabling the tab
 

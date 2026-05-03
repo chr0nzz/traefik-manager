@@ -1,43 +1,86 @@
 <div id="settingsModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeSettingsModal()">
-    <div class="modal-box" style="max-width:680px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="modal-box" style="max-width:680px;height:88vh;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;">
 
         <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border);flex-shrink:0;">
             <div class="flex items-center gap-2">
-                <i class="ph-fill ph-gear" style="color:var(--blue);font-size:18px;"></i>
-                <h3 class="font-bold text-sm" style="color:var(--text)">Settings</h3>
+                <button id="settingsMobileBack" onclick="settingsMobileBack()" style="display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--muted);align-items:center;margin-right:2px" class="flex items-center">
+                    <i class="ph-bold ph-caret-left" style="font-size:16px"></i>
+                </button>
+                <i class="ph-fill ph-gear" style="color:var(--blue);font-size:18px;" id="settingsGearIcon"></i>
+                <h3 class="font-bold text-sm" style="color:var(--text)" id="settingsModalTitle">Settings</h3>
             </div>
-            <button type="button" onclick="closeSettingsModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="closeSettingsModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+            </div>
         </div>
 
         <div class="modal-inner">
 
+            <div id="settingsMobileRoot" style="display:none;flex-direction:column;flex:1;overflow-y:auto;">
+                <button class="settings-mobile-row" onclick="switchSettingsPanel('ui')">
+                    <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-sliders" style="color:var(--muted)"></i>Interface</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
+                <button class="settings-mobile-row" onclick="switchSettingsPanel('auth')">
+                    <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-lock-key" style="color:var(--muted)"></i>Authentication</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
+                <button class="settings-mobile-row" id="msb-static-mobile" style="display:none" onclick="switchSettingsPanel('static'); openStaticSettingsPanel()">
+                    <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-sliders-horizontal" style="color:var(--muted)"></i>Static Config</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
+                <button class="settings-mobile-row" onclick="switchSettingsPanel('backups'); loadBackups()">
+                    <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-clock-counter-clockwise" style="color:var(--muted)"></i>Backups</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
+                <button class="settings-mobile-row" onclick="switchSettingsPanel('system')">
+                    <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-monitor" style="color:var(--muted)"></i>System Monitoring</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
+                <button class="settings-mobile-row" onclick="switchSettingsPanel('routes')">
+                    <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-path" style="color:var(--muted)"></i>Route Monitoring</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
+                <button class="settings-mobile-row" onclick="switchSettingsPanel('connection')">
+                    <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-plugs-connected" style="color:var(--muted)"></i>Connection</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
+                <button class="settings-mobile-row" onclick="switchSettingsPanel('about')">
+                    <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-info" style="color:var(--muted)"></i>About</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
+            </div>
+
             <div class="modal-sidebar">
-                <button class="modal-sidebar-btn active" id="msb-connection" onclick="switchSettingsPanel('connection', this)">
-                    <i class="ph-bold ph-plugs-connected"></i> Connection
-                </button>
-                <button class="modal-sidebar-btn" id="msb-routes" onclick="switchSettingsPanel('routes', this)">
-                    <i class="ph-bold ph-path"></i> Route Monitoring
-                </button>
-                <button class="modal-sidebar-btn" id="msb-system" onclick="switchSettingsPanel('system', this)">
-                    <i class="ph-bold ph-monitor"></i> System Monitoring
+                <button class="modal-sidebar-btn active" id="msb-ui" onclick="switchSettingsPanel('ui', this)">
+                    <i class="ph-bold ph-sliders"></i> Interface
                 </button>
                 <button class="modal-sidebar-btn" id="msb-auth" onclick="switchSettingsPanel('auth', this)">
                     <i class="ph-bold ph-lock-key"></i> Authentication
                 </button>
+                <button class="modal-sidebar-btn" id="msb-static" style="display:none" onclick="switchSettingsPanel('static', this); openStaticSettingsPanel()">
+                    <i class="ph-bold ph-sliders-horizontal"></i> Static Config
+                </button>
                 <button class="modal-sidebar-btn" id="msb-backups" onclick="switchSettingsPanel('backups', this); loadBackups()">
                     <i class="ph-bold ph-clock-counter-clockwise"></i> Backups
                 </button>
-                <button class="modal-sidebar-btn" id="msb-ui" onclick="switchSettingsPanel('ui', this)">
-                    <i class="ph-bold ph-sliders"></i> Interface
+                <button class="modal-sidebar-btn" id="msb-system" onclick="switchSettingsPanel('system', this)">
+                    <i class="ph-bold ph-monitor"></i> System Monitoring
+                </button>
+                <button class="modal-sidebar-btn" id="msb-routes" onclick="switchSettingsPanel('routes', this)">
+                    <i class="ph-bold ph-path"></i> Route Monitoring
+                </button>
+                <button class="modal-sidebar-btn" id="msb-connection" onclick="switchSettingsPanel('connection', this)">
+                    <i class="ph-bold ph-plugs-connected"></i> Connection
                 </button>
                 <button class="modal-sidebar-btn" id="msb-about" onclick="switchSettingsPanel('about', this)">
                     <i class="ph-bold ph-info"></i> About
                 </button>
             </div>
 
-            <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0;">
+            <div id="settingsPanelWrapper" style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0;">
 
-                <div class="modal-panel active" id="mpanel-connection">
+                <div class="modal-panel" id="mpanel-connection">
                     <div>
                         <span class="settings-section-label">Domains</span>
                         <div class="text-xs mb-2" style="color:var(--muted)">Comma-separated list of base domains used when adding routes.</div>
@@ -45,7 +88,7 @@
                     </div>
                     <div>
                         <span class="settings-section-label">Certificate Resolver</span>
-                        <div class="text-xs mb-2" style="color:var(--muted)">One or more cert resolver names, comma-separated (e.g. <code class="font-mono">letsencrypt, cloudflare</code>). The first is the default - each route can override it individually.</div>
+                        <div class="text-xs mb-2" style="color:var(--muted)">One or more cert resolver names, comma-separated (e.g. <code class="font-mono">letsencrypt, cloudflare</code>). The first is the default - each route can override it individually. If you manage certificates externally and don't use ACME, type <code class="font-mono">none</code>.</div>
                         <input type="text" id="settingsCertResolver" class="input-field" placeholder="cloudflare" onblur="saveSettings()">
                     </div>
                     <div>
@@ -392,28 +435,110 @@
                     </div>
                 </div>
 
-                <div class="modal-panel" id="mpanel-backups">
-                    <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="settings-section-label" style="margin:0;">Configuration Backups</span>
-                            <button onclick="createAndLoadBackups()" class="nav-btn text-xs">
-                                <i class="ph-bold ph-plus"></i> Create Backup
+                <div class="modal-panel" id="mpanel-backups" style="gap:0;padding:0;overflow:hidden;">
+                    <div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+                        <div style="display:flex;gap:2px;padding:12px 16px 0;border-bottom:1px solid var(--border);flex-shrink:0;">
+                            <button class="auth-sub-tab active" id="backup-tab-routes" onclick="switchBackupTab('routes', this)">
+                                <i class="ph-bold ph-path"></i> Routes
+                            </button>
+                            <button class="auth-sub-tab" id="backup-tab-static" onclick="switchBackupTab('static', this)">
+                                <i class="ph-bold ph-sliders-horizontal"></i> Static Config
                             </button>
                         </div>
-                        <div class="text-xs mb-4 px-3 py-2 rounded-lg flex items-center gap-2" style="background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.2);color:#d29922">
-                            <i class="ph-bold ph-warning text-sm flex-shrink-0"></i>
-                            Restoring a backup will overwrite your current config. A backup of the current state is created automatically before restoring.
+                        <div id="backup-sub-routes" class="auth-sub-panel" style="display:flex;flex-direction:column;gap:0;">
+                            <div class="flex items-center justify-between mb-3" style="flex-shrink:0;">
+                                <span class="settings-section-label" style="margin:0;">Route Config Backups</span>
+                                <button onclick="createAndLoadBackups()" class="nav-btn text-xs">
+                                    <i class="ph-bold ph-plus"></i> Create Backup
+                                </button>
+                            </div>
+                            <div class="text-xs mb-3 px-3 py-2 rounded-lg flex items-center gap-2" style="background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.2);color:#d29922;flex-shrink:0;">
+                                <i class="ph-bold ph-warning text-sm flex-shrink-0"></i>
+                                Restoring overwrites your current config. A backup is created automatically before restoring.
+                            </div>
+                            <div id="sm-backups-list" style="flex:1;overflow-y:auto;">
+                                <div class="text-center py-8" style="color:var(--muted)">
+                                    <i class="ph-light ph-spinner-gap text-2xl animate-spin block mb-2"></i>
+                                    Loading backups...
+                                </div>
+                            </div>
                         </div>
-                        <div id="sm-backups-list">
-                            <div class="text-center py-8" style="color:var(--muted)">
-                                <i class="ph-light ph-spinner-gap text-2xl animate-spin block mb-2"></i>
-                                Loading backups...
+                        <div id="backup-sub-static" class="auth-sub-panel" style="display:none;flex-direction:column;gap:0;">
+                            <div class="flex items-center justify-between mb-3" style="flex-shrink:0;">
+                                <span class="settings-section-label" style="margin:0;">Static Config Backups</span>
+                                <button onclick="createAndLoadStaticBackup()" class="nav-btn text-xs">
+                                    <i class="ph-bold ph-plus"></i> Create Backup
+                                </button>
+                            </div>
+                            <div class="text-xs mb-3 px-3 py-2 rounded-lg flex items-center gap-2" style="background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.2);color:#d29922;flex-shrink:0;">
+                                <i class="ph-bold ph-warning text-sm flex-shrink-0"></i>
+                                Restoring overwrites your current static config. A backup is created automatically before restoring.
+                            </div>
+                            <div id="sm-static-backups-list" style="flex:1;overflow-y:auto;">
+                                <div class="text-center py-8" style="color:var(--muted)">
+                                    <i class="ph-light ph-spinner-gap text-2xl animate-spin block mb-2"></i>
+                                    Loading...
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="modal-panel" id="mpanel-ui">
+                <div class="modal-panel" id="mpanel-static" style="gap:0;padding:0;overflow:hidden;">
+                    <div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+                        <div id="staticPendingBanner" style="display:none;flex-shrink:0;" class="mx-4 mt-3 px-4 py-2.5 rounded-lg flex items-center justify-between gap-3" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3)">
+                            <div class="flex items-center gap-2 text-xs" style="color:#ca8a04">
+                                <i class="ph-bold ph-warning"></i>
+                                <span>Pending changes - not yet saved</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="discardStaticChanges()" class="btn-secondary text-xs">Discard</button>
+                                <button onclick="saveStaticConfig()" class="btn-primary text-xs">Save</button>
+                            </div>
+                        </div>
+                        <div id="staticRestartBanner" style="display:none;flex-shrink:0;" class="mx-4 mt-3 px-4 py-2.5 rounded-lg flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-2 text-xs" style="color:#dc2626">
+                                <i class="ph-bold ph-warning-circle"></i>
+                                Restart required for changes to take effect
+                            </div>
+                            <button onclick="triggerTraefikRestart()" class="text-xs px-3 py-1.5 rounded-lg font-semibold" style="background:rgba(239,68,68,0.15);color:#dc2626;border:1px solid rgba(239,68,68,0.3)">Restart Traefik</button>
+                        </div>
+                        <div id="staticDangerWarn" class="mx-4 mt-3 rounded-lg flex-shrink-0" style="border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.05)">
+                            <div class="px-4 py-2.5 flex items-center gap-3">
+                                <i class="ph-bold ph-warning-octagon text-sm shrink-0" style="color:var(--red)"></i>
+                                <span class="text-xs font-semibold flex-1" style="color:var(--text)">Changes here can break Traefik</span>
+                                <button onclick="hideStaticDangerWarn()" class="btn-secondary text-xs" style="height:22px;padding:0 8px;font-size:11px">Hide</button>
+                            </div>
+                            <div class="static-warn-body px-4 pb-3 text-xs" style="color:var(--muted)">
+                                Only edit what you understand - a misconfigured static config will prevent Traefik from starting.
+                                <span class="block mt-1"><i class="ph-bold ph-shield-check" style="color:var(--green)"></i> A backup is created automatically before every save. Restore from <button onclick="switchSettingsPanel('backups', document.getElementById('msb-backups'));loadBackups()" style="color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-size:inherit;text-decoration:underline">Backups</button> if something goes wrong.</span>
+                            </div>
+                        </div>
+                        <div id="staticHeaderActions" class="flex items-center justify-end gap-1.5 flex-shrink-0 px-4 pt-3">
+                            <button id="staticHdrAddBtn" onclick="openStaticAddForm(_staticActiveSection)" class="btn-secondary text-xs flex items-center gap-1.5" style="height:28px;padding:0 10px">
+                                <i id="staticHdrAddIcon" class="ph-bold ph-plus text-xs" style="color:var(--blue)"></i>
+                                <span id="staticHdrAddLabel">Entrypoint</span>
+                            </button>
+                            <button onclick="openStaticYamlPopout()" class="btn-secondary text-xs flex items-center gap-1.5" style="height:28px;padding:0 10px">
+                                <i class="ph-bold ph-code text-xs"></i>
+                                Raw YAML
+                            </button>
+                            <button onclick="refreshStaticTab()" class="btn-secondary text-xs flex items-center gap-1.5" title="Refresh" style="height:28px;padding:0 10px">
+                                <i class="ph-bold ph-arrows-clockwise text-xs"></i>
+                                Refresh
+                            </button>
+                        </div>
+
+                        <div id="staticSettingsContent" style="flex:1;overflow-y:auto;padding:0;">
+                            <div class="text-center py-16" style="color:var(--muted)">
+                                <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
+                                <p>Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-panel active" id="mpanel-ui">
                     <div style="margin-bottom:12px;">
                         <div class="text-xs font-medium mb-2" style="color:var(--muted);display:flex;align-items:center;gap:5px;"><i class="ph-bold ph-squares-four"></i> DASHBOARD</div>
                         <div style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
@@ -457,12 +582,26 @@
                                 </div>
                                 <div class="toggle-switch" id="toggle-tm-badge" onclick="toggleTmBadge()"><div class="toggle-knob"></div></div>
                             </div>
-                            <div class="flex items-center justify-between" style="padding:10px 12px;">
+                            <div class="flex items-center justify-between" style="padding:10px 12px;border-bottom:1px solid var(--border)">
                                 <div>
                                     <div class="text-xs font-medium" style="color:var(--text)">Show documentation link</div>
                                     <div class="text-xs" style="color:var(--muted)">Traefik Manager documentation.</div>
                                 </div>
                                 <div class="toggle-switch" id="toggle-docs-link" onclick="toggleDocsLink()"><div class="toggle-knob"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between" style="padding:10px 12px;border-bottom:1px solid var(--border)">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Show API reference link</div>
+                                    <div class="text-xs" style="color:var(--muted)">Opens the interactive API reference.</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-api-link" onclick="toggleApiLink()"><div class="toggle-knob"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between" style="padding:10px 12px;">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Show keyboard shortcuts button</div>
+                                    <div class="text-xs" style="color:var(--muted)">Quick reference panel for keyboard shortcuts.</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-shortcuts-btn" onclick="toggleShortcutsBtn()"><div class="toggle-knob"></div></div>
                             </div>
                         </div>
                     </div>
@@ -496,7 +635,7 @@
                                 <div class="font-bold text-sm" style="color:var(--text)">Traefik Manager</div>
                                 <div class="text-xs mt-0.5" style="color:var(--muted)">
                                     GPL-3.0 licence ·
-                                    <a href="https://github.com/chr0nzz/traefik-manager" target="_blank" style="color:var(--blue);text-decoration:none">chr0nzz</a>
+                                    <a href="https://xyzlab.dev" target="_blank" style="color:var(--blue);text-decoration:none">xyzlab.dev</a>
                                 </div>
                             </div>
                         </div>
@@ -513,11 +652,20 @@
                             <div id="sm-mgr-update-notice" class="hidden text-xs px-3 py-2 rounded-md mb-2" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)">
                                 <i class="ph-bold ph-arrow-circle-up mr-1"></i><span id="sm-mgr-update-text"></span>
                             </div>
-                            <a id="mgrUpdateReleaseLink" href="https://github.com/chr0nzz/traefik-manager/releases" target="_blank"
-                               class="nav-btn text-xs" style="text-decoration:none;display:inline-flex">
-                                <i class="ph-bold ph-github-logo"></i> Release Notes
-                            </a>
+                            <div class="flex flex-wrap gap-2">
+                                <a href="https://github.com/chr0nzz/traefik-manager" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
+                                    <i class="ph-bold ph-github-logo"></i> GitHub
+                                </a>
+                                <a href="https://traefik-manager.xyzlab.dev" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
+                                    <i class="ph-bold ph-book-open"></i> Docs
+                                </a>
+                                <a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
+                                    <i class="ph-bold ph-google-play-logo"></i> Google Play
+                                </a>
+                            </div>
                         </div>
+
+                        <a id="mgrUpdateReleaseLink" href="https://github.com/chr0nzz/traefik-manager/releases" target="_blank" style="display:none"></a>
 
                         <div id="sm-about-release-notes" style="max-height:200px;overflow-y:auto;font-size:12px;line-height:1.6;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--input-bg)">
                             <span style="color:var(--muted)">Loading release notes…</span>
@@ -541,14 +689,6 @@
                             </a>
                         </div>
 
-                        <div class="flex gap-2" style="border-top:1px solid var(--border);padding-top:12px">
-                            <a href="https://github.com/chr0nzz/traefik-manager" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
-                                <i class="ph-bold ph-github-logo"></i> GitHub
-                            </a>
-                            <a href="https://traefik-manager.xyzlab.dev" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
-                                <i class="ph-bold ph-book-open"></i> Docs
-                            </a>
-                        </div>
 
                     </div>
                 </div>
@@ -560,6 +700,49 @@
 </div>
 
 <script>
+
+async function createAndLoadStaticBackup() {
+    const btn = document.querySelector('[onclick="createAndLoadStaticBackup()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ph-light ph-spinner-gap animate-spin"></i> Creating…'; }
+    try {
+        const res  = await fetch('/api/static/backup/create', { method: 'POST', headers: _csrfHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Static config backup created', 'success');
+            loadBackups();
+        } else {
+            showToast('Backup failed: ' + (data.error || 'Unknown'), 'error');
+        }
+    } catch(e) { showToast('Backup failed', 'error'); }
+    finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ph-bold ph-plus"></i> Create Backup'; }
+    }
+}
+
+function switchBackupTab(id, btn) {
+    document.querySelectorAll('#mpanel-backups .auth-sub-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#mpanel-backups .auth-sub-panel').forEach(p => p.style.display = 'none');
+    if (btn) btn.classList.add('active');
+    const panel = document.getElementById('backup-sub-' + id);
+    if (panel) panel.style.display = 'flex';
+}
+
+let _staticSettingsLoaded = false;
+function openStaticSettingsPanel() {
+    const warn = document.getElementById('staticDangerWarn');
+    if (warn) warn.style.display = localStorage.getItem('staticWarnHidden') === '1' ? 'none' : '';
+    if (!_staticSettingsLoaded) {
+        refreshStaticTab();
+        _staticSettingsLoaded = true;
+    }
+    requestAnimationFrame(_updateStaticTabArrows);
+}
+
+function hideStaticDangerWarn() {
+    localStorage.setItem('staticWarnHidden', '1');
+    const warn = document.getElementById('staticDangerWarn');
+    if (warn) warn.style.display = 'none';
+}
 
 function switchAuthTab(id, btn) {
     document.querySelectorAll('#mpanel-auth .auth-sub-tab').forEach(b => b.classList.remove('active'));
@@ -583,6 +766,22 @@ function switchSettingsPanel(id, btn) {
     const activeBtn = btn || document.getElementById('msb-' + id);
     if (activeBtn) activeBtn.classList.add('active');
     document.getElementById('mpanel-' + id).classList.add('active');
+    if (window.innerWidth < 640) {
+        const titles = {connection:'Connection',routes:'Route Monitoring',system:'System Monitoring',auth:'Authentication',backups:'Backups',static:'Static Config',ui:'Interface',about:'About'};
+        document.getElementById('settingsModalTitle').textContent = titles[id] || 'Settings';
+        document.getElementById('settingsGearIcon').style.display = 'none';
+        document.getElementById('settingsMobileRoot').style.display = 'none';
+        document.getElementById('settingsPanelWrapper').style.display = 'flex';
+        document.getElementById('settingsMobileBack').style.display = 'flex';
+    }
+}
+
+function settingsMobileBack() {
+    document.getElementById('settingsMobileRoot').style.display = 'flex';
+    document.getElementById('settingsPanelWrapper').style.display = 'none';
+    document.getElementById('settingsMobileBack').style.display = 'none';
+    document.getElementById('settingsGearIcon').style.display = '';
+    document.getElementById('settingsModalTitle').textContent = 'Settings';
 }
 
 async function openSettingsModal(panel) {
@@ -612,6 +811,7 @@ async function openSettingsModal(panel) {
         _applyTraefikBadgeVisibility();
         _applyTmBadgeVisibility();
         _applyDocsLinkVisibility();
+        _applyApiLinkVisibility();
         loadOtpStatus();
         loadApiKeyStatus();
         loadOidcStatus();
@@ -641,9 +841,17 @@ async function openSettingsModal(panel) {
         console.error('Could not load settings', e);
     }
     document.getElementById('settingsModal').style.display = 'flex';
-    const target = panel || 'connection';
-    switchSettingsPanel(target);
-    if (target === 'backups') loadBackups();
+    if (window.innerWidth < 640 && !panel) {
+        document.getElementById('settingsMobileRoot').style.display = 'flex';
+        document.getElementById('settingsPanelWrapper').style.display = 'none';
+        document.getElementById('settingsMobileBack').style.display = 'none';
+        document.getElementById('settingsGearIcon').style.display = '';
+        document.getElementById('settingsModalTitle').textContent = 'Settings';
+    } else {
+        const target = panel || 'ui';
+        switchSettingsPanel(target);
+        if (target === 'backups') loadBackups();
+    }
 }
 
 function closeSettingsModal() {
@@ -693,7 +901,7 @@ async function toggleAuth() {
     const currentlyOn = stateLabel.textContent === 'enabled';
     const newState    = !currentlyOn;
 
-    if (currentlyOn && !confirm('Disable built-in authentication? Anyone who can reach this URL will have full access.')) return;
+    if (currentlyOn && !await _confirm('Disable built-in authentication? Anyone who can reach this URL will have full access.', 'Disable Authentication', 'Disable')) return;
 
     try {
         const res  = await fetch('/api/auth/toggle', {
@@ -770,36 +978,47 @@ async function testTraefikApi() {
     }
 }
 
+function _renderBackupList(containerId, backups) {
+    const list = document.getElementById(containerId);
+    if (!list) return;
+    if (!backups.length) {
+        list.innerHTML = `<div class="text-center py-8" style="color:var(--muted)"><i class="ph-light ph-archive text-4xl block mb-2 opacity-30"></i><p>No backups yet</p></div>`;
+        return;
+    }
+    list.innerHTML = backups.map(b => `
+        <div class="flex items-center justify-between py-2.5 rounded-lg px-3 mb-2" style="background:var(--bg);border:1px solid var(--border)">
+            <div>
+                <div class="font-mono text-xs" style="color:var(--text)">${b.name}</div>
+                <div class="text-xs mt-0.5" style="color:var(--muted)">${b.modified} · ${formatBytes(b.size)}</div>
+            </div>
+            <div class="flex gap-1">
+                <button onclick="restoreBackup('${b.name}')" class="btn-secondary text-xs py-1 px-2.5">
+                    <i class="ph-bold ph-arrow-counter-clockwise text-xs"></i> Restore
+                </button>
+                <button onclick="deleteBackup('${b.name}')" class="btn-danger p-1.5">
+                    <i class="ph-bold ph-trash text-sm"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
 async function loadBackups() {
-    const list = document.getElementById('sm-backups-list');
-    list.innerHTML = `<div class="text-center py-8" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-2xl animate-spin block mb-2"></i>Loading…</div>`;
+    const routesList  = document.getElementById('sm-backups-list');
+    const staticList  = document.getElementById('sm-static-backups-list');
+    const spinner = `<div class="text-center py-8" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-2xl animate-spin block mb-2"></i>Loading…</div>`;
+    if (routesList) routesList.innerHTML = spinner;
+    if (staticList) staticList.innerHTML = spinner;
     try {
         const res     = await fetch('/api/backups');
         const backups = await res.json();
-
-        if (!backups.length) {
-            list.innerHTML = `<div class="text-center py-8" style="color:var(--muted)"><i class="ph-light ph-archive text-4xl block mb-2 opacity-30"></i><p>No backups yet</p></div>`;
-            return;
-        }
-
-        list.innerHTML = backups.map(b => `
-            <div class="flex items-center justify-between py-2.5 rounded-lg px-3 mb-2" style="background:var(--bg);border:1px solid var(--border)">
-                <div>
-                    <div class="font-mono text-xs" style="color:var(--text)">${b.name}</div>
-                    <div class="text-xs mt-0.5" style="color:var(--muted)">${b.modified} · ${formatBytes(b.size)}</div>
-                </div>
-                <div class="flex gap-1">
-                    <button onclick="restoreBackup('${b.name}')" class="btn-secondary text-xs py-1 px-2.5">
-                        <i class="ph-bold ph-arrow-counter-clockwise text-xs"></i> Restore
-                    </button>
-                    <button onclick="deleteBackup('${b.name}')" class="btn-danger p-1.5">
-                        <i class="ph-bold ph-trash text-sm"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
+        const routes  = backups.filter(b => b.kind !== 'static');
+        const statics = backups.filter(b => b.kind === 'static');
+        _renderBackupList('sm-backups-list', routes);
+        _renderBackupList('sm-static-backups-list', statics);
     } catch (e) {
-        list.innerHTML = `<p class="text-sm" style="color:var(--red)">Failed to load backups</p>`;
+        if (routesList) routesList.innerHTML = `<p class="text-sm" style="color:var(--red)">Failed to load backups</p>`;
+        if (staticList) staticList.innerHTML = `<p class="text-sm" style="color:var(--red)">Failed to load backups</p>`;
     }
 }
 
@@ -823,7 +1042,7 @@ async function createAndLoadBackups() {
 }
 
 async function restoreBackup(name) {
-    if (!confirm(`Restore backup "${name}"? Your current config will be backed up first.`)) return;
+    if (!await _confirm(`Restore backup "${name}"? Your current config will be backed up first.`, 'Restore Backup', 'Restore')) return;
     try {
         const res  = await fetch(`/api/restore/${name}`, { method: 'POST', headers: _csrfHeaders() });
         const data = await res.json();
@@ -840,7 +1059,7 @@ async function restoreBackup(name) {
 }
 
 async function deleteBackup(name) {
-    if (!confirm(`Delete backup "${name}"?`)) return;
+    if (!await _confirm(`Delete backup "${name}"?`, 'Delete Backup', 'Delete')) return;
     try {
         const res  = await fetch(`/api/backup/delete/${name}`, { method: 'POST', headers: _csrfHeaders() });
         const data = await res.json();
@@ -894,6 +1113,14 @@ function _applyTmBadgeVisibility() {
     if (tog) tog.classList.toggle('on', show);
 }
 
+function toggleShortcutsBtn() {
+    const show = localStorage.getItem('showShortcutsBtn') !== 'false';
+    localStorage.setItem('showShortcutsBtn', show ? 'false' : 'true');
+    document.documentElement.classList.toggle('tm-hide-shortcuts', show);
+    const t = document.getElementById('toggle-shortcuts-btn');
+    if (t) t.classList.toggle('on', !show);
+}
+
 function toggleDocsLink() {
     const show = localStorage.getItem('showDocsLink') !== 'false';
     localStorage.setItem('showDocsLink', show ? 'false' : 'true');
@@ -902,8 +1129,23 @@ function toggleDocsLink() {
 
 function _applyDocsLinkVisibility() {
     const show = localStorage.getItem('showDocsLink') !== 'false';
+    document.documentElement.classList.toggle('tm-hide-docs', !show);
     document.querySelectorAll('.nav-docs-link').forEach(el => el.classList.toggle('hidden', !show));
     const tog = document.getElementById('toggle-docs-link');
+    if (tog) tog.classList.toggle('on', show);
+}
+
+function toggleApiLink() {
+    const show = localStorage.getItem('showApiLink') === 'true';
+    localStorage.setItem('showApiLink', show ? 'false' : 'true');
+    _applyApiLinkVisibility();
+}
+
+function _applyApiLinkVisibility() {
+    const show = localStorage.getItem('showApiLink') === 'true';
+    document.documentElement.classList.toggle('tm-hide-api', !show);
+    document.querySelectorAll('.nav-api-link').forEach(el => el.classList.toggle('hidden', !show));
+    const tog = document.getElementById('toggle-api-link');
     if (tog) tog.classList.toggle('on', show);
 }
 
@@ -1007,20 +1249,28 @@ function _applyEntrypointsVisibility() {
 }
 
 function applyUiPrefs() {
+    const html = document.documentElement;
+    const showStats = _uiPref('showStatCards');
+    const compact = localStorage.getItem('compactStatCards') === 'true';
+    html.classList.toggle('tm-hide-stats', !showStats);
+    html.classList.toggle('tm-compact-stats', compact);
+    html.classList.toggle('tm-hide-entrypoints', !_uiPref('showEntrypoints'));
     const overviewSection = document.getElementById('overviewSection');
-    if (overviewSection) overviewSection.classList.toggle('hidden', !_uiPref('showStatCards'));
+    if (overviewSection) overviewSection.classList.toggle('hidden', !showStats);
     _applyEntrypointsVisibility();
     const grid = document.getElementById('statsGrid');
-    if (grid) grid.classList.toggle('stats-compact', localStorage.getItem('compactStatCards') === 'true');
+    if (grid) grid.classList.toggle('stats-compact', compact);
 }
 
 function loadUiTogglesIntoModal() {
     const sc = document.getElementById('toggle-ui-statcards');
     const ep = document.getElementById('toggle-ui-entrypoints');
     const cs = document.getElementById('toggle-ui-compact-stats');
+    const sh = document.getElementById('toggle-shortcuts-btn');
     if (sc) sc.classList.toggle('on', _uiPref('showStatCards'));
     if (ep) ep.classList.toggle('on', _uiPref('showEntrypoints'));
     if (cs) cs.classList.toggle('on', localStorage.getItem('compactStatCards') === 'true');
+    if (sh) sh.classList.toggle('on', localStorage.getItem('showShortcutsBtn') !== 'false');
 }
 
 function toggleUiPref(key) {
@@ -1052,7 +1302,7 @@ async function loadOtpStatus() {
 
 async function otpToggleFlow() {
     if (_otpEnabled) {
-        if (!confirm('Disable two-factor authentication?')) return;
+        if (!await _confirm('Disable two-factor authentication?', 'Disable 2FA', 'Disable')) return;
         try {
             const res  = await fetch('/api/auth/otp/disable', { method: 'POST', headers: _csrfHeaders() });
             const data = await res.json();

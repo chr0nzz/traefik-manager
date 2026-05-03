@@ -70,15 +70,61 @@ All `.yml` files in that directory will be loaded. A file picker appears in the 
 
 ## Optional monitoring mounts
 
-To enable the Certs, Plugins, and Logs tabs, add extra path mappings in the Unraid template under **Extra Parameters** or by editing the template's volume mappings:
+To enable optional tabs, add path mappings in the Unraid template:
 
-| Tab | Host path | Container path |
-|---|---|---|
-| Certs | `/mnt/user/appdata/traefik/acme.json` | `/app/acme.json` |
-| Plugins | `/mnt/user/appdata/traefik/traefik.yml` | `/app/traefik.yml` |
-| Logs | `/mnt/user/appdata/traefik/logs/access.log` | `/app/logs/access.log` |
+| Tab | Host path | Container path | Mode |
+|---|---|---|---|
+| Certs | `/mnt/user/appdata/traefik/acme.json` | `/app/acme.json` | Read-only |
+| Plugins | `/mnt/user/appdata/traefik/traefik.yml` | `/app/traefik.yml` | Read-only |
+| Plugins + Static Config | `/mnt/user/appdata/traefik/traefik.yml` | `/app/traefik.yml` | Read-write |
+| Logs | `/mnt/user/appdata/traefik/logs/access.log` | `/app/logs/access.log` | Read-only |
 
-All three should be mounted read-only. Then enable each tab in **Settings → System Monitoring**.
+Mount `traefik.yml` read-write if you want to use the Static Config editor. Read-only enables only the Plugins tab. Then enable each tab in **Settings → System Monitoring**.
+
+---
+
+## Static config editor
+
+The Static Config tab lets you edit `traefik.yml` directly from the UI - entrypoints, certificate resolvers, plugins, providers, API settings, and log level. After saving, Traefik Manager restarts Traefik automatically.
+
+### Requirements
+
+1. Mount `traefik.yml` with **read/write** access (not read-only) in the template
+2. Set the restart method via environment variables
+
+### Method 1: Socket proxy (recommended)
+
+Run a Docker socket proxy container (e.g. `ghcr.io/tecnativa/docker-socket-proxy`) and point Traefik Manager at it:
+
+| Variable | Value |
+|---|---|
+| `RESTART_METHOD` | `proxy` |
+| `DOCKER_HOST` | `tcp://socket-proxy:2375` |
+| `TRAEFIK_CONTAINER` | `traefik` |
+
+Both containers must be on the same Docker network. In the socket proxy container, set `CONTAINERS=1` and `POST=1`.
+
+### Method 2: Poison pill
+
+Traefik Manager writes a signal file. A watcher sidecar container monitors it and restarts Traefik. No socket access needed for Traefik Manager itself.
+
+| Variable | Value |
+|---|---|
+| `RESTART_METHOD` | `poison-pill` |
+| `SIGNAL_FILE_PATH` | `/signals/restart.sig` |
+
+Create a shared Docker volume named `traefik-signals` and mount it to `/signals` in both Traefik Manager and the watcher container.
+
+### Method 3: Direct socket
+
+Mount the Docker socket directly into Traefik Manager:
+
+| Variable | Value |
+|---|---|
+| `RESTART_METHOD` | `socket` |
+| `TRAEFIK_CONTAINER` | `traefik` |
+
+Add an extra path mapping: host `/var/run/docker.sock` → container `/var/run/docker.sock` (read-only).
 
 ---
 

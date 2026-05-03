@@ -108,17 +108,15 @@
                         <span class="text-sm" style="color:var(--text)">Skip TLS Verification (insecureSkipVerify)</span>
                     </div>
                     <p class="text-xs -mt-2" style="color:var(--muted)">For backends with self-signed certificates (e.g. Proxmox, Kasm).</p>
-                    {% if cert_resolvers %}
                     <div>
                         <label>Cert Resolver</label>
                         <select name="certResolver" id="certResolver" class="input-field">
                             {% for r in cert_resolvers %}
                             <option value="{{ r }}">{{ r }}</option>
                             {% endfor %}
-                            <option value="__none__">None (custom cert / tls.yml)</option>
+                            <option value="__none__">None (external / custom cert)</option>
                         </select>
                     </div>
-                    {% endif %}
                 </div>
 
                 <div id="tcpSection" class="protocol-section space-y-4">
@@ -148,17 +146,15 @@
                         <input type="checkbox" name="useTls" id="useTls" value="true" class="rounded" style="accent-color:var(--blue)" onchange="toggleTcpCertResolver(this.checked)">
                         <span class="text-sm" style="color:var(--text)">Enable TLS (with cert resolver)</span>
                     </div>
-                    {% if cert_resolvers %}
                     <div id="tcpCertResolverRow" style="display:none">
                         <label>Cert Resolver</label>
                         <select name="certResolver" id="certResolverTcp" class="input-field">
                             {% for r in cert_resolvers %}
                             <option value="{{ r }}">{{ r }}</option>
                             {% endfor %}
-                            <option value="__none__">None (custom cert / tls.yml)</option>
+                            <option value="__none__">None (external / custom cert)</option>
                         </select>
                     </div>
-                    {% endif %}
                 </div>
 
                 <div id="udpSection" class="protocol-section space-y-4">

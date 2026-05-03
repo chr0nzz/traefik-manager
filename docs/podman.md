@@ -167,9 +167,105 @@ Add `:z` to every optional volume mount on SELinux hosts:
 ```yaml
 volumes:
   - /path/to/traefik/acme.json:/app/acme.json:ro,z
-  - /path/to/traefik/traefik.yml:/app/traefik.yml:ro,z
+  - /path/to/traefik/traefik.yml:/app/traefik.yml:z          # read-write for Static Config editor
   - /path/to/traefik/logs/access.log:/app/logs/access.log:ro,z
 ```
+
+> Mount `traefik.yml` without `:ro` if you want to use the Static Config editor. Read-only enables only the Plugins tab.
+
+---
+
+## Static config editor
+
+The Static Config tab lets you edit `traefik.yml` directly from the UI. After saving, Traefik Manager can restart Traefik automatically.
+
+### Requirements
+
+Mount `traefik.yml` read-write (no `:ro`) and set `RESTART_METHOD`.
+
+### Method 1: Poison pill (recommended for Podman)
+
+No socket access needed for Traefik Manager. Instead, Traefik Manager writes a signal file to a shared named volume. Traefik's own healthcheck detects the file, removes it, and kills itself (`kill -TERM 1`). Podman's `restart: always` policy immediately starts a fresh Traefik instance. No extra container needed.
+
+Add a `healthcheck` to your Traefik service and mount the shared volume on both containers:
+
+```yaml
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "[ ! -f /signals/restart.sig ] || (rm /signals/restart.sig && kill -TERM 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 1
+    volumes:
+      # your existing traefik volumes...
+      - traefik-signals:/signals:z
+    networks:
+      - traefik
+
+  traefik-manager:
+    image: ghcr.io/chr0nzz/traefik-manager:latest
+    container_name: traefik-manager
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - COOKIE_SECURE=false
+      - STATIC_CONFIG_PATH=/app/traefik.yml
+      - RESTART_METHOD=poison-pill
+      - SIGNAL_FILE_PATH=/signals/restart.sig
+    volumes:
+      - /path/to/traefik/dynamic.yml:/app/config/dynamic.yml:z
+      - /path/to/traefik-manager/config:/app/config:z
+      - /path/to/traefik-manager/backups:/app/backups:z
+      - /path/to/traefik/traefik.yml:/app/traefik.yml:z
+      - traefik-signals:/signals:z
+    networks:
+      - traefik
+
+volumes:
+  traefik-signals:
+```
+
+### Method 2: Direct socket
+
+Mount the Podman socket directly. The socket path depends on whether Podman runs as root or rootless.
+
+```yaml
+services:
+  traefik-manager:
+    image: ghcr.io/chr0nzz/traefik-manager:latest
+    container_name: traefik-manager
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - COOKIE_SECURE=false
+      - STATIC_CONFIG_PATH=/app/traefik.yml
+      - RESTART_METHOD=socket
+      - TRAEFIK_CONTAINER=traefik
+    volumes:
+      - /path/to/traefik/dynamic.yml:/app/config/dynamic.yml:z
+      - /path/to/traefik-manager/config:/app/config:z
+      - /path/to/traefik-manager/backups:/app/backups:z
+      - /path/to/traefik/traefik.yml:/app/traefik.yml:z
+      # Root Podman:
+      - /run/podman/podman.sock:/var/run/docker.sock:ro
+      # Rootless Podman (replace 1000 with your UID):
+      # - /run/user/1000/podman/podman.sock:/var/run/docker.sock:ro
+```
+
+### Environment variables
+
+| Variable | Values | Default | Description |
+|---|---|---|---|
+| `STATIC_CONFIG_PATH` | path | - | Path to `traefik.yml` inside the container. Must be set for the Static Config and Plugins tabs to work. |
+| `RESTART_METHOD` | `proxy`, `socket`, `poison-pill` | - | How to restart Traefik after a static config change |
+| `TRAEFIK_CONTAINER` | container name | `traefik` | Name of the Traefik container to restart |
+| `SIGNAL_FILE_PATH` | path | `/signals/restart.sig` | Signal file path for the `poison-pill` method |
 
 ---
 

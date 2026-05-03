@@ -47,6 +47,8 @@ Three modes:
 
 Icons are fetched once and cached on disk at `/config/cache/{slug}.png` so they are served locally on subsequent loads.
 
+If a self-route is configured for Traefik Manager (**Settings → System → Expose via Traefik**), its dashboard card automatically shows the Traefik Manager icon instead of a CDN lookup.
+
 ### Group assignment
 
 Override which group the route belongs to. Select **Auto-detect** to let the keyword matching decide, or pick any built-in or custom group.

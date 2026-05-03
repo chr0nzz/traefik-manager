@@ -5,9 +5,9 @@
     <button onclick="openMwModal(); closeMobileMenu()" class="mobile-menu-item">
         <i class="ph-bold ph-plugs-connected" style="color:var(--purple)"></i> Add Middleware
     </button>
-    <button onclick="openSettingsModal(); closeMobileMenu()" class="mobile-menu-item">
-        <i class="ph-bold ph-gear" style="color:var(--muted)"></i> Settings
-    </button>
+    <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="mobile-menu-item nav-docs-link" style="text-decoration:none">
+        <i class="ph-bold ph-book-open" style="color:var(--muted)"></i> Documentation
+    </a>
     {% if auth_enabled %}
     <div class="mobile-menu-divider"></div>
     <form method="POST" action="{{ url_for('logout') }}">
@@ -21,6 +21,19 @@
         <i class="ph-bold ph-device-mobile" style="color:var(--green)"></i> Install as App
     </button>
     <div class="mobile-menu-divider"></div>
+    <button onclick="openSettingsModal(); closeMobileMenu()" class="mobile-menu-item">
+        <i class="ph-bold ph-gear" style="color:var(--muted)"></i> Settings
+    </button>
+    <div class="mobile-menu-divider"></div>
+    <div id="versionBadgeMobile" class="hidden items-center gap-2 px-4 py-2 text-xs font-mono" style="color:var(--muted)">
+        <span id="apiStatusDotMobile" style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span>
+        <i class="ph-bold ph-git-branch text-xs"></i>
+        <span id="versionTextMobile">-</span>
+    </div>
+    <div id="tmVersionBadgeMobile" class="hidden items-center gap-2 px-4 py-2 text-xs font-mono" style="color:var(--muted)">
+        <i class="ph-bold ph-package text-xs"></i>
+        <span id="tmVersionTextMobile">-</span>
+    </div>
     <div class="px-2 py-1">
         <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--muted)">Theme</div>
         <div class="flex gap-2">

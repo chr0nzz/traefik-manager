@@ -148,6 +148,12 @@ The Logs tab requires `ACCESS_LOG_PATH` to be set in your Traefik Manager server
 
 Access via the drawer under **Data → Backups**. Create and restore configuration backups.
 
+### Widget (Android)
+
+A home screen widget shows a live count of healthy, warning, and error services at a glance. Add it from your launcher's widget picker after installing the app.
+
+The widget connects using the same API key saved when you first connected the app. If the widget stops updating or shows offline, disconnect and reconnect the server in **Settings → Server** - this refreshes the stored credentials.
+
 ### Edit Mode
 
 Tap the **pencil icon** in the top bar to enter edit mode. In edit mode, cards reveal:
