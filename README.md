@@ -1,6 +1,3 @@
-> [!NOTE]
-> **v1 Beta is now available** - try the new Static Config editor and more. [Join the beta →](https://beta-tm.xyzlab.dev/beta)
-
 <div align="center">
 
 <img src="docs/public/images/icon.png" width="128" height="128" alt="Traefik Manager">
