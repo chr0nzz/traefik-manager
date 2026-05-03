@@ -1,6 +1,3 @@
-> [!NOTE]
-> **You are on the v1 beta branch.** For the stable release see [main](https://github.com/chr0nzz/traefik-manager/tree/main). Beta docs: [beta-tm.xyzlab.dev](https://beta-tm.xyzlab.dev)
-
 <div align="center">
 
 <img src="docs/public/images/icon.png" width="128" height="128" alt="Traefik Manager">
@@ -303,7 +300,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 
 ## Mobile App
 
-**traefik-manager-mobile** is a React Native companion app for managing Traefik Manager from your phone. Requires **Traefik Manager v0.6.0 or higher**.
+**traefik-manager-mobile** is a React Native companion app for managing Traefik Manager from your phone. Requires **Traefik Manager v1.0.0 or higher**.
 
 |          |                                                                                                |
 | ----------| ------------------------------------------------------------------------------------------------|
