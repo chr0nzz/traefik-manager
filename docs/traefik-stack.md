@@ -62,6 +62,7 @@ Your base domain and subdomains for:
 | Let's Encrypt - DNS: DigitalOcean | Requires a DigitalOcean API token. |
 | Let's Encrypt - DNS: Namecheap | Requires Namecheap API user and key. |
 | Let's Encrypt - DNS: DuckDNS | Requires a DuckDNS token. |
+| Let's Encrypt - DNS: deSEC | Requires a deSEC token. Works without port 80. |
 | No TLS (HTTP only) | Port 80 only. Suitable for internal LAN use. |
 
 **Dynamic config layout**
