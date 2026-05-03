@@ -4,43 +4,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>API Reference – Traefik Manager</title>
+  <script>
+    (function() {
+      const pref = localStorage.getItem('tm-theme') || 'dark';
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      window._tmIsDark = pref === 'dark' || (pref === 'system' && systemDark);
+    })();
+  </script>
   <style>
-    :root {
-      --scalar-color-1: #1f2328;
-      --scalar-color-2: #636c76;
-      --scalar-color-3: #8b949e;
-      --scalar-background-1: #f6f8fa;
-      --scalar-background-2: #ffffff;
-      --scalar-background-3: #eaeef2;
-      --scalar-border-color: #d0d7de;
-      --scalar-color-accent: #0969da;
-      --scalar-sidebar-background-1: #ffffff;
-      --scalar-sidebar-border-color: #d0d7de;
-      --scalar-color-green: #1a7f37;
-      --scalar-color-red: #cf222e;
-      --scalar-color-yellow: #9a6700;
-      --scalar-color-blue: #0969da;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --scalar-color-1: #e6edf3;
-        --scalar-color-2: #8b949e;
-        --scalar-color-3: #636c76;
-        --scalar-background-1: #0d1117;
-        --scalar-background-2: #161b22;
-        --scalar-background-3: #1c2128;
-        --scalar-border-color: #30363d;
-        --scalar-color-accent: #24a1de;
-        --scalar-sidebar-background-1: #161b22;
-        --scalar-sidebar-border-color: #30363d;
-        --scalar-color-green: #22c55e;
-        --scalar-color-red: #ef4444;
-        --scalar-color-yellow: #f59e0b;
-        --scalar-color-blue: #24a1de;
-      }
-    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { padding-top: 40px; }
+    #tm-app { height: calc(100vh - 40px); }
     #topbar {
       position: fixed;
       top: 0; left: 0; right: 0;
@@ -49,8 +23,6 @@
       display: flex;
       align-items: center;
       padding: 0 16px;
-      background: var(--scalar-background-2);
-      border-bottom: 1px solid var(--scalar-border-color);
       gap: 12px;
     }
     #topbar a {
@@ -60,17 +32,26 @@
       font-family: system-ui, sans-serif;
       font-size: 13px;
       font-weight: 500;
-      color: var(--scalar-color-2);
       text-decoration: none;
       transition: color 0.15s;
     }
-    #topbar a:hover { color: var(--scalar-color-1); }
     #topbar span {
       font-family: system-ui, sans-serif;
       font-size: 13px;
-      color: var(--scalar-color-3);
     }
   </style>
+  <script>
+    (function() {
+      const isDark = window._tmIsDark;
+      const bg = isDark ? '#0d1117' : '#ffffff';
+      const border = isDark ? '#30363d' : '#d0d7de';
+      const text = isDark ? '#e6edf3' : '#1f2328';
+      const muted = isDark ? '#8b949e' : '#656d76';
+      const s = document.createElement('style');
+      s.textContent = `#topbar{background:${bg};border-bottom:1px solid ${border}}#topbar a{color:${muted}}#topbar a:hover{color:${text}}#topbar span{color:${muted}}`;
+      document.head.appendChild(s);
+    })();
+  </script>
 </head>
 <body>
   <div id="topbar">
@@ -78,11 +59,42 @@
     <span>/</span>
     <span>API Reference</span>
   </div>
-  <script
-    id="api-reference"
-    data-url="/static/openapi.yaml"
-    data-configuration='{"theme":"none","servers":[{"url":""}]}'
-  ></script>
+  <div id="tm-app"></div>
   <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+  <script>
+    const _isDark = window._tmIsDark;
+    Scalar.createApiReference('#tm-app', {
+      url: '/static/openapi.yaml',
+      theme: 'none',
+      forceDarkModeState: _isDark ? 'dark' : 'light',
+      hideDarkModeToggle: true,
+      servers: [{ url: window.location.origin, description: 'This Traefik Manager instance' }],
+      customCss: _isDark ? `
+        .dark-mode {
+          --scalar-background-1: #0d1117;
+          --scalar-background-2: #161b22;
+          --scalar-background-3: #1c2128;
+          --scalar-color-1: #e6edf3;
+          --scalar-color-2: #8b949e;
+          --scalar-color-3: #656d76;
+          --scalar-color-accent: #24a1de;
+          --scalar-border-color: #30363d;
+          --scalar-background-accent: rgba(36,161,222,0.1);
+        }
+      ` : `
+        .light-mode {
+          --scalar-background-1: #f6f8fa;
+          --scalar-background-2: #ffffff;
+          --scalar-background-3: #eaeef2;
+          --scalar-color-1: #1f2328;
+          --scalar-color-2: #656d76;
+          --scalar-color-3: #8b949e;
+          --scalar-color-accent: #0969da;
+          --scalar-border-color: #d0d7de;
+          --scalar-background-accent: rgba(9,105,218,0.1);
+        }
+      `
+    });
+  </script>
 </body>
 </html>

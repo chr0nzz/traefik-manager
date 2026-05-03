@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Traefik Manager API
-  version: 1.0.0-beta4
+  version: 1.0.0
   description: |
     REST API powering the Traefik Manager web UI and official mobile app.
 

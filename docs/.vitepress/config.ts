@@ -28,17 +28,13 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide' },
-      { text: 'Beta', link: '/beta' },
       { text: 'Security', link: '/security' },
       { text: 'API', link: '/api' },
       { text: 'UI Examples', link: '/ui-examples' },
       {
-        text: 'v1.0.0-beta4',
+        text: 'v1.0.0',
         items: [
-          { text: 'v1.0.0-beta4', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta4' },
-          { text: 'v1.0.0-beta3.2', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta3.2' },
-          { text: 'v1.0.0-beta3.1', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta3.1' },
-          { text: 'v1.0.0-beta3', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0-beta3' },
+          { text: 'v1.0.0', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.0.0' },
           { text: 'All releases', link: 'https://github.com/chr0nzz/traefik-manager/releases' },
         ],
       },
@@ -47,7 +43,6 @@ export default defineConfig({
     sidebar: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide' },
-      { text: 'Beta', link: '/beta' },
       { text: 'Mobile App', link: '/mobile' },
       { text: 'Security', link: '/security' },
       { text: 'API', link: '/api' },
