@@ -2,15 +2,6 @@
 
 **traefik-manager-mobile** is a React Native companion app for managing Traefik Manager from your phone.
 
-::: warning Version Compatibility
-| Mobile App | Requires Server |
-|---|---|
-| v0.11.0+ | v0.12.0+ - adds entrypoint and middleware chip APIs |
-| v0.10.0 | v0.11.0+ - adds multi-domain rules, `insecureSkipVerify`, and `.yml` auto-append |
-| v0.6.0 - v0.9.x | v0.10.0+ - adds `CONFIG_DIR` multi-file API support |
-| Earlier | v0.6.0+ - adds API key authentication |
-:::
-
 ::: info Using external auth (Authentik, Authelia, etc.)?
 See [connecting without an API key](#connecting-without-an-api-key) and [external auth providers](#external-auth-providers) below.
 :::
@@ -21,8 +12,8 @@ See [connecting without an API key](#connecting-without-an-api-key) and [externa
 
 <MobileRelease />
 
-<a href="https://forms.gle/csituqc92sreNooZ8" target="_blank" rel="noopener noreferrer" class="vp-btn vp-btn--brand" style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;">
-  <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/google-play.png" style="height:18px;width:18px;vertical-align:middle;display:inline-block;margin-right:4px"> Sign up to beta test on Google Play
+<a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager">
+  <img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/GetItOnGooglePlay.svg" alt="Get it on Google Play" height="60" />
 </a>
 
 ---
