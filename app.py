@@ -672,7 +672,16 @@ def _check_csrf():
     expected = session.get('csrf_token', '')
     if not expected or not secrets.compare_digest(str(token), str(expected)):
         logger.warning(f"CSRF check failed from {request.remote_addr}")
+        if request.headers.get('X-Requested-With') == 'fetch' or request.is_json:
+            raise _CsrfError()
         abort(403)
+
+class _CsrfError(Exception):
+    pass
+
+@app.errorhandler(_CsrfError)
+def _handle_csrf_error(e):
+    return jsonify({'ok': False, 'message': 'Session expired - please refresh the page.'}), 403
 
 def csrf_protect(f):
     @wraps(f)
