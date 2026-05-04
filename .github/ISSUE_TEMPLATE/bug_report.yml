@@ -12,7 +12,7 @@ body:
     id: version
     attributes:
       label: Traefik Manager version
-      placeholder: "e.g. v1.0.0-beta3.2"
+      placeholder: "e.g. v1.0.0"
     validations:
       required: true
 
