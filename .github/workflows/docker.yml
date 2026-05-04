@@ -6,6 +6,7 @@ on:
       - "v*.*.*"
     branches:
       - dev
+      - main
     paths-ignore:
       - 'docs/**'
       - '*.md'
@@ -50,14 +51,14 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=beta,enable=${{ github.ref == 'refs/heads/dev' || contains(github.ref, '-beta') }}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && !contains(github.ref, '-beta') }}
             type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
             type=semver,pattern={{major}}.{{minor}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
             type=semver,pattern={{major}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
 
       - name: Build and push (linux/amd64 + linux/arm64)
         id: push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -69,7 +70,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Attest image
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}
