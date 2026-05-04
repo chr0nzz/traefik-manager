@@ -18,7 +18,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.0.0"
+APP_VERSION  = "1.0.1"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -2631,8 +2631,6 @@ def save_entry():
         svc_name       = request.form.get('serviceName', '').strip()
         subdomain      = request.form.get('subdomain', '').strip()
         domain         = request.form.get('domain', settings['domains'][0]).strip()
-        target_ip      = request.form.get('targetIp', '').strip()
-        target_port    = request.form.get('targetPort', '').strip()
         middlewares_in = request.form.get('middlewares', '').strip()
         protocol       = request.form.get('protocol', 'http').strip().lower()
         is_edit        = request.form.get('isEdit') == 'true'
@@ -2643,9 +2641,24 @@ def save_entry():
         _all_eps       = request.form.getlist('entryPoints')
         http_eps       = [ep.strip() for ep in (_all_eps[0] if _all_eps else 'https').split(',') if ep.strip()] or ['https']
         tcp_eps        = [ep.strip() for ep in (_all_eps[1] if len(_all_eps) > 1 else '').split(',') if ep.strip()] or ['https']
+        _all_ips       = request.form.getlist('targetIp')
+        _all_ports     = request.form.getlist('targetPort')
+        if protocol == 'tcp':
+            target_ip   = (_all_ips[1]   if len(_all_ips)   > 1 else '').strip()
+            target_port = (_all_ports[1] if len(_all_ports) > 1 else '').strip()
+        elif protocol == 'udp':
+            target_ip   = (_all_ips[2]   if len(_all_ips)   > 2 else '').strip()
+            target_port = (_all_ports[2] if len(_all_ports) > 2 else '').strip()
+        else:
+            target_ip   = (_all_ips[0]   if _all_ips   else '').strip()
+            target_port = (_all_ports[0] if _all_ports else '').strip()
         resolvers      = [r.strip() for r in settings['cert_resolver'].split(',') if r.strip()]
-        cert_resolver_raw = request.form.get('certResolver', '').strip()
-        cert_resolver  = '' if (cert_resolver_raw in ('__none__', 'none')) else (cert_resolver_raw or (resolvers[0] if resolvers else ''))
+        _all_resolvers    = request.form.getlist('certResolver')
+        cert_resolver_raw = (_all_resolvers[0] if _all_resolvers else '').strip()
+        cert_resolver     = '' if (cert_resolver_raw in ('__none__', 'none')) else (cert_resolver_raw or (resolvers[0] if resolvers else ''))
+        use_tls_tcp       = request.form.get('useTls') == 'true'
+        tcp_cert_raw      = (_all_resolvers[1] if len(_all_resolvers) > 1 else '').strip()
+        tcp_cert_resolver = '' if (tcp_cert_raw in ('__none__', 'none')) else (tcp_cert_raw or (resolvers[0] if resolvers else ''))
         config_file_raw = request.form.get('configFile', '').strip()
         target_path    = _resolve_config_path(config_file_raw) or CONFIG_PATH
 
@@ -2715,8 +2728,10 @@ def save_entry():
             rule = tcp_rule or (f"HostSNI(`{subdomain}.{domain}`)" if subdomain else "HostSNI(`*`)")
             config.setdefault('tcp', {}).setdefault('routers', {})
             config['tcp'].setdefault('services', {})
-            tcp_tls = {'certResolver': cert_resolver} if cert_resolver else {}
-            config['tcp']['routers'][router_name]   = {'rule': rule, 'entryPoints': tcp_eps, 'tls': tcp_tls, 'service': service_name}
+            router_entry = {'rule': rule, 'entryPoints': tcp_eps, 'service': service_name}
+            if use_tls_tcp:
+                router_entry['tls'] = {'certResolver': tcp_cert_resolver} if tcp_cert_resolver else {}
+            config['tcp']['routers'][router_name]   = router_entry
             config['tcp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
 
         elif protocol == 'udp':
