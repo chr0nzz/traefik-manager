@@ -257,7 +257,7 @@ select.input-field option { background: var(--card); color: var(--text); }
 .proto-toggle { display: flex; gap: 4px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
 .proto-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; background: transparent; transition: all 0.15s; color: var(--muted); letter-spacing: 0.05em; }
 .proto-btn.active-http { background: rgba(36,161,222,0.2); color: var(--blue); }
-.proto-btn.active-tcp  { background: rgba(163,113,247,0.2); color: var(--purple); }
+.proto-btn.active-tcp  { background: rgba(26,188,156,0.2); color: var(--teal); }
 .proto-btn.active-udp  { background: rgba(240,136,62,0.2); color: var(--orange); }
 
 /* Scrollbars */

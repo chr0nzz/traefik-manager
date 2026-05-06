@@ -12,13 +12,14 @@ from functools import wraps
 import click
 from flask import (Flask, render_template, request, redirect,
                    url_for, flash, jsonify, abort, session, send_file)
+from werkzeug.middleware.proxy_fix import ProxyFix
 from ruamel.yaml import YAML
 from ruamel.yaml import YAML as SafeYAML
 from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.0.3"
+APP_VERSION  = "1.0.4"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -30,6 +31,7 @@ logger = logging.getLogger("traefik-manager")
 
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 _CONFIG_DIR      = os.path.dirname(os.environ.get('SETTINGS_PATH', '/app/config/manager.yml'))
 _SECRET_KEY_PATH = os.path.join(_CONFIG_DIR, '.secret_key')
