@@ -12,8 +12,9 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/chr0nzz/traefik-manager)](https://github.com/chr0nzz/traefik-manager/releases)
 [![Docs](https://img.shields.io/badge/docs-github.io-blue)](https://traefik-manager.xyzlab.dev/)
-[![Mobile App](https://img.shields.io/badge/mobile-traefik--manager--mobile-green?logo=android&logoColor=white)](https://github.com/chr0nzz/traefik-manager-mobile)
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/B0B21YGSHD)
+[![Mobile App](https://img.shields.io/badge/mobile-repo-green?logo=android&logoColor=white)](https://github.com/chr0nzz/traefik-manager-mobile)
+[![Google Play](https://img.shields.io/badge/Google_Play-Available-blue?logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Sponsor-ff5f5f?logo=ko-fi&logoColor=white)](https://ko-fi.com/chr0nzz)
 
 </div>
 <div align="center">
