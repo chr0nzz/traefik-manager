@@ -1299,31 +1299,8 @@ def traefik_api_get(path):
     return None
 
 def traefik_api_get_all(path):
-    settings = load_settings()
-    base_url = settings['traefik_api_url']
-    if not _safe_api_url(base_url):
-        logger.error("traefik_api_url failed safety check")
-        return None
-    results = []
-    page = 1
-    per_page = 1000
-    try:
-        while True:
-            sep = '&' if '?' in path else '?'
-            resp = requests.get(f"{base_url}{path}{sep}page={page}&per_page={per_page}", timeout=10)
-            if resp.status_code != 200:
-                break
-            data = resp.json()
-            if not data:
-                break
-            results.extend(data)
-            next_page = resp.headers.get('X-Next-Page', '').strip()
-            if not next_page:
-                break
-            page = int(next_page)
-    except Exception as e:
-        logger.debug(f"Traefik API unavailable: {e}")
-    return results or None
+    sep = '&' if '?' in path else '?'
+    return traefik_api_get(f"{path}{sep}per_page=1000")
 
 @app.route('/api/traefik/overview')
 @login_required
