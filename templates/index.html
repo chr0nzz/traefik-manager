@@ -3327,6 +3327,7 @@ function _initMobileFilterBars() {
     if (_rg) _routeCardEls = Array.from(_rg.querySelectorAll('.route-card'));
     const _mg = document.getElementById('mwGrid');
     if (_mg) _mwCardEls = Array.from(_mg.querySelectorAll('.mw-card'));
+    refreshRoutes();
     loadOverviewStats();
     checkManagerVersion();
     fetchNotifications();
