@@ -140,7 +140,7 @@ def add_notification(type_, msg):
     entry = {'ts': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': type_, 'msg': msg}
     with _notif_lock:
         _notifications.append(entry)
-    threading.Thread(target=_save_notifications_bg, daemon=True).start()
+    _save_notifications_bg()
 
 _config_dir = os.environ.get('CONFIG_DIR', '').strip()
 ACTIVE_CONFIG_DIR = _config_dir
@@ -1132,6 +1132,7 @@ def login_otp():
             session.update(_vals)
             session.permanent = remember
             logger.info(f"Successful OTP login from {request.remote_addr}")
+            add_notification('info', f"Login from {request.remote_addr}")
             if must_change:
                 if not setup_complete:
                     return redirect(url_for('setup'))
@@ -1932,7 +1933,7 @@ def list_backups():
         del b['mtime']
     return backups
 
-_BACKUP_RE = re.compile(r'^[a-zA-Z0-9._-]+\.yml\.\d{8}_\d{6}\.bak$')
+_BACKUP_RE = re.compile(r'^[a-zA-Z0-9._ -]+\.yml\.\d{8}_\d{6}\.bak$')
 
 def _validated_backup_path(filename: str) -> str:
     if not _BACKUP_RE.match(filename):
@@ -1973,6 +1974,14 @@ def api_notifications_clear():
     with _notif_lock:
         _notifications.clear()
     threading.Thread(target=_save_notifications_bg, daemon=True).start()
+    return jsonify({'ok': True})
+
+@app.route('/api/notifications/update', methods=['POST'])
+@login_required
+def api_notifications_update():
+    version = (request.get_json(silent=True) or {}).get('version', '')
+    if version:
+        add_notification('info', f"Traefik Manager v{version} is available - update now")
     return jsonify({'ok': True})
 
 @app.route('/api/backups')
@@ -3015,6 +3024,7 @@ def oidc_callback():
         'oidc_name':     name,
     })
     logger.info(f"OIDC login success for {email!r} from {request.remote_addr}")
+    add_notification('info', f"OIDC login: {email} from {request.remote_addr}")
     return redirect(url_for('index'))
 
 
