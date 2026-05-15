@@ -259,6 +259,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 
 **Routing & Middleware**
 - Add, edit, delete, and **enable/disable** HTTP, TCP, and UDP routes - no YAML editing required
+- **Advanced rule editor** - toggle between a domain chip builder and a free-text rule input for complex expressions (`PathPrefix`, `HostRegexp`, `&&` / `||` compounds, etc.)
 - **Multiple domains per route** - select any combination of your configured domains; generates multi-host Traefik rules (`Host(\`sub.d1\`) || Host(\`sub.d2\`)`)
 - **Per-service insecureSkipVerify** - checkbox adds a named `serversTransport` for backends with self-signed certs (Proxmox, Kasm, etc.); yellow TLS skip badge shown on route cards
 - Create middlewares with built-in templates (Basic Auth, Forward Auth, Redirect, Strip Prefix)
@@ -267,7 +268,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 
 **Live Dashboard**
 - Real-time stats: router counts, service health, entrypoints, Traefik version
-- Provider tabs: Docker, Kubernetes, Swarm, Nomad, ECS, Consul Catalog, Redis, etcd, Consul KV, ZooKeeper, HTTP Provider, File - all API-based, no extra mounts
+- Provider tabs: Docker, Kubernetes, Swarm, Nomad, ECS, Consul Catalog, Redis, etcd, Consul KV, ZooKeeper, HTTP Provider, File - all API-based, no extra mounts; **each tab shows provider middlewares** in a read-only section
 - **Filter live services** by protocol (HTTP/TCP/UDP) and provider (docker, file, kubernetes…)
 - **List view toggle** on Routes, Middlewares, and Services tabs - switch between card grid and compact table
 

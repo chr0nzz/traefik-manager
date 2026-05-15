@@ -24,6 +24,7 @@
             <p>Loading file provider routes...</p>
         </div>
     </div>
+    <div id="fileExternalMiddlewares"></div>
 </div>
 
 <script>
@@ -35,9 +36,10 @@ async function refreshFileExternalTab() {
     container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading file provider routes...</p></div>`;
 
     try {
-        const [routerRes, managedNames] = await Promise.all([
+        const [routerRes, managedNames, mwRes] = await Promise.all([
             fetch('/api/traefik/routers').then(r => r.json()),
             fetch('/api/manager/router-names').then(r => r.json()),
+            fetch('/api/traefik/middlewares').then(r => r.json()).catch(() => ({})),
         ]);
 
         const managedSet = new Set(managedNames);
@@ -63,6 +65,8 @@ async function refreshFileExternalTab() {
             return;
         }
 
+        const _mws = [...(mwRes.http || []), ...(mwRes.tcp || [])].filter(m => { const mwProv = m.provider || (m.name||'').split('@')[1] || ''; return mwProv === 'file'; });
+        renderProviderMiddlewareSection(_mws, 'fileExternalMiddlewares');
         document.getElementById('fileExternalTabCount').textContent = _allFileExternalRoutes.length;
         renderFileExternalRoutes();
     } catch(e) {

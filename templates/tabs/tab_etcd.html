@@ -24,6 +24,7 @@
             <p>Loading etcd routes...</p>
         </div>
     </div>
+    <div id="etcdMiddlewares"></div>
 </div>
 
 <script>
@@ -35,7 +36,10 @@ async function refreshEtcdTab() {
     container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading etcd routes...</p></div>`;
 
     try {
-        const routerRes = await fetch('/api/traefik/routers').then(r => r.json());
+        const [routerRes, mwRes] = await Promise.all([
+            fetch('/api/traefik/routers').then(r => r.json()),
+            fetch('/api/traefik/middlewares').then(r => r.json()).catch(() => ({})),
+        ]);
 
         const http = (routerRes.http || []).map(r => ({ ...r, _proto: 'HTTP' }));
         const tcp  = (routerRes.tcp  || []).map(r => ({ ...r, _proto: 'TCP'  }));
@@ -57,6 +61,8 @@ async function refreshEtcdTab() {
             return;
         }
 
+        const _mws = [...(mwRes.http || []), ...(mwRes.tcp || [])].filter(m => { const mwProv = m.provider || (m.name||'').split('@')[1] || ''; return mwProv === 'etcd'; });
+        renderProviderMiddlewareSection(_mws, 'etcdMiddlewares');
         document.getElementById('etcdTabCount').textContent = _allEtcdRoutes.length;
         renderEtcdRoutes();
     } catch(e) {

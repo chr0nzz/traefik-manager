@@ -19,7 +19,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.0.4"
+APP_VERSION  = "1.1.0"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -110,7 +110,7 @@ GROUPS_CONFIG_FILE  = os.path.join(_CONFIG_DIR, 'dashboard.yml')
 NOTIFICATIONS_PATH  = os.path.join(_CONFIG_DIR, 'notifications.yml')
 os.makedirs(GROUPS_CACHE_DIR, exist_ok=True)
 
-_notifications     = deque(maxlen=100)
+_notifications     = deque(maxlen=200)
 _notif_lock        = threading.Lock()
 
 def _load_notifications():
@@ -140,7 +140,7 @@ def add_notification(type_, msg):
     entry = {'ts': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': type_, 'msg': msg}
     with _notif_lock:
         _notifications.append(entry)
-    threading.Thread(target=_save_notifications_bg, daemon=True).start()
+    _save_notifications_bg()
 
 _config_dir = os.environ.get('CONFIG_DIR', '').strip()
 ACTIVE_CONFIG_DIR = _config_dir
@@ -1132,6 +1132,7 @@ def login_otp():
             session.update(_vals)
             session.permanent = remember
             logger.info(f"Successful OTP login from {request.remote_addr}")
+            add_notification('info', f"Login from {request.remote_addr}")
             if must_change:
                 if not setup_complete:
                     return redirect(url_for('setup'))
@@ -1298,6 +1299,10 @@ def traefik_api_get(path):
         logger.debug(f"Traefik API unavailable: {e}")
     return None
 
+def traefik_api_get_all(path):
+    sep = '&' if '?' in path else '?'
+    return traefik_api_get(f"{path}{sep}per_page=1000")
+
 @app.route('/api/traefik/overview')
 @login_required
 def api_overview():
@@ -1307,26 +1312,26 @@ def api_overview():
 @login_required
 def api_routers():
     return jsonify({
-        'http': traefik_api_get('/api/http/routers') or [],
-        'tcp':  traefik_api_get('/api/tcp/routers')  or [],
-        'udp':  traefik_api_get('/api/udp/routers')  or [],
+        'http': traefik_api_get_all('/api/http/routers') or [],
+        'tcp':  traefik_api_get_all('/api/tcp/routers')  or [],
+        'udp':  traefik_api_get_all('/api/udp/routers')  or [],
     })
 
 @app.route('/api/traefik/services')
 @login_required
 def api_services():
     return jsonify({
-        'http': traefik_api_get('/api/http/services') or [],
-        'tcp':  traefik_api_get('/api/tcp/services')  or [],
-        'udp':  traefik_api_get('/api/udp/services')  or [],
+        'http': traefik_api_get_all('/api/http/services') or [],
+        'tcp':  traefik_api_get_all('/api/tcp/services')  or [],
+        'udp':  traefik_api_get_all('/api/udp/services')  or [],
     })
 
 @app.route('/api/traefik/middlewares')
 @login_required
 def api_middlewares():
     return jsonify({
-        'http': traefik_api_get('/api/http/middlewares') or [],
-        'tcp':  traefik_api_get('/api/tcp/middlewares')  or [],
+        'http': traefik_api_get_all('/api/http/middlewares') or [],
+        'tcp':  traefik_api_get_all('/api/tcp/middlewares')  or [],
     })
 
 @app.route('/api/manager/router-names')
@@ -1928,7 +1933,7 @@ def list_backups():
         del b['mtime']
     return backups
 
-_BACKUP_RE = re.compile(r'^[a-zA-Z0-9._-]+\.yml\.\d{8}_\d{6}\.bak$')
+_BACKUP_RE = re.compile(r'^[a-zA-Z0-9._ -]+\.yml\.\d{8}_\d{6}\.bak$')
 
 def _validated_backup_path(filename: str) -> str:
     if not _BACKUP_RE.match(filename):
@@ -1969,6 +1974,14 @@ def api_notifications_clear():
     with _notif_lock:
         _notifications.clear()
     threading.Thread(target=_save_notifications_bg, daemon=True).start()
+    return jsonify({'ok': True})
+
+@app.route('/api/notifications/update', methods=['POST'])
+@login_required
+def api_notifications_update():
+    version = (request.get_json(silent=True) or {}).get('version', '')
+    if version:
+        add_notification('info', f"Traefik Manager v{version} is available - update now")
     return jsonify({'ok': True})
 
 @app.route('/api/backups')
@@ -2346,7 +2359,7 @@ def _build_middlewares(config, config_file=''):
 def _traefik_service_url_map():
     url_map = {}
     for proto, addr_key in (('http', 'url'), ('tcp', 'address'), ('udp', 'address')):
-        for svc in traefik_api_get(f'/api/{proto}/services') or []:
+        for svc in traefik_api_get_all(f'/api/{proto}/services') or []:
             key = _svc_key(svc.get('name', ''))
             servers = svc.get('loadBalancer', {}).get('servers', [])
             if servers and addr_key in servers[0]:
@@ -2358,7 +2371,7 @@ def _build_external_routes(include_internal=False):
     svc_urls = _traefik_service_url_map()
     routes = []
     for proto in ('http', 'tcp', 'udp'):
-        data = traefik_api_get(f'/api/{proto}/routers') or []
+        data = traefik_api_get_all(f'/api/{proto}/routers') or []
         for r in data:
             provider = r.get('provider', '')
             if not provider or provider == 'file':
@@ -2647,6 +2660,7 @@ def save_entry():
         is_edit        = request.form.get('isEdit') == 'true'
         original_id    = request.form.get('originalId', '')
         tcp_rule       = request.form.get('tcpRule', '').strip()
+        http_rule      = request.form.get('httpRule', '').strip()
         scheme         = request.form.get('scheme', 'http').strip().lower()
         pass_host      = request.form.get('passHostHeader') == 'true'
         _all_eps       = request.form.getlist('entryPoints')
@@ -2666,7 +2680,8 @@ def save_entry():
         resolvers      = [r.strip() for r in settings['cert_resolver'].split(',') if r.strip()]
         _all_resolvers    = request.form.getlist('certResolver')
         cert_resolver_raw = (_all_resolvers[0] if _all_resolvers else '').strip()
-        cert_resolver     = '' if (cert_resolver_raw in ('__none__', 'none')) else (cert_resolver_raw or (resolvers[0] if resolvers else ''))
+        no_tls            = cert_resolver_raw == '__disabled__'
+        cert_resolver     = '' if (cert_resolver_raw in ('__none__', 'none', '__disabled__')) else (cert_resolver_raw or (resolvers[0] if resolvers else ''))
         use_tls_tcp       = request.form.get('useTls') == 'true'
         tcp_cert_raw      = (_all_resolvers[1] if len(_all_resolvers) > 1 else '').strip()
         tcp_cert_resolver = '' if (tcp_cert_raw in ('__none__', 'none')) else (tcp_cert_raw or (resolvers[0] if resolvers else ''))
@@ -2701,22 +2716,26 @@ def save_entry():
                     del s['services'][old_svc]
 
         if protocol == 'http':
-            selected_domains = request.form.getlist('domains') or [domain]
-            if subdomain and '.' in subdomain:
-                rule = f"Host(`{subdomain}`)"
-            elif subdomain:
-                hosts = [f"Host(`{subdomain}.{d}`)" for d in selected_domains]
-                rule  = " || ".join(hosts)
+            if http_rule:
+                rule = http_rule
             else:
-                hosts = [f"Host(`{d}`)" for d in selected_domains]
-                rule  = " || ".join(hosts)
+                selected_domains = request.form.getlist('domains') or [domain]
+                if subdomain and '.' in subdomain:
+                    rule = f"Host(`{subdomain}`)"
+                elif subdomain:
+                    hosts = [f"Host(`{subdomain}.{d}`)" for d in selected_domains]
+                    rule  = " || ".join(hosts)
+                else:
+                    hosts = [f"Host(`{d}`)" for d in selected_domains]
+                    rule  = " || ".join(hosts)
             target_url = target_ip if target_ip.startswith('http') else f"{scheme}://{target_ip}:{target_port}"
             mws        = [m.strip() for m in middlewares_in.split(',')] if middlewares_in else []
             insecure   = request.form.get('insecureSkipVerify') == 'true'
             config.setdefault('http', {}).setdefault('routers', {})
             config['http'].setdefault('services', {})
-            tls_val = {'certResolver': cert_resolver} if cert_resolver else {}
-            r = {'rule': rule, 'entryPoints': http_eps, 'tls': tls_val, 'service': service_name}
+            r = {'rule': rule, 'entryPoints': http_eps, 'service': service_name}
+            if not no_tls:
+                r['tls'] = {'certResolver': cert_resolver} if cert_resolver else {}
             if mws:
                 r['middlewares'] = mws
             lb = {'servers': [{'url': target_url}]}
@@ -3005,6 +3024,7 @@ def oidc_callback():
         'oidc_name':     name,
     })
     logger.info(f"OIDC login success for {email!r} from {request.remote_addr}")
+    add_notification('info', f"OIDC login: {email} from {request.remote_addr}")
     return redirect(url_for('index'))
 
 

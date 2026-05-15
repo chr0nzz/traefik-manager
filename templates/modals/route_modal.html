@@ -48,6 +48,12 @@
                 </div>
 
                 <div id="httpSection" class="protocol-section active space-y-4">
+                    <div class="flex gap-2">
+                        <button type="button" id="httpModeSimpleBtn" onclick="setHttpRuleMode('simple')" class="proto-btn active-http" style="padding:4px 12px;font-size:11px;border-radius:6px">Simple</button>
+                        <button type="button" id="httpModeAdvancedBtn" onclick="setHttpRuleMode('advanced')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Advanced rule</button>
+                    </div>
+
+                    <div id="httpSimpleFields">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label>Subdomain</label>
@@ -66,6 +72,13 @@
                             </select>
                             {% endif %}
                         </div>
+                    </div>
+                    </div>
+
+                    <div id="httpAdvancedFields" style="display:none">
+                        <label>Rule</label>
+                        <input type="text" name="httpRule" id="httpRule" class="input-field font-mono text-sm" placeholder="Host(`app.example.com`) || PathPrefix(`/api`)">
+                        <p class="text-xs mt-1" style="color:var(--muted)">Any valid <a href="https://doc.traefik.io/traefik/routing/routers/#rule" target="_blank" style="color:var(--blue)">Traefik router rule</a> expression.</p>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -111,6 +124,7 @@
                     <div>
                         <label>Cert Resolver</label>
                         <select name="certResolver" id="certResolver" class="input-field">
+                            <option value="__disabled__">No TLS</option>
                             {% for r in cert_resolvers %}
                             <option value="{{ r }}">{{ r }}</option>
                             {% endfor %}

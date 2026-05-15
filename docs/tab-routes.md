@@ -32,13 +32,14 @@ Click **Add Route** in the top bar. Fill in:
 |---|---|
 | Protocol | HTTP, TCP, or UDP |
 | Name | Unique identifier (used as the router and service key in `dynamic.yml`) |
-| Subdomain + Domain(s) | Subdomain field plus one or more domain chips. With multiple domains selected, generates a multi-host rule: `Host(\`sub.d1.com\`) \|\| Host(\`sub.d2.com\`)`. Long domain names are truncated in the chip display. |
+| Rule Mode | **Simple** (default) - use the Subdomain + Domain chip builder to generate a `Host()` rule. **Advanced rule** - type any valid Traefik rule directly (`PathPrefix`, `HostRegexp`, compound rules with `&&` / `\|\|`, etc.). Switch modes with the Simple / Advanced rule toggle at the top of the HTTP section. When editing a route with a complex rule, the form automatically opens in Advanced mode. |
+| Subdomain + Domain(s) | *(Simple mode only)* Subdomain field plus one or more domain chips. With multiple domains selected, generates a multi-host rule: `Host(\`sub.d1.com\`) \|\| Host(\`sub.d2.com\`)`. Long domain names are truncated in the chip display. |
 | Target IP / Port | Backend server to forward to |
 | Entry Points | Selectable chips fetched from the Traefik API - click to toggle. `websecure` is pre-selected for HTTP routes. UDP entry points are single-select. Falls back to a text input if the API returns no entry points. |
 | Middlewares | Selectable chips fetched from the Traefik API - click to toggle. Falls back to a text input if the API returns no middlewares. |
 | Backend Scheme | `HTTP` or `HTTPS` - the scheme Traefik uses to connect to your backend. Use `HTTPS` when the backend serves TLS internally. |
 | Pass Host Header | Enabled by default. Disable if the backend needs to see its own hostname instead of the original request `Host` header. Writes `passHostHeader: false` to the service in `dynamic.yml`. |
-| Cert Resolver | Shown for HTTP and TCP routes. Select which ACME cert resolver to use, or choose **None (custom cert / tls.yml)** to write `tls: {}` without a resolver - use this when your certificates are managed via a `tls.yml` file instead of ACME. Defaults to the first resolver configured in Settings. Only appears when at least one resolver is configured. |
+| Cert Resolver | Shown for HTTP and TCP routes. Three options: **No TLS** (default) - omits the `tls` key entirely; **named resolver** - uses ACME to issue a certificate; **None (external / custom cert)** - writes `tls: {}` without a resolver, for certificates managed via `tls.yml` or another external source. |
 | Skip TLS Verification | Adds `insecureSkipVerify: true` via a named `serversTransport` entry. Use for backends with self-signed certificates (e.g. Proxmox, Kasm). A yellow **TLS skip** badge appears on the route card. |
 | Config File | Shown when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Select an existing file or choose **+ New file...** to type a filename - the file is created automatically in `CONFIG_DIR`. The `.yml` extension is added automatically if omitted. |
 

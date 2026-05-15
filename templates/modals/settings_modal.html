@@ -1044,7 +1044,7 @@ async function createAndLoadBackups() {
 async function restoreBackup(name) {
     if (!await _confirm(`Restore backup "${name}"? Your current config will be backed up first.`, 'Restore Backup', 'Restore')) return;
     try {
-        const res  = await fetch(`/api/restore/${name}`, { method: 'POST', headers: _csrfHeaders() });
+        const res  = await fetch(`/api/restore/${encodeURIComponent(name)}`, { method: 'POST', headers: _csrfHeaders() });
         const data = await res.json();
         if (data.success) {
             showToast('Backup restored successfully!', 'success');
@@ -1061,7 +1061,7 @@ async function restoreBackup(name) {
 async function deleteBackup(name) {
     if (!await _confirm(`Delete backup "${name}"?`, 'Delete Backup', 'Delete')) return;
     try {
-        const res  = await fetch(`/api/backup/delete/${name}`, { method: 'POST', headers: _csrfHeaders() });
+        const res  = await fetch(`/api/backup/delete/${encodeURIComponent(name)}`, { method: 'POST', headers: _csrfHeaders() });
         const data = await res.json();
         if (data.success) { showToast('Backup deleted', 'success'); loadBackups(); }
         else showToast('Delete failed: ' + data.error, 'error');

@@ -24,6 +24,7 @@
             <p>Loading Kubernetes routes...</p>
         </div>
     </div>
+    <div id="kubernetesMiddlewares"></div>
 </div>
 
 <script>
@@ -37,7 +38,10 @@ async function refreshKubernetesTab() {
     container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading Kubernetes routes...</p></div>`;
 
     try {
-        const routerRes = await fetch('/api/traefik/routers').then(r => r.json());
+        const [routerRes, mwRes] = await Promise.all([
+            fetch('/api/traefik/routers').then(r => r.json()),
+            fetch('/api/traefik/middlewares').then(r => r.json()).catch(() => ({})),
+        ]);
 
         const http = (routerRes.http || []).map(r => ({ ...r, _proto: 'HTTP' }));
         const tcp  = (routerRes.tcp  || []).map(r => ({ ...r, _proto: 'TCP'  }));
@@ -59,6 +63,8 @@ async function refreshKubernetesTab() {
             return;
         }
 
+        const _mws = [...(mwRes.http || []), ...(mwRes.tcp || [])].filter(m => { const mwProv = m.provider || (m.name||'').split('@')[1] || ''; return new Set(['kubernetescrd','kubernetes','kubernetesgateway']).has(mwProv); });
+        renderProviderMiddlewareSection(_mws, 'kubernetesMiddlewares');
         document.getElementById('kubernetesTabCount').textContent = _allKubernetesRoutes.length;
         renderKubernetesRoutes();
     } catch(e) {

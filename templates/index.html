@@ -501,6 +501,31 @@ function switchTab(tab) {
 }
 
 // ── Shared provider card renderer (matches Routes tab card style) ─────────────
+function renderProviderMiddlewareSection(middlewares, containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!middlewares || middlewares.length === 0) { el.innerHTML = ''; return; }
+    const cards = middlewares.map(mw => {
+        const name = (mw.name || '').split('@')[0];
+        const type = mw.type || '';
+        const st   = (mw.status || '').toLowerCase();
+        const dot  = st === 'enabled' ? 'status-online' : (st === 'disabled' || st === 'error') ? 'status-offline' : 'status-unknown';
+        return `<div class="card p-3 flex items-center gap-3">
+            <span class="status-dot ${dot}" style="flex-shrink:0"></span>
+            <div class="min-w-0 flex-1">
+                <div class="text-sm font-semibold font-mono truncate" style="color:var(--text)" title="${_esc(name)}">${_esc(name)}</div>
+                ${type ? `<div class="text-xs mt-0.5" style="color:var(--muted)">${_esc(type)}</div>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+    el.innerHTML = `<div class="mt-6 pt-4" style="border-top:1px solid var(--border)">
+        <div class="text-xs font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style="color:var(--muted)">
+            <i class="ph-bold ph-plugs-connected"></i> Middlewares <span class="font-normal">(${middlewares.length})</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">${cards}</div>
+    </div>`;
+}
+
 function renderProviderCard(r, opts = {}) {
     const proto = (r._proto || 'HTTP').toUpperCase();
     const name  = (r.name  || '').split('@')[0];
@@ -659,14 +684,28 @@ function setProtocol(proto) {
     }
 }
 
+function setHttpRuleMode(mode) {
+    const isAdv = mode === 'advanced';
+    const simpleBtn = document.getElementById('httpModeSimpleBtn');
+    const advBtn    = document.getElementById('httpModeAdvancedBtn');
+    const simpleFields = document.getElementById('httpSimpleFields');
+    const advFields    = document.getElementById('httpAdvancedFields');
+    if (simpleBtn) { simpleBtn.classList.toggle('active-http', !isAdv); simpleBtn.classList.toggle('active-http', !isAdv); }
+    if (advBtn)    { advBtn.classList.toggle('active-http', isAdv); }
+    if (simpleFields) simpleFields.style.display = isAdv ? 'none' : '';
+    if (advFields)    advFields.style.display    = isAdv ? '' : 'none';
+    if (!isAdv) { const el = document.getElementById('httpRule'); if (el) el.value = ''; }
+}
+
 function openModal() {
     document.getElementById('isEdit').value = 'false';
     document.getElementById('modalTitle').innerText = 'Add Route';
     document.getElementById('originalId').value = '';
-    ['serviceName','subdomain','targetIp','targetPort','middlewares','tcpRule'].forEach(id => {
+    ['serviceName','subdomain','targetIp','targetPort','middlewares','tcpRule','httpRule'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    setHttpRuleMode('simple');
     _initDomainChips([]);
     _initEntrypointChips('http', []);
     _initEntrypointChips('tcp', []);
@@ -675,7 +714,7 @@ function openModal() {
     document.getElementById('useTls') && (document.getElementById('useTls').checked = false);
     toggleTcpCertResolver(false);
     const crHttp = document.getElementById('certResolver');
-    if (crHttp && availableCertResolvers.length > 0) crHttp.value = availableCertResolvers[0];
+    if (crHttp) crHttp.value = availableCertResolvers.length > 0 ? availableCertResolvers[0] : '__disabled__';
     const crTcp = document.getElementById('certResolverTcp');
     if (crTcp && availableCertResolvers.length > 0) crTcp.value = availableCertResolvers[0];
     setProtocol('http');
@@ -997,6 +1036,9 @@ function renderRouteGrid(apps) {
         const proto = app.protocol || 'http';
         const allDomains = [...(app.rule || '').matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
         const domain     = allDomains[0] || '';
+        const isSimpleHostRule = /^(Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*)$/.test((app.rule || '').trim());
+        const isComplexRule = !isSimpleHostRule && !!app.rule;
+        const ruleLabel  = isComplexRule ? 'Rule' : 'Domain';
         const badgeClass = proto === 'http' ? 'badge-http' : (proto === 'tcp' ? 'badge-tcp' : 'badge-udp');
         const tlsBadge = app.tls ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS</span>` : '';
         const insecureBadge = app.insecureSkipVerify ? `<span class="badge" style="font-size:9px;background:rgba(240,180,0,0.12);color:#d4a017;border:1px solid rgba(240,180,0,0.3)" title="insecureSkipVerify enabled"><i class="ph-bold ph-warning"></i> TLS skip</span>` : '';
@@ -1010,17 +1052,22 @@ function renderRouteGrid(apps) {
         const toggleIcon = enabled ? 'ph-toggle-right' : 'ph-toggle-left';
         const toggleTitle = enabled ? 'Disable route' : 'Enable route';
         const toggleBtn = isFileRoute ? `<button type="button" onclick="toggleRoute('${_esc(app.id)}',${enabled})" class="pill-btn ${enabled ? 'pill-btn-green' : 'pill-btn-muted'}" title="${toggleTitle}"><i class="ph-bold ${toggleIcon} text-sm"></i></button>` : '';
+        const _copyBtn = (val, col) => `<button onclick="event.stopPropagation();_copyToClipboard('${_esc(val)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--${col})'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button>`;
         const domainDisplay = allDomains.length > 1
-            ? `<div style="display:flex;flex-direction:column;gap:2px">${allDomains.map(d => `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(d)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(d)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>`).join('')}</div>`
-            : `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(domain || app.rule)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>`;
-        const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Domain</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>${mwBadges ? `<div class="flex flex-wrap gap-1">${mwBadges}</div>` : ''}`;
+            ? `<div style="display:flex;flex-direction:column;gap:2px">${allDomains.map(d => `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(d)}</div>${_copyBtn(d,'blue')}</div>`).join('')}</div>`
+            : isComplexRule
+                ? `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono" style="color:var(--blue);word-break:break-all" title="${_esc(app.rule)}">${_esc(app.rule)}</div>${_copyBtn(app.rule,'blue')}</div>`
+                : `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</div>${_copyBtn(domain || app.rule,'blue')}</div>`;
+        const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${ruleLabel}</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>${mwBadges ? `<div class="flex flex-wrap gap-1">${mwBadges}</div>` : ''}`;
         const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`;
         const cfArg = app.configFile ? `,'${_esc(app.configFile)}'` : ',\'\'';
         const cfBadge = (epBadges || app.configFile) ? '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;margin-top:8px"><div class="flex flex-wrap gap-1">' + epBadges + '</div>' + (app.configFile ? '<span class="badge badge-muted" style="font-size:9px">' + _esc(app.configFile) + '</span>' : '') + '</div>' : '';
         const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}"`;
         const listDomainDisplay = allDomains.length > 1
-            ? `<div style="display:flex;flex-direction:column;gap:1px">${allDomains.map(d => `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(d)}</span><button onclick="event.stopPropagation();_copyToClipboard('${_esc(d)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>`).join('')}</div>`
-            : `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</span><button onclick="event.stopPropagation();_copyToClipboard('${_esc(domain || app.rule)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div>`;
+            ? `<div style="display:flex;flex-direction:column;gap:1px">${allDomains.map(d => `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(d)}</span>${_copyBtn(d,'blue')}</div>`).join('')}</div>`
+            : isComplexRule
+                ? `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono" style="color:var(--blue);word-break:break-all" title="${_esc(app.rule)}">${_esc(app.rule)}</span>${_copyBtn(app.rule,'blue')}</div>`
+                : `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</span>${_copyBtn(domain || app.rule,'blue')}</div>`;
         if (_routeViewMode === 'list') {
             const epCompact = (app.entryPoints || []).slice(0, 2).map(ep => `<span class="badge badge-muted" style="font-size:9px">${_esc(ep)}</span>`).join('');
             return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" ${dataAttrs}><div class="svc-list-col-status"><span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span></div><div style="display:flex;align-items:center;gap:4px"><span class="badge ${badgeClass}" style="font-size:9px">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}</div><div class="svc-list-col-name">${_esc(app.name)}<div class="text-xs font-mono truncate" style="color:var(--muted);margin-top:1px">${_esc(app.service_name)}</div></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div><div style="display:flex;align-items:center;gap:3px">${epCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('[data-routekey]'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
@@ -1244,6 +1291,13 @@ function handleEdit(btn) {
 
     if (proto === 'http') {
         let rule = app.rule || '';
+        const isSimpleRule = /^(Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*)$/.test(rule.trim());
+        if (!isSimpleRule && rule) {
+            setHttpRuleMode('advanced');
+            document.getElementById('httpRule').value = rule;
+        } else {
+            setHttpRuleMode('simple');
+        }
         let subdomain = '';
         const hostMatches = [...rule.matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
         const matchedDomains = [];
@@ -1273,7 +1327,11 @@ function handleEdit(btn) {
         document.getElementById('scheme').value = targetScheme;
         document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
         const crHttp = document.getElementById('certResolver');
-        if (crHttp && app.certResolver) crHttp.value = app.certResolver;
+        if (crHttp) {
+            if (!app.tls && app.tls !== false) crHttp.value = '__disabled__';
+            else if (app.certResolver) crHttp.value = app.certResolver;
+            else crHttp.value = '__none__';
+        }
         const insecureChk = document.getElementById('insecureSkipVerify');
         if (insecureChk) insecureChk.checked = !!app.insecureSkipVerify;
 
@@ -1623,6 +1681,10 @@ async function checkForUpdate(currentVersion) {
             const notice = document.getElementById('sm-traefik-update-notice');
             const text   = document.getElementById('sm-traefik-update-text');
             if (notice && text) { text.textContent = `v${latestTag} available`; notice.classList.remove('hidden'); }
+            if (!sessionStorage.getItem('tm-update-notified-' + latestTag)) {
+                sessionStorage.setItem('tm-update-notified-' + latestTag, '1');
+                fetch('/api/notifications/update', { method: 'POST', headers: { ..._csrfHeaders(), 'X-Requested-With': 'fetch', 'Content-Type': 'application/json' }, body: JSON.stringify({ version: latestTag }) }).catch(() => {});
+            }
         }
     } catch(e) {}
 }
@@ -3269,6 +3331,7 @@ function _initMobileFilterBars() {
     if (_rg) _routeCardEls = Array.from(_rg.querySelectorAll('.route-card'));
     const _mg = document.getElementById('mwGrid');
     if (_mg) _mwCardEls = Array.from(_mg.querySelectorAll('.mw-card'));
+    refreshRoutes();
     loadOverviewStats();
     checkManagerVersion();
     fetchNotifications();

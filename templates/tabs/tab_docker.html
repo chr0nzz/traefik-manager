@@ -24,6 +24,7 @@
             <p>Loading docker routes...</p>
         </div>
     </div>
+    <div id="dockerMiddlewares"></div>
 </div>
 
 <script>
@@ -35,9 +36,10 @@ async function refreshDockerTab() {
     container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading docker routes...</p></div>`;
 
     try {
-        const [routerRes, svcRes] = await Promise.all([
+        const [routerRes, svcRes, mwRes] = await Promise.all([
             fetch('/api/traefik/routers').then(r => r.json()),
             fetch('/api/traefik/services').then(r => r.json()).catch(() => ({})),
+            fetch('/api/traefik/middlewares').then(r => r.json()).catch(() => ({})),
         ]);
 
         const svcMap = {};
@@ -81,6 +83,8 @@ async function refreshDockerTab() {
         }
 
         document.getElementById('dockerTabCount').textContent = _allDockerRoutes.length;
+        const dockerMws = [...(mwRes.http || []), ...(mwRes.tcp || [])].filter(m => (m.provider || (m.name||'').split('@')[1]) === 'docker');
+        renderProviderMiddlewareSection(dockerMws, 'dockerMiddlewares');
         renderDockerRoutes();
     } catch(e) {
         container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p></div>`;
