@@ -614,6 +614,22 @@ Test connectivity to a Traefik API URL. No authentication required.
 
 ---
 
+### `GET /api/ping`
+
+Ping a route's domain from the TM server and return latency. Used by the route health check in the Routes tab.
+
+| Query param | Description |
+|---|---|
+| `url` | Full URL to ping (must start with `http://` or `https://`) |
+
+```json
+{ "ok": true, "latency_ms": 42, "status_code": 200 }
+```
+
+On failure: `{ "ok": false, "error": "Timeout", "latency_ms": null }`
+
+---
+
 ## OpenAPI spec
 
 The raw OpenAPI 3.1 spec is available from your instance at:
