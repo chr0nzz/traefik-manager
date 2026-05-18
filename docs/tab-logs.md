@@ -2,6 +2,22 @@
 
 The **Logs** tab displays Traefik's access log - a record of every HTTP request routed through Traefik, including status codes, response times, upstream targets, and client IPs.
 
+## Analytics panel
+
+Above the log list, an analytics panel summarises the currently loaded entries across two rows:
+
+**Row 1 - Summary cards**
+- **Status Codes** - counts and percentages for 2xx / 3xx / 4xx / 5xx with a stacked proportion bar
+- **Response Time** - average and maximum duration, plus fast (<100 ms) / medium (100-500 ms) / slow (>500 ms) buckets
+- **Methods** - breakdown of HTTP verbs (GET, POST, PUT, DELETE, PATCH, etc.) with bar charts
+
+**Row 2 - Top lists**
+- **Top IPs** - the 6 client IPs with the most requests
+- **Top Paths** - the 6 most frequently requested paths
+- **Top Services** - the 6 Traefik services that handled the most requests
+
+The panel updates each time you change the line count or search filter.
+
 ## What it shows
 
 Each log entry is parsed into a card showing:

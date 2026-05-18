@@ -3202,15 +3202,135 @@ function parseLogLine(raw) {
 
 function filterLogs() { renderLogs(); }
 
+function renderLogStats(entries) {
+    const el = document.getElementById('logStats');
+    if (!el || !entries.length) { if (el) el.style.display = 'none'; return; }
+    const parsed = entries.map(e => typeof e === 'string' ? parseLogLine(e) : e).filter(Boolean);
+    if (!parsed.length) { el.style.display = 'none'; return; }
+
+    const total = parsed.length;
+    const s2 = parsed.filter(e => e.status >= 200 && e.status < 300).length;
+    const s3 = parsed.filter(e => e.status >= 300 && e.status < 400).length;
+    const s4 = parsed.filter(e => e.status >= 400 && e.status < 500).length;
+    const s5 = parsed.filter(e => e.status >= 500).length;
+    const pct = v => total ? Math.round((v/total)*100) : 0;
+
+    const parseDur = d => {
+        if (!d || d === '-') return null;
+        const ms = parseFloat(d);
+        if (isNaN(ms)) return null;
+        if (d.includes('ms')) return ms;
+        if (d.endsWith('s')) return ms * 1000;
+        return ms;
+    };
+    const durs = parsed.map(e => parseDur(e.duration)).filter(v => v !== null);
+    const avgDur = durs.length ? durs.reduce((a,b)=>a+b,0)/durs.length : null;
+    const maxDur = durs.length ? Math.max(...durs) : null;
+    const fmtDur = v => v === null ? '-' : v >= 1000 ? (v/1000).toFixed(2)+'s' : Math.round(v)+'ms';
+    const fast = durs.filter(d=>d<100).length;
+    const mid  = durs.filter(d=>d>=100&&d<500).length;
+    const slow = durs.filter(d=>d>=500).length;
+
+    const topN = (key, n) => {
+        const m = {};
+        parsed.forEach(e => { const v = e[key]; if (v && v !== '-') m[v] = (m[v]||0) + 1; });
+        return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,n);
+    };
+    const topIps   = topN('ip', 6);
+    const topPaths = topN('path', 6);
+    const topSvcs  = topN('service', 5);
+    const methods  = topN('method', 6);
+
+    const hbar = (v, max, col) => `<div style="flex:1;height:6px;border-radius:3px;background:var(--input-bg);overflow:hidden"><div style="height:100%;border-radius:3px;background:${col};width:${max?Math.max(3,Math.round((v/max)*100)):0}%"></div></div>`;
+    const topList = (pairs, col='var(--blue)', strip=false) => {
+        const max = pairs[0]?.[1]||1;
+        return pairs.map(([k,v]) => {
+            const label = strip ? k.replace(/@docker|@file|@kubernetes/g,'') : k;
+            return `<div class="flex items-center gap-2 py-1" style="border-bottom:1px solid var(--border)">
+                <span class="text-xs font-mono truncate" style="color:var(--text);min-width:0;flex:1" title="${_esc(k)}">${_esc(label)}</span>
+                ${hbar(v, max, col)}
+                <span class="text-xs font-bold flex-shrink-0 tabular-nums" style="color:var(--muted);min-width:28px;text-align:right">${v}</span>
+            </div>`;
+        }).join('');
+    };
+
+    const methodColors = {GET:'var(--blue)',POST:'var(--green)',PUT:'var(--yellow)',DELETE:'var(--red)',PATCH:'var(--purple)',HEAD:'var(--teal)'};
+
+    const stackW = g => total ? Math.max(0,Math.round((g/total)*100)) : 0;
+
+    el.innerHTML = `
+    <div class="grid gap-3 mb-3" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="rounded-xl p-4" style="background:var(--card);border:1px solid var(--border)">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)">Status Codes</span>
+                <span class="text-xs font-bold" style="color:var(--text)">${total} requests</span>
+            </div>
+            <div class="flex gap-4 mb-3">
+                ${[['2xx',s2,'var(--green)'],['3xx',s3,'var(--blue)'],['4xx',s4,'var(--yellow)'],['5xx',s5,'var(--red)']].map(([l,v,c])=>
+                    `<div><div class="text-xl font-bold" style="color:${c}">${v}</div><div class="text-xs" style="color:var(--muted)">${l} · ${pct(v)}%</div></div>`).join('')}
+            </div>
+            <div class="flex rounded-md overflow-hidden" style="height:8px;gap:1px">
+                ${[['var(--green)',s2],['var(--blue)',s3],['var(--yellow)',s4],['var(--red)',s5]].map(([c,v])=>
+                    stackW(v) > 0 ? `<div style="background:${c};width:${stackW(v)}%;border-radius:2px"></div>` : '').join('')}
+            </div>
+        </div>
+
+        <div class="rounded-xl p-4" style="background:var(--card);border:1px solid var(--border)">
+            <div class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:var(--muted)">Response Time</div>
+            <div class="flex items-end gap-4 mb-3">
+                <div><div class="text-2xl font-bold" style="color:var(--text)">${fmtDur(avgDur)}</div><div class="text-xs" style="color:var(--muted)">avg</div></div>
+                <div><div class="text-sm font-bold" style="color:var(--muted)">${fmtDur(maxDur)}</div><div class="text-xs" style="color:var(--muted)">max</div></div>
+            </div>
+            <div class="grid gap-1.5" style="grid-template-columns:1fr 1fr 1fr">
+                ${[['Fast','<100ms',fast,'var(--green)'],['Med','100-500',mid,'var(--yellow)'],['Slow','>500ms',slow,'var(--red)']].map(([l,s,v,c])=>
+                    `<div class="rounded-lg p-2 text-center" style="background:var(--input-bg)"><div class="text-sm font-bold" style="color:${c}">${v}</div><div class="text-xs" style="color:var(--muted)">${l}</div></div>`).join('')}
+            </div>
+        </div>
+
+        <div class="rounded-xl p-4" style="background:var(--card);border:1px solid var(--border)">
+            <div class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:var(--muted)">Methods</div>
+            <div class="space-y-1">
+                ${methods.map(([m,v]) => {
+                    const c = methodColors[m]||'var(--muted)';
+                    const max = methods[0]?.[1]||1;
+                    return `<div class="flex items-center gap-2">
+                        <span class="text-xs font-bold flex-shrink-0" style="color:${c};min-width:52px">${_esc(m)}</span>
+                        ${hbar(v, max, c)}
+                        <span class="text-xs tabular-nums flex-shrink-0" style="color:var(--muted);min-width:28px;text-align:right">${v}</span>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid gap-3" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="rounded-xl p-4" style="background:var(--card);border:1px solid var(--border)">
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Top IPs</div>
+            ${topList(topIps, 'var(--blue)')}
+        </div>
+        <div class="rounded-xl p-4" style="background:var(--card);border:1px solid var(--border)">
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Top Paths</div>
+            ${topList(topPaths, 'var(--teal)')}
+        </div>
+        <div class="rounded-xl p-4" style="background:var(--card);border:1px solid var(--border)">
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Top Services</div>
+            ${topList(topSvcs, 'var(--purple)', true)}
+        </div>
+    </div>`;
+    el.style.display = '';
+}
+
 function renderLogs() {
     const container = document.getElementById('logsContent');
     const q = (document.getElementById('logSearch')?.value || '').toLowerCase();
     const lines = q ? _allLogLines.filter(l => l.toLowerCase().includes(q)) : _allLogLines;
 
     if (lines.length === 0) {
+        document.getElementById('logStats')?.style && (document.getElementById('logStats').style.display = 'none');
         container.innerHTML = `<div class="text-center py-12" style="color:var(--muted)"><p>No log lines match</p></div>`;
         return;
     }
+    renderLogStats(lines);
 
     const statusColor = s => !s ? 'var(--muted)' : s >= 500 ? 'var(--red)' : s >= 400 ? 'var(--yellow)' : 'var(--green)';
     const methodColor = m => ({ GET:'var(--blue)', POST:'var(--green)', PUT:'var(--yellow)', DELETE:'var(--red)', PATCH:'var(--purple)' }[m] || 'var(--muted)');
