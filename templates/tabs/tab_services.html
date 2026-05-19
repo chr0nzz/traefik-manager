@@ -40,6 +40,22 @@
                 <i class="ph-bold ph-list" id="routeViewIcon"></i>
             </button>
         </div>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="toggleBulkMode()" id="bulkModeBtn" class="proto-btn text-xs px-3 py-1.5" title="Bulk select">
+                <i class="ph-bold ph-selection"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="bulkBar" style="display:none;position:sticky;bottom:16px;z-index:50;margin-top:12px">
+        <div class="flex items-center gap-2 px-4 py-3 rounded-xl" style="background:var(--card-bg);border:1px solid var(--blue);box-shadow:0 4px 24px rgba(0,0,0,0.3)">
+            <span id="bulkCount" class="text-sm font-semibold" style="color:var(--text)">0 selected</span>
+            <div class="flex-1"></div>
+            <button onclick="bulkEnable()" class="proto-btn active-http text-xs px-3 py-1.5" style="border-radius:6px"><i class="ph-bold ph-toggle-right" style="margin-right:4px"></i>Enable</button>
+            <button onclick="bulkDisable()" class="proto-btn text-xs px-3 py-1.5" style="border-radius:6px"><i class="ph-bold ph-toggle-left" style="margin-right:4px"></i>Disable</button>
+            <button onclick="bulkDelete()" class="proto-btn text-xs px-3 py-1.5" style="border-radius:6px;color:var(--red)"><i class="ph-bold ph-trash" style="margin-right:4px"></i>Delete</button>
+            <button onclick="toggleBulkMode()" class="btn-icon" title="Exit bulk mode"><i class="ph-bold ph-x text-sm"></i></button>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="routeGrid">
