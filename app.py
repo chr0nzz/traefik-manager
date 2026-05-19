@@ -2599,7 +2599,7 @@ def _entrypoint_mw_map() -> dict:
         return {}
     try:
         with open(path, 'r') as f:
-            cfg = yaml.safe_load(f) or {}
+            cfg = yaml.load(f) or {}
         result = {}
         for ep_name, ep_val in cfg.get('entryPoints', {}).items():
             mws = (ep_val or {}).get('http', {}).get('middlewares', [])
