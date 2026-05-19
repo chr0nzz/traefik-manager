@@ -136,11 +136,54 @@ def _save_notifications_bg():
     except Exception:
         logger.exception("Failed to save notifications")
 
+def _is_ntfy_url(url: str) -> bool:
+    from urllib.parse import urlparse
+    try:
+        h = urlparse(url).hostname or ''
+        return h == 'ntfy.sh' or h.startswith('ntfy.') or '/api/v1/publish' in url
+    except Exception:
+        return False
+
+def _send_webhook(url: str, wtype: str, type_: str, msg: str, ts: str, username: str = '', password: str = ''):
+    color_map = {'warning': 0xf0a500, 'error': 0xf85149, 'info': 0x58a6ff, 'success': 0x3fb950}
+    color = color_map.get(type_, 0x58a6ff)
+    tag_map = {'warning': 'warning', 'error': 'rotating_light', 'success': 'white_check_mark', 'info': 'information_source'}
+    auth = (username, password) if username else None
+    if wtype == 'discord':
+        payload = {'embeds': [{'title': msg, 'color': color, 'footer': {'text': f'Traefik Manager - {ts}'}}]}
+        requests.post(url, json=payload, timeout=5, auth=auth)
+    elif wtype == 'slack':
+        icon = {'warning': ':warning:', 'error': ':x:', 'success': ':white_check_mark:', 'info': ':information_source:'}.get(type_, ':bell:')
+        requests.post(url, json={'text': f'{icon} *Traefik Manager* - {msg}'}, timeout=5, auth=auth)
+    elif wtype == 'ntfy':
+        headers = {
+            'X-Title': 'Traefik Manager',
+            'X-Priority': '4' if type_ in ('warning', 'error') else '3',
+            'X-Tags': tag_map.get(type_, 'bell'),
+        }
+        requests.post(url, data=msg.encode('utf-8'), headers=headers, timeout=5, auth=auth)
+    else:
+        requests.post(url, json={'event': type_, 'message': msg, 'timestamp': ts}, timeout=5, auth=auth)
+
+def _fire_webhook(type_: str, msg: str, ts: str):
+    s   = load_settings()
+    url = s.get('webhook_url', '').strip()
+    if not url:
+        return
+    wtype    = s.get('webhook_type', 'discord')
+    username = s.get('webhook_username', '')
+    password = s.get('webhook_password', '')
+    try:
+        _send_webhook(url, wtype, type_, msg, ts, username, password)
+    except Exception as e:
+        logger.warning(f"Webhook delivery failed: {e}")
+
 def add_notification(type_, msg):
     entry = {'ts': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': type_, 'msg': msg}
     with _notif_lock:
         _notifications.append(entry)
     _save_notifications_bg()
+    threading.Thread(target=_fire_webhook, args=(type_, msg, entry['ts']), daemon=True).start()
 
 _config_dir = os.environ.get('CONFIG_DIR', '').strip()
 ACTIVE_CONFIG_DIR = _config_dir
@@ -269,6 +312,10 @@ def load_settings() -> dict:
         'oidc_allowed_emails':  '',
         'oidc_allowed_groups':  '',
         'oidc_groups_claim':    'groups',
+        'webhook_url':          '',
+        'webhook_type':         'discord',
+        'webhook_username':     '',
+        'webhook_password':     '',
     }
     if not os.path.exists(SETTINGS_PATH):
         return defaults
@@ -354,6 +401,14 @@ def load_settings() -> dict:
             merged['oidc_allowed_groups'] = str(data['oidc_allowed_groups']).strip()
         if 'oidc_groups_claim' in data:
             merged['oidc_groups_claim'] = str(data['oidc_groups_claim']).strip()
+        if 'webhook_url' in data:
+            merged['webhook_url'] = str(data['webhook_url']).strip()
+        if 'webhook_type' in data:
+            merged['webhook_type'] = str(data['webhook_type']).strip()
+        if 'webhook_username' in data:
+            merged['webhook_username'] = str(data['webhook_username']).strip()
+        if 'webhook_password' in data:
+            merged['webhook_password'] = _decrypt_otp_secret(str(data['webhook_password']))
         return merged
     except Exception as e:
         logger.warning(f"Could not load manager.yml, using defaults: {e}")
@@ -373,7 +428,8 @@ def save_settings(domains, cert_resolver, traefik_api_url,
                   oidc_enabled=None, oidc_provider_url=None, oidc_client_id=None,
                   oidc_client_secret=None, oidc_display_name=None,
                   oidc_allowed_emails=None, oidc_allowed_groups=None,
-                  oidc_groups_claim=None):
+                  oidc_groups_claim=None, webhook_url=None, webhook_type=None,
+                  webhook_username=None, webhook_password=None):
     if visible_tabs is None:
         visible_tabs = {t: False for t in OPTIONAL_TABS}
     _cur = load_settings()
@@ -413,6 +469,14 @@ def save_settings(domains, cert_resolver, traefik_api_url,
         oidc_allowed_groups = _cur.get('oidc_allowed_groups', '')
     if oidc_groups_claim is None:
         oidc_groups_claim = _cur.get('oidc_groups_claim', 'groups')
+    if webhook_url is None:
+        webhook_url = _cur.get('webhook_url', '')
+    if webhook_type is None:
+        webhook_type = _cur.get('webhook_type', 'discord')
+    if webhook_username is None:
+        webhook_username = _cur.get('webhook_username', '')
+    if webhook_password is None:
+        webhook_password = _cur.get('webhook_password', '')
     otp_secret = _encrypt_otp_secret(otp_secret)
     oidc_client_secret_enc = _encrypt_otp_secret(oidc_client_secret) if oidc_client_secret else ''
     os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
@@ -444,6 +508,10 @@ def save_settings(domains, cert_resolver, traefik_api_url,
             'oidc_allowed_emails':  oidc_allowed_emails,
             'oidc_allowed_groups':  oidc_allowed_groups,
             'oidc_groups_claim':    oidc_groups_claim,
+            'webhook_url':          webhook_url,
+            'webhook_type':         webhook_type,
+            'webhook_username':     webhook_username,
+            'webhook_password':     _encrypt_otp_secret(webhook_password) if webhook_password else '',
         }, f)
     os.replace(tmp, SETTINGS_PATH)
     logger.info("Manager settings saved")
@@ -2169,6 +2237,7 @@ def api_get_settings():
 
     s.pop('password_hash', None)
     s.pop('oidc_client_secret', None)
+    s.pop('webhook_password', None)
     s['auth_enabled']          = _auth_enabled()
     s['has_password']          = _has_password_set()
     s['auth_env_forced']       = os.environ.get('AUTH_ENABLED', '').strip().lower() in ('false', '0', 'no')
@@ -2192,14 +2261,24 @@ def api_save_settings():
         acme_json_path    = str(data.get('acme_json_path', '')).strip()
         access_log_path   = str(data.get('access_log_path', '')).strip()
         static_config_path = str(data.get('static_config_path', '')).strip()
+        webhook_url      = str(data.get('webhook_url', '')).strip()
+        webhook_type     = str(data.get('webhook_type', 'discord')).strip()
+        webhook_username = str(data.get('webhook_username', '')).strip()
+        webhook_password = str(data.get('webhook_password', ''))
         existing = load_settings()
+        if not webhook_password:
+            webhook_password = existing.get('webhook_password', '')
         save_settings(domains, cert_resolver, traefik_api_url,
                       auth_enabled=existing['auth_enabled'],
                       password_hash=existing['password_hash'],
                       visible_tabs=existing['visible_tabs'],
                       acme_json_path=acme_json_path,
                       access_log_path=access_log_path,
-                      static_config_path=static_config_path)
+                      static_config_path=static_config_path,
+                      webhook_url=webhook_url,
+                      webhook_type=webhook_type,
+                      webhook_username=webhook_username,
+                      webhook_password=webhook_password)
         result = load_settings()
         result.pop('password_hash', None)
         result.pop('oidc_client_secret', None)
@@ -2208,6 +2287,24 @@ def api_save_settings():
         logger.exception("Settings save error")
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/api/settings/webhook-test', methods=['POST'])
+@csrf_protect
+@login_required
+def api_webhook_test():
+    data     = request.get_json(silent=True) or {}
+    url      = str(data.get('url', '')).strip()
+    wtype    = str(data.get('webhook_type', 'discord')).strip()
+    username = str(data.get('username', '')).strip()
+    password = str(data.get('password', ''))
+    if not url or not url.startswith(('http://', 'https://')):
+        return jsonify({'ok': False, 'error': 'Invalid URL'}), 400
+    ts = time.strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        _send_webhook(url, wtype, 'info', 'Traefik Manager webhook test', ts, username, password)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)[:120]})
 
 @app.route('/api/settings/test-connection', methods=['POST'])
 @csrf_protect

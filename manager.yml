@@ -1,36 +1,84 @@
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Traefik Manager - manager.yml
 # This file is managed by the app. You can also edit it manually.
 # Restart the container after any manual changes.
-# ─────────────────────────────────────────────────────────────────────────────
+# Full reference: https://traefik-manager.xyzlab.dev/manager-yml
+# -----------------------------------------------------------------------------
 
-# ── Domains ───────────────────────────────────────────────────────────────────
+# -- Domains ------------------------------------------------------------------
 domains:
   - example.com
+  - example.lan
 
-# ── Certificate Resolver ──────────────────────────────────────────────────────
+# -- Certificate Resolver -----------------------------------------------------
 cert_resolver: cloudflare
 
-# ── Traefik API URL ───────────────────────────────────────────────────────────
+# -- Traefik API URL ----------------------------------------------------------
 traefik_api_url: http://traefik:8080
 
-# ── Authentication ────────────────────────────────────────────────────────────
+# -- File Paths ---------------------------------------------------------------
+# Paths inside the container. Mount the files and set these accordingly.
+# Can also be set via env vars: ACME_JSON_PATH, ACCESS_LOG_PATH, STATIC_CONFIG_PATH
+acme_json_path: ""
+access_log_path: ""
+static_config_path: ""
+
+# -- Authentication -----------------------------------------------------------
 # Set to false if using external auth (Authentik, Authelia, Traefik basicAuth).
 # AUTH_ENABLED env var takes priority over this field.
 auth_enabled: true
 
-# ── Password Hash ─────────────────────────────────────────────────────────────
-# Set automatically by the app. DO NOT edit manually unless pre-configuring.
+# -- Password Hash ------------------------------------------------------------
+# Set automatically by the app. Do not edit manually unless pre-configuring.
 # If left empty the app auto-generates a temporary password on startup and
-# prints it to the container logs. You can also pre-set a bcrypt hash here
-# (use: python -c "import bcrypt; print(bcrypt.hashpw(b'yourpw', bcrypt.gensalt()).decode())")
-# and set setup_complete: true to skip the setup wizard entirely.
+# prints it to the container logs. You can also pre-set a bcrypt hash here:
+#   python3 -c "import bcrypt; print(bcrypt.hashpw(b'yourpw', bcrypt.gensalt()).decode())"
+# Then set setup_complete: true to skip the setup wizard entirely.
 password_hash: ""
 
-# ── Route & System Monitoring ─────────────────────────────────────────────────
+# -- Setup State --------------------------------------------------------------
+# Managed automatically by the app. Do not edit unless pre-configuring.
+# must_change_password: true forces a password-change on next login.
+# setup_complete: true skips the setup wizard.
+must_change_password: false
+setup_complete: false
+
+# -- Two-Factor Authentication (TOTP) ----------------------------------------
+# Managed via Settings -> Authentication -> 2FA. Do not edit by hand.
+otp_enabled: false
+otp_secret: ""
+
+# -- API Keys -----------------------------------------------------------------
+# Managed via Settings -> Authentication -> API Keys. Do not edit by hand.
+api_key_enabled: false
+api_keys: []
+
+# -- OIDC / SSO ---------------------------------------------------------------
+# Managed via Settings -> Authentication -> OIDC. Do not edit by hand.
+oidc_enabled: false
+oidc_provider_url: ""
+oidc_client_id: ""
+oidc_client_secret: ""
+oidc_display_name: "OIDC"
+oidc_allowed_emails: ""
+oidc_allowed_groups: ""
+oidc_groups_claim: "groups"
+
+# -- Notification Webhooks ----------------------------------------------------
+# Managed via Settings -> Notifications.
+# webhook_type: discord | slack | ntfy | generic
+webhook_url: ""
+webhook_type: "discord"
+webhook_username: ""
+webhook_password: ""
+
+# -- Tab Visibility -----------------------------------------------------------
 # Show or hide optional tabs. Routes, Middlewares, and Services are always on.
-# Toggle in Settings → Route Monitoring / System Monitoring, or edit here and restart.
+# Toggle in Settings -> Route Monitoring / System Monitoring, or edit here and restart.
 visible_tabs:
+  # Visualizations
+  dashboard: false
+  routemap: false
   # Infrastructure
   docker: false
   kubernetes: false
@@ -52,11 +100,14 @@ visible_tabs:
   plugins: false
   logs: false
 
-# ── Setup State ───────────────────────────────────────────────────────────────
-# Managed automatically by the app. Do not edit unless pre-configuring.
-# must_change_password: true forces a password-change on next login (set by
-#   auto-generation or `flask reset-password`).
-# setup_complete: true skips the setup wizard (set after wizard finishes, or
-#   set manually when pre-configuring this file).
-must_change_password: false
-setup_complete: false
+# -- Self Route ---------------------------------------------------------------
+# TM's own Traefik route. Set via Settings -> Connection -> Self Route.
+self_route:
+  domain: ""
+  service_url: ""
+  router_name: traefik-manager
+  entry_point: websecure
+
+# -- Disabled Routes ----------------------------------------------------------
+# Stores config of disabled routes so they can be re-enabled. Managed automatically.
+disabled_routes: {}

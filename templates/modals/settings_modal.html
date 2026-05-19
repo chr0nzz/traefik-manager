@@ -45,6 +45,10 @@
                     <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-plugs-connected" style="color:var(--muted)"></i>Connection</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
+                <button class="settings-mobile-row" onclick="switchSettingsPanel('notifications')">
+                    <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-bell" style="color:var(--muted)"></i>Notifications</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
                 <button class="settings-mobile-row" onclick="switchSettingsPanel('about')">
                     <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-info" style="color:var(--muted)"></i>About</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
@@ -72,6 +76,9 @@
                 </button>
                 <button class="modal-sidebar-btn" id="msb-connection" onclick="switchSettingsPanel('connection', this)">
                     <i class="ph-bold ph-plugs-connected"></i> Connection
+                </button>
+                <button class="modal-sidebar-btn" id="msb-notifications" onclick="switchSettingsPanel('notifications', this)">
+                    <i class="ph-bold ph-bell"></i> Notifications
                 </button>
                 <button class="modal-sidebar-btn" id="msb-about" onclick="switchSettingsPanel('about', this)">
                     <i class="ph-bold ph-info"></i> About
@@ -626,6 +633,38 @@
                     </div>
                 </div>
 
+                <div class="modal-panel" id="mpanel-notifications">
+                    <div>
+                        <span class="settings-section-label">Webhook</span>
+                        <div class="text-xs mb-3" style="color:var(--muted)">Send a notification to a webhook on every event (route saved, deleted, backup restored, etc.).</div>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-xs font-medium" style="color:var(--text)">Type</label>
+                                <select id="webhookTypeSelect" class="input-field mt-1" onchange="onWebhookTypeChange();saveSettings()">
+                                    <option value="discord">Discord</option>
+                                    <option value="slack">Slack</option>
+                                    <option value="ntfy">ntfy.sh / self-hosted ntfy</option>
+                                    <option value="generic">Generic JSON</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium" style="color:var(--text)">Webhook URL</label>
+                                <div class="flex gap-2 mt-1">
+                                    <input type="url" id="webhookUrlInput" class="input-field text-sm flex-1" placeholder="https://discord.com/api/webhooks/..." onblur="saveSettings()">
+                                    <button type="button" onclick="testWebhook()" class="proto-btn text-xs px-3 py-1.5" style="border-radius:6px;flex-shrink:0">Test</button>
+                                </div>
+                                <div id="webhookTestResult" class="text-xs mt-1" style="display:none"></div>
+                            </div>
+                            <div id="webhookAuthFields" style="display:none">
+                                <label class="text-xs font-medium" style="color:var(--text)">Username <span class="font-normal" style="color:var(--muted)">(optional)</span></label>
+                                <input type="text" id="webhookUsername" class="input-field text-sm mt-1" placeholder="Leave empty if not required" onblur="saveSettings()" autocomplete="off">
+                                <label class="text-xs font-medium mt-2 block" style="color:var(--text)">Password <span class="font-normal" style="color:var(--muted)">(optional)</span></label>
+                                <input type="password" id="webhookPassword" class="input-field text-sm mt-1" placeholder="Leave empty if not required" onblur="saveSettings()" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="modal-panel" id="mpanel-about">
                     <div class="space-y-4">
 
@@ -767,7 +806,7 @@ function switchSettingsPanel(id, btn) {
     if (activeBtn) activeBtn.classList.add('active');
     document.getElementById('mpanel-' + id).classList.add('active');
     if (window.innerWidth < 640) {
-        const titles = {connection:'Connection',routes:'Route Monitoring',system:'System Monitoring',auth:'Authentication',backups:'Backups',static:'Static Config',ui:'Interface',about:'About'};
+        const titles = {connection:'Connection',routes:'Route Monitoring',system:'System Monitoring',auth:'Authentication',backups:'Backups',static:'Static Config',ui:'Interface',notifications:'Notifications',about:'About'};
         document.getElementById('settingsModalTitle').textContent = titles[id] || 'Settings';
         document.getElementById('settingsGearIcon').style.display = 'none';
         document.getElementById('settingsMobileRoot').style.display = 'none';
@@ -804,6 +843,13 @@ async function openSettingsModal(panel) {
         document.getElementById('settingsAcmeJsonPath').value     = data.acme_json_path || '';
         document.getElementById('settingsAccessLogPath').value    = data.access_log_path || '';
         document.getElementById('settingsStaticConfigPath').value = data.static_config_path || '';
+        const whEl = document.getElementById('webhookUrlInput');
+        if (whEl) whEl.value = data.webhook_url || '';
+        const whType = document.getElementById('webhookTypeSelect');
+        if (whType) whType.value = data.webhook_type || 'discord';
+        const whUser = document.getElementById('webhookUsername');
+        if (whUser) whUser.value = data.webhook_username || '';
+        onWebhookTypeChange();
 
         if (data.visible_tabs) _visibleTabsCache = data.visible_tabs;
         loadTabTogglesIntoModal();
@@ -924,6 +970,27 @@ async function toggleAuth() {
     }
 }
 
+function onWebhookTypeChange() {
+    const type = document.getElementById('webhookTypeSelect')?.value;
+    const authFields = document.getElementById('webhookAuthFields');
+    if (authFields) authFields.style.display = (type === 'ntfy' || type === 'generic') ? '' : 'none';
+}
+
+async function testWebhook() {
+    const url      = document.getElementById('webhookUrlInput')?.value.trim();
+    const wtype    = document.getElementById('webhookTypeSelect')?.value || 'discord';
+    const username = document.getElementById('webhookUsername')?.value.trim() || '';
+    const password = document.getElementById('webhookPassword')?.value || '';
+    const res = document.getElementById('webhookTestResult');
+    if (!url) { if (res) { res.style.display=''; res.style.color='var(--red)'; res.textContent='Enter a webhook URL first.'; } return; }
+    if (res) { res.style.display=''; res.style.color='var(--muted)'; res.textContent='Sending...'; }
+    try {
+        const r = await fetch('/api/settings/webhook-test', { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':_csrfHeaders()['X-CSRF-Token']}, body: JSON.stringify({url, webhook_type: wtype, username, password}) });
+        const d = await r.json();
+        if (res) { res.style.color = d.ok ? 'var(--green)' : 'var(--red)'; res.textContent = d.ok ? 'Delivered.' : (d.error || 'Failed.'); }
+    } catch(e) { if (res) { res.style.color='var(--red)'; res.textContent='Request failed.'; } }
+}
+
 async function saveSettings() {
     const domains          = document.getElementById('settingsDomains').value.split(',').map(d => d.trim()).filter(Boolean);
     const resolver         = document.getElementById('settingsCertResolver').value.trim();
@@ -931,12 +998,16 @@ async function saveSettings() {
     const acmeJsonPath     = document.getElementById('settingsAcmeJsonPath')?.value.trim() || '';
     const accessLogPath    = document.getElementById('settingsAccessLogPath')?.value.trim() || '';
     const staticConfigPath = document.getElementById('settingsStaticConfigPath')?.value.trim() || '';
+    const webhookUrl       = document.getElementById('webhookUrlInput')?.value.trim() || '';
+    const webhookType      = document.getElementById('webhookTypeSelect')?.value || 'discord';
+    const webhookUsername  = document.getElementById('webhookUsername')?.value.trim() || '';
+    const webhookPassword  = document.getElementById('webhookPassword')?.value || '';
     if (!domains.length) return;
     try {
         const res  = await fetch('/api/settings', {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token']},
-            body: JSON.stringify({ domains, cert_resolver: resolver, traefik_api_url: apiUrl, acme_json_path: acmeJsonPath, access_log_path: accessLogPath, static_config_path: staticConfigPath })
+            body: JSON.stringify({ domains, cert_resolver: resolver, traefik_api_url: apiUrl, acme_json_path: acmeJsonPath, access_log_path: accessLogPath, static_config_path: staticConfigPath, webhook_url: webhookUrl, webhook_type: webhookType, webhook_username: webhookUsername, webhook_password: webhookPassword })
         });
         const data = await res.json();
         if (data.success) {

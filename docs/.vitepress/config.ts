@@ -70,6 +70,7 @@ export default defineConfig({
           { text: 'manager.yml', link: '/manager-yml' },
           { text: 'Environment Variables', link: '/env-vars' },
           { text: 'OIDC / SSO Login', link: '/oidc' },
+          { text: 'Notification Webhooks', link: '/webhooks' },
           { text: 'Reset Password', link: '/reset-password' },
         ],
       },
