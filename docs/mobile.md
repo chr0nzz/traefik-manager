@@ -13,7 +13,7 @@ See [connecting without an API key](#connecting-without-an-api-key) and [externa
 <MobileRelease />
 
 <a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager">
-  <img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/GetItOnGooglePlay.svg" alt="Get it on Google Play" height="25" />
+  <img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/GetItOnGooglePlay.svg" alt="Get it on Google Play" style="height:50px;width:auto" />
 </a>
 
 ---
