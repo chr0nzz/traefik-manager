@@ -765,6 +765,24 @@ function togglePwVis(inputId, btn) {
     btn.innerHTML = show ? '<i class="ph-bold ph-eye-slash text-sm"></i>' : '<i class="ph-bold ph-eye text-sm"></i>';
 }
 
+async function generateDigestAuth() {
+    const user  = (document.getElementById('wizDaGenUser')?.value || '').trim();
+    const realm = (document.getElementById('wizDaGenRealm')?.value || '').trim();
+    const pass  = (document.getElementById('wizDaGenPass')?.value || '');
+    if (!user || !realm || !pass) { showToast('Enter a username, realm and password', 'error'); return; }
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    try {
+        const res  = await fetch('/api/tools/digestauth', { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token': csrf}, body: JSON.stringify({username: user, realm, password: pass}) });
+        const json = await res.json();
+        if (!json.ok) { showToast(json.error || 'Failed', 'error'); return; }
+        const ta = document.getElementById('wizDaUsers');
+        if (ta) ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + json.hash;
+        document.getElementById('wizDaGenUser').value = '';
+        document.getElementById('wizDaGenRealm').value = '';
+        document.getElementById('wizDaGenPass').value = '';
+    } catch(e) { showToast('Error generating hash', 'error'); }
+}
+
 async function generateHtpasswd() {
     const user = (document.getElementById('wizBaGenUser')?.value || '').trim();
     const pass = (document.getElementById('wizBaGenPass')?.value || '');
@@ -856,9 +874,7 @@ function buildYamlFromWizard() {
 
     } else if (key === 'digestAuth') {
         const users = _lines('wizDaUsers');
-        const realm = _val('wizDaRealm');
         yaml = 'digestAuth:\n  users:\n' + users.map(l => '    - "' + l + '"').join('\n');
-        if (realm) yaml += '\n  realm: "' + realm + '"';
 
     } else if (key === 'forwardAuth') {
         const addr  = _val('wizFaAddress');

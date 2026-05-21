@@ -189,13 +189,21 @@
                     </div>
 
                     <div id="mwWiz-digestAuth" class="mw-wiz-form space-y-3" style="display:none">
+                        <div class="rounded-lg p-3 space-y-2" style="background:var(--input-bg);border:1px solid var(--border)">
+                            <div class="text-xs font-semibold" style="color:var(--muted)">Generate entry</div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <input type="text" id="wizDaGenUser" class="input-field text-sm" placeholder="Username">
+                                <input type="text" id="wizDaGenRealm" class="input-field text-sm" placeholder="Realm (e.g. traefik)">
+                                <div class="relative">
+                                    <input type="password" id="wizDaGenPass" class="input-field text-sm pr-8" placeholder="Password">
+                                    <button type="button" onclick="togglePwVis('wizDaGenPass',this)" class="absolute right-2 top-1/2 -translate-y-1/2" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0"><i class="ph-bold ph-eye text-sm"></i></button>
+                                </div>
+                            </div>
+                            <button type="button" onclick="generateDigestAuth()" class="proto-btn active-http text-xs px-3 py-1" style="border-radius:6px"><i class="ph-bold ph-plus" style="margin-right:4px"></i>Generate &amp; Add</button>
+                        </div>
                         <div>
                             <label>Users <span class="text-xs font-normal" style="color:var(--muted)">(one per line, format: <code class="font-mono">user:realm:md5hash</code>)</span></label>
                             <textarea id="wizDaUsers" class="input-field font-mono text-xs" rows="4" placeholder="admin:traefik:a2688e031edb4be6fe3079ef99a6274e"></textarea>
-                        </div>
-                        <div>
-                            <label>Realm <span class="text-xs font-normal" style="color:var(--muted)">(optional)</span></label>
-                            <input type="text" id="wizDaRealm" class="input-field" placeholder="traefik">
                         </div>
                     </div>
 

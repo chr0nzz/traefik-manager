@@ -1459,17 +1459,19 @@ def api_route_ping():
         return jsonify({'ok': False, 'error': 'Timeout' if 'timeout' in err.lower() else err, 'latency_ms': None})
 
 def _apr1_hash(password: str, salt: str) -> str:
-    import hashlib, struct
-    pw  = password.encode('utf-8')
+    import hashlib
+    pw  = password.encode('latin-1')
     sl  = salt.encode('ascii')
     mgc = b'$apr1$'
     a   = hashlib.md5(pw + mgc + sl)
     b   = hashlib.md5(pw + sl + pw).digest()
     plen = len(pw)
-    a.update(b * (plen // 16) + b[:plen % 16])
+    ndig, nrem = divmod(plen, 16)
+    for n in ndig * [16] + [nrem]:
+        a.update(b[:n])
     i = plen
     while i:
-        a.update(b'\x00' if (i & 1) else pw)
+        a.update(b'\x00' if (i & 1) else pw[:1])
         i >>= 1
     a = a.digest()
     for i in range(1000):
@@ -1492,6 +1494,19 @@ def _apr1_hash(password: str, salt: str) -> str:
     enc += to64((a[4]<<16)|(a[10]<<8)|a[5], 4)
     enc += to64(a[11], 2)
     return f'$apr1${salt}${enc}'
+
+@app.route('/api/tools/digestauth', methods=['POST'])
+@login_required
+def api_digestauth():
+    import hashlib
+    data     = request.get_json(silent=True) or {}
+    username = data.get('username', '').strip()
+    realm    = data.get('realm', '').strip()
+    password = data.get('password', '')
+    if not username or not realm or not password:
+        return jsonify({'ok': False, 'error': 'username, realm and password required'}), 400
+    h = hashlib.md5(f'{username}:{realm}:{password}'.encode()).hexdigest()
+    return jsonify({'ok': True, 'hash': f'{username}:{realm}:{h}'})
 
 @app.route('/api/tools/htpasswd', methods=['POST'])
 @login_required
