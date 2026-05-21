@@ -2564,10 +2564,18 @@ def _build_middlewares(config, config_file=''):
     return middlewares
 
 
-def _traefik_router_ep_map() -> dict:
-    ep_map = {}
+def _fetch_traefik_routers_and_services():
+    all_routers  = {}
+    all_services = {}
     for proto in ('http', 'tcp', 'udp'):
-        for r in traefik_api_get_all(f'/api/{proto}/routers') or []:
+        all_routers[proto]  = traefik_api_get_all(f'/api/{proto}/routers')  or []
+        all_services[proto] = traefik_api_get_all(f'/api/{proto}/services') or []
+    return all_routers, all_services
+
+def _traefik_router_ep_map(all_routers: dict) -> dict:
+    ep_map = {}
+    for proto, routers in all_routers.items():
+        for r in routers:
             name = r.get('name', '')
             key  = name.split('@')[0] if '@' in name else name
             eps  = r.get('entryPoints', [])
@@ -2575,10 +2583,14 @@ def _traefik_router_ep_map() -> dict:
                 ep_map[key] = eps
     return ep_map
 
-def _traefik_service_url_map():
+def _traefik_service_url_map(all_services: dict = None):
+    if all_services is None:
+        all_services = {}
+        for proto in ('http', 'tcp', 'udp'):
+            all_services[proto] = traefik_api_get_all(f'/api/{proto}/services') or []
     url_map = {}
     for proto, addr_key in (('http', 'url'), ('tcp', 'address'), ('udp', 'address')):
-        for svc in traefik_api_get_all(f'/api/{proto}/services') or []:
+        for svc in all_services.get(proto, []):
             key = _svc_key(svc.get('name', ''))
             servers = svc.get('loadBalancer', {}).get('servers', [])
             if servers and addr_key in servers[0]:
@@ -2586,12 +2598,10 @@ def _traefik_service_url_map():
     return url_map
 
 
-def _build_external_routes(include_internal=False):
-    svc_urls = _traefik_service_url_map()
+def _build_external_routes(all_routers: dict, svc_urls: dict, include_internal=False):
     routes = []
     for proto in ('http', 'tcp', 'udp'):
-        data = traefik_api_get_all(f'/api/{proto}/routers') or []
-        for r in data:
+        for r in all_routers.get(proto, []):
             provider = r.get('provider', '')
             if not provider or provider == 'file':
                 continue
@@ -2649,14 +2659,15 @@ def _build_all_apps(include_external=True, include_internal=False):
             combined_tcp.setdefault(k, v)
         for k, v in cfg.get('udp', {}).get('services', {}).items():
             combined_udp.setdefault(k, v)
-    api_svc_urls  = _traefik_service_url_map()
+    all_routers, all_services = _fetch_traefik_routers_and_services()
+    api_svc_urls  = _traefik_service_url_map(all_services)
     ep_mw_map     = _entrypoint_mw_map()
-    router_ep_map = _traefik_router_ep_map()
+    router_ep_map = _traefik_router_ep_map(all_routers)
     for cf, config in loaded:
         all_apps.extend(_build_apps(config, cf, combined_http, combined_tcp, combined_udp, api_svc_urls))
         all_middlewares.extend(_build_middlewares(config, cf))
     if include_external:
-        all_apps.extend(_build_external_routes(include_internal=include_internal))
+        all_apps.extend(_build_external_routes(all_routers, api_svc_urls, include_internal=include_internal))
     for app in all_apps:
         if not app.get('entryPoints') and app.get('name') in router_ep_map:
             app['entryPoints'] = router_ep_map[app['name']]
@@ -3304,6 +3315,9 @@ def api_save_oidc():
             domains=s['domains'],
             cert_resolver=s['cert_resolver'],
             traefik_api_url=s['traefik_api_url'],
+            auth_enabled=s.get('auth_enabled', True),
+            password_hash=s.get('password_hash', ''),
+            visible_tabs=s.get('visible_tabs'),
             oidc_enabled=bool(data.get('oidc_enabled', False)),
             oidc_provider_url=str(data.get('oidc_provider_url', '')).strip(),
             oidc_client_id=str(data.get('oidc_client_id', '')).strip(),
