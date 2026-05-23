@@ -290,6 +290,12 @@
                 <span class="badge badge-muted" id="certsTabCount">-</span>
             </span>
         </button>
+        <button onclick="switchTab('crowdsec')" id="btn-crowdsec" class="tab-btn tab-optional" data-tab="crowdsec">
+            <span class="flex items-center gap-2">
+                <i class="ph-bold ph-shield-slash"></i>
+                CrowdSec
+            </span>
+        </button>
         <button onclick="switchTab('plugins')" id="btn-plugins" class="tab-btn tab-optional" data-tab="plugins">
             <span class="flex items-center gap-2">
                 <i class="ph-bold ph-puzzle-piece"></i>
@@ -354,7 +360,9 @@
 
     {% include 'tabs/tab_certs.html' %}
 
-    
+    {% include 'tabs/tab_crowdsec.html' %}
+
+
     {% include 'tabs/tab_plugins.html' %}
 
     
@@ -426,7 +434,7 @@ async function _fixSelfRouteEp(fixEp) {
     } catch(e) { showToast('Failed to update self-route', 'error'); }
 }
 
-const OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs'];
+const OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'crowdsec', 'plugins', 'logs'];
 
 let _visibleTabsCache = {};
 
@@ -495,6 +503,7 @@ function switchTab(tab) {
     if (tab === 'http_provider') refreshHttpProviderTab();
     if (tab === 'file_external') refreshFileExternalTab();
     if (tab === 'certs')         refreshCertsTab();
+    if (tab === 'crowdsec')      refreshCrowdSecTab();
     if (tab === 'plugins')       refreshPluginsTab();
     if (tab === 'logs')          refreshLogs();
     _initMobileFilterBars();
@@ -3483,6 +3492,149 @@ async function refreshCertsTab() {
     } catch(e) {
         container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-plug-slash text-5xl block mb-3 opacity-30"></i><p>Could not load certificate data</p></div>`;
     }
+}
+
+let _csDecisions = [];
+let _csAlerts    = [];
+let _csTypeFilter = 'all';
+
+async function refreshCrowdSecTab() {
+    const decEl  = document.getElementById('csDecisionsTable');
+    const altEl  = document.getElementById('csAlertsTable');
+    const statsEl = document.getElementById('crowdsecStats');
+    if (!decEl) return;
+    const spinner = `<div class="text-center py-8" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-3xl block mb-2 animate-spin opacity-40"></i><p class="text-xs">Loading...</p></div>`;
+    decEl.innerHTML = spinner;
+    altEl.innerHTML = spinner;
+    try {
+        const [decisions, alerts] = await Promise.all([
+            fetch('/api/crowdsec/decisions').then(r => r.json()),
+            fetch('/api/crowdsec/alerts').then(r => r.json()),
+        ]);
+        _csDecisions = Array.isArray(decisions) ? decisions : [];
+        _csAlerts    = Array.isArray(alerts)    ? alerts    : [];
+        _renderCsStats(_csDecisions, statsEl);
+        _csApplyFilters();
+    } catch(e) {
+        const err = `<div class="text-center py-8 text-xs" style="color:var(--muted)">Could not reach CrowdSec LAPI</div>`;
+        decEl.innerHTML = err; altEl.innerHTML = err;
+    }
+}
+
+function _setCsType(type, btn) {
+    _csTypeFilter = type;
+    document.querySelectorAll('[id^="cs-type-"]').forEach(b => b.classList.remove('active-http'));
+    btn.classList.add('active-http');
+    _csApplyFilters();
+}
+
+function _csApplyFilters() {
+    const q = (document.getElementById('csSearch')?.value || '').toLowerCase().trim();
+    const decEl = document.getElementById('csDecisionsTable');
+    const altEl = document.getElementById('csAlertsTable');
+    const filtered = _csDecisions.filter(d => {
+        if (_csTypeFilter !== 'all' && d.type !== _csTypeFilter) return false;
+        if (q && !((d.value||'').toLowerCase().includes(q) || (d.scenario||'').toLowerCase().includes(q) || (d.origin||'').toLowerCase().includes(q))) return false;
+        return true;
+    });
+    const filteredAlerts = _csAlerts.filter(a => {
+        if (!q) return true;
+        const ip = (a.source && a.source.ip) ? a.source.ip : '';
+        return ip.toLowerCase().includes(q) || (a.scenario||'').toLowerCase().includes(q);
+    });
+    if (decEl) _renderCsDecisions(filtered, decEl);
+    if (altEl) _renderCsAlerts(filteredAlerts, altEl);
+}
+
+function _renderCsStats(decisions, el) {
+    if (!el) return;
+    const bans      = decisions.filter(d => d.type === 'ban').length;
+    const captchas  = decisions.filter(d => d.type === 'captcha').length;
+    const bypasses  = decisions.filter(d => d.type === 'bypass').length;
+    const stats = [
+        { label: 'Active Bans',     value: bans,     color: 'var(--red)',    icon: 'ph-prohibit' },
+        { label: 'Captchas',        value: captchas,  color: 'var(--yellow)', icon: 'ph-puzzle-piece' },
+        { label: 'Bypasses',        value: bypasses,  color: 'var(--green)',  icon: 'ph-check-circle' },
+    ];
+    el.innerHTML = stats.map(s => `
+        <div class="rounded-xl p-4" style="background:var(--card);border:1px solid var(--border)">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)">${s.label}</span>
+                <i class="ph-bold ${s.icon} text-base" style="color:${s.color};opacity:0.7"></i>
+            </div>
+            <div class="text-3xl font-bold" style="color:${s.value > 0 ? s.color : 'var(--muted)'}">${s.value}</div>
+        </div>`).join('');
+}
+
+function _renderCsDecisions(decisions, el) {
+    document.getElementById('csDecisionCount').textContent = decisions.length;
+    if (decisions.length === 0) {
+        el.innerHTML = `<div class="text-center py-10 text-xs" style="color:var(--muted)">No active decisions</div>`;
+        return;
+    }
+    const rows = decisions.map(d => {
+        const exp = d.duration || d.until || '-';
+        const scenario = _esc(d.scenario || d.origin || '-');
+        return `<tr style="border-top:1px solid var(--border)">
+            <td class="px-3 py-2 font-mono text-xs" style="color:var(--text)">${_esc(d.value || '-')}</td>
+            <td class="px-3 py-2 text-xs"><span class="badge ${d.type === 'ban' ? 'badge-red' : d.type === 'captcha' ? 'badge-yellow' : 'badge-green'}">${_esc(d.type || '-')}</span></td>
+            <td class="px-3 py-2 text-xs" style="color:var(--muted)">${_esc(String(exp))}</td>
+            <td class="px-3 py-2 text-xs" style="color:var(--muted)">${scenario}</td>
+            <td class="px-3 py-2 text-xs text-right">
+                <button onclick="csUnban(${d.id})" class="btn-icon text-xs" title="Unban / delete decision" style="color:var(--red)"><i class="ph-bold ph-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+    el.innerHTML = `<table class="w-full text-left" style="border-collapse:collapse">
+        <thead><tr style="background:var(--input-bg)">
+            <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">IP / Scope</th>
+            <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">Type</th>
+            <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">Duration / Until</th>
+            <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">Scenario</th>
+            <th class="px-3 py-2 text-xs font-semibold text-right" style="color:var(--muted)">Action</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function _renderCsAlerts(alerts, el) {
+    document.getElementById('csAlertCount').textContent = alerts.length;
+    if (alerts.length === 0) {
+        el.innerHTML = `<div class="text-center py-10 text-xs" style="color:var(--muted)">No recent alerts</div>`;
+        return;
+    }
+    const rows = alerts.map(a => {
+        const ts  = a.startAt ? new Date(a.startAt).toLocaleString() : '-';
+        const ip  = (a.source && a.source.ip) ? _esc(a.source.ip) : '-';
+        const scenario = _esc(a.scenario || '-');
+        const decisions = (a.decisions || []).length;
+        return `<tr style="border-top:1px solid var(--border)">
+            <td class="px-3 py-2 text-xs" style="color:var(--muted)">${_esc(ts)}</td>
+            <td class="px-3 py-2 font-mono text-xs" style="color:var(--text)">${ip}</td>
+            <td class="px-3 py-2 text-xs" style="color:var(--muted)">${scenario}</td>
+            <td class="px-3 py-2 text-xs text-center"><span class="badge badge-muted">${decisions}</span></td>
+        </tr>`;
+    }).join('');
+    el.innerHTML = `<table class="w-full text-left" style="border-collapse:collapse">
+        <thead><tr style="background:var(--input-bg)">
+            <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">Time</th>
+            <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">Source IP</th>
+            <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">Scenario</th>
+            <th class="px-3 py-2 text-xs font-semibold text-center" style="color:var(--muted)">Decisions</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+    </table>`;
+}
+
+async function csUnban(id) {
+    if (!confirm(`Delete decision ${id} (unban IP)?`)) return;
+    try {
+        const res = await fetch(`/api/crowdsec/decisions/${id}`, {
+            method: 'DELETE', headers: {'X-CSRFToken': _csrfToken()}
+        }).then(r => r.json());
+        if (res.ok) { addNotification('success', `Decision ${id} deleted`); refreshCrowdSecTab(); }
+        else addNotification('error', res.error || 'Failed to delete decision');
+    } catch(e) { addNotification('error', 'Request failed'); }
 }
 
 let _allLogLines    = [];

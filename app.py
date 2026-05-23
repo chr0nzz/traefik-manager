@@ -19,7 +19,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.2.0"
+APP_VERSION  = "1.3.0"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -283,7 +283,7 @@ def _get_signal_file_path() -> str:
     return os.environ.get('SIGNAL_FILE_PATH', '/signals/restart.sig')
 
 
-OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'plugins', 'logs']
+OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'crowdsec', 'plugins', 'logs']
 
 def load_settings() -> dict:
     defaults = {
@@ -316,6 +316,8 @@ def load_settings() -> dict:
         'webhook_type':         'discord',
         'webhook_username':     '',
         'webhook_password':     '',
+        'crowdsec_lapi_url':    '',
+        'crowdsec_api_key':     '',
     }
     if not os.path.exists(SETTINGS_PATH):
         return defaults
@@ -409,6 +411,10 @@ def load_settings() -> dict:
             merged['webhook_username'] = str(data['webhook_username']).strip()
         if 'webhook_password' in data:
             merged['webhook_password'] = _decrypt_otp_secret(str(data['webhook_password']))
+        if 'crowdsec_lapi_url' in data:
+            merged['crowdsec_lapi_url'] = str(data['crowdsec_lapi_url']).strip()
+        if 'crowdsec_api_key' in data:
+            merged['crowdsec_api_key'] = _decrypt_otp_secret(str(data['crowdsec_api_key']))
         return merged
     except Exception as e:
         logger.warning(f"Could not load manager.yml, using defaults: {e}")
@@ -429,7 +435,8 @@ def save_settings(domains, cert_resolver, traefik_api_url,
                   oidc_client_secret=None, oidc_display_name=None,
                   oidc_allowed_emails=None, oidc_allowed_groups=None,
                   oidc_groups_claim=None, webhook_url=None, webhook_type=None,
-                  webhook_username=None, webhook_password=None):
+                  webhook_username=None, webhook_password=None,
+                  crowdsec_lapi_url=None, crowdsec_api_key=None):
     if visible_tabs is None:
         visible_tabs = {t: False for t in OPTIONAL_TABS}
     _cur = load_settings()
@@ -477,6 +484,10 @@ def save_settings(domains, cert_resolver, traefik_api_url,
         webhook_username = _cur.get('webhook_username', '')
     if webhook_password is None:
         webhook_password = _cur.get('webhook_password', '')
+    if crowdsec_lapi_url is None:
+        crowdsec_lapi_url = _cur.get('crowdsec_lapi_url', '')
+    if crowdsec_api_key is None:
+        crowdsec_api_key = _cur.get('crowdsec_api_key', '')
     otp_secret = _encrypt_otp_secret(otp_secret)
     oidc_client_secret_enc = _encrypt_otp_secret(oidc_client_secret) if oidc_client_secret else ''
     os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
@@ -512,6 +523,8 @@ def save_settings(domains, cert_resolver, traefik_api_url,
             'webhook_type':         webhook_type,
             'webhook_username':     webhook_username,
             'webhook_password':     _encrypt_otp_secret(webhook_password) if webhook_password else '',
+            'crowdsec_lapi_url':    crowdsec_lapi_url,
+            'crowdsec_api_key':     _encrypt_otp_secret(crowdsec_api_key) if crowdsec_api_key else '',
         }, f)
     os.replace(tmp, SETTINGS_PATH)
     logger.info("Manager settings saved")
@@ -1431,6 +1444,59 @@ def api_entrypoints():
 def api_version():
     return jsonify(traefik_api_get('/api/version') or {})
 
+
+def _cs_lapi_url() -> str:
+    s = load_settings()
+    return s.get('crowdsec_lapi_url', '').strip() or os.environ.get('CROWDSEC_LAPI_URL', '').strip()
+
+def _cs_api_key() -> str:
+    s = load_settings()
+    return s.get('crowdsec_api_key', '').strip() or os.environ.get('CROWDSEC_API_KEY', '').strip()
+
+def _cs_request(method: str, path: str, **kwargs):
+    lapi = _cs_lapi_url().rstrip('/')
+    key  = _cs_api_key()
+    if not lapi or not key:
+        return None
+    try:
+        resp = requests.request(method, f"{lapi}{path}",
+                                headers={'X-Api-Key': key, 'Accept': 'application/json'},
+                                timeout=5, **kwargs)
+        resp.raise_for_status()
+        return resp.json() if resp.content else None
+    except Exception as e:
+        logger.warning(f"CrowdSec LAPI error {method} {path}: {e}")
+        return None
+
+@app.route('/api/crowdsec/decisions')
+@login_required
+def api_cs_decisions():
+    data = _cs_request('GET', '/v1/decisions?limit=200')
+    if data is None and not (_cs_lapi_url() and _cs_api_key()):
+        return jsonify({'error': 'CrowdSec not configured'}), 503
+    return jsonify(data or [])
+
+@app.route('/api/crowdsec/alerts')
+@login_required
+def api_cs_alerts():
+    data = _cs_request('GET', '/v1/alerts?limit=50')
+    if data is None and not (_cs_lapi_url() and _cs_api_key()):
+        return jsonify({'error': 'CrowdSec not configured'}), 503
+    return jsonify(data or [])
+
+@app.route('/api/crowdsec/decisions/<int:decision_id>', methods=['DELETE'])
+@csrf_protect
+@login_required
+def api_cs_unban(decision_id):
+    if not (_cs_lapi_url() and _cs_api_key()):
+        return jsonify({'error': 'CrowdSec not configured'}), 503
+    result = _cs_request('DELETE', f'/v1/decisions/{decision_id}')
+    if result is None:
+        return jsonify({'error': 'Failed to delete decision'}), 500
+    add_notification('success', f'Decision {decision_id} deleted (IP unbanned)')
+    return jsonify({'ok': True})
+
+
 @app.route('/api/ping')
 @login_required
 def api_route_ping():
@@ -2261,10 +2327,13 @@ def api_get_settings():
     s.pop('password_hash', None)
     s.pop('oidc_client_secret', None)
     s.pop('webhook_password', None)
-    s['auth_enabled']          = _auth_enabled()
-    s['has_password']          = _has_password_set()
-    s['auth_env_forced']       = os.environ.get('AUTH_ENABLED', '').strip().lower() in ('false', '0', 'no')
+    s.pop('crowdsec_api_key', None)
+    s['auth_enabled']           = _auth_enabled()
+    s['has_password']           = _has_password_set()
+    s['auth_env_forced']        = os.environ.get('AUTH_ENABLED', '').strip().lower() in ('false', '0', 'no')
     s['oidc_client_secret_set'] = bool(load_settings().get('oidc_client_secret', ''))
+    s['crowdsec_api_key_set']   = bool(_cs_api_key())
+    s['crowdsec_enabled']       = bool(_cs_lapi_url() and _cs_api_key())
     return jsonify(s)
 
 @app.route('/api/settings', methods=['POST'])
@@ -2284,13 +2353,17 @@ def api_save_settings():
         acme_json_path    = str(data.get('acme_json_path', '')).strip()
         access_log_path   = str(data.get('access_log_path', '')).strip()
         static_config_path = str(data.get('static_config_path', '')).strip()
-        webhook_url      = str(data.get('webhook_url', '')).strip()
-        webhook_type     = str(data.get('webhook_type', 'discord')).strip()
-        webhook_username = str(data.get('webhook_username', '')).strip()
-        webhook_password = str(data.get('webhook_password', ''))
+        webhook_url          = str(data.get('webhook_url', '')).strip()
+        webhook_type         = str(data.get('webhook_type', 'discord')).strip()
+        webhook_username     = str(data.get('webhook_username', '')).strip()
+        webhook_password     = str(data.get('webhook_password', ''))
+        crowdsec_lapi_url    = str(data.get('crowdsec_lapi_url', '')).strip()
+        crowdsec_api_key     = str(data.get('crowdsec_api_key', ''))
         existing = load_settings()
         if not webhook_password:
             webhook_password = existing.get('webhook_password', '')
+        if not crowdsec_api_key:
+            crowdsec_api_key = existing.get('crowdsec_api_key', '')
         save_settings(domains, cert_resolver, traefik_api_url,
                       auth_enabled=existing['auth_enabled'],
                       password_hash=existing['password_hash'],
@@ -2301,10 +2374,13 @@ def api_save_settings():
                       webhook_url=webhook_url,
                       webhook_type=webhook_type,
                       webhook_username=webhook_username,
-                      webhook_password=webhook_password)
+                      webhook_password=webhook_password,
+                      crowdsec_lapi_url=crowdsec_lapi_url,
+                      crowdsec_api_key=crowdsec_api_key)
         result = load_settings()
         result.pop('password_hash', None)
         result.pop('oidc_client_secret', None)
+        result.pop('crowdsec_api_key', None)
         return jsonify({'success': True, 'settings': result})
     except Exception as e:
         logger.exception("Settings save error")
@@ -2900,7 +2976,8 @@ def index():
                            multi_config=MULTI_CONFIG,
                            config_paths_list=config_paths_list,
                            config_dir_set=bool(ACTIVE_CONFIG_DIR),
-                           cert_resolvers=cert_resolvers)
+                           cert_resolvers=cert_resolvers,
+                           crowdsec_enabled=bool(_cs_lapi_url() and _cs_api_key()))
 
 
 def _is_fetch():

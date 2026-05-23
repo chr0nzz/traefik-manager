@@ -207,6 +207,9 @@
                             <button class="auth-sub-tab" id="system-tab-paths" onclick="switchSystemTab('paths', this)">
                                 <i class="ph-bold ph-folder-open"></i> File Paths
                             </button>
+                            <button class="auth-sub-tab" id="system-tab-crowdsec" onclick="switchSystemTab('crowdsec', this)">
+                                <i class="ph-bold ph-shield-slash"></i> CrowdSec
+                            </button>
                         </div>
 
                         <div id="system-sub-tabs" class="auth-sub-panel" style="display:flex;">
@@ -217,6 +220,10 @@
                                     <label class="tab-toggle-row" onclick="toggleTabVisibility('certs')">
                                         <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-check" style="color:var(--muted)"></i> Certs</span>
                                         <div class="toggle-switch" id="toggle-certs"><div class="toggle-knob"></div></div>
+                                    </label>
+                                    <label class="tab-toggle-row" onclick="toggleTabVisibility('crowdsec')">
+                                        <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-slash" style="color:var(--muted)"></i> CrowdSec</span>
+                                        <div class="toggle-switch" id="toggle-crowdsec"><div class="toggle-knob"></div></div>
                                     </label>
                                     <label class="tab-toggle-row" onclick="toggleTabVisibility('plugins')">
                                         <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-puzzle-piece" style="color:var(--muted)"></i> Plugins</span>
@@ -251,6 +258,23 @@
                             </div>
                             <div id="pathsSavedNotice" class="hidden text-xs px-3 py-2 rounded-md" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
                                 <i class="ph-bold ph-check-circle mr-1"></i>Paths saved to <code>manager.yml</code>
+                            </div>
+                        </div>
+
+                        <div id="system-sub-crowdsec" class="auth-sub-panel" style="display:none;">
+                            <div>
+                                <span class="settings-section-label">LAPI URL</span>
+                                <div class="text-xs mb-2" style="color:var(--muted)">CrowdSec Local API URL. Leave blank to use the <code class="font-mono">CROWDSEC_LAPI_URL</code> env var.</div>
+                                <input type="text" id="settingsCrowdSecUrl" class="input-field" placeholder="http://crowdsec:8080" onblur="saveSettings()">
+                            </div>
+                            <div>
+                                <span class="settings-section-label">API Key</span>
+                                <div class="text-xs mb-2" style="color:var(--muted)">Bouncer API key. Stored encrypted. Leave blank to use the <code class="font-mono">CROWDSEC_API_KEY</code> env var.</div>
+                                <input type="password" id="settingsCrowdSecKey" class="input-field" placeholder="••••••••" autocomplete="new-password" onblur="saveSettings()">
+                                <div id="crowdsecKeySetHint" class="mt-1 text-xs hidden" style="color:var(--green)"><i class="ph-bold ph-check-circle"></i> API key configured</div>
+                            </div>
+                            <div id="crowdsecSavedNotice" class="hidden text-xs px-3 py-2 rounded-md" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
+                                <i class="ph-bold ph-check-circle mr-1"></i>CrowdSec credentials saved
                             </div>
                         </div>
 
@@ -857,6 +881,9 @@ async function openSettingsModal(panel) {
         document.getElementById('settingsAcmeJsonPath').value     = data.acme_json_path || '';
         document.getElementById('settingsAccessLogPath').value    = data.access_log_path || '';
         document.getElementById('settingsStaticConfigPath').value = data.static_config_path || '';
+        document.getElementById('settingsCrowdSecUrl').value      = data.crowdsec_lapi_url || '';
+        const csKeyHint = document.getElementById('crowdsecKeySetHint');
+        if (csKeyHint) csKeyHint.classList.toggle('hidden', !data.crowdsec_api_key_set);
         const whEl = document.getElementById('webhookUrlInput');
         if (whEl) whEl.value = data.webhook_url || '';
         const whType = document.getElementById('webhookTypeSelect');
@@ -1003,22 +1030,30 @@ async function saveSettings() {
     const acmeJsonPath     = document.getElementById('settingsAcmeJsonPath')?.value.trim() || '';
     const accessLogPath    = document.getElementById('settingsAccessLogPath')?.value.trim() || '';
     const staticConfigPath = document.getElementById('settingsStaticConfigPath')?.value.trim() || '';
-    const webhookUrl       = document.getElementById('webhookUrlInput')?.value.trim() || '';
-    const webhookType      = document.getElementById('webhookTypeSelect')?.value || 'discord';
-    const webhookUsername  = document.getElementById('webhookUsername')?.value.trim() || '';
-    const webhookPassword  = document.getElementById('webhookPassword')?.value || '';
+    const webhookUrl        = document.getElementById('webhookUrlInput')?.value.trim() || '';
+    const webhookType       = document.getElementById('webhookTypeSelect')?.value || 'discord';
+    const webhookUsername   = document.getElementById('webhookUsername')?.value.trim() || '';
+    const webhookPassword   = document.getElementById('webhookPassword')?.value || '';
+    const crowdsecLapiUrl   = document.getElementById('settingsCrowdSecUrl')?.value.trim() || '';
+    const crowdsecApiKey    = document.getElementById('settingsCrowdSecKey')?.value || '';
     if (!domains.length) return;
     try {
         const res  = await fetch('/api/settings', {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token']},
-            body: JSON.stringify({ domains, cert_resolver: resolver, traefik_api_url: apiUrl, acme_json_path: acmeJsonPath, access_log_path: accessLogPath, static_config_path: staticConfigPath, webhook_url: webhookUrl, webhook_type: webhookType, webhook_username: webhookUsername, webhook_password: webhookPassword })
+            body: JSON.stringify({ domains, cert_resolver: resolver, traefik_api_url: apiUrl, acme_json_path: acmeJsonPath, access_log_path: accessLogPath, static_config_path: staticConfigPath, webhook_url: webhookUrl, webhook_type: webhookType, webhook_username: webhookUsername, webhook_password: webhookPassword, crowdsec_lapi_url: crowdsecLapiUrl, crowdsec_api_key: crowdsecApiKey })
         });
         const data = await res.json();
         if (data.success) {
             document.getElementById('settingsSavedNotice').classList.remove('hidden');
             document.getElementById('pathsSavedNotice')?.classList.remove('hidden');
             setTimeout(() => document.getElementById('pathsSavedNotice')?.classList.add('hidden'), 3000);
+            document.getElementById('crowdsecSavedNotice')?.classList.remove('hidden');
+            setTimeout(() => document.getElementById('crowdsecSavedNotice')?.classList.add('hidden'), 3000);
+            if (crowdsecApiKey) {
+                document.getElementById('settingsCrowdSecKey').value = '';
+                document.getElementById('crowdsecKeySetHint')?.classList.remove('hidden');
+            }
             if (typeof availableDomains !== 'undefined') {
                 availableDomains.length = 0;
                 domains.forEach(d => availableDomains.push(d));
