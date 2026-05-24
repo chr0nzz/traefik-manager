@@ -219,6 +219,11 @@ select.input-field option { background: var(--card); color: var(--text); }
 .pill-btn-muted  { background: rgba(139,148,158,0.09); border-color: rgba(139,148,158,0.3); color: var(--muted); }
 .pill-btn-red    { background: rgba(248,81,73,0.09);   border-color: rgba(248,81,73,0.3);   color: var(--red); }
 
+.route-ctx-menu { position:fixed;z-index:9999;border-radius:10px;padding:4px;min-width:168px;box-shadow:0 8px 32px rgba(0,0,0,0.4); }
+.route-ctx-item { display:flex;align-items:center;gap:9px;padding:7px 12px;font-size:12px;cursor:pointer;border:none;background:none;color:var(--text);width:100%;text-align:left;text-decoration:none;border-radius:6px;transition:background 0.1s; }
+.route-ctx-item:hover { background:var(--input-bg); }
+.route-ctx-danger { color:var(--red) !important; }
+
 .modal-overlay {
     position: fixed; inset: 0; z-index: 50;
     background: rgba(1,4,9,0.85);
@@ -725,7 +730,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 .svc-list-col-provider,
 .svc-list-col-servers,
 .svc-list-col-usedby { display: flex; align-items: center; }
-.route-list-grid { grid-template-columns: 20px 110px 1fr 200px 160px 100px 185px; }
+.route-list-grid { grid-template-columns: 20px 110px 1fr 200px 160px 100px auto; }
 .mw-list-grid { grid-template-columns: 80px 1fr 1fr 120px; }
 
 /* Responsive */

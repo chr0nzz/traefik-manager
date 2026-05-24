@@ -1317,6 +1317,7 @@ function renderRouteGrid(apps) {
         const insecureBadge = app.insecureSkipVerify ? `<span class="badge" style="font-size:9px;background:rgba(240,180,0,0.12);color:#d4a017;border:1px solid rgba(240,180,0,0.3)" title="insecureSkipVerify enabled"><i class="ph-bold ph-warning"></i> TLS skip</span>` : '';
         const openLink = (proto === 'http' && domain && !domain.includes('{') && !domain.includes('*') && !domain.includes('HostRegexp'))
             ? `<a href="https://${domain}" target="_blank" class="pill-btn pill-btn-blue" title="Open site"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : '';
+        const openUrl  = (proto === 'http' && domain && !domain.includes('{') && !domain.includes('*') && !domain.includes('HostRegexp')) ? 'https://' + domain : '';
         const epBadges = (app.entryPoints || []).map(ep => '<span class="badge badge-muted" style="font-size:9px">' + _esc(ep) + '</span>').join('');
         const mwBadges   = (app.middlewares || []).map(mw => `<span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">${_esc(mw)}</span>`).join('');
         const epMwBadges = (app.entrypointMiddlewares || []).map(mw => `<span class="badge badge-muted" title="Applied via entrypoint">${_esc(mw)} <span style="font-size:9px;opacity:0.6">ep</span></span>`).join('');
@@ -1347,9 +1348,9 @@ function renderRouteGrid(apps) {
                 : `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</span>${_copyBtn(domain || app.rule,'blue')}</div>`;
         if (_routeViewMode === 'list') {
             const epCompact = (app.entryPoints || []).slice(0, 2).map(ep => `<span class="badge badge-muted" style="font-size:9px">${_esc(ep)}</span>`).join('');
-            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="svc-list-col-status" style="display:flex;align-items:center;gap:6px">${bulkCheckbox}<span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span></div><div style="display:flex;align-items:center;gap:4px"><span class="badge ${badgeClass}" style="font-size:9px">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}</div><div class="svc-list-col-name">${_esc(app.name)}<div class="text-xs font-mono truncate" style="color:var(--muted);margin-top:1px">${_esc(app.service_name)}</div></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div><div style="display:flex;align-items:center;gap:3px">${epCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('[data-routekey]'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
+            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="svc-list-col-status" style="display:flex;align-items:center;gap:6px">${bulkCheckbox}<span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span></div><div style="display:flex;align-items:center;gap:4px"><span class="badge ${badgeClass}" style="font-size:9px">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}</div><div class="svc-list-col-name">${_esc(app.name)}<div class="text-xs font-mono truncate" style="color:var(--muted);margin-top:1px">${_esc(app.service_name)}</div></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div><button onclick="event.stopPropagation();_copyToClipboard('${_esc(app.target)}')" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div><div style="display:flex;align-items:center;gap:3px">${epCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${openUrl}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="More"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
         }
-        return `<div class="card route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5">${bulkCheckbox}<span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" onclick="openRouteDetailFromCard(this.closest('.route-card'))" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>${openLink}<button type="button" onclick="deleteRoute('${_esc(app.id)}'${cfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div>${cfBadge}</div></div>`;
+        return `<div class="card route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5">${bulkCheckbox}<span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}<span class="status-dot status-checking" title="Checking..."></span></div><h3 class="font-bold text-sm mt-1.5 truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${openUrl}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="More"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div>${cfBadge}</div></div>`;
     }).join('');
 
     if (_routeViewMode === 'list') {
@@ -1550,6 +1551,85 @@ function toggleTcpCertResolver(checked) {
     const row = document.getElementById('tcpCertResolverRow');
     if (row) row.style.display = checked ? '' : 'none';
 }
+
+function cloneRoute(btn) {
+    const app = JSON.parse(btn.getAttribute('data-app'));
+    openModal();
+    document.getElementById('modalTitle').innerText = 'Clone Route';
+    const proto = app.protocol || 'http';
+    setProtocol(proto);
+    if (proto === 'http') {
+        const targetScheme = (app.target || '').startsWith('https://') ? 'https' : 'http';
+        let target = (app.target || '').replace('http://','').replace('https://','');
+        const parts = target.split(':');
+        document.getElementById('targetIp').value = parts[0] || '';
+        document.getElementById('targetPort').value = parts[1] || '80';
+        _initMiddlewareChips(app.middlewares || []);
+        _initEntrypointChips('http', app.entryPoints || []);
+        document.getElementById('scheme').value = targetScheme;
+        document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
+        const crHttp = document.getElementById('certResolver');
+        if (crHttp) {
+            if (!app.tls && app.tls !== false) crHttp.value = '__disabled__';
+            else if (app.certResolver) crHttp.value = app.certResolver;
+            else crHttp.value = '__none__';
+        }
+        const insecureChk = document.getElementById('insecureSkipVerify');
+        if (insecureChk) insecureChk.checked = !!app.insecureSkipVerify;
+    } else if (proto === 'tcp') {
+        const target = (app.target || '').split(':');
+        document.getElementById('targetIpTcp').value = target[0] || '';
+        document.getElementById('targetPortTcp').value = target[1] || '';
+        _initEntrypointChips('tcp', app.entryPoints || []);
+        const useTlsChk = document.getElementById('useTls');
+        if (useTlsChk) { useTlsChk.checked = !!app.tls; toggleTcpCertResolver(!!app.tls); }
+        const crTcp = document.getElementById('certResolverTcp');
+        if (crTcp && app.certResolver) crTcp.value = app.certResolver;
+    } else if (proto === 'udp') {
+        const target = (app.target || '').split(':');
+        document.getElementById('targetIpUdp').value = target[0] || '';
+        document.getElementById('targetPortUdp').value = target[1] || '';
+        _initEntrypointChips('udp', app.entryPoints || []);
+    }
+}
+
+let _routeMenuCard = null;
+
+function _openRouteMenu(event, btn) {
+    event.stopPropagation();
+    _routeMenuCard = btn.closest('.route-card');
+    const app      = JSON.parse(btn.getAttribute('data-app'));
+    const openUrl  = btn.getAttribute('data-openurl') || '';
+    const id       = app.id;
+    const cf       = app.configFile ? `'${app.configFile.replace(/'/g,"\\'")}'` : "''";
+    const appJsonStr = JSON.stringify(app).replace(/'/g,'&#39;');
+    const menu = document.getElementById('routeActionsMenu');
+    if (!menu) return;
+
+    let items = `<button class="route-ctx-item" onclick="_closeRouteMenu();openRouteDetailFromCard(_routeMenuCard)"><i class="ph-bold ph-info"></i> View Details</button>`;
+    if (openUrl) items += `<a class="route-ctx-item" href="${openUrl}" target="_blank" rel="noopener" onclick="_closeRouteMenu()"><i class="ph-bold ph-arrow-square-out"></i> Open</a>`;
+    items += `<button class="route-ctx-item" data-app='${appJsonStr}' onclick="_closeRouteMenu();cloneRoute(this)"><i class="ph-bold ph-copy"></i> Clone</button>`;
+    items += `<div style="height:1px;background:var(--border);margin:3px 6px"></div>`;
+    items += `<button class="route-ctx-item route-ctx-danger" onclick="_closeRouteMenu();deleteRoute('${id.replace(/'/g,"\\'")}',${cf})"><i class="ph-bold ph-trash"></i> Delete</button>`;
+    menu.innerHTML = items;
+    menu.style.display = 'block';
+
+    const rect = btn.getBoundingClientRect();
+    const menuW = 170;
+    let left = rect.right - menuW;
+    if (left < 8) left = 8;
+    let top = rect.bottom + 6;
+    if (top + 210 > window.innerHeight) top = rect.top - 210;
+    menu.style.left = left + 'px';
+    menu.style.top  = top  + 'px';
+}
+
+function _closeRouteMenu() {
+    const menu = document.getElementById('routeActionsMenu');
+    if (menu) menu.style.display = 'none';
+}
+
+document.addEventListener('click', () => _closeRouteMenu());
 
 function handleEdit(btn) {
     const app = JSON.parse(btn.getAttribute('data-app'));
@@ -5216,5 +5296,6 @@ setTheme = function(theme) {
 };
 </script>
 
+<div id="routeActionsMenu" class="route-ctx-menu" style="display:none;background:var(--card);border:1px solid var(--border)"></div>
 </body>
 </html>
