@@ -221,10 +221,6 @@
                                         <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-check" style="color:var(--muted)"></i> Certs</span>
                                         <div class="toggle-switch" id="toggle-certs"><div class="toggle-knob"></div></div>
                                     </label>
-                                    <label class="tab-toggle-row" onclick="toggleTabVisibility('crowdsec')">
-                                        <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-slash" style="color:var(--muted)"></i> CrowdSec</span>
-                                        <div class="toggle-switch" id="toggle-crowdsec"><div class="toggle-knob"></div></div>
-                                    </label>
                                     <label class="tab-toggle-row" onclick="toggleTabVisibility('plugins')">
                                         <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-puzzle-piece" style="color:var(--muted)"></i> Plugins</span>
                                         <div class="toggle-switch" id="toggle-plugins"><div class="toggle-knob"></div></div>
@@ -234,6 +230,14 @@
                                         <div class="toggle-switch" id="toggle-logs"><div class="toggle-knob"></div></div>
                                     </label>
                                 </div>
+                            </div>
+                            <div>
+                                <span class="settings-section-label">Intrusion Detection</span>
+                                <div class="text-xs mb-3" style="color:var(--muted)">Requires API credentials, not a file mount. Configure the LAPI URL and key in the CrowdSec tab.</div>
+                                <label class="tab-toggle-row" onclick="toggleTabVisibility('crowdsec')">
+                                    <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-shield-slash" style="color:var(--muted)"></i> CrowdSec</span>
+                                    <div class="toggle-switch" id="toggle-crowdsec"><div class="toggle-knob"></div></div>
+                                </label>
                             </div>
                         </div>
 

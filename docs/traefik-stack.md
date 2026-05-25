@@ -101,6 +101,17 @@ For existing installs that did not enable the static config editor during setup,
 - **Re-run setup.sh** - answer the static config questions differently. The script regenerates `docker-compose.yml` from your answers. Your config files and backups are preserved but any manual edits to the compose file will be overwritten.
 - **Enable manually** - see [Enable static config editor](static-enable.md) to add just the required volume, env vars, and restart method to your existing compose without re-running setup.
 
+**CrowdSec IDS** - optionally add CrowdSec intrusion detection to the stack.
+
+| Option | What happens |
+|---|---|
+| Install as part of this stack | Adds a `crowdsec` service to the compose, generates a random bouncer API key, writes `crowdsec/acquis.yaml` pointing at the Traefik access log, and injects `CROWDSEC_LAPI_URL` + `CROWDSEC_API_KEY` into Traefik Manager automatically. |
+| Connect to existing instance | Prompts for the LAPI URL and API key of a CrowdSec instance you are already running. Injects both into Traefik Manager. No new service is added to the compose. |
+
+Choosing the install option with access logs disabled will automatically enable the access log mount - CrowdSec needs it to detect intrusions.
+
+Once installed, enable the **CrowdSec** tab in Traefik Manager under Settings to view active decisions, recent alerts, and unban IPs.
+
 ### Directory structure
 
 ```
@@ -117,6 +128,8 @@ For existing installs that did not enable the static config editor during setup,
 - traefik-manager/
   - config/
   - backups/
+- crowdsec/              (only if CrowdSec install mode chosen)
+  - acquis.yaml
 ```
 
 ### DNS records
