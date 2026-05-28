@@ -2454,6 +2454,11 @@ def api_settings_test_connection():
         return jsonify({'ok': False, 'error': 'Invalid URL'}), 400
     u = str(data.get('user', '')).strip()
     p = str(data.get('password', '')).strip()
+    if not p:
+        stored   = load_settings()
+        if not u:
+            u = stored.get('traefik_api_user', '')
+        p = stored.get('traefik_api_password', '')
     auth = (u, p) if u and p else None
     logger.info(f"Connection test to {url!r} by {request.remote_addr}")
     try:
@@ -3028,6 +3033,131 @@ def api_toggle_route(route_id):
     except Exception as e:
         logger.error(f"Toggle route error: {e}")
         return jsonify({'ok': False, 'message': 'Failed to toggle route.'}), 500
+
+
+@app.route('/api/routes/<path:route_id>/raw', methods=['GET'])
+@login_required
+def api_route_raw_get(route_id):
+    rname = route_id.split('::', 1)[1] if '::' in route_id else route_id
+    cf    = route_id.split('::', 1)[0] if '::' in route_id else ''
+
+    target_path   = _resolve_config_path(cf) if cf else None
+    paths_to_scan = [target_path] if target_path else CONFIG_PATHS
+
+    for p in paths_to_scan:
+        config = load_config(p)
+        for proto in ('http', 'tcp', 'udp'):
+            routers = config.get(proto, {}).get('routers', {})
+            if rname in routers:
+                router   = routers[rname]
+                svc_name = router.get('service', rname)
+                svc_key  = _svc_key(svc_name)
+                svc      = config.get(proto, {}).get('services', {}).get(svc_key)
+                out      = {proto: {'routers': {rname: dict(router)}}}
+                if svc is not None:
+                    out[proto]['services'] = {svc_name: dict(svc)}
+                stream = StringIO()
+                yaml.dump(out, stream)
+                raw = stream.getvalue()
+                with open(p, 'r') as f:
+                    _, template_map = _sanitize_go_templates(f.read())
+                for placeholder, original in template_map.items():
+                    raw = raw.replace(placeholder, original)
+                return jsonify({'raw': raw, 'configFile': os.path.basename(p), 'proto': proto})
+
+    return jsonify({'error': 'Route not found'}), 404
+
+
+@app.route('/api/routes/<path:route_id>/raw', methods=['POST'])
+@csrf_protect
+@login_required
+def api_route_raw_save(route_id):
+    body    = request.get_json(force=True, silent=True) or {}
+    content = body.get('content', '')
+    if not content.strip():
+        return jsonify({'ok': False, 'error': 'No content'}), 400
+
+    rname = route_id.split('::', 1)[1] if '::' in route_id else route_id
+    cf    = route_id.split('::', 1)[0] if '::' in route_id else ''
+
+    user_map     = {}
+    user_counter = [0]
+    def _replace_user(m):
+        key = f'__TM_USER_{user_counter[0]}__'
+        user_map[key] = m.group(0)
+        user_counter[0] += 1
+        return key
+    sanitized_user = re.sub(r'\{\{[^}]*\}\}', _replace_user, content)
+
+    try:
+        new_data = yaml.load(sanitized_user)
+        if not isinstance(new_data, dict):
+            raise ValueError("Expected a YAML mapping")
+    except Exception as e:
+        return jsonify({'ok': False, 'error': f'Invalid YAML: {e}'}), 400
+
+    target_path = _resolve_config_path(cf) if cf else None
+    if not target_path:
+        for p in CONFIG_PATHS:
+            cfg = load_config(p)
+            for proto in ('http', 'tcp', 'udp'):
+                if rname in cfg.get(proto, {}).get('routers', {}):
+                    target_path = p
+                    break
+            if target_path:
+                break
+    if not target_path:
+        return jsonify({'ok': False, 'error': 'Route not found'}), 404
+
+    config = load_config(target_path)
+
+    for proto in ('http', 'tcp', 'udp'):
+        proto_cfg  = config.get(proto, {})
+        old_router = proto_cfg.get('routers', {}).pop(rname, None)
+        if old_router:
+            old_svc = _svc_key(old_router.get('service', rname))
+            proto_cfg.get('services', {}).pop(old_svc, None)
+
+    for proto in ('http', 'tcp', 'udp'):
+        new_proto = new_data.get(proto, {})
+        if not new_proto:
+            continue
+        section = config.setdefault(proto, {})
+        new_routers  = new_proto.get('routers', {})
+        new_services = new_proto.get('services', {})
+        if new_routers:
+            section.setdefault('routers', {}).update(new_routers)
+        if new_services:
+            section.setdefault('services', {}).update(new_services)
+
+    try:
+        create_backup(target_path)
+        file_map = {}
+        if os.path.exists(target_path):
+            with open(target_path, 'r') as f:
+                _, file_map = _sanitize_go_templates(f.read())
+        combined_map = {**file_map, **user_map}
+        stream = StringIO()
+        yaml.dump(_strip_empty_sections(config), stream)
+        yaml_content = stream.getvalue()
+        for placeholder, original in combined_map.items():
+            yaml_content = yaml_content.replace(placeholder, original)
+        tmp = target_path + '.tmp'
+        try:
+            with open(tmp, 'w') as f:
+                f.write(yaml_content)
+            shutil.copyfile(tmp, target_path)
+        finally:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+        logger.info(f"Route '{rname}' raw config saved: {target_path}")
+        add_notification(f"Route '{rname}' updated", 'success')
+        return jsonify({'ok': True})
+    except Exception as e:
+        logger.exception("Route raw save error")
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 
 @app.route('/')

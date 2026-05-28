@@ -81,6 +81,20 @@
     <div id="staticYamlPopoutEditor" style="flex:1;min-height:0;"></div>
 </div>
 
+<div id="routeYamlPopout" style="display:none;position:fixed;inset:0;z-index:9998;background:var(--bg);flex-direction:column;">
+    <div class="flex items-center justify-between px-6 py-3.5" style="border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div class="flex items-center gap-2">
+            <i class="ph-bold ph-code" style="color:var(--blue)"></i>
+            <span class="font-semibold text-sm" id="routeYamlPopoutTitle">Raw YAML</span>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="saveRouteYaml()" class="btn-primary text-xs"><i class="ph-bold ph-floppy-disk mr-1"></i>Save</button>
+            <button onclick="closeRouteYamlEditor()" class="btn-secondary text-xs"><i class="ph-bold ph-arrows-in mr-1"></i>Close</button>
+        </div>
+    </div>
+    <div id="routeYamlPopoutEditor" style="flex:1;min-height:0;"></div>
+</div>
+
 <div id="traefikRestartOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);flex-direction:column;align-items:center;justify-content:center;gap:16px">
     <i class="ph-bold ph-arrows-clockwise text-5xl animate-spin" style="color:var(--blue);opacity:0.9"></i>
     <div class="text-center">
@@ -1605,6 +1619,7 @@ function _openRouteMenu(event, btn) {
     let items = `<button class="route-ctx-item" onclick="_closeRouteMenu();openRouteDetailFromCard(_routeMenuCard)"><i class="ph-bold ph-info"></i> View Details</button>`;
     if (openUrl) items += `<a class="route-ctx-item" href="${openUrl}" target="_blank" rel="noopener" onclick="_closeRouteMenu()"><i class="ph-bold ph-arrow-square-out"></i> Open</a>`;
     items += `<button class="route-ctx-item" data-app='${appJsonStr}' onclick="_closeRouteMenu();cloneRoute(this)"><i class="ph-bold ph-copy"></i> Clone</button>`;
+    items += `<button class="route-ctx-item" onclick="_closeRouteMenu();openRouteYamlEditor('${id.replace(/'/g,"\\'")}')"><i class="ph-bold ph-code"></i> Raw YAML</button>`;
     items += `<div style="height:1px;background:var(--border);margin:3px 6px"></div>`;
     items += `<button class="route-ctx-item route-ctx-danger" onclick="_closeRouteMenu();deleteRoute('${id.replace(/'/g,"\\'")}',${cf})"><i class="ph-bold ph-trash"></i> Delete</button>`;
     menu.innerHTML = items;
@@ -3430,7 +3445,7 @@ function renderPluginCards() {
             <div class="space-y-2 text-xs">
                 <div class="font-mono truncate" style="color:var(--muted)" title="${_esc(moduleName)}">${_esc(moduleName)}</div>
                 <div class="flex items-center justify-between pt-1">
-                    <span class="badge badge-muted" style="font-size:9px">v${_esc(version)}</span>
+                    <span class="badge badge-muted" style="font-size:9px">${_esc(version.startsWith('v') ? version : 'v' + version)}</span>
                     <span class="badge badge-muted" style="font-size:9px">plugin</span>
                 </div>
             </div>
@@ -4405,6 +4420,81 @@ async function saveStaticConfig() {
                 const d2 = await r2.json();
                 _renderStaticSections(d2.parsed);
             } catch(e) {}
+        } else {
+            showToast(data.error || 'Save failed', 'error');
+        }
+    } catch(e) {
+        showToast('Save failed', 'error');
+    }
+}
+
+let _routeYamlMonaco  = null;
+let _routeYamlId      = '';
+let _routeYamlContent = '';
+
+function _initRouteYamlMonaco(content) {
+    const container = document.getElementById('routeYamlPopoutEditor');
+    if (!container) return;
+    if (_routeYamlMonaco) {
+        _routeYamlMonaco.setValue(content);
+        _routeYamlContent = content;
+        setTimeout(() => _routeYamlMonaco.layout(), 50);
+        return;
+    }
+    require(['vs/editor/editor.main'], function() {
+        _ensureMonacoThemes().then(() => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            _routeYamlMonaco = monaco.editor.create(container, {
+                value: content,
+                language: 'yaml',
+                theme: _monacoThemeName(isDark),
+                minimap: { enabled: true },
+                fontSize: 13,
+                lineNumbers: 'on',
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                wordWrap: 'off',
+            });
+            _routeYamlContent = content;
+        });
+    });
+}
+
+async function openRouteYamlEditor(id) {
+    _routeYamlId = id;
+    const name = id.includes('::') ? id.split('::')[1] : id;
+    const title = document.getElementById('routeYamlPopoutTitle');
+    if (title) title.textContent = `Raw YAML - ${name}`;
+    try {
+        const res  = await fetch(`/api/routes/${encodeURIComponent(id)}/raw`);
+        const data = await res.json();
+        if (data.error) { showToast(data.error, 'error'); return; }
+        const overlay = document.getElementById('routeYamlPopout');
+        if (overlay) overlay.style.display = 'flex';
+        _initRouteYamlMonaco(data.raw || '');
+    } catch(e) {
+        showToast('Failed to load route YAML', 'error');
+    }
+}
+
+function closeRouteYamlEditor() {
+    const overlay = document.getElementById('routeYamlPopout');
+    if (overlay) overlay.style.display = 'none';
+}
+
+async function saveRouteYaml() {
+    const content = _routeYamlMonaco ? _routeYamlMonaco.getValue() : _routeYamlContent;
+    try {
+        const res = await fetch(`/api/routes/${encodeURIComponent(_routeYamlId)}/raw`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+            body: JSON.stringify({ content }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+            closeRouteYamlEditor();
+            refreshRoutes();
+            fetchNotifications();
         } else {
             showToast(data.error || 'Save failed', 'error');
         }
