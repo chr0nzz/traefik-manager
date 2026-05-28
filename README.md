@@ -262,7 +262,8 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 - **Advanced rule editor** - toggle between a domain chip builder and a free-text rule input for complex expressions (`PathPrefix`, `HostRegexp`, `&&` / `||` compounds, etc.)
 - **Multiple domains per route** - select any combination of your configured domains; generates multi-host Traefik rules (`Host(\`sub.d1\`) || Host(\`sub.d2\`)`)
 - **Per-service insecureSkipVerify** - checkbox adds a named `serversTransport` for backends with self-signed certs (Proxmox, Kasm, etc.); yellow TLS skip badge shown on route cards
-- Create middlewares with built-in templates (Basic Auth, Forward Auth, Redirect, Strip Prefix)
+- **23 middleware wizard templates** with guided form fields (Basic Auth, Forward Auth, Rate Limit, IP Allowlist, Secure Headers, CORS, Redirect, Strip/Add Prefix, Retry, Circuit Breaker, Buffering, and more) - toggle to raw YAML for anything else
+- **Route clone** - duplicate a route into the add modal pre-filled with its service URL, middlewares, and entrypoints
 - **Multi-config file support** - mount several dynamic config files with `CONFIG_DIR` or `CONFIG_PATHS`; a dropdown selects which file each route or middleware is saved to; **create new files on the fly** when `CONFIG_DIR` is set
 - Timestamped backups before every change; one-click restore from Settings
 
@@ -282,10 +283,11 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 - Three restart methods: **socket proxy** (recommended - sidecar with minimal socket exposure), **poison pill** (no socket needed - shared signal file), **direct socket**
 - Full-screen reconnect overlay polls until Traefik is back up and dismisses automatically
 
-**System Monitoring** *(optional file mounts)*
+**System Monitoring** *(optional)*
 - **Certs** - `acme.json` certificates with expiry tracking
 - **Plugins** - plugins from your static `traefik.yml`; add, edit, and remove plugins when static config editor is enabled
 - **Logs** - parsed access log cards showing method, status, path, IP, service, and duration; click any card for a full detail panel with all fields and the raw log line
+- **CrowdSec** - active decisions (bans, captchas, bypasses) and recent alerts from a CrowdSec LAPI; unban IPs with one click. Configure via `CROWDSEC_LAPI_URL` / `CROWDSEC_API_KEY` env vars or **Settings → System Monitoring → CrowdSec**
 - **Configurable file paths** - set `acme.json`, access log, and static config paths from **Settings → File Paths** without a container restart; UI setting takes priority over env vars
 
 **Security**
@@ -294,6 +296,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 - Auto-generated password on first start · CLI recovery with `flask reset-password`
 - **OIDC / SSO** - sign in with Keycloak, Google, Authentik, or any OIDC-compliant provider alongside password login; access restricted to specific emails or groups; client secret stored encrypted at rest
 - **Per-device API keys** - up to 10 named keys (e.g. "My Phone"), each independently revocable via `X-Api-Key` header
+- **Traefik API basic auth** - set `TRAEFIK_API_USER` / `TRAEFIK_API_PASSWORD` (or via Settings) for Traefik dashboards with `api.insecure: false`
 - **Rate limiting** on login and auth endpoints (Flask-Limiter)
 - **Atomic config writes** - crash-safe YAML saves via temp file + rename
 - **Encrypted OTP secret** - TOTP seed encrypted at rest with Fernet
