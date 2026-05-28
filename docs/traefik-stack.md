@@ -193,6 +193,8 @@ Installs just Traefik Manager as a Docker container. Use this when Traefik is al
 
 To add static config support to an existing install, either re-run `setup.sh` (regenerates the compose file from your answers, preserving config/backups) or follow [Enable static config editor](static-enable.md) to add only the required changes manually.
 
+**CrowdSec** - optionally connect Traefik Manager to a CrowdSec instance you are already running. The script prompts for the LAPI URL and API key and injects `CROWDSEC_LAPI_URL` and `CROWDSEC_API_KEY` into the generated compose file. Once set, enable the **CrowdSec** tab in Traefik Manager under Settings. You can also configure this after install via **Settings → System Monitoring → CrowdSec** or by setting the env vars manually.
+
 ### Directory structure
 
 ```
@@ -242,6 +244,8 @@ Installs Traefik Manager as a native systemd service. No Docker required. Use th
 **Static config editor** - if you mount the static config, the script also asks:
 
 To add static config support to an existing native install, either re-run `setup.sh` (clones/updates the repo and regenerates the systemd unit) or follow [Enable static config editor](static-enable.md) to add the env vars manually.
+
+**CrowdSec** - optionally connect Traefik Manager to a running CrowdSec instance. The script prompts for the LAPI URL and API key and writes `CROWDSEC_LAPI_URL` and `CROWDSEC_API_KEY` into the systemd unit file. You can also set them after install via **Settings → System Monitoring → CrowdSec** or by editing the unit file directly (`sudo systemctl edit traefik-manager`).
 
 - **Restart method** - two options for native installs:
   - *Poison pill* (recommended) - writes a signal file; no Docker socket needed

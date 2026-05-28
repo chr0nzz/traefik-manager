@@ -97,7 +97,7 @@ services:
       - proxy
 
   traefik-manager:
-    image: ghcr.io/XYZLab/traefik-manager:latest
+    image: ghcr.io/chr0nzz/traefik-manager:latest
     environment:
       - CROWDSEC_LAPI_URL=http://crowdsec:8080
       - CROWDSEC_API_KEY=your-bouncer-api-key
