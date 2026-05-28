@@ -290,12 +290,17 @@ Get current application settings. Password hash is never included.
 | `oidc_enabled` | OIDC on/off |
 | `visible_tabs` | Tab visibility map |
 | `webhook_url` | Notification webhook URL |
+| `traefik_api_user` | Traefik API username for basic auth |
+| `traefik_api_password_set` | `true` if a Traefik API password is saved |
+| `crowdsec_lapi_url` | CrowdSec LAPI URL |
+| `crowdsec_api_key_set` | `true` if a CrowdSec API key is saved |
+| `crowdsec_enabled` | `true` if both LAPI URL and API key are configured |
 
 ---
 
 ### `POST /api/settings`
 
-Update settings. Send only the fields you want to change.
+Update settings. Send only the fields you want to change. Also accepts: `traefik_api_user`, `traefik_api_password` (leave blank to keep existing), `crowdsec_lapi_url`, `crowdsec_api_key` (leave blank to keep existing).
 
 ---
 
@@ -331,6 +336,16 @@ Show or hide optional UI tabs.
 
 ```json
 { "dashboard": true, "routemap": true, "docker": false }
+```
+
+---
+
+### `POST /api/settings/test-connection`
+
+Test connectivity to a Traefik API URL before saving. Accepts optional credentials for auth-protected dashboards.
+
+```json
+{ "url": "http://traefik:8080", "user": "admin", "password": "secret" }
 ```
 
 ---
@@ -638,6 +653,62 @@ Ping a route's domain from the TM server and return latency. Used by the route h
 ```
 
 On failure: `{ "ok": false, "error": "Timeout", "latency_ms": null }`
+
+---
+
+## CrowdSec
+
+### `GET /api/crowdsec/decisions`
+
+List active CrowdSec decisions (bans, captchas, bypasses). Returns an empty list if CrowdSec is not configured.
+
+**Response**
+
+```json
+[
+  {
+    "id": 1,
+    "value": "1.2.3.4",
+    "type": "ban",
+    "duration": "3h59m",
+    "scenario": "crowdsecurity/http-bf",
+    "origin": "CAPI"
+  }
+]
+```
+
+---
+
+### `GET /api/crowdsec/alerts`
+
+List recent CrowdSec alerts (up to 50).
+
+**Response**
+
+```json
+[
+  {
+    "startAt": "2026-05-28T10:00:00Z",
+    "source": { "ip": "1.2.3.4" },
+    "scenario": "crowdsecurity/http-bf",
+    "decisions": [{ "type": "ban", "duration": "4h" }]
+  }
+]
+```
+
+---
+
+### `DELETE /api/crowdsec/decisions/{id}`
+
+Unban / remove a decision by ID.
+
+**Response**
+
+```json
+{ "ok": true }
+```
+
+Returns `{ "ok": false, "error": "..." }` if the deletion fails or CrowdSec is not reachable.
 
 ---
 

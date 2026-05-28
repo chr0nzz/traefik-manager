@@ -123,6 +123,8 @@ tags:
     description: In-app event log.
   - name: Static Config
     description: Read and edit Traefik's static config (`traefik.yml`) via the Static Config editor.
+  - name: CrowdSec
+    description: Active decisions and alerts from a CrowdSec LAPI, with unban support.
   - name: Utility
     description: Version info, router names, and connection testing.
 
@@ -834,15 +836,22 @@ paths:
                   domains: { type: array, items: { type: string } }
                   cert_resolver: { type: string }
                   traefik_api_url: { type: string }
+                  traefik_api_user: { type: string }
+                  traefik_api_password_set: { type: boolean, description: "true if a Traefik API password is saved" }
                   acme_json_path: { type: string }
                   access_log_path: { type: string }
                   static_config_path: { type: string }
                   auth_enabled: { type: boolean }
                   oidc_enabled: { type: boolean }
                   visible_tabs: { type: object }
+                  crowdsec_lapi_url: { type: string }
+                  crowdsec_api_key_set: { type: boolean, description: "true if a CrowdSec API key is saved" }
+                  crowdsec_enabled: { type: boolean, description: "true if both LAPI URL and API key are configured" }
     post:
       tags: [Settings]
       summary: Update settings
+      description: |
+        Update application settings. Leave password fields blank to keep existing values.
       requestBody:
         required: true
         content:
@@ -853,9 +862,13 @@ paths:
                 domains: { type: array, items: { type: string } }
                 cert_resolver: { type: string }
                 traefik_api_url: { type: string }
+                traefik_api_user: { type: string }
+                traefik_api_password: { type: string, description: "Leave blank to keep existing password" }
                 acme_json_path: { type: string }
                 access_log_path: { type: string }
                 static_config_path: { type: string }
+                crowdsec_lapi_url: { type: string }
+                crowdsec_api_key: { type: string, description: "Leave blank to keep existing key" }
       responses:
         "200":
           description: Success
@@ -921,6 +934,34 @@ paths:
                 properties:
                   success: { type: boolean }
                   visible_tabs: { type: object }
+
+  /api/settings/test-connection:
+    post:
+      tags: [Settings]
+      summary: Test Traefik API connection
+      description: Test connectivity to a Traefik API URL using optional credentials. Does not save any settings.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url: { type: string, example: "http://traefik:8080" }
+                user: { type: string, description: "Basic auth username" }
+                password: { type: string, description: "Basic auth password" }
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  version: { type: string, example: "3.2.0" }
+                  error: { type: string }
 
   # ─── Backups ──────────────────────────────────────────────────────────────
 
@@ -1181,6 +1222,79 @@ paths:
                   ok: { type: boolean }
                   raw: { type: string }
                   parsed: { type: object }
+
+  # ─── CrowdSec ─────────────────────────────────────────────────────────────
+
+  /api/crowdsec/decisions:
+    get:
+      tags: [CrowdSec]
+      summary: List active decisions
+      description: Returns active CrowdSec decisions (bans, captchas, bypasses). Returns an empty list if CrowdSec is not configured.
+      responses:
+        "200":
+          description: Decision list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer }
+                    value: { type: string, example: "1.2.3.4" }
+                    type: { type: string, example: "ban" }
+                    duration: { type: string, example: "3h59m" }
+                    scenario: { type: string, example: "crowdsecurity/http-bf" }
+                    origin: { type: string, example: "CAPI" }
+
+  /api/crowdsec/alerts:
+    get:
+      tags: [CrowdSec]
+      summary: List recent alerts
+      description: Returns up to 50 recent CrowdSec alerts.
+      responses:
+        "200":
+          description: Alert list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    startAt: { type: string, format: date-time }
+                    source:
+                      type: object
+                      properties:
+                        ip: { type: string, example: "1.2.3.4" }
+                    scenario: { type: string, example: "crowdsecurity/http-bf" }
+                    decisions:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          type: { type: string }
+                          duration: { type: string }
+
+  /api/crowdsec/decisions/{id}:
+    delete:
+      tags: [CrowdSec]
+      summary: Delete a decision (unban)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  error: { type: string }
 
   # ─── Utility ──────────────────────────────────────────────────────────────
 

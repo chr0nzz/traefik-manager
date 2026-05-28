@@ -15,6 +15,8 @@ Variables marked ✅ **override** the corresponding `manager.yml` field on every
 | Variable | Default | Override | Description |
 |---|---|---|---|
 | `TRAEFIK_API_URL` | `http://traefik:8080` | ✅ `traefik_api_url` | Traefik API URL |
+| `TRAEFIK_API_USER` | _(unset)_ | ✅ `traefik_api_user` | Username for Traefik API basic auth |
+| `TRAEFIK_API_PASSWORD` | _(unset)_ | ✅ `traefik_api_password` | Password for Traefik API basic auth (stored encrypted) |
 
 ### Authentication
 
@@ -57,6 +59,8 @@ Variables marked ✅ **override** the corresponding `manager.yml` field on every
 |---|---|---|---|
 | `ACME_JSON_PATH` | `/app/acme.json` | - | Path to `acme.json` for the Certificates tab |
 | `ACCESS_LOG_PATH` | `/app/logs/access.log` | - | Path to access log for the Logs tab |
+| `CROWDSEC_LAPI_URL` | _(unset)_ | ✅ `crowdsec_lapi_url` | CrowdSec LAPI base URL (e.g. `http://crowdsec:8080`) |
+| `CROWDSEC_API_KEY` | _(unset)_ | ✅ `crowdsec_api_key` | CrowdSec bouncer API key (stored encrypted) |
 
 ### Security
 
@@ -87,6 +91,28 @@ environment:
 Environment=TRAEFIK_API_URL=http://localhost:8080
 ```
 :::
+
+---
+
+### `TRAEFIK_API_USER`
+
+**Default:** _(unset)_  
+**Overrides:** `traefik_api_user` in `manager.yml`
+
+Username for HTTP Basic Auth on the Traefik API. Set this when `api.insecure: false` and basic auth is configured on the Traefik dashboard. Must be set together with `TRAEFIK_API_PASSWORD`.
+
+Can also be configured via **Settings → Connection** without a restart.
+
+---
+
+### `TRAEFIK_API_PASSWORD`
+
+**Default:** _(unset)_  
+**Overrides:** `traefik_api_password` in `manager.yml` (stored encrypted)
+
+Password for HTTP Basic Auth on the Traefik API. Stored encrypted at rest. Leave blank to keep the existing value when updating other settings.
+
+Can also be configured via **Settings → Connection** without a restart.
 
 ---
 
@@ -486,6 +512,48 @@ volumes:
 == Linux (systemd)
 ```ini
 Environment=ACCESS_LOG_PATH=/var/log/traefik/access.log
+```
+:::
+
+---
+
+### `CROWDSEC_LAPI_URL`
+
+**Default:** _(unset)_  
+**Overrides:** `crowdsec_lapi_url` in `manager.yml`
+
+Base URL of the CrowdSec Local API. Required to enable the CrowdSec tab. The value set in **Settings → System Monitoring → CrowdSec** takes priority over this env var; the env var is used as a fallback when the settings field is blank.
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - CROWDSEC_LAPI_URL=http://crowdsec:8080
+```
+== Linux (systemd)
+```ini
+Environment=CROWDSEC_LAPI_URL=http://crowdsec:8080
+```
+:::
+
+---
+
+### `CROWDSEC_API_KEY`
+
+**Default:** _(unset)_  
+**Overrides:** `crowdsec_api_key` in `manager.yml` (stored encrypted)
+
+CrowdSec bouncer API key. Generate one with `cscli bouncers add traefik-manager` inside the CrowdSec container. The settings field value takes priority over this env var.
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - CROWDSEC_API_KEY=your-bouncer-key
+```
+== Linux (systemd)
+```ini
+Environment=CROWDSEC_API_KEY=your-bouncer-key
 ```
 :::
 

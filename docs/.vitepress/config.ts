@@ -98,6 +98,7 @@ export default defineConfig({
           { text: 'Certificates', link: '/tab-certs' },
           { text: 'Plugins', link: '/tab-plugins' },
           { text: 'Logs', link: '/tab-logs' },
+          { text: 'CrowdSec', link: '/tab-crowdsec' },
         ],
       },
       {
