@@ -21,7 +21,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.3.1"
+APP_VERSION  = "1.3.2"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -2859,7 +2859,8 @@ def _build_all_apps(include_external=True, include_internal=False):
                     ep_mws.append(mw)
         app['entrypointMiddlewares'] = ep_mws
     settings = load_settings()
-    for rname, rdata in settings.get('disabled_routes', {}).items():
+    for route_id, rdata in settings.get('disabled_routes', {}).items():
+        rname    = route_id.split('::', 1)[1] if '::' in route_id else route_id
         proto    = rdata.get('protocol', 'http')
         router   = rdata.get('router', {})
         svc_name = router.get('service', '')
@@ -2868,7 +2869,7 @@ def _build_all_apps(include_external=True, include_internal=False):
         if proto == 'http':
             servers    = svc.get('loadBalancer', {}).get('servers', [])
             target_url = servers[0].get('url', 'N/A') if servers else 'N/A'
-            all_apps.append({'id': rname, 'name': rname, 'rule': router.get('rule', ''),
+            all_apps.append({'id': route_id, 'name': rname, 'rule': router.get('rule', ''),
                              'service_name': svc_name, 'target': target_url,
                              'middlewares': router.get('middlewares', []),
                              'entryPoints': router.get('entryPoints', []),
@@ -2878,7 +2879,7 @@ def _build_all_apps(include_external=True, include_internal=False):
         elif proto == 'tcp':
             servers = svc.get('loadBalancer', {}).get('servers', [])
             target  = servers[0].get('address', 'N/A') if servers else 'N/A'
-            all_apps.append({'id': rname, 'name': rname, 'rule': router.get('rule', ''),
+            all_apps.append({'id': route_id, 'name': rname, 'rule': router.get('rule', ''),
                              'service_name': svc_name, 'target': target,
                              'middlewares': [], 'entryPoints': router.get('entryPoints', []),
                              'protocol': 'tcp', 'tls': bool(router.get('tls')), 'enabled': False,
@@ -2886,7 +2887,7 @@ def _build_all_apps(include_external=True, include_internal=False):
         else:
             servers = svc.get('loadBalancer', {}).get('servers', [])
             target  = servers[0].get('address', 'N/A') if servers else 'N/A'
-            all_apps.append({'id': rname, 'name': rname, 'rule': '',
+            all_apps.append({'id': route_id, 'name': rname, 'rule': '',
                              'service_name': svc_name, 'target': target,
                              'middlewares': [], 'entryPoints': router.get('entryPoints', []),
                              'protocol': 'udp', 'tls': False, 'enabled': False,
