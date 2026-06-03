@@ -3335,6 +3335,8 @@ def save_entry():
             config.setdefault('http', {}).setdefault('routers', {})
             config['http'].setdefault('services', {})
             r = {'rule': rule, 'entryPoints': http_eps, 'service': service_name}
+            if mws:
+                r['middlewares'] = mws
             if not no_tls:
                 tls_entry = {'certResolver': cert_resolver} if cert_resolver else {}
                 tls_main  = request.form.get('tlsWildcardMain', '').strip()
@@ -3345,8 +3347,6 @@ def save_entry():
                         domain_entry['sans'] = tls_sans
                     tls_entry['domains'] = [domain_entry]
                 r['tls'] = tls_entry
-            if mws:
-                r['middlewares'] = mws
             lb = {'servers': [{'url': target_url}]}
             if not pass_host:
                 lb['passHostHeader'] = False
