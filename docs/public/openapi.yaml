@@ -677,6 +677,8 @@ paths:
                 scheme: { type: string, enum: [http, https], default: "http" }
                 passHostHeader: { type: boolean, default: true }
                 certResolver: { type: string, description: "ACME resolver name. Use `none` or `__none__` for external/custom certs (writes `tls: {}` with no resolver)." }
+                tlsWildcardMain: { type: string, description: "Main domain for tls.domains (e.g. example.com). Use with DNS challenge resolvers for wildcard certs." }
+                tlsWildcardSans: { type: string, description: "Newline-separated SANs for tls.domains (e.g. *.example.com)." }
                 configFile: { type: string, description: "Target config file basename (multi-config only)" }
                 isEdit: { type: boolean }
                 originalId: { type: string }

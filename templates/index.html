@@ -719,6 +719,7 @@ function openModal() {
     if (crHttp) { crHttp.value = availableCertResolvers.length > 0 ? availableCertResolvers[0] : '__disabled__'; toggleWildcardSection(crHttp.value); }
     const crTcp = document.getElementById('certResolverTcp');
     if (crTcp && availableCertResolvers.length > 0) crTcp.value = availableCertResolvers[0];
+    const wcChk = document.getElementById('wildcardCheckbox'); if (wcChk) wcChk.checked = false;
     const mainEl = document.getElementById('tlsWildcardMain'); if (mainEl) mainEl.value = '';
     const sansEl = document.getElementById('tlsWildcardSans'); if (sansEl) sansEl.value = '';
     setProtocol('http');
@@ -1567,7 +1568,24 @@ function toggleTcpCertResolver(checked) {
 
 function toggleWildcardSection(resolverVal) {
     const sec = document.getElementById('wildcardSection');
-    if (sec) sec.style.display = (resolverVal && resolverVal !== '__disabled__') ? '' : 'none';
+    if (!sec) return;
+    const show = resolverVal && resolverVal !== '__disabled__';
+    sec.style.display = show ? '' : 'none';
+    if (!show) {
+        const chk = document.getElementById('wildcardCheckbox');
+        if (chk) chk.checked = false;
+        _onWildcardToggle(false);
+    }
+}
+
+function _onWildcardToggle(checked) {
+    const mainEl = document.getElementById('tlsWildcardMain');
+    const sansEl = document.getElementById('tlsWildcardSans');
+    if (!mainEl || !sansEl) return;
+    if (!checked) { mainEl.value = ''; sansEl.value = ''; return; }
+    const domSel = document.getElementById('domainSelect');
+    const base   = domSel ? domSel.value : (document.getElementById('singleDomain')?.textContent || '').trim();
+    if (base) { mainEl.value = base; sansEl.value = '*.' + base; }
 }
 
 function cloneRoute(btn) {
@@ -1596,12 +1614,16 @@ function cloneRoute(btn) {
         const insecureChk = document.getElementById('insecureSkipVerify');
         if (insecureChk) insecureChk.checked = !!app.insecureSkipVerify;
         const tlsDomains = app.tlsDomains || [];
-        if (tlsDomains.length) {
+        const chk = document.getElementById('wildcardCheckbox');
+        if (tlsDomains.length && chk) {
             const first = tlsDomains[0];
+            chk.checked = true;
             const mainEl = document.getElementById('tlsWildcardMain');
             const sansEl = document.getElementById('tlsWildcardSans');
             if (mainEl) mainEl.value = first.main || '';
             if (sansEl) sansEl.value = (first.sans || []).join('\n');
+        } else if (chk) {
+            chk.checked = false;
         }
     } else if (proto === 'tcp') {
         const target = (app.target || '').split(':');

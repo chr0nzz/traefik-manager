@@ -131,21 +131,14 @@
                             <option value="__none__">None (external / custom cert)</option>
                         </select>
                     </div>
-                    <div id="wildcardSection" style="display:none;padding:12px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border)">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)">Wildcard Domains <span style="color:var(--muted);font-weight:400">(optional)</span></span>
-                        </div>
-                        <div class="space-y-2">
-                            <div>
-                                <label class="text-xs" style="color:var(--muted)">Main Domain</label>
-                                <input type="text" name="tlsWildcardMain" id="tlsWildcardMain" class="input-field" placeholder="example.com">
-                            </div>
-                            <div>
-                                <label class="text-xs" style="color:var(--muted)">SANs (one per line)</label>
-                                <textarea name="tlsWildcardSans" id="tlsWildcardSans" class="input-field font-mono" rows="2" placeholder="*.example.com" style="resize:vertical"></textarea>
-                            </div>
-                        </div>
-                        <p class="text-xs mt-2" style="color:var(--muted)">Writes <code class="font-mono">tls.domains</code> to the router - use with DNS challenge resolvers to request wildcard certs.</p>
+                    <div id="wildcardSection" style="display:none">
+                        <label class="flex items-center gap-2 cursor-pointer" style="margin-top:4px">
+                            <input type="checkbox" id="wildcardCheckbox" onchange="_onWildcardToggle(this.checked)" style="accent-color:var(--blue)">
+                            <span class="text-sm" style="color:var(--text)">Request wildcard certificate</span>
+                        </label>
+                        <p class="text-xs mt-1" style="color:var(--muted)">Adds <code class="font-mono">tls.domains</code> with <code class="font-mono">*.domain</code> SAN - use with DNS challenge resolvers.</p>
+                        <input type="hidden" name="tlsWildcardMain" id="tlsWildcardMain">
+                        <input type="hidden" name="tlsWildcardSans" id="tlsWildcardSans">
                     </div>
                 </div>
 

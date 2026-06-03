@@ -82,6 +82,8 @@ Create or update a route. Accepts `application/x-www-form-urlencoded`.
 | `scheme` | string | `http` or `https` (default: `http`) |
 | `passHostHeader` | boolean | Default: `true` |
 | `certResolver` | string | ACME resolver name. Use `none` to write `tls: {}` with no resolver (external certs). |
+| `tlsWildcardMain` | string | Main domain for `tls.domains` (e.g. `example.com`). Use with DNS challenge resolvers for wildcard certs. |
+| `tlsWildcardSans` | string | Newline-separated SANs for `tls.domains` (e.g. `*.example.com`). |
 | `configFile` | string | Target config file (multi-config only) |
 | `isEdit` | boolean | `true` when updating an existing route |
 | `originalId` | string | Original route ID when renaming |
