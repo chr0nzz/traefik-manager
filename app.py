@@ -21,7 +21,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.3.2"
+APP_VERSION  = "1.4.0"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -2334,6 +2334,13 @@ def api_static_backup_create():
         logger.exception("Static backup create error")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/backup/static/create', methods=['POST'])
+@csrf_protect
+@login_required
+def api_backup_static_create_alias():
+    return api_static_backup_create()
+
+
 @app.route('/api/backup/delete/<filename>', methods=['POST'])
 @csrf_protect
 @login_required
@@ -2691,6 +2698,7 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
                      'tls': bool(tls_http), 'enabled': True,
                      'passHostHeader': lb.get('passHostHeader', True),
                      'certResolver': tls_http.get('certResolver', '') if isinstance(tls_http, dict) else '',
+                     'tlsDomains': tls_http.get('domains', []) if isinstance(tls_http, dict) else [],
                      'insecureSkipVerify': insecure,
                      'configFile': config_file, 'provider': 'file'})
     tcp_svcs = dict(config.get('tcp', {}).get('services', {}))
@@ -3328,7 +3336,15 @@ def save_entry():
             config['http'].setdefault('services', {})
             r = {'rule': rule, 'entryPoints': http_eps, 'service': service_name}
             if not no_tls:
-                r['tls'] = {'certResolver': cert_resolver} if cert_resolver else {}
+                tls_entry = {'certResolver': cert_resolver} if cert_resolver else {}
+                tls_main  = request.form.get('tlsWildcardMain', '').strip()
+                tls_sans  = [s.strip() for s in request.form.get('tlsWildcardSans', '').splitlines() if s.strip()]
+                if tls_main:
+                    domain_entry = {'main': tls_main}
+                    if tls_sans:
+                        domain_entry['sans'] = tls_sans
+                    tls_entry['domains'] = [domain_entry]
+                r['tls'] = tls_entry
             if mws:
                 r['middlewares'] = mws
             lb = {'servers': [{'url': target_url}]}
