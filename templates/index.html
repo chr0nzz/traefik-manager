@@ -716,9 +716,11 @@ function openModal() {
     document.getElementById('useTls') && (document.getElementById('useTls').checked = false);
     toggleTcpCertResolver(false);
     const crHttp = document.getElementById('certResolver');
-    if (crHttp) crHttp.value = availableCertResolvers.length > 0 ? availableCertResolvers[0] : '__disabled__';
+    if (crHttp) { crHttp.value = availableCertResolvers.length > 0 ? availableCertResolvers[0] : '__disabled__'; toggleWildcardSection(crHttp.value); }
     const crTcp = document.getElementById('certResolverTcp');
     if (crTcp && availableCertResolvers.length > 0) crTcp.value = availableCertResolvers[0];
+    const mainEl = document.getElementById('tlsWildcardMain'); if (mainEl) mainEl.value = '';
+    const sansEl = document.getElementById('tlsWildcardSans'); if (sansEl) sansEl.value = '';
     setProtocol('http');
     // Init config file to first option (multi-config mode)
     const cfSel = document.getElementById('configFileSelect');
@@ -1563,6 +1565,11 @@ function toggleTcpCertResolver(checked) {
     if (row) row.style.display = checked ? '' : 'none';
 }
 
+function toggleWildcardSection(resolverVal) {
+    const sec = document.getElementById('wildcardSection');
+    if (sec) sec.style.display = (resolverVal && resolverVal !== '__disabled__') ? '' : 'none';
+}
+
 function cloneRoute(btn) {
     const app = JSON.parse(btn.getAttribute('data-app'));
     openModal();
@@ -1584,9 +1591,18 @@ function cloneRoute(btn) {
             if (!app.tls && app.tls !== false) crHttp.value = '__disabled__';
             else if (app.certResolver) crHttp.value = app.certResolver;
             else crHttp.value = '__none__';
+            toggleWildcardSection(crHttp.value);
         }
         const insecureChk = document.getElementById('insecureSkipVerify');
         if (insecureChk) insecureChk.checked = !!app.insecureSkipVerify;
+        const tlsDomains = app.tlsDomains || [];
+        if (tlsDomains.length) {
+            const first = tlsDomains[0];
+            const mainEl = document.getElementById('tlsWildcardMain');
+            const sansEl = document.getElementById('tlsWildcardSans');
+            if (mainEl) mainEl.value = first.main || '';
+            if (sansEl) sansEl.value = (first.sans || []).join('\n');
+        }
     } else if (proto === 'tcp') {
         const target = (app.target || '').split(':');
         document.getElementById('targetIpTcp').value = target[0] || '';

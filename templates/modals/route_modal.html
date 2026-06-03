@@ -123,13 +123,29 @@
                     <p class="text-xs -mt-2" style="color:var(--muted)">For backends with self-signed certificates (e.g. Proxmox, Kasm).</p>
                     <div>
                         <label>Cert Resolver</label>
-                        <select name="certResolver" id="certResolver" class="input-field">
+                        <select name="certResolver" id="certResolver" class="input-field" onchange="toggleWildcardSection(this.value)">
                             <option value="__disabled__">No TLS</option>
                             {% for r in cert_resolvers %}
                             <option value="{{ r }}">{{ r }}</option>
                             {% endfor %}
                             <option value="__none__">None (external / custom cert)</option>
                         </select>
+                    </div>
+                    <div id="wildcardSection" style="display:none;padding:12px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border)">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)">Wildcard Domains <span style="color:var(--muted);font-weight:400">(optional)</span></span>
+                        </div>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="text-xs" style="color:var(--muted)">Main Domain</label>
+                                <input type="text" name="tlsWildcardMain" id="tlsWildcardMain" class="input-field" placeholder="example.com">
+                            </div>
+                            <div>
+                                <label class="text-xs" style="color:var(--muted)">SANs (one per line)</label>
+                                <textarea name="tlsWildcardSans" id="tlsWildcardSans" class="input-field font-mono" rows="2" placeholder="*.example.com" style="resize:vertical"></textarea>
+                            </div>
+                        </div>
+                        <p class="text-xs mt-2" style="color:var(--muted)">Writes <code class="font-mono">tls.domains</code> to the router - use with DNS challenge resolvers to request wildcard certs.</p>
                     </div>
                 </div>
 
