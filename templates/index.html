@@ -4981,6 +4981,7 @@ function closeStaticForm(section) {
 function _resetStaticForm(section) {
     if (section === 'entrypoints') {
         ['sfEpName','sfEpAddr','sfEpRedirect'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+        const h3 = document.getElementById('sfEpHttp3'); if (h3) h3.checked = false;
     } else if (section === 'resolvers') {
         ['sfResName','sfResEmail','sfResProvider'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
         const st = document.getElementById('sfResStorage'); if (st) st.value = '/acme.json';
@@ -5003,6 +5004,7 @@ function _prefillStaticForm(section, name) {
         document.getElementById('sfEpName').value    = name;
         document.getElementById('sfEpAddr').value    = ep.address || '';
         document.getElementById('sfEpRedirect').value = ep.http?.redirections?.entryPoint?.to || '';
+        const h3chk = document.getElementById('sfEpHttp3'); if (h3chk) h3chk.checked = !!ep.http3;
     } else if (section === 'resolvers') {
         const acme = ((d.certificatesResolvers || {})[name] || {}).acme || {};
         document.getElementById('sfResName').value    = name;
@@ -5059,7 +5061,7 @@ async function submitStaticSection(section) {
     let name, payload;
     if (section === 'entrypoints') {
         name    = document.getElementById('sfEpName').value.trim();
-        payload = { address: document.getElementById('sfEpAddr').value.trim(), redirect_to: document.getElementById('sfEpRedirect').value.trim() };
+        payload = { address: document.getElementById('sfEpAddr').value.trim(), redirect_to: document.getElementById('sfEpRedirect').value.trim(), http3: document.getElementById('sfEpHttp3')?.checked || false };
     } else if (section === 'resolvers') {
         name    = document.getElementById('sfResName').value.trim();
         payload = { email: document.getElementById('sfResEmail').value.trim(), storage: document.getElementById('sfResStorage').value.trim(), challenge_type: document.getElementById('sfResChallenge').value, provider: document.getElementById('sfResProvider').value.trim(), http_entrypoint: document.getElementById('sfResHttpEp').value.trim() };
@@ -5432,6 +5434,11 @@ function _buildStaticTabHTML() {
             <div>
                 <label class="text-xs block mb-1" style="color:var(--muted)">HTTP → HTTPS redirect <span style="color:var(--muted);font-weight:400">(optional)</span></label>
                 <input id="sfEpRedirect" type="text" class="input-field text-sm" placeholder="Name of the HTTPS entrypoint to redirect to, e.g. websecure">
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" id="sfEpHttp3" class="rounded" style="accent-color:var(--blue)">
+                <span class="text-xs" style="color:var(--text)">Enable HTTP/3 (QUIC)</span>
+                <span class="text-xs" style="color:var(--muted)">- adds <code class="font-mono">http3: {}</code> to this entrypoint</span>
             </div>
             <div class="flex gap-2 justify-end pt-1">
                 <button onclick="closeStaticForm('entrypoints')" class="btn-secondary text-xs">Cancel</button>

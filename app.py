@@ -1819,6 +1819,8 @@ def api_static_section_update():
                 redirect_to = str(payload.get('redirect_to', '')).strip()
                 if redirect_to:
                     ep['http'] = {'redirections': {'entryPoint': {'to': redirect_to, 'scheme': 'https', 'permanent': True}}}
+                if payload.get('http3'):
+                    ep['http3'] = {}
                 eps[name] = ep
         elif section == 'resolvers':
             resolvers = config.setdefault('certificatesResolvers', {})
