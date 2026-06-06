@@ -21,7 +21,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.4.0"
+APP_VERSION  = "1.4.1"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -2121,6 +2121,8 @@ def api_certs():
                     domain    = c.get('domain', {})
                     not_after = _parse_cert_expiry(c.get('certificate', ''))
                     certs.append({'resolver': resolver_name, 'main': domain.get('main', ''), 'sans': domain.get('sans', []) or [], 'not_after': not_after})
+        except PermissionError:
+            errors.append(f'Permission denied reading {acme_path}. Run: chmod o+r {acme_path}')
         except Exception as e:
             logger.exception("Error reading acme.json")
             errors.append(str(e))
