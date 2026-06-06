@@ -70,6 +70,6 @@ fi
 
 tailwindcss -c "$REPO_ROOT/tailwind.config.js" \
   -i "$REPO_ROOT/static/css/tailwind.input.css" \
-  -o "$REPO_ROOT/static/css/tailwind.css" --minify
+  -o "$REPO_ROOT/static/css/tailwind.css" --minify 2>&1 | grep -v "caniuse-lite\|npx update-browserslist-db"
 
 echo "Done."
