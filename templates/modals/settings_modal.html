@@ -2389,7 +2389,8 @@ async function agentWizStep3Save() {
     } catch(e) { showToast('Save failed', 'error'); }
 }
 
-function agentWizDone() {
+async function agentWizDone() {
+    await agentWizStep3Save();
     document.getElementById('agentWizardView').style.display = 'none';
     document.getElementById('agentListView').style.display   = 'flex';
     loadAgentsList();
