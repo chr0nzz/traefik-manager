@@ -1634,18 +1634,48 @@ def _cs_request(method: str, path: str, **kwargs):
 @app.route('/api/crowdsec/decisions')
 @login_required
 def api_cs_decisions():
-    data = _cs_request('GET', '/v1/decisions?limit=200')
-    if data is None and not (_cs_lapi_url() and _cs_api_key()):
+    if not (_cs_lapi_url() and _cs_api_key()):
         return jsonify({'error': 'CrowdSec not configured'}), 503
-    return jsonify(data or [])
+    all_decisions = []
+    page = 1
+    while True:
+        chunk = _cs_request('GET', f'/v1/decisions?limit=500&page={page}')
+        if not chunk:
+            break
+        all_decisions.extend(chunk)
+        if len(chunk) < 500:
+            break
+        page += 1
+    now = datetime.now(timezone.utc)
+    active = []
+    for d in all_decisions:
+        until = d.get('until')
+        if until:
+            try:
+                exp = datetime.fromisoformat(until.replace('Z', '+00:00'))
+                if exp < now:
+                    continue
+            except Exception:
+                pass
+        active.append(d)
+    return jsonify(active)
 
 @app.route('/api/crowdsec/alerts')
 @login_required
 def api_cs_alerts():
-    data = _cs_request('GET', '/v1/alerts?limit=50')
-    if data is None and not (_cs_lapi_url() and _cs_api_key()):
+    if not (_cs_lapi_url() and _cs_api_key()):
         return jsonify({'error': 'CrowdSec not configured'}), 503
-    return jsonify(data or [])
+    all_alerts = []
+    page = 1
+    while True:
+        chunk = _cs_request('GET', f'/v1/alerts?limit=200&page={page}')
+        if not chunk:
+            break
+        all_alerts.extend(chunk)
+        if len(chunk) < 200:
+            break
+        page += 1
+    return jsonify(all_alerts)
 
 @app.route('/api/crowdsec/decisions/<int:decision_id>', methods=['DELETE'])
 @csrf_protect

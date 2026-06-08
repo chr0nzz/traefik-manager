@@ -4171,13 +4171,15 @@ function _renderCsDecisions(decisions, el) {
         return;
     }
     const rows = decisions.map(d => {
-        const exp = d.duration || d.until || '-';
-        const scenario = _esc(d.scenario || d.origin || '-');
+        const until = d.until ? new Date(d.until).toLocaleString() : (d.duration || '-');
+        const scenario = _esc(d.scenario || '-');
+        const origin = _esc(d.origin || '-');
         return `<tr style="border-top:1px solid var(--border)">
             <td class="px-3 py-2 font-mono text-xs" style="color:var(--text)">${_esc(d.value || '-')}</td>
             <td class="px-3 py-2 text-xs"><span class="badge ${d.type === 'ban' ? 'badge-red' : d.type === 'captcha' ? 'badge-yellow' : 'badge-green'}">${_esc(d.type || '-')}</span></td>
-            <td class="px-3 py-2 text-xs" style="color:var(--muted)">${_esc(String(exp))}</td>
+            <td class="px-3 py-2 text-xs" style="color:var(--muted)">${_esc(origin)}</td>
             <td class="px-3 py-2 text-xs" style="color:var(--muted)">${scenario}</td>
+            <td class="px-3 py-2 text-xs" style="color:var(--muted)">${_esc(String(until))}</td>
             <td class="px-3 py-2 text-xs text-right">
                 <button onclick="csUnban(${d.id})" class="btn-icon text-xs" title="Unban / delete decision" style="color:var(--red)"><i class="ph-bold ph-trash"></i></button>
             </td>
@@ -4187,8 +4189,9 @@ function _renderCsDecisions(decisions, el) {
         <thead><tr style="background:var(--input-bg)">
             <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">IP / Scope</th>
             <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">Type</th>
-            <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">Duration / Until</th>
+            <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">Origin</th>
             <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">Scenario</th>
+            <th class="px-3 py-2 text-xs font-semibold" style="color:var(--muted)">Expires</th>
             <th class="px-3 py-2 text-xs font-semibold text-right" style="color:var(--muted)">Action</th>
         </tr></thead>
         <tbody>${rows}</tbody>
