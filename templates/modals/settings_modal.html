@@ -87,6 +87,9 @@
                 <button class="modal-sidebar-btn" id="msb-agents" onclick="switchSettingsPanel('agents', this); loadAgentsList()">
                     <i class="ph-bold ph-robot"></i> Agents
                 </button>
+                <button class="modal-sidebar-btn" id="msb-templates" onclick="switchSettingsPanel('templates', this); loadTemplatesList()">
+                    <i class="ph-bold ph-puzzle-piece"></i> Templates
+                </button>
                 <button class="modal-sidebar-btn" id="msb-about" onclick="switchSettingsPanel('about', this)">
                     <i class="ph-bold ph-info"></i> About
                 </button>
@@ -1021,6 +1024,35 @@
                                     </button>
                                     <button onclick="agentWizDone()" class="btn-primary text-xs py-1.5 px-4">Done <i class="ph-bold ph-check text-xs"></i></button>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-panel" id="mpanel-templates" style="gap:0;padding:0;overflow:hidden;">
+                    <div class="flex items-center justify-between px-4 py-3" style="border-bottom:1px solid var(--border);flex-shrink:0;">
+                        <div class="font-semibold text-sm" style="color:var(--text)">Middleware Templates</div>
+                        <button onclick="openTemplateEditor(null)" class="btn-secondary text-xs py-1 px-2.5">
+                            <i class="ph-bold ph-plus text-xs"></i> Add Template
+                        </button>
+                    </div>
+                    <div id="templateListView" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;"></div>
+                    <div id="templateEditorView" style="display:none;flex-direction:column;flex:1;overflow-y:auto;">
+                        <div class="flex items-center justify-between px-4 py-3" style="border-bottom:1px solid var(--border);flex-shrink:0;">
+                            <div class="font-semibold text-sm" id="templateEditorTitle" style="color:var(--text)">Add Template</div>
+                        </div>
+                        <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+                            <div>
+                                <label class="text-xs font-medium mb-1 block" style="color:var(--muted)">Name</label>
+                                <input id="tplName" type="text" class="input-field text-sm" placeholder="e.g. Secure Headers">
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium mb-1 block" style="color:var(--muted)">YAML</label>
+                                <textarea id="tplYaml" class="input-field text-xs font-mono" rows="12" placeholder="headers:&#10;  sslRedirect: true&#10;  forceSTSHeader: true&#10;  stsSeconds: 315360000" style="resize:vertical;"></textarea>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="saveTemplate()" class="btn-primary text-xs py-1.5 px-4">Save</button>
+                                <button onclick="closeTemplateEditor()" class="btn-secondary text-xs py-1.5 px-4">Cancel</button>
                             </div>
                         </div>
                     </div>
@@ -2555,6 +2587,108 @@ function agentCfgChanged() {
 
 function updateServerSwitcher(agents) {
     if (typeof _updateServerSwitcherList === 'function') _updateServerSwitcherList(agents);
+}
+
+let _editingTemplateId = null;
+
+async function loadTemplatesList() {
+    const listEl = document.getElementById('templateListView');
+    if (!listEl) return;
+    try {
+        const res  = await fetch('/api/mw/templates');
+        const data = await res.json();
+        const templates = data.templates || [];
+        if (templates.length === 0) {
+            listEl.innerHTML = `<div class="text-center py-10" style="color:var(--muted)">
+                <i class="ph-light ph-puzzle-piece text-3xl block mb-2 opacity-40"></i>
+                <p class="text-xs">No custom templates yet. Click <strong>Add Template</strong> to create one.</p>
+            </div>`;
+            return;
+        }
+        listEl.innerHTML = templates.map(t => `
+            <div class="flex items-center justify-between px-3 py-2.5 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">
+                <div class="flex items-center gap-2 min-w-0">
+                    <i class="ph-bold ph-puzzle-piece text-sm flex-shrink-0" style="color:var(--blue)"></i>
+                    <span class="text-sm font-medium truncate" style="color:var(--text)">${_esc(t.name)}</span>
+                </div>
+                <div class="flex gap-1 flex-shrink-0">
+                    <button onclick="openTemplateEditor('${t.id}')" class="btn-icon text-xs" title="Edit"><i class="ph-bold ph-pencil text-xs"></i></button>
+                    <button onclick="deleteTemplate('${t.id}')" class="btn-icon text-xs" title="Delete" style="color:var(--red)"><i class="ph-bold ph-trash text-xs"></i></button>
+                </div>
+            </div>`).join('');
+    } catch(e) {
+        listEl.innerHTML = `<div class="text-xs py-4 text-center" style="color:var(--muted)">Failed to load templates</div>`;
+    }
+}
+
+async function openTemplateEditor(id) {
+    _editingTemplateId = id;
+    document.getElementById('templateListView').style.display = 'none';
+    document.getElementById('templateEditorView').style.display = 'flex';
+    document.getElementById('templateEditorTitle').textContent = id ? 'Edit Template' : 'Add Template';
+    document.getElementById('tplName').value = '';
+    document.getElementById('tplYaml').value = '';
+    if (id) {
+        try {
+            const res  = await fetch('/api/mw/templates');
+            const data = await res.json();
+            const t    = (data.templates || []).find(x => x.id === id);
+            if (t) {
+                document.getElementById('tplName').value = t.name;
+                document.getElementById('tplYaml').value = t.yaml;
+            }
+        } catch(e) {}
+    }
+}
+
+function closeTemplateEditor() {
+    _editingTemplateId = null;
+    document.getElementById('templateEditorView').style.display = 'none';
+    document.getElementById('templateListView').style.display = 'flex';
+    loadTemplatesList();
+}
+
+async function saveTemplate() {
+    const name = document.getElementById('tplName').value.trim();
+    const yaml = document.getElementById('tplYaml').value;
+    if (!name) { showToast('Name is required', 'error'); return; }
+    try {
+        let res;
+        if (_editingTemplateId) {
+            res = await fetch('/api/mw/templates/' + _editingTemplateId, {
+                method: 'PUT', headers: { ..._csrfHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, yaml })
+            });
+        } else {
+            res = await fetch('/api/mw/templates', {
+                method: 'POST', headers: { ..._csrfHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, yaml })
+            });
+        }
+        const data = await res.json();
+        if (data.ok) {
+            showToast(_editingTemplateId ? 'Template updated' : 'Template created', 'success');
+            closeTemplateEditor();
+            if (typeof _loadCustomMwTemplates === 'function') _loadCustomMwTemplates();
+        } else {
+            showToast(data.error || 'Save failed', 'error');
+        }
+    } catch(e) { showToast('Request failed', 'error'); }
+}
+
+async function deleteTemplate(id) {
+    if (!confirm('Delete this template?')) return;
+    try {
+        const res  = await fetch('/api/mw/templates/' + id, { method: 'DELETE', headers: _csrfHeaders() });
+        const data = await res.json();
+        if (data.ok) {
+            showToast('Template deleted', 'success');
+            loadTemplatesList();
+            if (typeof _loadCustomMwTemplates === 'function') _loadCustomMwTemplates();
+        } else {
+            showToast(data.error || 'Delete failed', 'error');
+        }
+    } catch(e) { showToast('Request failed', 'error'); }
 }
 
 </script>

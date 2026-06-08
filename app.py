@@ -172,6 +172,32 @@ def save_agents_file(agents: list):
     os.replace(tmp, AGENTS_PATH)
 
 
+def load_templates() -> list:
+    if not os.path.exists(TEMPLATES_PATH):
+        return []
+    try:
+        with open(TEMPLATES_PATH, 'r') as f:
+            raw = _yaml_safe.load(f) or {}
+        return [
+            {'id': str(t['id']), 'name': str(t.get('name', ''))[:100], 'yaml': str(t.get('yaml', ''))}
+            for t in (raw.get('templates', []) or [])
+            if isinstance(t, dict) and t.get('id') and t.get('name')
+        ]
+    except Exception as e:
+        logger.warning(f"Could not load templates.yml: {e}")
+        return []
+
+
+def save_templates_file(templates: list):
+    import json as _json
+    os.makedirs(os.path.dirname(TEMPLATES_PATH), exist_ok=True)
+    tmp = TEMPLATES_PATH + '.tmp'
+    safe = [{'id': t['id'], 'name': t['name'], 'yaml': t['yaml']} for t in templates]
+    with open(tmp, 'w') as f:
+        yaml.dump({'templates': _json.loads(_json.dumps(safe))}, f)
+    os.replace(tmp, TEMPLATES_PATH)
+
+
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_COOKIE_HTTPONLY']    = True
 app.config['SESSION_COOKIE_SAMESITE']    = 'Lax'
@@ -201,6 +227,7 @@ GROUPS_CACHE_DIR   = os.path.join(_CONFIG_DIR, 'cache')
 GROUPS_CONFIG_FILE  = os.path.join(_CONFIG_DIR, 'dashboard.yml')
 NOTIFICATIONS_PATH  = os.path.join(_CONFIG_DIR, 'notifications.yml')
 AGENTS_PATH        = os.path.join(_CONFIG_DIR, 'agents.yml')
+TEMPLATES_PATH     = os.path.join(_CONFIG_DIR, 'templates.yml')
 os.makedirs(GROUPS_CACHE_DIR, exist_ok=True)
 
 _notifications     = deque(maxlen=200)
@@ -4418,6 +4445,59 @@ def _agent_write_config(agent: dict, filename: str, config_dict: dict):
     yaml.dump(_strip_empty_sections(config_dict) if config_dict else {}, stream)
     resp = _agent_request(agent, 'POST', '/api/configs', json={'name': filename, 'content': stream.getvalue()})
     resp.raise_for_status()
+
+
+@app.route('/api/mw/templates', methods=['GET'])
+@login_required
+def api_mw_templates_list():
+    return jsonify({'templates': load_templates()})
+
+
+@app.route('/api/mw/templates', methods=['POST'])
+@csrf_protect
+@login_required
+def api_mw_templates_create():
+    import uuid as _uuid
+    data = request.get_json(silent=True) or {}
+    name = str(data.get('name', '')).strip()[:100]
+    yaml_content = str(data.get('yaml', '')).strip()
+    if not name:
+        return jsonify({'error': 'name is required'}), 400
+    templates = load_templates()
+    template = {'id': str(_uuid.uuid4()), 'name': name, 'yaml': yaml_content}
+    templates.append(template)
+    save_templates_file(templates)
+    return jsonify({'ok': True, 'template': template})
+
+
+@app.route('/api/mw/templates/<template_id>', methods=['PUT'])
+@csrf_protect
+@login_required
+def api_mw_templates_update(template_id):
+    data = request.get_json(silent=True) or {}
+    templates = load_templates()
+    updated = False
+    for i, t in enumerate(templates):
+        if t['id'] == template_id:
+            if 'name' in data:
+                templates[i]['name'] = str(data['name']).strip()[:100]
+            if 'yaml' in data:
+                templates[i]['yaml'] = str(data['yaml'])
+            updated = True
+            break
+    if not updated:
+        return jsonify({'error': 'Template not found'}), 404
+    save_templates_file(templates)
+    return jsonify({'ok': True})
+
+
+@app.route('/api/mw/templates/<template_id>', methods=['DELETE'])
+@csrf_protect
+@login_required
+def api_mw_templates_delete(template_id):
+    templates = [t for t in load_templates() if t['id'] != template_id]
+    save_templates_file(templates)
+    return jsonify({'ok': True})
 
 
 @app.route('/api/agents/<agent_id>/routes')

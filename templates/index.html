@@ -903,6 +903,7 @@ function openMwModal() {
     setMwMode('yaml');
     _showMwWizard('');
     _initMwMonaco('');
+    _loadCustomMwTemplates();
 }
 
 function closeMwModal() { document.getElementById('mwModal').style.display = 'none'; }
@@ -1994,6 +1995,7 @@ function handleMwEdit(btn) {
     _showMwWizard('');
     document.getElementById('mwModal').style.display = 'flex';
     _initMwMonaco(mw.yaml.trim());
+    _loadCustomMwTemplates();
 }
 
 const mwTemplates = {
@@ -2022,10 +2024,34 @@ const mwTemplates = {
     inFlightReq: `inFlightReq:\n  amount: 10`,
 };
 
+async function _loadCustomMwTemplates() {
+    const grp = document.getElementById('mwCustomOptgroup');
+    if (!grp) return;
+    try {
+        const res  = await fetch('/api/mw/templates');
+        const data = await res.json();
+        const templates = data.templates || [];
+        grp.innerHTML = templates.map(t => `<option value="custom:${t.id}">${_esc(t.name)}</option>`).join('');
+        grp.style.display = templates.length ? '' : 'none';
+    } catch(e) {
+        grp.style.display = 'none';
+    }
+}
+
 function applyMwTemplate(select) {
     const tpl = select.value;
     if (!tpl) return;
-    if (_wizardTemplates.has(tpl)) {
+    if (tpl.startsWith('custom:')) {
+        const id = tpl.slice(7);
+        fetch('/api/mw/templates').then(r => r.json()).then(data => {
+            const t = (data.templates || []).find(x => x.id === id);
+            if (t) {
+                setMwMode('yaml');
+                if (_mwMonacoEditor) _mwMonacoEditor.setValue(t.yaml);
+                else document.getElementById('middlewareContent').value = t.yaml;
+            }
+        });
+    } else if (_wizardTemplates.has(tpl)) {
         _showMwWizard(tpl);
         setMwMode('wizard');
     } else if (mwTemplates[tpl]) {

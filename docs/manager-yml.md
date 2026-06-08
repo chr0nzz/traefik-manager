@@ -14,6 +14,7 @@ TM stores some data in separate files alongside `manager.yml` in the same config
 |---|---|
 | `manager.yml` | All TM settings - auth, domains, tabs, webhooks, OIDC, git backup, CrowdSec, disabled routes |
 | `agents.yml` | Remote agent registrations (encrypted API keys). Auto-created and migrated from `manager.yml` on first start after v1.5.0 |
+| `templates.yml` | Custom middleware templates created in Settings - Templates |
 | `notifications.yml` | Recent notification history |
 | `dashboard.yml` | Dashboard widget layout |
 
