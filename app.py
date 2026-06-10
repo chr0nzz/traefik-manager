@@ -1683,9 +1683,12 @@ def _cs_api_key() -> str:
     s = load_settings()
     return s.get('crowdsec_api_key', '').strip() or os.environ.get('CROWDSEC_API_KEY', '').strip()
 
-def _cs_request(method: str, path: str, **kwargs):
-    lapi = _cs_lapi_url().rstrip('/')
-    key  = _cs_api_key()
+def _cs_request(method: str, path: str, lapi: str = None, key: str = None, **kwargs):
+    if lapi is None:
+        lapi = _cs_lapi_url()
+    if key is None:
+        key = _cs_api_key()
+    lapi = lapi.rstrip('/')
     if not lapi or not key:
         return None
     try:
@@ -1701,13 +1704,15 @@ def _cs_request(method: str, path: str, **kwargs):
 @app.route('/api/crowdsec/decisions')
 @login_required
 def api_cs_decisions():
-    if not (_cs_lapi_url() and _cs_api_key()):
+    lapi = _cs_lapi_url()
+    key  = _cs_api_key()
+    if not (lapi and key):
         return jsonify({'error': 'CrowdSec not configured'}), 503
     try:
         all_decisions = []
         page = 1
         while True:
-            chunk = _cs_request('GET', f'/v1/decisions?limit=500&page={page}')
+            chunk = _cs_request('GET', f'/v1/decisions?limit=500&page={page}', lapi=lapi, key=key)
             if not isinstance(chunk, list):
                 break
             all_decisions.extend(chunk)
@@ -1734,13 +1739,15 @@ def api_cs_decisions():
 @app.route('/api/crowdsec/alerts')
 @login_required
 def api_cs_alerts():
-    if not (_cs_lapi_url() and _cs_api_key()):
+    lapi = _cs_lapi_url()
+    key  = _cs_api_key()
+    if not (lapi and key):
         return jsonify({'error': 'CrowdSec not configured'}), 503
     try:
         all_alerts = []
         page = 1
         while True:
-            chunk = _cs_request('GET', f'/v1/alerts?limit=200&page={page}')
+            chunk = _cs_request('GET', f'/v1/alerts?limit=200&page={page}', lapi=lapi, key=key)
             if not isinstance(chunk, list):
                 break
             all_alerts.extend(chunk)
