@@ -1308,7 +1308,21 @@ async function refreshRoutes() {
         renderRouteGrid(data.apps || []);
         renderMwGrid(data.middlewares || []);
         loadOverviewStats();
+        _renderConfigErrorBanner(data.configErrors || []);
     } catch(e) {}
+}
+
+function _renderConfigErrorBanner(errors) {
+    const el = document.getElementById('configErrorBanner');
+    if (!el) return;
+    if (!errors.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.style.display = 'block';
+    el.innerHTML = errors.map(e =>
+        `<div class="flex items-start gap-2 mb-1 last:mb-0">
+            <i class="ph-bold ph-warning-circle flex-shrink-0 mt-0.5" style="color:var(--yellow)"></i>
+            <div class="text-xs"><span class="font-semibold" style="color:var(--text)">${_esc(e.file)}</span><span class="ml-2" style="color:var(--muted)">${_esc(e.error)}</span></div>
+        </div>`
+    ).join('');
 }
 
 function _setAgentBanner(_show) {}
