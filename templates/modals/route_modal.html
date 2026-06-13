@@ -178,9 +178,15 @@
                         </div>
                         <input type="hidden" name="entryPoints" id="entryPointsTcp">
                     </div>
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" name="useTls" id="useTls" value="true" class="rounded" style="accent-color:var(--blue)" onchange="toggleTcpCertResolver(this.checked)">
-                        <span class="text-sm" style="color:var(--text)">Enable TLS (with cert resolver)</span>
+                    <div>
+                        <label>TLS Mode</label>
+                        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);width:fit-content">
+                            <button type="button" onclick="setTcpTlsMode('none',this)" id="tcpTlsNone" class="proto-btn active-http text-xs px-3 py-1.5">No TLS</button>
+                            <button type="button" onclick="setTcpTlsMode('tls',this)" id="tcpTlsTls" class="proto-btn text-xs px-3 py-1.5">TLS</button>
+                            <button type="button" onclick="setTcpTlsMode('passthrough',this)" id="tcpTlsPassthrough" class="proto-btn text-xs px-3 py-1.5">Passthrough</button>
+                        </div>
+                        <input type="hidden" name="useTls" id="useTls" value="">
+                        <input type="hidden" name="tlsPassthrough" id="tlsPassthrough" value="">
                     </div>
                     <div id="tcpCertResolverRow" style="display:none">
                         <label>Cert Resolver</label>

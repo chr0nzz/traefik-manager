@@ -3397,7 +3397,7 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
         apps.append({'id': app_id, 'name': rname, 'rule': rdata.get('rule', ''),
                      'service_name': svc_name, 'target': target,
                      'middlewares': [], 'entryPoints': _to_list(rdata.get('entryPoints')),
-                     'protocol': 'tcp', 'tls': bool(tls_tcp), 'enabled': True,
+                     'protocol': 'tcp', 'tls': tls_tcp if isinstance(tls_tcp, dict) else ({} if tls_tcp else None), 'enabled': True,
                      'certResolver': tls_tcp.get('certResolver', '') if isinstance(tls_tcp, dict) else '',
                      'configFile': config_file, 'provider': 'file'})
     udp_svcs = dict(config.get('udp', {}).get('services', {}))
@@ -3991,7 +3991,7 @@ def save_entry():
         pass_host      = request.form.get('passHostHeader') == 'true'
         _all_eps       = request.form.getlist('entryPoints')
         http_eps       = [ep.strip() for ep in (_all_eps[0] if _all_eps else 'https').split(',') if ep.strip()] or ['https']
-        tcp_eps        = [ep.strip() for ep in (_all_eps[1] if len(_all_eps) > 1 else '').split(',') if ep.strip()] or ['https']
+        tcp_eps        = [ep.strip() for ep in (_all_eps[1] if len(_all_eps) > 1 else '').split(',') if ep.strip()]
         _all_ips       = request.form.getlist('targetIp')
         _all_ports     = request.form.getlist('targetPort')
         if protocol == 'tcp':
@@ -4009,6 +4009,7 @@ def save_entry():
         no_tls            = cert_resolver_raw == '__disabled__'
         cert_resolver     = '' if (cert_resolver_raw in ('__none__', 'none', '__disabled__')) else (cert_resolver_raw or (resolvers[0] if resolvers else ''))
         use_tls_tcp       = request.form.get('useTls') == 'true'
+        tls_passthrough   = request.form.get('tlsPassthrough') == 'true'
         tcp_cert_raw      = (_all_resolvers[1] if len(_all_resolvers) > 1 else '').strip()
         tcp_cert_resolver = '' if (tcp_cert_raw in ('__none__', 'none')) else (tcp_cert_raw or (resolvers[0] if resolvers else ''))
         config_file_raw = request.form.get('configFile', '').strip()
@@ -4131,8 +4132,12 @@ def save_entry():
             rule = tcp_rule or (f"HostSNI(`{subdomain}.{domain}`)" if subdomain else "HostSNI(`*`)")
             config.setdefault('tcp', {}).setdefault('routers', {})
             config['tcp'].setdefault('services', {})
-            router_entry = {'rule': rule, 'entryPoints': tcp_eps, 'service': service_name}
-            if use_tls_tcp:
+            router_entry = {'rule': rule, 'service': service_name}
+            if tcp_eps:
+                router_entry['entryPoints'] = tcp_eps
+            if tls_passthrough:
+                router_entry['tls'] = {'passthrough': True}
+            elif use_tls_tcp:
                 router_entry['tls'] = {'certResolver': tcp_cert_resolver} if tcp_cert_resolver else {}
             config['tcp']['routers'][router_name]   = router_entry
             config['tcp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
