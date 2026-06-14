@@ -296,7 +296,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 **Multi-Server Management**
 - **Traefik Manager Agent (TMA)** - lightweight Go daemon that runs alongside Traefik on any remote server; install it in seconds with the one-liner installer
 - **Server switcher** in the nav bar - switch between local and remote agents; all data tabs show that server's routes, services, middlewares, backups, and logs
-- **Settings → Agents** multi-step wizard - generates a ready-to-paste Docker Compose or systemd unit with all env vars pre-filled; API key shown once and stored encrypted
+- **Settings → Agents** multi-step wizard - generates a ready-to-paste Docker Compose or Docker Run command with all env vars pre-filled; API key shown once and stored encrypted
 - **Per-server git backup** - each agent handles its own autonomous git cycle via env vars; viewed from TM when that agent is active
 - Manage unlimited remote Traefik instances from a single TM - no VPN or SSH required
 
@@ -405,6 +405,7 @@ Full documentation at **[traefik-manager.xyzlab.dev](https://traefik-manager.xyz
 | Layer     | Technology                                    |
 | -----------| -----------------------------------------------|
 | Backend   | Python 3.11 · Flask · Gunicorn                |
+| Agent     | Go 1.23 · Alpine Linux (TMA - remote agent daemon) |
 | Config    | ruamel.yaml (preserves comments)              |
 | Auth      | bcrypt · pyotp (TOTP) · Flask sessions · CSRF · Flask-Limiter · Fernet |
 | Frontend  | Vanilla JS · Tailwind CSS · Phosphor Icons    |
