@@ -11,15 +11,15 @@ TMA is a lightweight Go daemon that runs alongside Traefik on a remote server. I
 
 When a remote agent is active:
 
-- **Routes** - The Routes tab shows the agent's routes fetched live from the remote Traefik instance. You can add, edit, delete, and toggle routes exactly as you would locally - changes are written to the agent's config files and a `.bak` backup is created before every write. The Config File selector in the Add/Edit Route modal lists the agent's actual config files (fetched live), not the local TM files. If the agent has **Domains** configured (Settings - Agents - Traefik tab), the Add/Edit Route modal shows domain chip selectors - the same experience as local TM. Without domains configured, the Subdomain field becomes a free-form **Hostname** field (enter the full hostname, e.g. `app.example.com`). Entrypoints in the route form are fetched live from the agent's Traefik instance.
+- **Routes** - The Routes tab shows the agent's routes fetched live from the remote Traefik instance. You can add, edit, delete, and toggle routes exactly as you would locally - changes are written to the agent's config files and a `.bak` backup is created before every write. The Config File selector in the Add/Edit Route modal lists the agent's actual config files (fetched live), not the Host's config files. If the agent has **Domains** configured (Settings - Agents - Traefik tab), the Add/Edit Route modal shows domain chip selectors - the same experience as the Host. Without domains configured, the Subdomain field becomes a free-form **Hostname** field (enter the full hostname, e.g. `app.example.com`). Entrypoints in the route form are fetched live from the agent's Traefik instance.
 - **Middlewares** - The Middlewares tab shows only middlewares managed by TM - those in config files under `CONFIG_PATH` with the `@file` provider suffix. Traefik built-in and other provider middlewares are excluded from the badge count and the chip selector. You can add and edit middlewares on the agent exactly as you would locally.
 - **Services** - Shows the agent's services from the remote Traefik API.
 - **Route Map** - The route map diagram renders the agent's routes and services.
-- **Tab visibility** - Provider and monitoring tab toggles (Docker, Kubernetes, Certs, Plugins, etc.) are stored per-server in the browser. Changes made while on an agent do not affect local TM or other agents.
-- **Static Config** (Settings - Static Config) - Available if the agent has `STATIC_CONFIG_PATH` set. Raw YAML editing is supported; section-based editing (entrypoints, cert resolvers, etc.) is available only on local TM. Traefik restart works if the agent has `RESTART_METHOD` configured.
+- **Tab visibility** - Provider and monitoring tab toggles (Docker, Kubernetes, Certs, Plugins, etc.) are stored per-server in the browser. Changes made while on an agent do not affect the Host or other agents.
+- **Static Config** (Settings - Static Config) - Available if the agent has `STATIC_CONFIG_PATH` set. Raw YAML editing is supported; section-based editing (entrypoints, cert resolvers, etc.) is available only on the Host. Traefik restart works if the agent has `RESTART_METHOD` configured.
 - **Backups** (Settings - Backups) - Shows the agent's local `.bak` backup files. The agent creates a `.bak` automatically before every config write; you can also create a manual backup at any time. Restore, delete, and git history operations all proxy through the agent. Git backup configuration fields are hidden (managed via `GIT_BACKUP_*` env vars on the agent). The Static Config backup sub-tab is not shown for agents.
 - **CrowdSec** - If the agent has `CROWDSEC_LAPI_URL` and `CROWDSEC_API_KEY` configured, the CrowdSec tab shows that server's decisions and alerts.
-- **Settings sidebar** - When an agent is active, only agent-relevant Settings panels are shown: Backups, Route Monitoring tab toggles, Static Config (if configured), and System Monitoring tab toggles. Authentication, Connection, Notifications, and Templates are hidden - they only apply to the local TM instance.
+- **Settings sidebar** - When an agent is active, only agent-relevant Settings panels are shown: Backups, Route Monitoring tab toggles, Static Config (if configured), and System Monitoring tab toggles. Authentication, Connection, Notifications, and Templates are hidden - they only apply to the Host.
 
 ## Install via installer script
 
@@ -159,7 +159,7 @@ sudo systemctl enable --now tma
 
 ### Domains (TM-side, not an env var)
 
-The **Domains** field in Settings - Agents (Traefik tab) is a TM-side configuration - it is not passed to the agent container. It tells TM what domains are available on this agent when creating or editing routes. Enter one or more domains separated by commas (e.g. `example.com, example.net`). When set, the Add/Edit Route modal shows a domain chip selector exactly like local TM. When left blank, the Subdomain field becomes a free-form Hostname field for the full hostname.
+The **Domains** field in Settings - Agents (Traefik tab) is a TM-side configuration - it is not passed to the agent container. It tells TM what domains are available on this agent when creating or editing routes. Enter one or more domains separated by commas (e.g. `example.com, example.net`). When set, the Add/Edit Route modal shows a domain chip selector exactly like the Host. When left blank, the Subdomain field becomes a free-form Hostname field for the full hostname.
 
 ## Storage
 

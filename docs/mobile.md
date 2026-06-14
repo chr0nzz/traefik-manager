@@ -61,8 +61,8 @@ Tap the **hamburger icon** (top-left of any screen) to open the navigation drawe
 
 | Section | Items |
 |---|---|
-| General | Appearance, App Lock, Traefik, Server |
-| Tabs | Logs |
+| General | Appearance, App Lock, Traefik, Server, Active Server |
+| Tabs | Logs, Certificates, Plugins, CrowdSec |
 | Data | Backups |
 | Info | About |
 
@@ -87,6 +87,8 @@ Tap the **hamburger icon** (top-left of any screen) to open the navigation drawe
 - Entry points fetched from the Traefik API and shown as selectable chips for HTTP, TCP, and UDP; `websecure` is pre-selected for HTTP; UDP is single-select
 - Middlewares fetched from the Traefik API and shown as selectable chips
 - Toggle **Skip TLS Verification** per route for backends with self-signed certificates (`insecureSkipVerify`)
+- **Wildcard Certificate Domains** - when TLS is enabled, toggle on to specify a main domain and SANs (e.g. `*.example.com`) for wildcard certificate requests via DNS challenge
+- **TLS Options profile** - select any named TLS options profile configured on your Traefik instance to apply it to the route
 - Edit existing routes
 - Delete routes with confirmation
 - Tap a domain to open it in the browser
@@ -95,21 +97,33 @@ Tap the **hamburger icon** (top-left of any screen) to open the navigation drawe
 
 - List all middlewares with type, protocol, and YAML config preview
 - Filter by protocol
-- Add new middlewares - two-step flow: choose from 12 built-in templates then fill in the form
+- Add new middlewares - two-step flow: choose from 23 built-in templates then fill in the wizard form
 
     | Template | Description |
     |---|---|
     | Blank | Start from scratch |
     | HTTPS Redirect | Redirect HTTP to HTTPS |
     | Basic Auth | Password protect your service |
+    | Digest Auth | MD5 digest authentication |
     | Security Headers | HSTS, X-Frame, XSS filter |
     | Rate Limit | Limit requests per source IP |
     | Forward Auth | Delegate auth to an external service |
+    | Authentik | Authentik SSO forward auth |
+    | Authelia | Authelia forward auth |
+    | Gatekeeper | Gatekeeper forward auth (with forward Authorization header option) |
+    | OIDC Auth | OpenID Connect auth via traefik-oidc-auth plugin |
+    | IP Allowlist | Restrict access by IP range |
+    | Private IPs | Allow LAN / private IP ranges only |
+    | CORS | Cross-origin resource sharing headers |
+    | Redirect Regex | Redirect using a regex pattern |
     | Strip Prefix | Remove a URL path prefix |
     | Add Prefix | Prepend a URL path prefix |
+    | Replace Path | Replace request URL path |
     | Compress | Enable gzip / brotli compression |
-    | IP Allowlist | Restrict access by IP range |
-    | Redirect Regex | Redirect using a regex pattern |
+    | Retry | Retry failed requests |
+    | Circuit Breaker | Stop traffic when error rate is high |
+    | Buffering | Buffer request and response bodies |
+    | In-Flight Req | Limit concurrent requests |
     | Chain | Combine multiple middlewares |
 
 - Edit existing middlewares (name + YAML)
@@ -137,7 +151,18 @@ The Logs tab requires `ACCESS_LOG_PATH` to be set in your Traefik Manager server
 
 ### Backups
 
-Access via the drawer under **Data → Backups**. Create and restore configuration backups.
+Access via the drawer under **Data → Backups**. Create and restore local `.bak` configuration backups (route config and static config sections).
+
+**Git Backup** - tap the Git Backup row at the top of the Backups screen to view the git backup status, branch, last push time, and full commit history. Tap **Push Now** to trigger an immediate git push, or tap any commit row to restore the config to that point in time (requires git backup configured in Settings on the web app).
+
+### Multi-Server Agent Mode
+
+When TMA agents are registered in the web app, the **Active Server** row appears in **Settings - General**. Tap it to switch between:
+
+- **Host** - manages the Traefik instance connected to your Traefik Manager server
+- **Remote agents** - any TMA agent registered in the web app, shown with a live health indicator
+
+When an agent is active, the agent name appears as a subtitle below each tab title, and all data (routes, middlewares, services, backups) reflects that agent's Traefik instance. Switching servers clears the query cache so tabs reload immediately.
 
 ### Widget (Android)
 
@@ -176,6 +201,10 @@ Configure domains, cert resolvers, and the direct Traefik API URL. Includes a **
 ### Server
 
 Change the Traefik Manager server URL and API key, or switch to Demo Mode.
+
+### Active Server
+
+Switch between the local Traefik Manager and any registered remote TMA agents. See [Multi-Server Agent Mode](#multi-server-agent-mode) above.
 
 ---
 
@@ -230,7 +259,7 @@ When using this split-route pattern, keep Traefik Manager's built-in auth **enab
 
 | | |
 |---|---|
-| Traefik Manager (server) | **v0.12.0 or higher** (mobile v0.11.0+), v0.11.0+ for mobile v0.10.0, v0.10.0+ for mobile v0.6.0-v0.9.x, v0.6.0+ for earlier mobile versions |
+| Traefik Manager (server) | **v1.5.0 or higher** for mobile v1.5.0; v0.12.0+ for mobile v0.11.0+; v0.11.0+ for mobile v0.10.0 |
 | Android | 7.0+ (API 24+) |
 | iOS | 16+ (build from source required) |
 
