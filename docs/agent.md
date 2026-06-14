@@ -7,7 +7,16 @@ TMA is a lightweight Go daemon that runs alongside Traefik on a remote server. I
 1. Install TMA on each remote server (alongside Traefik)
 2. In TM Settings - Agents, click **Add Agent** and enter the agent's URL
 3. TM generates an API key - save it and set it as `TMA_API_KEY` in the agent's environment
-4. Use the **server switcher** in the TM navigation bar to switch between local and remote servers
+4. Use the **server switcher** in the TM navigation bar to switch between the Host and remote servers
+
+Each agent card in Settings - Agents has four action buttons:
+
+| Button | Action |
+|---|---|
+| Key icon | Manage API keys for this agent |
+| Pencil icon | Rename the agent - click to edit inline, Enter or click the checkmark to save |
+| Gear icon | Edit agent settings (Traefik config, paths, restart method, git backup, CrowdSec) |
+| Trash icon | Remove the agent from TM (does not affect the agent service on the remote server) |
 
 When a remote agent is active:
 

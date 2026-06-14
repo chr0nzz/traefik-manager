@@ -2346,16 +2346,20 @@ async function loadAgentsList() {
             return;
         }
         body.innerHTML = agents.map(a => `
-            <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-2" style="background:var(--bg);border:1px solid var(--border);">
+            <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-2" data-agent-id="${a.id}" style="background:var(--bg);border:1px solid var(--border);">
                 <div style="flex:1;min-width:0;">
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full flex-shrink-0" id="agent-dot-${a.id}" style="background:var(--muted)"></span>
-                        <span class="text-xs font-medium truncate" style="color:var(--text)">${_esc(a.name)}</span>
+                        <span class="agent-name-label text-xs font-medium truncate" style="color:var(--text)">${_esc(a.name)}</span>
                     </div>
-                    <div class="text-xs mt-0.5 truncate font-mono" style="color:var(--muted)">${_esc(a.url)}</div>
+                    <div class="flex items-center gap-1 mt-0.5">
+                        <span class="agent-url-label text-xs truncate font-mono" style="color:var(--muted)">${_esc(a.url)}</span>
+                        <button onclick="inlineEditAgent('${a.id}','url','${_esc(a.url)}')" class="btn-icon agent-url-btn flex-shrink-0" title="Edit URL" style="opacity:0.5;padding:0 2px;"><i class="ph-bold ph-pencil-simple" style="font-size:10px;"></i></button>
+                    </div>
                 </div>
                 <div class="flex items-center gap-1 flex-shrink-0">
                     <button onclick="openAgentKeys('${a.id}','${_esc(a.name)}')" class="btn-icon" title="API Keys"><i class="ph-bold ph-key text-xs"></i></button>
+                    <button onclick="inlineEditAgent('${a.id}','name','${_esc(a.name)}')" class="btn-icon agent-rename-btn" title="Rename"><i class="ph-bold ph-pencil-simple text-xs"></i></button>
                     <button onclick="openAgentSetup('${a.id}')" class="btn-icon" title="Edit Settings"><i class="ph-bold ph-gear text-xs"></i></button>
                     <button onclick="deleteAgent('${a.id}','${_esc(a.name)}')" class="btn-icon" title="Remove" style="color:var(--red)"><i class="ph-bold ph-trash text-xs"></i></button>
                 </div>
@@ -2562,6 +2566,42 @@ async function pingAgent(id, url) {
         const data = await res.json();
         dot.style.background = data.ok ? 'var(--green)' : 'var(--red)';
     } catch(e) { if (dot) dot.style.background = 'var(--red)'; }
+}
+
+function inlineEditAgent(id, field, currentValue) {
+    const card = document.querySelector(`[data-agent-id="${id}"]`);
+    if (!card) return;
+    const isName = field === 'name';
+    const labelEl  = card.querySelector(isName ? '.agent-name-label' : '.agent-url-label');
+    const pencilBtn = card.querySelector(isName ? '.agent-rename-btn' : '.agent-url-btn');
+    if (!labelEl || !pencilBtn) return;
+    const input = document.createElement('input');
+    input.type = isName ? 'text' : 'url';
+    input.value = currentValue;
+    input.className = 'input-field text-xs';
+    input.style.cssText = isName ? 'padding:2px 6px;height:24px;width:120px;' : 'padding:2px 6px;height:24px;width:200px;';
+    labelEl.replaceWith(input);
+    pencilBtn.innerHTML = '<i class="ph-bold ph-check text-xs"></i>';
+    pencilBtn.style.color = 'var(--green)';
+    pencilBtn.style.opacity = '1';
+    input.focus();
+    input.select();
+    let _done = false;
+    const submit = async () => {
+        if (_done) return;
+        _done = true;
+        const newVal = input.value.trim();
+        if (!newVal || newVal === currentValue) { loadAgentsList(); return; }
+        try {
+            const res  = await fetch('/api/agents/' + id, { method: 'PUT', headers: { ..._csrfHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ [field]: newVal }) });
+            const data = await res.json();
+            if (data.ok) { showToast(`Agent ${isName ? 'renamed' : 'URL updated'}`, 'success'); loadAgentsList(); updateServerSwitcher(); }
+            else { _done = false; showToast(`Update failed: ${data.error || 'Unknown'}`, 'error'); loadAgentsList(); }
+        } catch(e) { _done = false; showToast('Update failed', 'error'); loadAgentsList(); }
+    };
+    pencilBtn.onclick = submit;
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') loadAgentsList(); });
+    input.addEventListener('blur', () => setTimeout(submit, 150));
 }
 
 async function deleteAgent(id, name) {

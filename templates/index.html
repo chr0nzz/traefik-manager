@@ -436,7 +436,6 @@ function _renderServerSwitcherList(runHealthChecks) {
                     <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${dotColor}" id="ss-dot-${a.id}"></span>
                     <div style="min-width:0;flex:1;">
                         <div class="text-xs font-medium truncate" style="color:var(--text)">${_esc(a.name)}</div>
-                        <div class="text-xs truncate font-mono" style="color:var(--muted)">${_esc(a.url)}</div>
                     </div>
                     ${active ? '<i class="ph-bold ph-check text-xs ml-auto flex-shrink-0" style="color:var(--blue)"></i>' : ''}
                 </div>

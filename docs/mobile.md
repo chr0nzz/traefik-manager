@@ -164,6 +164,8 @@ When TMA agents are registered in the web app, the **Active Server** row appears
 
 When an agent is active, the agent name appears as a subtitle below each tab title, and all data (routes, middlewares, services, backups) reflects that agent's Traefik instance. Switching servers clears the query cache so tabs reload immediately.
 
+To rename an agent, tap the pencil icon on its row - the name becomes an editable field. Tap the checkmark or submit to save.
+
 ### Widget (Android)
 
 A home screen widget shows a live count of healthy, warning, and error services at a glance. Add it from your launcher's widget picker after installing the app.
