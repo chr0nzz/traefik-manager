@@ -1355,7 +1355,7 @@ async function saveMwAjax(event) {
         const json = await res.json();
         closeMwModal();
         showToast(json.message, json.ok ? 'success' : 'error');
-        if (json.ok) { refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); setTimeout(fetchNotifications, 8000); }
+        if (json.ok) { _cachedMiddlewares = null; refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); setTimeout(fetchNotifications, 8000); }
     } catch(e) {
         showToast('Error saving middleware', 'error');
     } finally {
@@ -1387,7 +1387,7 @@ async function deleteMw(name, configFile) {
         const res = await fetch('/delete-middleware/' + encodeURIComponent(name), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
         const json = await res.json();
         showToast(json.message, json.ok ? 'success' : 'error');
-        if (json.ok) { refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); }
+        if (json.ok) { _cachedMiddlewares = null; refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); }
     } catch(e) { showToast('Error deleting middleware', 'error'); }
 }
 
@@ -2341,7 +2341,7 @@ async function loadOverviewStats() {
             document.getElementById('cmpHttpErr').textContent      = hc.e;
             renderDonut('donutHttp', hc.s, hc.w, hc.e);
             renderBar('barHttpRouters', hc.s, hc.w, hc.e);
-            document.getElementById('countRoutes').textContent = httpStat.length + tcpAllStat.length;
+            document.getElementById('countRoutes').textContent = http.filter(_isFile).length + tcpAll.filter(_isFile).length;
 
             const dockerCount = [...http, ...tcpAll].filter(r => (r.provider || (r.name||'').split('@')[1]||'') === 'docker').length;
             document.getElementById('dockerTabCount').textContent = dockerCount || '-';
