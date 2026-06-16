@@ -22,7 +22,7 @@ from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.5.0"
+APP_VERSION  = "1.5.1"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -4758,14 +4758,22 @@ def api_agent_routes(agent_id):
     try:
         all_configs = _agent_load_configs(agent)
 
+        config_errors = []
         try:
             r_resp = _agent_request(agent, 'GET', '/api/traefik/routers')
             s_resp = _agent_request(agent, 'GET', '/api/traefik/services')
             all_routers  = r_resp.json()  if r_resp.ok  else {}
             all_services = s_resp.json()  if s_resp.ok  else {}
-        except Exception:
+            if not r_resp.ok:
+                try:
+                    err = r_resp.json().get('error') or r_resp.text
+                except Exception:
+                    err = r_resp.text
+                config_errors.append({'file': "Agent Traefik API", 'error': err or f'HTTP {r_resp.status_code}'})
+        except Exception as e:
             all_routers  = {}
             all_services = {}
+            config_errors.append({'file': "Agent Traefik API", 'error': str(e)})
 
         svc_urls = _traefik_service_url_map(all_services)
 
@@ -4789,7 +4797,7 @@ def api_agent_routes(agent_id):
 
         apps.extend(_build_external_routes(all_routers, svc_urls))
 
-        return jsonify({'apps': apps, 'middlewares': middlewares})
+        return jsonify({'apps': apps, 'middlewares': middlewares, 'configErrors': config_errors})
     except requests.exceptions.ConnectionError:
         return jsonify({'error': 'Cannot reach agent'}), 502
     except Exception as e:

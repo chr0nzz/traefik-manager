@@ -1859,7 +1859,15 @@ async function _initMiddlewareChips(selectedMiddlewares) {
             _cachedMiddlewares = (data.http || []).map(m => m.name || m).filter(m => m && (!m.includes('@') || m.endsWith('@file')));
         } catch(e) { _cachedMiddlewares = []; }
     }
-    const mws = _cachedMiddlewares;
+    const configMws = (typeof _allMiddlewares !== 'undefined' ? _allMiddlewares : [])
+        .filter(m => (m.type || 'http').toLowerCase() === 'http' && m.name)
+        .map(m => m.name);
+    const byBase = new Map();
+    [...(_cachedMiddlewares || []), ...configMws].forEach(full => {
+        const base = full.split('@')[0];
+        if (!byBase.has(base)) byBase.set(base, full);
+    });
+    const mws = [...byBase.values()];
     if (!mws.length) {
         container.innerHTML = `<input type="text" class="input-field" style="flex:1" placeholder="auth@file, redirect-https" oninput="document.getElementById('middlewares').value=this.value">`;
         hidden.value = selectedMiddlewares ? selectedMiddlewares.join(', ') : '';
@@ -2145,7 +2153,10 @@ async function handleEdit(btn) {
 
     await _populateConfigFileSelect('route');
     const cfSel = document.getElementById('configFileSelect');
-    if (cfSel && app.configFile) cfSel.value = app.configFile;
+    if (app.configFile) {
+        if (cfSel) cfSel.value = app.configFile;
+        document.getElementById('configFile').value = app.configFile;
+    }
     document.getElementById('appModal').style.display = 'flex';
 }
 
@@ -2164,7 +2175,10 @@ async function handleMwEdit(btn) {
     _showMwWizard('');
     await _populateConfigFileSelect('mw');
     const cfSel = document.getElementById('mwConfigFileSelect');
-    if (cfSel && mw.configFile) cfSel.value = mw.configFile;
+    if (mw.configFile) {
+        if (cfSel) cfSel.value = mw.configFile;
+        document.getElementById('mwConfigFile').value = mw.configFile;
+    }
     document.getElementById('mwModal').style.display = 'flex';
     _initMwMonaco(mw.yaml.trim());
     _loadCustomMwTemplates();

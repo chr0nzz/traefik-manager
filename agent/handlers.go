@@ -65,50 +65,59 @@ func (a *App) traefikProxy(w http.ResponseWriter, r *http.Request, traefikPath s
 	io.Copy(w, resp.Body)
 }
 
-func (a *App) traefikFetchProto(ctx context.Context, traefikPath string) json.RawMessage {
+func (a *App) traefikFetchProto(ctx context.Context, traefikPath string) (json.RawMessage, error) {
 	target := strings.TrimRight(a.cfg.TraefikAPIURL, "/") + traefikPath
 	ctx2, cancel := context.WithTimeout(ctx, 12*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx2, http.MethodGet, target, nil)
 	if err != nil {
-		return json.RawMessage("[]")
+		return json.RawMessage("[]"), err
 	}
 	resp, err := a.httpClient.Do(req)
 	if err != nil {
-		return json.RawMessage("[]")
+		return json.RawMessage("[]"), err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return json.RawMessage("[]")
+		return json.RawMessage("[]"), nil
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return json.RawMessage("[]")
+		return json.RawMessage("[]"), nil
 	}
-	return json.RawMessage(body)
+	return json.RawMessage(body), nil
 }
 
 func (a *App) routersHandler(w http.ResponseWriter, r *http.Request) {
-	jsonOK(w, map[string]json.RawMessage{
-		"http": a.traefikFetchProto(r.Context(), "/api/http/routers"),
-		"tcp":  a.traefikFetchProto(r.Context(), "/api/tcp/routers"),
-		"udp":  a.traefikFetchProto(r.Context(), "/api/udp/routers"),
-	})
+	httpR, err := a.traefikFetchProto(r.Context(), "/api/http/routers")
+	if err != nil {
+		jsonError(w, "traefik unavailable at "+a.cfg.TraefikAPIURL+": "+err.Error(), http.StatusBadGateway)
+		return
+	}
+	tcpR, _ := a.traefikFetchProto(r.Context(), "/api/tcp/routers")
+	udpR, _ := a.traefikFetchProto(r.Context(), "/api/udp/routers")
+	jsonOK(w, map[string]json.RawMessage{"http": httpR, "tcp": tcpR, "udp": udpR})
 }
 
 func (a *App) servicesHandler(w http.ResponseWriter, r *http.Request) {
-	jsonOK(w, map[string]json.RawMessage{
-		"http": a.traefikFetchProto(r.Context(), "/api/http/services"),
-		"tcp":  a.traefikFetchProto(r.Context(), "/api/tcp/services"),
-		"udp":  a.traefikFetchProto(r.Context(), "/api/udp/services"),
-	})
+	httpS, err := a.traefikFetchProto(r.Context(), "/api/http/services")
+	if err != nil {
+		jsonError(w, "traefik unavailable at "+a.cfg.TraefikAPIURL+": "+err.Error(), http.StatusBadGateway)
+		return
+	}
+	tcpS, _ := a.traefikFetchProto(r.Context(), "/api/tcp/services")
+	udpS, _ := a.traefikFetchProto(r.Context(), "/api/udp/services")
+	jsonOK(w, map[string]json.RawMessage{"http": httpS, "tcp": tcpS, "udp": udpS})
 }
 
 func (a *App) middlewaresHandler(w http.ResponseWriter, r *http.Request) {
-	jsonOK(w, map[string]json.RawMessage{
-		"http": a.traefikFetchProto(r.Context(), "/api/http/middlewares"),
-		"tcp":  a.traefikFetchProto(r.Context(), "/api/tcp/middlewares"),
-	})
+	httpM, err := a.traefikFetchProto(r.Context(), "/api/http/middlewares")
+	if err != nil {
+		jsonError(w, "traefik unavailable at "+a.cfg.TraefikAPIURL+": "+err.Error(), http.StatusBadGateway)
+		return
+	}
+	tcpM, _ := a.traefikFetchProto(r.Context(), "/api/tcp/middlewares")
+	jsonOK(w, map[string]json.RawMessage{"http": httpM, "tcp": tcpM})
 }
 
 // ---- config files -----------------------------------------------------------
