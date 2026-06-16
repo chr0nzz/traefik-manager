@@ -2707,6 +2707,7 @@ async function openAgentSetup(id, titleOverride) {
             if (a.docker_host)        document.getElementById('agCfgDockerHost').value  = a.docker_host;
             if (a.signal_file_path)   document.getElementById('agCfgSignalFile').value  = a.signal_file_path;
             if (a.crowdsec_lapi_url)  document.getElementById('agCfgCsUrl').value       = a.crowdsec_lapi_url;
+            if (a.crowdsec_machine_id) document.getElementById('agCfgCsMachineId').value = a.crowdsec_machine_id;
             if (a.restart_method)     selectRestartMethod(a.restart_method, null);
             const container = a.traefik_container || '';
             if (container) {
@@ -2765,6 +2766,8 @@ function resetAgentWizardCfgFields() {
     const rlEl   = document.getElementById('agCfgRateLimit'); if (rlEl) rlEl.value = '';
     const domsEl = document.getElementById('agCfgDomains'); if (domsEl) domsEl.value = '';
     document.getElementById('agCfgCsKey').value       = '';
+    document.getElementById('agCfgCsMachineId').value = '';
+    document.getElementById('agCfgCsMachinePassword').value = '';
     document.getElementById('agCfgInsecureTLS')?.classList.remove('on');
     selectRestartMethod('', document.querySelector('#restartMethodChips .agent-chip'));
 }
@@ -2906,6 +2909,8 @@ function buildAgentCfgPayload() {
         signal_file_path:   document.getElementById('agCfgSignalFile').value.trim(),
         crowdsec_lapi_url:  document.getElementById('agCfgCsUrl').value.trim(),
         crowdsec_api_key:   document.getElementById('agCfgCsKey').value,
+        crowdsec_machine_id:       document.getElementById('agCfgCsMachineId').value.trim(),
+        crowdsec_machine_password: document.getElementById('agCfgCsMachinePassword').value,
         git_backup_enabled: document.getElementById('agCfgGitEnabled').checked,
         git_backup_repo:    document.getElementById('agCfgGitRepo').value.trim(),
         git_backup_branch:  document.getElementById('agCfgGitBranch').value.trim() || 'main',
@@ -2933,6 +2938,8 @@ function agentCfgChanged() {
     const signalFile= document.getElementById('agCfgSignalFile').value.trim();
     const csUrl     = document.getElementById('agCfgCsUrl').value.trim();
     const csKey     = document.getElementById('agCfgCsKey').value.trim();
+    const csMid     = document.getElementById('agCfgCsMachineId').value.trim();
+    const csMpw     = document.getElementById('agCfgCsMachinePassword').value.trim();
     const gitOn     = document.getElementById('agCfgGitEnabled').checked;
     const gitRepo   = document.getElementById('agCfgGitRepo').value.trim();
     const gitBranch = document.getElementById('agCfgGitBranch').value.trim() || 'main';
@@ -2958,6 +2965,8 @@ function agentCfgChanged() {
     if (backupDir)   envLines.push(`      - BACKUP_DIR=${backupDir}`);
     if (csUrl)       envLines.push(`      - CROWDSEC_LAPI_URL=${csUrl}`);
     if (csKey)       envLines.push(`      - CROWDSEC_API_KEY=${csKey}`);
+    if (csMid)       envLines.push(`      - CROWDSEC_MACHINE_ID=${csMid}`);
+    if (csMpw)       envLines.push(`      - CROWDSEC_MACHINE_PASSWORD=${csMpw}`);
     if (gitOn) {
         envLines.push(`      - GIT_BACKUP_ENABLED=true`);
         if (gitRepo)   envLines.push(`      - GIT_BACKUP_REPO=${gitRepo}`);

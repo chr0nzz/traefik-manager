@@ -92,6 +92,8 @@ def _save_agents(agents: list) -> list:
             enc['api_key'] = _encrypt_otp_secret(enc['api_key'])
         if enc.get('crowdsec_api_key'):
             enc['crowdsec_api_key'] = _encrypt_otp_secret(enc['crowdsec_api_key'])
+        if enc.get('crowdsec_machine_password'):
+            enc['crowdsec_machine_password'] = _encrypt_otp_secret(enc['crowdsec_machine_password'])
         if enc.get('git_backup_token'):
             enc['git_backup_token'] = _encrypt_otp_secret(enc['git_backup_token'])
         out.append(enc)
@@ -119,6 +121,8 @@ def _parse_agent_dict(a: dict) -> dict:
         'signal_file_path':             str(a.get('signal_file_path', '')).strip(),
         'crowdsec_lapi_url':            str(a.get('crowdsec_lapi_url', '')).strip(),
         'crowdsec_api_key':             _decrypt_otp_secret(str(a.get('crowdsec_api_key', ''))),
+        'crowdsec_machine_id':          str(a.get('crowdsec_machine_id', '')).strip(),
+        'crowdsec_machine_password':    _decrypt_otp_secret(str(a.get('crowdsec_machine_password', ''))),
         'git_backup_enabled':           bool(a.get('git_backup_enabled', False)),
         'git_backup_repo':              str(a.get('git_backup_repo', '')).strip(),
         'git_backup_branch':            str(a.get('git_backup_branch', 'main')).strip() or 'main',
@@ -4664,6 +4668,7 @@ def _redact_agent(a: dict) -> dict:
     out = dict(a)
     out['api_key'] = '***' if out.get('api_key') else ''
     out['crowdsec_api_key'] = '***' if out.get('crowdsec_api_key') else ''
+    out['crowdsec_machine_password'] = '***' if out.get('crowdsec_machine_password') else ''
     out['git_backup_token'] = '***' if out.get('git_backup_token') else ''
     return out
 
@@ -4828,6 +4833,8 @@ def api_agents_create():
         'signal_file_path':      str(data.get('signal_file_path', '')).strip(),
         'crowdsec_lapi_url':     str(data.get('crowdsec_lapi_url', '')).strip(),
         'crowdsec_api_key':      str(data.get('crowdsec_api_key', '')).strip(),
+        'crowdsec_machine_id':       str(data.get('crowdsec_machine_id', '')).strip(),
+        'crowdsec_machine_password': str(data.get('crowdsec_machine_password', '')).strip(),
         'git_backup_enabled':    bool(data.get('git_backup_enabled', False)),
         'git_backup_repo':       str(data.get('git_backup_repo', '')).strip(),
         'git_backup_branch':     str(data.get('git_backup_branch', 'main')).strip() or 'main',
@@ -4858,7 +4865,7 @@ def api_agents_update(agent_id):
                 'config_path', 'static_config_path',
                 'acme_json_path', 'access_log_path', 'plugins_dir', 'backup_dir',
                 'restart_method', 'traefik_container', 'docker_host', 'signal_file_path',
-                'crowdsec_lapi_url', 'git_backup_enabled', 'git_backup_repo',
+                'crowdsec_lapi_url', 'crowdsec_machine_id', 'git_backup_enabled', 'git_backup_repo',
                 'git_backup_branch', 'git_backup_username', 'git_backup_auto_push',
                 'git_backup_commit_message', 'tma_port', 'tma_rate_limit', 'domains',
             ]
@@ -4867,6 +4874,8 @@ def api_agents_update(agent_id):
                     agents[i][field] = data[field]
             if 'crowdsec_api_key' in data and data['crowdsec_api_key'] not in ('', '***'):
                 agents[i]['crowdsec_api_key'] = str(data['crowdsec_api_key'])
+            if 'crowdsec_machine_password' in data and data['crowdsec_machine_password'] not in ('', '***'):
+                agents[i]['crowdsec_machine_password'] = str(data['crowdsec_machine_password'])
             if 'git_backup_token' in data and data['git_backup_token'] not in ('', '***'):
                 agents[i]['git_backup_token'] = str(data['git_backup_token'])
             updated = True
