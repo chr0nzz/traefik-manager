@@ -6,7 +6,6 @@ on:
       - "v*.*.*"
     branches:
       - dev
-      - main
 
   workflow_dispatch:
 
@@ -77,7 +76,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=beta,enable=${{ github.ref == 'refs/heads/dev' || contains(github.ref, '-beta') }}
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && !contains(github.ref, '-beta') }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
             type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
             type=semver,pattern={{major}}.{{minor}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
             type=semver,pattern={{major}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
@@ -136,7 +135,7 @@ jobs:
           images: ${{ env.REGISTRY }}/chr0nzz/traefik-manager-agent
           tags: |
             type=raw,value=beta,enable=${{ github.ref == 'refs/heads/dev' || contains(github.ref, '-beta') }}
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && !contains(github.ref, '-beta') }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
             type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
             type=semver,pattern={{major}}.{{minor}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
             type=semver,pattern={{major}},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-beta') }}
