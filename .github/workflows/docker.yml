@@ -7,10 +7,6 @@ on:
     branches:
       - dev
       - main
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - 'wrangler.toml'
 
   workflow_dispatch:
 
@@ -19,7 +15,37 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.detect.outputs.run }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect non-docs changes
+        id: detect
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          base="${{ github.event.before }}"
+          if [[ -z "$base" || "$base" == "0000000000000000000000000000000000000000" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "$base" "${{ github.sha }}" | grep -qvE '^(docs/|.*\.md$|wrangler\.toml$)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -77,6 +103,8 @@ jobs:
           push-to-registry: true
 
   build-agent:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
