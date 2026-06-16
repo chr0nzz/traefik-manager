@@ -4291,6 +4291,7 @@ def save_entry():
 def delete_entry(router_id):
     fetch = _is_fetch()
     try:
+        settings        = load_settings()
         config_file_raw = request.form.get('configFile', '').strip()
         agent_id        = request.form.get('agent_id', '').strip()
         agent           = _agent_by_id(agent_id) if agent_id else None

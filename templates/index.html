@@ -1615,6 +1615,8 @@ async function deleteSelfRoute() {
 function renderRouteGrid(apps) {
     window._lastRenderedApps = apps;
     if (_activeAgent) apps = apps.filter(a => !a.provider || a.provider === 'file');
+    const countEl = document.getElementById('countRoutes');
+    if (countEl) countEl.textContent = apps.filter(a => (!a.provider || a.provider === 'file') && a.enabled !== false).length;
     const grid = document.getElementById('routeGrid');
     if (!grid) return;
     const emptyEl = document.getElementById('routeEmpty');
@@ -2341,8 +2343,6 @@ async function loadOverviewStats() {
             const _isFile = r => (r.provider || (r.name||'').split('@')[1]||'') === 'file';
             const httpStat   = _activeAgent ? http.filter(_isFile)   : http;
             const tcpAllStat = _activeAgent ? tcpAll.filter(_isFile) : tcpAll;
-
-            document.getElementById('countRoutes').textContent = httpStat.length + tcpAllStat.length;
 
             const hc = statusCounts(httpStat);
             document.getElementById('statHttpRouters').textContent = httpStat.length;
