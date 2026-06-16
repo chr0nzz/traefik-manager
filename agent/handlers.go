@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -308,21 +309,166 @@ func (a *App) dockerKill(ctx context.Context) error {
 
 // ---- crowdsec proxy ---------------------------------------------------------
 
+var (
+	csJWT       string
+	csJWTExpiry time.Time
+	csJWTMu     sync.Mutex
+)
+
+func (a *App) csGetJWT(ctx context.Context) (string, error) {
+	csJWTMu.Lock()
+	defer csJWTMu.Unlock()
+	if csJWT != "" && time.Now().Before(csJWTExpiry) {
+		return csJWT, nil
+	}
+	body, _ := json.Marshal(map[string]any{
+		"machine_id": a.cfg.CrowdSecMachineID,
+		"password":   a.cfg.CrowdSecMachinePassword,
+		"scenarios":  []string{},
+	})
+	target := strings.TrimRight(a.cfg.CrowdSecLAPIURL, "/") + "/v1/watchers/login"
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target, bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	var result struct {
+		Token  string `json:"token"`
+		Expire string `json:"expire"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil || result.Token == "" {
+		return "", fmt.Errorf("CrowdSec login failed (HTTP %d)", resp.StatusCode)
+	}
+	csJWT = result.Token
+	if exp, err := time.Parse(time.RFC3339, result.Expire); err == nil {
+		csJWTExpiry = exp.Add(-2 * time.Minute)
+	} else {
+		csJWTExpiry = time.Now().Add(58 * time.Minute)
+	}
+	return csJWT, nil
+}
+
+func (a *App) csHasMachine() bool {
+	return a.cfg.CrowdSecMachineID != "" && a.cfg.CrowdSecMachinePassword != ""
+}
+
+func (a *App) csRequest(ctx context.Context, method, csPath string, body io.Reader, useJWT bool) (*http.Response, error) {
+	target := strings.TrimRight(a.cfg.CrowdSecLAPIURL, "/") + csPath
+	req, err := http.NewRequestWithContext(ctx, method, target, body)
+	if err != nil {
+		return nil, err
+	}
+	if useJWT && a.csHasMachine() {
+		token, err := a.csGetJWT(ctx)
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Authorization", "Bearer "+token)
+	} else if a.cfg.CrowdSecAPIKey != "" {
+		req.Header.Set("X-Api-Key", a.cfg.CrowdSecAPIKey)
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	return http.DefaultClient.Do(req)
+}
+
+func (a *App) csPageJSON(ctx context.Context, path string, useJWT bool) ([]json.RawMessage, error) {
+	resp, err := a.csRequest(ctx, http.MethodGet, path, nil, useJWT)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("LAPI %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+	}
+	var result []json.RawMessage
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, nil
+	}
+	return result, nil
+}
+
+func (a *App) crowdsecDecisionsHandler(w http.ResponseWriter, r *http.Request) {
+	if a.cfg.CrowdSecLAPIURL == "" {
+		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		return
+	}
+	var all []json.RawMessage
+	now := time.Now().UTC()
+	for page := 1; page <= 10; page++ {
+		chunk, err := a.csPageJSON(r.Context(), fmt.Sprintf("/v1/decisions?limit=500&page=%d", page), false)
+		if err != nil {
+			if page == 1 {
+				jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
+				return
+			}
+			break
+		}
+		if len(chunk) == 0 {
+			break
+		}
+		for _, raw := range chunk {
+			var d struct {
+				Until string `json:"until"`
+			}
+			if err := json.Unmarshal(raw, &d); err == nil && d.Until != "" {
+				exp, err := time.Parse(time.RFC3339, d.Until)
+				if err == nil && exp.Before(now) {
+					continue
+				}
+			}
+			all = append(all, raw)
+		}
+		if len(chunk) < 500 {
+			break
+		}
+	}
+	if all == nil {
+		all = []json.RawMessage{}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(all)
+}
+
+func (a *App) crowdsecAlertsHandler(w http.ResponseWriter, r *http.Request) {
+	if a.cfg.CrowdSecLAPIURL == "" {
+		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		return
+	}
+	chunk, err := a.csPageJSON(r.Context(), "/v1/alerts?limit=200", true)
+	if err != nil {
+		jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+	out := make([]json.RawMessage, 0, len(chunk))
+	for _, raw := range chunk {
+		var meta struct {
+			Decisions []struct {
+				Origin string `json:"origin"`
+			} `json:"decisions"`
+		}
+		if json.Unmarshal(raw, &meta) == nil && len(meta.Decisions) > 0 && meta.Decisions[0].Origin == "lists" {
+			continue
+		}
+		out = append(out, raw)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(out)
+}
+
 func (a *App) crowdsecProxy(w http.ResponseWriter, r *http.Request, method, csPath string) {
 	if a.cfg.CrowdSecLAPIURL == "" {
 		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
 		return
 	}
-	target := strings.TrimRight(a.cfg.CrowdSecLAPIURL, "/") + csPath
-	req, err := http.NewRequestWithContext(r.Context(), method, target, nil)
-	if err != nil {
-		jsonError(w, "proxy error: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if a.cfg.CrowdSecAPIKey != "" {
-		req.Header.Set("X-Api-Key", a.cfg.CrowdSecAPIKey)
-	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := a.csRequest(r.Context(), method, csPath, r.Body, true)
 	if err != nil {
 		jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
 		return

@@ -151,7 +151,31 @@ sudo systemctl enable --now tma
 | Variable | Default | Description |
 |---|---|---|
 | `CROWDSEC_LAPI_URL` | - | CrowdSec LAPI URL (e.g. `http://crowdsec:8080`) |
-| `CROWDSEC_API_KEY` | - | CrowdSec bouncer API key |
+| `CROWDSEC_API_KEY` | - | CrowdSec bouncer API key - used to read **decisions** (active bans/captchas/bypasses) |
+| `CROWDSEC_MACHINE_ID` | - | CrowdSec machine login - required to read **alerts** and to unban (delete decisions) |
+| `CROWDSEC_MACHINE_PASSWORD` | - | Password for the machine login |
+
+**Two credential types - why both?**
+
+CrowdSec's LAPI uses two different authentication methods for different endpoints:
+
+- **Bouncer key** (`CROWDSEC_API_KEY`) can read the active **decisions** list. This is all you need to see and filter bans, captchas, and bypasses in the CrowdSec tab.
+- **Machine credentials** (`CROWDSEC_MACHINE_ID` + `CROWDSEC_MACHINE_PASSWORD`) are required to read the **alerts** list and to **unban** (delete a decision). Bouncer keys cannot access these endpoints - the LAPI returns `403 access forbidden` or an empty result.
+
+Set both if you want the full CrowdSec tab (decisions **and** alerts plus unban). Set only the bouncer key if you only need the decisions view.
+
+**Creating a machine login:**
+
+On the CrowdSec host, register a machine and let CrowdSec generate the credentials:
+
+```bash
+sudo cscli machines add traefik-manager --auto
+sudo cat /etc/crowdsec/local_api_credentials.yaml
+```
+
+Copy the `login` and `password` from that file into `CROWDSEC_MACHINE_ID` and `CROWDSEC_MACHINE_PASSWORD`. If the machine shows as unvalidated, run `sudo cscli machines validate traefik-manager`.
+
+> **Compose gotcha**: if the generated password contains a `$`, escape it as `$$` in `docker-compose.yml` (Docker Compose treats a single `$` as a variable reference). No escaping is needed for a Docker `run` command or a systemd unit.
 
 **If CrowdSec runs as a systemd service on the same host as the agent:**
 

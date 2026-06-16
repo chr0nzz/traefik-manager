@@ -4346,14 +4346,21 @@ async function refreshCrowdSecTab() {
         }
         _csLapiOnline = true;
         const rawDec  = await decRes.json();
-        const rawAlt  = altRes.ok ? await altRes.json() : [];
+        let altErr    = '';
+        let rawAlt    = [];
+        if (altRes.ok) {
+            rawAlt = await altRes.json();
+        } else {
+            try { altErr = (await altRes.json()).error || ''; } catch {}
+        }
         _csDecisions = Array.isArray(rawDec) ? rawDec : [];
         _csAlerts    = Array.isArray(rawAlt) ? rawAlt : [];
         _csDecisionsPage = 1;
         _renderCsStats(_csDecisions, _csAlerts, _csLapiOnline, statsEl);
         _csApplyFilters();
         if (altEl && !altRes.ok) {
-            altEl.innerHTML = `<div class="text-center py-8 text-xs" style="color:var(--muted)">Alerts unavailable - bouncer key may lack read:alerts permission</div>`;
+            const hint = altErr ? _esc(altErr) : 'Alerts unavailable - bouncer key may lack read:alerts permission, or set CROWDSEC_MACHINE_ID / CROWDSEC_MACHINE_PASSWORD';
+            altEl.innerHTML = `<div class="text-center py-8 text-xs" style="color:var(--muted)">${hint}</div>`;
         }
     } catch(e) {
         _csLapiOnline = false;

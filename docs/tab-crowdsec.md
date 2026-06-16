@@ -100,6 +100,8 @@ Copy the key that is printed - it is only shown once.
 
 ::: warning Alerts permission
 Bouncer keys created with `cscli bouncers add` have read access to decisions but not alerts by default. If the Alerts section shows a permissions error, you need a key with `read:alerts` scope or use the CrowdSec console to generate a key with full read permissions.
+
+On a [remote agent](agent.md#crowdsec), alerts and unban are instead handled with CrowdSec machine credentials (`CROWDSEC_MACHINE_ID` / `CROWDSEC_MACHINE_PASSWORD`) alongside the bouncer key, since the agent reads decisions with the bouncer key and alerts with the machine login.
 :::
 
 ## Docker Compose example

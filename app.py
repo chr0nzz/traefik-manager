@@ -1749,17 +1749,23 @@ def api_cs_alerts():
     if not (lapi and key):
         return jsonify({'error': 'CrowdSec not configured'}), 503
     try:
-        all_alerts = []
-        page = 1
-        while page <= 5:
-            chunk = _cs_request('GET', f'/v1/alerts?limit=200&page={page}', lapi=lapi, key=key)
-            if not isinstance(chunk, list):
-                break
-            all_alerts.extend(chunk)
-            if len(chunk) < 200:
-                break
-            page += 1
-        return jsonify(all_alerts)
+        resp = requests.get(
+            f"{lapi.rstrip('/')}/v1/alerts?limit=200",
+            headers={'X-Api-Key': key, 'Accept': 'application/json'},
+            timeout=5,
+        )
+        if not resp.ok:
+            try:
+                msg = resp.json().get('message') or resp.json().get('error') or resp.text
+            except Exception:
+                msg = resp.text
+            return jsonify({'error': f'LAPI {resp.status_code}: {msg}'}), resp.status_code
+        alerts = resp.json() if resp.content else []
+        if not isinstance(alerts, list):
+            alerts = []
+        filtered = [al for al in alerts
+                    if not (al.get('decisions') and al['decisions'][0].get('origin') == 'lists')]
+        return jsonify(filtered)
     except Exception as e:
         logger.exception("CrowdSec alerts error")
         return jsonify({'error': str(e)}), 500

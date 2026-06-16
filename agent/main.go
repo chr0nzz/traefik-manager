@@ -26,8 +26,10 @@ type Config struct {
 	TraefikContainer   string
 	DockerHost         string
 	SignalFilePath     string
-	CrowdSecLAPIURL    string
-	CrowdSecAPIKey     string
+	CrowdSecLAPIURL         string
+	CrowdSecAPIKey          string
+	CrowdSecMachineID       string
+	CrowdSecMachinePassword string
 	GitBackupEnabled   bool
 	GitBackupRepo      string
 	GitBackupBranch    string
@@ -88,8 +90,10 @@ func loadConfig() *Config {
 		TraefikContainer:   envOr("TRAEFIK_CONTAINER", "traefik"),
 		DockerHost:         os.Getenv("DOCKER_HOST"),
 		SignalFilePath:     os.Getenv("SIGNAL_FILE_PATH"),
-		CrowdSecLAPIURL:    os.Getenv("CROWDSEC_LAPI_URL"),
-		CrowdSecAPIKey:     os.Getenv("CROWDSEC_API_KEY"),
+		CrowdSecLAPIURL:         os.Getenv("CROWDSEC_LAPI_URL"),
+		CrowdSecAPIKey:          os.Getenv("CROWDSEC_API_KEY"),
+		CrowdSecMachineID:       os.Getenv("CROWDSEC_MACHINE_ID"),
+		CrowdSecMachinePassword: os.Getenv("CROWDSEC_MACHINE_PASSWORD"),
 		GitBackupEnabled:   envBool("GIT_BACKUP_ENABLED", false),
 		GitBackupRepo:      os.Getenv("GIT_BACKUP_REPO"),
 		GitBackupBranch:    envOr("GIT_BACKUP_BRANCH", "main"),
@@ -164,9 +168,9 @@ func (a *App) router(w http.ResponseWriter, r *http.Request) {
 		a.staticStatusHandler(w, r)
 
 	case p == "/api/crowdsec/decisions" && m == http.MethodGet:
-		a.crowdsecProxy(w, r, http.MethodGet, "/v1/decisions?limit=200")
+		a.crowdsecDecisionsHandler(w, r)
 	case p == "/api/crowdsec/alerts" && m == http.MethodGet:
-		a.crowdsecProxy(w, r, http.MethodGet, "/v1/alerts?limit=50")
+		a.crowdsecAlertsHandler(w, r)
 	case strings.HasPrefix(p, "/api/crowdsec/decisions/") && m == http.MethodDelete:
 		id := strings.TrimPrefix(p, "/api/crowdsec/decisions/")
 		a.crowdsecProxy(w, r, http.MethodDelete, "/v1/decisions/"+id)
