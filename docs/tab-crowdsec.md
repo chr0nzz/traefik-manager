@@ -150,5 +150,5 @@ networks:
 ```
 
 ::: tip Automated setup
-The [traefik-stack installer](traefik-stack.md) can configure CrowdSec automatically during installation, including generating the bouncer key and wiring up the environment variables.
+The [traefik-stack installer](traefik-stack.md) can configure CrowdSec automatically during installation. When you choose to install CrowdSec as part of the stack, it generates the bouncer key (for decisions) and also registers a **machine** and wires up `CROWDSEC_MACHINE_ID` / `CROWDSEC_MACHINE_PASSWORD` (for alerts and unban), so both views work out of the box. When connecting to an existing CrowdSec instance, the installer prompts for an optional machine ID and password.
 :::

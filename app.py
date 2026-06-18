@@ -4271,6 +4271,12 @@ def save_entry():
             save_config(_strip_empty_sections(config), target_path)
             _register_config_path(target_path)
             threading.Thread(target=lambda: _git_push_if_enabled('route save'), daemon=True).start()
+        if is_edit and original_id:
+            disabled = settings.get('disabled_routes', {})
+            dkey = f"agent_{agent_id}::{original_id}" if agent else original_id
+            if dkey in disabled:
+                disabled.pop(dkey)
+                save_settings(disabled_routes=disabled)
         msg = f"Successfully saved {svc_name}"
         action = "updated" if is_edit else "created"
         add_notification('success', f"Route {svc_name} {action}")
