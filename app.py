@@ -20,6 +20,7 @@ from flask import (Flask, render_template, request, redirect,
 from werkzeug.middleware.proxy_fix import ProxyFix
 from ruamel.yaml import YAML
 from ruamel.yaml import YAML as SafeYAML
+from ruamel.yaml.scalarstring import DoubleQuotedScalarString
 from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -2202,7 +2203,8 @@ def api_static_section_update():
             else:
                 if action == 'edit' and old_name != name:
                     eps.pop(old_name, None)
-                ep = {'address': payload.get('address', '')}
+                addr = str(payload.get('address', '')).strip()
+                ep = {'address': DoubleQuotedScalarString(addr) if addr else ''}
                 redirect_to = str(payload.get('redirect_to', '')).strip()
                 if redirect_to:
                     ep['http'] = {'redirections': {'entryPoint': {'to': redirect_to, 'scheme': 'https', 'permanent': True}}}
