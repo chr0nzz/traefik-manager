@@ -472,6 +472,70 @@ func (a *App) crowdsecAlertsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(out)
 }
 
+func (a *App) crowdsecAddDecisionHandler(w http.ResponseWriter, r *http.Request) {
+	if a.cfg.CrowdSecLAPIURL == "" {
+		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		return
+	}
+	var body struct {
+		Value    string `json:"value"`
+		Type     string `json:"type"`
+		Duration string `json:"duration"`
+		Reason   string `json:"reason"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	ip := strings.TrimSpace(body.Value)
+	if ip == "" {
+		jsonError(w, "IP/Range is required", http.StatusBadRequest)
+		return
+	}
+	dtype := strings.TrimSpace(body.Type)
+	if dtype == "" {
+		dtype = "ban"
+	}
+	if dtype != "ban" && dtype != "captcha" && dtype != "bypass" {
+		jsonError(w, "Invalid type", http.StatusBadRequest)
+		return
+	}
+	duration := strings.TrimSpace(body.Duration)
+	if duration == "" {
+		duration = "24h"
+	}
+	reason := strings.TrimSpace(body.Reason)
+	if reason == "" {
+		reason = "manual ban from Traefik Manager"
+	}
+	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	payload := []map[string]any{{
+		"capacity": 0,
+		"decisions": []map[string]any{{
+			"duration": duration, "origin": "manual", "scenario": reason,
+			"scope": "Ip", "type": dtype, "value": ip, "simulated": false,
+		}},
+		"events": []any{}, "events_count": 1, "labels": nil, "leakspeed": "0",
+		"message": reason, "scenario": reason, "scenario_hash": "", "scenario_version": "",
+		"simulated": false,
+		"source":   map[string]any{"ip": ip, "scope": "Ip", "value": ip},
+		"start_at": now, "stop_at": now,
+	}}
+	buf, _ := json.Marshal(payload)
+	resp, err := a.csRequest(r.Context(), http.MethodPost, "/v1/alerts", bytes.NewReader(buf), true)
+	if err != nil {
+		jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		b, _ := io.ReadAll(resp.Body)
+		jsonError(w, "failed to add decision: "+strings.TrimSpace(string(b)), resp.StatusCode)
+		return
+	}
+	jsonOK(w, map[string]any{"ok": true})
+}
+
 func (a *App) crowdsecProxy(w http.ResponseWriter, r *http.Request, method, csPath string) {
 	if a.cfg.CrowdSecLAPIURL == "" {
 		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)

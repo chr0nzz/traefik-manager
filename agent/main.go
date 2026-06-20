@@ -169,6 +169,8 @@ func (a *App) router(w http.ResponseWriter, r *http.Request) {
 
 	case p == "/api/crowdsec/decisions" && m == http.MethodGet:
 		a.crowdsecDecisionsHandler(w, r)
+	case p == "/api/crowdsec/decisions" && m == http.MethodPost:
+		a.crowdsecAddDecisionHandler(w, r)
 	case p == "/api/crowdsec/alerts" && m == http.MethodGet:
 		a.crowdsecAlertsHandler(w, r)
 	case strings.HasPrefix(p, "/api/crowdsec/decisions/") && m == http.MethodDelete:
