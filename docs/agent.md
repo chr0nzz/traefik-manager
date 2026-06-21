@@ -261,3 +261,17 @@ When an agent is active in the TM server switcher, Settings - Backups shows the 
 - **Static Config tab** - not shown for agents (static config is part of the regular backup)
 
 See [API Reference - Agent](api-agent.md) for the full endpoint list.
+
+## Troubleshooting
+
+**Switched to an agent but the Routes/Services tabs are empty ("No routes found")**
+
+This almost always means the agent container can reach Traefik Manager, but the **agent itself cannot reach its Traefik API**. Routes from the Docker, Kubernetes, and other providers come from the Traefik API, so if `TRAEFIK_API_URL` is wrong or unreachable from inside the agent container, those routes all disappear. The Routes tab shows a banner with the exact connection error (e.g. `traefik unavailable at http://traefik:8080: connection refused`).
+
+Check the agent's `TRAEFIK_API_URL`:
+
+- It must be reachable **from inside the agent container**. `http://traefik:8080` only works when the agent shares Traefik's Docker network; from a different host or network, point it at the Traefik API's reachable address.
+- Traefik's API must be enabled (`--api=true`) and listening where the URL points.
+- Test it from the agent host: `docker exec <agent-container> wget -qO- http://traefik:8080/api/http/routers` - it should return JSON.
+
+For HTTPS Traefik API URLs with a self-signed or Cloudflare Origin certificate, set `TRAEFIK_INSECURE_SKIP_VERIFY=true`.

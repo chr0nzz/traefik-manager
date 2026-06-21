@@ -6,6 +6,8 @@ import secrets
 import logging
 import threading
 import subprocess
+import fcntl
+import contextlib
 import requests
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -18,11 +20,12 @@ from flask import (Flask, render_template, request, redirect,
 from werkzeug.middleware.proxy_fix import ProxyFix
 from ruamel.yaml import YAML
 from ruamel.yaml import YAML as SafeYAML
+from ruamel.yaml.scalarstring import DoubleQuotedScalarString
 from io import StringIO
 from cryptography.fernet import Fernet, InvalidToken
 
 GITHUB_REPO  = "chr0nzz/traefik-manager"
-APP_VERSION  = "1.5.0"
+APP_VERSION  = "1.5.1"
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -2200,7 +2203,8 @@ def api_static_section_update():
             else:
                 if action == 'edit' and old_name != name:
                     eps.pop(old_name, None)
-                ep = {'address': payload.get('address', '')}
+                addr = str(payload.get('address', '')).strip()
+                ep = {'address': DoubleQuotedScalarString(addr) if addr else ''}
                 redirect_to = str(payload.get('redirect_to', '')).strip()
                 if redirect_to:
                     ep['http'] = {'redirections': {'entryPoint': {'to': redirect_to, 'scheme': 'https', 'permanent': True}}}
@@ -2659,10 +2663,27 @@ def _git_ensure_repo():
             _git_run(['config', 'user.name', 'Traefik Manager'], cwd=repo_dir)
             _git_run(['pull', 'origin', branch], cwd=repo_dir)
     else:
-        _git_run(['remote', 'set-url', 'origin', auth_url])
+        _, _, rc = _git_run(['remote', 'set-url', 'origin', auth_url])
+        if rc != 0:
+            _git_run(['remote', 'add', 'origin', auth_url])
         _git_run(['config', 'user.email', 'traefik-manager@localhost'])
         _git_run(['config', 'user.name', 'Traefik Manager'])
     return repo_dir
+
+@contextlib.contextmanager
+def _git_lock():
+    """Cross-process lock (flock) so concurrent gunicorn workers don't run git
+    operations on the same repo at once, which corrupts the index/remote state."""
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    f = open(os.path.join(BACKUP_DIR, '.git-push.lock'), 'w')
+    try:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        yield
+    finally:
+        try:
+            fcntl.flock(f, fcntl.LOCK_UN)
+        finally:
+            f.close()
 
 def _git_push_configs(action='backup'):
     s = load_settings()
@@ -2670,34 +2691,40 @@ def _git_push_configs(action='backup'):
         return False, 'No repository configured'
     branch = s.get('git_backup_branch', 'main').strip() or 'main'
     tmpl   = s.get('git_backup_commit_message', 'traefik-manager: {action} at {timestamp}')
-    try:
-        repo_dir = _git_ensure_repo()
-    except Exception as e:
-        return False, f'Repo init failed: {e}'
-    dyn_dir    = os.path.join(repo_dir, 'dynamic')
-    static_dir = os.path.join(repo_dir, 'static')
-    os.makedirs(dyn_dir,    exist_ok=True)
-    os.makedirs(static_dir, exist_ok=True)
-    for p in CONFIG_PATHS:
-        if os.path.exists(p):
-            shutil.copy2(p, os.path.join(dyn_dir, os.path.basename(p)))
-    sp = _get_static_config_path()
-    if sp and os.path.exists(sp):
-        shutil.copy2(sp, os.path.join(static_dir, os.path.basename(sp)))
-    ts  = time.strftime('%Y-%m-%d %H:%M:%S')
-    msg = tmpl.replace('{action}', action).replace('{timestamp}', ts)
-    _git_run(['add', '-A'])
-    _, _, rc = _git_run(['diff', '--cached', '--quiet'])
-    if rc == 0:
-        return True, 'No changes'
-    _, err, rc = _git_run(['commit', '-m', msg])
-    if rc != 0:
-        return False, f'Commit failed: {err}'
-    _, err, rc = _git_run(['push', '-u', 'origin', branch])
-    if rc != 0:
-        return False, f'Push failed: {err}'
-    logger.info(f"Git backup: {msg}")
-    return True, ''
+    with _git_lock():
+        try:
+            repo_dir = _git_ensure_repo()
+        except Exception as e:
+            return False, f'Repo init failed: {e}'
+        # Sync the local clone to the remote first so the push always fast-forwards.
+        # This self-heals a diverged clone that would otherwise reject every push.
+        _, _, frc = _git_run(['fetch', 'origin', branch])
+        if frc == 0:
+            _git_run(['reset', '--hard', 'FETCH_HEAD'])
+        dyn_dir    = os.path.join(repo_dir, 'dynamic')
+        static_dir = os.path.join(repo_dir, 'static')
+        os.makedirs(dyn_dir,    exist_ok=True)
+        os.makedirs(static_dir, exist_ok=True)
+        for p in CONFIG_PATHS:
+            if os.path.exists(p):
+                shutil.copy2(p, os.path.join(dyn_dir, os.path.basename(p)))
+        sp = _get_static_config_path()
+        if sp and os.path.exists(sp):
+            shutil.copy2(sp, os.path.join(static_dir, os.path.basename(sp)))
+        ts  = time.strftime('%Y-%m-%d %H:%M:%S')
+        msg = tmpl.replace('{action}', action).replace('{timestamp}', ts)
+        _git_run(['add', '-A'])
+        _, _, rc = _git_run(['diff', '--cached', '--quiet'])
+        if rc == 0:
+            return True, 'No changes'
+        _, err, rc = _git_run(['commit', '-m', msg])
+        if rc != 0:
+            return False, f'Commit failed: {err}'
+        _, err, rc = _git_run(['push', 'origin', f'HEAD:{branch}'])
+        if rc != 0:
+            return False, f'Push failed: {err}'
+        logger.info(f"Git backup: {msg}")
+        return True, ''
 
 def _git_push_if_enabled(action='backup'):
     try:
@@ -3921,6 +3948,7 @@ def api_toggle_route(route_id):
             _toggle_route_agent(agent, agent_id, route_id, bool(enable))
         else:
             _toggle_route(route_id, bool(enable))
+            threading.Thread(target=lambda: _git_push_if_enabled('route toggle'), daemon=True).start()
         return jsonify({'ok': True})
     except Exception as e:
         logger.error(f"Toggle route error: {e}")
@@ -4046,6 +4074,7 @@ def api_route_raw_save(route_id):
                 pass
         logger.info(f"Route '{rname}' raw config saved: {target_path}")
         add_notification(f"Route '{rname}' updated", 'success')
+        threading.Thread(target=lambda: _git_push_if_enabled('route raw save'), daemon=True).start()
         return jsonify({'ok': True})
     except Exception as e:
         logger.exception("Route raw save error")
@@ -4261,6 +4290,12 @@ def save_entry():
             save_config(_strip_empty_sections(config), target_path)
             _register_config_path(target_path)
             threading.Thread(target=lambda: _git_push_if_enabled('route save'), daemon=True).start()
+        if is_edit and original_id:
+            disabled = settings.get('disabled_routes', {})
+            dkey = f"agent_{agent_id}::{original_id}" if agent else original_id
+            if dkey in disabled:
+                disabled.pop(dkey)
+                save_settings(disabled_routes=disabled)
         msg = f"Successfully saved {svc_name}"
         action = "updated" if is_edit else "created"
         add_notification('success', f"Route {svc_name} {action}")
@@ -4281,6 +4316,7 @@ def save_entry():
 def delete_entry(router_id):
     fetch = _is_fetch()
     try:
+        settings        = load_settings()
         config_file_raw = request.form.get('configFile', '').strip()
         agent_id        = request.form.get('agent_id', '').strip()
         agent           = _agent_by_id(agent_id) if agent_id else None
@@ -4327,7 +4363,11 @@ def delete_entry(router_id):
             disabled = settings.get('disabled_routes', {})
             if agent:
                 agent_id = request.form.get('agent_id', '').strip()
-                store_key = f"{agent_id}::{plain_id}"
+                store_key = f"agent_{agent_id}::{router_id}"
+                if store_key not in disabled:
+                    cand = [k for k in disabled
+                            if k.startswith(f"agent_{agent_id}::") and (k.split('::')[-1] == plain_id)]
+                    store_key = cand[0] if cand else store_key
                 if store_key in disabled:
                     disabled.pop(store_key)
                     save_settings(disabled_routes=disabled)
@@ -4341,6 +4381,8 @@ def delete_entry(router_id):
                 return jsonify({'ok': False, 'message': f'Route "{plain_id}" not found'}), 404
             flash(f'Route "{plain_id}" not found', "error")
             return redirect(url_for('index'))
+        if not agent:
+            threading.Thread(target=lambda: _git_push_if_enabled('route delete'), daemon=True).start()
         msg = f"Deleted {plain_id}"
         add_notification('warning', f"Route {plain_id} deleted")
         if fetch:
@@ -4453,6 +4495,8 @@ def delete_middleware(mw_name):
                     create_backup(target_path)
                     save_config(_strip_empty_sections(config), target_path)
                     break
+        if not agent:
+            threading.Thread(target=lambda: _git_push_if_enabled('middleware delete'), daemon=True).start()
         msg = f"Deleted middleware {mw_name}"
         add_notification('warning', f"Middleware {mw_name} deleted")
         if fetch:
@@ -4758,14 +4802,22 @@ def api_agent_routes(agent_id):
     try:
         all_configs = _agent_load_configs(agent)
 
+        config_errors = []
         try:
             r_resp = _agent_request(agent, 'GET', '/api/traefik/routers')
             s_resp = _agent_request(agent, 'GET', '/api/traefik/services')
             all_routers  = r_resp.json()  if r_resp.ok  else {}
             all_services = s_resp.json()  if s_resp.ok  else {}
-        except Exception:
+            if not r_resp.ok:
+                try:
+                    err = r_resp.json().get('error') or r_resp.text
+                except Exception:
+                    err = r_resp.text
+                config_errors.append({'file': "Agent Traefik API", 'error': err or f'HTTP {r_resp.status_code}'})
+        except Exception as e:
             all_routers  = {}
             all_services = {}
+            config_errors.append({'file': "Agent Traefik API", 'error': str(e)})
 
         svc_urls = _traefik_service_url_map(all_services)
 
@@ -4789,7 +4841,36 @@ def api_agent_routes(agent_id):
 
         apps.extend(_build_external_routes(all_routers, svc_urls))
 
-        return jsonify({'apps': apps, 'middlewares': middlewares})
+        prefix = f"agent_{agent_id}::"
+        for store_key, rdata in load_settings().get('disabled_routes', {}).items():
+            if not store_key.startswith(prefix):
+                continue
+            rid      = store_key[len(prefix):]
+            rname    = rid.split('::', 1)[1] if '::' in rid else rid
+            proto    = rdata.get('protocol', 'http')
+            router   = rdata.get('router', {})
+            svc_name = router.get('service', '')
+            svc      = rdata.get('service', {})
+            cf       = rdata.get('configFile', '')
+            servers  = svc.get('loadBalancer', {}).get('servers', [])
+            if proto == 'http':
+                target = servers[0].get('url', 'N/A') if servers else 'N/A'
+                apps.append({'id': rid, 'name': rname, 'rule': router.get('rule', ''),
+                             'service_name': svc_name, 'target': target,
+                             'middlewares': router.get('middlewares', []),
+                             'entryPoints': router.get('entryPoints', []),
+                             'protocol': 'http', 'tls': bool(router.get('tls')), 'enabled': False,
+                             'passHostHeader': svc.get('loadBalancer', {}).get('passHostHeader', True),
+                             'configFile': cf, 'provider': 'file', 'entrypointMiddlewares': []})
+            else:
+                target = servers[0].get('address', 'N/A') if servers else 'N/A'
+                apps.append({'id': rid, 'name': rname, 'rule': router.get('rule', ''),
+                             'service_name': svc_name, 'target': target,
+                             'middlewares': [], 'entryPoints': router.get('entryPoints', []),
+                             'protocol': proto, 'tls': bool(router.get('tls')) if proto == 'tcp' else False,
+                             'enabled': False, 'configFile': cf, 'provider': 'file'})
+
+        return jsonify({'apps': apps, 'middlewares': middlewares, 'configErrors': config_errors})
     except requests.exceptions.ConnectionError:
         return jsonify({'error': 'Cannot reach agent'}), 502
     except Exception as e:

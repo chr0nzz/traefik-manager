@@ -2633,21 +2633,22 @@ function inlineEditAgent(id, field, currentValue) {
     pencilBtn.style.opacity = '1';
     input.focus();
     input.select();
-    let _done = false;
+    let _settled = false;
     const submit = async () => {
-        if (_done) return;
-        _done = true;
+        if (_settled) return;
+        _settled = true;
         const newVal = input.value.trim();
         if (!newVal || newVal === currentValue) { loadAgentsList(); return; }
         try {
             const res  = await fetch('/api/agents/' + id, { method: 'PUT', headers: { ..._csrfHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ [field]: newVal }) });
             const data = await res.json();
-            if (data.ok) { showToast(`Agent ${isName ? 'renamed' : 'URL updated'}`, 'success'); loadAgentsList(); updateServerSwitcher(); }
-            else { _done = false; showToast(`Update failed: ${data.error || 'Unknown'}`, 'error'); loadAgentsList(); }
-        } catch(e) { _done = false; showToast('Update failed', 'error'); loadAgentsList(); }
+            if (data.ok) { showToast(`Agent ${isName ? 'renamed' : 'URL updated'}`, 'success'); updateServerSwitcher(); }
+            else { showToast(`Update failed: ${data.error || 'Unknown'}`, 'error'); }
+        } catch(e) { showToast('Update failed', 'error'); }
+        loadAgentsList();
     };
     pencilBtn.onclick = submit;
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') loadAgentsList(); });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') { _settled = true; loadAgentsList(); } });
     input.addEventListener('blur', () => setTimeout(submit, 150));
 }
 

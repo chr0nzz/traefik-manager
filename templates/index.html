@@ -408,9 +408,10 @@ let _agentList = [];
 const _agentHealthCache = {};
 
 function agentFetch(path, opts) {
-    if (!_activeAgent) return fetch(path, opts);
+    const merged = { ...opts, headers: { ...(opts && opts.headers), ..._csrfHeaders() } };
+    if (!_activeAgent) return fetch(path, merged);
     const proxyPath = '/api/agents/proxy/' + _activeAgent.id + '/' + path.replace(/^\/api\//, '');
-    return fetch(proxyPath, { ...opts, headers: { ...(opts && opts.headers), ..._csrfHeaders() } });
+    return fetch(proxyPath, merged);
 }
 
 function _renderServerSwitcherList(runHealthChecks) {
@@ -1615,6 +1616,8 @@ async function deleteSelfRoute() {
 function renderRouteGrid(apps) {
     window._lastRenderedApps = apps;
     if (_activeAgent) apps = apps.filter(a => !a.provider || a.provider === 'file');
+    const countEl = document.getElementById('countRoutes');
+    if (countEl) countEl.textContent = apps.filter(a => (!a.provider || a.provider === 'file') && a.enabled !== false).length;
     const grid = document.getElementById('routeGrid');
     if (!grid) return;
     const emptyEl = document.getElementById('routeEmpty');
@@ -1859,7 +1862,15 @@ async function _initMiddlewareChips(selectedMiddlewares) {
             _cachedMiddlewares = (data.http || []).map(m => m.name || m).filter(m => m && (!m.includes('@') || m.endsWith('@file')));
         } catch(e) { _cachedMiddlewares = []; }
     }
-    const mws = _cachedMiddlewares;
+    const configMws = (typeof _allMiddlewares !== 'undefined' ? _allMiddlewares : [])
+        .filter(m => (m.type || 'http').toLowerCase() === 'http' && m.name)
+        .map(m => m.name);
+    const byBase = new Map();
+    [...(_cachedMiddlewares || []), ...configMws].forEach(full => {
+        const base = full.split('@')[0];
+        if (!byBase.has(base)) byBase.set(base, full);
+    });
+    const mws = [...byBase.values()];
     if (!mws.length) {
         container.innerHTML = `<input type="text" class="input-field" style="flex:1" placeholder="auth@file, redirect-https" oninput="document.getElementById('middlewares').value=this.value">`;
         hidden.value = selectedMiddlewares ? selectedMiddlewares.join(', ') : '';
@@ -2145,7 +2156,10 @@ async function handleEdit(btn) {
 
     await _populateConfigFileSelect('route');
     const cfSel = document.getElementById('configFileSelect');
-    if (cfSel && app.configFile) cfSel.value = app.configFile;
+    if (app.configFile) {
+        if (cfSel) cfSel.value = app.configFile;
+        document.getElementById('configFile').value = app.configFile;
+    }
     document.getElementById('appModal').style.display = 'flex';
 }
 
@@ -2164,7 +2178,10 @@ async function handleMwEdit(btn) {
     _showMwWizard('');
     await _populateConfigFileSelect('mw');
     const cfSel = document.getElementById('mwConfigFileSelect');
-    if (cfSel && mw.configFile) cfSel.value = mw.configFile;
+    if (mw.configFile) {
+        if (cfSel) cfSel.value = mw.configFile;
+        document.getElementById('mwConfigFile').value = mw.configFile;
+    }
     document.getElementById('mwModal').style.display = 'flex';
     _initMwMonaco(mw.yaml.trim());
     _loadCustomMwTemplates();
@@ -2327,8 +2344,6 @@ async function loadOverviewStats() {
             const _isFile = r => (r.provider || (r.name||'').split('@')[1]||'') === 'file';
             const httpStat   = _activeAgent ? http.filter(_isFile)   : http;
             const tcpAllStat = _activeAgent ? tcpAll.filter(_isFile) : tcpAll;
-
-            document.getElementById('countRoutes').textContent = httpStat.length + tcpAllStat.length;
 
             const hc = statusCounts(httpStat);
             document.getElementById('statHttpRouters').textContent = httpStat.length;

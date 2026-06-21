@@ -42,13 +42,15 @@ Supported platforms: GitHub, Gitea, Forgejo, GitLab, and any Git host accessible
 
 ## Auto-push behavior
 
-When auto-push is enabled, Traefik Manager pushes to your repository in the background after:
+When auto-push is enabled, Traefik Manager pushes to your repository in the background after any config change:
 
-- Adding or editing a **route**
-- Adding or editing a **middleware**
+- Adding, editing, deleting, enabling, or disabling a **route** (including raw-YAML route edits)
+- Adding, editing, or deleting a **middleware**
 - Saving the **static config** (via the Static Config editor)
 
 The push runs in a background thread and does not block the UI response. If the push fails (e.g. network error), a warning is logged but the config change is still saved locally.
+
+Before each push, Traefik Manager fetches and syncs the local backup clone to the remote so the push always fast-forwards. This self-heals a clone that has diverged from the remote (which would otherwise reject every push). Concurrent pushes are serialized to avoid Git lock collisions during rapid changes.
 
 If there are no changes since the last push (the files are identical), no commit is created.
 

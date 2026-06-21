@@ -40,6 +40,14 @@
     Description="URL of the Traefik API. Usually http://traefik:8080 when on the same Docker network."
     Type="Variable" Display="always" Required="true" Mask="false">http://traefik:8080</Config>
 
+  <Config Name="Traefik API Username" Target="TRAEFIK_API_USER" Default=""
+    Description="Optional: basic-auth username for the Traefik API, if your API/dashboard is protected by a basicAuth middleware."
+    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+
+  <Config Name="Traefik API Password" Target="TRAEFIK_API_PASSWORD" Default=""
+    Description="Optional: basic-auth password for the Traefik API. Only needed if TRAEFIK_API_USER is set."
+    Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+
   <Config Name="Domains" Target="DOMAINS" Default="example.com"
     Description="Comma-separated list of base domains shown in the Add Route form. Example: example.com,home.lab"
     Type="Variable" Display="always" Required="true" Mask="false">example.com</Config>
@@ -69,8 +77,12 @@
 
   <Config Name="Static Config / Plugins Tab - traefik.yml" Target="/app/traefik.yml" Default=""
     Mode="rw"
-    Description="Optional: path to your Traefik static config file (traefik.yml) on the host. Required for the Plugins tab and the Static Config editor. Mount read-write to allow editing; read-only enables the Plugins tab only."
+    Description="Optional: path to your Traefik static config file (traefik.yml) on the host. Required for the Plugins tab and the Static Config editor. Mount read-write to allow editing; read-only enables the Plugins tab only. Also set the Static Config Path variable below to /app/traefik.yml."
     Type="Path" Display="advanced" Required="false" Mask="false"></Config>
+
+  <Config Name="Static Config Path" Target="STATIC_CONFIG_PATH" Default=""
+    Description="Path inside the container to the static config (traefik.yml) you mounted above. Set to /app/traefik.yml to enable the Static Config editor and Plugins tab. Leave blank if not mounting traefik.yml."
+    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
 
   <Config Name="Logs Tab - access.log" Target="/app/logs/access.log" Default=""
     Mode="ro"
@@ -111,6 +123,23 @@
   <Config Name="Auth Enabled" Target="AUTH_ENABLED" Default="true"
     Description="Set to false to disable built-in login. Only use this when Traefik Manager is protected by an external auth provider such as Authentik or Authelia."
     Type="Variable" Display="advanced" Required="false" Mask="false">true</Config>
+
+  <!-- CrowdSec (optional) -->
+  <Config Name="CrowdSec LAPI URL" Target="CROWDSEC_LAPI_URL" Default=""
+    Description="Optional: CrowdSec Local API URL (e.g. http://crowdsec:8080) to enable the CrowdSec tab. Can also be set in Settings."
+    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+
+  <Config Name="CrowdSec API Key" Target="CROWDSEC_API_KEY" Default=""
+    Description="Optional: CrowdSec bouncer API key, used to read decisions. Generate with: cscli bouncers add traefik-manager"
+    Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+
+  <Config Name="CrowdSec Machine ID" Target="CROWDSEC_MACHINE_ID" Default=""
+    Description="Optional: CrowdSec machine login, required to view Alerts and to unban (bouncer keys cannot). Create with: cscli machines add traefik-manager --auto"
+    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+
+  <Config Name="CrowdSec Machine Password" Target="CROWDSEC_MACHINE_PASSWORD" Default=""
+    Description="Optional: password for the CrowdSec machine login above. Found in /etc/crowdsec/local_api_credentials.yaml."
+    Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
 
   <!-- Advanced -->
   <Config Name="Settings File Path" Target="SETTINGS_PATH" Default="/app/config/manager.yml"
