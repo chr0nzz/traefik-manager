@@ -539,7 +539,7 @@
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <input id="backupKeepCount" type="number" min="0" class="input-field" style="width:80px;" placeholder="0">
-                                    <button onclick="saveBackupKeepCount()" id="backupKeepBtn" class="nav-btn text-xs"><i class="ph-bold ph-floppy-disk"></i> Save</button>
+                                    <button onclick="saveBackupKeepCount('backupKeepCount')" id="backupKeepBtn" class="nav-btn text-xs"><i class="ph-bold ph-floppy-disk"></i> Save</button>
                                 </div>
                             </div>
                             <div id="backupRetentionEnvNote" style="display:none;background:rgba(36,161,222,0.06);border:1px solid rgba(36,161,222,0.2);color:var(--muted)" class="text-xs mb-3 px-3 py-2 rounded-lg flex-shrink-0">
@@ -562,6 +562,16 @@
                             <div class="text-xs mb-3 px-3 py-2 rounded-lg flex items-center gap-2" style="background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.2);color:#d29922;flex-shrink:0;">
                                 <i class="ph-bold ph-warning text-sm flex-shrink-0"></i>
                                 Restoring overwrites your current static config. A backup is created automatically before restoring.
+                            </div>
+                            <div class="flex items-center justify-between gap-2 mb-3 px-3 py-2 rounded-lg" style="background:var(--bg);border:1px solid var(--border);flex-shrink:0;">
+                                <div>
+                                    <div class="text-xs font-medium">Keep last N backups per file</div>
+                                    <div class="text-xs" style="color:var(--muted)">Older .bak files are pruned automatically. 0 = keep all.</div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input id="backupKeepCountStatic" type="number" min="0" class="input-field" style="width:80px;" placeholder="0">
+                                    <button onclick="saveBackupKeepCount('backupKeepCountStatic')" id="backupKeepBtnStatic" class="nav-btn text-xs"><i class="ph-bold ph-floppy-disk"></i> Save</button>
+                                </div>
                             </div>
                             <div id="sm-static-backups-list" style="flex:1;overflow-y:auto;min-height:0;">
                                 <div class="text-center py-8" style="color:var(--muted)">
@@ -1947,6 +1957,7 @@ async function loadBackups() {
             const sres = await fetch('/api/settings');
             const sdat = await sres.json();
             _setVal('backupKeepCount', (sdat.backup_keep_count ?? 0));
+            _setVal('backupKeepCountStatic', (sdat.backup_keep_count ?? 0));
         } catch (e) {}
     }
     const routesList  = document.getElementById('sm-backups-list');
@@ -1975,13 +1986,15 @@ async function loadBackups() {
     }
 }
 
-async function saveBackupKeepCount() {
-    const input = document.getElementById('backupKeepCount');
-    const btn   = document.getElementById('backupKeepBtn');
+async function saveBackupKeepCount(sourceId) {
+    const input = document.getElementById(sourceId || 'backupKeepCount');
     if (!input) return;
+    const btnId = sourceId === 'backupKeepCountStatic' ? 'backupKeepBtnStatic' : 'backupKeepBtn';
+    const btn   = document.getElementById(btnId);
     let n = parseInt(input.value, 10);
     if (isNaN(n) || n < 0) n = 0;
-    input.value = n;
+    _setVal('backupKeepCount', n);
+    _setVal('backupKeepCountStatic', n);
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ph-light ph-spinner-gap animate-spin text-xs"></i> Saving…'; }
     try {
         const res = await fetch('/api/settings/backup-retention', {

@@ -236,6 +236,9 @@ func (a *App) staticWriteHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
+	if err := a.createFileBak(a.cfg.StaticConfigPath, ""); err != nil {
+		log.Printf("pre-write static backup failed: %v", err)
+	}
 	if err := atomicWrite(a.cfg.StaticConfigPath, []byte(body.Content)); err != nil {
 		jsonError(w, "write failed: "+err.Error(), http.StatusInternalServerError)
 		return
