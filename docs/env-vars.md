@@ -17,6 +17,8 @@ Variables marked ✅ **override** the corresponding `manager.yml` field on every
 | `TRAEFIK_API_URL` | `http://traefik:8080` | ✅ `traefik_api_url` | Traefik API URL |
 | `TRAEFIK_API_USER` | _(unset)_ | ✅ `traefik_api_user` | Username for Traefik API basic auth |
 | `TRAEFIK_API_PASSWORD` | _(unset)_ | ✅ `traefik_api_password` | Password for Traefik API basic auth (stored encrypted) |
+| `TRAEFIK_INSECURE_SKIP_VERIFY` | `false` | - | Skip TLS certificate verification when calling the Traefik API (for self-signed certs) |
+| `REQUESTS_CA_BUNDLE` | _(system bundle)_ | - | Path to a CA bundle for outbound HTTPS; defaults to `/etc/ssl/certs/ca-certificates.crt` so mounted private CAs are trusted |
 
 ### Authentication
 

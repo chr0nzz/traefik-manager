@@ -1628,6 +1628,16 @@ def api_apikey_status():
     })
 
 
+if not os.environ.get('REQUESTS_CA_BUNDLE'):
+    _SYSTEM_CA_BUNDLE = '/etc/ssl/certs/ca-certificates.crt'
+    if os.path.exists(_SYSTEM_CA_BUNDLE):
+        os.environ['REQUESTS_CA_BUNDLE'] = _SYSTEM_CA_BUNDLE
+
+def _traefik_verify():
+    if os.environ.get('TRAEFIK_INSECURE_SKIP_VERIFY', '').lower() in ('true', '1', 'yes'):
+        return False
+    return True
+
 def traefik_api_get(path):
     settings = load_settings()
     base_url = settings['traefik_api_url']
@@ -1638,7 +1648,7 @@ def traefik_api_get(path):
     p = settings.get('traefik_api_password', '')
     auth = (u, p) if u and p else None
     try:
-        resp = requests.get(f"{base_url}{path}", timeout=3, auth=auth)
+        resp = requests.get(f"{base_url}{path}", timeout=3, auth=auth, verify=_traefik_verify())
         if resp.status_code == 200:
             return resp.json()
     except Exception as e:
@@ -2025,7 +2035,7 @@ def api_ping():
     auth = (u, p) if u and p else None
     try:
         t0   = _t.monotonic()
-        resp = requests.get(f"{settings['traefik_api_url']}/ping", timeout=3, auth=auth)
+        resp = requests.get(f"{settings['traefik_api_url']}/ping", timeout=3, auth=auth, verify=_traefik_verify())
         ms   = round((_t.monotonic() - t0) * 1000)
         if resp.status_code == 200:
             return jsonify({'ok': True, 'latency_ms': ms})
@@ -2247,13 +2257,21 @@ def api_static_section_update():
                 plugins[name] = {'moduleName': payload.get('moduleName', ''), 'version': payload.get('version', '')}
         elif section == 'api' and action == 'set':
             if payload.get('enabled', True):
-                api_cfg = {}
+                api_cfg = config.get('api')
+                if not isinstance(api_cfg, dict):
+                    api_cfg = {}
                 if not payload.get('dashboard', True):
                     api_cfg['dashboard'] = False
+                elif 'dashboard' in api_cfg:
+                    api_cfg['dashboard'] = True
                 if payload.get('insecure'):
                     api_cfg['insecure'] = True
+                elif 'insecure' in api_cfg:
+                    api_cfg['insecure'] = False
                 if payload.get('debug'):
                     api_cfg['debug'] = True
+                else:
+                    api_cfg.pop('debug', None)
                 config['api'] = api_cfg
             else:
                 config.pop('api', None)
@@ -2342,13 +2360,21 @@ def api_setup_test_connection():
     p = str(data.get('password', '')).strip()
     auth = (u, p) if u and p else None
     try:
-        resp = requests.get(f"{url}/api/version", timeout=4, auth=auth)
+        resp = requests.get(f"{url}/api/version", timeout=4, auth=auth, verify=_traefik_verify())
         if resp.status_code == 200:
             info = resp.json()
             return jsonify({'ok': True, 'version': info.get('Version', '?')})
-        return jsonify({'ok': False, 'error': f'HTTP {resp.status_code}'})
+        if resp.status_code in (401, 403):
+            return jsonify({'ok': False, 'error': f'HTTP {resp.status_code} - check the API username and password'})
+        return jsonify({'ok': False, 'error': f'HTTP {resp.status_code} from {url}/api/version'})
+    except requests.exceptions.SSLError as e:
+        return jsonify({'ok': False, 'error': f'TLS verification failed - the API certificate is not trusted. Mount your CA into /etc/ssl/certs/ca-certificates.crt or set TRAEFIK_INSECURE_SKIP_VERIFY=true. ({str(e)[:120]})'})
+    except requests.exceptions.Timeout:
+        return jsonify({'ok': False, 'error': 'Connection timed out - the API URL may be unreachable from the container'})
+    except requests.exceptions.ConnectionError as e:
+        return jsonify({'ok': False, 'error': f'Connection error - check the URL and network. ({str(e)[:120]})'})
     except Exception as e:
-        return jsonify({'ok': False, 'error': 'Connection failed'})
+        return jsonify({'ok': False, 'error': str(e)[:160]})
 
 
 @app.route('/api/traefik/router/<protocol>/<path:name>')
@@ -2687,22 +2713,36 @@ def _git_ensure_repo():
     token    = s.get('git_backup_token', '').strip()
     auth_url = _git_auth_url(repo_url, username, token)
     repo_dir = _git_repo_dir()
-    if not os.path.exists(os.path.join(repo_dir, '.git')):
-        if os.path.exists(repo_dir) and os.listdir(repo_dir):
-            shutil.rmtree(repo_dir)
-            logger.info("Git repo dir was non-empty without .git - cleared for fresh clone")
+
+    def _fresh_clone():
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir, ignore_errors=True)
         os.makedirs(repo_dir, exist_ok=True)
         _, _, rc = _git_run(['clone', '--branch', branch, auth_url, '.'], cwd=repo_dir)
         if rc != 0:
             _git_run(['init'], cwd=repo_dir)
             _git_run(['remote', 'add', 'origin', auth_url], cwd=repo_dir)
-            _git_run(['config', 'user.email', 'traefik-manager@localhost'], cwd=repo_dir)
-            _git_run(['config', 'user.name', 'Traefik Manager'], cwd=repo_dir)
             _git_run(['pull', 'origin', branch], cwd=repo_dir)
+        _git_run(['config', 'user.email', 'traefik-manager@localhost'], cwd=repo_dir)
+        _git_run(['config', 'user.name', 'Traefik Manager'], cwd=repo_dir)
+
+    # A valid clone has a working .git and a usable origin remote. If either is
+    # missing (corrupt clone, interrupted write, missing remote) re-clone fresh
+    # so the push can never fail with "'origin' does not appear to be a git repository".
+    valid = False
+    if os.path.exists(os.path.join(repo_dir, '.git')):
+        _, _, rc = _git_run(['rev-parse', '--git-dir'])
+        valid = (rc == 0)
+    if not valid:
+        _fresh_clone()
     else:
-        _, _, rc = _git_run(['remote', 'set-url', 'origin', auth_url])
+        _, _, rc = _git_run(['remote', 'get-url', 'origin'])
         if rc != 0:
-            _git_run(['remote', 'add', 'origin', auth_url])
+            _, _, arc = _git_run(['remote', 'add', 'origin', auth_url])
+            if arc != 0:
+                _fresh_clone()
+        else:
+            _git_run(['remote', 'set-url', 'origin', auth_url])
         _git_run(['config', 'user.email', 'traefik-manager@localhost'])
         _git_run(['config', 'user.name', 'Traefik Manager'])
     return repo_dir
@@ -3296,13 +3336,21 @@ def api_settings_test_connection():
     auth = (u, p) if u and p else None
     logger.info(f"Connection test to {url!r} by {request.remote_addr}")
     try:
-        resp = requests.get(f"{url}/api/version", timeout=4, auth=auth)
+        resp = requests.get(f"{url}/api/version", timeout=4, auth=auth, verify=_traefik_verify())
         if resp.status_code == 200:
             info = resp.json()
             return jsonify({'ok': True, 'version': info.get('Version', '?')})
-        return jsonify({'ok': False, 'error': f'HTTP {resp.status_code}'})
-    except Exception:
-        return jsonify({'ok': False, 'error': 'Connection failed'})
+        if resp.status_code in (401, 403):
+            return jsonify({'ok': False, 'error': f'HTTP {resp.status_code} - check the API username and password'})
+        return jsonify({'ok': False, 'error': f'HTTP {resp.status_code} from {url}/api/version'})
+    except requests.exceptions.SSLError as e:
+        return jsonify({'ok': False, 'error': f'TLS verification failed - the API certificate is not trusted. Mount your CA into /etc/ssl/certs/ca-certificates.crt or set TRAEFIK_INSECURE_SKIP_VERIFY=true. ({str(e)[:120]})'})
+    except requests.exceptions.Timeout:
+        return jsonify({'ok': False, 'error': 'Connection timed out - the API URL may be unreachable from the container'})
+    except requests.exceptions.ConnectionError as e:
+        return jsonify({'ok': False, 'error': f'Connection error - check the URL and network. ({str(e)[:120]})'})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)[:160]})
 
 
 @app.route('/api/settings/tabs', methods=['POST'])
