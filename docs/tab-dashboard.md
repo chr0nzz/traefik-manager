@@ -49,6 +49,8 @@ Icons are fetched once and cached on disk at `/config/cache/{slug}.png` so they 
 
 If a self-route is configured for Traefik Manager (**Settings → System → Expose via Traefik**), its dashboard card automatically shows the Traefik Manager icon instead of a CDN lookup.
 
+These per-route icon overrides are also used by the [Routes tab](tab-routes.md#app-icons) when its **Show app icons** option is enabled, so an icon you set here appears there too.
+
 ### Group assignment
 
 Override which group the route belongs to. Select **Auto-detect** to let the keyword matching decide, or pick any built-in or custom group.

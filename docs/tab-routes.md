@@ -24,6 +24,12 @@ The filter bar above the grid lets you narrow routes by:
 
 Toggle between **grid** (default) and **list** view using the button in the filter bar. List view shows a compact table with Status, Protocol, Name, Domain/Rule, Target, Entry Points, and action buttons.
 
+## App icons
+
+Enable **Settings - Interface - Routes - Show app icons** to display an app icon next to each route name, in both grid and list view. The toggle is **off by default** and is a per-browser preference (it applies to the Host and to remote agents).
+
+Icons use the same source and per-route overrides as the [Dashboard](tab-dashboard.md#icon): the slug is auto-detected from the route or service name via the selfh.st CDN. Any custom icon you set on a Dashboard card (a selfh.st slug or a Custom URL, for apps the name match does not recognize) is read from the dashboard config and shown on the Routes tab too. If an icon cannot be resolved it is hidden - no broken-image placeholder.
+
 ## Creating a route 
 
 Click **Add Route** in the top bar. Fill in:

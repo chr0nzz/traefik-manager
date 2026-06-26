@@ -269,6 +269,7 @@ Add routes, manage middlewares, monitor services, and view TLS certificates - al
 - **Multi-config file support** - mount several dynamic config files with `CONFIG_DIR` or `CONFIG_PATHS`; a dropdown selects which file each route or middleware is saved to; **create new files on the fly** when `CONFIG_DIR` is set
 - **Timestamped backups** before every change; one-click restore from Settings; `POST /api/backup/create` and `POST /api/backup/static/create` for automation
 - **Git Repository Backup** - push your Traefik configuration to a remote Git repository (GitHub, Gitea, Forgejo, GitLab, or any HTTPS host) after every change; browse the full commit history, view per-file side-by-side diffs, and restore any commit with one click; access token stored encrypted at rest; auto-push on every route, middleware, or static config save; manual push and Test Connection available in Settings → Backups → Git
+- **App icons on routes** *(optional, off by default)* - toggle in Settings → Interface → Routes to show an app icon next to each route name in grid and list view, reusing the Dashboard's selfh.st icons and per-route custom overrides; applies to the Host and remote agents
 
 **Live Dashboard**
 - Real-time stats: router counts, service health, entrypoints, Traefik version

@@ -754,6 +754,18 @@
                         </div>
                     </div>
                     <div style="margin-bottom:12px;">
+                        <div class="text-xs font-medium mb-2" style="color:var(--muted);display:flex;align-items:center;gap:5px;"><i class="ph-bold ph-list-bullets"></i> ROUTES</div>
+                        <div style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+                            <div class="flex items-center justify-between" style="padding:10px 12px;">
+                                <div>
+                                    <div class="text-xs font-medium" style="color:var(--text)">Show app icons</div>
+                                    <div class="text-xs" style="color:var(--muted)">Display the app icon next to each route name, like the dashboard. Applies to host and agent routes.</div>
+                                </div>
+                                <div class="toggle-switch" id="toggle-route-icons" onclick="toggleRouteIcons()"><div class="toggle-knob"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:12px;">
                         <div class="text-xs font-medium mb-2" style="color:var(--muted);display:flex;align-items:center;gap:5px;"><i class="ph-bold ph-navigation-arrow"></i> NAVBAR</div>
                         <div style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
                             <div class="flex items-center justify-between" style="padding:10px 12px;border-bottom:1px solid var(--border)">
@@ -2067,6 +2079,18 @@ function toggleTraefikBadge() {
     _applyTraefikBadgeVisibility();
 }
 
+function toggleRouteIcons() {
+    const show = localStorage.getItem('showRouteIcons') === 'true';
+    localStorage.setItem('showRouteIcons', show ? 'false' : 'true');
+    window._showRouteIcons = !show;
+    const tog = document.getElementById('toggle-route-icons');
+    if (tog) tog.classList.toggle('on', !show);
+    if (typeof renderRouteGrid === 'function' && window._lastRenderedApps) {
+        renderRouteGrid(window._lastRenderedApps);
+        if (typeof filterRoutes === 'function') filterRoutes();
+    }
+}
+
 function _applyTraefikBadgeVisibility() {
     const show = localStorage.getItem('showTraefikBadge') !== 'false';
     const hasVersion = (document.getElementById('versionText').textContent || '').trim() !== '-';
@@ -2259,6 +2283,8 @@ function loadUiTogglesIntoModal() {
     if (ep) ep.classList.toggle('on', _uiPref('showEntrypoints'));
     if (cs) cs.classList.toggle('on', localStorage.getItem('compactStatCards') === 'true');
     if (sh) sh.classList.toggle('on', localStorage.getItem('showShortcutsBtn') !== 'false');
+    const ri = document.getElementById('toggle-route-icons');
+    if (ri) ri.classList.toggle('on', localStorage.getItem('showRouteIcons') === 'true');
 }
 
 function toggleUiPref(key) {
