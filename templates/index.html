@@ -1955,29 +1955,39 @@ function _toggleEpChip(btn, ep, proto) {
 
 let _cachedMiddlewares = null;
 
-async function _initMiddlewareChips(selectedMiddlewares) {
-    const container = document.getElementById('middlewareChips');
-    const hidden    = document.getElementById('middlewares');
+async function _initMiddlewareChips(selectedMiddlewares, protocol = 'http') {
+    const isTcp = protocol === 'tcp';
+    const container = document.getElementById(isTcp ? 'tcpMiddlewareChips' : 'middlewareChips');
+    const hidden    = document.getElementById(isTcp ? 'middlewaresTcp' : 'middlewares');
     if (!container || !hidden) return;
 
     if (!_cachedMiddlewares) {
         try {
             const res = await agentFetch('/api/traefik/middlewares');
             const data = res.ok ? (await res.json()) : {};
-            _cachedMiddlewares = (data.http || []).map(m => m.name || m).filter(m => m && (!m.includes('@') || m.endsWith('@file')));
-        } catch(e) { _cachedMiddlewares = []; }
+            _cachedMiddlewares = { http: [], tcp: [] };
+            (data.http || []).forEach(m => {
+                const name = m.name || m;
+                if (name && (!name.includes('@') || name.endsWith('@file'))) _cachedMiddlewares.http.push(name);
+            });
+            (data.tcp || []).forEach(m => {
+                const name = m.name || m;
+                if (name && (!name.includes('@') || name.endsWith('@file'))) _cachedMiddlewares.tcp.push(name);
+            });
+        } catch(e) { _cachedMiddlewares = { http: [], tcp: [] }; }
     }
     const configMws = (typeof _allMiddlewares !== 'undefined' ? _allMiddlewares : [])
-        .filter(m => (m.type || 'http').toLowerCase() === 'http' && m.name)
+        .filter(m => (m.type || 'http').toLowerCase() === protocol && m.name)
         .map(m => m.name);
+    const apiMws = _cachedMiddlewares[protocol] || [];
     const byBase = new Map();
-    [...(_cachedMiddlewares || []), ...configMws].forEach(full => {
+    [...apiMws, ...configMws].forEach(full => {
         const base = full.split('@')[0];
         if (!byBase.has(base)) byBase.set(base, full);
     });
     const mws = [...byBase.values()];
     if (!mws.length) {
-        container.innerHTML = `<input type="text" class="input-field" style="flex:1" placeholder="auth@file, redirect-https" oninput="document.getElementById('middlewares').value=this.value">`;
+        container.innerHTML = `<input type="text" class="input-field" style="flex:1" placeholder="${isTcp ? 'tcp-middleware@file' : 'auth@file, redirect-https'}" oninput="document.getElementById('${hidden.id}').value=this.value">`;
         hidden.value = selectedMiddlewares ? selectedMiddlewares.join(', ') : '';
         return;
     }
@@ -2107,6 +2117,7 @@ async function cloneRoute(btn) {
         const target = (app.target || '').split(':');
         document.getElementById('targetIpTcp').value = target[0] || '';
         document.getElementById('targetPortTcp').value = target[1] || '';
+        _initMiddlewareChips(app.middlewares || [], 'tcp');
         _initEntrypointChips('tcp', app.entryPoints || []);
         const tlsMode = app.tls ? (app.tls.passthrough ? 'passthrough' : 'tls') : 'none';
         setTcpTlsMode(tlsMode, document.getElementById(tlsMode === 'passthrough' ? 'tcpTlsPassthrough' : tlsMode === 'tls' ? 'tcpTlsTls' : 'tcpTlsNone'));
@@ -2243,6 +2254,7 @@ async function handleEdit(btn) {
         const target = (app.target || '').split(':');
         document.getElementById('targetIpTcp').value = target[0] || '';
         document.getElementById('targetPortTcp').value = target[1] || '';
+        _initMiddlewareChips(app.middlewares || [], 'tcp');
         _initEntrypointChips('tcp', app.entryPoints || []);
         const tlsMode2 = app.tls ? (app.tls.passthrough ? 'passthrough' : 'tls') : 'none';
         setTcpTlsMode(tlsMode2, document.getElementById(tlsMode2 === 'passthrough' ? 'tcpTlsPassthrough' : tlsMode2 === 'tls' ? 'tcpTlsTls' : 'tcpTlsNone'));
@@ -3548,7 +3560,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints) 
     
     const mws = (liveRouter ? liveRouter.middlewares : app.middlewares) || [];
     let mwSection = '';
-    if (protocol === 'http') {
+    if (protocol !== 'udp') {
         if (mws.length > 0) {
             const mwHtml = `<div class="p-4 flex flex-wrap gap-2">${mws.map(m => `<span class="badge" style="background:rgba(163,113,247,0.12);color:var(--purple);border:1px solid rgba(163,113,247,0.3)">${m}</span>`).join('')}</div>`;
             mwSection = `<div class="detail-section mb-4">

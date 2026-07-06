@@ -175,6 +175,13 @@
                         <input type="hidden" name="entryPoints" id="entryPointsTcp">
                     </div>
                     <div>
+                        <label>Middlewares</label>
+                        <div id="tcpMiddlewareChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px">
+                            <span class="text-xs" style="color:var(--muted);align-self:center">Loading...</span>
+                        </div>
+                        <input type="hidden" name="middlewares" id="middlewaresTcp">
+                    </div>
+                    <div>
                         <label>TLS Mode</label>
                         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);width:fit-content">
                             <button type="button" onclick="setTcpTlsMode('none',this)" id="tcpTlsNone" class="proto-btn active-http text-xs px-3 py-1.5">No TLS</button>
