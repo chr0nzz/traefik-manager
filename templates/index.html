@@ -1372,9 +1372,8 @@ async function saveRouteAjax(event) {
         if (_activeAgent) fd.append('agent_id', _activeAgent.id);
         const res = await fetch(form.action, { method:'POST', headers:{'X-Requested-With':'fetch'}, body: fd });
         const json = await res.json();
-        closeModal();
         showToast(json.message, json.ok ? 'success' : 'error');
-        if (json.ok) { refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); setTimeout(fetchNotifications, 8000); }
+        if (json.ok) { closeModal(); refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); setTimeout(fetchNotifications, 8000); }
     } catch(e) {
         showToast('Error saving route', 'error');
     } finally {
@@ -1419,9 +1418,8 @@ async function saveMwAjax(event) {
         if (_activeAgent) fd.append('agent_id', _activeAgent.id);
         const res = await fetch(form.action, { method:'POST', headers:{'X-Requested-With':'fetch'}, body: fd });
         const json = await res.json();
-        closeMwModal();
         showToast(json.message, json.ok ? 'success' : 'error');
-        if (json.ok) { _cachedMiddlewares = null; refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); setTimeout(fetchNotifications, 8000); }
+        if (json.ok) { closeMwModal(); _cachedMiddlewares = null; refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); setTimeout(fetchNotifications, 8000); }
     } catch(e) {
         showToast('Error saving middleware', 'error');
     } finally {
@@ -2180,13 +2178,50 @@ function _onWildcardToggle(checked) {
     if (base) { mainEl.value = base; sansEl.value = '*.' + base; }
 }
 
+function _applyHttpRuleToForm(rule) {
+    const isSimpleRule = /^(Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*)$/.test(rule.trim());
+    if (!isSimpleRule && rule) {
+        setHttpRuleMode('advanced');
+        document.getElementById('httpRule').value = rule;
+    } else {
+        setHttpRuleMode('simple');
+    }
+    _updateRouteModalForAgent();
+    const domainsForMatch = _domainsForForm();
+    let subdomain = '';
+    const hostMatches = [...rule.matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
+    const matchedDomains = [];
+    for (let fullHost of hostMatches) {
+        let found = false;
+        for (let d of domainsForMatch) {
+            if (fullHost.endsWith('.' + d)) { if (!subdomain) subdomain = fullHost.slice(0, -(d.length + 1)); matchedDomains.push(d); found = true; break; }
+            else if (fullHost === d) { matchedDomains.push(d); found = true; break; }
+        }
+        if (!found && !subdomain) subdomain = fullHost;
+    }
+    document.getElementById('subdomain').value = subdomain;
+    if (document.getElementById('domainChips')) {
+        _initDomainChips(matchedDomains.length ? matchedDomains : []);
+    } else {
+        const sel = document.getElementById('domainSelect');
+        if (sel && matchedDomains.length > 0) sel.value = matchedDomains[0];
+    }
+}
+
 async function cloneRoute(btn) {
     const app = JSON.parse(btn.getAttribute('data-app'));
     await openModal();
     document.getElementById('modalTitle').innerText = 'Clone Route';
+    document.getElementById('serviceName').value = (app.name || '') + '-copy';
+    const cfSel = document.getElementById('configFileSelect');
+    if (app.configFile) {
+        document.getElementById('configFile').value = app.configFile;
+        if (cfSel) cfSel.value = app.configFile;
+    }
     const proto = app.protocol || 'http';
     setProtocol(proto);
     if (proto === 'http') {
+        _applyHttpRuleToForm(app.rule || '');
         const targetScheme = (app.target || '').startsWith('https://') ? 'https' : 'http';
         let target = (app.target || '').replace('http://','').replace('https://','');
         const parts = target.split(':');
@@ -2223,6 +2258,7 @@ async function cloneRoute(btn) {
             tlsOptSel.value = app.tlsOptionsProfile || '';
         }
     } else if (proto === 'tcp') {
+        document.getElementById('tcpRule').value = app.rule || '';
         const target = (app.target || '').split(':');
         document.getElementById('targetIpTcp').value = target[0] || '';
         document.getElementById('targetPortTcp').value = target[1] || '';
@@ -2293,34 +2329,7 @@ async function handleEdit(btn) {
     setProtocol(proto);
 
     if (proto === 'http') {
-        let rule = app.rule || '';
-        const isSimpleRule = /^(Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*)$/.test(rule.trim());
-        if (!isSimpleRule && rule) {
-            setHttpRuleMode('advanced');
-            document.getElementById('httpRule').value = rule;
-        } else {
-            setHttpRuleMode('simple');
-        }
-        _updateRouteModalForAgent();
-        const domainsForMatch = _domainsForForm();
-        let subdomain = '';
-        const hostMatches = [...rule.matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
-        const matchedDomains = [];
-        for (let fullHost of hostMatches) {
-            let found = false;
-            for (let d of domainsForMatch) {
-                if (fullHost.endsWith('.' + d)) { if (!subdomain) subdomain = fullHost.slice(0, -(d.length + 1)); matchedDomains.push(d); found = true; break; }
-                else if (fullHost === d) { matchedDomains.push(d); found = true; break; }
-            }
-            if (!found && !subdomain) subdomain = fullHost;
-        }
-        document.getElementById('subdomain').value = subdomain;
-        if (document.getElementById('domainChips')) {
-            _initDomainChips(matchedDomains.length ? matchedDomains : []);
-        } else {
-            const sel = document.getElementById('domainSelect');
-            if (sel && matchedDomains.length > 0) sel.value = matchedDomains[0];
-        }
+        _applyHttpRuleToForm(app.rule || '');
 
         const targetScheme = (app.target || '').startsWith('https://') ? 'https' : 'http';
         let target = app.target.replace('http://','').replace('https://','');
@@ -3022,15 +3031,24 @@ async function bulkDelete() {
     if (!ids.length) return;
     if (!await _confirm(`Delete ${ids.length} route${ids.length > 1 ? 's' : ''}?`, 'Bulk Delete', 'Delete')) return;
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    let failed = 0;
     for (const id of ids) {
         const card = document.querySelector(`.route-card[data-routekey="${CSS.escape(id)}"]`);
         const cf   = card?.dataset.configfile || '';
         const data = new FormData();
         data.append('csrf_token', csrf);
         if (cf) data.append('configFile', cf);
-        await fetch('/delete/' + encodeURIComponent(id), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
+        if (_activeAgent) data.append('agent_id', _activeAgent.id);
+        try {
+            const res  = await fetch('/delete/' + encodeURIComponent(id), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
+            const json = await res.json();
+            if (!res.ok || !json.ok) failed++;
+        } catch(e) { failed++; }
     }
+    if (failed) showToast(`${failed} of ${ids.length} route${ids.length > 1 ? 's' : ''} could not be deleted.`, 'error');
+    else showToast(`Deleted ${ids.length} route${ids.length > 1 ? 's' : ''}.`, 'success');
     _bulkSelected.clear(); updateBulkBar(); refreshRoutes(); fetchNotifications();
+    if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData();
 }
 let _mwViewMode = 'grid';
 let _allMiddlewares = {{ middlewares | tojson | safe }};
