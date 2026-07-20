@@ -61,4 +61,13 @@
     <div id="configErrorBanner" style="display:none;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.3);border-radius:10px;padding:12px 16px;margin-bottom:16px"></div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="routeGrid"></div>
+
+    <div id="routeEmpty" class="text-center py-20" style="display:none;color:var(--muted)">
+        <i class="ph-light ph-list-plus text-6xl block mb-4 opacity-30"></i>
+        <p class="text-base font-medium" id="routeEmptyText">No routes yet</p>
+        <p class="text-sm mt-1 mb-5" id="routeEmptySub">Create your first route to start managing your Traefik proxy.</p>
+        <button onclick="openModal()" id="routeEmptyCta" class="nav-btn nav-btn-primary" style="display:inline-flex">
+            <i class="ph-bold ph-plus"></i> Add Route
+        </button>
+    </div>
 </div>

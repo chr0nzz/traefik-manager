@@ -841,6 +841,7 @@ function pickRouteDomain(val, label) {
 
 function filterRoutes() {
     const q = document.getElementById('searchRoutes').value.toLowerCase();
+    let visible = 0;
     for (const card of _routeCardEls) {
         const name    = card.dataset.name || '';
         const proto   = card.dataset.protocol || '';
@@ -852,6 +853,21 @@ function filterRoutes() {
             (!currentRouteDomainFilter || domains.some(d => d === currentRouteDomainFilter || d.endsWith('.' + currentRouteDomainFilter))) &&
             (currentRouteStatusFilter === 'all' || (currentRouteStatusFilter === 'active' && enabled) || (currentRouteStatusFilter === 'inactive' && !enabled));
         card.style.display = show ? '' : 'none';
+        if (show) visible++;
+    }
+    const emptyEl = document.getElementById('routeEmpty');
+    if (emptyEl && _routeCardEls.length > 0) {
+        if (visible === 0) {
+            const t = document.getElementById('routeEmptyText');
+            const sub = document.getElementById('routeEmptySub');
+            const cta = document.getElementById('routeEmptyCta');
+            if (t) t.textContent = 'No routes match your filters';
+            if (sub) sub.style.display = 'none';
+            if (cta) cta.style.display = 'none';
+            emptyEl.style.display = '';
+        } else {
+            emptyEl.style.display = 'none';
+        }
     }
 }
 
@@ -1738,7 +1754,16 @@ function renderRouteGrid(apps) {
     if (apps.length === 0) {
         grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4';
         grid.innerHTML = '';
-        if (emptyEl) emptyEl.style.display = '';
+        _routeCardEls = [];
+        if (emptyEl) {
+            const t = document.getElementById('routeEmptyText');
+            const sub = document.getElementById('routeEmptySub');
+            const cta = document.getElementById('routeEmptyCta');
+            if (t) t.textContent = _activeAgent ? 'No routes on this server yet' : 'No routes yet';
+            if (sub) sub.style.display = '';
+            if (cta) cta.style.display = 'inline-flex';
+            emptyEl.style.display = '';
+        }
         return;
     }
     if (emptyEl) emptyEl.style.display = 'none';

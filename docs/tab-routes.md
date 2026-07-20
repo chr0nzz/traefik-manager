@@ -11,6 +11,10 @@ The **Routes** tab (also called Services) is the main management interface. It d
 - Multi-domain routes show each domain as a separate pill badge; clicking a domain or target copies it to the clipboard
 - Full detail view via the info button - shows live Traefik status, service health, and raw config
 
+## Empty state
+
+When no routes exist yet - such as on a fresh install - the tab shows a prompt with an **Add Route** button instead of a blank grid. When a search or filter matches nothing, it shows a "No routes match your filters" message instead.
+
 ## Filtering
 
 The filter bar above the grid lets you narrow routes by:
