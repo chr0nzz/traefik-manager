@@ -31,6 +31,10 @@ All endpoints return JSON.
 
 State-changing endpoints (POST / DELETE) require an `X-CSRF-Token` header when using session auth. API key requests skip this.
 
+## Caching
+
+All non-static responses are sent with `Cache-Control: no-store, no-cache, must-revalidate`. Without it, browsers applied heuristic freshness to API responses and to the app shell, which could serve stale data until a hard reload. Files under `/static/` are unaffected and stay cacheable.
+
 ---
 
 ## Routes & Middlewares
@@ -179,6 +183,8 @@ All services across HTTP, TCP, and UDP.
 
 All middlewares across HTTP and TCP.
 
+Returns `502` with `{"error": "Traefik API unreachable"}` if the Traefik API cannot be reached. Earlier versions returned `200` with empty lists in that case, which made an unreachable Traefik indistinguishable from one that genuinely has no middlewares.
+
 ---
 
 ### `GET /api/traefik/entrypoints`
@@ -188,6 +194,8 @@ All configured entrypoints.
 ```json
 [{ "name": "websecure", "address": ":443" }]
 ```
+
+Returns `502` with `{"error": "Traefik API unreachable"}` if the Traefik API cannot be reached. Earlier versions returned `200` with an empty list in that case.
 
 ---
 

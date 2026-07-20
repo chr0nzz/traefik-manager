@@ -96,6 +96,8 @@ The `/api/traefik/routers`, `/api/traefik/services`, and `/api/traefik/middlewar
 
 This matches the format TM expects for its own Traefik API calls, so agent data renders identically to local data.
 
+If the agent cannot reach its Traefik API, or Traefik answers with a non-`200` status, these endpoints return `502` with `{"error": "traefik unavailable...", "ok": false}`. Earlier versions turned a non-`200` response into an empty list with status `200`, so a broken Traefik looked the same as one with nothing configured.
+
 ## API keys
 
 The agent supports multiple named API keys stored in `BACKUP_DIR/keys.json` (encrypted). The primary `TMA_API_KEY` from the environment always works regardless of the key store. Additional keys can be created, listed, and deleted via `/api/keys`. This is useful when multiple TM instances need to connect to the same agent.

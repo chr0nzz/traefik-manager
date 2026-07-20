@@ -112,3 +112,7 @@ Fetches from:
 - `/api/traefik/entrypoints` - entry point names from the Traefik API
 - `/api/dashboard/config` - custom groups and per-route overrides from `dashboard.yml`
 - `/api/dashboard/icon/<slug>` - app icons (cached from selfh.st CDN)
+
+Data is cached for 30 seconds. Opening the tab re-renders it, and refetches once the cache is older than that, so config changes made outside this browser tab (another session, the static config editor, or a direct file edit) appear without a page reload. Adding, editing, deleting, or toggling a route refreshes it immediately.
+
+If the Traefik API cannot be reached, the tab shows an error toast and retries the next time you open it instead of caching the empty result.

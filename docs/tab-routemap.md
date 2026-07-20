@@ -76,3 +76,5 @@ Fetches from:
 - `/api/traefik/entrypoints` - entry point names from the Traefik API
 
 No extra mounts or configuration required beyond a working Traefik API connection.
+
+Data is shared with the Dashboard tab and cached for 30 seconds, so route changes made elsewhere appear without a page reload. If the Traefik API cannot be reached, the tab reports the error and retries on the next open rather than caching an empty topology.
