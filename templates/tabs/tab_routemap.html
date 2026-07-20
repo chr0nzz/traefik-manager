@@ -86,6 +86,8 @@ let _rmConfig    = { custom_groups: [], route_overrides: {} };
 let _rmAllRoutes = [];
 let _rmAllEps    = {};
 let _rmDataLoaded = false;
+let _rmLoadedAt   = 0;
+const RM_DATA_TTL = 30000;
 
 window.rmGetCustomGroups = function() { return _rmConfig.custom_groups || []; };
 
@@ -110,8 +112,8 @@ async function rmSaveConfig() {
     });
 }
 
-window.rmEnsureData = async function() {
-    if (_rmDataLoaded) return;
+window.rmEnsureData = async function(force) {
+    if (_rmDataLoaded && !force && (Date.now() - _rmLoadedAt) < RM_DATA_TTL) return true;
     try {
         const routeUrl = _activeAgent
             ? '/api/agents/' + _activeAgent.id + '/routes'
@@ -121,13 +123,14 @@ window.rmEnsureData = async function() {
             agentFetch('/api/traefik/entrypoints'),
             fetch('/api/dashboard/config')
         ]);
+        if (!routeRes.ok) throw new Error('routes ' + routeRes.status);
         const routeData = await routeRes.json();
         _rmAllRoutes = (routeData.apps || []).map(r => ({
             ...r,
             middlewares: [...new Set([...(r.middlewares || []), ...(r.entrypointMiddlewares || [])])]
         }));
         try {
-            const epData = await epRes.json();
+            const epData = epRes.ok ? await epRes.json() : {};
             _rmAllEps = Array.isArray(epData)
                 ? Object.fromEntries(epData.map(ep => [ep.name, ep]))
                 : (epData || {});
@@ -136,8 +139,11 @@ window.rmEnsureData = async function() {
     } catch(e) {
         _rmAllRoutes = [];
         _rmAllEps    = {};
+        return false;
     }
     _rmDataLoaded = true;
+    _rmLoadedAt   = Date.now();
+    return true;
 };
 
 (function() {
@@ -361,14 +367,19 @@ window.rmClearFilters = function() {
 };
 
 window.refreshRoutemapTab = async function() {
-    if (_rmDrawn) { rmRender(); return; }
-    document.getElementById('rmLoading').classList.remove('hidden');
-    document.getElementById('rmTopoContainer').classList.add('hidden');
-    document.getElementById('rmEmpty').classList.add('hidden');
+    if (!_rmDrawn) {
+        document.getElementById('rmLoading').classList.remove('hidden');
+        document.getElementById('rmTopoContainer').classList.add('hidden');
+        document.getElementById('rmEmpty').classList.add('hidden');
+    }
 
-    await window.rmEnsureData();
+    const ok = await window.rmEnsureData();
 
     document.getElementById('rmLoading').classList.add('hidden');
+    if (!ok && !_rmDrawn) {
+        showToast('Could not load route map data. Retrying on next open.', 'error');
+        return;
+    }
     _rmDrawn = true;
     rmRenderProviderFilters();
     rmRenderEpFilters();

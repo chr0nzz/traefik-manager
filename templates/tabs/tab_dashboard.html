@@ -399,14 +399,19 @@ function dashRenderProviderFilters() {
 }
 
 window.refreshDashboardTab = async function() {
-    if (_dashDrawn) return;
-    document.getElementById('dashLoading').classList.remove('hidden');
-    document.getElementById('dashPodsContainer').classList.add('hidden');
-    document.getElementById('dashEmpty').classList.add('hidden');
+    if (!_dashDrawn) {
+        document.getElementById('dashLoading').classList.remove('hidden');
+        document.getElementById('dashPodsContainer').classList.add('hidden');
+        document.getElementById('dashEmpty').classList.add('hidden');
+    }
 
-    await window.rmEnsureData();
+    const ok = await window.rmEnsureData();
 
     document.getElementById('dashLoading').classList.add('hidden');
+    if (!ok) {
+        if (!_dashDrawn) showToast('Could not load dashboard data. Retrying on next open.', 'error');
+        return;
+    }
     _dashDrawn = true;
     dashRenderProviderFilters();
     dashRender();
