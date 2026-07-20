@@ -3844,6 +3844,46 @@ document.addEventListener('click', e => {
         closeMobileMenu();
     }
 });
+const _autofillAllowed = new Set(['pwCurrent', 'pwNew', 'pwConfirm', 'otpVerifyCode']);
+
+function _guardAutofillField(el) {
+    el.dataset.afGuarded = '1';
+    if (el.type === 'hidden' || _autofillAllowed.has(el.id)) return;
+    el.setAttribute('autocomplete', el.type === 'password' ? 'new-password' : 'off');
+    el.setAttribute('data-lpignore', 'true');
+    el.setAttribute('data-1p-ignore', 'true');
+    el.setAttribute('data-form-type', 'other');
+}
+
+function _sweepAutofillGuard() {
+    document.querySelectorAll('input:not([data-af-guarded]), textarea:not([data-af-guarded]), select:not([data-af-guarded])')
+        .forEach(_guardAutofillField);
+    document.querySelectorAll('form:not([data-af-guarded])').forEach(f => {
+        f.dataset.afGuarded = '1';
+        f.setAttribute('autocomplete', 'off');
+    });
+}
+
+let _afSweepQueued = false;
+
+function _queueAutofillSweep() {
+    if (_afSweepQueued) return;
+    _afSweepQueued = true;
+    requestAnimationFrame(() => {
+        _afSweepQueued = false;
+        _sweepAutofillGuard();
+    });
+}
+
+function _initAutofillGuard() {
+    _sweepAutofillGuard();
+    new MutationObserver(_queueAutofillSweep)
+        .observe(document.documentElement, { childList: true, subtree: true });
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _initAutofillGuard);
+else _initAutofillGuard();
+
 let _pwaInstallPrompt = null;
 
 if ('serviceWorker' in navigator) {

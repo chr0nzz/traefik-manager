@@ -390,7 +390,7 @@
                                         <div class="text-xs text-center" style="color:var(--muted)">
                                             Or enter manually: <code id="otpManualSecret" style="background:var(--border);padding:2px 6px;border-radius:3px;font-family:monospace;user-select:all"></code>
                                         </div>
-                                        <input type="text" id="otpVerifyCode" class="input-field" placeholder="Enter 6-digit code to confirm" inputmode="numeric" maxlength="6" style="text-align:center;letter-spacing:.2em;font-family:monospace">
+                                        <input type="text" id="otpVerifyCode" class="input-field" placeholder="Enter 6-digit code to confirm" autocomplete="one-time-code" inputmode="numeric" maxlength="6" style="text-align:center;letter-spacing:.2em;font-family:monospace">
                                         <div id="otpSetupMsg" class="hidden text-xs px-3 py-2 rounded-md"></div>
                                         <div class="flex gap-2">
                                             <button onclick="otpConfirmEnable()" class="nav-btn text-xs"><i class="ph-bold ph-check"></i> Verify &amp; Enable</button>
