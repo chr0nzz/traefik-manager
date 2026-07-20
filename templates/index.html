@@ -2010,7 +2010,7 @@ function _customDomainPrompt(btn) {
     };
     input.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); commit(); }
-        else if (e.key === 'Escape') { if (window._domainChipRender) window._domainChipRender(); }
+        else if (e.key === 'Escape' && input.value) { e.stopPropagation(); input.value = ''; if (window._domainChipRender) window._domainChipRender(); }
     });
     input.addEventListener('blur', () => { if (input.isConnected) commit(); });
 }
@@ -3598,8 +3598,28 @@ function _isTyping() {
     return t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || document.activeElement?.isContentEditable;
 }
 
+function _closeTopModal() {
+    const modals = [
+        ['tlsOptionsModal', closeTlsOptionModal],
+        ['appModal', closeModal],
+        ['mwModal', closeMwModal],
+        ['settingsModal', closeSettingsModal],
+        ['rmEditModal', window.rmCloseEditModal],
+        ['rmGroupsModal', window.rmCloseGroupsModal],
+    ];
+    for (const [id, close] of modals) {
+        const el = document.getElementById(id);
+        if (el && getComputedStyle(el).display !== 'none' && typeof close === 'function') {
+            close();
+            return true;
+        }
+    }
+    return false;
+}
+
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+        if (_closeTopModal()) return;
         closeRouteDetail();
         closeMwDetail();
         closeSvcDetail();
