@@ -57,6 +57,12 @@ For TCP routes, enter a raw SNI rule (`HostSNI(\`*\`)` for passthrough). UDP rou
 
 Click the pencil icon on any route card, or open the detail panel and click **Edit**.
 
+Saving only rewrites the parts of the route the form owns: the rule, entry points, service reference, middlewares and TLS on the router, and the first server address, `passHostHeader` and the insecure-TLS transport on the service. Anything else you have written by hand is preserved - router `priority`, sticky sessions, health checks, additional servers, and your own `serversTransport`. An existing route also keeps the service name it already points at, rather than being renamed to `<name>-service`.
+
+::: warning Advanced service types
+If a router points at a `weighted`, `mirroring` or `failover` service instead of a `loadBalancer`, that service is left untouched, so editing the target field in the modal has no effect on it. Edit those services directly in the config file.
+:::
+
 ## Deleting a route
 
 Click the trash icon on the route card. The corresponding service entry in `dynamic.yml` is removed automatically.
