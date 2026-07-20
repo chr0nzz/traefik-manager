@@ -496,6 +496,9 @@ function switchServer(agentId) {
     _cachedEntrypoints = null;
     _cachedMiddlewares = null;
     _cachedCertResolvers = null;
+    _inflightEntrypoints = null;
+    _inflightMiddlewares = null;
+    _inflightCertResolvers = null;
     _customDomains = [];
     if (agent) document.getElementById('selfRouteEpWarning')?.remove();
     if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData();
@@ -895,7 +898,7 @@ function setHttpRuleMode(mode) {
     if (!isAdv) { const el = document.getElementById('httpRule'); if (el) el.value = ''; }
 }
 
-function openModal() {
+async function openModal() {
     document.getElementById('isEdit').value = 'false';
     document.getElementById('modalTitle').innerText = 'Add Route';
     document.getElementById('originalId').value = '';
@@ -904,11 +907,13 @@ function openModal() {
         if (el) el.value = '';
     });
     setHttpRuleMode('simple');
-    _initEntrypointChips('http', []);
-    _initEntrypointChips('tcp', []);
-    _initEntrypointChips('udp', []);
-    _initMiddlewareChips([]);
-    _initMiddlewareChips([], 'tcp');
+    await Promise.all([
+        _initEntrypointChips('http', []),
+        _initEntrypointChips('tcp', []),
+        _initEntrypointChips('udp', []),
+        _initMiddlewareChips([]),
+        _initMiddlewareChips([], 'tcp')
+    ]);
     setTcpTlsMode('none', document.getElementById('tcpTlsNone'));
     const crHttp = document.getElementById('certResolver');
     if (crHttp) { crHttp.value = (!_activeAgent && availableCertResolvers.length > 0) ? availableCertResolvers[0] : '__disabled__'; toggleWildcardSection(crHttp.value); }
@@ -923,10 +928,11 @@ function openModal() {
     _populateTlsOptionsSelect();
     _updateRouteModalForAgent();
     _initDomainChips([]);
-    _populateConfigFileSelect('route').then(() => {
-        document.getElementById('appModal').style.display = 'flex';
-    });
-    _loadAgentResolversIntoSelects();
+    await Promise.all([
+        _populateConfigFileSelect('route'),
+        _loadAgentResolversIntoSelects()
+    ]);
+    document.getElementById('appModal').style.display = 'flex';
 }
 
 function closeModal() { document.getElementById('appModal').style.display = 'none'; }
@@ -1478,12 +1484,16 @@ async function refreshRoutes() {
         } else {
             res = await fetch('/api/routes');
         }
+        if (!res.ok) throw new Error('routes ' + res.status);
         const data = await res.json();
         renderRouteGrid(data.apps || []);
         renderMwGrid(data.middlewares || []);
         loadOverviewStats();
         _renderConfigErrorBanner(data.configErrors || []);
-    } catch(e) {}
+    } catch(e) {
+        console.error('refreshRoutes failed:', e);
+        showToast('Could not load routes. Check the connection and try again.', 'error');
+    }
 }
 
 function _renderConfigErrorBanner(errors) {
@@ -1855,16 +1865,56 @@ function _ensureResolverOption(sel, value) {
 
 let _cachedEntrypoints = null;
 let _cachedCertResolvers = null;
+let _inflightEntrypoints = null;
+let _inflightCertResolvers = null;
+let _inflightMiddlewares = null;
+
+async function _fetchEntrypointsCached() {
+    if (_cachedEntrypoints) return _cachedEntrypoints;
+    if (!_inflightEntrypoints) {
+        _inflightEntrypoints = (async () => {
+            const res = await agentFetch('/api/traefik/entrypoints');
+            if (!res.ok) throw new Error('entrypoints ' + res.status);
+            const data = await res.json();
+            _cachedEntrypoints = Array.isArray(data) ? data : [];
+            return _cachedEntrypoints;
+        })();
+        _inflightEntrypoints.catch(() => {}).then(() => { _inflightEntrypoints = null; });
+    }
+    return _inflightEntrypoints;
+}
+
+async function _fetchMiddlewaresCached() {
+    if (_cachedMiddlewares) return _cachedMiddlewares;
+    if (!_inflightMiddlewares) {
+        _inflightMiddlewares = (async () => {
+            const res = await agentFetch('/api/traefik/middlewares');
+            if (!res.ok) throw new Error('middlewares ' + res.status);
+            const data = await res.json();
+            const clean = arr => (arr || []).map(m => m.name || m).filter(m => m && (!m.includes('@') || m.endsWith('@file')));
+            _cachedMiddlewares = { http: clean(data.http), tcp: clean(data.tcp) };
+            return _cachedMiddlewares;
+        })();
+        _inflightMiddlewares.catch(() => {}).then(() => { _inflightMiddlewares = null; });
+    }
+    return _inflightMiddlewares;
+}
 
 async function _loadAgentResolversIntoSelects() {
     if (!_activeAgent) return;
-    if (_cachedCertResolvers === null) {
-        try {
+    if (_cachedCertResolvers === null && !_inflightCertResolvers) {
+        _inflightCertResolvers = (async () => {
             const res = await fetch('/api/agents/' + _activeAgent.id + '/cert-resolvers');
+            if (!res.ok) throw new Error('cert-resolvers ' + res.status);
             _cachedCertResolvers = (await res.json()).resolvers || [];
-        } catch (e) { _cachedCertResolvers = []; }
+            return _cachedCertResolvers;
+        })();
+        _inflightCertResolvers.catch(() => {}).then(() => { _inflightCertResolvers = null; });
     }
-    const list = _cachedCertResolvers;
+    let list = _cachedCertResolvers;
+    if (list === null) {
+        try { list = await _inflightCertResolvers; } catch (e) { list = []; }
+    }
     ['certResolver', 'certResolverTcp'].forEach(id => {
         const sel = document.getElementById(id);
         if (!sel) return;
@@ -1976,13 +2026,9 @@ async function _initEntrypointChips(proto, selectedEntrypoints) {
     const hidden      = document.getElementById(hiddenId);
     if (!container || !hidden) return;
 
-    if (!_cachedEntrypoints) {
-        try {
-            const res = await agentFetch('/api/traefik/entrypoints');
-            _cachedEntrypoints = res.ok ? (await res.json()) : [];
-        } catch(e) { _cachedEntrypoints = []; }
-    }
-    const eps = (_cachedEntrypoints || []).map(e => e.name || e).filter(Boolean);
+    let epList = [];
+    try { epList = await _fetchEntrypointsCached(); } catch(e) {}
+    const eps = (epList || []).map(e => e.name || e).filter(Boolean);
     const isSingle = proto === 'udp';
     if (!eps.length) {
         container.innerHTML = `<input type="text" id="${hiddenId}_fallback" class="input-field" placeholder="${proto === 'http' ? 'https' : proto}" style="flex:1" oninput="document.getElementById('${hiddenId}').value=this.value">`;
@@ -2036,15 +2082,9 @@ async function _initMiddlewareChips(selectedMiddlewares, proto) {
     const hidden    = document.getElementById(hiddenId);
     if (!container || !hidden) return;
 
-    if (!_cachedMiddlewares) {
-        try {
-            const res = await agentFetch('/api/traefik/middlewares');
-            const data = res.ok ? (await res.json()) : {};
-            const clean = arr => (arr || []).map(m => m.name || m).filter(m => m && (!m.includes('@') || m.endsWith('@file')));
-            _cachedMiddlewares = { http: clean(data.http), tcp: clean(data.tcp) };
-        } catch(e) { _cachedMiddlewares = { http: [], tcp: [] }; }
-    }
-    const liveMws = _cachedMiddlewares[proto] || [];
+    let mwData = null;
+    try { mwData = await _fetchMiddlewaresCached(); } catch(e) {}
+    const liveMws = (mwData || {})[proto] || [];
     const configMws = (typeof _allMiddlewares !== 'undefined' ? _allMiddlewares : [])
         .filter(m => (m.type || 'http').toLowerCase() === proto && m.name)
         .map(m => m.name);
@@ -2142,7 +2182,7 @@ function _onWildcardToggle(checked) {
 
 async function cloneRoute(btn) {
     const app = JSON.parse(btn.getAttribute('data-app'));
-    openModal();
+    await openModal();
     document.getElementById('modalTitle').innerText = 'Clone Route';
     const proto = app.protocol || 'http';
     setProtocol(proto);
@@ -2152,8 +2192,8 @@ async function cloneRoute(btn) {
         const parts = target.split(':');
         document.getElementById('targetIp').value = parts[0] || '';
         document.getElementById('targetPort').value = parts[1] || '80';
-        _initMiddlewareChips(app.middlewares || []);
-        _initEntrypointChips('http', app.entryPoints || []);
+        await _initMiddlewareChips(app.middlewares || []);
+        await _initEntrypointChips('http', app.entryPoints || []);
         document.getElementById('scheme').value = targetScheme;
         document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
         const crHttp = document.getElementById('certResolver');
@@ -2186,8 +2226,8 @@ async function cloneRoute(btn) {
         const target = (app.target || '').split(':');
         document.getElementById('targetIpTcp').value = target[0] || '';
         document.getElementById('targetPortTcp').value = target[1] || '';
-        _initEntrypointChips('tcp', app.entryPoints || []);
-        _initMiddlewareChips(app.middlewares || [], 'tcp');
+        await _initEntrypointChips('tcp', app.entryPoints || []);
+        await _initMiddlewareChips(app.middlewares || [], 'tcp');
         const tlsMode = app.tls ? (app.tls.passthrough ? 'passthrough' : 'tls') : 'none';
         setTcpTlsMode(tlsMode, document.getElementById(tlsMode === 'passthrough' ? 'tcpTlsPassthrough' : tlsMode === 'tls' ? 'tcpTlsTls' : 'tcpTlsNone'));
         const crTcp = document.getElementById('certResolverTcp');
@@ -2196,7 +2236,7 @@ async function cloneRoute(btn) {
         const target = (app.target || '').split(':');
         document.getElementById('targetIpUdp').value = target[0] || '';
         document.getElementById('targetPortUdp').value = target[1] || '';
-        _initEntrypointChips('udp', app.entryPoints || []);
+        await _initEntrypointChips('udp', app.entryPoints || []);
     }
 }
 
@@ -2287,8 +2327,8 @@ async function handleEdit(btn) {
         const parts = target.split(':');
         document.getElementById('targetIp').value = parts[0];
         document.getElementById('targetPort').value = parts[1] || '80';
-        _initMiddlewareChips(app.middlewares || []);
-        _initEntrypointChips('http', app.entryPoints || []);
+        await _initMiddlewareChips(app.middlewares || []);
+        await _initEntrypointChips('http', app.entryPoints || []);
         document.getElementById('scheme').value = targetScheme;
         document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
         const crHttp = document.getElementById('certResolver');
@@ -2323,8 +2363,8 @@ async function handleEdit(btn) {
         const target = (app.target || '').split(':');
         document.getElementById('targetIpTcp').value = target[0] || '';
         document.getElementById('targetPortTcp').value = target[1] || '';
-        _initEntrypointChips('tcp', app.entryPoints || []);
-        _initMiddlewareChips(app.middlewares || [], 'tcp');
+        await _initEntrypointChips('tcp', app.entryPoints || []);
+        await _initMiddlewareChips(app.middlewares || [], 'tcp');
         const tlsMode2 = app.tls ? (app.tls.passthrough ? 'passthrough' : 'tls') : 'none';
         setTcpTlsMode(tlsMode2, document.getElementById(tlsMode2 === 'passthrough' ? 'tcpTlsPassthrough' : tlsMode2 === 'tls' ? 'tcpTlsTls' : 'tcpTlsNone'));
         const crTcp = document.getElementById('certResolverTcp');
@@ -2334,7 +2374,7 @@ async function handleEdit(btn) {
         const target = (app.target || '').split(':');
         document.getElementById('targetIpUdp').value = target[0] || '';
         document.getElementById('targetPortUdp').value = target[1] || '';
-        _initEntrypointChips('udp', app.entryPoints || []);
+        await _initEntrypointChips('udp', app.entryPoints || []);
     }
 
     await _populateConfigFileSelect('route');
