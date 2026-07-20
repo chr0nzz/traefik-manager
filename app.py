@@ -1413,6 +1413,10 @@ def set_security_headers(response):
     response.headers['Referrer-Policy']          = 'strict-origin-when-cross-origin'
     response.headers['X-XSS-Protection']         = '1; mode=block'
     response.headers['Permissions-Policy']       = 'camera=(), microphone=(), geolocation=()'
+    if not request.path.startswith('/static/'):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+        response.headers['Pragma']        = 'no-cache'
+        response.headers['Expires']       = '0'
     if app.config.get('SESSION_COOKIE_SECURE'):
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     return response
@@ -1975,9 +1979,13 @@ def api_services():
 @app.route('/api/traefik/middlewares')
 @login_required
 def api_middlewares():
+    http_mws = traefik_api_get_all('/api/http/middlewares')
+    tcp_mws  = traefik_api_get_all('/api/tcp/middlewares')
+    if http_mws is None and tcp_mws is None:
+        return jsonify({'error': 'Traefik API unreachable'}), 502
     return jsonify({
-        'http': traefik_api_get_all('/api/http/middlewares') or [],
-        'tcp':  traefik_api_get_all('/api/tcp/middlewares')  or [],
+        'http': http_mws or [],
+        'tcp':  tcp_mws  or [],
     })
 
 @app.route('/api/manager/router-names')
@@ -1993,7 +2001,10 @@ def api_manager_router_names():
 @app.route('/api/traefik/entrypoints')
 @login_required
 def api_entrypoints():
-    return jsonify(traefik_api_get('/api/entrypoints') or [])
+    eps = traefik_api_get('/api/entrypoints')
+    if eps is None:
+        return jsonify({'error': 'Traefik API unreachable'}), 502
+    return jsonify(eps)
 
 @app.route('/api/traefik/version')
 @login_required

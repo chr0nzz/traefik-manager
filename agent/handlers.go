@@ -79,11 +79,11 @@ func (a *App) traefikFetchProto(ctx context.Context, traefikPath string) (json.R
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return json.RawMessage("[]"), nil
+		return json.RawMessage("[]"), fmt.Errorf("traefik returned status %d", resp.StatusCode)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return json.RawMessage("[]"), nil
+		return json.RawMessage("[]"), err
 	}
 	return json.RawMessage(body), nil
 }
