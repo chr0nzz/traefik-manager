@@ -5187,7 +5187,37 @@ const HTTP_STATUS = {
     500:'Internal Server Error',501:'Not Implemented',502:'Bad Gateway',503:'Service Unavailable',504:'Gateway Timeout'
 };
 
+function _fmtLogDuration(ns) {
+    if (!ns) return '';
+    if (ns >= 1e9) return (ns / 1e9).toFixed(2) + 's';
+    if (ns >= 1e6) return Math.round(ns / 1e6) + 'ms';
+    if (ns >= 1e3) return Math.round(ns / 1e3) + 'µs';
+    return ns + 'ns';
+}
+
 function parseLogLine(raw) {
+    const trimmed = raw.trimStart();
+    if (trimmed.startsWith('{')) {
+        try {
+            const j = JSON.parse(trimmed);
+            if (j.RequestMethod || j.RequestPath || j.DownstreamStatus) {
+                const durNs = typeof j.Duration === 'number' ? j.Duration : parseInt(j.Duration) || 0;
+                const size = j.DownstreamContentSize != null ? j.DownstreamContentSize : (j.OriginContentSize != null ? j.OriginContentSize : '');
+                return {
+                    ip: j.ClientHost || (j.ClientAddr || '').split(':')[0] || '',
+                    date: j.StartUTC || j.StartLocal || j.time || '',
+                    method: j.RequestMethod || '',
+                    path: j.RequestPath || '',
+                    status: parseInt(j.DownstreamStatus) || parseInt(j.OriginStatus) || 0,
+                    size: String(size),
+                    service: j.ServiceName || '',
+                    serviceUrl: j.ServiceURL || j.ServiceAddr || '',
+                    duration: _fmtLogDuration(durNs),
+                    raw
+                };
+            }
+        } catch (_) {}
+    }
     const full = raw.match(
         /^(\S+) \S+ \S+ \[([^\]]+)\] "(\S+) (\S+)[^"]*" (\d+) (\S+) "[^"]*" "[^"]*" \S+ "([^"]*)" "([^"]*)" (\S+)/
     );

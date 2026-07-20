@@ -49,6 +49,8 @@ accessLog:
   format: common
 ```
 
+Both the `common` (CLF text) and `json` access log formats are parsed into cards. Lines that match neither are shown as-is.
+
 Then point traefik-manager at the log file via the `ACCESS_LOG_PATH` environment variable (default: `/app/logs/access.log`).
 
 :::tabs
