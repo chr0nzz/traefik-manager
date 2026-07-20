@@ -4167,6 +4167,46 @@ def _strip_empty_sections(config: dict) -> dict:
                 del config[proto]
     return config
 
+def _apply_managed_keys(target: dict, new: dict, managed: tuple) -> None:
+    for key in managed:
+        if key in new:
+            target[key] = new[key]
+        elif key in target:
+            del target[key]
+
+
+def _merge_router(section: dict, name: str, new: dict, managed: tuple) -> None:
+    existing = section.get(name)
+    if not isinstance(existing, dict):
+        section[name] = new
+        return
+    _apply_managed_keys(existing, new, managed)
+
+
+def _merge_service(section: dict, name: str, new_lb: dict, server_key: str, transport_name: str) -> None:
+    existing = section.get(name)
+    existing_lb = existing.get('loadBalancer') if isinstance(existing, dict) else None
+    if not isinstance(existing_lb, dict):
+        if isinstance(existing, dict) and existing:
+            return
+        section[name] = {'loadBalancer': new_lb}
+        return
+    servers = existing_lb.get('servers')
+    new_servers = new_lb.get('servers') or []
+    if isinstance(servers, list) and servers and isinstance(servers[0], dict) and new_servers:
+        servers[0][server_key] = new_servers[0][server_key]
+    else:
+        existing_lb['servers'] = new_servers
+    if 'passHostHeader' in new_lb:
+        existing_lb['passHostHeader'] = new_lb['passHostHeader']
+    elif 'passHostHeader' in existing_lb:
+        del existing_lb['passHostHeader']
+    if 'serversTransport' in new_lb:
+        existing_lb['serversTransport'] = new_lb['serversTransport']
+    elif existing_lb.get('serversTransport') == transport_name:
+        del existing_lb['serversTransport']
+
+
 def save_config(data, path=None):
     if path is None:
         path = CONFIG_PATH
@@ -4942,6 +4982,14 @@ def save_entry():
                     _prev_path = _resolve_config_path(orig_cfg_file)
                     _prev_src = load_config(_prev_path) if _prev_path else {}
             _prev_tcp_mws = _prev_src.get('tcp', {}).get('routers', {}).get(plain_original_id, {}).get('middlewares')
+            for sec in ('http', 'tcp', 'udp'):
+                prev_router = _prev_src.get(sec, {}).get('routers', {}).get(plain_original_id)
+                if not isinstance(prev_router, dict):
+                    continue
+                prev_svc = (prev_router.get('service') or '').split('@')[0].strip()
+                if prev_svc and prev_svc in _prev_src.get(sec, {}).get('services', {}):
+                    service_name = prev_svc
+                break
 
         if is_edit and plain_original_id and orig_cfg_file != cfg_filename:
             if agent:
@@ -5030,8 +5078,9 @@ def save_entry():
                     del existing_transports[transport_name]
                     if not existing_transports:
                         del config['http']['serversTransports']
-            config['http']['routers'][router_name]   = r
-            config['http']['services'][service_name] = {'loadBalancer': lb}
+            _merge_router(config['http']['routers'], router_name, r,
+                          ('rule', 'entryPoints', 'service', 'middlewares', 'tls'))
+            _merge_service(config['http']['services'], service_name, lb, 'url', transport_name)
 
         elif protocol == 'tcp':
             rule = tcp_rule or (f"HostSNI(`{subdomain}.{domain}`)" if subdomain else "HostSNI(`*`)")
@@ -5050,15 +5099,20 @@ def save_entry():
                 router_entry['tls'] = {'passthrough': True}
             elif use_tls_tcp:
                 router_entry['tls'] = {'certResolver': tcp_cert_resolver} if tcp_cert_resolver else {}
-            config['tcp']['routers'][router_name]   = router_entry
-            config['tcp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
+            _merge_router(config['tcp']['routers'], router_name, router_entry,
+                          ('rule', 'entryPoints', 'service', 'middlewares', 'tls'))
+            _merge_service(config['tcp']['services'], service_name,
+                           {'servers': [{'address': f"{target_ip}:{target_port}"}]}, 'address', '')
 
         elif protocol == 'udp':
             udp_ep = request.form.get('udpEntryPoint', '').strip()
             config.setdefault('udp', {}).setdefault('routers', {})
             config['udp'].setdefault('services', {})
-            config['udp']['routers'][router_name]   = {'entryPoints': [udp_ep] if udp_ep else [], 'service': service_name}
-            config['udp']['services'][service_name] = {'loadBalancer': {'servers': [{'address': f"{target_ip}:{target_port}"}]}}
+            _merge_router(config['udp']['routers'], router_name,
+                          {'entryPoints': [udp_ep] if udp_ep else [], 'service': service_name},
+                          ('entryPoints', 'service'))
+            _merge_service(config['udp']['services'], service_name,
+                           {'servers': [{'address': f"{target_ip}:{target_port}"}]}, 'address', '')
 
         if agent:
             _agent_write_config(agent, cfg_filename, config)
