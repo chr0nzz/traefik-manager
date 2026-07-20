@@ -1413,7 +1413,7 @@ def set_security_headers(response):
     response.headers['Referrer-Policy']          = 'strict-origin-when-cross-origin'
     response.headers['X-XSS-Protection']         = '1; mode=block'
     response.headers['Permissions-Policy']       = 'camera=(), microphone=(), geolocation=()'
-    if not request.path.startswith('/static/'):
+    if not request.path.startswith('/static/') and 'Cache-Control' not in response.headers:
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
         response.headers['Pragma']        = 'no-cache'
         response.headers['Expires']       = '0'

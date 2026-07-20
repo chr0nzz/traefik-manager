@@ -33,7 +33,9 @@ State-changing endpoints (POST / DELETE) require an `X-CSRF-Token` header when u
 
 ## Caching
 
-All non-static responses are sent with `Cache-Control: no-store, no-cache, must-revalidate`. Without it, browsers applied heuristic freshness to API responses and to the app shell, which could serve stale data until a hard reload. Files under `/static/` are unaffected and stay cacheable.
+Responses are sent with `Cache-Control: no-store, no-cache, must-revalidate` by default. Without it, browsers applied heuristic freshness to API responses and to the app shell, which could serve stale data until a hard reload.
+
+Two kinds of response keep their own caching: anything under `/static/`, and any endpoint that sets `Cache-Control` itself. `GET /api/dashboard/icon/<slug>` is the latter - it serves cached app icons with `max-age=86400` so they are not refetched on every dashboard render.
 
 ---
 
