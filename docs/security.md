@@ -132,6 +132,14 @@ Set `COOKIE_SECURE=true` whenever TM is accessed over HTTPS. Without it, browser
 
 ---
 
+## Browser autofill
+
+Every field in the app except the sign-in form is marked so browsers and password managers do not autofill it. Credential fields inside the app (API user and password, git backup token, CrowdSec key, the basic-auth and digest-auth generators) are marked `new-password`, which stops Chrome offering saved logins and prompting to save what you type there.
+
+The sign-in form is deliberately untouched, so your password manager still works where it should. The password change and TOTP fields in Settings keep their proper `current-password`, `new-password`, and `one-time-code` semantics.
+
+---
+
 ## Outbound requests (SSRF protection)
 
 Several features make TM issue outbound HTTP requests on your behalf - the connection test, the webhook test, the URL ping tool, and OIDC provider discovery. To prevent these from being used to reach cloud metadata endpoints, these fetchers reject:
