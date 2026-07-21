@@ -4244,6 +4244,14 @@ def _to_list(val, default=None):
         return [val]
     return list(val) if hasattr(val, '__iter__') else []
 
+def _service_type(svc_def) -> str:
+    if isinstance(svc_def, dict):
+        for t in ('weighted', 'mirroring', 'failover'):
+            if t in svc_def:
+                return t
+    return 'loadBalancer'
+
+
 def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=None, extra_udp_svcs=None, api_svc_urls=None):
     apps = []
     http_config = config.get('http', {})
@@ -4279,6 +4287,7 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
                      'tlsDomains': tls_http.get('domains', []) if isinstance(tls_http, dict) else [],
                      'tlsOptionsProfile': tls_http.get('options', '') if isinstance(tls_http, dict) else '',
                      'insecureSkipVerify': insecure,
+                     'serviceType': _service_type(http_svcs.get(svc_key)),
                      'configFile': config_file, 'provider': 'file'})
     tcp_svcs = dict(config.get('tcp', {}).get('services', {}))
     if extra_tcp_svcs:
@@ -4302,6 +4311,7 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
                      'middlewares': _to_list(rdata.get('middlewares')), 'entryPoints': _to_list(rdata.get('entryPoints')),
                      'protocol': 'tcp', 'tls': tls_tcp if isinstance(tls_tcp, dict) else ({} if tls_tcp else None), 'enabled': True,
                      'certResolver': tls_tcp.get('certResolver', '') if isinstance(tls_tcp, dict) else '',
+                     'serviceType': _service_type(tcp_svcs.get(svc_key)),
                      'configFile': config_file, 'provider': 'file'})
     udp_svcs = dict(config.get('udp', {}).get('services', {}))
     if extra_udp_svcs:
@@ -4323,6 +4333,7 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
                      'service_name': svc_name, 'target': target,
                      'middlewares': [], 'entryPoints': _to_list(rdata.get('entryPoints')),
                      'protocol': 'udp', 'tls': False, 'enabled': True,
+                     'serviceType': _service_type(udp_svcs.get(svc_key)),
                      'configFile': config_file, 'provider': 'file'})
     return apps
 
@@ -4469,6 +4480,7 @@ def _build_all_apps(include_external=True, include_internal=False):
                              'entryPoints': router.get('entryPoints', []),
                              'protocol': 'http', 'tls': bool(router.get('tls')), 'enabled': False,
                              'passHostHeader': svc.get('loadBalancer', {}).get('passHostHeader', True),
+                             'serviceType': _service_type(svc),
                              'configFile': cf, 'provider': 'file', 'entrypointMiddlewares': []})
         elif proto == 'tcp':
             servers = svc.get('loadBalancer', {}).get('servers', [])
@@ -4477,6 +4489,7 @@ def _build_all_apps(include_external=True, include_internal=False):
                              'service_name': svc_name, 'target': target,
                              'middlewares': router.get('middlewares', []), 'entryPoints': router.get('entryPoints', []),
                              'protocol': 'tcp', 'tls': bool(router.get('tls')), 'enabled': False,
+                             'serviceType': _service_type(svc),
                              'configFile': cf, 'provider': 'file'})
         else:
             servers = svc.get('loadBalancer', {}).get('servers', [])
@@ -4485,6 +4498,7 @@ def _build_all_apps(include_external=True, include_internal=False):
                              'service_name': svc_name, 'target': target,
                              'middlewares': [], 'entryPoints': router.get('entryPoints', []),
                              'protocol': 'udp', 'tls': False, 'enabled': False,
+                             'serviceType': _service_type(svc),
                              'configFile': cf, 'provider': 'file'})
     return all_apps, all_middlewares
 
@@ -5734,6 +5748,7 @@ def api_agent_routes(agent_id):
                              'entryPoints': router.get('entryPoints', []),
                              'protocol': 'http', 'tls': bool(router.get('tls')), 'enabled': False,
                              'passHostHeader': svc.get('loadBalancer', {}).get('passHostHeader', True),
+                             'serviceType': _service_type(svc),
                              'configFile': cf, 'provider': 'file', 'entrypointMiddlewares': []})
             else:
                 target = servers[0].get('address', 'N/A') if servers else 'N/A'
@@ -5742,6 +5757,7 @@ def api_agent_routes(agent_id):
                              'middlewares': router.get('middlewares', []) if proto == 'tcp' else [],
                              'entryPoints': router.get('entryPoints', []),
                              'protocol': proto, 'tls': bool(router.get('tls')) if proto == 'tcp' else False,
+                             'serviceType': _service_type(svc),
                              'enabled': False, 'configFile': cf, 'provider': 'file'})
 
         return jsonify({'apps': apps, 'middlewares': middlewares, 'configErrors': config_errors})

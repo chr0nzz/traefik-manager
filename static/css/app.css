@@ -607,6 +607,8 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 .notif-mark-read { font-size: 11px; color: var(--blue); background: none; border: none; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: background 0.15s; }
 .notif-mark-read:hover { background: rgba(36,161,222,0.1); }
 .notif-list { overflow-y: auto; max-height: 420px; padding: 6px; }
+.modal-inline-notice { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--yellow); background: rgba(210,153,34,0.1); border: 1px solid rgba(210,153,34,0.3); }
+.modal-inline-notice i { margin-top: 1px; flex-shrink: 0; }
 .notif-empty { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 12px; }
 .notif-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 10px; border-radius: 8px; transition: background 0.1s; }
 .notif-item:hover { background: var(--input-bg); }

@@ -914,9 +914,24 @@ function setHttpRuleMode(mode) {
     if (!isAdv) { const el = document.getElementById('httpRule'); if (el) el.value = ''; }
 }
 
+function _applyServiceTypeNotice(svcType) {
+    const editable = !svcType || svcType === 'loadBalancer';
+    const notice = document.getElementById('svcTypeNotice');
+    if (notice) notice.style.display = editable ? 'none' : 'flex';
+    if (!editable) {
+        const text = document.getElementById('svcTypeNoticeText');
+        if (text) text.textContent = `This route points at a ${svcType} service, which can't be edited here. The target field is ignored on save — use the Raw YAML editor to change it.`;
+    }
+    ['targetIp', 'targetPort', 'targetIpTcp', 'targetPortTcp', 'targetIpUdp', 'targetPortUdp'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = !editable;
+    });
+}
+
 async function openModal() {
     document.getElementById('isEdit').value = 'false';
     document.getElementById('modalTitle').innerText = 'Add Route';
+    _applyServiceTypeNotice('loadBalancer');
     document.getElementById('originalId').value = '';
     ['serviceName','subdomain','targetIp','targetPort','middlewares','tcpRule','httpRule'].forEach(id => {
         const el = document.getElementById(id);
@@ -2352,6 +2367,7 @@ async function handleEdit(btn) {
 
     const proto = app.protocol || 'http';
     setProtocol(proto);
+    _applyServiceTypeNotice(app.serviceType);
 
     if (proto === 'http') {
         _applyHttpRuleToForm(app.rule || '');
