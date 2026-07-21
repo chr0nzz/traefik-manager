@@ -2887,7 +2887,10 @@ def api_certs():
 @app.route('/api/traefik/logs')
 @login_required
 def api_logs():
-    lines_req = min(int(request.args.get('lines', 100)), 1000)
+    try:
+        lines_req = min(int(request.args.get('lines', 100)), 1000)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid lines parameter'}), 400
     log_path = _readable_config_path(_get_access_log_path())
     if not log_path or not os.path.exists(log_path):
         return jsonify({'error': 'Access log not found. Set ACCESS_LOG_PATH env var or configure the path in Settings.', 'lines': []})
@@ -3596,7 +3599,7 @@ def api_tls_options_save():
         opts['clientAuth'] = ca_obj
     config.setdefault('tls', {}).setdefault('options', {})[name] = opts
     save_config(_strip_empty_sections(config), target_path)
-    add_notification(f"TLS profile '{name}' saved", 'success')
+    add_notification('success', f"TLS profile '{name}' saved")
     return jsonify({'ok': True})
 
 
@@ -3613,7 +3616,7 @@ def api_tls_options_delete(name):
     create_backup(target_path)
     del tls_opts[name]
     save_config(_strip_empty_sections(config), target_path)
-    add_notification(f"TLS profile '{name}' deleted", 'success')
+    add_notification('success', f"TLS profile '{name}' deleted")
     return jsonify({'ok': True})
 
 
@@ -4108,6 +4111,13 @@ def _restore_go_templates(obj, mapping):
         return [_restore_go_templates(item, mapping) for item in obj]
     return obj
 
+def _file_template_map(path):
+    if path and os.path.exists(path):
+        with open(path, 'r') as f:
+            _, mapping = _sanitize_go_templates(f.read())
+        return mapping
+    return {}
+
 def _load_config_display(path):
     if not os.path.exists(path):
         return {}
@@ -4233,7 +4243,12 @@ def save_config(data, path=None):
 
 
 def _svc_key(name):
+    if not isinstance(name, str):
+        return ''
     return name.split('@')[0] if '@' in name else name
+
+def _as_dict(val):
+    return val if isinstance(val, dict) else {}
 
 def _to_list(val, default=None):
     if val is None:
@@ -4246,19 +4261,21 @@ def _to_list(val, default=None):
 
 def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=None, extra_udp_svcs=None, api_svc_urls=None):
     apps = []
-    http_config = config.get('http', {})
-    http_svcs = dict(http_config.get('services', {}))
+    http_config = config.get('http') or {}
+    http_svcs = dict(http_config.get('services') or {})
     if extra_http_svcs:
         for k, v in extra_http_svcs.items():
             if k not in http_svcs:
                 http_svcs[k] = v
-    for rname, rdata in http_config.get('routers', {}).items():
+    for rname, rdata in (http_config.get('routers') or {}).items():
+        if not isinstance(rdata, dict):
+            continue
         svc_name = rdata.get('service', '')
         svc_key  = _svc_key(svc_name)
         target_url = 'N/A'
         lb = {}
         if svc_key in http_svcs:
-            lb = http_svcs[svc_key].get('loadBalancer', {})
+            lb = _as_dict(_as_dict(http_svcs[svc_key]).get('loadBalancer'))
             servers = lb.get('servers', [])
             if servers:
                 target_url = servers[0].get('url', 'Unknown')
@@ -4267,8 +4284,8 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
         app_id = f"{config_file}::{rname}" if (MULTI_CONFIG and config_file) else rname
         tls_http = rdata.get('tls', {})
         transport_name = lb.get('serversTransport', '')
-        transports_cfg = http_config.get('serversTransports', {})
-        insecure = bool(transports_cfg.get(transport_name, {}).get('insecureSkipVerify', False)) if transport_name else False
+        transports_cfg = http_config.get('serversTransports') or {}
+        insecure = bool(_as_dict(transports_cfg.get(transport_name)).get('insecureSkipVerify', False)) if transport_name else False
         apps.append({'id': app_id, 'name': rname, 'rule': rdata.get('rule', ''),
                      'service_name': svc_name, 'target': target_url,
                      'middlewares': _to_list(rdata.get('middlewares')),
@@ -4280,17 +4297,20 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
                      'tlsOptionsProfile': tls_http.get('options', '') if isinstance(tls_http, dict) else '',
                      'insecureSkipVerify': insecure,
                      'configFile': config_file, 'provider': 'file'})
-    tcp_svcs = dict(config.get('tcp', {}).get('services', {}))
+    tcp_config = config.get('tcp') or {}
+    tcp_svcs = dict(tcp_config.get('services') or {})
     if extra_tcp_svcs:
         for k, v in extra_tcp_svcs.items():
             if k not in tcp_svcs:
                 tcp_svcs[k] = v
-    for rname, rdata in config.get('tcp', {}).get('routers', {}).items():
+    for rname, rdata in (tcp_config.get('routers') or {}).items():
+        if not isinstance(rdata, dict):
+            continue
         svc_name = rdata.get('service', '')
         svc_key  = _svc_key(svc_name)
         target = 'N/A'
         if svc_key in tcp_svcs:
-            servers = tcp_svcs[svc_key].get('loadBalancer', {}).get('servers', [])
+            servers = _as_dict(_as_dict(tcp_svcs[svc_key]).get('loadBalancer')).get('servers', [])
             if servers:
                 target = servers[0].get('address', 'N/A')
         if target == 'N/A' and api_svc_urls:
@@ -4303,17 +4323,20 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
                      'protocol': 'tcp', 'tls': tls_tcp if isinstance(tls_tcp, dict) else ({} if tls_tcp else None), 'enabled': True,
                      'certResolver': tls_tcp.get('certResolver', '') if isinstance(tls_tcp, dict) else '',
                      'configFile': config_file, 'provider': 'file'})
-    udp_svcs = dict(config.get('udp', {}).get('services', {}))
+    udp_config = config.get('udp') or {}
+    udp_svcs = dict(udp_config.get('services') or {})
     if extra_udp_svcs:
         for k, v in extra_udp_svcs.items():
             if k not in udp_svcs:
                 udp_svcs[k] = v
-    for rname, rdata in config.get('udp', {}).get('routers', {}).items():
+    for rname, rdata in (udp_config.get('routers') or {}).items():
+        if not isinstance(rdata, dict):
+            continue
         svc_name = rdata.get('service', '')
         svc_key  = _svc_key(svc_name)
         target = 'N/A'
         if svc_key in udp_svcs:
-            servers = udp_svcs[svc_key].get('loadBalancer', {}).get('servers', [])
+            servers = _as_dict(_as_dict(udp_svcs[svc_key]).get('loadBalancer')).get('servers', [])
             if servers:
                 target = servers[0].get('address', 'N/A')
         if target == 'N/A' and api_svc_urls:
@@ -4421,11 +4444,11 @@ def _build_all_apps(include_external=True, include_internal=False):
     combined_tcp  = {}
     combined_udp  = {}
     for _, cfg in loaded:
-        for k, v in cfg.get('http', {}).get('services', {}).items():
+        for k, v in ((cfg.get('http') or {}).get('services') or {}).items():
             combined_http.setdefault(k, v)
-        for k, v in cfg.get('tcp', {}).get('services', {}).items():
+        for k, v in ((cfg.get('tcp') or {}).get('services') or {}).items():
             combined_tcp.setdefault(k, v)
-        for k, v in cfg.get('udp', {}).get('services', {}).items():
+        for k, v in ((cfg.get('udp') or {}).get('services') or {}).items():
             combined_udp.setdefault(k, v)
     ep_mw_map = _entrypoint_mw_map()
     if include_external:
@@ -4489,6 +4512,18 @@ def _build_all_apps(include_external=True, include_internal=False):
     return all_apps, all_middlewares
 
 
+def _service_shared(config: dict, svc_name: str, exclude_router: str) -> bool:
+    target = _svc_key(svc_name)
+    for sec in ('http', 'tcp', 'udp'):
+        routers = (config.get(sec) or {}).get('routers') or {}
+        for rn, rd in routers.items():
+            if rn == exclude_router or not isinstance(rd, dict):
+                continue
+            if _svc_key(rd.get('service', '')) == target:
+                return True
+    return False
+
+
 def _toggle_route(route_id: str, enable: bool):
     settings = load_settings()
     disabled = settings.get('disabled_routes', {})
@@ -4534,7 +4569,10 @@ def _toggle_route(route_id: str, enable: bool):
         target_path  = None
         svc_path     = None
         svc_config   = None
-        for p in CONFIG_PATHS:
+        cf_prefix   = route_id.split('::', 1)[0] if '::' in route_id else ''
+        _pref_path  = _resolve_config_path(cf_prefix) if cf_prefix else None
+        search_paths = [_pref_path] if _pref_path else CONFIG_PATHS
+        for p in search_paths:
             config = load_config(p)
             for prot in ('http', 'tcp', 'udp'):
                 routers = config.get(prot, {}).get('routers', {})
@@ -4549,7 +4587,10 @@ def _toggle_route(route_id: str, enable: bool):
                 break
         if proto is None:
             return
-        svc = dict(svc_config.get(proto, {}).get('services', {}).pop(svc_name, {}))
+        if _service_shared(svc_config, svc_name, rname):
+            svc = dict(svc_config.get(proto, {}).get('services', {}).get(svc_name, {}))
+        else:
+            svc = dict(svc_config.get(proto, {}).get('services', {}).pop(svc_name, {}))
         if not svc:
             for p in CONFIG_PATHS:
                 if p == target_path:
@@ -4558,10 +4599,15 @@ def _toggle_route(route_id: str, enable: bool):
                 if svc_name in other.get(proto, {}).get('services', {}):
                     svc      = dict(other[proto]['services'].pop(svc_name))
                     svc_path = p
+                    svc      = _restore_go_templates(svc, _file_template_map(p))
                     other_stripped = _strip_empty_sections(other)
                     create_backup(p)
                     save_config(other_stripped, p)
                     break
+        _target_map = _file_template_map(target_path)
+        router = _restore_go_templates(router, _target_map)
+        if svc_path is None:
+            svc = _restore_go_templates(svc, _target_map)
         cf = os.path.basename(target_path) if (MULTI_CONFIG or ACTIVE_CONFIG_DIR) else ''
         svc_cf = os.path.basename(svc_path) if svc_path and (MULTI_CONFIG or ACTIVE_CONFIG_DIR) else cf
         disabled[route_id] = {'protocol': proto, 'router': router, 'service': svc, 'configFile': cf, 'serviceConfigFile': svc_cf}
@@ -4690,13 +4736,18 @@ def _toggle_route_agent(agent: dict, agent_id: str, route_id: str, enable: bool)
         _agent_write_config(agent, cf, config)
     else:
         all_cfgs = _agent_load_configs(agent)
-        for fname, config in all_cfgs.items():
+        cf_prefix = route_id.split('::', 1)[0] if '::' in route_id else ''
+        cfg_items = [(cf_prefix, all_cfgs[cf_prefix])] if cf_prefix in all_cfgs else list(all_cfgs.items())
+        for fname, config in cfg_items:
             for prot in ('http', 'tcp', 'udp'):
                 routers = config.get(prot, {}).get('routers', {})
                 if rname in routers:
                     router   = dict(routers.pop(rname))
                     svc_name = _svc_key(router.get('service', rname))
-                    svc      = dict(config.get(prot, {}).get('services', {}).pop(svc_name, {}))
+                    if _service_shared(config, svc_name, rname):
+                        svc = dict(config.get(prot, {}).get('services', {}).get(svc_name, {}))
+                    else:
+                        svc = dict(config.get(prot, {}).get('services', {}).pop(svc_name, {}))
                     disabled[store_key] = {'protocol': prot, 'router': router, 'service': svc, 'configFile': fname}
                     _agent_write_config(agent, fname, config)
                     break
@@ -4850,7 +4901,7 @@ def api_route_raw_save(route_id):
             except OSError:
                 pass
         logger.info(f"Route '{rname}' raw config saved: {target_path}")
-        add_notification(f"Route '{rname}' updated", 'success')
+        add_notification('success', f"Route '{rname}' updated")
         threading.Thread(target=lambda: _git_push_if_enabled('route raw save'), daemon=True).start()
         return jsonify({'ok': True})
     except Exception as e:
@@ -5163,7 +5214,8 @@ def delete_entry(router_id):
                     if plain_id in s.get('routers', {}):
                         svc = (s['routers'][plain_id].get('service') or '').strip()
                         del s['routers'][plain_id]
-                        if svc and 'services' in s and svc in s['services']:
+                        if (svc and 'services' in s and svc in s['services']
+                                and not _service_shared(config, svc, plain_id)):
                             del s['services'][svc]
                         _agent_write_config(agent, fname, config)
                         deleted = True
@@ -5182,7 +5234,8 @@ def delete_entry(router_id):
                     if plain_id in s.get('routers', {}):
                         svc = (s['routers'][plain_id].get('service') or '').strip()
                         del s['routers'][plain_id]
-                        if svc and 'services' in s and svc in s['services']:
+                        if (svc and 'services' in s and svc in s['services']
+                                and not _service_shared(config, svc, plain_id)):
                             del s['services'][svc]
                         create_backup(target_path)
                         save_config(_strip_empty_sections(config), target_path)
@@ -5477,6 +5530,8 @@ def oidc_callback():
     groups = userinfo.get(s.get('oidc_groups_claim', 'groups'), [])
     if not isinstance(groups, list):
         groups = [str(groups)]
+    _ev = userinfo.get('email_verified')
+    email_unverified = _ev is False or (isinstance(_ev, str) and _ev.strip().lower() in ('false', '0', 'no'))
     allowed_emails = [e.strip().lower() for e in s.get('oidc_allowed_emails', '').split(',') if e.strip()]
     allowed_groups = [g.strip() for g in s.get('oidc_allowed_groups', '').split(',') if g.strip()]
     if not allowed_emails and not allowed_groups and not s.get('oidc_allow_any_authenticated'):
@@ -5485,6 +5540,10 @@ def oidc_callback():
         return redirect(url_for('login'))
     if allowed_emails and email not in allowed_emails:
         logger.warning(f"OIDC login denied for {email!r} - not in allowed emails")
+        flash("Your account is not authorized to access this application.", "error")
+        return redirect(url_for('login'))
+    if allowed_emails and email in allowed_emails and email_unverified:
+        logger.warning(f"OIDC login denied for {email!r} - email not verified by the identity provider")
         flash("Your account is not authorized to access this application.", "error")
         return redirect(url_for('login'))
     if allowed_groups and not any(g in allowed_groups for g in groups):
@@ -5939,6 +5998,8 @@ def api_agents_proxy(agent_id, path):
         elif request.data:
             kwargs['data'] = request.data
         agent_path = '/api/' + path.lstrip('/')
+        if request.query_string:
+            kwargs['params'] = request.query_string
         resp = _agent_request(agent, request.method, agent_path, **kwargs)
         if (request.method in ('POST', 'PUT', 'DELETE') and resp.status_code < 400
                 and not agent_path.startswith('/api/backup/git')
