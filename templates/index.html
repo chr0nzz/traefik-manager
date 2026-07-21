@@ -2385,6 +2385,7 @@ async function handleEdit(btn) {
             if (sansEl) sansEl.value = (first.sans || []).join('\n');
         } else if (wChk) {
             wChk.checked = false;
+            _onWildcardToggle(false);
         }
         const tlsOptSel2 = document.getElementById('tlsOptionsProfileSelect');
         if (tlsOptSel2) {
