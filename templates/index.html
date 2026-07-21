@@ -493,6 +493,8 @@ function _updateServerSwitcherList(agents) {
 function switchServer(agentId) {
     const agent = agentId ? (_agentRegistry[agentId] || null) : null;
     _activeAgent = agent;
+    if (agent) localStorage.setItem('tm_active_agent', agent.id);
+    else localStorage.removeItem('tm_active_agent');
     _cachedEntrypoints = null;
     _cachedMiddlewares = null;
     _cachedCertResolvers = null;
@@ -5552,11 +5554,21 @@ function _initMobileFilterBars() {
     if (typeof applyUiPrefs === 'function') applyUiPrefs();
     if (typeof _applyDocsLinkVisibility === 'function') _applyDocsLinkVisibility();
     _initMobileFilterBars();
-    refreshRoutes();
+    const _storedAgentId = localStorage.getItem('tm_active_agent');
+    if (!_storedAgentId) refreshRoutes();
     loadOverviewStats();
     checkManagerVersion();
     fetchNotifications();
-    fetch('/api/agents').then(r => r.json()).then(d => _updateServerSwitcherList(d.agents || [])).catch(() => {});
+    fetch('/api/agents').then(r => r.json()).then(d => {
+        const agents = d.agents || [];
+        _updateServerSwitcherList(agents);
+        if (_storedAgentId && agents.some(a => a.id === _storedAgentId)) {
+            switchServer(_storedAgentId);
+        } else if (_storedAgentId) {
+            localStorage.removeItem('tm_active_agent');
+            refreshRoutes();
+        }
+    }).catch(() => { if (_storedAgentId) refreshRoutes(); });
     setInterval(fetchNotifications, 60000);
 })();
 
