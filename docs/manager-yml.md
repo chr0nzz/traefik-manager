@@ -75,6 +75,7 @@ visible_tabs:
   plugins: false
   logs: true
 disabled_routes: {}
+managed_middlewares: {}
 self_route:
   domain: ""
   service_url: ""
@@ -426,6 +427,21 @@ Controls which optional tabs are shown. Managed via the setup wizard or **Settin
 **Type:** map - **Default:** `{}`
 
 Stores the full config of disabled routes so they can be re-enabled without data loss. Managed automatically by the enable/disable toggle. Do not edit by hand.
+
+---
+
+### `managed_middlewares`
+
+**Type:** map - **Default:** `{}`
+
+Ownership ledger for middlewares that traefik-manager generated on your behalf - currently the `<route>-headers` middleware created by the [Security headers preset](./tab-routes#security-headers-preset). Each entry records that the tool created that middleware, so it will only ever update or remove middlewares it owns, and refuses to overwrite a same-named middleware you wrote by hand. Managed automatically; do not edit by hand.
+
+```yaml
+managed_middlewares:
+  jellyfin-headers:
+    kind: route-headers
+    route: jellyfin
+```
 
 ---
 

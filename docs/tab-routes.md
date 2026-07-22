@@ -53,6 +53,7 @@ Click **Add Route** in the top bar. Fill in:
 | Request wildcard certificate | Appears when a cert resolver is selected. Check this to add a `tls.domains` block with `main: yourdomain.com` and `sans: *.yourdomain.com` auto-filled from the selected domain. Use with DNS challenge resolvers (Cloudflare, Route 53, etc.) to request a wildcard certificate that covers all subdomains. |
 | TLS Options Profile | Appears when a cert resolver is selected. Select a named `tls.options` profile from the TLS Options tab to assign it to this router (e.g. `modern`, `strict`). Leave blank to use Traefik's default TLS settings. |
 | Skip TLS Verification | Adds `insecureSkipVerify: true` via a named `serversTransport` entry. Use for backends with self-signed certificates (e.g. Proxmox, Kasm). A yellow **TLS skip** badge appears on the route card. |
+| Security headers preset | *(HTTP only)* Generates a tool-managed `<route>-headers` middleware with a `Permissions-Policy` and common security headers, and attaches it to the router. See [Security headers preset](#security-headers-preset) below. |
 | Config File | Shown when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Select an existing file or choose **+ New file...** to type a filename - the file is created automatically in `CONFIG_DIR`. The `.yml` extension is added automatically if omitted. |
 
 For TCP routes, enter a raw SNI rule (`HostSNI(\`*\`)` for passthrough). UDP routes route by entry point only - no rule needed.
@@ -66,6 +67,30 @@ Saving only rewrites the parts of the route the form owns: the rule, entry point
 ::: warning Advanced service types
 If a router points at a `weighted`, `mirroring` or `failover` service instead of a `loadBalancer`, that service is left untouched, so editing the target field in the modal has no effect on it. Edit those services directly in the config file.
 :::
+
+## Security headers preset
+
+The **Security headers preset** toggle in the HTTP route form generates a middleware that sets a `Permissions-Policy` and the common security headers, so you don't have to hand-write one. When enabled on save it:
+
+- creates a middleware named `<route>-headers` under `http.middlewares` and attaches it to the router, and
+- records ownership in `manager.yml` under [`managed_middlewares`](./manager-yml#managed-middlewares) so the tool knows it created it.
+
+The generated middleware is a **normal, visible, editable file middleware** - it appears in the [Middlewares tab](./tab-middlewares) like any other and you can hand-tune it there.
+
+**Toggles:**
+
+- **Permissions-Policy** - each browser feature (`geolocation`, `camera`, `microphone`, `fullscreen`, `autoplay`, `payment`, `usb`, `display-capture`, `accelerometer`, `gyroscope`, `magnetometer`) can be set to **self** (only your site), **all** (any site), or **block**. The default allows `self` for the first five and blocks the rest, written via `customResponseHeaders` so it stays version-independent.
+- **HSTS** - `stsSeconds: 31536000` + `stsIncludeSubdomains` (force HTTPS for a year).
+- **Content-Type nosniff**, **Frame deny** (anti-clickjacking), and a **Referrer-Policy** selector.
+
+**Round-trip and safety:**
+
+- Re-opening the route reads the middleware back into the toggles. If you have hand-edited `<route>-headers` beyond what the toggles can represent, the form shows it as **custom** and leaves your content untouched - change any toggle to regenerate it, or turn the preset off to remove it.
+- Turning the preset off removes the `<route>-headers` middleware, detaches it from the router, and clears the ledger entry - but only if the tool created it.
+- If a middleware named `<route>-headers` already exists and was **not** created by the preset, the save is refused with a clear message so a hand-authored middleware is never overwritten. Rename or remove it first.
+- Renaming a route moves its `<route>-headers` middleware to match the new name.
+
+The preset is available for local (file-provider) HTTP routes; routes on a remote agent are unaffected.
 
 ## Deleting a route
 

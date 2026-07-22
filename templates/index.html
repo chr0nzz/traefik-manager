@@ -932,6 +932,100 @@ function _applyServiceTypeNotice(svcType) {
     });
 }
 
+const HP_FEATURES = ['geolocation','camera','microphone','fullscreen','autoplay','payment','usb','display-capture','accelerometer','gyroscope','magnetometer'];
+const HP_SELF_DEFAULT = ['geolocation','camera','microphone','fullscreen','autoplay'];
+
+function _hpDefaults() {
+    const perms = {};
+    HP_FEATURES.forEach(f => perms[f] = HP_SELF_DEFAULT.includes(f) ? 'self' : 'block');
+    return { perms, hsts: true, nosniff: true, frameDeny: true, referrer: 'strict-origin-when-cross-origin' };
+}
+
+function _buildHeadersPresetPerms() {
+    const host = document.getElementById('hpPerms');
+    if (!host || host.dataset.built) return;
+    host.dataset.built = '1';
+    HP_FEATURES.forEach(f => {
+        const wrap = document.createElement('div');
+        wrap.className = 'flex items-center justify-between gap-2';
+        wrap.innerHTML = `<span class="text-sm" style="color:var(--text)">${f}</span>`
+            + `<select id="hp_perm_${f}" name="hp_perm_${f}" onchange="_hpUserEdited()" class="input-field" style="max-width:9rem">`
+            + `<option value="self">self</option><option value="all">all</option><option value="block">block</option></select>`;
+        host.appendChild(wrap);
+    });
+}
+
+function _applyHeadersPresetToggles(t) {
+    HP_FEATURES.forEach(f => {
+        const sel = document.getElementById('hp_perm_' + f);
+        if (sel) sel.value = (t.perms && t.perms[f]) || 'block';
+    });
+    document.getElementById('hp_hsts').checked = !!t.hsts;
+    document.getElementById('hp_nosniff').checked = !!t.nosniff;
+    document.getElementById('hp_frameDeny').checked = !!t.frameDeny;
+    document.getElementById('hp_referrer').value = t.referrer || '';
+}
+
+function _renderHeadersPresetState(on, custom) {
+    document.getElementById('hpBody').style.display = (on && !custom) ? '' : 'none';
+    const notice = document.getElementById('hpCustomNotice');
+    notice.style.display = (on && custom) ? '' : 'none';
+    if (on && custom) {
+        const el = document.getElementById('hpCustomName');
+        if (el) el.textContent = document.getElementById('serviceName').value + '-headers';
+    }
+}
+
+function _hpUserEdited() {
+    document.getElementById('headersPresetCustom').value = 'false';
+    _renderHeadersPresetState(document.getElementById('hpEnabled').checked, false);
+}
+
+function _onHeadersPresetToggle(on) {
+    document.getElementById('headersPresetEnabled').value = on ? 'true' : 'false';
+    document.getElementById('headersPresetCustom').value = 'false';
+    _renderHeadersPresetState(on, false);
+}
+
+function _resetHeadersPreset() {
+    const section = document.getElementById('headersPresetSection');
+    if (!section) return;
+    _buildHeadersPresetPerms();
+    const host = !_activeAgent;
+    section.style.display = host ? '' : 'none';
+    document.getElementById('hpEnabled').checked = false;
+    _applyHeadersPresetToggles(_hpDefaults());
+    document.getElementById('headersPresetPresent').value = host ? 'true' : '';
+    document.getElementById('headersPresetEnabled').value = 'false';
+    document.getElementById('headersPresetCustom').value = 'false';
+    _renderHeadersPresetState(false, false);
+}
+
+function _applyHeadersPreset(hp) {
+    const section = document.getElementById('headersPresetSection');
+    if (!section) return;
+    _buildHeadersPresetPerms();
+    if (!hp || _activeAgent) {
+        section.style.display = 'none';
+        document.getElementById('hpEnabled').checked = false;
+        _applyHeadersPresetToggles(_hpDefaults());
+        document.getElementById('headersPresetPresent').value = '';
+        document.getElementById('headersPresetEnabled').value = 'false';
+        document.getElementById('headersPresetCustom').value = 'false';
+        _renderHeadersPresetState(false, false);
+        return;
+    }
+    section.style.display = '';
+    const on = hp.state === 'toggles' || hp.state === 'custom';
+    const custom = hp.state === 'custom';
+    document.getElementById('hpEnabled').checked = on;
+    _applyHeadersPresetToggles(hp.toggles || _hpDefaults());
+    document.getElementById('headersPresetPresent').value = 'true';
+    document.getElementById('headersPresetEnabled').value = on ? 'true' : 'false';
+    document.getElementById('headersPresetCustom').value = custom ? 'true' : 'false';
+    _renderHeadersPresetState(on, custom);
+}
+
 async function openModal() {
     document.getElementById('isEdit').value = 'false';
     document.getElementById('modalTitle').innerText = 'Add Route';
@@ -958,6 +1052,7 @@ async function openModal() {
     const mainEl = document.getElementById('tlsWildcardMain'); if (mainEl) mainEl.value = '';
     const sansEl = document.getElementById('tlsWildcardSans'); if (sansEl) sansEl.value = '';
     setProtocol('http');
+    _resetHeadersPreset();
     const tlsOptSel = document.getElementById('tlsOptionsProfileSelect');
     if (tlsOptSel) tlsOptSel.value = '';
     _populateTlsOptionsSelect();
@@ -2294,7 +2389,9 @@ async function cloneRoute(btn) {
         const parts = target.split(':');
         document.getElementById('targetIp').value = parts[0] || '';
         document.getElementById('targetPort').value = parts[1] || '80';
-        await _initMiddlewareChips(app.middlewares || []);
+        const _ownedHdr = (app.headersPreset && app.headersPreset.owned) ? app.name + '-headers' : null;
+        await _initMiddlewareChips((app.middlewares || []).filter(m => m !== _ownedHdr));
+        _applyHeadersPreset(app.headersPreset);
         await _initEntrypointChips('http', app.entryPoints || []);
         document.getElementById('scheme').value = targetScheme;
         document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
@@ -2404,7 +2501,9 @@ async function handleEdit(btn) {
         const parts = target.split(':');
         document.getElementById('targetIp').value = parts[0];
         document.getElementById('targetPort').value = parts[1] || '80';
-        await _initMiddlewareChips(app.middlewares || []);
+        const _ownedHdr = (app.headersPreset && app.headersPreset.owned) ? app.name + '-headers' : null;
+        await _initMiddlewareChips((app.middlewares || []).filter(m => m !== _ownedHdr));
+        _applyHeadersPreset(app.headersPreset);
         await _initEntrypointChips('http', app.entryPoints || []);
         document.getElementById('scheme').value = targetScheme;
         document.getElementById('passHostHeader').checked = app.passHostHeader !== false;

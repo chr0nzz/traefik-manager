@@ -126,6 +126,41 @@
                         </div>
                         <span class="tm-info-btn" data-tip="Disables certificate validation for the backend. Use for self-signed certs (e.g. Proxmox, Kasm). Adds insecureSkipVerify via a named serversTransport."><i class="ph-bold ph-info"></i></span>
                     </div>
+                    <div id="headersPresetSection">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="hpEnabled" onchange="_onHeadersPresetToggle(this.checked)" class="rounded" style="accent-color:var(--blue)">
+                                <span class="text-sm" style="color:var(--text)">Security headers preset</span>
+                            </div>
+                            <span class="tm-info-btn" data-tip="Creates a tool-managed <route>-headers middleware: a Permissions-Policy plus common security headers (HSTS, nosniff, frame-deny, referrer). It stays a normal, editable file middleware in the Middlewares tab."><i class="ph-bold ph-info"></i></span>
+                        </div>
+                        <input type="hidden" name="headersPresetPresent" id="headersPresetPresent" value="">
+                        <input type="hidden" name="headersPresetEnabled" id="headersPresetEnabled" value="false">
+                        <input type="hidden" name="headersPresetCustom" id="headersPresetCustom" value="false">
+                        <div id="hpCustomNotice" class="text-xs mt-2 p-2 rounded-lg" style="display:none;background:rgba(240,180,0,0.1);border:1px solid rgba(240,180,0,0.3);color:var(--text)">
+                            The <code id="hpCustomName"></code> middleware has been hand-edited beyond what these toggles cover, so it's shown as custom and kept as-is. Edit it in the Middlewares tab, or turn the preset off and on again to replace it with the toggle defaults. Turn it off to remove it.
+                        </div>
+                        <div id="hpBody" class="mt-2 p-3 rounded-lg" style="display:none;background:var(--input-bg);border:1px solid var(--border)">
+                            <p class="text-xs mb-2" style="color:var(--muted)">Permissions-Policy — who may use each browser feature. <code>self</code> = only your own site · <code>all</code> = any site, including embedded iframes · <code>block</code> = no one.</p>
+                            <div id="hpPerms" class="grid grid-cols-2 gap-2"></div>
+                            <div class="grid grid-cols-2 gap-2 mt-3">
+                                <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" name="hp_hsts" id="hp_hsts" value="true" onchange="_hpUserEdited()" class="rounded" style="accent-color:var(--blue)"> HSTS (force HTTPS)</label>
+                                <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" name="hp_nosniff" id="hp_nosniff" value="true" onchange="_hpUserEdited()" class="rounded" style="accent-color:var(--blue)"> Content-Type nosniff</label>
+                                <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" name="hp_frameDeny" id="hp_frameDeny" value="true" onchange="_hpUserEdited()" class="rounded" style="accent-color:var(--blue)"> Frame deny (anti-clickjacking)</label>
+                                <div>
+                                    <label class="text-sm" style="color:var(--text)">Referrer-Policy</label>
+                                    <select name="hp_referrer" id="hp_referrer" onchange="_hpUserEdited()" class="input-field">
+                                        <option value="">(none)</option>
+                                        <option value="no-referrer">no-referrer</option>
+                                        <option value="strict-origin-when-cross-origin">strict-origin-when-cross-origin</option>
+                                        <option value="same-origin">same-origin</option>
+                                        <option value="strict-origin">strict-origin</option>
+                                        <option value="origin-when-cross-origin">origin-when-cross-origin</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div id="wildcardCheckboxRow" style="display:none" class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="wildcardCheckbox" onchange="_onWildcardToggle(this.checked)" class="rounded" style="accent-color:var(--blue)">

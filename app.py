@@ -644,6 +644,7 @@ def load_settings() -> dict:
         'otp_secret':           '',
         'otp_enabled':          False,
         'disabled_routes':      {},
+        'managed_middlewares':  {},
         'api_keys':             [],
         'api_key_enabled':      False,
         'self_route':           {'domain': '', 'service_url': ''},
@@ -734,6 +735,8 @@ def load_settings() -> dict:
                 merged['setup_complete'] = True
         if 'disabled_routes' in data and isinstance(data['disabled_routes'], dict):
             merged['disabled_routes'] = dict(data['disabled_routes'])
+        if 'managed_middlewares' in data and isinstance(data['managed_middlewares'], dict):
+            merged['managed_middlewares'] = dict(data['managed_middlewares'])
         if 'api_keys' in data and isinstance(data['api_keys'], list):
             keys = []
             for k in data['api_keys']:
@@ -849,6 +852,7 @@ def save_settings(domains, cert_resolver, traefik_api_url,
                   otp_secret=None, otp_enabled=None,
                   api_keys=None,
                   disabled_routes=None,
+                  managed_middlewares=None,
                   self_route=None,
                   acme_json_path=None,
                   access_log_path=None,
@@ -886,6 +890,8 @@ def save_settings(domains, cert_resolver, traefik_api_url,
         self_route = _cur.get('self_route', {'domain': '', 'service_url': ''})
     if disabled_routes is None:
         disabled_routes = _cur.get('disabled_routes', {})
+    if managed_middlewares is None:
+        managed_middlewares = _cur.get('managed_middlewares', {})
     if acme_json_path is None:
         acme_json_path = _cur.get('acme_json_path', '')
     if default_theme is None:
@@ -979,6 +985,7 @@ def save_settings(domains, cert_resolver, traefik_api_url,
         'otp_secret':           otp_secret,
         'otp_enabled':          otp_enabled,
         'disabled_routes':      disabled_routes,
+        'managed_middlewares':  managed_middlewares,
         'api_keys':             api_keys,
         'api_key_enabled':      len(list(api_keys)) > 0,
         'self_route':           self_route,
@@ -4272,6 +4279,134 @@ def _merge_service(section: dict, name: str, new_lb: dict, server_key: str, tran
         del existing_lb['serversTransport']
 
 
+def _json_plain(value: object) -> object:
+    import json as _json
+    try:
+        return _json.loads(_json.dumps(value, default=str))
+    except (TypeError, ValueError):
+        return value
+
+
+HEADERS_PRESET_FEATURES = (
+    'geolocation', 'camera', 'microphone', 'fullscreen', 'autoplay',
+    'payment', 'usb', 'display-capture', 'accelerometer', 'gyroscope', 'magnetometer',
+)
+HEADERS_PRESET_SELF_DEFAULT = ('geolocation', 'camera', 'microphone', 'fullscreen', 'autoplay')
+HEADERS_PRESET_HSTS_SECONDS = 31536000
+HEADERS_PRESET_REFERRER_DEFAULT = 'strict-origin-when-cross-origin'
+HEADERS_PRESET_REFERRER_VALUES = {
+    'no-referrer', 'strict-origin-when-cross-origin', 'same-origin',
+    'strict-origin', 'origin-when-cross-origin',
+}
+_PERM_VALUE_TO_TOKEN = {'self': '(self)', 'all': '*', 'block': '()'}
+_PERM_TOKEN_TO_VALUE = {'(self)': 'self', '*': 'all', '()': 'block'}
+_HEADERS_PRESET_KEYS = {
+    'customResponseHeaders', 'stsSeconds', 'stsIncludeSubdomains',
+    'contentTypeNosniff', 'frameDeny', 'referrerPolicy',
+}
+
+
+def _headers_preset_defaults() -> dict:
+    return {
+        'perms': {f: ('self' if f in HEADERS_PRESET_SELF_DEFAULT else 'block') for f in HEADERS_PRESET_FEATURES},
+        'hsts': True,
+        'nosniff': True,
+        'frameDeny': True,
+        'referrer': HEADERS_PRESET_REFERRER_DEFAULT,
+    }
+
+
+def _build_permissions_policy(perms: dict) -> str:
+    parts = []
+    for feat in HEADERS_PRESET_FEATURES:
+        token = _PERM_VALUE_TO_TOKEN.get(perms.get(feat, 'block'), '()')
+        parts.append(f"{feat}={token}")
+    return ', '.join(parts)
+
+
+def _build_headers_middleware(toggles: dict) -> dict:
+    headers = {}
+    pp = _build_permissions_policy(toggles.get('perms') or {})
+    if pp:
+        headers['customResponseHeaders'] = {'Permissions-Policy': pp}
+    if toggles.get('hsts'):
+        headers['stsSeconds'] = HEADERS_PRESET_HSTS_SECONDS
+        headers['stsIncludeSubdomains'] = True
+    if toggles.get('nosniff'):
+        headers['contentTypeNosniff'] = True
+    if toggles.get('frameDeny'):
+        headers['frameDeny'] = True
+    ref = (toggles.get('referrer') or '').strip()
+    if ref:
+        headers['referrerPolicy'] = ref
+    return {'headers': headers}
+
+
+def _parse_permissions_policy(value) -> dict | None:
+    if not isinstance(value, str):
+        return None
+    perms = {f: 'block' for f in HEADERS_PRESET_FEATURES}
+    for token in value.split(','):
+        token = token.strip()
+        if not token or '=' not in token:
+            return None
+        feat, _, raw = token.partition('=')
+        feat = feat.strip()
+        val = _PERM_TOKEN_TO_VALUE.get(raw.strip())
+        if feat not in HEADERS_PRESET_FEATURES or val is None:
+            return None
+        perms[feat] = val
+    return perms
+
+
+def _headers_toggles_from_form(form) -> dict:
+    perms = {}
+    for feat in HEADERS_PRESET_FEATURES:
+        val = form.get(f'hp_perm_{feat}', '')
+        perms[feat] = val if val in ('self', 'all', 'block') else 'block'
+    return {
+        'perms': perms,
+        'hsts': form.get('hp_hsts') == 'true',
+        'nosniff': form.get('hp_nosniff') == 'true',
+        'frameDeny': form.get('hp_frameDeny') == 'true',
+        'referrer': (form.get('hp_referrer') or '').strip(),
+    }
+
+
+def _decode_headers_middleware(body) -> dict | None:
+    plain = _json_plain(body)
+    if not isinstance(plain, dict) or set(plain.keys()) != {'headers'}:
+        return None
+    h = plain.get('headers')
+    if not isinstance(h, dict) or not set(h.keys()).issubset(_HEADERS_PRESET_KEYS):
+        return None
+    toggles = {
+        'perms': {f: 'block' for f in HEADERS_PRESET_FEATURES},
+        'hsts': False, 'nosniff': False, 'frameDeny': False, 'referrer': '',
+    }
+    crh = h.get('customResponseHeaders')
+    if crh is not None:
+        if not isinstance(crh, dict) or set(crh.keys()) - {'Permissions-Policy'}:
+            return None
+        parsed = _parse_permissions_policy(crh.get('Permissions-Policy'))
+        if parsed is None:
+            return None
+        toggles['perms'] = parsed
+    if 'stsSeconds' in h:
+        toggles['hsts'] = True
+    if 'contentTypeNosniff' in h:
+        toggles['nosniff'] = True
+    if 'frameDeny' in h:
+        toggles['frameDeny'] = True
+    if 'referrerPolicy' in h:
+        if h.get('referrerPolicy') not in HEADERS_PRESET_REFERRER_VALUES:
+            return None
+        toggles['referrer'] = h['referrerPolicy']
+    if _build_headers_middleware(toggles) != plain:
+        return None
+    return toggles
+
+
 def save_config(data, path=None):
     if path is None:
         path = CONFIG_PATH
@@ -4540,6 +4675,27 @@ def _build_all_apps(include_external=True, include_internal=False):
                     ep_mws.append(mw)
         app['entrypointMiddlewares'] = ep_mws
     settings = load_settings()
+    _mm_ledger = settings.get('managed_middlewares', {})
+    _http_mw_by_file = {cf: ((cfg.get('http') or {}).get('middlewares') or {}) for cf, cfg in loaded}
+    for app in all_apps:
+        if app.get('protocol') != 'http' or app.get('provider') != 'file':
+            continue
+        hdr_mw_name = f"{app.get('name')}-headers"
+        hdr_body    = _http_mw_by_file.get(app.get('configFile', ''), {}).get(hdr_mw_name)
+        owned       = hdr_mw_name in _mm_ledger
+        decoded     = _decode_headers_middleware(hdr_body) if (owned and hdr_body is not None) else None
+        if not owned or hdr_body is None:
+            hdr_state = 'off'
+        elif decoded is not None:
+            hdr_state = 'toggles'
+        else:
+            hdr_state = 'custom'
+        app['headersPreset'] = {
+            'owned':   owned,
+            'exists':  hdr_body is not None,
+            'state':   hdr_state,
+            'toggles': decoded if decoded is not None else _headers_preset_defaults(),
+        }
     for route_id, rdata in settings.get('disabled_routes', {}).items():
         if route_id.startswith('agent_'):
             continue  # agent disabled routes belong to that agent, not the host
@@ -5092,6 +5248,24 @@ def save_entry():
         plain_original_id = orig_parts[1] if len(orig_parts) > 1 else original_id
         orig_cfg_file = orig_parts[0] if len(orig_parts) > 1 else cfg_filename
 
+        _ledger            = settings.get('managed_middlewares', {})
+        _ledger_changed    = False
+        hdr_name           = f"{router_name}-headers"
+        hdr_ledger_key     = f"agent_{agent_id}::{hdr_name}" if agent else hdr_name
+        hdr_preset_present = protocol == 'http' and request.form.get('headersPresetPresent') == 'true'
+        hdr_preset_on      = hdr_preset_present and request.form.get('headersPresetEnabled') == 'true'
+        hdr_preset_custom  = request.form.get('headersPresetCustom') == 'true'
+        if hdr_preset_on:
+            _existing_hdr = config.get('http', {}).get('middlewares', {}).get(hdr_name)
+            _hdr_foreign  = _existing_hdr is not None and (
+                hdr_ledger_key not in _ledger or (is_edit and orig_cfg_file != cfg_filename))
+            if _hdr_foreign:
+                _msg = f"A middleware named '{hdr_name}' already exists and wasn't created by the route presets. Rename or remove it first, then re-save."
+                if fetch:
+                    return jsonify({'ok': False, 'message': _msg}), 409
+                flash(_msg, "error")
+                return redirect(url_for('index'))
+
         _prev_tcp_mws = None
         if is_edit and plain_original_id:
             _prev_src = config
@@ -5133,6 +5307,15 @@ def save_entry():
                 del old_transports[old_transport_name]
                 if not old_transports:
                     del http_sec['serversTransports']
+            old_hdr_name = f"{plain_original_id}-headers"
+            old_hdr_key  = f"agent_{agent_id}::{old_hdr_name}" if agent else old_hdr_name
+            if hdr_preset_present and old_hdr_key in _ledger:
+                old_hdr_mws = http_sec.get('middlewares', {})
+                old_hdr_mws.pop(old_hdr_name, None)
+                if not old_hdr_mws and 'middlewares' in http_sec:
+                    del http_sec['middlewares']
+                del _ledger[old_hdr_key]
+                _ledger_changed = True
             if agent:
                 _agent_write_config(agent, orig_cfg_file, old_config)
             elif orig_target_path:
@@ -5147,6 +5330,16 @@ def save_entry():
                     del old_routers[plain_original_id]
                 if old_svc and old_svc != service_name and 'services' in s and old_svc in s['services']:
                     del s['services'][old_svc]
+            if hdr_preset_present and plain_original_id != router_name:
+                rn_hdr_name = f"{plain_original_id}-headers"
+                rn_hdr_key  = f"agent_{agent_id}::{rn_hdr_name}" if agent else rn_hdr_name
+                if rn_hdr_key in _ledger:
+                    rn_hdr_mws = config.get('http', {}).get('middlewares', {})
+                    rn_hdr_mws.pop(rn_hdr_name, None)
+                    if not rn_hdr_mws and 'http' in config and 'middlewares' in config['http']:
+                        del config['http']['middlewares']
+                    del _ledger[rn_hdr_key]
+                    _ledger_changed = True
 
         if protocol == 'http':
             if http_rule:
@@ -5169,6 +5362,24 @@ def save_entry():
             insecure   = request.form.get('insecureSkipVerify') == 'true'
             config.setdefault('http', {}).setdefault('routers', {})
             config['http'].setdefault('services', {})
+            if hdr_preset_present:
+                if hdr_preset_on or hdr_ledger_key in _ledger:
+                    mws = [m for m in mws if m != hdr_name]
+                if hdr_preset_on and not hdr_preset_custom:
+                    config['http'].setdefault('middlewares', {})[hdr_name] = _build_headers_middleware(_headers_toggles_from_form(request.form))
+                _hdr_present_now = config.get('http', {}).get('middlewares', {}).get(hdr_name) is not None
+                if hdr_preset_on and _hdr_present_now:
+                    mws.append(hdr_name)
+                    if hdr_ledger_key not in _ledger:
+                        _ledger[hdr_ledger_key] = {'kind': 'route-headers', 'route': router_name}
+                        _ledger_changed = True
+                elif hdr_ledger_key in _ledger:
+                    _hdr_sec = config.get('http', {}).get('middlewares', {})
+                    _hdr_sec.pop(hdr_name, None)
+                    if not _hdr_sec and 'middlewares' in config['http']:
+                        del config['http']['middlewares']
+                    _ledger.pop(hdr_ledger_key, None)
+                    _ledger_changed = True
             r = {'rule': rule, 'entryPoints': http_eps, 'service': service_name}
             if mws:
                 r['middlewares'] = mws
@@ -5234,6 +5445,16 @@ def save_entry():
             _merge_service(config['udp']['services'], service_name,
                            {'servers': [{'address': f"{target_ip}:{target_port}"}]}, 'address', '')
 
+        if _ledger_changed:
+            save_settings(
+                domains=settings['domains'],
+                cert_resolver=settings['cert_resolver'],
+                traefik_api_url=settings['traefik_api_url'],
+                auth_enabled=settings['auth_enabled'],
+                password_hash=settings['password_hash'],
+                visible_tabs=settings['visible_tabs'],
+                managed_middlewares=_ledger,
+            )
         if agent:
             _agent_write_config(agent, cfg_filename, config)
             threading.Thread(target=lambda: _git_push_agent_if_enabled(agent, 'route save'), daemon=True).start()
