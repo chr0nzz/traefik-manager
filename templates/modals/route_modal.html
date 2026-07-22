@@ -161,6 +161,21 @@
                             </div>
                         </div>
                     </div>
+                    <div id="streamingPresetSection">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="streamingEnabled" onchange="_onStreamingToggle(this.checked)" class="rounded" style="accent-color:var(--blue)">
+                                <span class="text-sm" style="color:var(--text)">Optimize for streaming (Jellyfin / Emby / Plex)</span>
+                            </div>
+                            <span class="tm-info-btn" data-tip="Sets forwardingTimeouts on the service's serversTransport (unlimited response-header timeout for long transcodes) and forces passHostHeader. Composes with Skip TLS Verification on the same transport."><i class="ph-bold ph-info"></i></span>
+                        </div>
+                        <input type="hidden" name="streamingPresetPresent" id="streamingPresetPresent" value="">
+                        <input type="hidden" name="streamingPresetEnabled" id="streamingPresetEnabled" value="false">
+                        <div id="streamingNote" class="text-xs mt-2 p-2 rounded-lg" style="display:none;background:var(--input-bg);border:1px solid var(--border);color:var(--muted)">
+                            Forces <code>passHostHeader</code> and sets long <code>forwardingTimeouts</code> on <code><span id="streamingTpName"></span></code>. Entry-point <code>respondingTimeouts</code> are global and static — adjust them in the Static Config editor if long transcodes still cut off.
+                            <span id="streamingBufWarn" style="display:none;color:var(--yellow, #d4a017)"><br>⚠ A <code>buffering</code>/<code>compress</code> middleware is attached — remove it for smooth streaming and seeking.</span>
+                        </div>
+                    </div>
                     <div id="wildcardCheckboxRow" style="display:none" class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="wildcardCheckbox" onchange="_onWildcardToggle(this.checked)" class="rounded" style="accent-color:var(--blue)">

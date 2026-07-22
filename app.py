@@ -4279,6 +4279,10 @@ def _merge_service(section: dict, name: str, new_lb: dict, server_key: str, tran
         del existing_lb['serversTransport']
 
 
+def _streaming_forwarding_timeouts() -> dict:
+    return {'dialTimeout': '30s', 'responseHeaderTimeout': '0s', 'idleConnTimeout': '90s'}
+
+
 def _json_plain(value: object) -> object:
     import json as _json
     try:
@@ -4483,7 +4487,9 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
         tls_http = rdata.get('tls', {})
         transport_name = lb.get('serversTransport', '')
         transports_cfg = http_config.get('serversTransports') or {}
-        insecure = bool(_as_dict(transports_cfg.get(transport_name)).get('insecureSkipVerify', False)) if transport_name else False
+        transport_cfg  = _as_dict(transports_cfg.get(transport_name)) if transport_name else {}
+        insecure  = bool(transport_cfg.get('insecureSkipVerify', False))
+        streaming = 'forwardingTimeouts' in transport_cfg
         apps.append({'id': app_id, 'name': rname, 'rule': rdata.get('rule', ''),
                      'service_name': svc_name, 'target': target_url,
                      'middlewares': _to_list(rdata.get('middlewares')),
@@ -4494,6 +4500,7 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
                      'tlsDomains': tls_http.get('domains', []) if isinstance(tls_http, dict) else [],
                      'tlsOptionsProfile': tls_http.get('options', '') if isinstance(tls_http, dict) else '',
                      'insecureSkipVerify': insecure,
+                     'streaming': streaming,
                      'serviceType': _service_type(http_svcs.get(svc_key)),
                      'configFile': config_file, 'provider': 'file'})
     tcp_config = config.get('tcp') or {}
@@ -5255,6 +5262,8 @@ def save_entry():
         hdr_preset_present = protocol == 'http' and request.form.get('headersPresetPresent') == 'true'
         hdr_preset_on      = hdr_preset_present and request.form.get('headersPresetEnabled') == 'true'
         hdr_preset_custom  = request.form.get('headersPresetCustom') == 'true'
+        stream_preset_present = protocol == 'http' and request.form.get('streamingPresetPresent') == 'true'
+        stream_preset_on      = stream_preset_present and request.form.get('streamingPresetEnabled') == 'true'
         if hdr_preset_on:
             _existing_hdr = config.get('http', {}).get('middlewares', {}).get(hdr_name)
             _hdr_foreign  = _existing_hdr is not None and (
@@ -5397,18 +5406,28 @@ def save_entry():
                     tls_entry['options'] = tls_opts_profile
                 r['tls'] = tls_entry
             lb = {'servers': [{'url': target_url}]}
-            if not pass_host:
+            if not pass_host and not stream_preset_on:
                 lb['passHostHeader'] = False
             transport_name = f"{svc_name}-transport"
+            existing_transports = config.get('http', {}).get('serversTransports', {})
+            tp = existing_transports.get(transport_name)
+            tp = tp if isinstance(tp, dict) else {}
             if insecure:
+                tp['insecureSkipVerify'] = True
+            else:
+                tp.pop('insecureSkipVerify', None)
+            if stream_preset_present:
+                if stream_preset_on:
+                    tp['forwardingTimeouts'] = _streaming_forwarding_timeouts()
+                else:
+                    tp.pop('forwardingTimeouts', None)
+            if tp:
+                config['http'].setdefault('serversTransports', {})[transport_name] = tp
                 lb['serversTransport'] = transport_name
-                config['http'].setdefault('serversTransports', {})[transport_name] = {'insecureSkipVerify': True}
-            elif not insecure:
-                existing_transports = config.get('http', {}).get('serversTransports', {})
-                if transport_name in existing_transports:
-                    del existing_transports[transport_name]
-                    if not existing_transports:
-                        del config['http']['serversTransports']
+            elif transport_name in existing_transports:
+                del existing_transports[transport_name]
+                if not existing_transports and 'serversTransports' in config['http']:
+                    del config['http']['serversTransports']
             _merge_router(config['http']['routers'], router_name, r,
                           ('rule', 'entryPoints', 'service', 'middlewares', 'tls'))
             _merge_service(config['http']['services'], service_name, lb, 'url', transport_name)

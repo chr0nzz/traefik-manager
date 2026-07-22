@@ -54,6 +54,7 @@ Click **Add Route** in the top bar. Fill in:
 | TLS Options Profile | Appears when a cert resolver is selected. Select a named `tls.options` profile from the TLS Options tab to assign it to this router (e.g. `modern`, `strict`). Leave blank to use Traefik's default TLS settings. |
 | Skip TLS Verification | Adds `insecureSkipVerify: true` via a named `serversTransport` entry. Use for backends with self-signed certificates (e.g. Proxmox, Kasm). A yellow **TLS skip** badge appears on the route card. |
 | Security headers preset | *(HTTP only)* Generates a tool-managed `<route>-headers` middleware with a `Permissions-Policy` and common security headers, and attaches it to the router. See [Security headers preset](#security-headers-preset) below. |
+| Optimize for streaming | *(HTTP only)* Sets long `forwardingTimeouts` on the service's `serversTransport` and forces `passHostHeader`, for media servers (Jellyfin/Emby/Plex). See [Streaming preset](#streaming-preset) below. |
 | Config File | Shown when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Select an existing file or choose **+ New file...** to type a filename - the file is created automatically in `CONFIG_DIR`. The `.yml` extension is added automatically if omitted. |
 
 For TCP routes, enter a raw SNI rule (`HostSNI(\`*\`)` for passthrough). UDP routes route by entry point only - no rule needed.
@@ -91,6 +92,28 @@ The generated middleware is a **normal, visible, editable file middleware** - it
 - Renaming a route moves its `<route>-headers` middleware to match the new name.
 
 The preset is available for local (file-provider) HTTP routes; routes on a remote agent are unaffected.
+
+## Streaming preset
+
+The **Optimize for streaming** toggle tunes an HTTP route for media servers (Jellyfin, Emby, Plex), where long transcodes otherwise time out and seeking breaks. On save it:
+
+- sets `forwardingTimeouts` on the service's `<service>-transport` serversTransport (`responseHeaderTimeout: 0s` - unlimited, so long transcodes aren't cut off - plus a `dialTimeout` and `idleConnTimeout`), and
+- forces `passHostHeader` on.
+
+```yaml
+serversTransports:
+  jellyfin-transport:
+    forwardingTimeouts:
+      dialTimeout: "30s"
+      responseHeaderTimeout: "0s"
+      idleConnTimeout: "90s"
+```
+
+It shares the same `<service>-transport` as [Skip TLS Verification](#creating-a-route), so the two compose: turning one off leaves the other's key in place, and the transport is removed only when both are off. Turning streaming off removes just the `forwardingTimeouts` key.
+
+Streaming works best **without response buffering** - if a `buffering` or `compress` middleware is attached to the route, the form warns you to remove it. Entry-point `respondingTimeouts` are global and static, so they are not changed here; adjust them in the [Static Config editor](./static) if long transcodes still cut off.
+
+Like the headers preset, streaming is managed only through the route modal for local HTTP routes; API, agent and other saves leave the transport untouched.
 
 ## Deleting a route
 

@@ -1016,14 +1016,87 @@ function _applyHeadersPreset(hp) {
         return;
     }
     section.style.display = '';
-    const on = hp.state === 'toggles' || hp.state === 'custom';
-    const custom = hp.state === 'custom';
+    let state = hp.state;
+    if (state === 'custom' && document.getElementById('isEdit').value === 'false') state = 'off';
+    const on = state === 'toggles' || state === 'custom';
+    const custom = state === 'custom';
     document.getElementById('hpEnabled').checked = on;
     _applyHeadersPresetToggles(hp.toggles || _hpDefaults());
     document.getElementById('headersPresetPresent').value = 'true';
     document.getElementById('headersPresetEnabled').value = on ? 'true' : 'false';
     document.getElementById('headersPresetCustom').value = custom ? 'true' : 'false';
     _renderHeadersPresetState(on, custom);
+}
+
+function _streamingBufWarn() {
+    const el = document.getElementById('streamingBufWarn');
+    if (!el) return;
+    const mws = (document.getElementById('middlewares').value || '').split(',').map(s => s.trim());
+    el.style.display = mws.some(m => /(?:^|[-_.])(?:buffering|compress)(?:[-_.]|$)/i.test(m)) ? '' : 'none';
+}
+
+function _clearStreamingForce() {
+    const ph = document.getElementById('passHostHeader');
+    if (ph) { ph.disabled = false; delete ph.dataset.streamPrev; }
+}
+
+function _renderStreamingState(on) {
+    document.getElementById('streamingNote').style.display = on ? '' : 'none';
+    const ph = document.getElementById('passHostHeader');
+    if (ph) {
+        if (on) {
+            if (ph.dataset.streamPrev === undefined) ph.dataset.streamPrev = ph.checked ? 'true' : 'false';
+            ph.checked = true;
+            ph.disabled = true;
+        } else {
+            ph.disabled = false;
+            if (ph.dataset.streamPrev !== undefined) {
+                ph.checked = ph.dataset.streamPrev === 'true';
+                delete ph.dataset.streamPrev;
+            }
+        }
+    }
+    if (on) {
+        const el = document.getElementById('streamingTpName');
+        if (el) el.textContent = document.getElementById('serviceName').value + '-transport';
+        _streamingBufWarn();
+    }
+}
+
+function _onStreamingToggle(on) {
+    document.getElementById('streamingPresetEnabled').value = on ? 'true' : 'false';
+    _renderStreamingState(on);
+}
+
+function _resetStreamingPreset() {
+    const section = document.getElementById('streamingPresetSection');
+    if (!section) return;
+    _clearStreamingForce();
+    const host = !_activeAgent;
+    section.style.display = host ? '' : 'none';
+    document.getElementById('streamingEnabled').checked = false;
+    document.getElementById('streamingPresetPresent').value = host ? 'true' : '';
+    document.getElementById('streamingPresetEnabled').value = 'false';
+    _renderStreamingState(false);
+}
+
+function _applyStreamingPreset(on) {
+    const section = document.getElementById('streamingPresetSection');
+    if (!section) return;
+    _clearStreamingForce();
+    if (on == null || _activeAgent) {
+        section.style.display = 'none';
+        document.getElementById('streamingEnabled').checked = false;
+        document.getElementById('streamingPresetPresent').value = '';
+        document.getElementById('streamingPresetEnabled').value = 'false';
+        _renderStreamingState(false);
+        return;
+    }
+    section.style.display = '';
+    document.getElementById('streamingEnabled').checked = !!on;
+    document.getElementById('streamingPresetPresent').value = 'true';
+    document.getElementById('streamingPresetEnabled').value = on ? 'true' : 'false';
+    _renderStreamingState(!!on);
 }
 
 async function openModal() {
@@ -1053,6 +1126,7 @@ async function openModal() {
     const sansEl = document.getElementById('tlsWildcardSans'); if (sansEl) sansEl.value = '';
     setProtocol('http');
     _resetHeadersPreset();
+    _resetStreamingPreset();
     const tlsOptSel = document.getElementById('tlsOptionsProfileSelect');
     if (tlsOptSel) tlsOptSel.value = '';
     _populateTlsOptionsSelect();
@@ -2278,6 +2352,7 @@ async function _initMiddlewareChips(selectedMiddlewares, proto) {
         container.innerHTML = sel.map((mw, i) => chip(mw, i, true)).join('')
             + divider
             + unsel.map(mw => chip(mw, 0, false)).join('');
+        if (proto !== 'tcp') _streamingBufWarn();
     }
     render();
     if (!window._mwChipState || typeof window._mwChipState.render === 'function') window._mwChipState = {};
@@ -2395,6 +2470,7 @@ async function cloneRoute(btn) {
         await _initEntrypointChips('http', app.entryPoints || []);
         document.getElementById('scheme').value = targetScheme;
         document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
+        _applyStreamingPreset(app.streaming);
         const crHttp = document.getElementById('certResolver');
         if (crHttp) {
             if (!app.tls && app.tls !== false) crHttp.value = '__disabled__';
@@ -2507,6 +2583,7 @@ async function handleEdit(btn) {
         await _initEntrypointChips('http', app.entryPoints || []);
         document.getElementById('scheme').value = targetScheme;
         document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
+        _applyStreamingPreset(app.streaming);
         const crHttp = document.getElementById('certResolver');
         if (crHttp) {
             if (!app.tls && app.tls !== false) crHttp.value = '__disabled__';
