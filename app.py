@@ -37,8 +37,14 @@ logging.basicConfig(
 logger = logging.getLogger("traefik-manager")
 
 
+def _proxy_fix_hops() -> int:
+    try:
+        return max(0, int(os.environ.get('PROXY_FIX_HOPS', '1')))
+    except ValueError:
+        return 1
+
 app = Flask(__name__)
-PROXY_FIX_HOPS = 1
+PROXY_FIX_HOPS = _proxy_fix_hops()
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=PROXY_FIX_HOPS, x_proto=1, x_host=1)
 
 _CONFIG_DIR      = os.path.dirname(os.environ.get('SETTINGS_PATH', '/app/config/manager.yml'))
@@ -1240,6 +1246,7 @@ logger.info(f"Settings Path:  {SETTINGS_PATH}")
 logger.info(f"Backup Dir:     {BACKUP_DIR}")
 logger.info(f"Traefik API:    {_s['traefik_api_url']}")
 logger.info(f"Restart Method: {_restart_meth}")
+logger.info(f"Trusted Hops:   {PROXY_FIX_HOPS}")
 logger.info(f"Static Config:  {_static_path if _static_path else 'not configured'}")
 logger.info(f"Domains:        {_s['domains']}")
 logger.info(f"Cert Resolver:  {_s['cert_resolver'] or 'not set'}")

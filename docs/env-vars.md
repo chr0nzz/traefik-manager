@@ -80,6 +80,7 @@ Variables marked ✅ **override** the corresponding `manager.yml` field on every
 |---|---|---|---|
 | `SECRET_KEY` | _(auto-generated)_ | - | Flask session signing key |
 | `OTP_ENCRYPTION_KEY` | _(auto-generated)_ | - | Fernet key for encrypting TOTP secrets |
+| `PROXY_FIX_HOPS` | `1` | - | Number of trusted proxy hops in front of Traefik Manager for `X-Forwarded-For` |
 
 ---
 
@@ -693,4 +694,30 @@ python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().
 
 ::: warning
 If you lose this key, existing TOTP secrets become unreadable and 2FA must be re-enrolled. Back up `.otp_key` alongside your config volume.
+:::
+
+---
+
+### `PROXY_FIX_HOPS`
+
+**Default:** `1`
+
+How many trusted reverse-proxy hops sit in front of Traefik Manager. The app runs behind `ProxyFix`, which reads the client IP from the right of `X-Forwarded-For`; this value is how many positions it trusts. With a single proxy in front (Traefik → app) the default of `1` is correct. With two hops (e.g. Cloudflare → Traefik → app) the app's own login and audit logs would otherwise record the intermediate proxy's IP - set it to `2`.
+
+The active value is shown in the startup log as `Trusted Hops` and in the Client IP Diagnostic.
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - PROXY_FIX_HOPS=2
+```
+== Linux (systemd)
+```ini
+Environment=PROXY_FIX_HOPS=2
+```
+:::
+
+::: warning
+Only count hops you actually control. Each trusted hop is one more `X-Forwarded-For` entry a client could forge, so setting this higher than your real proxy chain lets callers spoof their source IP past the login rate-limiter and audit log. Set it to `0` to ignore `X-Forwarded-For` entirely and use the direct connection IP.
 :::
