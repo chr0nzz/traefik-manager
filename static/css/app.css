@@ -136,6 +136,8 @@ main { overflow-x: hidden; }
 }
 .input-field:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(36,161,222,0.1); }
 .input-field::placeholder { color: var(--muted); }
+input[type="search"].input-field::-webkit-search-cancel-button,
+input[type="search"].input-field::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
 select.input-field {
     appearance: none;
     -webkit-appearance: none;

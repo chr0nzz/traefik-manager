@@ -3,7 +3,7 @@
     <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
         <div class="relative flex-1 min-w-48">
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-            <input type="text" id="searchRoutes" oninput="filterRoutes()" placeholder="Search routes..." class="input-field pl-9">
+            <input type="search" id="searchRoutes" oninput="filterRoutes()" placeholder="Search routes..." class="input-field pl-9" autocomplete="off" name="route-search-nofill">
         </div>
         <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg); border:1px solid var(--border)">
             <div class="live-dd" id="dd-route-domain">
