@@ -41,6 +41,8 @@ Every template switches to **Wizard** mode - a structured form with labeled fiel
 
 The Forward Auth wizards (including Authentik, Authelia, and Gatekeeper) expose an optional **Max Response Body Size** field (`maxResponseBodySize`, Traefik 3.7+) to cap the auth server's response. See [Traefik Security Hardening](hardening.md) for the recommended hardening middlewares and options.
 
+The **IP Allow List** wizard includes a **Client IP source** (`ipStrategy`) selector. When Traefik is exposed directly, leave it on **Direct connection**. When a reverse proxy (Cloudflare, another Traefik, nginx) sits in front, the allow-list would otherwise match the proxy's IP on every request - pick **trusted hop depth** to set `ipStrategy.depth` (the number of proxies in front), or **exclude proxy IPs** to set `ipStrategy.excludedIPs` when the proxy's own addresses vary. Depth and excluded IPs are mutually exclusive, matching Traefik's own constraint.
+
 ### Middleware ordering in routes
 
 When attaching middlewares to a route, order matters - Traefik processes them left to right. The middleware chip selector in the route form shows selected middlewares first (numbered by position) with a divider before unselected ones, so you can see the processing order at a glance.

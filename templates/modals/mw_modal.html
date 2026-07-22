@@ -234,6 +234,25 @@ X-Forwarded-Name: name</textarea>
                             <label>Allowed CIDRs <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
                             <textarea id="wizIpCidrs" class="input-field font-mono text-sm" rows="5" placeholder="192.168.1.0/24&#10;10.0.0.0/8&#10;127.0.0.1/32"></textarea>
                         </div>
+                        <div>
+                            <label>Client IP source <span class="text-xs font-normal" style="color:var(--muted)">(ipStrategy)</span></label>
+                            <select id="wizIpStrategy" class="input-field" onchange="_wizIpStrategySync()">
+                                <option value="direct">Direct connection - Traefik is exposed directly</option>
+                                <option value="depth">Behind proxies - trusted hop depth</option>
+                                <option value="excluded">Behind proxies - exclude proxy IPs</option>
+                            </select>
+                            <p class="text-xs mt-1" style="color:var(--muted)">If a reverse proxy (Cloudflare, another Traefik, nginx) sits in front, the list must read the real client IP from <code class="font-mono">X-Forwarded-For</code> instead of the proxy's connection IP - otherwise every request looks like it comes from the proxy.</p>
+                        </div>
+                        <div id="wizIpDepthRow" style="display:none">
+                            <label>Trusted hop depth</label>
+                            <input type="number" id="wizIpDepth" class="input-field" value="1" min="1" style="width:120px">
+                            <p class="text-xs mt-1" style="color:var(--muted)">Number of trusted proxies in front of Traefik. It takes the IP that many positions from the right of <code class="font-mono">X-Forwarded-For</code>. One proxy (e.g. Cloudflare only) = <code class="font-mono">1</code>.</p>
+                        </div>
+                        <div id="wizIpExcludedRow" style="display:none">
+                            <label>Proxy IPs to exclude <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                            <textarea id="wizIpExcluded" class="input-field font-mono text-sm" rows="3" placeholder="173.245.48.0/20&#10;103.21.244.0/22"></textarea>
+                            <p class="text-xs mt-1" style="color:var(--muted)">Traefik strips these from the right of <code class="font-mono">X-Forwarded-For</code> and uses the next IP. Use when the proxy's own IPs vary. Cannot be combined with a fixed depth.</p>
+                        </div>
                     </div>
 
                     <div id="mwWiz-secureHeaders" class="mw-wiz-form space-y-3" style="display:none">

@@ -1099,6 +1099,14 @@ const _wizKeyMap = {
     ipAllowListPrivate: 'ipAllowList',
 };
 
+function _wizIpStrategySync() {
+    const mode = document.getElementById('wizIpStrategy')?.value || 'direct';
+    const depthRow = document.getElementById('wizIpDepthRow');
+    const exRow    = document.getElementById('wizIpExcludedRow');
+    if (depthRow) depthRow.style.display = mode === 'depth' ? '' : 'none';
+    if (exRow)    exRow.style.display    = mode === 'excluded' ? '' : 'none';
+}
+
 function _showMwWizard(tpl) {
     document.querySelectorAll('.mw-wiz-form').forEach(el => el.style.display = 'none');
     const none = document.getElementById('mwWiz-none');
@@ -1109,6 +1117,13 @@ function _showMwWizard(tpl) {
         sec.style.display = '';
         sec.querySelectorAll('input:not([type=checkbox]):not([type=radio]), textarea').forEach(el => { el.value = ''; });
         sec.querySelectorAll('input[type=checkbox]').forEach(el => { el.checked = el.defaultChecked; });
+    }
+    if (key === 'ipAllowList') {
+        const strat = document.getElementById('wizIpStrategy');
+        if (strat) strat.value = 'direct';
+        const depth = document.getElementById('wizIpDepth');
+        if (depth) depth.value = '1';
+        _wizIpStrategySync();
     }
     if (tpl === 'forwardAuthAuthentik') {
         const el = document.getElementById('wizFaAddress'); if (el) el.value = 'http://authentik-server:9000/outpost.goauthentik.io/auth/traefik';
@@ -1200,6 +1215,14 @@ function buildYamlFromWizard() {
     } else if (key === 'ipAllowList') {
         const cidrs = _lines('wizIpCidrs');
         yaml = 'ipAllowList:\n  sourceRange:\n' + cidrs.map(c => '    - "' + c + '"').join('\n');
+        const strat = _val('wizIpStrategy', 'direct');
+        if (strat === 'depth') {
+            const depth = _val('wizIpDepth', '1');
+            yaml += '\n  ipStrategy:\n    depth: ' + (/^\d+$/.test(depth) && +depth > 0 ? depth : '1');
+        } else if (strat === 'excluded') {
+            const excluded = _lines('wizIpExcluded');
+            if (excluded.length) yaml += '\n  ipStrategy:\n    excludedIPs:\n' + excluded.map(c => '      - "' + c + '"').join('\n');
+        }
 
     } else if (key === 'secureHeaders') {
         const lines = ['headers:'];
