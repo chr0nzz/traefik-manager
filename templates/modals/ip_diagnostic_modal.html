@@ -1,0 +1,21 @@
+<div id="ipDiagModal" class="modal-overlay" style="display:none" onclick="_onBackdropClick(event, closeIpDiagModal)">
+    <div class="modal-box" style="max-width:560px">
+        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+            <div class="flex items-center gap-2">
+                <i class="ph-bold ph-network" style="color:var(--blue)"></i>
+                <h3 class="font-bold text-sm" style="color:var(--text)">Client IP Diagnostic</h3>
+            </div>
+            <button type="button" onclick="closeIpDiagModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+        </div>
+
+        <div class="px-5 py-4 space-y-4" style="max-height:70vh;overflow-y:auto">
+            <p class="text-xs" style="color:var(--muted)">What this instance sees for your own request right now. Use it to check whether the real client IP is reaching the app before it feeds logs, CrowdSec and <code class="font-mono">ipAllowList</code>.</p>
+            <div id="ipDiagBody"></div>
+        </div>
+
+        <div class="flex justify-end gap-2 px-5 py-4" style="border-top:1px solid var(--border)">
+            <button type="button" onclick="loadIpDiagnostic()" class="btn-secondary"><i class="ph-bold ph-arrows-clockwise text-xs" style="margin-right:6px"></i>Refresh</button>
+            <button type="button" onclick="closeIpDiagModal()" class="btn-primary">Close</button>
+        </div>
+    </div>
+</div>

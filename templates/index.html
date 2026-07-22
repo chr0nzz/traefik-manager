@@ -422,6 +422,8 @@
 
 {% include 'modals/tls_options_modal.html' %}
 
+{% include 'modals/ip_diagnostic_modal.html' %}
+
 {% include 'modals/detail_panels.html' %}
 
 <script>
@@ -3666,6 +3668,7 @@ function _closeTopModal() {
         ['appModal', closeModal],
         ['mwModal', closeMwModal],
         ['settingsModal', closeSettingsModal],
+        ['ipDiagModal', closeIpDiagModal],
         ['rmEditModal', window.rmCloseEditModal],
         ['rmGroupsModal', window.rmCloseGroupsModal],
     ];
@@ -5277,6 +5280,99 @@ function _fmtLogDuration(ns) {
     return ns + 'ns';
 }
 
+function classifyIp(ip) {
+    if (!ip) return 'unknown';
+    ip = ip.trim();
+    const v4 = ip.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (v4) {
+        const o = v4.slice(1).map(Number);
+        if (o.some(n => n > 255)) return 'unknown';
+        const [a, b] = o;
+        if (a === 127) return 'loopback';
+        if (a === 169 && b === 254) return 'link-local';
+        if (a === 10) return 'private';
+        if (a === 172 && b >= 16 && b <= 31) return 'private';
+        if (a === 192 && b === 168) return 'private';
+        if (a === 100 && b >= 64 && b <= 127) return 'cgnat';
+        return 'public';
+    }
+    let v6 = ip.replace(/^\[|\]$/g, '').split('%')[0].toLowerCase();
+    if (!v6.includes(':')) return 'unknown';
+    if (v6 === '::1') return 'loopback';
+    if (v6.startsWith('fe80')) return 'link-local';
+    if (v6.startsWith('fc') || v6.startsWith('fd')) return 'private';
+    if (v6.startsWith('::ffff:') && v6.slice(7).includes('.')) return classifyIp(v6.slice(7));
+    return 'public';
+}
+
+const _IP_CLASS_META = {
+    'public':     ['Public', 'ip-badge-public'],
+    'private':    ['Private', 'ip-badge-private'],
+    'cgnat':      ['CGNAT', 'ip-badge-cgnat'],
+    'loopback':   ['Loopback', 'ip-badge-muted'],
+    'link-local': ['Link-local', 'ip-badge-muted'],
+    'unknown':    ['?', 'ip-badge-muted'],
+};
+
+function ipClassBadge(cls) {
+    const [label, klass] = _IP_CLASS_META[cls] || _IP_CLASS_META['unknown'];
+    return `<span class="ip-badge ${klass}">${label}</span>`;
+}
+
+function openIpDiagModal() {
+    const m = document.getElementById('ipDiagModal');
+    if (!m) return;
+    m.style.display = 'flex';
+    loadIpDiagnostic();
+}
+
+function closeIpDiagModal() {
+    const m = document.getElementById('ipDiagModal');
+    if (m) m.style.display = 'none';
+}
+
+async function loadIpDiagnostic() {
+    const body = document.getElementById('ipDiagBody');
+    if (!body) return;
+    body.innerHTML = `<div class="text-xs py-4 text-center" style="color:var(--muted)">Loading...</div>`;
+    let d;
+    try {
+        d = await fetch('/api/diagnostics/client-ip').then(r => r.json());
+    } catch (_) {
+        body.innerHTML = `<div class="text-xs py-4 text-center" style="color:var(--red)">Failed to load diagnostic.</div>`;
+        return;
+    }
+    const row = (label, ip, cls, hint) => `
+        <div class="flex items-center gap-2 py-2" style="border-bottom:1px solid var(--border)">
+            <span class="text-xs" style="color:var(--muted);min-width:120px">${label}</span>
+            <span class="text-xs font-mono truncate" style="color:var(--text);flex:1;min-width:0" title="${_esc(ip || '')}">${ip ? _esc(ip) : '<span style="color:var(--muted)">—</span>'}</span>
+            ${ip ? ipClassBadge(cls || classifyIp(ip)) : ''}
+        </div>` + (hint ? `<div class="text-xs" style="color:var(--muted);margin:-4px 0 4px 122px">${hint}</div>` : '');
+
+    const hdrRows = Object.entries(d.headers || {}).map(([k, v]) => `
+        <div class="flex items-center gap-2 py-1.5" style="border-bottom:1px solid var(--border)">
+            <span class="text-xs font-mono" style="color:var(--muted);min-width:120px">${_esc(k)}</span>
+            <span class="text-xs font-mono truncate" style="color:${v ? 'var(--text)' : 'var(--muted)'};flex:1;min-width:0" title="${_esc(v || '')}">${v ? _esc(v) : 'not set'}</span>
+        </div>`).join('');
+
+    const spoofable = d.effective_class === 'private' || d.effective_class === 'loopback' || d.effective_class === 'cgnat';
+
+    body.innerHTML = `
+        <div class="rounded-xl p-3 mb-3" style="background:var(--card);border:1px solid var(--border)">
+            ${row('App sees (client)', d.effective_ip, d.effective_class)}
+            ${row('Socket peer', d.socket_peer, d.socket_peer_class, 'The direct TCP connection — your reverse proxy, or the real client if none.')}
+            <div class="flex items-center gap-2 py-2">
+                <span class="text-xs" style="color:var(--muted);min-width:120px">Trusted hops</span>
+                <span class="text-xs font-mono" style="color:var(--text)">${d.proxy_hops}</span>
+            </div>
+        </div>
+        <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Forwarding Headers</div>
+        <div class="rounded-xl p-3 mb-3" style="background:var(--card);border:1px solid var(--border)">
+            ${hdrRows}
+        </div>
+        ${spoofable ? `<div class="rounded-xl p-3 text-xs" style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);color:var(--text)"><i class="ph-bold ph-warning" style="color:var(--yellow);margin-right:6px"></i>The client IP the app trusts is <strong>${_esc(d.effective_class)}</strong>. If clients should reach you from the public internet, a proxy in front is rewriting it — check that your trusted hops and the upstream <code class="font-mono">trustedIPs</code> are set correctly, or real client IPs will be lost to logs, CrowdSec and ipAllowList.</div>` : ''}`;
+}
+
 function parseLogLine(raw) {
     const trimmed = raw.trimStart();
     if (trimmed.startsWith('{')) {
@@ -5353,12 +5449,13 @@ function renderLogStats(entries) {
     const methods  = topN('method', 6);
 
     const hbar = (v, max, col) => `<div style="flex:1;height:6px;border-radius:3px;background:var(--input-bg);overflow:hidden"><div style="height:100%;border-radius:3px;background:${col};width:${max?Math.max(3,Math.round((v/max)*100)):0}%"></div></div>`;
-    const topList = (pairs, col='var(--blue)', strip=false) => {
+    const topList = (pairs, col='var(--blue)', strip=false, decorate=null) => {
         const max = pairs[0]?.[1]||1;
         return pairs.map(([k,v]) => {
             const label = strip ? k.replace(/@docker|@file|@kubernetes/g,'') : k;
             return `<div class="flex items-center gap-2 py-1" style="border-bottom:1px solid var(--border)">
                 <span class="text-xs font-mono truncate" style="color:var(--text);min-width:0;flex:1" title="${_esc(k)}">${_esc(label)}</span>
+                ${decorate ? decorate(k) : ''}
                 ${hbar(v, max, col)}
                 <span class="text-xs font-bold flex-shrink-0 tabular-nums" style="color:var(--muted);min-width:28px;text-align:right">${v}</span>
             </div>`;
@@ -5417,7 +5514,7 @@ function renderLogStats(entries) {
     <div class="grid gap-3 grid-cols-1 sm:grid-cols-3">
         <div class="rounded-xl p-4" style="background:var(--card);border:1px solid var(--border)">
             <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Top IPs</div>
-            ${topList(topIps, 'var(--blue)')}
+            ${topList(topIps, 'var(--blue)', false, ip => ipClassBadge(classifyIp(ip)))}
         </div>
         <div class="rounded-xl p-4" style="background:var(--card);border:1px solid var(--border)">
             <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Top Paths</div>

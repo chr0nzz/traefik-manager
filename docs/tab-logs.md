@@ -12,7 +12,7 @@ Above the log list, an analytics panel summarises the currently loaded entries a
 - **Methods** - breakdown of HTTP verbs (GET, POST, PUT, DELETE, PATCH, etc.) with bar charts
 
 **Row 2 - Top lists**
-- **Top IPs** - the 6 client IPs with the most requests
+- **Top IPs** - the 6 client IPs with the most requests, each tagged with its scope (**Public**, **Private**, **CGNAT**, **Loopback** or **Link-local**) so local noise - such as a gateway's `192.168.x.1` from hairpin NAT - is easy to tell apart from real public clients
 - **Top Paths** - the 6 most frequently requested paths
 - **Top Services** - the 6 Traefik services that handled the most requests
 
@@ -94,6 +94,19 @@ usermod -aG adm traefik-manager
 ## Geolocation
 
 When [IP geolocation](geoip.md) is enabled (**Settings → Interface → Geolocation**), the Logs tab adds a country flag next to each client IP, a **Top Countries** breakdown, and a shaded **world map** of where the requests came from. Click a country on the map or in the list to filter the log entries to it. Lookups run on the server against a local database, so no IP addresses are sent to any third party.
+
+## Client IP diagnostic
+
+The **network** icon in the top navigation bar opens a read-only **Client IP Diagnostic** for your own request. It shows:
+
+- **App sees (client)** - the IP traefik-manager treats as the client after `ProxyFix`. This is the address that feeds the login/audit log, and the one your `ipAllowList` and CrowdSec rules match against.
+- **Socket peer** - the IP on the other end of the raw TCP connection (your reverse proxy, or the real client if there is none).
+- **Trusted hops** - how many proxy hops the app trusts when reading `X-Forwarded-For`.
+- **Forwarding headers** - the raw `X-Forwarded-For`, `X-Real-IP`, `CF-Connecting-IP`, `X-Forwarded-Proto` and `X-Forwarded-Host` values as received.
+
+Each IP is tagged with the same scope classification as the Top IPs list. If the client IP the app trusts is private, loopback or CGNAT while you expect public clients, the panel warns you - that usually means the upstream proxy's `trustedIPs` or the trusted-hop count is off, and the real client IP is being lost before it reaches logs, CrowdSec and `ipAllowList`.
+
+For hairpin-NAT'd LAN traffic the real client IP is already gone at the network layer, so it cannot be recovered here - the panel only reports what actually arrives.
 
 ## Notes
 

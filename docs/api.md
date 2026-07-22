@@ -253,6 +253,31 @@ Tail Traefik access logs. Requires `ACCESS_LOG_PATH`.
 
 ---
 
+### `GET /api/diagnostics/client-ip`
+
+Read-only diagnostic for the current request. Returns what the app sees as the client after `ProxyFix`, the raw socket peer, the forwarding headers as received, the number of trusted proxy hops, and a scope classification (`public`, `private`, `cgnat`, `loopback`, `link-local` or `unknown`) for each observed IP.
+
+```json
+{
+  "effective_ip": "203.0.113.5",
+  "effective_class": "public",
+  "socket_peer": "172.20.0.1",
+  "socket_peer_class": "private",
+  "headers": {
+    "X-Forwarded-For": "203.0.113.5",
+    "X-Real-IP": "",
+    "CF-Connecting-IP": "",
+    "X-Forwarded-Proto": "https",
+    "X-Forwarded-Host": "example.com"
+  },
+  "forwarded_for_chain": ["203.0.113.5"],
+  "proxy_hops": 1,
+  "classes": { "203.0.113.5": "public", "172.20.0.1": "private" }
+}
+```
+
+---
+
 ## Dashboard
 
 ### `GET /api/dashboard/config`

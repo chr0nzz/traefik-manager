@@ -109,6 +109,12 @@ main { overflow-x: hidden; }
 .badge-red  { background: rgba(248,81,73,0.15); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
 .badge-muted { background: rgba(139,148,158,0.1); color: var(--muted); border: 1px solid rgba(139,148,158,0.3); }
 
+.ip-badge { display: inline-flex; align-items: center; flex-shrink: 0; padding: 1px 6px; border-radius: 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.5; }
+.ip-badge-public  { background: rgba(36,161,222,0.15); color: var(--blue); }
+.ip-badge-private { background: rgba(210,153,34,0.15); color: var(--yellow); }
+.ip-badge-cgnat   { background: rgba(240,136,62,0.15); color: var(--orange); }
+.ip-badge-muted   { background: rgba(139,148,158,0.12); color: var(--muted); }
+
 .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .status-online  { background: var(--green); box-shadow: 0 0 6px rgba(63,185,80,0.6); }
 .status-offline { background: var(--red); }

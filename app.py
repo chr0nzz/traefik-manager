@@ -7,6 +7,7 @@ import logging
 import threading
 import subprocess
 import fcntl
+import ipaddress
 import contextlib
 import requests
 import urllib3
@@ -37,7 +38,8 @@ logger = logging.getLogger("traefik-manager")
 
 
 app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+PROXY_FIX_HOPS = 1
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=PROXY_FIX_HOPS, x_proto=1, x_host=1)
 
 _CONFIG_DIR      = os.path.dirname(os.environ.get('SETTINGS_PATH', '/app/config/manager.yml'))
 _SECRET_KEY_PATH = os.path.join(_CONFIG_DIR, '.secret_key')
@@ -3993,6 +3995,52 @@ def api_geoip_update():
         add_notification('success', f'GeoIP database updated (DB-IP {info})')
         return jsonify({'success': True, 'db_month': info, 'status': _geoip_status()})
     return jsonify({'success': False, 'error': f'Download failed: {info}'}), 502
+
+
+_CGNAT_NETWORK = ipaddress.ip_network('100.64.0.0/10')
+
+def _classify_ip(ip: str) -> str:
+    try:
+        addr = ipaddress.ip_address((ip or '').strip())
+    except ValueError:
+        return 'unknown'
+    if addr.is_loopback:
+        return 'loopback'
+    if addr.is_link_local:
+        return 'link-local'
+    if addr.version == 4 and addr in _CGNAT_NETWORK:
+        return 'cgnat'
+    if addr.is_private:
+        return 'private'
+    return 'public'
+
+
+@app.route('/api/diagnostics/client-ip')
+@login_required
+def api_client_ip_diagnostic():
+    orig        = request.environ.get('werkzeug.proxy_fix.orig') or {}
+    socket_peer = orig.get('REMOTE_ADDR', '') or ''
+    headers     = {
+        'X-Forwarded-For':   request.headers.get('X-Forwarded-For', ''),
+        'X-Real-IP':         request.headers.get('X-Real-IP', ''),
+        'CF-Connecting-IP':  request.headers.get('CF-Connecting-IP', ''),
+        'X-Forwarded-Proto': request.headers.get('X-Forwarded-Proto', ''),
+        'X-Forwarded-Host':  request.headers.get('X-Forwarded-Host', ''),
+    }
+    xff_chain = [p.strip() for p in headers['X-Forwarded-For'].split(',') if p.strip()]
+    effective = request.remote_addr or ''
+    seen      = [ip for ip in [effective, socket_peer, *xff_chain] if ip]
+    classes   = {ip: _classify_ip(ip) for ip in seen}
+    return jsonify({
+        'effective_ip':        effective,
+        'effective_class':     _classify_ip(effective),
+        'socket_peer':         socket_peer,
+        'socket_peer_class':   _classify_ip(socket_peer),
+        'headers':             headers,
+        'forwarded_for_chain': xff_chain,
+        'proxy_hops':          PROXY_FIX_HOPS,
+        'classes':             classes,
+    })
 
 
 @app.route('/api/settings/backup-retention', methods=['POST'])
