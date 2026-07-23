@@ -59,6 +59,26 @@ Multiple edits in one session only require a single restart.
 
 ---
 
+## Trusted IPs helper
+
+Behind a proxy such as Cloudflare, Traefik only believes `X-Forwarded-For` from sources listed in an entrypoint's `forwardedHeaders.trustedIPs`. Until those are set, your logs, CrowdSec, `ipAllowList` and the login limiter all see the proxy IP instead of the real client. The **Trusted IPs** button in the Static Config header opens a guided helper that writes that field for you.
+
+1. Pick the target entrypoint (for example `websecure`). Any `trustedIPs` already configured are shown.
+2. Choose one or more sources:
+   - **Cloudflare edge ranges** - the full IPv4 + IPv6 set, hardcoded with a capture date. Nothing is fetched at runtime.
+   - **Private ranges** - `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `fc00::/7`.
+   - **Your own proxies / LAN** - free-form CIDRs or single IPs, one per line. Invalid entries are flagged and skipped.
+3. Click **Preview change** to see exactly which ranges will be added. Existing entries are kept, and anything already trusted is deduplicated - the helper only ever adds.
+4. Click **Apply & Save** to stage the change into the static config, back it up, and save. As with any static change, a **Restart required** banner then appears.
+
+Because `trustedIPs` lives in the static config, this is global and needs a Traefik restart. Every trusted range can forge client IPs downstream, so only add proxies you control. Use the [Client IP Diagnostic](hardening.md) to confirm what actually reaches the app before and after. The helper works for the Host and for remote agents.
+
+::: tip Refreshing the Cloudflare ranges
+The hardcoded ranges live in `_CLOUDFLARE_IPS_V4` / `_CLOUDFLARE_IPS_V6` in `app.py`, sourced from [cloudflare.com/ips](https://www.cloudflare.com/ips/) (`/ips-v4` + `/ips-v6`). They are refreshed on release; replace both lists from that source and bump `_CLOUDFLARE_IPS_CAPTURED`.
+:::
+
+---
+
 ## Setup
 
 ### 1. Mount traefik.yml into TM

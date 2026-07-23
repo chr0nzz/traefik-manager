@@ -2684,6 +2684,143 @@ def api_static_section_update():
         return jsonify({'error': str(e)}), 500
 
 
+# Cloudflare edge ranges for forwardedHeaders.trustedIPs, captured 2026-07-23 from
+# https://www.cloudflare.com/ips/ (https://www.cloudflare.com/ips-v4 + /ips-v6).
+# Refresh on release: replace both lists from that source and bump _CLOUDFLARE_IPS_CAPTURED.
+_CLOUDFLARE_IPS_CAPTURED = '2026-07-23'
+_CLOUDFLARE_IPS_V4 = [
+    '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22',
+    '141.101.64.0/18', '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20',
+    '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13',
+    '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+]
+_CLOUDFLARE_IPS_V6 = [
+    '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32',
+    '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32',
+]
+_PRIVATE_IP_RANGES = ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', 'fc00::/7']
+
+
+def _trusted_ip_key(cidr: str) -> str:
+    try:
+        return str(ipaddress.ip_network(str(cidr).strip(), strict=False))
+    except ValueError:
+        return str(cidr).strip().lower()
+
+
+def _is_valid_cidr(cidr: str) -> bool:
+    try:
+        ipaddress.ip_network(str(cidr).strip(), strict=False)
+        return True
+    except ValueError:
+        return False
+
+
+def _merge_trusted_ips(existing: list, additions: list) -> tuple:
+    seen = {_trusted_ip_key(x) for x in existing}
+    added = []
+    for cidr in additions:
+        key = _trusted_ip_key(cidr)
+        if key in seen:
+            continue
+        seen.add(key)
+        added.append(cidr)
+    return list(existing) + added, added
+
+
+def _parse_cidr_input(raw) -> list:
+    if isinstance(raw, list):
+        parts = [str(x) for x in raw]
+    else:
+        parts = re.split(r'[\s,]+', str(raw or ''))
+    return [p.strip() for p in parts if p.strip()]
+
+
+@app.route('/api/static/trusted-ips/preview', methods=['POST'])
+@csrf_protect
+@login_required
+def api_static_trusted_ips_preview():
+    req = request.get_json(silent=True) or {}
+    current_raw = req.get('current_raw', '')
+    entrypoint  = str(req.get('entrypoint', '')).strip()
+    try:
+        _y = YAML()
+        _y.preserve_quotes = True
+        if current_raw:
+            config = _y.load(StringIO(current_raw)) or {}
+        else:
+            path = _get_static_config_path()
+            if not path or not os.path.exists(path):
+                return jsonify({'error': 'Static config not found'}), 404
+            with open(path, 'r') as f:
+                config = _y.load(f) or {}
+        if not isinstance(config, dict):
+            return jsonify({'error': 'Static config is not a mapping'}), 400
+        ep_key = 'entryPoints' if 'entryPoints' in config else ('entrypoints' if 'entrypoints' in config else 'entryPoints')
+        eps = config.get(ep_key)
+        summary = []
+        if isinstance(eps, dict):
+            for nm, cfg in eps.items():
+                cur = []
+                addr = ''
+                if isinstance(cfg, dict):
+                    addr = str(cfg.get('address', ''))
+                    fh = cfg.get('forwardedHeaders')
+                    if isinstance(fh, dict) and isinstance(fh.get('trustedIPs'), list):
+                        cur = [str(x) for x in fh['trustedIPs']]
+                summary.append({'name': str(nm), 'address': addr, 'trusted_ips': cur})
+        resp = {
+            'ok': True,
+            'entrypoints': summary,
+            'cloudflare_captured': _CLOUDFLARE_IPS_CAPTURED,
+            'cloudflare_ranges': _CLOUDFLARE_IPS_V4 + _CLOUDFLARE_IPS_V6,
+            'private_ranges': _PRIVATE_IP_RANGES,
+        }
+        if not entrypoint:
+            return jsonify(resp)
+        if not isinstance(eps, dict) or entrypoint not in eps:
+            return jsonify({'error': f'Entrypoint "{entrypoint}" not found in static config'}), 400
+        custom  = _parse_cidr_input(req.get('custom_cidrs', []))
+        invalid = [c for c in custom if not _is_valid_cidr(c)]
+        additions = []
+        if req.get('cloudflare'):
+            additions += _CLOUDFLARE_IPS_V4 + _CLOUDFLARE_IPS_V6
+        if req.get('private'):
+            additions += _PRIVATE_IP_RANGES
+        additions += [c for c in custom if _is_valid_cidr(c)]
+        ep = eps.get(entrypoint)
+        if not isinstance(ep, dict):
+            ep = {}
+        fh = ep.get('forwardedHeaders') if isinstance(ep.get('forwardedHeaders'), dict) else {}
+        cur_seq = fh.get('trustedIPs')
+        existing = [str(x) for x in cur_seq] if isinstance(cur_seq, list) else []
+        final, added = _merge_trusted_ips(existing, additions)
+        if isinstance(cur_seq, list):
+            for c in added:
+                cur_seq.append(DoubleQuotedScalarString(c))
+        else:
+            fh['trustedIPs'] = [DoubleQuotedScalarString(c) for c in final]
+        ep['forwardedHeaders'] = fh
+        eps[entrypoint] = ep
+        stream = StringIO()
+        _y.dump(config, stream)
+        new_raw = stream.getvalue()
+        parsed = SafeYAML(typ='safe').load(new_raw) or {}
+        resp.update({
+            'entrypoint': entrypoint,
+            'existing': existing,
+            'added': added,
+            'final': final,
+            'invalid': invalid,
+            'raw': new_raw,
+            'parsed': parsed,
+        })
+        return jsonify(resp)
+    except Exception as e:
+        logger.exception("Trusted IPs preview failed")
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/setup/test-connection', methods=['POST'])
 @login_required
 def api_setup_test_connection():

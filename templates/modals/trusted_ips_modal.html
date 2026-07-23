@@ -1,0 +1,54 @@
+<div id="trustedIpsModal" class="modal-overlay" style="display:none;z-index:9997" onclick="_onBackdropClick(event, closeTrustedIpsModal)">
+    <div class="modal-box" style="max-width:600px">
+        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border)">
+            <div class="flex items-center gap-2">
+                <i class="ph-bold ph-shield-check" style="color:var(--green)"></i>
+                <h3 class="font-bold text-sm" style="color:var(--text)">Trusted IPs Helper</h3>
+            </div>
+            <button type="button" onclick="closeTrustedIpsModal()" class="btn-icon"><i class="ph-bold ph-x text-sm"></i></button>
+        </div>
+
+        <div class="px-5 py-4 space-y-4" style="max-height:70vh;overflow-y:auto">
+            <p class="text-xs" style="color:var(--muted)">Adds <code class="font-mono">forwardedHeaders.trustedIPs</code> to an entrypoint so Traefik believes <code class="font-mono">X-Forwarded-For</code> from your proxies. This trust feeds logs, CrowdSec, <code class="font-mono">ipAllowList</code> and the login limiter - check what reaches the app first with the <button type="button" onclick="closeTrustedIpsModal();openIpDiagModal()" style="color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-size:inherit;text-decoration:underline">Client IP Diagnostic</button>.</p>
+
+            <div class="rounded-lg px-3 py-2.5 flex items-start gap-2 text-xs" style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);color:var(--text)">
+                <i class="ph-bold ph-warning-circle shrink-0" style="color:var(--red);margin-top:1px"></i>
+                <span>This edits the <strong>static</strong> config - it is global and needs a Traefik restart to take effect. A backup is created automatically before the save. Every trusted range can forge client IPs, so only add proxies you control.</span>
+            </div>
+
+            <div>
+                <label class="text-xs block mb-1" style="color:var(--muted)">Entrypoint</label>
+                <select id="tipEntrypoint" class="input-field text-sm" onchange="_tipRenderCurrent()">
+                    <option value="">Loading...</option>
+                </select>
+                <div id="tipCurrent" class="mt-2"></div>
+            </div>
+
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Sources to add</p>
+                <label class="flex items-start gap-2 mb-2 cursor-pointer">
+                    <input type="checkbox" id="tipSrcCloudflare" class="rounded mt-0.5" style="accent-color:var(--green)" onchange="_tipInvalidatePreview()" checked>
+                    <span class="text-xs" style="color:var(--text)"><span id="tipCfLabel">Cloudflare edge ranges</span><span class="block" style="color:var(--muted)">The classic "behind Cloudflare" case. Hardcoded and refreshed on release - no runtime fetch.</span></span>
+                </label>
+                <label class="flex items-start gap-2 mb-2 cursor-pointer">
+                    <input type="checkbox" id="tipSrcPrivate" class="rounded mt-0.5" style="accent-color:var(--green)" onchange="_tipInvalidatePreview()">
+                    <span class="text-xs" style="color:var(--text)">Private ranges<span class="block font-mono" style="color:var(--muted)">10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7</span></span>
+                </label>
+                <div>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">Your own proxies / LAN <span style="font-weight:400">(one CIDR or IP per line)</span></label>
+                    <textarea id="tipCustom" class="input-field text-sm font-mono" rows="3" oninput="_tipInvalidatePreview()" placeholder="203.0.113.10&#10;198.51.100.0/24"></textarea>
+                </div>
+            </div>
+
+            <div>
+                <button type="button" onclick="tipPreview()" class="btn-secondary text-xs flex items-center gap-1.5"><i class="ph-bold ph-eye text-xs"></i>Preview change</button>
+                <div id="tipPreviewBox" class="mt-3 space-y-1"></div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2 px-5 py-4" style="border-top:1px solid var(--border)">
+            <button type="button" onclick="closeTrustedIpsModal()" class="btn-secondary">Cancel</button>
+            <button type="button" id="tipApplyBtn" onclick="tipApply()" class="btn-primary" disabled>Apply &amp; Save</button>
+        </div>
+    </div>
+</div>

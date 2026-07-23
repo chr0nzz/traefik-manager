@@ -424,6 +424,8 @@
 
 {% include 'modals/ip_diagnostic_modal.html' %}
 
+{% include 'modals/trusted_ips_modal.html' %}
+
 {% include 'modals/detail_panels.html' %}
 
 <script>
@@ -6862,6 +6864,7 @@ function _renderStaticEntrypoints(eps) {
         const redir = ep.http?.redirections?.entryPoint?.to || '';
         const uhs   = ep.http?.underscoreHeadersStrategy || '';
         const http3 = !!ep.http3;
+        const tips  = Array.isArray(ep.forwardedHeaders?.trustedIPs) ? ep.forwardedHeaders.trustedIPs.length : 0;
         const port  = addr.replace(/^.*:/, '');
         const proto = port === '443' ? 'HTTPS' : port === '80' ? 'HTTP' : port ? port : '';
         const nd    = JSON.stringify(name);
@@ -6874,6 +6877,7 @@ function _renderStaticEntrypoints(eps) {
                 ${redir ? `<span class="text-xs flex-shrink-0" style="color:var(--muted)">→ <span class="font-mono" style="color:var(--text)">${_esc(redir)}</span></span>` : ''}
                 ${http3 ? `<span class="text-xs px-1.5 py-0.5 rounded font-semibold flex-shrink-0" style="background:rgba(163,113,247,0.1);color:var(--purple)">HTTP/3</span>` : ''}
                 ${uhs ? `<span class="text-xs px-1.5 py-0.5 rounded font-semibold flex-shrink-0" style="background:rgba(63,185,80,0.12);color:var(--green)" title="underscoreHeadersStrategy: ${_esc(uhs)}"><i class="ph-bold ph-shield-check" style="font-size:10px"></i> ${_esc(uhs)}</span>` : ''}
+                ${tips ? `<span class="text-xs px-1.5 py-0.5 rounded font-semibold flex-shrink-0" style="background:rgba(36,161,222,0.1);color:var(--blue)" title="forwardedHeaders.trustedIPs: ${tips} range(s)"><i class="ph-bold ph-shield" style="font-size:10px"></i> ${tips} trusted</span>` : ''}
             </div>
             <div class="flex gap-1 flex-shrink-0">
                 <button onclick='openStaticEditForm("entrypoints",${nd})' class="btn-icon text-xs" title="Edit"><i class="ph-bold ph-pencil-simple"></i></button>
@@ -7513,6 +7517,120 @@ async function refreshStaticTab() {
         if (!await _confirm('You have unsaved changes. Discard and reload?', 'Unsaved Changes', 'Discard')) return;
     }
     await _loadStaticFromDisk();
+}
+
+let _tipData = null;
+
+function _tipBaseRaw() {
+    return _staticMonaco ? _staticMonaco.getValue() : _staticRawContent;
+}
+
+function _tipInvalidatePreview() {
+    if (_tipData) _tipData.preview = null;
+    const pv = document.getElementById('tipPreviewBox'); if (pv) pv.innerHTML = '';
+    const applyBtn = document.getElementById('tipApplyBtn'); if (applyBtn) applyBtn.disabled = true;
+}
+
+function openTrustedIpsHelper() {
+    const modal = document.getElementById('trustedIpsModal');
+    if (!modal) return;
+    _tipData = null;
+    document.getElementById('tipEntrypoint').innerHTML = '<option value="">Loading...</option>';
+    document.getElementById('tipCurrent').innerHTML = '';
+    document.getElementById('tipPreviewBox').innerHTML = '';
+    document.getElementById('tipCustom').value = '';
+    document.getElementById('tipSrcCloudflare').checked = true;
+    document.getElementById('tipSrcPrivate').checked = false;
+    document.getElementById('tipApplyBtn').disabled = true;
+    modal.style.display = 'flex';
+    _tipInspect();
+}
+
+function closeTrustedIpsModal() {
+    const m = document.getElementById('trustedIpsModal');
+    if (m) m.style.display = 'none';
+}
+
+async function _tipInspect() {
+    try {
+        const res = await fetch('/api/static/trusted-ips/preview', { method: 'POST', headers: { 'Content-Type': 'application/json', ..._csrfHeaders() }, body: JSON.stringify({ current_raw: _tipBaseRaw() }) });
+        const d = await res.json();
+        if (!res.ok || d.error) { showToast(d.error || 'Failed to read static config', 'error'); closeTrustedIpsModal(); return; }
+        _tipData = d;
+        const sel = document.getElementById('tipEntrypoint');
+        if (!d.entrypoints.length) {
+            sel.innerHTML = '<option value="">No entrypoints found</option>';
+        } else {
+            sel.innerHTML = d.entrypoints.map(e => `<option value="${_esc(e.name)}">${_esc(e.name)}${e.address ? ' (' + _esc(e.address) + ')' : ''}</option>`).join('');
+        }
+        const cf = document.getElementById('tipCfLabel');
+        if (cf) cf.textContent = `Cloudflare edge ranges (${(d.cloudflare_ranges || []).length}, captured ${d.cloudflare_captured})`;
+        _tipRenderCurrent();
+    } catch (e) { showToast('Failed to read static config', 'error'); closeTrustedIpsModal(); }
+}
+
+function _tipRenderCurrent() {
+    if (_tipData) _tipData.preview = null;
+    const applyBtn = document.getElementById('tipApplyBtn');
+    if (applyBtn) applyBtn.disabled = true;
+    const pv = document.getElementById('tipPreviewBox');
+    if (pv) pv.innerHTML = '';
+    const sel = document.getElementById('tipEntrypoint');
+    const name = sel ? sel.value : '';
+    const ep = (_tipData && _tipData.entrypoints || []).find(e => e.name === name);
+    const box = document.getElementById('tipCurrent');
+    if (!box) return;
+    const cur = (ep && ep.trusted_ips) || [];
+    if (!cur.length) {
+        box.innerHTML = `<span class="text-xs" style="color:var(--muted)">No <code class="font-mono">trustedIPs</code> on this entrypoint yet.</span>`;
+    } else {
+        box.innerHTML = `<div class="text-xs mb-1" style="color:var(--muted)">Current <code class="font-mono">trustedIPs</code> (${cur.length}):</div><div class="flex flex-wrap gap-1">` + cur.map(c => `<span class="text-xs font-mono px-1.5 py-0.5 rounded" style="background:var(--input-bg);color:var(--text)">${_esc(c)}</span>`).join('') + `</div>`;
+    }
+}
+
+async function tipPreview() {
+    const sel = document.getElementById('tipEntrypoint');
+    const entrypoint = sel ? sel.value : '';
+    if (!entrypoint) { showToast('Pick an entrypoint', 'error'); return; }
+    const cloudflare = document.getElementById('tipSrcCloudflare').checked;
+    const priv = document.getElementById('tipSrcPrivate').checked;
+    const custom = document.getElementById('tipCustom').value;
+    if (!cloudflare && !priv && !custom.trim()) { showToast('Select at least one source', 'error'); return; }
+    try {
+        const res = await fetch('/api/static/trusted-ips/preview', { method: 'POST', headers: { 'Content-Type': 'application/json', ..._csrfHeaders() }, body: JSON.stringify({ current_raw: _tipBaseRaw(), entrypoint, cloudflare, private: priv, custom_cidrs: custom }) });
+        const d = await res.json();
+        if (!res.ok || d.error) { showToast(d.error || 'Preview failed', 'error'); return; }
+        if (_tipData) _tipData.preview = d;
+        _tipRenderPreview(d);
+    } catch (e) { showToast('Preview failed', 'error'); }
+}
+
+function _tipRenderPreview(d) {
+    const box = document.getElementById('tipPreviewBox');
+    if (!box) return;
+    const added = d.added || [], invalid = d.invalid || [], existing = d.existing || [];
+    let html = '';
+    if (!added.length && !invalid.length) {
+        html += `<div class="text-xs px-3 py-2 rounded" style="background:rgba(234,179,8,0.1);color:#ca8a04">Nothing new to add - every selected range is already trusted on <span class="font-mono">${_esc(d.entrypoint)}</span>.</div>`;
+    }
+    if (added.length) {
+        html += `<div class="text-xs mb-1" style="color:var(--green)"><i class="ph-bold ph-plus-circle"></i> Adding ${added.length} range${added.length > 1 ? 's' : ''}:</div><div class="flex flex-wrap gap-1 mb-2">` + added.map(c => `<span class="text-xs font-mono px-1.5 py-0.5 rounded" style="background:rgba(63,185,80,0.12);color:var(--green)">${_esc(c)}</span>`).join('') + `</div>`;
+    }
+    if (invalid.length) {
+        html += `<div class="text-xs mb-1" style="color:var(--red)"><i class="ph-bold ph-warning"></i> Skipped ${invalid.length} invalid entr${invalid.length > 1 ? 'ies' : 'y'}:</div><div class="flex flex-wrap gap-1 mb-2">` + invalid.map(c => `<span class="text-xs font-mono px-1.5 py-0.5 rounded" style="background:rgba(239,68,68,0.12);color:var(--red)">${_esc(c)}</span>`).join('') + `</div>`;
+    }
+    html += `<div class="text-xs" style="color:var(--muted)">Result: <span style="color:var(--text);font-weight:600">${d.final.length}</span> trusted range${d.final.length !== 1 ? 's' : ''} on <span class="font-mono">${_esc(d.entrypoint)}</span> (was ${existing.length}).</div>`;
+    box.innerHTML = html;
+    document.getElementById('tipApplyBtn').disabled = !added.length;
+}
+
+async function tipApply() {
+    const d = _tipData && _tipData.preview;
+    if (!d || !d.raw) return;
+    _staticRawContent = d.raw;
+    if (_staticMonaco) _staticMonaco.setValue(d.raw);
+    closeTrustedIpsModal();
+    await saveStaticConfig();
 }
 
 const _origSetTheme = setTheme;
