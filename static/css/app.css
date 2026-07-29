@@ -261,6 +261,27 @@ select.input-field:disabled { opacity: 0.6; cursor: not-allowed; }
     overflow-y: auto;
     box-shadow: 0 24px 80px rgba(0,0,0,0.6);
 }
+.modal-box-route,
+.modal-box-tls,
+.modal-box-ipdiag,
+.modal-box-mw,
+.modal-box-trusted-ips,
+.modal-box-rm-groups,
+.modal-box-rm-edit,
+.modal-box-settings {
+    max-width: 95vw;
+    overflow-x: hidden;
+    resize: horizontal;
+    border-bottom-right-radius: 4px;
+}
+.modal-box-route      { width: 560px; min-width: 560px; }
+.modal-box-tls        { width: 560px; min-width: 560px; }
+.modal-box-ipdiag     { width: 560px; min-width: 560px; }
+.modal-box-mw         { width: 620px; min-width: 620px; }
+.modal-box-trusted-ips{ width: 600px; min-width: 600px; }
+.modal-box-rm-groups  { width: 460px; min-width: 460px; overflow: hidden; display: flex; flex-direction: column; }
+.modal-box-rm-edit    { width: 440px; min-width: 440px; overflow: hidden; display: flex; flex-direction: column; }
+.modal-box-settings   { width: 680px; min-width: 680px; height: 88vh; max-height: 95vh; min-height: 420px; display: flex; flex-direction: column; }
 
 
 .modal-inner { display: flex; flex: 1; overflow: hidden; min-height: 380px; }
@@ -779,7 +800,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
     .modal-box { max-width: 100% !important; width: 100%; border-radius: 18px 18px 0 0; max-height: 92vh; }
 
     #settingsModal { align-items: stretch !important; }
-    #settingsModal .modal-box { border-radius: 0 !important; max-height: 100% !important; height: 100% !important; overflow-x: hidden; }
+    #settingsModal .modal-box { border-radius: 0 !important; max-height: 100% !important; height: 100% !important; overflow-x: hidden; resize: none !important; }
     #settingsModal .modal-inner { flex: 1; overflow: hidden; min-height: unset; }
     #settingsModal .modal-sidebar { display: none !important; }
     #settingsModal #settingsPanelWrapper { display: flex; flex-direction: column; flex: 1; overflow: hidden; }

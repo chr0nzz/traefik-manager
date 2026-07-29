@@ -1,5 +1,5 @@
 <div id="appModal" class="modal-overlay" style="display:none">
-    <div class="modal-box">
+    <div class="modal-box modal-box-route">
         <form id="routeForm" action="{{ url_for('save_entry') }}" method="POST" onsubmit="saveRouteAjax(event)">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="isEdit" id="isEdit" value="false">
