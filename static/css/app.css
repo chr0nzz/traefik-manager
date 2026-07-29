@@ -274,14 +274,14 @@ select.input-field:disabled { opacity: 0.6; cursor: not-allowed; }
     resize: horizontal;
     border-bottom-right-radius: 4px;
 }
-.modal-box-route      { width: 560px; min-width: 560px; }
-.modal-box-tls        { width: 560px; min-width: 560px; }
-.modal-box-ipdiag     { width: 560px; min-width: 560px; }
-.modal-box-mw         { width: 620px; min-width: 620px; }
-.modal-box-trusted-ips{ width: 600px; min-width: 600px; }
-.modal-box-rm-groups  { width: 460px; min-width: 460px; overflow: hidden; display: flex; flex-direction: column; }
-.modal-box-rm-edit    { width: 440px; min-width: 440px; overflow: hidden; display: flex; flex-direction: column; }
-.modal-box-settings   { width: 680px; min-width: 680px; height: 88vh; max-height: 95vh; min-height: 420px; display: flex; flex-direction: column; }
+.modal-box-route      { width: 560px; min-width: min(560px, 95vw); }
+.modal-box-tls        { width: 560px; min-width: min(560px, 95vw); }
+.modal-box-ipdiag     { width: 560px; min-width: min(560px, 95vw); }
+.modal-box-mw         { width: 620px; min-width: min(620px, 95vw); }
+.modal-box-trusted-ips{ width: 600px; min-width: min(600px, 95vw); }
+.modal-box-rm-groups  { width: 460px; min-width: min(460px, 95vw); overflow: hidden; display: flex; flex-direction: column; }
+.modal-box-rm-edit    { width: 440px; min-width: min(440px, 95vw); overflow: hidden; display: flex; flex-direction: column; }
+.modal-box-settings   { width: 680px; min-width: min(680px, 95vw); height: 88vh; max-height: 88vh; display: flex; flex-direction: column; }
 
 
 .modal-inner { display: flex; flex: 1; overflow: hidden; min-height: 380px; }
