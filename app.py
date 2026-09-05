@@ -6348,6 +6348,11 @@ def oidc_callback():
         return redirect(url_for('login'))
     state = request.args.get('state', '')
     if not state or not secrets.compare_digest(state, session.get('oidc_state', '')):
+        logger.warning(f"OIDC callback rejected from {request.remote_addr} - state mismatch "
+                       f"(provider sent {'a state' if state else 'no state'}, "
+                       f"session {'has one' if session.get('oidc_state') else 'has none'})"
+                       + (f", provider error={request.args.get('error')!r}"
+                          if request.args.get('error') else ''))
         flash("Invalid OIDC state. Please try again.", "error")
         return redirect(url_for('login'))
     err = request.args.get('error', '')
@@ -6356,6 +6361,10 @@ def oidc_callback():
         return redirect(url_for('login'))
     code = request.args.get('code', '')
     if not code:
+        logger.warning(f"OIDC callback returned no code from {request.remote_addr}"
+                       + (f" - provider error={request.args.get('error')!r} "
+                          f"{request.args.get('error_description', '')!r}"
+                          if request.args.get('error') else ''))
         flash("OIDC login failed - no code returned.", "error")
         return redirect(url_for('login'))
     provider_url = s.get('oidc_provider_url', '').rstrip('/')

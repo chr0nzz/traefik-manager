@@ -299,6 +299,12 @@
             <span class="logo-text">Traefik <span>Manager</span></span>
         </div>
         <div class="step-title">Sign in</div>
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+        <div class="banner banner-{{ 'error' if category == 'error' else 'info' }}">
+            <i class="ph-bold {{ 'ph-warning-circle' if category == 'error' else 'ph-info' }}" style="flex-shrink:0;margin-top:1px"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
         {% set show_local = local_auth_enabled | default(true) %}
         <p class="step-subtitle">{% if show_local %}Enter your password to access Traefik Manager.{% else %}Sign in with your identity provider.{% endif %}</p>
         {% if temp_password_hint and show_local %}
