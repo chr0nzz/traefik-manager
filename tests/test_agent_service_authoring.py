@@ -177,3 +177,49 @@ def test_the_client_lists_services_through_the_host():
         'proxying the list to the agent loses ownership, since the ledger lives on the Host')
     assert re.search(r"fetch\(_svcApiPath\('/api/traefik/services'\)", src), \
         'the list must be fetched from the Host with the agent id'
+
+
+def test_a_middleware_rename_cascades_on_an_agent(client, monkeypatch):
+    fake = _install(monkeypatch)
+    fake.files['dynamic.yml']['http']['middlewares'] = {'auth': {'basicAuth': {'users': ['u:x']}}}
+    fake.files['other.yml'] = {'http': {'routers': {
+        'web': {'rule': 'Host(`w.example.com`)', 'service': 'x', 'middlewares': ['auth']}}}}
+
+    r = client.post('/save-middleware', data={
+        'csrf_token': 'testtoken', 'agent_id': 'a1', 'middlewareName': 'authelia',
+        'isMwEdit': 'true', 'originalMwId': 'auth', 'mwProtocol': 'http',
+        'originalMwProtocol': 'http', 'configFile': 'dynamic.yml',
+        'middlewareContent': "basicAuth:\n  users: ['u:x']\n"}, headers=HDR)
+    assert r.status_code in (200, 302), r.get_data(as_text=True)
+
+    mws = fake.files['other.yml']['http']['routers']['web'].get('middlewares')
+    assert mws == ['authelia'], \
+        'the agent router in another file kept the old name: %r' % mws
+
+
+def test_deleting_a_used_middleware_on_an_agent_is_refused(client, monkeypatch):
+    fake = _install(monkeypatch)
+    fake.files['dynamic.yml']['http']['middlewares'] = {'auth': {'basicAuth': {'users': ['u:x']}}}
+    fake.files['dynamic.yml']['http']['routers'] = {
+        'web': {'rule': 'Host(`w.example.com`)', 'service': 'x', 'middlewares': ['auth']}}
+
+    r = client.post('/delete-middleware/auth',
+                    data={'csrf_token': 'testtoken', 'agent_id': 'a1'}, headers=HDR)
+    assert r.status_code == 409, r.get_data(as_text=True)
+    assert 'auth' in (fake.files['dynamic.yml']['http'].get('middlewares') or {}), \
+        'the middleware was deleted on the agent despite being in use'
+
+
+def test_force_deleting_on_an_agent_strips_the_reference(client, monkeypatch):
+    fake = _install(monkeypatch)
+    fake.files['dynamic.yml']['http']['middlewares'] = {'auth': {'basicAuth': {'users': ['u:x']}}}
+    fake.files['dynamic.yml']['http']['routers'] = {
+        'web': {'rule': 'Host(`w.example.com`)', 'service': 'x', 'middlewares': ['auth']}}
+
+    r = client.post('/delete-middleware/auth',
+                    data={'csrf_token': 'testtoken', 'agent_id': 'a1', 'force': 'true'},
+                    headers=HDR)
+    assert r.status_code == 200, r.get_data(as_text=True)
+    assert 'auth' not in (fake.files['dynamic.yml']['http'].get('middlewares') or {})
+    assert not fake.files['dynamic.yml']['http']['routers']['web'].get('middlewares'), \
+        'the agent router kept a reference to a middleware that no longer exists'

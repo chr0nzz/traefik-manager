@@ -49,9 +49,9 @@ export default defineConfig({
       },
       { text: 'Security', link: '/security' },
       {
-        text: 'v1.13.2',
+        text: 'v1.13.3',
         items: [
-          { text: 'v1.13.2', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.13.2' },
+          { text: 'v1.13.3', link: 'https://github.com/chr0nzz/traefik-manager/releases/tag/v1.13.3' },
           { text: 'All releases', link: 'https://github.com/chr0nzz/traefik-manager/releases' },
         ],
       },

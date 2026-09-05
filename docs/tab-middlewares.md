@@ -72,6 +72,12 @@ At twelve middlewares or more the selector gains a filter box. Typing narrows th
 
 Click the pencil icon on any middleware card. Editing always opens the YAML editor, even for a middleware you created through a wizard.
 
+Renaming one moves every route that uses it to the new name, including routes in other config files.
+
+## Deleting a middleware
+
+Deleting one a route still uses is refused, and the message names the routes. Confirm and Traefik Manager removes it from those routes and deletes it.
+
 ## Attaching a middleware to a route
 
 In the route form, click a chip in the **Middlewares** selector to attach or detach it. The chips come from the Traefik API and your config files; the form falls back to a comma-separated text field only when neither yields any. The `@file` suffix tells Traefik the middleware is defined in the file provider.

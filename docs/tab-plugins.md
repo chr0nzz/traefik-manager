@@ -62,3 +62,7 @@ experimental:
 ```
 
 If the file is not found, the tab explains that the static config is not configured and shows the env var and the volume line to add.
+
+## Renaming and removing
+
+Renaming a plugin moves every middleware using it to the new name. Removing one a middleware still uses is refused, and the message names the middlewares.

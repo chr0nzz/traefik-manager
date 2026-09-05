@@ -1638,6 +1638,7 @@ def api_service_save():
                 and not (isinstance(_orig_def, dict) and 'loadBalancer' in _orig_def):
             return jsonify({'ok': False, 'error': 'That service is not managed here'}), 403
         section.pop(original, None)
+        _retarget_service(config, original, name)
         for gone in _composite.drop_orphan_children(section, original, set()):
             ledger.pop(_svc_ledger_key(gone, agent_id), None)
         ledger.pop(_svc_ledger_key(original, agent_id), None)
@@ -1665,6 +1666,9 @@ def api_service_save():
     else:
         create_backup(target_path)
         save_config(_strip_empty_sections(config), target_path)
+    if original and original != name:
+        _cascade_across_configs(agent, lambda c: _retarget_service(c, original, name),
+                                already=cfg_filename if agent else target_path)
     save_settings(
         domains=settings['domains'], cert_resolver=settings['cert_resolver'],
         traefik_api_url=settings['traefik_api_url'], auth_enabled=settings['auth_enabled'],
@@ -2276,13 +2280,31 @@ def api_static_config_save():
         return jsonify({'error': 'No content provided'}), 400
     try:
         _y = SafeYAML(typ='safe')
-        _y.load(content)
+        _new_doc = _y.load(content)
     except Exception as e:
         return jsonify({'error': f'Invalid YAML: {e}'}), 400
+    _before = {}
+    try:
+        if os.path.exists(safe_path):
+            with open(safe_path) as _fh:
+                _before = SafeYAML(typ='safe').load(_fh.read()) or {}
+    except Exception:
+        _before = {}
+    _renames, _gone = _plugin_diff(_static_plugins(_before), _static_plugins(_new_doc))
+    _dyn = [load_config(_p) for _p in env.CONFIG_PATHS]
+    for _name in _gone:
+        _users = _middlewares_using_plugin(_dyn, _name)
+        if _users:
+            return jsonify({'error': f"{_name} is still used by " + ', '.join(_users[:5])
+                                     + (' and others' if len(_users) > 5 else '')
+                                     + '. Delete those middlewares first',
+                            'inUseBy': _users}), 409
     try:
         create_backup(safe_path)
         with open(safe_path, 'w') as f:
             f.write(content)
+        for _old, _new in _renames.items():
+            _cascade_across_configs(None, lambda c, o=_old, n=_new: _retarget_plugin(c, o, n))
         logger.info(f"Static config saved by {request.remote_addr}: {safe_path}")
         add_notification('success', 'Static config saved')
         threading.Thread(target=lambda: _git_push_if_enabled('static config save'), daemon=True).start()
@@ -4004,11 +4026,18 @@ def api_tls_options_save():
         if ca_cas:
             ca_obj['caFiles'] = ca_cas
         opts['clientAuth'] = ca_obj
+    original = str(data.get('originalName') or '').strip()
+    if original and original != name:
+        (config.get('tls') or {}).get('options', {}).pop(original, None)
+        _retarget_tls_option(config, original, name)
     config.setdefault('tls', {}).setdefault('options', {})[name] = opts
     if agent:
         _agent_write_config(agent, cfg_name, config)
     else:
         save_config(_strip_empty_sections(config), target_path)
+    if original and original != name:
+        _cascade_across_configs(agent, lambda c: _retarget_tls_option(c, original, name),
+                                already=cfg_name if agent else target_path)
     add_notification('success', f"TLS profile '{name}' saved")
     return jsonify({'ok': True})
 
@@ -4031,6 +4060,13 @@ def api_tls_options_delete(name):
     tls_opts = (config.get('tls') or {}).get('options', {})
     if name not in tls_opts:
         return jsonify({'ok': False, 'message': 'Profile not found'}), 404
+    _tls_all = (list(cfgs.values()) if agent else [load_config(_p) for _p in env.CONFIG_PATHS])
+    _tls_users = _tls_option_routers_using(_tls_all, name)
+    if _tls_users:
+        return jsonify({'ok': False,
+                        'message': f"{name} is still used by " + ', '.join(_tls_users[:5])
+                                   + (' and others' if len(_tls_users) > 5 else ''),
+                        'inUseBy': _tls_users}), 409
     del tls_opts[name]
     if agent:
         _agent_write_config(agent, cfg_name, _strip_empty_sections(config))
@@ -5911,6 +5947,7 @@ def delete_entry(router_id):
 def save_middleware():
     fetch = _is_fetch()
     try:
+        _mw_rename_cascade = None
         mw_name         = request.form.get('middlewareName', '').strip()
         mw_content      = request.form.get('middlewareContent', '').strip()
         is_edit         = request.form.get('isMwEdit') == 'true'
@@ -5988,12 +6025,23 @@ def save_middleware():
         config.setdefault(mw_protocol, {}).setdefault('middlewares', {})
         if is_edit and original_id and (original_id != mw_name or original_proto != mw_protocol):
             config.get(original_proto, {}).get('middlewares', {}).pop(original_id, None)
+            if original_id != mw_name:
+                _retarget_middleware(config, original_id, mw_name)
+                _mw_rename_cascade = (original_id, mw_name)
         config[mw_protocol]['middlewares'][mw_name] = parsed_mw
         if agent:
             _agent_write_config(agent, cfg_filename, config)
+            if _mw_rename_cascade:
+                _o, _n = _mw_rename_cascade
+                _cascade_across_configs(agent, lambda c: _retarget_middleware(c, _o, _n),
+                                        already=cfg_filename)
             threading.Thread(target=lambda: _git_push_agent_if_enabled(agent, 'middleware save'), daemon=True).start()
         else:
             save_config(_strip_empty_sections(config), target_path)
+            if _mw_rename_cascade:
+                _o, _n = _mw_rename_cascade
+                _cascade_across_configs(None, lambda c: _retarget_middleware(c, _o, _n),
+                                        already=target_path)
             _register_config_path(target_path)
             threading.Thread(target=lambda: _git_push_if_enabled('middleware save'), daemon=True).start()
         action = "updated" if is_edit else "created"
@@ -6010,6 +6058,167 @@ def save_middleware():
     return redirect(url_for('index'))
 
 
+def _retarget_service(config, old: str, new: str) -> bool:
+    bare = str(old or '').split('@')[0]
+    changed = False
+    for section in ('http', 'tcp', 'udp'):
+        for rdata in ((config.get(section) or {}).get('routers') or {}).values():
+            if isinstance(rdata, dict) and str(rdata.get('service') or '').split('@')[0] == bare:
+                rdata['service'] = new
+                changed = True
+    for sdata in ((config.get('http') or {}).get('services') or {}).values():
+        if not isinstance(sdata, dict):
+            continue
+        for kind in ('weighted', 'mirroring', 'failover', 'highestRandomWeight'):
+            block = sdata.get(kind)
+            if not isinstance(block, dict):
+                continue
+            for key in ('service', 'fallback'):
+                if str(block.get(key) or '').split('@')[0] == bare:
+                    block[key] = new
+                    changed = True
+            for child in (block.get('services') or []) + (block.get('mirrors') or []):
+                if isinstance(child, dict) and str(child.get('name') or '').split('@')[0] == bare:
+                    child['name'] = new
+                    changed = True
+    return changed
+
+
+def _cascade_across_configs(agent, fn, already=''):
+    touched = []
+    if agent:
+        for fname, cfg in _agent_load_configs(agent).items():
+            if fname == already:
+                continue
+            if fn(cfg):
+                _agent_write_config(agent, fname, cfg)
+                touched.append(fname)
+        return touched
+    for path in env.CONFIG_PATHS:
+        if path == already or os.path.basename(path) == already:
+            continue
+        cfg = load_config(path)
+        if fn(cfg):
+            create_backup(path)
+            save_config(_strip_empty_sections(cfg), path)
+            touched.append(os.path.basename(path))
+    return touched
+
+
+def _static_plugins(doc) -> dict:
+    block = ((doc or {}).get('experimental') or {}).get('plugins') or {}
+    return {k: v for k, v in block.items() if isinstance(v, dict)}
+
+
+def _plugin_diff(before: dict, after: dict) -> tuple:
+    gone = [k for k in before if k not in after]
+    added = [k for k in after if k not in before]
+    renames = {}
+    for old in list(gone):
+        mod = str(before[old].get('moduleName') or '').strip()
+        if not mod:
+            continue
+        for new in list(added):
+            if str(after[new].get('moduleName') or '').strip() == mod:
+                renames[old] = new
+                gone.remove(old)
+                added.remove(new)
+                break
+    return renames, gone
+
+
+def _middlewares_using_plugin(configs, name: str) -> list:
+    out = []
+    for cfg in configs:
+        for section in ('http', 'tcp'):
+            for mname, mdata in ((cfg.get(section) or {}).get('middlewares') or {}).items():
+                if isinstance(mdata, dict) and isinstance(mdata.get('plugin'), dict) \
+                        and name in mdata['plugin']:
+                    out.append(mname)
+    return sorted(set(out))
+
+
+def _retarget_plugin(config, old: str, new: str) -> bool:
+    changed = False
+    for section in ('http', 'tcp'):
+        for mdata in ((config.get(section) or {}).get('middlewares') or {}).values():
+            if not isinstance(mdata, dict):
+                continue
+            block = mdata.get('plugin')
+            if isinstance(block, dict) and old in block:
+                block[new] = block.pop(old)
+                changed = True
+    return changed
+
+
+def _retarget_tls_option(config, old: str, new: str) -> bool:
+    bare = str(old or '').split('@')[0]
+    changed = False
+    for section in ('http', 'tcp'):
+        for rdata in ((config.get(section) or {}).get('routers') or {}).values():
+            if not isinstance(rdata, dict):
+                continue
+            tls = rdata.get('tls')
+            if isinstance(tls, dict) and str(tls.get('options') or '').split('@')[0] == bare:
+                tls['options'] = new
+                changed = True
+    return changed
+
+
+def _tls_option_routers_using(configs, name: str) -> list:
+    bare = str(name or '').split('@')[0]
+    out = []
+    for cfg in configs:
+        for section in ('http', 'tcp'):
+            for rname, rdata in ((cfg.get(section) or {}).get('routers') or {}).items():
+                if not isinstance(rdata, dict):
+                    continue
+                tls = rdata.get('tls')
+                if isinstance(tls, dict) and str(tls.get('options') or '').split('@')[0] == bare:
+                    out.append(rname)
+    return sorted(set(out))
+
+
+def _middleware_routers_using(configs, name: str) -> list:
+    bare = str(name or '').split('@')[0]
+    out = []
+    for cfg in configs:
+        for section in ('http', 'tcp'):
+            for rname, rdata in ((cfg.get(section) or {}).get('routers') or {}).items():
+                if not isinstance(rdata, dict):
+                    continue
+                for ref in (rdata.get('middlewares') or []):
+                    if str(ref).split('@')[0] == bare:
+                        out.append(rname)
+                        break
+    return sorted(set(out))
+
+
+def _retarget_middleware(config, old: str, new: str) -> bool:
+    bare = str(old or '').split('@')[0]
+    changed = False
+    for section in ('http', 'tcp'):
+        for rdata in ((config.get(section) or {}).get('routers') or {}).values():
+            if not isinstance(rdata, dict) or not rdata.get('middlewares'):
+                continue
+            rebuilt = []
+            hit = False
+            for ref in rdata['middlewares']:
+                if str(ref).split('@')[0] == bare:
+                    hit = True
+                    if new:
+                        rebuilt.append(new)
+                else:
+                    rebuilt.append(ref)
+            if hit:
+                changed = True
+                if rebuilt:
+                    rdata['middlewares'] = rebuilt
+                else:
+                    rdata.pop('middlewares', None)
+    return changed
+
+
 @app.route('/delete-middleware/<mw_name>', methods=['POST'])
 @csrf_protect
 @login_required
@@ -6019,6 +6228,17 @@ def delete_middleware(mw_name):
         config_file_raw = request.form.get('configFile', '').strip()
         agent_id        = request.form.get('agent_id', '').strip()
         agent           = _agent_by_id(agent_id) if agent_id else None
+        force           = str(request.form.get('force', '')).strip().lower() in ('1', 'true', 'yes')
+        _all = (list(_agent_load_configs(agent).values()) if agent
+                else [load_config(_p) for _p in env.CONFIG_PATHS])
+        _users = _middleware_routers_using(_all, mw_name)
+        if _users and not force:
+            msg = (f"{mw_name} is still used by " + ', '.join(_users[:5])
+                   + (' and others' if len(_users) > 5 else ''))
+            if fetch:
+                return jsonify({'ok': False, 'message': msg, 'inUseBy': _users}), 409
+            flash(msg, "error")
+            return redirect(url_for('index'))
         if agent:
             all_configs = _agent_load_configs(agent)
             for fname, config in all_configs.items():
@@ -6031,9 +6251,10 @@ def delete_middleware(mw_name):
                         mws.pop(mw_name, None)
                         found = True
                         break
+                if _retarget_middleware(config, mw_name, ''):
+                    found = True
                 if found:
                     _agent_write_config(agent, fname, config)
-                    break
         else:
             if config_file_raw:
                 search_paths = [_resolve_config_path(config_file_raw) or env.CONFIG_PATH]
@@ -6048,10 +6269,11 @@ def delete_middleware(mw_name):
                         mws.pop(mw_name, None)
                         found = True
                         break
+                if _retarget_middleware(config, mw_name, ''):
+                    found = True
                 if found:
                     create_backup(target_path)
                     save_config(_strip_empty_sections(config), target_path)
-                    break
         if agent:
             threading.Thread(target=lambda: _git_push_agent_if_enabled(agent, 'middleware delete'), daemon=True).start()
         else:

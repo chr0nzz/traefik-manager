@@ -469,17 +469,32 @@ async function saveMwAjax(event) {
 }
 
 async function deleteMw(name, configFile) {
-    if (!await _confirm('Delete middleware "' + name + '"? Any route still referencing it will stop working.', 'Delete Middleware', 'Delete', 'DELETE')) return;
+    if (!await _confirm('Delete middleware "' + name + '"?', 'Delete Middleware', 'Delete', 'DELETE')) return;
+    await _sendMwDelete(name, configFile, false);
+}
+
+async function _sendMwDelete(name, configFile, force) {
     const data = new FormData();
     data.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
     if (configFile) data.append('configFile', configFile);
     if (_activeAgent) data.append('agent_id', _activeAgent.id);
+    if (force) data.append('force', 'true');
     try {
         const res = await fetch('/delete-middleware/' + encodeURIComponent(name), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
-        if (!res.ok) { showToast(await _errText(res, 'Error deleting middleware'), 'error'); return; }
-        const json = await res.json();
-        showToast(json.message || json.error || 'Error deleting middleware', json.ok ? 'success' : 'error');
-        if (json.ok) { _cachedMiddlewares = null; refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); }
+        const json = await res.json().catch(() => null);
+        if (res.status === 409 && json && (json.inUseBy || []).length) {
+            const routes = json.inUseBy;
+            const shown = routes.slice(0, 5).join(', ') + (routes.length > 5 ? ' and ' + (routes.length - 5) + ' more' : '');
+            const label = routes.length === 1 ? '1 route' : routes.length + ' routes';
+            if (await _confirm('"' + name + '" is still used by ' + shown + '. Remove it from ' + label + ' and delete it?',
+                               'Middleware In Use', 'Remove and delete', 'DELETE')) {
+                await _sendMwDelete(name, configFile, true);
+            }
+            return;
+        }
+        if (!res.ok) { showToast((json && (json.message || json.error)) || await _errText(res, 'Error deleting middleware'), 'error'); return; }
+        showToast((json && (json.message || json.error)) || 'Error deleting middleware', json && json.ok ? 'success' : 'error');
+        if (json && json.ok) { _cachedMiddlewares = null; refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); }
     } catch(e) { showToast(_netErrText(e, 'Error deleting middleware'), 'error'); }
 }
 
@@ -1073,6 +1088,13 @@ async function _pluginSectionWrite(body) {
 }
 
 async function deletePlugin(name) {
+    const users = _pluginMwsUsing(name).map(m => m.name);
+    if (users.length) {
+        const shown = users.slice(0, 5).join(', ') + (users.length > 5 ? ' and ' + (users.length - 5) + ' more' : '');
+        await _confirm(`"${name}" is still used by ${shown}. Delete those middlewares first.`,
+                       'Plugin In Use', 'OK');
+        return;
+    }
     if (!await _confirm(`Remove plugin "${name}"?`, 'Remove Plugin', 'Remove')) return;
     const d1 = await _pluginSectionWrite({ section: 'plugins', action: 'remove', name, old_name: name, data: {} });
     if (!d1) return;
