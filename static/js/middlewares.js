@@ -134,6 +134,25 @@ function setMwMode(mode) {
     }
 }
 
+const FA_DEFAULT_MAX_BODY = 4096;
+
+function _faNeedsLimit(yaml) {
+    const y = String(yaml || '');
+    if (!/(^|\n)\s*forwardAuth\s*:/.test(y)) return false;
+    return !/(^|\n)\s*maxResponseBodySize\s*:/.test(y);
+}
+
+function _faWithLimit(yaml) {
+    const y = String(yaml || '');
+    if (!_faNeedsLimit(y)) return y;
+    const lines = y.split('\n');
+    const at = lines.findIndex(l => /^\s*forwardAuth\s*:/.test(l));
+    if (at < 0) return y;
+    const base = (lines[at].match(/^\s*/) || [''])[0];
+    lines.splice(at + 1, 0, base + '  maxResponseBodySize: ' + FA_DEFAULT_MAX_BODY);
+    return lines.join('\n');
+}
+
 const _wizardTemplates = new Set(['basicAuth','digestAuth','forwardAuth','forwardAuthAuthentik','forwardAuthAuthelia','forwardAuthGatekeeper','oidcAuth','ipAllowList','ipAllowListPrivate','rateLimit','secureHeaders','corsHeaders','encodedCharacters','redirectScheme','redirectRegex','stripPrefix','addPrefix','replacePath','compress','retry','circuitBreaker','buffering','chain','inFlightReq','stripPrefixRegex','replacePathRegex','errors','contentType','grpcWeb','passTLSClientCert']);
 
 const _wizKeyMap = {
@@ -186,12 +205,17 @@ function _showMwWizard(tpl) {
     if (tpl === 'forwardAuthAuthentik') {
         const el = document.getElementById('wizFaAddress'); if (el) el.value = 'http://authentik-server:9000/outpost.goauthentik.io/auth/traefik';
         const hd = document.getElementById('wizFaHeaders'); if (hd) hd.value = 'X-authentik-username\nX-authentik-groups\nX-authentik-email\nX-authentik-name\nX-authentik-uid';
+        const mb = document.getElementById('wizFaMaxBody'); if (mb && !mb.value) mb.value = FA_DEFAULT_MAX_BODY;
     } else if (tpl === 'forwardAuthAuthelia') {
         const el = document.getElementById('wizFaAddress'); if (el) el.value = 'http://authelia:9091/api/authz/forward-auth';
         const hd = document.getElementById('wizFaHeaders'); if (hd) hd.value = 'Remote-User\nRemote-Groups\nRemote-Name\nRemote-Email';
+        const mb = document.getElementById('wizFaMaxBody'); if (mb && !mb.value) mb.value = FA_DEFAULT_MAX_BODY;
+    } else if (tpl === 'forwardAuth') {
+        const mb = document.getElementById('wizFaMaxBody'); if (mb && !mb.value) mb.value = FA_DEFAULT_MAX_BODY;
     } else if (tpl === 'forwardAuthGatekeeper') {
         const hd = document.getElementById('wizGkHeaders'); if (hd) hd.value = 'X-Auth-User\nX-Auth-Email\nX-Auth-Groups';
         const ga = document.getElementById('wizGkAuthorization'); if (ga) ga.checked = false;
+        const mb = document.getElementById('wizGkMaxBody'); if (mb && !mb.value) mb.value = FA_DEFAULT_MAX_BODY;
     } else if (tpl === 'oidcAuth') {
         const sc = document.getElementById('wizOidcScopes'); if (sc) sc.value = 'openid\nprofile\nemail';
         const hd = document.getElementById('wizOidcHeaders'); if (hd) hd.value = 'X-Forwarded-User: preferred_username\nX-Forwarded-Email: email\nX-Forwarded-Name: name';
@@ -539,6 +563,7 @@ function _tmMwCard(mw, showCf) {
                        : chained ? 'used in a chain' : 'unused';
     const yaml = String(mw.yaml || '').split('\n').slice(0, 4).join('\n');
     const rail = `<span class="tm-rail tm-rail-sm" onclick="event.stopPropagation()">` +
+        (_faNeedsLimit(mw.yaml) ? `<button type="button" class="tm-btn" title="No response size limit set - Traefik 3.7 warns about this. Click to add one" data-mw='${mwJson}' onclick="event.stopPropagation();addFaLimit(this)"><i class="ph-bold ph-warning" style="color:var(--amber)"></i></button>` : '') +
         `<button type="button" class="tm-btn" title="Edit" data-mw='${mwJson}' onclick="event.stopPropagation();handleMwEdit(this)"><i class="ph-bold ph-pencil-simple"></i></button>` +
         `<button type="button" class="tm-btn" title="Delete" onclick="event.stopPropagation();deleteMw(${_jsArg(mw.name)}${cfArg})"><i class="ph-bold ph-trash"></i></button>` +
         '</span>';
@@ -591,6 +616,18 @@ function renderMwGrid(middlewares) {
     _mwCardEls = Array.from(grid.querySelectorAll('.mw-card'));
     setTabCount('middlewares', middlewares.length);
     filterMw();
+}
+
+async function addFaLimit(btn) {
+    const mw = JSON.parse(btn.getAttribute('data-mw'));
+    await handleMwEdit(btn);
+    const box = document.getElementById('middlewareContent');
+    if (box) {
+        const withLimit = _faWithLimit(mw.yaml || box.value);
+        box.value = withLimit;
+        if (_mwMonacoEditor) _mwMonacoEditor.setValue(withLimit);
+    }
+    showToast('Review the limit and save', 'info');
 }
 
 async function handleMwEdit(btn) {

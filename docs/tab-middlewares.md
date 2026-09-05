@@ -43,7 +43,7 @@ Every template switches to **Wizard** mode - a structured form with labeled fiel
 | Routing | Redirect to HTTPS, Redirect Regex, Strip Prefix, Strip Prefix Regex, Add Prefix, Replace Path, Replace Path Regex |
 | Advanced | Gzip Compress, Retry, Circuit Breaker, Buffering, Middleware Chain, In-Flight Limit, Custom Error Pages, Content Type, gRPC-Web, Pass TLS Client Cert |
 
-The Forward Auth wizards (including Authentik, Authelia, and Gatekeeper) expose an optional **Max Response Body Size** field (`maxResponseBodySize`, Traefik 3.7+) to cap the auth server's response. See [Traefik Security Hardening](hardening.md) for the recommended hardening middlewares and options.
+The Forward Auth wizards (including Authentik, Authelia, and Gatekeeper) fill **Max Response Body Size** (`maxResponseBodySize`, Traefik 3.7+) with `4096` to cap the auth server's response. Traefik warns on every forward auth middleware without it. An existing middleware missing the limit shows a warning icon on its card; clicking it opens the editor with the line added for you to review and save. See [Traefik Security Hardening](hardening.md) for the recommended hardening middlewares and options.
 
 The **Custom Error Pages** wizard picks the service that serves the page from the services already
 defined in your config, so create that service first. Use `{status}` in the query to substitute the

@@ -65,7 +65,7 @@ Ambiguous percent-encoded characters in a request path (e.g. `%2F` for `/`, `%2E
 
 ## ForwardAuth response size limit
 
-A compromised or misbehaving auth server could return a very large response body to the forwardAuth subrequest. **Traefik 3.7+** adds `maxResponseBodySize` to cap it. The forwardAuth wizards (including Authentik, Authelia, and Gatekeeper) expose it as **Max Response Body Size** - set a small limit in bytes (a few KB) since auth responses are tiny.
+A compromised or misbehaving auth server could return a very large response body to the forwardAuth subrequest. **Traefik 3.7+** adds `maxResponseBodySize` to cap it. The forwardAuth wizards (including Authentik, Authelia, and Gatekeeper) fill it as **Max Response Body Size** with `4096`, which suits the tiny responses auth servers return. Raise it if your provider returns a larger body, since Traefik fails the request when the response exceeds the limit.
 
 ---
 
