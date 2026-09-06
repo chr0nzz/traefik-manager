@@ -506,10 +506,12 @@ function _dskState(r) {
         s.note    = 'declared here, not reported by Traefik';
         s.noteIc  = 'ph-bold ph-question';
         s.noteCls = 'd-off';
+    } else if (svc && svc.total) {
+        s.health = 'up';
+        s.dot    = 'sig-cell-ok';
+        s.dotTip = 'Router loaded, ' + svc.up + ' of ' + svc.total + ' backend servers up';
     } else {
-        s.dotTip = svc && svc.total
-            ? 'Router loaded, ' + svc.up + ' of ' + svc.total + ' backend servers up'
-            : 'Router loaded and enabled';
+        s.dotTip = 'Router loaded and enabled, Traefik reports no backend health for this service';
     }
 
     if (!s.note && !s.url && lnk.why) {

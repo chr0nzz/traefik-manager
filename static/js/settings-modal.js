@@ -1756,9 +1756,13 @@ function applyUiPrefs() {
     html.classList.toggle('tm-fixed', _pref === 'fixed' || _pref === 'classic');
     buildSideNav();
     placeStatCards();
-    const overviewSection = document.getElementById('overviewSection');
-    if (overviewSection) overviewSection.classList.toggle('hidden', !showStats);
+    const statsPanelEl = document.getElementById('statsPanel');
+    if (statsPanelEl) statsPanelEl.classList.toggle('hidden', !showStats);
     _applyEntrypointsVisibility();
+    const overviewSection = document.getElementById('overviewSection');
+    const barEl = document.getElementById('entrypointsBar');
+    const barShown = !!barEl && !barEl.classList.contains('hidden');
+    if (overviewSection) overviewSection.classList.toggle('hidden', !showStats && !barShown);
     const panel = document.getElementById('statsPanel');
     if (panel) panel.classList.toggle('sig-compact', compact);
     const logPanel = document.getElementById('logStatsPanel');

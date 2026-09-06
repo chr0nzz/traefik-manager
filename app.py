@@ -2028,6 +2028,9 @@ def api_cs_unban(decision_id):
     return jsonify({'ok': True})
 
 
+_PING_UNREACHABLE = (502, 503, 504)
+
+
 @app.route('/api/ping')
 @login_required
 def api_route_ping():
@@ -2052,16 +2055,30 @@ def api_route_ping():
         resp = requests.head(target, timeout=5, allow_redirects=False, verify=False)
         ms   = round((_t.monotonic() - t0) * 1000)
         return ms, resp.status_code
-    try:
-        ms, code = _ping(url)
-        return jsonify({'ok': True, 'latency_ms': ms, 'status_code': code})
-    except Exception as primary_err:
+    def _try_fallback():
         if fallback and fallback.startswith(('http://', 'https://')) and _ssrf_ok(fallback):
             try:
                 ms, code = _ping(fallback)
-                return jsonify({'ok': True, 'latency_ms': ms, 'status_code': code, 'via_target': True})
+                if code in _PING_UNREACHABLE:
+                    return None, code
+                return {'ok': True, 'latency_ms': ms, 'status_code': code, 'via_target': True}, code
             except Exception:
-                pass
+                return None, None
+        return None, None
+
+    try:
+        ms, code = _ping(url)
+        if code not in _PING_UNREACHABLE:
+            return jsonify({'ok': True, 'latency_ms': ms, 'status_code': code})
+        alt, alt_code = _try_fallback()
+        if alt:
+            return jsonify(alt)
+        return jsonify({'ok': False, 'latency_ms': ms, 'status_code': code,
+                        'error': f'The proxy answered {code}, the backend is not reachable'})
+    except Exception as primary_err:
+        alt, _alt_code = _try_fallback()
+        if alt:
+            return jsonify(alt)
         err = str(primary_err)[:80]
         return jsonify({'ok': False, 'error': 'Timeout' if 'timeout' in err.lower() else err, 'latency_ms': None})
 

@@ -30,17 +30,18 @@ Everything else the tab knows - backend target, provider, entry points, server c
 
 ### The status dot
 
-The dot on the icon plate has six states:
+The dot on the icon plate has these states:
 
 | Dot | Meaning |
 |-----|---------|
-| Quiet grey square | Router loaded and, where Traefik reports backend health, every server up |
+| Green square | Every backend server up, where Traefik reports backend health |
+| Quiet grey square | Router loaded, but Traefik reports no backend health for the service |
 | Hollow square | Route disabled, loaded but not enabled, or the Traefik API did not answer |
 | Hollow circle | Traefik is answering but has never reported this router |
 | Yellow | Backend degraded, some servers up and some down |
 | Red with a glow | Router errored, or every backend server down |
 
-Backend health comes from `serverStatus` in the Traefik API. Traefik only reports it for services that have a health check configured; without one the dot means "the router is loaded", which is what its tooltip says.
+Backend health comes from `serverStatus` in the Traefik API. Traefik only reports it for services that have a health check configured. Without one the dot stays grey rather than green, because Traefik cannot tell us whether the app behind the route is actually answering.
 
 Every dot carries a full-sentence tooltip. When the Traefik API cannot be read at all, the tab says so once above the pods rather than drawing an unexplained ring on every route, so "Traefik answered with no routers" and "Traefik did not answer" stay distinguishable.
 
