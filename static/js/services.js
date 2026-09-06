@@ -778,21 +778,40 @@ async function saveServiceModal() {
 async function deleteServiceFromModal() {
     const name = (document.getElementById('svcOriginalName')?.value || '').trim();
     if (!name) return;
-    if (!confirm('Delete the service ' + name + '? Its own backends are removed with it.')) return;
+    if (!await _confirm('Delete the service ' + name + '? Its own backends are removed with it.', 'Delete Service', 'Delete', 'DELETE')) return;
+    await _sendServiceDelete(name, false);
+}
+
+async function _sendServiceDelete(name, force) {
     const err = document.getElementById('svcError');
     try {
-        const res = await fetch(_svcApiPath('/api/services/' + encodeURIComponent(name)), {
+        const res = await fetch(_svcApiPath('/api/services/' + encodeURIComponent(name)) + (force ? (_activeAgent ? '&' : '?') + 'force=1' : ''), {
             method: 'DELETE', headers: { 'X-Requested-With': 'fetch', ..._csrfHeaders() },
         });
-        const body = await res.json();
-        if (!res.ok || !body.ok) {
-            if (err) { err.textContent = body.error || 'Could not delete'; err.style.display = ''; }
+        const body = await res.json().catch(() => null);
+        if (res.status === 409 && body && ((body.inUseBy || []).length || (body.parents || []).length)) {
+            const routes = body.inUseBy || [], parents = body.parents || [];
+            const show = a => a.slice(0, 5).join(', ') + (a.length > 5 ? ' and ' + (a.length - 5) + ' more' : '');
+            const parts = [];
+            if (routes.length) parts.push('Delete ' + (routes.length === 1 ? 'the route ' : routes.length + ' routes: ') + show(routes));
+            if (parents.length) parts.push('remove it from ' + show(parents) + (parents.length === 1 ? ' (which is deleted if nothing is left in it)' : ' (any left empty are deleted too)'));
+            if (await _confirm('"' + name + '" is still in use. ' + parts.join(', and ') + ', then delete it?',
+                               'Service In Use', 'Delete all of it', 'DELETE')) {
+                await _sendServiceDelete(name, true);
+            }
+            return;
+        }
+        if (!res.ok || !body || !body.ok) {
+            if (err) { err.textContent = (body && body.error) || 'Could not delete'; err.style.display = ''; }
             return;
         }
         closeServiceModal();
-        showToast('Service ' + name + ' deleted', 'success');
+        const d = body.deleted || {};
+        const extra = (d.routers || []).length ? ' and ' + d.routers.length + (d.routers.length === 1 ? ' route' : ' routes') : '';
+        showToast('Service ' + name + ' deleted' + extra, 'success');
         window._tmServices = null;
         loadServices();
+        if (extra && typeof refreshRoutes === 'function') refreshRoutes();
     } catch (e) {
         if (err) { err.textContent = 'Could not delete'; err.style.display = ''; }
     }

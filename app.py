@@ -1501,6 +1501,49 @@ def _stream_service_proto(name: str) -> str:
     return ''
 
 
+def _remove_router(config, sec, name, ledger, agent_id=''):
+    s = config.get(sec) or {}
+    routers = s.get('routers') or {}
+    if name not in routers:
+        return False
+    svc = str((routers[name] or {}).get('service') or '').strip()
+    del routers[name]
+    if svc and 'services' in s and svc in s['services'] and not _service_shared(config, svc, name):
+        del s['services'][svc]
+        _drop_owned_transport(config, svc, ledger, agent_id)
+        if sec == 'http':
+            for gone in _composite.drop_orphan_children(s['services'], name, set()):
+                ledger.pop(_svc_ledger_key(gone, agent_id), None)
+            ledger.pop(_svc_ledger_key(svc, agent_id), None)
+    return True
+
+
+def _strip_service_child(config, parent, child):
+    sdef = ((config.get('http') or {}).get('services') or {}).get(parent)
+    if not isinstance(sdef, dict):
+        return ''
+    hit = False
+    for kind in ('weighted', 'mirroring', 'failover', 'highestRandomWeight'):
+        block = sdef.get(kind)
+        if not isinstance(block, dict):
+            continue
+        for key in ('services', 'mirrors'):
+            lst = block.get(key)
+            if isinstance(lst, list):
+                kept = [c for c in lst if not (isinstance(c, dict)
+                                               and str(c.get('name') or '').split('@')[0] == child)]
+                if len(kept) != len(lst):
+                    hit = True
+                    block[key] = kept
+        for key in ('service', 'fallback'):
+            if str(block.get(key) or '').split('@')[0] == child:
+                hit = True
+                block.pop(key, None)
+    if not hit:
+        return ''
+    return 'emptied' if not _svc_own.child_names(sdef) else 'stripped'
+
+
 def _service_referenced_by(configs, name: str) -> list:
     out = []
     for cfg in configs:
@@ -1653,6 +1696,13 @@ def api_service_save():
                         'error': f"{claimed[0]} already belongs to {claimed[1]}. "
                                  f"Pick a different name"}), 409
 
+    _loop = _composite.find_cycle(section, name, children)
+    if _loop:
+        return jsonify({'ok': False,
+                        'error': (f"{name} cannot use itself as a backend" if _loop == name
+                                  else f"{_loop} already routes back to {name}, which would "
+                                       f"make a cycle Traefik cannot load")}), 400
+
     _composite.merge_into(section, name, block, owned)
     for gone in _composite.drop_orphan_children(section, name, set(owned)):
         ledger.pop(_svc_ledger_key(gone, agent_id), None)
@@ -1695,44 +1745,80 @@ def api_service_delete(name):
         return err
     agent_configs = _agent_load_configs(agent) if agent else {}
     configs  = list(agent_configs.values()) if agent else [load_config(p) for p in env.CONFIG_PATHS]
-    used_by  = _service_routers_using(configs, bare)
-    if used_by:
-        return jsonify({'ok': False,
-                        'error': 'Still used by ' + ', '.join(sorted(set(used_by))[:5])}), 409
-    parents = _service_referenced_by(configs, bare)
-    if parents:
-        return jsonify({'ok': False,
-                        'error': 'Still a backend of ' + ', '.join(sorted(set(parents))[:5])}), 409
+    force    = str(request.args.get('force') or '').strip().lower() in ('1', 'true', 'yes')
+    used_by  = sorted(set(_service_routers_using(configs, bare)))
+    parents  = sorted(set(_service_referenced_by(configs, bare)))
+    if (used_by or parents) and not force:
+        bits = []
+        if used_by:
+            bits.append('still used by ' + ', '.join(used_by[:5]) + (' and others' if len(used_by) > 5 else ''))
+        if parents:
+            bits.append('still a backend of ' + ', '.join(parents[:5]) + (' and others' if len(parents) > 5 else ''))
+        return jsonify({'ok': False, 'error': f'{bare} is ' + '; '.join(bits),
+                        'inUseBy': used_by, 'parents': parents}), 409
 
     settings = load_settings()
     ledger   = dict(settings.get('managed_middlewares') or {})
-    removed  = False
     targets = ([(fname, cfg) for fname, cfg in agent_configs.items()] if agent
                else [(path, load_config(path)) for path in env.CONFIG_PATHS])
-    for where, config in targets:
+    home = None
+    for idx, (where, config) in enumerate(targets):
         section = (config.get('http') or {}).get('services') or {}
-        if bare not in section:
-            continue
-        _def = section.get(bare)
-        if not _svc_own.is_owned(bare, _def, ledger, agent_id) \
-                and not (isinstance(_def, dict) and 'loadBalancer' in _def):
-            return jsonify({'ok': False, 'error': 'That service is not managed here'}), 403
+        if bare in section:
+            home = idx
+            _def = section.get(bare)
+            if not _svc_own.is_owned(bare, _def, ledger, agent_id) \
+                    and not (isinstance(_def, dict) and 'loadBalancer' in _def):
+                return jsonify({'ok': False, 'error': 'That service is not managed here'}), 403
+            break
+    if home is None:
+        return jsonify({'ok': False, 'error': 'Service not found'}), 404
+    if not force:
         child_users = _children_still_in_use(configs, bare, set())
         if child_users:
             return _in_use_error(child_users)
-        del section[bare]
-        for gone in _composite.drop_orphan_children(section, bare, set()):
-            ledger.pop(_svc_ledger_key(gone, agent_id), None)
-        ledger.pop(_svc_ledger_key(bare, agent_id), None)
+
+    touched = set()
+    deleted_routers, deleted_services = [], []
+    victims, frontier = {bare}, [bare]
+    while frontier:
+        victim = frontier.pop()
+        for idx, (where, config) in enumerate(targets):
+            for sec in ('http', 'tcp', 'udp'):
+                for rname in list(((config.get(sec) or {}).get('routers') or {})):
+                    rd = config[sec]['routers'].get(rname)
+                    if isinstance(rd, dict) and str(rd.get('service') or '').split('@')[0] == victim:
+                        if _remove_router(config, sec, rname, ledger, agent_id):
+                            deleted_routers.append(rname)
+                            touched.add(idx)
+            for pname in list(((config.get('http') or {}).get('services') or {})):
+                if pname in victims:
+                    continue
+                res = _strip_service_child(config, pname, victim)
+                if res:
+                    touched.add(idx)
+                if res == 'emptied':
+                    victims.add(pname)
+                    frontier.append(pname)
+    for victim in victims:
+        for idx, (where, config) in enumerate(targets):
+            section = (config.get('http') or {}).get('services') or {}
+            if victim not in section:
+                continue
+            section.pop(victim, None)
+            keep = {c for c, _u in _children_still_in_use([cfg for _w, cfg in targets], victim, set())}
+            for gone in _composite.drop_orphan_children(section, victim, keep):
+                ledger.pop(_svc_ledger_key(gone, agent_id), None)
+            ledger.pop(_svc_ledger_key(victim, agent_id), None)
+            deleted_services.append(victim)
+            touched.add(idx)
+    for idx in sorted(touched):
+        where, config = targets[idx]
         if agent:
             _agent_write_config(agent, where, config)
         else:
             create_backup(where)
             save_config(_strip_empty_sections(config), where)
-        removed = True
-        break
-    if not removed:
-        return jsonify({'ok': False, 'error': 'Service not found'}), 404
     save_settings(
         domains=settings['domains'], cert_resolver=settings['cert_resolver'],
         traefik_api_url=settings['traefik_api_url'], auth_enabled=settings['auth_enabled'],
@@ -1746,7 +1832,8 @@ def api_service_delete(name):
                          daemon=True).start()
     else:
         threading.Thread(target=lambda: _git_push_if_enabled('service delete'), daemon=True).start()
-    return jsonify({'ok': True})
+    return jsonify({'ok': True, 'deleted': {'routers': sorted(set(deleted_routers)),
+                                            'services': sorted(set(deleted_services))}})
 
 
 def _owned_child_services(agent_id: str = '') -> list:
@@ -5662,6 +5749,16 @@ def save_entry():
                     if _managed_backends else ('rule', 'entryPoints', 'service', 'middlewares', 'tls')
                 _merge_router(config['http']['routers'], router_name, r, _http_managed)
                 _svc_section = config['http']['services']
+                if _composite_posted:
+                    _loop = _composite.find_cycle(_svc_section, service_name, _be.get('children'))
+                    if _loop:
+                        _loop_msg = (f"{service_name} cannot use itself as a backend" if _loop == service_name
+                                     else f"{_loop} already routes back to {service_name}, which would "
+                                          f"make a cycle Traefik cannot load")
+                        if fetch:
+                            return jsonify({'ok': False, 'message': _loop_msg}), 400
+                        flash(_loop_msg, "error")
+                        return redirect(url_for('index'))
                 _cmp_block, _cmp_owned, _cmp_names = (
                     _composite.build(router_name, _composite_type, _be.get('children'),
                                      lb_extra={k: v for k, v in lb.items() if k != 'servers'})
@@ -5872,15 +5969,8 @@ def delete_entry(router_id):
                 if config_file_raw and fname != config_file_raw:
                     continue
                 for sec in ('http', 'tcp', 'udp'):
-                    s = config.get(sec, {})
-                    if plain_id in s.get('routers', {}):
-                        svc = (s['routers'][plain_id].get('service') or '').strip()
-                        del s['routers'][plain_id]
-                        if (svc and 'services' in s and svc in s['services']
-                                and not _service_shared(config, svc, plain_id)):
-                            del s['services'][svc]
-                            if _drop_owned_transport(config, svc, _del_ledger, agent_id):
-                                _del_ledger_changed = True
+                    if _remove_router(config, sec, plain_id, _del_ledger, agent_id):
+                        _del_ledger_changed = True
                         _agent_write_config(agent, fname, config)
                         deleted = True
                         break
@@ -5894,22 +5984,8 @@ def delete_entry(router_id):
             for target_path in search_paths:
                 config = load_config(target_path)
                 for sec in ('http', 'tcp', 'udp'):
-                    s = config.get(sec, {})
-                    if plain_id in s.get('routers', {}):
-                        svc = (s['routers'][plain_id].get('service') or '').strip()
-                        del s['routers'][plain_id]
-                        if (svc and 'services' in s and svc in s['services']
-                                and not _service_shared(config, svc, plain_id)):
-                            del s['services'][svc]
-                            if _drop_owned_transport(config, svc, _del_ledger):
-                                _del_ledger_changed = True
-                            if sec == 'http':
-                                for _gone in _composite.drop_orphan_children(
-                                        s['services'], plain_id, set()):
-                                    _del_ledger.pop(_svc_ledger_key(_gone, agent_id), None)
-                                    _del_ledger_changed = True
-                                if _del_ledger.pop(_svc_ledger_key(svc, agent_id), None):
-                                    _del_ledger_changed = True
+                    if _remove_router(config, sec, plain_id, _del_ledger, agent_id):
+                        _del_ledger_changed = True
                         create_backup(target_path)
                         save_config(_strip_empty_sections(config), target_path)
                         deleted = True

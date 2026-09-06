@@ -1421,7 +1421,8 @@ managed independently on the Host and on each agent.
 Refuses with `409` if a service of that name exists and Traefik Manager does not manage it, if one
 of its generated children is still used elsewhere, or if that child name already belongs to another
 service; with `403` when renaming something it does not manage; and with `400` for an invalid name,
-type, or a name that belongs to a TCP or UDP service.
+type, a name that belongs to a TCP or UDP service, or a `service` backend that would make the
+service reference itself, directly or through other services.
 
 ---
 
@@ -1429,9 +1430,14 @@ type, or a name that belongs to a TCP or UDP service.
 
 Delete a managed composite service and the child services it owns.
 
-Refuses with `409` while a router still points at it, while another service still lists it as a
-backend, or while one of its generated children is still used elsewhere; `403` if Traefik Manager
-does not manage it, and `404` if it does not exist.
+Refuses with `409` while a router still points at it or another service still lists it as a
+backend. The response carries `inUseBy` (router names) and `parents` (service names). Send
+`?force=1` to delete those routers, remove the service from those parents, delete any parent left
+with no backends, and then delete the service; a generated child another service still uses is kept.
+The response then lists what went under `deleted.routers` and `deleted.services`.
+
+Without `force`, also `409` while one of its generated children is still used elsewhere. `403` if
+Traefik Manager does not manage it, `404` if it does not exist.
 
 Pass `?agent_id=<id>` to delete on a remote agent.
 

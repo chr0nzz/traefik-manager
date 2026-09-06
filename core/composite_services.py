@@ -144,3 +144,27 @@ def ledger_entries(parent_name: str, block: dict, owned: dict,
             'file':   config_file,
         }
     return out
+
+
+def find_cycle(section, name: str, children) -> str:
+    from core.service_ownership import child_names
+    bare = str(name or '').split('@')[0]
+    for child in normalise_children(children):
+        if child['kind'] != SERVICE:
+            continue
+        start = str(child['name']).split('@')[0]
+        if start == bare:
+            return start
+        seen = set()
+        stack = [start]
+        while stack:
+            cur = stack.pop()
+            if cur in seen:
+                continue
+            seen.add(cur)
+            for nxt in child_names((section or {}).get(cur)):
+                nxt = str(nxt).split('@')[0]
+                if nxt == bare:
+                    return start
+                stack.append(nxt)
+    return ''

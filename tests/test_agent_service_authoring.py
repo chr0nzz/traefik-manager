@@ -145,7 +145,7 @@ def test_the_client_sends_the_agent_id_rather_than_proxying():
     assert 'agent_id' in save, 'the save body must carry the selected agent'
     assert '_csrfHeaders()' in save, 'the save lost its CSRF header when it left agentFetch'
 
-    for name in ('_setServiceOwnership', 'deleteServiceFromModal'):
+    for name in ('_setServiceOwnership', '_sendServiceDelete'):
         body = re.search(r'async function ' + name + r'\(.*?\n\}', src, re.S).group(0)
         assert '_svcApiPath(' in body, '%s must pass the agent id' % name
         assert '_csrfHeaders()' in body, '%s lost its CSRF header' % name
