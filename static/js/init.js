@@ -139,6 +139,7 @@ window.addEventListener('appinstalled', () => {
         setInterval(refreshStorageBanner, 300000);
     }
     setInterval(fetchNotifications, 60000);
+    setInterval(() => { if (typeof window._rhPoll === 'function') window._rhPoll(); }, 60000);
 })();
 
 document.addEventListener('click', e => {

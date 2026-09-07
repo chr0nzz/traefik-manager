@@ -78,6 +78,8 @@ A verdict line sums up every problem in plain language and names the providers r
 
 Colour is rationed: a healthy install is almost monochrome, so anything coloured is worth reading.
 
+The HTTP routers card also counts routes whose backend the background reachability check found down, as **unreachable**, alongside what Traefik itself reports. Click the count to filter the Routes tab to them.
+
 Choose which of the four tabs show it under **Settings - Interface - Show on**, and switch to a denser layout with **Compact stat cards**. The [Logs](tab-logs.md) and [CrowdSec](tab-crowdsec.md) analytics panels use the same visual language.
 
 ---

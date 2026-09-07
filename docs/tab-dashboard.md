@@ -34,15 +34,15 @@ The dot on the icon plate has these states:
 
 | Dot | Meaning |
 |-----|---------|
-| Green square | Every backend server up. From Traefik where the service has a health check, otherwise from Traefik Manager reaching the app itself |
+| Green square | Every backend server up. From Traefik where the service has a health check, otherwise from the background route check reaching the app |
 | Red with a glow | The app did not answer, or answered with a gateway error |
-| Quiet grey square | Router loaded, but there is no health check and no launch URL to check against |
+| Quiet grey square | Router loaded, but there is no health check and the route has not been checked yet, or route checks are off in Settings |
 | Hollow square | Route disabled, loaded but not enabled, or the Traefik API did not answer |
 | Hollow circle | Traefik is answering but has never reported this router |
 | Yellow | Backend degraded, some servers up and some down |
 | Red with a glow | Router errored, or every backend server down |
 
-Backend health comes from `serverStatus` in the Traefik API where the service has a health check configured, since that is authoritative. Without one, Traefik Manager checks the route itself: it requests the launch URL and treats a 502, 503 or 504 as down, falling back to the backend address when there is one. Routes with no launch URL cannot be checked and stay grey.
+Backend health comes from `serverStatus` in the Traefik API where the service has a health check configured, since that is authoritative. Without one, the background route check requests the route through the proxy on its schedule (Settings - Notifications - Route checks) and treats a 502, 503 or 504 as down, trying the backend address before giving up. When a forward auth middleware answers with a redirect before the backend is reached, the backend address is checked directly instead; if Traefik Manager cannot reach that address the dot stays green with a tooltip saying the backend was not verified. The tooltip says when the route was last checked. Nothing is pinged from the browser.
 
 Every dot carries a full-sentence tooltip. When the Traefik API cannot be read at all, the tab says so once above the pods rather than drawing an unexplained ring on every route, so "Traefik answered with no routers" and "Traefik did not answer" stay distinguishable.
 
@@ -94,7 +94,7 @@ Three modes:
 - **selfh.st slug** - enter a slug directly (e.g. `plex`, `grafana`) - see [selfh.st/icons](https://selfh.st/icons/) for available icons
 - **Custom URL** - enter any direct image URL to use as the icon
 
-Icons are requested by the browser from jsDelivr (`cdn.jsdelivr.net/gh/selfhst/icons`), so the browser needs to reach it. If a slug does not resolve, the plate falls back to a two-letter monogram of the display name. (A server-side caching endpoint exists at `/api/dashboard/icon/<slug>` but the frontend does not use it yet.)
+Icons are requested by the browser from jsDelivr (`cdn.jsdelivr.net/gh/selfhst/icons@main`), so the browser needs to reach it. If a slug does not resolve, the plate falls back to a two-letter monogram of the display name. (A server-side caching endpoint exists at `/api/dashboard/icon/<slug>` but the frontend does not use it yet.)
 
 If a self route is configured for Traefik Manager (**Settings - Connection - Self route**), its dashboard card automatically shows the Traefik Manager icon instead of a CDN lookup.
 
@@ -188,6 +188,7 @@ Fetches from:
 - `/api/dashboard/config` - custom groups and per-route overrides from `dashboard.yml`
 - `/api/traefik/routers` - live router state for the status dot
 - `/api/traefik/services` - `serverStatus` per backend server, for the degraded and unreachable dot states
+- `/api/routes/health` - the last background reachability result per route
 
 Router and service state is keyed on the full `name@provider`, so `whoami@docker` and `whoami@file` do not collapse into one entry and show each other's status.
 

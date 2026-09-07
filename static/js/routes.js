@@ -102,7 +102,7 @@ function filterRoutes() {
             (currentProtoFilter === 'all' || proto === currentProtoFilter) &&
             (!currentRouteDomainFilter || domains.some(d => d === currentRouteDomainFilter || d.endsWith('.' + currentRouteDomainFilter))) &&
             (currentRouteStatusFilter === 'all' || (currentRouteStatusFilter === 'active' && enabled) || (currentRouteStatusFilter === 'inactive' && !enabled)) &&
-            (!_apiStatusFilter || card.dataset.apistatus === _apiStatusFilter || card.dataset.apibound === _apiStatusFilter) &&
+            (!_apiStatusFilter || card.dataset.apistatus === _apiStatusFilter || card.dataset.apibound === _apiStatusFilter || card.dataset.health === _apiStatusFilter) &&
             (!_routeEpFilter || eps.includes(_routeEpFilter));
         card.style.display = show ? '' : 'none';
         if (show) visible++;
@@ -692,15 +692,17 @@ async function pingAllRoutes() {
             if (statusEl) {
                 statusEl.className = data.ok ? 'status-dot status-online' : 'status-dot status-offline';
                 statusEl.title = data.ok
-                    ? (data.self ? `Online (self)` : data.via_target ? `Backend online · ${data.latency_ms}ms` : `Online · ${data.latency_ms}ms (${data.status_code})`)
+                    ? (data.self ? `Online (self)` : data.unverified ? `Proxy answered ${data.status_code}, backend not verified${data.note ? '. ' + data.note : ''}` : data.via_target ? `Backend online · ${data.latency_ms}ms` : `Online · ${data.latency_ms}ms (${data.status_code})`)
                     : `Unreachable${data.error ? ': ' + data.error : ''}`;
             }
+            if (typeof window._rhRemember === 'function') window._rhRemember(card.dataset.rid || card.dataset.routekey, data);
             if (data.ok) { online++; } else { offline++; offlineRoutes.push(domain); }
         } catch(e) {
             if (statusEl) { statusEl.className = 'status-dot status-unknown'; statusEl.title = 'Ping failed'; }
             offline++; offlineRoutes.push(domain);
         }
     }
+    if (typeof _sdApplyRouteCards === 'function') _sdApplyRouteCards();
     const total = online + offline;
     const type  = offline > 0 ? 'warning' : 'info';
     const msg   = offline > 0
@@ -710,7 +712,7 @@ async function pingAllRoutes() {
     fetch('/api/notifications/add', { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':csrf}, body: JSON.stringify({type, message: msg, category: 'traefik'}) })
         .then(() => fetchNotifications());
 }
-const _ROUTE_ICON_CDN = 'https://cdn.jsdelivr.net/gh/selfhst/icons/png';
+const _ROUTE_ICON_CDN = 'https://cdn.jsdelivr.net/gh/selfhst/icons@main/png';
 
 function _routeIconSlug(app) {
     let s = (app.service_name || app.name || '').split('@')[0];
@@ -829,7 +831,7 @@ function _tmRouteCard(app, i, opts) {
         ? `<input type="checkbox" class="bulk-check" onclick="event.stopPropagation()" ${bulkSel ? 'checked' : ''} onchange="toggleBulkSelect(${_jsArg(app.id)})" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;margin-top:6px">`
         : '';
 
-    const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}" data-target="${_esc(app.target)}" data-configfile="${_esc(app.configFile || '')}" data-eps="${(app.entryPoints || []).map(e => _esc(e)).join('|')}"`;
+    const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-rid="${_esc(app.id)}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}" data-target="${_esc(app.target)}" data-configfile="${_esc(app.configFile || '')}" data-eps="${(app.entryPoints || []).map(e => _esc(e)).join('|')}"`;
 
     return `<div class="tm-card route-card${bulkSel ? ' tm-sel' : ''}" ${dataAttrs} style="--tm-accent:var(--blue)" onclick="openRouteDetailFromCard(this)">
         <div class="tm-head">${bulkCheckbox}${head}
@@ -915,7 +917,7 @@ function renderRouteGrid(apps) {
         const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${ruleLabel}</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1?`<span class="badge badge-muted" style="font-size:9px" title="${(app.servers||[]).length} backends">+${(app.servers||[]).length-1}</span>`:''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`; const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1?`<span class="badge badge-muted" style="font-size:9px" title="${(app.servers||[]).length} backends">+${(app.servers||[]).length-1}</span>`:''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`;
         const cfArg = `,${_jsArg(app.configFile || '')}`;
         const cfBadge = (epBadges || mwBadges || epMwBadges || app.configFile) ? `<div class="flex flex-wrap items-center gap-1 mt-2">${epBadges}${mwBadges}${epMwBadges}${app.configFile ? `<span class="badge badge-muted" style="font-size:9px;margin-left:auto">${_esc(app.configFile)}</span>` : ''}</div>` : '';
-        const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}" data-target="${_esc(app.target)}" data-configfile="${_esc(app.configFile||'')}" data-eps="${(app.entryPoints||[]).map(e => _esc(e)).join('|')}"`;
+        const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-rid="${_esc(app.id)}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}" data-target="${_esc(app.target)}" data-configfile="${_esc(app.configFile||'')}" data-eps="${(app.entryPoints||[]).map(e => _esc(e)).join('|')}"`;
         const isBulkSelected = _bulkMode && _bulkSelected.has(app.id);
         const bulkOutline = isBulkSelected ? 'outline:2px solid var(--blue);outline-offset:-2px;' : '';
         const bulkCheckbox = _bulkMode ? `<input type="checkbox" class="bulk-check" onclick="event.stopPropagation()" ${isBulkSelected ? 'checked' : ''} onchange="toggleBulkSelect(${_jsArg(app.id)})" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;border-radius:3px;margin-right:2px">` : '';
@@ -946,7 +948,7 @@ function renderRouteGrid(apps) {
         grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4';
     }
     _routeCardEls = Array.from(grid.querySelectorAll('.route-card'));
-    if (typeof _sdApplyRouteCards === 'function') _sdApplyRouteCards(false);
+    if (typeof _sdApplyRouteCards === 'function') _sdApplyRouteCards();
     if (document.getElementById('searchRoutes')) filterRoutes();
 }
 

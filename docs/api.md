@@ -291,6 +291,36 @@ router names. Send `force` to remove it from them and delete it.
 
 ---
 
+### `GET /api/routes/health`
+
+The last result of the background route reachability check, per route id. Pass `agent_id` for an agent's routes.
+
+```json
+{
+  "enabled": true,
+  "interval": 300,
+  "checked_at": 1757200000,
+  "routes": {
+    "photos": { "state": "up", "source": "ping", "latency_ms": 42, "status_code": 200, "at": 1757200000 },
+    "api":    { "state": "down", "source": "traefik", "servers": { "up": 0, "total": 2 }, "at": 1757200000 },
+    "blog":   { "state": "pending", "pending": true, "source": "ping", "status_code": 502, "error": "The proxy answered 502, the backend is not reachable", "at": 1757200000 }
+  }
+}
+```
+
+| Field | Description |
+|---|---|
+| `state` | `up`, `degraded`, `down`, or `pending` (one failed check, not yet confirmed) |
+| `source` | `traefik` when the service has a health check, `ping` when the route was requested |
+| `servers` | `up` and `total` from Traefik, `traefik` source only |
+| `via_target` | `true` when the proxy answered a gateway error or an auth redirect and the backend answered directly |
+| `unverified` | `true` when the proxy redirected to another host and the backend could not be checked from Traefik Manager; `note` says why |
+| `at` | Unix time of the observation |
+
+Routes only appear after their first check. `enabled: false` means the check is off in Settings and `routes` is empty.
+
+---
+
 ## Traefik
 
 These endpoints proxy read-only data from the Traefik API. They require a valid Traefik API URL in settings.
@@ -671,6 +701,16 @@ Enable GeoIP and set the database path. Omitted keys keep their current value.
 ```
 
 Returns `{ "success": true, "status": { } }` carrying the same payload as `GET /api/geoip/status`.
+
+---
+
+### `POST /api/settings/route-health`
+
+```json
+{ "enabled": true, "interval": 300 }
+```
+
+Both fields optional. `interval` is seconds and must be one of `60`, `300`, `900`, `1800`, otherwise `400`. Returns `{ "ok": true, "enabled": true, "interval": 300 }`.
 
 ---
 
@@ -1385,6 +1425,8 @@ Send a `HEAD` request to a route's domain from the TM server and return latency.
 On failure: `{ "ok": false, "error": "Timeout", "latency_ms": null }`
 
 A URL pointing at TM's own hostname, or at the configured self-route domain, short-circuits to `{ "ok": true, "latency_ms": 0, "status_code": 200, "self": true }` without a request. A successful fallback adds `"via_target": true`. Targets that fail the SSRF guard return `400`.
+
+A 502, 503 or 504 from the proxy means down, and the fallback is tried before giving up. A redirect to a different host (a forward auth middleware answering before the backend) proves nothing about the backend, so the fallback is checked directly: an answer is up, a refused connection or no route is down, and an address Traefik Manager cannot resolve or reach in time returns `"ok": true` with `"unverified": true` and a `note` saying why.
 
 ---
 

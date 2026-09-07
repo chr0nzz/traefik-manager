@@ -455,6 +455,7 @@ function _dskState(r) {
     const ov  = (_rmConfig.route_overrides || {})[r.id] || {};
     const st  = _dskRouterState(r);
     const svc = _dskSvcState(r);
+    const chk = (typeof window._rhGet === 'function') ? window._rhGet(r.id) : null;
     const lnk = _dashLaunchInfo(r, ov);
     const s = {
         ov: ov, url: lnk.url, hosts: lnk.hosts || 0,
@@ -510,11 +511,28 @@ function _dskState(r) {
         s.health = 'up';
         s.dot    = 'sig-cell-ok';
         s.dotTip = 'Router loaded, ' + svc.up + ' of ' + svc.total + ' backend servers up';
-    } else if (lnk.url) {
-        s.ping   = true;
-        s.dotTip = 'Router loaded, checking whether the app answers';
+    } else if (chk && chk.state === 'down') {
+        s.health  = 'down';
+        s.dot     = 'sig-cell-err';
+        s.dotTip  = chk.source === 'traefik'
+            ? 'Backend unreachable - 0 of ' + ((chk.servers || {}).total || 0) + ' servers up'
+            : 'Unreachable' + (chk.error ? ': ' + chk.error : '') + ' \u00b7 ' + _dskAgo(chk.at);
+        s.note    = 'backend unreachable';
+        s.noteIc  = 'ph-fill ph-warning-octagon';
+        s.noteCls = 'd-bad';
+    } else if (chk && chk.state === 'up') {
+        s.health = 'up';
+        s.dot    = 'sig-cell-ok';
+        s.dotTip = (chk.self ? 'Online (self)'
+            : chk.unverified ? 'Proxy answered ' + chk.status_code + ', backend not verified' + (chk.note ? '. ' + chk.note : '')
+            : chk.via_target ? 'Backend online \u00b7 ' + chk.latency_ms + 'ms'
+            : 'Online \u00b7 ' + chk.latency_ms + 'ms (' + chk.status_code + ')') + ' \u00b7 ' + _dskAgo(chk.at);
+    } else if (chk && chk.state === 'pending') {
+        s.dotTip = 'Router loaded, the last check failed' + (chk.error ? ': ' + chk.error : '') + ', confirming on the next pass';
+    } else if (!_dskChecksOn()) {
+        s.dotTip = 'Router loaded, route checks are off in Settings';
     } else {
-        s.dotTip = 'Router loaded and enabled, Traefik reports no backend health for this service';
+        s.dotTip = 'Router loaded and enabled, Traefik reports no backend health for this service and it has not been checked yet';
     }
 
     if (!s.note && !s.url && lnk.why) {
@@ -741,53 +759,18 @@ function dashRenderPods(routes) {
         _dskPods.set(p.meta.name, p);
         grid.appendChild(dashBuildPod(p));
     });
-    _dskPingPass(pods.flatMap(p => p.entries));
 }
 
-let _dskPingGen = 0;
-
-function _dskPingTarget(r) {
-    const t = String(r.target || '');
-    return /^https?:\/\//.test(t) ? t : '';
+function _dskChecksOn() {
+    return !(window._rhMeta && window._rhMeta.loaded && window._rhMeta.enabled === false);
 }
 
-function _dskApplyPing(rid, data) {
-    document.querySelectorAll('.dsk-dot[data-rid="' + String(rid).replace(/"/g, '\\"') + '"]').forEach(dot => {
-        dot.classList.remove('sig-cell-ok', 'sig-cell-err', 'sig-cell-warn', 'sig-cell-idle', 'dsk-dot-unk');
-        if (!data) {
-            dot.title = 'Router loaded, the reachability check did not complete';
-            return;
-        }
-        if (data.ok) {
-            dot.classList.add('sig-cell-ok');
-            dot.title = data.self ? 'Online (self)'
-                : data.via_target ? 'Backend online \u00b7 ' + data.latency_ms + 'ms'
-                : 'Online \u00b7 ' + data.latency_ms + 'ms (' + data.status_code + ')';
-        } else {
-            dot.classList.add('sig-cell-err');
-            dot.title = 'Unreachable' + (data.error ? ': ' + data.error : '');
-        }
-    });
-}
-
-function _dskPingPass(entries) {
-    const gen  = ++_dskPingGen;
-    const jobs = entries.filter(e => e.s && e.s.ping && e.s.url);
-    if (!jobs.length) return;
-    let next = 0;
-    const worker = async () => {
-        while (next < jobs.length) {
-            const { r, s } = jobs[next++];
-            const tgt = _dskPingTarget(r);
-            const url = '/api/ping?url=' + encodeURIComponent(s.url)
-                + (tgt ? '&fallback=' + encodeURIComponent(tgt) : '');
-            let data = null;
-            try { data = await (await fetch(url)).json(); } catch (e) { data = null; }
-            if (gen !== _dskPingGen) return;
-            _dskApplyPing(r.id, data);
-        }
-    };
-    for (let i = 0; i < Math.min(6, jobs.length); i++) worker();
+function _dskAgo(at) {
+    if (!at) return '';
+    const sec = Math.max(0, Math.floor(Date.now() / 1000) - at);
+    if (sec < 60)   return 'checked just now';
+    if (sec < 3600) return 'checked ' + Math.floor(sec / 60) + 'm ago';
+    return 'checked ' + Math.floor(sec / 3600) + 'h ago';
 }
 
 function _dskTogglePod(name, force) {
@@ -1006,6 +989,7 @@ window.refreshDashboardTab = async function() {
         if (first) showToast('Could not load dashboard data.', 'error');
         return;
     }
+    if (typeof window._rhLoad === 'function') await window._rhLoad(_rmServerId());
     _dashDrawn = true;
     dashRenderProviderFilters();
     dashRender();
