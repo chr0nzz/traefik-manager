@@ -506,10 +506,15 @@ function _dskState(r) {
         s.note    = 'declared here, not reported by Traefik';
         s.noteIc  = 'ph-bold ph-question';
         s.noteCls = 'd-off';
+    } else if (svc && svc.total) {
+        s.health = 'up';
+        s.dot    = 'sig-cell-ok';
+        s.dotTip = 'Router loaded, ' + svc.up + ' of ' + svc.total + ' backend servers up';
+    } else if (lnk.url) {
+        s.ping   = true;
+        s.dotTip = 'Router loaded, checking whether the app answers';
     } else {
-        s.dotTip = svc && svc.total
-            ? 'Router loaded, ' + svc.up + ' of ' + svc.total + ' backend servers up'
-            : 'Router loaded and enabled';
+        s.dotTip = 'Router loaded and enabled, Traefik reports no backend health for this service';
     }
 
     if (!s.note && !s.url && lnk.why) {
@@ -558,7 +563,7 @@ function _dskPlate(r, name, s) {
     return '<span class="dsk-ic" data-mono="' + _esc(_dskMono(name)) + '">'
         + '<img class="dsk-ic-img" src="' + _esc(rmGetIconUrl(r)) + '" data-slug="' + _esc(window.rmIconSlug(r)) + '"'
         + ' alt="" loading="lazy" decoding="async" onerror="window.rmIconFallback(this)">'
-        + '<span class="sig-cell dsk-dot ' + s.dot + '" title="' + _esc(s.dotTip) + '"></span>'
+        + '<span class="sig-cell dsk-dot ' + s.dot + '" data-rid="' + _esc(r.id) + '" title="' + _esc(s.dotTip) + '"></span>'
         + '</span>';
 }
 
@@ -736,6 +741,53 @@ function dashRenderPods(routes) {
         _dskPods.set(p.meta.name, p);
         grid.appendChild(dashBuildPod(p));
     });
+    _dskPingPass(pods.flatMap(p => p.entries));
+}
+
+let _dskPingGen = 0;
+
+function _dskPingTarget(r) {
+    const t = String(r.target || '');
+    return /^https?:\/\//.test(t) ? t : '';
+}
+
+function _dskApplyPing(rid, data) {
+    document.querySelectorAll('.dsk-dot[data-rid="' + String(rid).replace(/"/g, '\\"') + '"]').forEach(dot => {
+        dot.classList.remove('sig-cell-ok', 'sig-cell-err', 'sig-cell-warn', 'sig-cell-idle', 'dsk-dot-unk');
+        if (!data) {
+            dot.title = 'Router loaded, the reachability check did not complete';
+            return;
+        }
+        if (data.ok) {
+            dot.classList.add('sig-cell-ok');
+            dot.title = data.self ? 'Online (self)'
+                : data.via_target ? 'Backend online \u00b7 ' + data.latency_ms + 'ms'
+                : 'Online \u00b7 ' + data.latency_ms + 'ms (' + data.status_code + ')';
+        } else {
+            dot.classList.add('sig-cell-err');
+            dot.title = 'Unreachable' + (data.error ? ': ' + data.error : '');
+        }
+    });
+}
+
+function _dskPingPass(entries) {
+    const gen  = ++_dskPingGen;
+    const jobs = entries.filter(e => e.s && e.s.ping && e.s.url);
+    if (!jobs.length) return;
+    let next = 0;
+    const worker = async () => {
+        while (next < jobs.length) {
+            const { r, s } = jobs[next++];
+            const tgt = _dskPingTarget(r);
+            const url = '/api/ping?url=' + encodeURIComponent(s.url)
+                + (tgt ? '&fallback=' + encodeURIComponent(tgt) : '');
+            let data = null;
+            try { data = await (await fetch(url)).json(); } catch (e) { data = null; }
+            if (gen !== _dskPingGen) return;
+            _dskApplyPing(r.id, data);
+        }
+    };
+    for (let i = 0; i < Math.min(6, jobs.length); i++) worker();
 }
 
 function _dskTogglePod(name, force) {

@@ -43,7 +43,7 @@ Every template switches to **Wizard** mode - a structured form with labeled fiel
 | Routing | Redirect to HTTPS, Redirect Regex, Strip Prefix, Strip Prefix Regex, Add Prefix, Replace Path, Replace Path Regex |
 | Advanced | Gzip Compress, Retry, Circuit Breaker, Buffering, Middleware Chain, In-Flight Limit, Custom Error Pages, Content Type, gRPC-Web, Pass TLS Client Cert |
 
-The Forward Auth wizards (including Authentik, Authelia, and Gatekeeper) expose an optional **Max Response Body Size** field (`maxResponseBodySize`, Traefik 3.7+) to cap the auth server's response. See [Traefik Security Hardening](hardening.md) for the recommended hardening middlewares and options.
+The Forward Auth wizards (including Authentik, Authelia, and Gatekeeper) fill **Max Response Body Size** (`maxResponseBodySize`, Traefik 3.7+) with `4096` to cap the auth server's response. Traefik warns on every forward auth middleware without it. An existing middleware missing the limit shows a warning icon on its card; clicking it opens the editor with the line added for you to review and save. See [Traefik Security Hardening](hardening.md) for the recommended hardening middlewares and options.
 
 The **Custom Error Pages** wizard picks the service that serves the page from the services already
 defined in your config, so create that service first. Use `{status}` in the query to substitute the
@@ -71,6 +71,12 @@ At twelve middlewares or more the selector gains a filter box. Typing narrows th
 ## Editing a middleware
 
 Click the pencil icon on any middleware card. Editing always opens the YAML editor, even for a middleware you created through a wizard.
+
+Renaming one moves every route that uses it to the new name, including routes in other config files.
+
+## Deleting a middleware
+
+Deleting one a route still uses is refused, and the message names the routes. Confirm and Traefik Manager removes it from those routes and deletes it.
 
 ## Attaching a middleware to a route
 

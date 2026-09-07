@@ -1501,6 +1501,49 @@ def _stream_service_proto(name: str) -> str:
     return ''
 
 
+def _remove_router(config, sec, name, ledger, agent_id=''):
+    s = config.get(sec) or {}
+    routers = s.get('routers') or {}
+    if name not in routers:
+        return False
+    svc = str((routers[name] or {}).get('service') or '').strip()
+    del routers[name]
+    if svc and 'services' in s and svc in s['services'] and not _service_shared(config, svc, name):
+        del s['services'][svc]
+        _drop_owned_transport(config, svc, ledger, agent_id)
+        if sec == 'http':
+            for gone in _composite.drop_orphan_children(s['services'], name, set()):
+                ledger.pop(_svc_ledger_key(gone, agent_id), None)
+            ledger.pop(_svc_ledger_key(svc, agent_id), None)
+    return True
+
+
+def _strip_service_child(config, parent, child):
+    sdef = ((config.get('http') or {}).get('services') or {}).get(parent)
+    if not isinstance(sdef, dict):
+        return ''
+    hit = False
+    for kind in ('weighted', 'mirroring', 'failover', 'highestRandomWeight'):
+        block = sdef.get(kind)
+        if not isinstance(block, dict):
+            continue
+        for key in ('services', 'mirrors'):
+            lst = block.get(key)
+            if isinstance(lst, list):
+                kept = [c for c in lst if not (isinstance(c, dict)
+                                               and str(c.get('name') or '').split('@')[0] == child)]
+                if len(kept) != len(lst):
+                    hit = True
+                    block[key] = kept
+        for key in ('service', 'fallback'):
+            if str(block.get(key) or '').split('@')[0] == child:
+                hit = True
+                block.pop(key, None)
+    if not hit:
+        return ''
+    return 'emptied' if not _svc_own.child_names(sdef) else 'stripped'
+
+
 def _service_referenced_by(configs, name: str) -> list:
     out = []
     for cfg in configs:
@@ -1638,6 +1681,7 @@ def api_service_save():
                 and not (isinstance(_orig_def, dict) and 'loadBalancer' in _orig_def):
             return jsonify({'ok': False, 'error': 'That service is not managed here'}), 403
         section.pop(original, None)
+        _retarget_service(config, original, name)
         for gone in _composite.drop_orphan_children(section, original, set()):
             ledger.pop(_svc_ledger_key(gone, agent_id), None)
         ledger.pop(_svc_ledger_key(original, agent_id), None)
@@ -1652,6 +1696,13 @@ def api_service_save():
                         'error': f"{claimed[0]} already belongs to {claimed[1]}. "
                                  f"Pick a different name"}), 409
 
+    _loop = _composite.find_cycle(section, name, children)
+    if _loop:
+        return jsonify({'ok': False,
+                        'error': (f"{name} cannot use itself as a backend" if _loop == name
+                                  else f"{_loop} already routes back to {name}, which would "
+                                       f"make a cycle Traefik cannot load")}), 400
+
     _composite.merge_into(section, name, block, owned)
     for gone in _composite.drop_orphan_children(section, name, set(owned)):
         ledger.pop(_svc_ledger_key(gone, agent_id), None)
@@ -1665,6 +1716,9 @@ def api_service_save():
     else:
         create_backup(target_path)
         save_config(_strip_empty_sections(config), target_path)
+    if original and original != name:
+        _cascade_across_configs(agent, lambda c: _retarget_service(c, original, name),
+                                already=cfg_filename if agent else target_path)
     save_settings(
         domains=settings['domains'], cert_resolver=settings['cert_resolver'],
         traefik_api_url=settings['traefik_api_url'], auth_enabled=settings['auth_enabled'],
@@ -1691,44 +1745,80 @@ def api_service_delete(name):
         return err
     agent_configs = _agent_load_configs(agent) if agent else {}
     configs  = list(agent_configs.values()) if agent else [load_config(p) for p in env.CONFIG_PATHS]
-    used_by  = _service_routers_using(configs, bare)
-    if used_by:
-        return jsonify({'ok': False,
-                        'error': 'Still used by ' + ', '.join(sorted(set(used_by))[:5])}), 409
-    parents = _service_referenced_by(configs, bare)
-    if parents:
-        return jsonify({'ok': False,
-                        'error': 'Still a backend of ' + ', '.join(sorted(set(parents))[:5])}), 409
+    force    = str(request.args.get('force') or '').strip().lower() in ('1', 'true', 'yes')
+    used_by  = sorted(set(_service_routers_using(configs, bare)))
+    parents  = sorted(set(_service_referenced_by(configs, bare)))
+    if (used_by or parents) and not force:
+        bits = []
+        if used_by:
+            bits.append('still used by ' + ', '.join(used_by[:5]) + (' and others' if len(used_by) > 5 else ''))
+        if parents:
+            bits.append('still a backend of ' + ', '.join(parents[:5]) + (' and others' if len(parents) > 5 else ''))
+        return jsonify({'ok': False, 'error': f'{bare} is ' + '; '.join(bits),
+                        'inUseBy': used_by, 'parents': parents}), 409
 
     settings = load_settings()
     ledger   = dict(settings.get('managed_middlewares') or {})
-    removed  = False
     targets = ([(fname, cfg) for fname, cfg in agent_configs.items()] if agent
                else [(path, load_config(path)) for path in env.CONFIG_PATHS])
-    for where, config in targets:
+    home = None
+    for idx, (where, config) in enumerate(targets):
         section = (config.get('http') or {}).get('services') or {}
-        if bare not in section:
-            continue
-        _def = section.get(bare)
-        if not _svc_own.is_owned(bare, _def, ledger, agent_id) \
-                and not (isinstance(_def, dict) and 'loadBalancer' in _def):
-            return jsonify({'ok': False, 'error': 'That service is not managed here'}), 403
+        if bare in section:
+            home = idx
+            _def = section.get(bare)
+            if not _svc_own.is_owned(bare, _def, ledger, agent_id) \
+                    and not (isinstance(_def, dict) and 'loadBalancer' in _def):
+                return jsonify({'ok': False, 'error': 'That service is not managed here'}), 403
+            break
+    if home is None:
+        return jsonify({'ok': False, 'error': 'Service not found'}), 404
+    if not force:
         child_users = _children_still_in_use(configs, bare, set())
         if child_users:
             return _in_use_error(child_users)
-        del section[bare]
-        for gone in _composite.drop_orphan_children(section, bare, set()):
-            ledger.pop(_svc_ledger_key(gone, agent_id), None)
-        ledger.pop(_svc_ledger_key(bare, agent_id), None)
+
+    touched = set()
+    deleted_routers, deleted_services = [], []
+    victims, frontier = {bare}, [bare]
+    while frontier:
+        victim = frontier.pop()
+        for idx, (where, config) in enumerate(targets):
+            for sec in ('http', 'tcp', 'udp'):
+                for rname in list(((config.get(sec) or {}).get('routers') or {})):
+                    rd = config[sec]['routers'].get(rname)
+                    if isinstance(rd, dict) and str(rd.get('service') or '').split('@')[0] == victim:
+                        if _remove_router(config, sec, rname, ledger, agent_id):
+                            deleted_routers.append(rname)
+                            touched.add(idx)
+            for pname in list(((config.get('http') or {}).get('services') or {})):
+                if pname in victims:
+                    continue
+                res = _strip_service_child(config, pname, victim)
+                if res:
+                    touched.add(idx)
+                if res == 'emptied':
+                    victims.add(pname)
+                    frontier.append(pname)
+    for victim in victims:
+        for idx, (where, config) in enumerate(targets):
+            section = (config.get('http') or {}).get('services') or {}
+            if victim not in section:
+                continue
+            section.pop(victim, None)
+            keep = {c for c, _u in _children_still_in_use([cfg for _w, cfg in targets], victim, set())}
+            for gone in _composite.drop_orphan_children(section, victim, keep):
+                ledger.pop(_svc_ledger_key(gone, agent_id), None)
+            ledger.pop(_svc_ledger_key(victim, agent_id), None)
+            deleted_services.append(victim)
+            touched.add(idx)
+    for idx in sorted(touched):
+        where, config = targets[idx]
         if agent:
             _agent_write_config(agent, where, config)
         else:
             create_backup(where)
             save_config(_strip_empty_sections(config), where)
-        removed = True
-        break
-    if not removed:
-        return jsonify({'ok': False, 'error': 'Service not found'}), 404
     save_settings(
         domains=settings['domains'], cert_resolver=settings['cert_resolver'],
         traefik_api_url=settings['traefik_api_url'], auth_enabled=settings['auth_enabled'],
@@ -1742,7 +1832,8 @@ def api_service_delete(name):
                          daemon=True).start()
     else:
         threading.Thread(target=lambda: _git_push_if_enabled('service delete'), daemon=True).start()
-    return jsonify({'ok': True})
+    return jsonify({'ok': True, 'deleted': {'routers': sorted(set(deleted_routers)),
+                                            'services': sorted(set(deleted_services))}})
 
 
 def _owned_child_services(agent_id: str = '') -> list:
@@ -2024,6 +2115,9 @@ def api_cs_unban(decision_id):
     return jsonify({'ok': True})
 
 
+_PING_UNREACHABLE = (502, 503, 504)
+
+
 @app.route('/api/ping')
 @login_required
 def api_route_ping():
@@ -2048,16 +2142,30 @@ def api_route_ping():
         resp = requests.head(target, timeout=5, allow_redirects=False, verify=False)
         ms   = round((_t.monotonic() - t0) * 1000)
         return ms, resp.status_code
-    try:
-        ms, code = _ping(url)
-        return jsonify({'ok': True, 'latency_ms': ms, 'status_code': code})
-    except Exception as primary_err:
+    def _try_fallback():
         if fallback and fallback.startswith(('http://', 'https://')) and _ssrf_ok(fallback):
             try:
                 ms, code = _ping(fallback)
-                return jsonify({'ok': True, 'latency_ms': ms, 'status_code': code, 'via_target': True})
+                if code in _PING_UNREACHABLE:
+                    return None, code
+                return {'ok': True, 'latency_ms': ms, 'status_code': code, 'via_target': True}, code
             except Exception:
-                pass
+                return None, None
+        return None, None
+
+    try:
+        ms, code = _ping(url)
+        if code not in _PING_UNREACHABLE:
+            return jsonify({'ok': True, 'latency_ms': ms, 'status_code': code})
+        alt, alt_code = _try_fallback()
+        if alt:
+            return jsonify(alt)
+        return jsonify({'ok': False, 'latency_ms': ms, 'status_code': code,
+                        'error': f'The proxy answered {code}, the backend is not reachable'})
+    except Exception as primary_err:
+        alt, _alt_code = _try_fallback()
+        if alt:
+            return jsonify(alt)
         err = str(primary_err)[:80]
         return jsonify({'ok': False, 'error': 'Timeout' if 'timeout' in err.lower() else err, 'latency_ms': None})
 
@@ -2276,13 +2384,31 @@ def api_static_config_save():
         return jsonify({'error': 'No content provided'}), 400
     try:
         _y = SafeYAML(typ='safe')
-        _y.load(content)
+        _new_doc = _y.load(content)
     except Exception as e:
         return jsonify({'error': f'Invalid YAML: {e}'}), 400
+    _before = {}
+    try:
+        if os.path.exists(safe_path):
+            with open(safe_path) as _fh:
+                _before = SafeYAML(typ='safe').load(_fh.read()) or {}
+    except Exception:
+        _before = {}
+    _renames, _gone = _plugin_diff(_static_plugins(_before), _static_plugins(_new_doc))
+    _dyn = [load_config(_p) for _p in env.CONFIG_PATHS]
+    for _name in _gone:
+        _users = _middlewares_using_plugin(_dyn, _name)
+        if _users:
+            return jsonify({'error': f"{_name} is still used by " + ', '.join(_users[:5])
+                                     + (' and others' if len(_users) > 5 else '')
+                                     + '. Delete those middlewares first',
+                            'inUseBy': _users}), 409
     try:
         create_backup(safe_path)
         with open(safe_path, 'w') as f:
             f.write(content)
+        for _old, _new in _renames.items():
+            _cascade_across_configs(None, lambda c, o=_old, n=_new: _retarget_plugin(c, o, n))
         logger.info(f"Static config saved by {request.remote_addr}: {safe_path}")
         add_notification('success', 'Static config saved')
         threading.Thread(target=lambda: _git_push_if_enabled('static config save'), daemon=True).start()
@@ -4004,11 +4130,18 @@ def api_tls_options_save():
         if ca_cas:
             ca_obj['caFiles'] = ca_cas
         opts['clientAuth'] = ca_obj
+    original = str(data.get('originalName') or '').strip()
+    if original and original != name:
+        (config.get('tls') or {}).get('options', {}).pop(original, None)
+        _retarget_tls_option(config, original, name)
     config.setdefault('tls', {}).setdefault('options', {})[name] = opts
     if agent:
         _agent_write_config(agent, cfg_name, config)
     else:
         save_config(_strip_empty_sections(config), target_path)
+    if original and original != name:
+        _cascade_across_configs(agent, lambda c: _retarget_tls_option(c, original, name),
+                                already=cfg_name if agent else target_path)
     add_notification('success', f"TLS profile '{name}' saved")
     return jsonify({'ok': True})
 
@@ -4031,6 +4164,13 @@ def api_tls_options_delete(name):
     tls_opts = (config.get('tls') or {}).get('options', {})
     if name not in tls_opts:
         return jsonify({'ok': False, 'message': 'Profile not found'}), 404
+    _tls_all = (list(cfgs.values()) if agent else [load_config(_p) for _p in env.CONFIG_PATHS])
+    _tls_users = _tls_option_routers_using(_tls_all, name)
+    if _tls_users:
+        return jsonify({'ok': False,
+                        'message': f"{name} is still used by " + ', '.join(_tls_users[:5])
+                                   + (' and others' if len(_tls_users) > 5 else ''),
+                        'inUseBy': _tls_users}), 409
     del tls_opts[name]
     if agent:
         _agent_write_config(agent, cfg_name, _strip_empty_sections(config))
@@ -5609,6 +5749,16 @@ def save_entry():
                     if _managed_backends else ('rule', 'entryPoints', 'service', 'middlewares', 'tls')
                 _merge_router(config['http']['routers'], router_name, r, _http_managed)
                 _svc_section = config['http']['services']
+                if _composite_posted:
+                    _loop = _composite.find_cycle(_svc_section, service_name, _be.get('children'))
+                    if _loop:
+                        _loop_msg = (f"{service_name} cannot use itself as a backend" if _loop == service_name
+                                     else f"{_loop} already routes back to {service_name}, which would "
+                                          f"make a cycle Traefik cannot load")
+                        if fetch:
+                            return jsonify({'ok': False, 'message': _loop_msg}), 400
+                        flash(_loop_msg, "error")
+                        return redirect(url_for('index'))
                 _cmp_block, _cmp_owned, _cmp_names = (
                     _composite.build(router_name, _composite_type, _be.get('children'),
                                      lb_extra={k: v for k, v in lb.items() if k != 'servers'})
@@ -5819,15 +5969,8 @@ def delete_entry(router_id):
                 if config_file_raw and fname != config_file_raw:
                     continue
                 for sec in ('http', 'tcp', 'udp'):
-                    s = config.get(sec, {})
-                    if plain_id in s.get('routers', {}):
-                        svc = (s['routers'][plain_id].get('service') or '').strip()
-                        del s['routers'][plain_id]
-                        if (svc and 'services' in s and svc in s['services']
-                                and not _service_shared(config, svc, plain_id)):
-                            del s['services'][svc]
-                            if _drop_owned_transport(config, svc, _del_ledger, agent_id):
-                                _del_ledger_changed = True
+                    if _remove_router(config, sec, plain_id, _del_ledger, agent_id):
+                        _del_ledger_changed = True
                         _agent_write_config(agent, fname, config)
                         deleted = True
                         break
@@ -5841,22 +5984,8 @@ def delete_entry(router_id):
             for target_path in search_paths:
                 config = load_config(target_path)
                 for sec in ('http', 'tcp', 'udp'):
-                    s = config.get(sec, {})
-                    if plain_id in s.get('routers', {}):
-                        svc = (s['routers'][plain_id].get('service') or '').strip()
-                        del s['routers'][plain_id]
-                        if (svc and 'services' in s and svc in s['services']
-                                and not _service_shared(config, svc, plain_id)):
-                            del s['services'][svc]
-                            if _drop_owned_transport(config, svc, _del_ledger):
-                                _del_ledger_changed = True
-                            if sec == 'http':
-                                for _gone in _composite.drop_orphan_children(
-                                        s['services'], plain_id, set()):
-                                    _del_ledger.pop(_svc_ledger_key(_gone, agent_id), None)
-                                    _del_ledger_changed = True
-                                if _del_ledger.pop(_svc_ledger_key(svc, agent_id), None):
-                                    _del_ledger_changed = True
+                    if _remove_router(config, sec, plain_id, _del_ledger, agent_id):
+                        _del_ledger_changed = True
                         create_backup(target_path)
                         save_config(_strip_empty_sections(config), target_path)
                         deleted = True
@@ -5911,6 +6040,7 @@ def delete_entry(router_id):
 def save_middleware():
     fetch = _is_fetch()
     try:
+        _mw_rename_cascade = None
         mw_name         = request.form.get('middlewareName', '').strip()
         mw_content      = request.form.get('middlewareContent', '').strip()
         is_edit         = request.form.get('isMwEdit') == 'true'
@@ -5988,12 +6118,23 @@ def save_middleware():
         config.setdefault(mw_protocol, {}).setdefault('middlewares', {})
         if is_edit and original_id and (original_id != mw_name or original_proto != mw_protocol):
             config.get(original_proto, {}).get('middlewares', {}).pop(original_id, None)
+            if original_id != mw_name:
+                _retarget_middleware(config, original_id, mw_name)
+                _mw_rename_cascade = (original_id, mw_name)
         config[mw_protocol]['middlewares'][mw_name] = parsed_mw
         if agent:
             _agent_write_config(agent, cfg_filename, config)
+            if _mw_rename_cascade:
+                _o, _n = _mw_rename_cascade
+                _cascade_across_configs(agent, lambda c: _retarget_middleware(c, _o, _n),
+                                        already=cfg_filename)
             threading.Thread(target=lambda: _git_push_agent_if_enabled(agent, 'middleware save'), daemon=True).start()
         else:
             save_config(_strip_empty_sections(config), target_path)
+            if _mw_rename_cascade:
+                _o, _n = _mw_rename_cascade
+                _cascade_across_configs(None, lambda c: _retarget_middleware(c, _o, _n),
+                                        already=target_path)
             _register_config_path(target_path)
             threading.Thread(target=lambda: _git_push_if_enabled('middleware save'), daemon=True).start()
         action = "updated" if is_edit else "created"
@@ -6010,6 +6151,167 @@ def save_middleware():
     return redirect(url_for('index'))
 
 
+def _retarget_service(config, old: str, new: str) -> bool:
+    bare = str(old or '').split('@')[0]
+    changed = False
+    for section in ('http', 'tcp', 'udp'):
+        for rdata in ((config.get(section) or {}).get('routers') or {}).values():
+            if isinstance(rdata, dict) and str(rdata.get('service') or '').split('@')[0] == bare:
+                rdata['service'] = new
+                changed = True
+    for sdata in ((config.get('http') or {}).get('services') or {}).values():
+        if not isinstance(sdata, dict):
+            continue
+        for kind in ('weighted', 'mirroring', 'failover', 'highestRandomWeight'):
+            block = sdata.get(kind)
+            if not isinstance(block, dict):
+                continue
+            for key in ('service', 'fallback'):
+                if str(block.get(key) or '').split('@')[0] == bare:
+                    block[key] = new
+                    changed = True
+            for child in (block.get('services') or []) + (block.get('mirrors') or []):
+                if isinstance(child, dict) and str(child.get('name') or '').split('@')[0] == bare:
+                    child['name'] = new
+                    changed = True
+    return changed
+
+
+def _cascade_across_configs(agent, fn, already=''):
+    touched = []
+    if agent:
+        for fname, cfg in _agent_load_configs(agent).items():
+            if fname == already:
+                continue
+            if fn(cfg):
+                _agent_write_config(agent, fname, cfg)
+                touched.append(fname)
+        return touched
+    for path in env.CONFIG_PATHS:
+        if path == already or os.path.basename(path) == already:
+            continue
+        cfg = load_config(path)
+        if fn(cfg):
+            create_backup(path)
+            save_config(_strip_empty_sections(cfg), path)
+            touched.append(os.path.basename(path))
+    return touched
+
+
+def _static_plugins(doc) -> dict:
+    block = ((doc or {}).get('experimental') or {}).get('plugins') or {}
+    return {k: v for k, v in block.items() if isinstance(v, dict)}
+
+
+def _plugin_diff(before: dict, after: dict) -> tuple:
+    gone = [k for k in before if k not in after]
+    added = [k for k in after if k not in before]
+    renames = {}
+    for old in list(gone):
+        mod = str(before[old].get('moduleName') or '').strip()
+        if not mod:
+            continue
+        for new in list(added):
+            if str(after[new].get('moduleName') or '').strip() == mod:
+                renames[old] = new
+                gone.remove(old)
+                added.remove(new)
+                break
+    return renames, gone
+
+
+def _middlewares_using_plugin(configs, name: str) -> list:
+    out = []
+    for cfg in configs:
+        for section in ('http', 'tcp'):
+            for mname, mdata in ((cfg.get(section) or {}).get('middlewares') or {}).items():
+                if isinstance(mdata, dict) and isinstance(mdata.get('plugin'), dict) \
+                        and name in mdata['plugin']:
+                    out.append(mname)
+    return sorted(set(out))
+
+
+def _retarget_plugin(config, old: str, new: str) -> bool:
+    changed = False
+    for section in ('http', 'tcp'):
+        for mdata in ((config.get(section) or {}).get('middlewares') or {}).values():
+            if not isinstance(mdata, dict):
+                continue
+            block = mdata.get('plugin')
+            if isinstance(block, dict) and old in block:
+                block[new] = block.pop(old)
+                changed = True
+    return changed
+
+
+def _retarget_tls_option(config, old: str, new: str) -> bool:
+    bare = str(old or '').split('@')[0]
+    changed = False
+    for section in ('http', 'tcp'):
+        for rdata in ((config.get(section) or {}).get('routers') or {}).values():
+            if not isinstance(rdata, dict):
+                continue
+            tls = rdata.get('tls')
+            if isinstance(tls, dict) and str(tls.get('options') or '').split('@')[0] == bare:
+                tls['options'] = new
+                changed = True
+    return changed
+
+
+def _tls_option_routers_using(configs, name: str) -> list:
+    bare = str(name or '').split('@')[0]
+    out = []
+    for cfg in configs:
+        for section in ('http', 'tcp'):
+            for rname, rdata in ((cfg.get(section) or {}).get('routers') or {}).items():
+                if not isinstance(rdata, dict):
+                    continue
+                tls = rdata.get('tls')
+                if isinstance(tls, dict) and str(tls.get('options') or '').split('@')[0] == bare:
+                    out.append(rname)
+    return sorted(set(out))
+
+
+def _middleware_routers_using(configs, name: str) -> list:
+    bare = str(name or '').split('@')[0]
+    out = []
+    for cfg in configs:
+        for section in ('http', 'tcp'):
+            for rname, rdata in ((cfg.get(section) or {}).get('routers') or {}).items():
+                if not isinstance(rdata, dict):
+                    continue
+                for ref in (rdata.get('middlewares') or []):
+                    if str(ref).split('@')[0] == bare:
+                        out.append(rname)
+                        break
+    return sorted(set(out))
+
+
+def _retarget_middleware(config, old: str, new: str) -> bool:
+    bare = str(old or '').split('@')[0]
+    changed = False
+    for section in ('http', 'tcp'):
+        for rdata in ((config.get(section) or {}).get('routers') or {}).values():
+            if not isinstance(rdata, dict) or not rdata.get('middlewares'):
+                continue
+            rebuilt = []
+            hit = False
+            for ref in rdata['middlewares']:
+                if str(ref).split('@')[0] == bare:
+                    hit = True
+                    if new:
+                        rebuilt.append(new)
+                else:
+                    rebuilt.append(ref)
+            if hit:
+                changed = True
+                if rebuilt:
+                    rdata['middlewares'] = rebuilt
+                else:
+                    rdata.pop('middlewares', None)
+    return changed
+
+
 @app.route('/delete-middleware/<mw_name>', methods=['POST'])
 @csrf_protect
 @login_required
@@ -6019,6 +6321,17 @@ def delete_middleware(mw_name):
         config_file_raw = request.form.get('configFile', '').strip()
         agent_id        = request.form.get('agent_id', '').strip()
         agent           = _agent_by_id(agent_id) if agent_id else None
+        force           = str(request.form.get('force', '')).strip().lower() in ('1', 'true', 'yes')
+        _all = (list(_agent_load_configs(agent).values()) if agent
+                else [load_config(_p) for _p in env.CONFIG_PATHS])
+        _users = _middleware_routers_using(_all, mw_name)
+        if _users and not force:
+            msg = (f"{mw_name} is still used by " + ', '.join(_users[:5])
+                   + (' and others' if len(_users) > 5 else ''))
+            if fetch:
+                return jsonify({'ok': False, 'message': msg, 'inUseBy': _users}), 409
+            flash(msg, "error")
+            return redirect(url_for('index'))
         if agent:
             all_configs = _agent_load_configs(agent)
             for fname, config in all_configs.items():
@@ -6031,9 +6344,10 @@ def delete_middleware(mw_name):
                         mws.pop(mw_name, None)
                         found = True
                         break
+                if _retarget_middleware(config, mw_name, ''):
+                    found = True
                 if found:
                     _agent_write_config(agent, fname, config)
-                    break
         else:
             if config_file_raw:
                 search_paths = [_resolve_config_path(config_file_raw) or env.CONFIG_PATH]
@@ -6048,10 +6362,11 @@ def delete_middleware(mw_name):
                         mws.pop(mw_name, None)
                         found = True
                         break
+                if _retarget_middleware(config, mw_name, ''):
+                    found = True
                 if found:
                     create_backup(target_path)
                     save_config(_strip_empty_sections(config), target_path)
-                    break
         if agent:
             threading.Thread(target=lambda: _git_push_agent_if_enabled(agent, 'middleware delete'), daemon=True).start()
         else:
@@ -6126,6 +6441,11 @@ def oidc_callback():
         return redirect(url_for('login'))
     state = request.args.get('state', '')
     if not state or not secrets.compare_digest(state, session.get('oidc_state', '')):
+        logger.warning(f"OIDC callback rejected from {request.remote_addr} - state mismatch "
+                       f"(provider sent {'a state' if state else 'no state'}, "
+                       f"session {'has one' if session.get('oidc_state') else 'has none'})"
+                       + (f", provider error={request.args.get('error')!r}"
+                          if request.args.get('error') else ''))
         flash("Invalid OIDC state. Please try again.", "error")
         return redirect(url_for('login'))
     err = request.args.get('error', '')
@@ -6134,6 +6454,10 @@ def oidc_callback():
         return redirect(url_for('login'))
     code = request.args.get('code', '')
     if not code:
+        logger.warning(f"OIDC callback returned no code from {request.remote_addr}"
+                       + (f" - provider error={request.args.get('error')!r} "
+                          f"{request.args.get('error_description', '')!r}"
+                          if request.args.get('error') else ''))
         flash("OIDC login failed - no code returned.", "error")
         return redirect(url_for('login'))
     provider_url = s.get('oidc_provider_url', '').rstrip('/')

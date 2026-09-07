@@ -33,12 +33,12 @@ separately rather than as unchecked, and never move the backends up and down num
 
 The **+** button in the filter bar creates a service without needing a route first. Pick a type:
 
-| Type | Backends |
-|---|---|
-| Load Balancer | A list of addresses, each with its scheme |
-| Weighted | Rows that are each an IP:Port or an existing service, split by weight |
-| Mirroring | The first row serves; the rest receive a copy by percentage |
-| Failover | The first row serves; the second takes over if it fails |
+| Type          | Backends                                                              |
+| ---------------| -----------------------------------------------------------------------|
+| Load Balancer | A list of addresses, each with its scheme                             |
+| Weighted      | Rows that are each an IP:Port or an existing service, split by weight |
+| Mirroring     | The first row serves; the rest receive a copy by percentage           |
+| Failover      | The first row serves; the second takes over if it fails               |
 
 Each IP:Port row in a composite becomes its own child service named `<name>-backend-<n>`, so every
 row carries its own weight. A row referencing an existing service is stored by name and never
@@ -78,6 +78,10 @@ Viewing needs no volume mounts: the list is read from the Traefik API (`/api/htt
 Creating, editing and deleting write to your dynamic config files, so those need the same mount the Routes tab uses. Without it the tab still works as a read-only view.
 
 With a remote agent selected, the same actions write to that agent's config files instead, and ownership is recorded against that server.
+
+Deleting a service a route still points at, or that another service lists as a backend, is refused and the message names them. Confirm and Traefik Manager deletes those routes, removes the service from the parents that listed it, deletes any parent left with no backends, and then deletes the service. A generated child another service still uses is kept.
+
+A weighted, mirroring or failover service cannot use itself as a backend, directly or through another service. Traefik expands such a loop forever on load and runs out of memory, so the save is refused before anything is written.
 
 ## Notes
 

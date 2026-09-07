@@ -291,7 +291,7 @@ function openTlsOptionModal(opt) {
     document.getElementById('tlsOptionsModalTitle').textContent = isEdit ? 'Edit TLS Profile' : 'Add TLS Profile';
     document.getElementById('tlsOptEditName').value    = isEdit ? (opt.name || '') : '';
     document.getElementById('tlsOptName').value        = isEdit ? (opt.name || '') : '';
-    document.getElementById('tlsOptName').readOnly     = isEdit;
+    document.getElementById('tlsOptName').readOnly     = false;
     document.getElementById('tlsOptMinVersion').value  = isEdit ? (opt.minVersion || '') : '';
     document.getElementById('tlsOptMaxVersion').value  = isEdit ? (opt.maxVersion || '') : '';
     document.getElementById('tlsOptSniStrict').checked = isEdit ? !!opt.sniStrict : false;
@@ -348,7 +348,8 @@ async function saveTlsOption() {
         const res = await fetch('/api/tls-options', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch', 'X-CSRF-Token': token },
-            body: JSON.stringify({ ...body, server: _tlsSrv() }),
+            body: JSON.stringify({ ...body, server: _tlsSrv(),
+                               originalName: (document.getElementById('tlsOptEditName')?.value || '').trim() }),
         });
         if (!res.ok) { showToast(await _errText(res, 'Save failed'), 'error'); return; }
         const json = await res.json();

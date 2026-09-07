@@ -284,6 +284,10 @@ Delete a middleware by name. Accepts `application/x-www-form-urlencoded`.
 | `name` | Middleware name (path) |
 | `configFile` | Config file basename (body, multi-config only) |
 | `agent_id` | Delete on this agent instead of the Host (body) |
+| `force` | Remove the middleware from the routes using it, then delete it (body) |
+
+Refused with `409` while a router still references it. The response carries `inUseBy` with the
+router names. Send `force` to remove it from them and delete it.
 
 ---
 
@@ -699,6 +703,8 @@ List all `tls.options` profiles from every mounted config file.
 
 ### `POST /api/tls-options`
 
+Pass `originalName` to rename a profile, which moves every router using it to the new name.
+
 Create or update a TLS options profile. JSON body. Empty fields are left out of the written YAML, and `clientAuthType: NoClientCert` writes no `clientAuth` block. `400` without a `name`.
 
 | Field | Type | Description |
@@ -718,7 +724,8 @@ Create or update a TLS options profile. JSON body. Empty fields are left out of 
 
 ### `DELETE /api/tls-options/{name}`
 
-Delete a TLS options profile by name. `404` if the profile does not exist.
+Delete a TLS options profile by name. `404` if the profile does not exist, `409` while a router
+still uses it, with `inUseBy` naming the routers.
 
 | Query param | Description |
 |---|---|
@@ -1403,7 +1410,8 @@ follow automatically.
 `type` is `loadBalancer`, `weighted`, `mirroring` or `failover`. For `mirroring` use `percent`
 instead of `weight`; the first backend is the one that serves. `failover` takes exactly two
 backends and refuses a third with `400`. Pass `originalName` to rename a managed service, which
-moves its children with it. `configFile` picks the file for a new service; an existing service is
+moves its children with it, along with every router and parent service that referenced the old
+name, across all config files. `configFile` picks the file for a new service; an existing service is
 always rewritten in the file it already lives in.
 
 Pass `agent_id` to author on a remote agent instead of the Host. The service is written to that
@@ -1413,7 +1421,8 @@ managed independently on the Host and on each agent.
 Refuses with `409` if a service of that name exists and Traefik Manager does not manage it, if one
 of its generated children is still used elsewhere, or if that child name already belongs to another
 service; with `403` when renaming something it does not manage; and with `400` for an invalid name,
-type, or a name that belongs to a TCP or UDP service.
+type, a name that belongs to a TCP or UDP service, or a `service` backend that would make the
+service reference itself, directly or through other services.
 
 ---
 
@@ -1421,9 +1430,14 @@ type, or a name that belongs to a TCP or UDP service.
 
 Delete a managed composite service and the child services it owns.
 
-Refuses with `409` while a router still points at it, while another service still lists it as a
-backend, or while one of its generated children is still used elsewhere; `403` if Traefik Manager
-does not manage it, and `404` if it does not exist.
+Refuses with `409` while a router still points at it or another service still lists it as a
+backend. The response carries `inUseBy` (router names) and `parents` (service names). Send
+`?force=1` to delete those routers, remove the service from those parents, delete any parent left
+with no backends, and then delete the service; a generated child another service still uses is kept.
+The response then lists what went under `deleted.routers` and `deleted.services`.
+
+Without `force`, also `409` while one of its generated children is still used elsewhere. `403` if
+Traefik Manager does not manage it, `404` if it does not exist.
 
 Pass `?agent_id=<id>` to delete on a remote agent.
 

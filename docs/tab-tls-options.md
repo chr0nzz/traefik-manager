@@ -46,6 +46,10 @@ tls:
         - CurveP384
 ```
 
+## Renaming and deleting
+
+Renaming a profile moves every router using it to the new name. Deleting one a router still uses is refused, and the message names the routers.
+
 ## Assigning a profile to a router
 
 In the **Add / Edit Route** form, select a profile from the **TLS Options Profile** dropdown, which appears once TLS is enabled on the route. TM writes `tls.options: <name>` to the router config.
