@@ -70,6 +70,13 @@ def test_an_unchecked_route_stays_neutral_and_says_it_is_waiting():
     assert s['dot'] == '' and 'not been checked yet' in s['tip'], s
 
 
+def test_a_route_with_no_host_points_at_the_link_setting():
+    s = _run("HEALTH = {}; _dashLaunchInfo = () => ({ url: null, why: 'no launch URL, wildcard host. <b>Set one in edit</b>', glyph: 'ph-bold ph-link-break' });"
+             "\nconst s = _dskState({ id: 'a', name: 'a', enabled: true });"
+             "\nconsole.log(JSON.stringify({ dot: s.dot, tip: s.dotTip }));")
+    assert s['dot'] == '' and 'no host to check' in s['tip'] and 'Set a link' in s['tip'], s
+
+
 def test_checks_switched_off_are_named_in_the_tooltip():
     s = _state("HEALTH = {}; META = { loaded: true, enabled: false };")
     assert s['dot'] == '' and 'off in Settings' in s['tip'], s

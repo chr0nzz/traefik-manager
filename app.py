@@ -621,7 +621,8 @@ def _route_health_sources():
     return out
 
 
-_monitor.register('routes', _rh.TICK, lambda: _rh.check(_route_health_sources))
+_monitor.register('routes', _rh.TICK, lambda: _rh.check(
+    _route_health_sources, overrides_for=lambda server: _read_groups_config(server)['route_overrides']))
 
 
 def _reencrypt_file(name, read, write):

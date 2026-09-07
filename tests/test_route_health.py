@@ -170,6 +170,24 @@ def test_only_enabled_http_routes_with_a_real_host_are_checked(mon):
     assert rh.snapshot('host', settings=settings)['routes']['me']['self'] is True
 
 
+def test_a_dashboard_link_makes_a_wildcard_route_checkable(mon):
+    probe = _Probe()
+    apps  = [_app('wild', host='*.example.com'), _app('plain'), _app('off')]
+    links = {'wild': {'url': 'https://photos.example.com/'}, 'plain': {'url': 'https://elsewhere.example.com'},
+             'off': {'url': 'https://nope.example.com', 'link_disabled': True}}
+    rh.check(_host(apps), now=0, probe=probe, settings=ON, overrides_for=lambda server: links)
+    assert sorted(u for u, _f in probe.calls) == ['https://app.example.com', 'https://elsewhere.example.com', 'https://photos.example.com/'], probe.calls
+    assert _state(mon, 'wild')['state'] == 'up', 'a wildcard route with a link set on the dashboard must be checked at that link'
+
+
+def test_a_dashboard_link_to_ourselves_reads_as_self(mon):
+    probe = _Probe()
+    settings = dict(ON, self_route={'domain': 'tm.example.com'})
+    rh.check(_host([_app('wild', host='*.example.com')]), now=0, probe=probe, settings=settings,
+             overrides_for=lambda server: {'wild': {'url': 'https://tm.example.com/dashboard'}})
+    assert probe.calls == [] and _state(mon, 'wild')['last']['self'] is True
+
+
 def test_the_ping_uses_the_scheme_the_route_serves_and_the_backend_as_fallback(mon):
     probe = _Probe()
     rh.check(_host([_app('plain', tls=False, target='http://10.0.0.9:8080')]), now=0, probe=probe, settings=ON)

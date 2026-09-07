@@ -24,7 +24,7 @@ Date.now = () => 1000 * 1000;
 const CARDS = [];
 function card(rid, routekey, protocol) {
     const el = { className: '', title: '' };
-    const c = { dataset: { rid, routekey, protocol: protocol || 'http' }, querySelector: () => el, appendChild() {}, dot: el };
+    const c = { dataset: { rid, routekey, protocol: protocol || 'http', domains: 'app.example.com' }, querySelector: () => el, appendChild() {}, dot: el };
     CARDS.push(c); return c;
 }
 const document = { querySelectorAll: () => CARDS, createElement: () => ({ style: {} }), getElementById: () => null };
@@ -47,6 +47,17 @@ def test_a_loaded_router_with_no_check_result_is_not_green():
     cls, title = res[0]
     assert 'status-online' not in cls, 'Traefik saying the router loaded is not proof the backend answers'
     assert cls == 'status-dot status-unknown' and 'not checked yet' in title, res
+
+
+def test_a_wildcard_route_says_why_it_is_not_checked():
+    res = _run("""
+_sdApiStatusMap = { wild: { status: 'enabled', error: [], eps: [] } };
+const c = card('wild', 'wild'); c.dataset.domains = '*.example.com|{sub}.example.org';
+_sdApplyRouteCards();
+console.log(JSON.stringify([c.dot.className, c.dot.title]));
+""")
+    assert res[0] == 'status-dot status-unknown'
+    assert 'no host to check' in res[1] and 'Set a link' in res[1], res
 
 
 def test_a_dead_backend_paints_the_card_red_from_the_background_check():

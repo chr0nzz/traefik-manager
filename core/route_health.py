@@ -42,7 +42,15 @@ def route_url(app: dict) -> str:
     return ''
 
 
-def candidates(apps, self_hosts=()) -> list:
+def override_url(app: dict, overrides) -> str:
+    ov = (overrides or {}).get(str(app.get('id') or ''))
+    if not isinstance(ov, dict) or ov.get('link_disabled'):
+        return ''
+    url = str(ov.get('url') or '').strip()
+    return url if url.lower().startswith(('http://', 'https://')) else ''
+
+
+def candidates(apps, self_hosts=(), overrides=None) -> list:
     out  = []
     mine = {str(h).lower() for h in self_hosts if h}
     for app in apps or []:
@@ -50,10 +58,11 @@ def candidates(apps, self_hosts=()) -> list:
             continue
         if app.get('enabled') is False or not app.get('id'):
             continue
-        url = route_url(app)
+        url = override_url(app, overrides) or route_url(app)
         if not url:
             continue
-        out.append((app, '' if url.split('://', 1)[1].lower() in mine else url))
+        host = url.split('://', 1)[1].split('/', 1)[0].lower()
+        out.append((app, '' if host in mine else url))
     return out
 
 
@@ -145,7 +154,7 @@ def _self_hosts(settings) -> set:
     return {domain} if domain else set()
 
 
-def check(sources, now=None, probe=None, settings=None) -> list:
+def check(sources, now=None, probe=None, settings=None, overrides_for=None) -> list:
     settings = settings if settings is not None else settings_mod.load_settings()
     now      = now if now is not None else time.time()
     meta     = monitor_mod._section(META)
@@ -165,7 +174,13 @@ def check(sources, now=None, probe=None, settings=None) -> list:
         checked.add(server)
         skip  = _self_hosts(settings) if server == monitor_mod.HOST_SERVER else set()
         index = service_index(services)
-        jobs  = [(app, url) for app, url in candidates(apps, skip) if not url or reachability.ssrf_ok(url)]
+        overrides = {}
+        if overrides_for:
+            try:
+                overrides = overrides_for(server) or {}
+            except Exception:
+                logger.exception(f"Route check could not read the dashboard links for {name or 'the host'}")
+        jobs  = [(app, url) for app, url in candidates(apps, skip, overrides) if not url or reachability.ssrf_ok(url)]
         if not jobs:
             continue
         try:

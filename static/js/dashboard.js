@@ -1116,7 +1116,7 @@ function _rhAgo(at) {
     return Math.floor(s / 3600) + 'h ago';
 }
 
-function _sdHealthDot(h) {
+function _sdHealthDot(h, noHost) {
     if (h) {
         const when = (h.manual ? 'pinged ' : 'checked ') + _rhAgo(h.at);
         const sv   = h.servers || {};
@@ -1141,6 +1141,7 @@ function _sdHealthDot(h) {
         }
     }
     if (_rhMeta.loaded && !_rhMeta.enabled) return { cls: 'status-unknown', title: 'Router loaded, route checks are off in Settings' };
+    if (noHost) return { cls: 'status-unknown', title: 'Router loaded, the rule has no host to check. Set a link on the Dashboard and it will be checked' };
     return { cls: 'status-unknown', title: 'Router loaded, not checked yet' };
 }
 
@@ -1182,7 +1183,8 @@ function _sdApplyRouteCards() {
             statusEl.className = 'status-dot status-online';
             statusEl.title = 'Enabled, stream routes are not reachability checked';
         } else if (apiStatus === 'enabled' || health) {
-            const d = _sdHealthDot(health);
+            const hosts = (card.dataset.domains || '').split('|').filter(d => d && !d.includes('{') && !d.includes('*'));
+            const d = _sdHealthDot(health, !hosts.length);
             statusEl.className = 'status-dot ' + d.cls;
             statusEl.title = d.title;
         } else {

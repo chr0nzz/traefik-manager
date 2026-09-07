@@ -531,6 +531,8 @@ function _dskState(r) {
         s.dotTip = 'Router loaded, the last check failed' + (chk.error ? ': ' + chk.error : '') + ', confirming on the next pass';
     } else if (!_dskChecksOn()) {
         s.dotTip = 'Router loaded, route checks are off in Settings';
+    } else if (!lnk.url) {
+        s.dotTip = 'Router loaded, no backend health from Traefik and the rule has no host to check. Set a link in edit and it will be checked';
     } else {
         s.dotTip = 'Router loaded and enabled, Traefik reports no backend health for this service and it has not been checked yet';
     }
