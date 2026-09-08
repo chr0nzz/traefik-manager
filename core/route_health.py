@@ -101,13 +101,34 @@ def _fallback(app: dict) -> str:
     return target if target.startswith(('http://', 'https://')) else ''
 
 
-def observe(app: dict, url: str, index: dict, probe=None) -> dict:
+def _state_for(up: int, total: int) -> str:
+    return 'down' if up == 0 else ('degraded' if up < total else 'up')
+
+
+def servers_health(app: dict, server_probe=None):
+    urls = [str(u) for u in (app.get('servers') or []) if str(u).startswith(('http://', 'https://'))]
+    if len(urls) < 2:
+        return None
+    verdicts = [(server_probe or reachability.backend_state)(u) for u in urls]
+    if 'unknown' in verdicts:
+        return None
+    up = verdicts.count('up')
+    return {'up': up, 'total': len(urls), 'down_servers': [u for u, v in zip(urls, verdicts) if v != 'up']}
+
+
+def observe(app: dict, url: str, index: dict, probe=None, server_probe=None) -> dict:
     if not url:
         return {'state': 'up', 'source': 'self', 'self': True}
     health = service_health(app, index)
     if health and health['total']:
-        state = 'down' if health['up'] == 0 else ('degraded' if health['up'] < health['total'] else 'up')
-        return {'state': state, 'source': 'traefik', 'servers': health}
+        return {'state': _state_for(health['up'], health['total']), 'source': 'traefik', 'servers': health}
+    direct = servers_health(app, server_probe)
+    if direct:
+        obs = {'state': _state_for(direct['up'], direct['total']), 'source': 'servers',
+               'servers': {'up': direct['up'], 'total': direct['total']}}
+        if direct['down_servers']:
+            obs['down_servers'] = direct['down_servers']
+        return obs
     result = (probe or reachability.probe)(url, _fallback(app))
     obs = {'state': 'up' if result.get('ok') else 'down', 'source': 'ping'}
     for field in ('latency_ms', 'status_code', 'error', 'via_target', 'unverified', 'note'):
@@ -120,10 +141,12 @@ def _message(name: str, state: str, obs: dict) -> str:
     if state == 'up':
         return f"Route {name} is reachable again"
     servers = obs.get('servers') or {}
-    if obs.get('source') == 'traefik':
+    if obs.get('source') in ('traefik', 'servers'):
+        down = obs.get('down_servers') or []
+        tail = f" ({', '.join(down)})" if down else ''
         if state == 'degraded':
-            return f"Route {name} backend is degraded, {servers.get('up', 0)} of {servers.get('total', 0)} servers up"
-        return f"Route {name} backend is down, 0 of {servers.get('total', 0)} servers up"
+            return f"Route {name} backend is degraded, {servers.get('up', 0)} of {servers.get('total', 0)} servers up{tail}"
+        return f"Route {name} backend is down, 0 of {servers.get('total', 0)} servers up{tail}"
     err = str(obs.get('error') or '').strip()
     return f"Route {name} is unreachable" + (f" ({err})" if err else '')
 
@@ -132,7 +155,7 @@ def settle(prev, obs: dict, name: str, now: float):
     prev       = prev if isinstance(prev, dict) else {}
     prev_state = prev.get('state')
     fails      = int(prev.get('fails') or 0)
-    if obs['state'] == 'down' and obs.get('source') == 'ping':
+    if obs['state'] == 'down' and obs.get('source') in ('ping', 'servers'):
         fails += 1
         state = 'down' if fails >= FAILS_TO_DOWN else 'pending'
     else:
@@ -210,7 +233,7 @@ def _public(entry: dict) -> dict:
     out  = {'state': entry.get('state') or 'pending',
             'pending': int(entry.get('fails') or 0) > 0 and entry.get('state') != 'down',
             'source': last.get('source') or ''}
-    for field in ('latency_ms', 'status_code', 'error', 'via_target', 'unverified', 'note', 'servers', 'self', 'at'):
+    for field in ('latency_ms', 'status_code', 'error', 'via_target', 'unverified', 'note', 'servers', 'down_servers', 'self', 'at'):
         if last.get(field) is not None:
             out[field] = last[field]
     return out

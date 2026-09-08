@@ -1061,7 +1061,7 @@ function _sdApplyHealth(objs) {
         const sv = h.servers || {};
         if (h.state === 'down') {
             o.cell = 'err'; o.down = true;
-            o.reason = h.source === 'traefik' ? 'backend down, 0 of ' + sv.total + ' servers up'
+            o.reason = (h.source === 'traefik' || h.source === 'servers') ? 'backend down, 0 of ' + sv.total + ' servers up'
                 : 'backend unreachable' + (h.error ? ', ' + h.error : '');
         } else if (h.state === 'degraded') {
             o.cell = 'warn'; o.degraded = true;
@@ -1123,16 +1123,17 @@ function _sdHealthDot(h, noHost) {
         if (h.state === 'up') {
             const what = h.self ? 'Online (self)'
                 : h.unverified ? 'Proxy answered ' + h.status_code + ', backend not verified' + (h.note ? '. ' + h.note : '')
-                : h.source === 'traefik' ? 'Backend up, ' + sv.up + ' of ' + sv.total + ' servers'
+                : (h.source === 'traefik' || h.source === 'servers') ? 'Backend up, ' + sv.up + ' of ' + sv.total + ' servers'
                 : h.via_target ? 'Backend online · ' + h.latency_ms + 'ms'
                 : 'Online · ' + h.latency_ms + 'ms (' + h.status_code + ')';
             return { cls: 'status-online', title: what + ' · ' + when };
         }
         if (h.state === 'degraded') {
-            return { cls: 'status-checking', title: 'Backend degraded, ' + sv.up + ' of ' + sv.total + ' servers up · ' + when };
+            const which = (h.down_servers || []).length ? ' (' + h.down_servers.join(', ') + ' down)' : '';
+            return { cls: 'status-checking', title: 'Backend degraded, ' + sv.up + ' of ' + sv.total + ' servers up' + which + ' · ' + when };
         }
         if (h.state === 'down') {
-            const why = h.source === 'traefik' ? 'Backend down, 0 of ' + sv.total + ' servers up'
+            const why = (h.source === 'traefik' || h.source === 'servers') ? 'Backend down, 0 of ' + sv.total + ' servers up'
                 : 'Unreachable' + (h.error ? ': ' + h.error : '');
             return { cls: 'status-offline', title: why + ' · ' + when };
         }

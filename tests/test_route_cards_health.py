@@ -78,6 +78,15 @@ _rhIngest({ enabled: true, routes: { photos: { state: 'up', source: 'traefik', s
     assert cls == 'status-dot status-online' and '2 of 2 servers' in title and '1m ago' in title, res
 
 
+def test_a_degraded_pool_is_amber_on_the_card_and_names_the_dead_server():
+    res = _apply("""
+_sdApiStatusMap = { photos: { status: 'enabled', error: [], eps: [] } }; card('photos', 'photos');
+_rhIngest({ enabled: true, routes: { photos: { state: 'degraded', source: 'servers', servers: { up: 1, total: 2 }, down_servers: ['http://10.0.0.22:80'], at: 990 } } });
+""")
+    cls, title = res[0]
+    assert cls == 'status-dot status-checking' and '1 of 2' in title and '10.0.0.22' in title, res
+
+
 def test_a_manual_ping_survives_a_redraw():
     res = _run("""
 _sdApiStatusMap = { photos: { status: 'enabled', error: [], eps: [] } }; card('photos', 'photos');

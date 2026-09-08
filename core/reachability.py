@@ -74,7 +74,7 @@ def _classify_failure(exc) -> str:
 
 def _backend(fallback, ssrf, head):
     if not (fallback and _is_http(fallback) and ssrf(fallback)):
-        return 'unknown', None, 'no backend address to check'
+        return 'unknown', None, 'has no address to check'
     try:
         ms, code, _loc = _head(fallback, head)
     except Exception as exc:
@@ -84,6 +84,11 @@ def _backend(fallback, ssrf, head):
     if code in UNREACHABLE:
         return 'down', None, f'answered {code}'
     return 'up', {'ok': True, 'latency_ms': ms, 'status_code': code, 'via_target': True}, ''
+
+
+def backend_state(url: str, ssrf=None, head=None) -> str:
+    verdict, _alt, _why = _backend(url, ssrf or ssrf_ok, head or requests.head)
+    return verdict
 
 
 def probe(url: str, fallback: str = '', ssrf=None, head=None) -> dict:
@@ -114,6 +119,6 @@ def probe(url: str, fallback: str = '', ssrf=None, head=None) -> dict:
             return {'ok': False, 'latency_ms': ms, 'status_code': code,
                     'error': f'The proxy redirected to {auth_host} before reaching the backend, and the backend {why}'}
         return {'ok': True, 'latency_ms': ms, 'status_code': code, 'unverified': True,
-                'note': f'The proxy redirected to {auth_host} before reaching the backend, which {why}'}
+                'note': f'The proxy redirected to {auth_host} before reaching the backend, and the backend {why}'}
 
     return {'ok': True, 'latency_ms': ms, 'status_code': code}

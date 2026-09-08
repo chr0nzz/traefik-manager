@@ -188,6 +188,53 @@ def test_a_dashboard_link_to_ourselves_reads_as_self(mon):
     assert probe.calls == [] and _state(mon, 'wild')['last']['self'] is True
 
 
+def _multi(name='photos', servers=('http://10.0.0.5:80', 'http://10.0.0.22:80')):
+    app = _app(name)
+    app['servers'] = list(servers)
+    return app
+
+
+def test_a_dead_server_in_a_pool_reads_as_degraded_without_a_health_check(mon):
+    from core import reachability
+    states = {'http://10.0.0.5:80': 'up', 'http://10.0.0.22:80': 'down'}
+    saved  = reachability.backend_state
+    reachability.backend_state = lambda u: states[u]
+    probe  = _Probe()
+    try:
+        raised = rh.check(_host([_multi()]), now=0, probe=probe, settings=ON)
+    finally:
+        reachability.backend_state = saved
+    assert probe.calls == [], 'when every server can be reached directly, the proxy is not asked'
+    assert [(t, m) for t, m, _c in raised] == [('warning', 'Route photos backend is degraded, 1 of 2 servers up (http://10.0.0.22:80)')]
+    st = _state(mon, 'photos')
+    assert st['state'] == 'degraded' and st['last']['source'] == 'servers' and st['last']['down_servers'] == ['http://10.0.0.22:80']
+
+
+def test_a_pool_traefik_manager_cannot_reach_falls_back_to_the_proxy(mon):
+    from core import reachability
+    saved = reachability.backend_state
+    reachability.backend_state = lambda u: 'unknown' if u.endswith(':80') else 'up'
+    probe = _Probe()
+    try:
+        rh.check(_host([_multi()]), now=0, probe=probe, settings=ON)
+    finally:
+        reachability.backend_state = saved
+    assert len(probe.calls) == 1, 'a pool with an unreachable member is judged through the proxy, not guessed'
+    assert _state(mon, 'photos')['last']['source'] == 'ping'
+
+
+def test_a_single_server_is_never_probed_directly(mon):
+    from core import reachability
+    saved = reachability.backend_state
+    calls = []
+    reachability.backend_state = lambda u: calls.append(u) or 'up'
+    try:
+        rh.check(_host([_app('photos')]), now=0, probe=_Probe(), settings=ON)
+    finally:
+        reachability.backend_state = saved
+    assert calls == []
+
+
 def test_the_ping_uses_the_scheme_the_route_serves_and_the_backend_as_fallback(mon):
     probe = _Probe()
     rh.check(_host([_app('plain', tls=False, target='http://10.0.0.9:8080')]), now=0, probe=probe, settings=ON)

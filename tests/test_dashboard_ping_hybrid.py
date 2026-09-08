@@ -65,6 +65,13 @@ def test_traefik_health_still_wins_over_the_background_check():
     assert down['dot'] == 'sig-cell-err', down
 
 
+def test_a_degraded_pool_from_the_background_check_is_amber_with_the_dead_server_named():
+    s = _state("HEALTH = { a: { state: 'degraded', source: 'servers', servers: { up: 1, total: 2 }, down_servers: ['http://10.0.0.22:80'], at: 990 } };")
+    assert s['dot'] == 'sig-cell-warn' and s['health'] == 'warn'
+    assert '1 of 2' in s['tip'] and '10.0.0.22' in s['tip'], s
+    assert 'degraded' in s['note']
+
+
 def test_an_unchecked_route_stays_neutral_and_says_it_is_waiting():
     s = _state("HEALTH = {};")
     assert s['dot'] == '' and 'not been checked yet' in s['tip'], s

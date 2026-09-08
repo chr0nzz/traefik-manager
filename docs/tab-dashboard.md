@@ -39,7 +39,7 @@ The dot on the icon plate has these states:
 | Quiet grey square | Router loaded, but there is no health check and the route has not been checked yet, or route checks are off in Settings |
 | Hollow square | Route disabled, loaded but not enabled, or the Traefik API did not answer |
 | Hollow circle | Traefik is answering but has never reported this router |
-| Yellow | Backend degraded, some servers up and some down |
+| Yellow | Backend degraded, some servers up and some down. From Traefik where the service has a health check, otherwise from checking each server directly |
 | Red with a glow | Router errored, or every backend server down |
 
 Backend health comes from `serverStatus` in the Traefik API where the service has a health check configured, since that is authoritative. Without one, the background route check requests the route through the proxy on its schedule (Settings - Notifications - Route checks) and treats a 502, 503 or 504 as down, trying the backend address before giving up. When a forward auth middleware answers with a redirect before the backend is reached, the backend address is checked directly instead; if Traefik Manager cannot reach that address the dot stays green with a tooltip saying the backend was not verified. The tooltip says when the route was last checked. Nothing is pinged from the browser. A route whose rule has no concrete host (a wildcard or a regexp) cannot be requested from the rule alone; set a link on it in edit and the check uses that URL, otherwise the dot stays grey and the tooltip says so.

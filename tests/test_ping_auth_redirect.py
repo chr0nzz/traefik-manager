@@ -82,7 +82,7 @@ def test_a_backend_that_cannot_be_reached_is_reported_unverified_not_down(probe)
         assert r['ok'] is True and r['unverified'] is True, r
         assert 'auth.example.com' in r['note'] and 'no-such-host' in r['note'], r['note']
         r2 = probe(front.url)
-        assert r2['ok'] is True and r2['unverified'] is True and 'no backend address' in r2['note'], r2
+        assert r2['ok'] is True and r2['unverified'] is True and 'no address to check' in r2['note'], r2
     finally:
         front.close()
 

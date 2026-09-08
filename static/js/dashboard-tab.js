@@ -514,12 +514,21 @@ function _dskState(r) {
     } else if (chk && chk.state === 'down') {
         s.health  = 'down';
         s.dot     = 'sig-cell-err';
-        s.dotTip  = chk.source === 'traefik'
+        s.dotTip  = (chk.source === 'traefik' || chk.source === 'servers')
             ? 'Backend unreachable - 0 of ' + ((chk.servers || {}).total || 0) + ' servers up'
             : 'Unreachable' + (chk.error ? ': ' + chk.error : '') + ' \u00b7 ' + _dskAgo(chk.at);
         s.note    = 'backend unreachable';
         s.noteIc  = 'ph-fill ph-warning-octagon';
         s.noteCls = 'd-bad';
+    } else if (chk && chk.state === 'degraded') {
+        const sv  = chk.servers || {};
+        s.health  = 'warn';
+        s.dot     = 'sig-cell-warn';
+        s.dotTip  = 'Backend degraded - ' + sv.up + ' of ' + sv.total + ' servers up'
+            + ((chk.down_servers || []).length ? ' (' + chk.down_servers.join(', ') + ' down)' : '') + ' \u00b7 ' + _dskAgo(chk.at);
+        s.note    = 'backend degraded <b>' + sv.up + '/' + sv.total + ' servers</b>';
+        s.noteIc  = 'ph-fill ph-warning';
+        s.noteCls = 'd-warn';
     } else if (chk && chk.state === 'up') {
         s.health = 'up';
         s.dot    = 'sig-cell-ok';
