@@ -7,7 +7,7 @@ The **Routes** tab is the main management interface. It lists every route define
 - Route name, rule, target host:port, protocol
 - TLS / cert resolver status
 - Entry points and attached middlewares
-- A status dot fed by the Traefik API (enabled / warning / error)
+- A status dot: red or yellow when Traefik reports a router error or warning, otherwise the result of the background reachability check (green up, yellow degraded or unconfirmed, red down, grey not checked yet). Hover for the reason and when it was checked
 - Hosts and targets, each with a copy button
 - A detail panel with the traffic flow, router, TLS, middleware and service data
 
@@ -24,7 +24,7 @@ With no routes yet the tab shows an **Add Route** prompt instead of a blank grid
 | Status | All / Active / Inactive |
 | Protocol | All / HTTP / TCP / UDP |
 
-The heartbeat button pings every enabled HTTP route that has a concrete host and sets each card's status dot from the result.
+The heartbeat button pings every enabled HTTP route that has a concrete host right now and sets each card's status dot from the answer. The next background check replaces it. The schedule is set under Settings - Notifications - Route checks.
 
 ## Views
 

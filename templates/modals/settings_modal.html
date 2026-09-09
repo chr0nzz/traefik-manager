@@ -1197,6 +1197,24 @@
                     <div class="sc-lede">
                         <div class="sc-lede-t">Notifications<span class="tm-info-btn" data-tip="Send a message when a route is saved, a backup runs, a certificate nears expiry or an agent goes offline. Add one channel per destination: Discord, Slack, ntfy, Gotify, Pushover, Pushbullet, Telegram, or a generic JSON payload you shape downstream."><i class="ph-bold ph-info"></i></span></div>
                     </div>
+                    <div style="margin-bottom:12px;" id="routeCheckSection">
+                        <div class="sc-sec-head"><i class="ph-bold ph-heartbeat sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Route checks</span><span class="tm-info-btn" data-tip="Every enabled HTTP route on the Host and on each agent is requested from the server on this schedule. Where the service has a Traefik health check that result is used instead. A route counts as down after two failed checks in a row, and an alert goes to the channels below under the Traefik category, once when it goes down and once when it is back."><i class="ph-bold ph-info"></i></span><span class="sc-sec-rule"></span></div>
+                        <div class="sc-panel">
+                            <div class="sc-set">
+                                <div class="sc-set-l">
+                                    <div class="sc-set-n">Check route reachability</div>
+                                    <div class="sc-set-d">Feeds the status dot on the Routes tab and the Dashboard, and alerts when a backend stops answering</div>
+                                </div>
+                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-route-check" onclick="toggleRouteCheck()"><div class="toggle-knob"></div></div></div>
+                            </div>
+                            <div class="sc-set">
+                                <div class="sc-set-l">
+                                    <div class="sc-set-n">Every</div>
+                                </div>
+                                <div class="sc-set-v"><select id="routeCheckInterval" class="input-field" style="width:auto;padding-top:4px;padding-bottom:4px" onchange="saveRouteCheckInterval(this.value)"><option value="60">1 minute</option><option value="300">5 minutes</option><option value="900">15 minutes</option><option value="1800">30 minutes</option></select></div>
+                            </div>
+                        </div>
+                    </div>
                     <div id="channelListView" style="display:flex;flex-direction:column;">
                         <div class="sc-sec-head"><i class="ph-bold ph-bell sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Channels</span><span class="tm-info-btn" data-tip="Every enabled channel gets its own copy of an event, filtered by the categories, severity, digest and quiet hours set on it."><i class="ph-bold ph-info"></i></span><span class="sc-sec-rule"></span><div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)"><button onclick="startAddChannel()" class="proto-btn text-xs px-3 py-1.5" title="Add channel"><i class="ph-bold ph-plus"></i></button></div></div>
                         <div class="sc-panel" id="channelsListBody">

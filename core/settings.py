@@ -200,6 +200,8 @@ def load_settings() -> dict:
         'ui_prefs':             {},
         'geoip_enabled':        False,
         'geoip_db_path':        '',
+        'route_check_enabled':  True,
+        'route_check_interval': 300,
         'notification_channels': [],
         'notifications_read_until': 0,
         'webhook_url':          '',
@@ -347,6 +349,13 @@ def load_settings() -> dict:
             merged['geoip_enabled'] = bool(data['geoip_enabled'])
         if 'geoip_db_path' in data:
             merged['geoip_db_path'] = str(data['geoip_db_path']).strip()
+        if 'route_check_enabled' in data:
+            merged['route_check_enabled'] = bool(data['route_check_enabled'])
+        if 'route_check_interval' in data:
+            try:
+                merged['route_check_interval'] = int(data['route_check_interval'])
+            except (TypeError, ValueError):
+                pass
         if 'notifications_read_until' in data:
             try:
                 merged['notifications_read_until'] = max(0, int(data['notifications_read_until']))
@@ -448,7 +457,8 @@ def save_settings(domains, cert_resolver, traefik_api_url,
                   git_backup_auto_push=None,
                   agent_api_rate_limit=None, backup_keep_count=None,
                   default_theme=None, ui_prefs=None,
-                  geoip_enabled=None, geoip_db_path=None):
+                  geoip_enabled=None, geoip_db_path=None,
+                  route_check_enabled=None, route_check_interval=None):
     if visible_tabs is None:
         visible_tabs = {t: False for t in OPTIONAL_TABS}
     _cur = load_settings()
@@ -486,6 +496,10 @@ def save_settings(domains, cert_resolver, traefik_api_url,
         geoip_enabled = _cur.get('geoip_enabled', False)
     if geoip_db_path is None:
         geoip_db_path = _cur.get('geoip_db_path', '')
+    if route_check_enabled is None:
+        route_check_enabled = _cur.get('route_check_enabled', True)
+    if route_check_interval is None:
+        route_check_interval = _cur.get('route_check_interval', 300)
     if access_log_path is None:
         access_log_path = _cur.get('access_log_path', '')
     if static_config_path is None:
@@ -604,6 +618,8 @@ def save_settings(domains, cert_resolver, traefik_api_url,
         'ui_prefs':             ui_prefs,
         'geoip_enabled':        bool(geoip_enabled),
         'geoip_db_path':        str(geoip_db_path or '').strip(),
+        'route_check_enabled':  bool(route_check_enabled),
+        'route_check_interval': int(route_check_interval or 300),
         'oidc_groups_claim':    oidc_groups_claim,
         'notification_channels': _dump_channels(notification_channels),
         'notifications_read_until': int(notifications_read_until or 0),

@@ -60,6 +60,8 @@ from core import backups as _back
 from core import notifications as _noti
 from core import notify_providers as _notify_providers
 from core import monitor as _monitor
+from core import reachability as _reach
+from core import route_health as _rh
 from core import updates as _updates
 from core import traefik as _trae
 from core import agents_http as _agen
@@ -342,19 +344,7 @@ _ALLOWED_API_SCHEMES = env.ALLOWED_API_SCHEMES
 
 
 def _ssrf_ok(url: str) -> bool:
-    try:
-        from urllib.parse import urlparse
-        import socket, ipaddress
-        host = urlparse(url).hostname
-        if not host:
-            return False
-        for res in socket.getaddrinfo(host, None):
-            ip = ipaddress.ip_address(res[4][0])
-            if ip.is_link_local or ip.is_multicast or ip.is_reserved or ip.is_unspecified:
-                return False
-        return True
-    except Exception:
-        return False
+    return _reach.ssrf_ok(url)
 
 
 def _register_config_path(path: str):
@@ -610,6 +600,29 @@ _monitor.register('crowdsec', _crowd.CS_ALERT_INTERVAL,
                   lambda: _crowd.check_local_alerts(_crowd.CS_ALERT_WINDOW))
 _monitor.register('updates', _updates.UPDATE_INTERVAL, _updates.check_updates)
 _monitor.register('notify-flush', _noti.FLUSH_INTERVAL, _noti.flush_due)
+
+
+def _route_health_sources():
+    out = []
+    try:
+        apps, _mws = _build_all_apps(include_external=True)
+        out.append((_monitor.HOST_SERVER, '', apps,
+                    {'http': traefik_api_get_all('/api/http/services') or []}))
+    except Exception:
+        logger.exception("Route check could not list the host routes")
+    for server, name, agent in _monitor._agent_servers():
+        try:
+            if not _monitor._agent_usable(agent):
+                continue
+            payload = _agent_routes_payload(agent, server)
+            out.append((server, name, payload['apps'], payload.get('traefikServices') or {}))
+        except Exception:
+            logger.exception(f"Route check could not list routes for agent {name}")
+    return out
+
+
+_monitor.register('routes', _rh.TICK, lambda: _rh.check(
+    _route_health_sources, overrides_for=lambda server: _read_groups_config(server)['route_overrides']))
 
 
 def _reencrypt_file(name, read, write):
@@ -2115,13 +2128,9 @@ def api_cs_unban(decision_id):
     return jsonify({'ok': True})
 
 
-_PING_UNREACHABLE = (502, 503, 504)
-
-
 @app.route('/api/ping')
 @login_required
 def api_route_ping():
-    import time as _t
     from urllib.parse import urlparse
     url      = request.args.get('url', '').strip()
     fallback = request.args.get('fallback', '').strip()
@@ -2137,37 +2146,7 @@ def api_route_ping():
     self_domain = (settings.get('self_route') or {}).get('domain', '').strip().lower()
     if self_domain and host.lower() == self_domain:
         return jsonify({'ok': True, 'latency_ms': 0, 'status_code': 200, 'self': True})
-    def _ping(target):
-        t0   = _t.monotonic()
-        resp = requests.head(target, timeout=5, allow_redirects=False, verify=False)
-        ms   = round((_t.monotonic() - t0) * 1000)
-        return ms, resp.status_code
-    def _try_fallback():
-        if fallback and fallback.startswith(('http://', 'https://')) and _ssrf_ok(fallback):
-            try:
-                ms, code = _ping(fallback)
-                if code in _PING_UNREACHABLE:
-                    return None, code
-                return {'ok': True, 'latency_ms': ms, 'status_code': code, 'via_target': True}, code
-            except Exception:
-                return None, None
-        return None, None
-
-    try:
-        ms, code = _ping(url)
-        if code not in _PING_UNREACHABLE:
-            return jsonify({'ok': True, 'latency_ms': ms, 'status_code': code})
-        alt, alt_code = _try_fallback()
-        if alt:
-            return jsonify(alt)
-        return jsonify({'ok': False, 'latency_ms': ms, 'status_code': code,
-                        'error': f'The proxy answered {code}, the backend is not reachable'})
-    except Exception as primary_err:
-        alt, _alt_code = _try_fallback()
-        if alt:
-            return jsonify(alt)
-        err = str(primary_err)[:80]
-        return jsonify({'ok': False, 'error': 'Timeout' if 'timeout' in err.lower() else err, 'latency_ms': None})
+    return jsonify(_reach.probe(url, fallback, ssrf=_ssrf_ok, head=requests.head))
 
 def _apr1_hash(password: str, salt: str) -> str:
     import hashlib
@@ -4591,6 +4570,41 @@ def api_save_geoip():
         return jsonify({'success': False, 'error': 'Save failed'}), 500
 
 
+@app.route('/api/routes/health')
+@login_required
+def api_routes_health():
+    agent_id = request.args.get('agent_id', '').strip()
+    if agent_id and not _agent_by_id(agent_id):
+        return jsonify({'error': 'Agent not found'}), 404
+    return jsonify(_rh.snapshot(agent_id or _monitor.HOST_SERVER))
+
+
+@app.route('/api/settings/route-health', methods=['POST'])
+@csrf_protect
+@login_required
+def api_save_route_health():
+    data     = request.get_json(silent=True) or {}
+    existing = load_settings()
+    enabled  = bool(data['enabled']) if 'enabled' in data else existing.get('route_check_enabled', True)
+    try:
+        interval = int(data.get('interval', existing.get('route_check_interval', _rh.DEFAULT_INTERVAL)))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Interval must be a number of seconds'}), 400
+    if interval not in _rh.INTERVALS:
+        return jsonify({'error': 'Interval must be one of %s seconds' % ', '.join(str(i) for i in _rh.INTERVALS)}), 400
+    save_settings(
+        domains=existing['domains'],
+        cert_resolver=existing['cert_resolver'],
+        traefik_api_url=existing['traefik_api_url'],
+        auth_enabled=existing['auth_enabled'],
+        password_hash=existing['password_hash'],
+        visible_tabs=existing['visible_tabs'],
+        route_check_enabled=enabled,
+        route_check_interval=interval,
+    )
+    return jsonify({'ok': True, 'enabled': enabled, 'interval': interval})
+
+
 _CGNAT_NETWORK = ipaddress.ip_network('100.64.0.0/10')
 
 def _classify_ip(ip: str) -> str:
@@ -5128,7 +5142,7 @@ def dashboard_icon(slug):
     if os.path.exists(miss_path):
         return ('', 404)
     try:
-        r = requests.get(f'https://cdn.jsdelivr.net/gh/selfhst/icons/png/{slug}.png', timeout=2)
+        r = requests.get(f'https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/{slug}.png', timeout=2)
         if r.status_code == 200 and 'image' in r.headers.get('content-type', ''):
             with open(cache_path, 'wb') as wf:
                 wf.write(r.content)
@@ -6760,6 +6774,108 @@ def api_mw_templates_delete(template_id):
     return jsonify({'ok': True})
 
 
+def _agent_routes_payload(agent, agent_id):
+    all_configs = _agent_load_configs(agent)
+
+    config_errors = []
+    try:
+        r_resp = _agent_request(agent, 'GET', '/api/traefik/routers')
+        s_resp = _agent_request(agent, 'GET', '/api/traefik/services')
+        all_routers  = r_resp.json()  if r_resp.ok  else {}
+        all_services = s_resp.json()  if s_resp.ok  else {}
+        if not r_resp.ok:
+            try:
+                err = r_resp.json().get('error') or r_resp.text
+            except Exception:
+                err = r_resp.text
+            config_errors.append({'file': "Agent Traefik API", 'error': err or f'HTTP {r_resp.status_code}'})
+    except Exception as e:
+        all_routers  = {}
+        all_services = {}
+        config_errors.append({'file': "Agent Traefik API", 'error': str(e)})
+
+    svc_urls = _traefik_service_url_map(all_services)
+
+    combined_http, combined_tcp, combined_udp = {}, {}, {}
+    for config in all_configs.values():
+        for k, v in config.get('http', {}).get('services', {}).items():
+            combined_http.setdefault(k, v)
+        for k, v in config.get('tcp',  {}).get('services', {}).items():
+            combined_tcp.setdefault(k, v)
+        for k, v in config.get('udp',  {}).get('services', {}).items():
+            combined_udp.setdefault(k, v)
+
+    apps, middlewares = [], []
+    for fname, config in all_configs.items():
+        apps.extend(_build_apps(config, config_file=fname,
+                                extra_http_svcs=combined_http,
+                                extra_tcp_svcs=combined_tcp,
+                                extra_udp_svcs=combined_udp,
+                                api_svc_urls=svc_urls,
+                                agent_id=agent_id))
+        middlewares.extend(_build_middlewares(config, config_file=fname))
+
+    apps.extend(_build_external_routes(all_routers, svc_urls))
+
+    prefix = f"agent_{agent_id}::"
+    for store_key, rdata in load_settings().get('disabled_routes', {}).items():
+        if not store_key.startswith(prefix):
+            continue
+        rid      = store_key[len(prefix):]
+        rname    = rid.split('::', 1)[1] if '::' in rid else rid
+        proto    = rdata.get('protocol', 'http')
+        router   = rdata.get('router', {})
+        svc_name = router.get('service', '')
+        svc      = rdata.get('service', {})
+        cf       = rdata.get('configFile', '')
+        servers  = svc.get('loadBalancer', {}).get('servers', [])
+        if proto == 'http':
+            target = servers[0].get('url', 'N/A') if servers else 'N/A'
+            apps.append({'id': rid, 'name': rname, 'rule': router.get('rule', ''),
+                         'service_name': svc_name, 'target': target,
+                         'middlewares': router.get('middlewares', []),
+                         'entryPoints': router.get('entryPoints', []),
+                         'protocol': 'http', 'tls': bool(router.get('tls')), 'enabled': False,
+                         'passHostHeader': svc.get('loadBalancer', {}).get('passHostHeader', True),
+                         'serviceType': _service_type(svc),
+                         'configFile': cf, 'provider': 'file', 'entrypointMiddlewares': []})
+        else:
+            target = servers[0].get('address', 'N/A') if servers else 'N/A'
+            apps.append({'id': rid, 'name': rname, 'rule': router.get('rule', ''),
+                         'service_name': svc_name, 'target': target,
+                         'middlewares': router.get('middlewares', []) if proto == 'tcp' else [],
+                         'entryPoints': router.get('entryPoints', []),
+                         'protocol': proto, 'tls': bool(router.get('tls')) if proto == 'tcp' else False,
+                         'serviceType': _service_type(svc),
+                         'enabled': False, 'configFile': cf, 'provider': 'file'})
+
+    _mm_ledger       = load_settings().get('managed_middlewares', {})
+    _http_mw_by_file = {fn: ((cfg.get('http') or {}).get('middlewares') or {}) for fn, cfg in all_configs.items()}
+    for _app in apps:
+        if _app.get('protocol') != 'http' or _app.get('provider') != 'file':
+            continue
+        hdr_mw_name = f"{_app.get('name')}-headers"
+        hdr_body    = _http_mw_by_file.get(_app.get('configFile', ''), {}).get(hdr_mw_name)
+        owned       = f"agent_{agent_id}::{hdr_mw_name}" in _mm_ledger
+        decoded     = _decode_headers_middleware(hdr_body) if (owned and hdr_body is not None) else None
+        if not owned or hdr_body is None:
+            hdr_state = 'off'
+        elif decoded is not None:
+            hdr_state = 'toggles'
+        else:
+            hdr_state = 'custom'
+        _app['headersPreset'] = {
+            'owned':   owned,
+            'exists':  hdr_body is not None,
+            'state':   hdr_state,
+            'toggles': decoded if decoded is not None else _headers_preset_defaults(),
+        }
+
+    return {'apps': apps, 'middlewares': middlewares, 'configErrors': config_errors,
+            'services': _collect_file_services(all_configs.values()),
+            'traefikServices': all_services}
+
+
 @app.route('/api/agents/<agent_id>/routes')
 @login_required
 def api_agent_routes(agent_id):
@@ -6767,104 +6883,9 @@ def api_agent_routes(agent_id):
     if not agent:
         return jsonify({'error': 'Agent not found'}), 404
     try:
-        all_configs = _agent_load_configs(agent)
-
-        config_errors = []
-        try:
-            r_resp = _agent_request(agent, 'GET', '/api/traefik/routers')
-            s_resp = _agent_request(agent, 'GET', '/api/traefik/services')
-            all_routers  = r_resp.json()  if r_resp.ok  else {}
-            all_services = s_resp.json()  if s_resp.ok  else {}
-            if not r_resp.ok:
-                try:
-                    err = r_resp.json().get('error') or r_resp.text
-                except Exception:
-                    err = r_resp.text
-                config_errors.append({'file': "Agent Traefik API", 'error': err or f'HTTP {r_resp.status_code}'})
-        except Exception as e:
-            all_routers  = {}
-            all_services = {}
-            config_errors.append({'file': "Agent Traefik API", 'error': str(e)})
-
-        svc_urls = _traefik_service_url_map(all_services)
-
-        combined_http, combined_tcp, combined_udp = {}, {}, {}
-        for config in all_configs.values():
-            for k, v in config.get('http', {}).get('services', {}).items():
-                combined_http.setdefault(k, v)
-            for k, v in config.get('tcp',  {}).get('services', {}).items():
-                combined_tcp.setdefault(k, v)
-            for k, v in config.get('udp',  {}).get('services', {}).items():
-                combined_udp.setdefault(k, v)
-
-        apps, middlewares = [], []
-        for fname, config in all_configs.items():
-            apps.extend(_build_apps(config, config_file=fname,
-                                    extra_http_svcs=combined_http,
-                                    extra_tcp_svcs=combined_tcp,
-                                    extra_udp_svcs=combined_udp,
-                                    api_svc_urls=svc_urls,
-                                    agent_id=agent_id))
-            middlewares.extend(_build_middlewares(config, config_file=fname))
-
-        apps.extend(_build_external_routes(all_routers, svc_urls))
-
-        prefix = f"agent_{agent_id}::"
-        for store_key, rdata in load_settings().get('disabled_routes', {}).items():
-            if not store_key.startswith(prefix):
-                continue
-            rid      = store_key[len(prefix):]
-            rname    = rid.split('::', 1)[1] if '::' in rid else rid
-            proto    = rdata.get('protocol', 'http')
-            router   = rdata.get('router', {})
-            svc_name = router.get('service', '')
-            svc      = rdata.get('service', {})
-            cf       = rdata.get('configFile', '')
-            servers  = svc.get('loadBalancer', {}).get('servers', [])
-            if proto == 'http':
-                target = servers[0].get('url', 'N/A') if servers else 'N/A'
-                apps.append({'id': rid, 'name': rname, 'rule': router.get('rule', ''),
-                             'service_name': svc_name, 'target': target,
-                             'middlewares': router.get('middlewares', []),
-                             'entryPoints': router.get('entryPoints', []),
-                             'protocol': 'http', 'tls': bool(router.get('tls')), 'enabled': False,
-                             'passHostHeader': svc.get('loadBalancer', {}).get('passHostHeader', True),
-                             'serviceType': _service_type(svc),
-                             'configFile': cf, 'provider': 'file', 'entrypointMiddlewares': []})
-            else:
-                target = servers[0].get('address', 'N/A') if servers else 'N/A'
-                apps.append({'id': rid, 'name': rname, 'rule': router.get('rule', ''),
-                             'service_name': svc_name, 'target': target,
-                             'middlewares': router.get('middlewares', []) if proto == 'tcp' else [],
-                             'entryPoints': router.get('entryPoints', []),
-                             'protocol': proto, 'tls': bool(router.get('tls')) if proto == 'tcp' else False,
-                             'serviceType': _service_type(svc),
-                             'enabled': False, 'configFile': cf, 'provider': 'file'})
-
-        _mm_ledger       = load_settings().get('managed_middlewares', {})
-        _http_mw_by_file = {fn: ((cfg.get('http') or {}).get('middlewares') or {}) for fn, cfg in all_configs.items()}
-        for _app in apps:
-            if _app.get('protocol') != 'http' or _app.get('provider') != 'file':
-                continue
-            hdr_mw_name = f"{_app.get('name')}-headers"
-            hdr_body    = _http_mw_by_file.get(_app.get('configFile', ''), {}).get(hdr_mw_name)
-            owned       = f"agent_{agent_id}::{hdr_mw_name}" in _mm_ledger
-            decoded     = _decode_headers_middleware(hdr_body) if (owned and hdr_body is not None) else None
-            if not owned or hdr_body is None:
-                hdr_state = 'off'
-            elif decoded is not None:
-                hdr_state = 'toggles'
-            else:
-                hdr_state = 'custom'
-            _app['headersPreset'] = {
-                'owned':   owned,
-                'exists':  hdr_body is not None,
-                'state':   hdr_state,
-                'toggles': decoded if decoded is not None else _headers_preset_defaults(),
-            }
-
-        return jsonify({'apps': apps, 'middlewares': middlewares, 'configErrors': config_errors,
-                        'services': _collect_file_services(all_configs.values())})
+        payload = _agent_routes_payload(agent, agent_id)
+        payload.pop('traefikServices', None)
+        return jsonify(payload)
     except requests.exceptions.SSLError as e:
         return jsonify({'error': 'TLS verification failed - the agent certificate is not trusted '
                                  'by Traefik Manager (%s)' % str(e)[:100]}), 502

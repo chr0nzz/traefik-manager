@@ -106,7 +106,8 @@ function _sdUsing(r) {
 }
 
 function _sdBackends(s) {
-    const m = s && s.serverStatus;
+    if (!(s && s.loadBalancer && s.loadBalancer.healthCheck)) return null;
+    const m = s.serverStatus;
     if (!m || typeof m !== 'object') return null;
     const keys = Object.keys(m);
     if (!keys.length) return null;
@@ -220,12 +221,13 @@ function _sdObj(raw, kind, ctx) {
 function _sdTally(objs) {
     const t = { total: objs.length, err: 0, warn: 0, idle: 0, ok: 0,
                 disabled: 0, warning: 0, unknown: 0, unbound: 0, unused: 0, unchecked: 0, degraded: 0,
-                composite: 0 };
+                composite: 0, down: 0 };
     objs.forEach(o => {
         t[o.cell]++;
         if (o.status === 'disabled') t.disabled++;
         if (o.status === 'warning')  t.warning++;
         if (o.status === 'unknown')  t.unknown++;
+        if (o.down)      t.down++;
         if (o.unbound)   t.unbound++;
         if (o.unused)    t.unused++;
         if (o.unchecked) t.unchecked++;
@@ -400,6 +402,7 @@ function _sdAria(label, total, t) {
     if (total === 0) return 'no ' + label + ' configured';
     const bits = [];
     if (t.disabled)  bits.push(t.disabled + ' disabled');
+    if (t.down)      bits.push(t.down + ' unreachable');
     if (t.warning)   bits.push(t.warning + ' warnings');
     if (t.degraded)  bits.push(t.degraded + ' degraded');
     if (t.unbound)   bits.push(t.unbound + ' unbound');
@@ -528,7 +531,9 @@ function _sdEpRow(ep, info) {
     const base = 'tab=services;proto=' + p.key + ';ep=' + ep.name;
     const go = _sdExc('', '', info.n, 'routers', base, info.objs).go;
     const flags = [];
-    if (info.err)  flags.push(_sdExc('d-bad',  'ph-fill ph-x-circle', info.err,  'disabled', base + ';apistatus=disabled', info.objs.filter(o => o.cell === 'err')));
+    const disabledN = info.err - (info.down || 0);
+    if (disabledN) flags.push(_sdExc('d-bad',  'ph-fill ph-x-circle', disabledN,  'disabled', base + ';apistatus=disabled', info.objs.filter(o => o.cell === 'err' && !o.down)));
+    if (info.down) flags.push(_sdExc('d-bad',  'ph-fill ph-warning-octagon', info.down, 'unreachable', base + ';apistatus=unreachable', info.objs.filter(o => o.down)));
     if (info.warn) flags.push(_sdExc('d-warn', 'ph-fill ph-warning',  info.warn, 'warnings', base + ';apistatus=warning', info.objs.filter(o => o.cell === 'warn')));
     const flagHtml = flags.length
         ? flags.map(f => _sdFlag(f, false)).join('')
@@ -541,7 +546,7 @@ function _sdEpRow(ep, info) {
         : info.n === 0
         ? 'no routers bound to ' + ep.name
         : _sdNum(info.n) + ' router' + (info.n === 1 ? '' : 's') + ' on ' + ep.name
-          + ((info.err || info.warn) ? ': ' + info.err + ' disabled, ' + info.warn + ' warnings' : ', all live');
+          + ((info.err || info.warn) ? ': ' + (info.err - (info.down || 0)) + ' disabled, ' + (info.down || 0) + ' unreachable, ' + info.warn + ' warnings' : ', all live');
     return '<div class="sig-ep-row" data-health="' + health + '" tabindex="0" role="button" data-sd="' + _esc(go) + '">'
          + '<span class="sig-ep-id"><span class="d-proto ' + p.cls + ' sig-proto">' + p.tag + '</span>'
          + '<span class="sig-ep-name">' + _esc(ep.name) + '</span>' + _sdEpGlyphs(ep, info) + '</span>'
@@ -692,6 +697,7 @@ function _sdCardModel(key, objs, ov, avail) {
         warning:  objs.filter(o => o.status === 'warning'),
         unknown:  objs.filter(o => o.status === 'unknown'),
         unbound:  objs.filter(o => o.unbound),
+        down:     objs.filter(o => o.down),
         unused:   objs.filter(o => o.unused),
         degraded: objs.filter(o => o.degraded),
         composite: objs.filter(o => o.composite),
@@ -745,6 +751,7 @@ function _sdRender(model) {
     const ov     = model.overview;
 
     const av = model.avail || {};
+    _sdApplyHealth(model.objs.http);
     const m = {
         http:       _sdCardModel('http',       _sdScoped(model.objs.http),       _sdSumSections([ov.routersHttp]), av.http),
         stream:     _sdCardModel('stream',     _sdScoped(model.objs.stream),     _sdSumSections([ov.routersTcp, ov.routersUdp]), av.stream),
@@ -770,6 +777,7 @@ function _sdRender(model) {
             + (h.t.unbound ? SD_SEP + _sdNum(h.t.unbound) + ' unbound' : '')),
         flags: [
             h.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle', h.t.disabled, 'disabled',   hGo + ';apistatus=disabled', h.groups.disabled),
+            h.t.down     && _sdExc('d-bad',  'ph-fill ph-warning-octagon', h.t.down, 'unreachable', hGo + ';apistatus=unreachable', h.groups.down),
             h.t.warning  && _sdExc('d-warn', 'ph-fill ph-warning',  h.t.warning,  'warnings',   hGo + ';apistatus=warning',  h.groups.warning),
             h.t.unbound  && _sdExc('d-off',  'ph-bold ph-plug',     h.t.unbound,  'unbound',    hGo + ';apistatus=unbound',  h.groups.unbound),
             h.t.unknown  && _sdExc('d-off',  'ph-bold ph-question', h.t.unknown,  'unreported', hGo,                         h.groups.unknown),
@@ -863,6 +871,7 @@ function _sdRender(model) {
     if (verdEl) {
         const items = [];
         if (m.http.t.disabled)       items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.http.t.disabled,       'routers disabled',     'tab=services;proto=http;apistatus=disabled', m.http.groups.disabled));
+        if (m.http.t.down)           items.push(_sdExc('d-bad',  'ph-fill ph-warning-octagon',     m.http.t.down,           'backends unreachable', 'tab=services;proto=http;apistatus=unreachable', m.http.groups.down));
         if (m.http.t.warning)        items.push(_sdExc('d-warn', 'ph-fill ph-warning',             m.http.t.warning,        'router warnings',      'tab=services;proto=http;apistatus=warning',  m.http.groups.warning));
         if (m.stream.t.disabled)     items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.stream.t.disabled,     'stream disabled',      sGo + ';apistatus=disabled',                  m.stream.groups.disabled));
         if (m.service.t.disabled)    items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.service.t.disabled,    'services disabled',    'tab=live;svcstatus=error',                   m.service.groups.disabled));
@@ -962,7 +971,7 @@ function _sdRender(model) {
             const epBlind = !av.http;
             const info = new Map();
             eps.forEach(ep => info.set(ep.name, {
-                n: 0, err: 0, warn: 0, idle: 0, ok: 0, tls: false,
+                n: 0, err: 0, warn: 0, idle: 0, ok: 0, down: 0, tls: false,
                 httpN: 0, tcpN: 0, udpN: 0, blind: epBlind, objs: [],
                 cells: { err: [], warn: [], idle: [], ok: 0, blind: epBlind },
                 providers: new Set(), internalOnly: false,
@@ -979,6 +988,7 @@ function _sdRender(model) {
                     if (pair.raw && pair.raw.tls) i.tls = true;
                     i.providers.add(o.provider);
                     i.objs.push(o);
+                    if (o.down) i.down++;
                     if (o.cell === 'ok') { i.ok++; i.cells.ok++; }
                     else { i[o.cell]++; i.cells[o.cell].push((o.name || o.short) + ': ' + (o.reason || o.cell)); }
                 });
@@ -1030,8 +1040,113 @@ function _sdRender(model) {
 }
 
 let _sdApiStatusMap = null;
+let _rhMap  = {};
+const _rhMeta = { enabled: true, interval: 300, checked_at: null, loaded: false };
+window._rhMeta = _rhMeta;
+window._rhGet  = function(rid) { return (rid && _rhMap[rid]) || null; };
+window._rhByName = function(name) {
+    if (!name) return null;
+    if (_rhMap[name]) return _rhMap[name];
+    const hit = Object.keys(_rhMap).find(rid => rid.split('::').pop() === name);
+    return hit ? _rhMap[hit] : null;
+};
 
-function _sdApplyRouteCards(ping) {
+function _sdApplyHealth(objs) {
+    (objs || []).forEach(o => {
+        if (o.baseCell === undefined) { o.baseCell = o.cell; o.baseReason = o.reason; }
+        o.cell = o.baseCell; o.reason = o.baseReason; o.down = false;
+        if (o.status !== 'enabled' || o.baseCell !== 'ok') return;
+        const h = window._rhByName(o.short);
+        if (!h) return;
+        const sv = h.servers || {};
+        if (h.state === 'down') {
+            o.cell = 'err'; o.down = true;
+            o.reason = (h.source === 'traefik' || h.source === 'servers') ? 'backend down, 0 of ' + sv.total + ' servers up'
+                : 'backend unreachable' + (h.error ? ', ' + h.error : '');
+        } else if (h.state === 'degraded') {
+            o.cell = 'warn'; o.degraded = true;
+            o.reason = 'backend degraded, ' + sv.up + ' of ' + sv.total + ' servers up';
+        }
+    });
+}
+
+function _rhIngest(data) {
+    if (!data || typeof data !== 'object' || !data.routes) return;
+    _rhMeta.enabled    = data.enabled !== false;
+    _rhMeta.interval   = data.interval || 300;
+    _rhMeta.checked_at = data.checked_at || null;
+    _rhMeta.loaded     = true;
+    const next = {};
+    Object.keys(data.routes).forEach(rid => { next[rid] = data.routes[rid]; });
+    Object.keys(_rhMap).forEach(rid => {
+        const mine = _rhMap[rid], theirs = next[rid];
+        if (mine && mine.manual && (!theirs || (mine.at || 0) > (theirs.at || 0))) next[rid] = mine;
+    });
+    _rhMap = next;
+}
+
+window._rhRemember = function(rid, res) {
+    if (!rid || !res) return;
+    _rhMap[rid] = { state: res.ok ? 'up' : 'down', source: 'ping', manual: true,
+                    at: Math.floor(Date.now() / 1000), latency_ms: res.latency_ms,
+                    status_code: res.status_code, error: res.error, via_target: res.via_target, self: res.self,
+                    unverified: res.unverified, note: res.note };
+};
+
+window._rhLoad = async function(server) {
+    try {
+        const r = await fetch('/api/routes/health' + (server ? '?agent_id=' + encodeURIComponent(server) : ''));
+        if (r.ok) _rhIngest(await r.json());
+    } catch (e) {}
+};
+
+window._rhPoll = async function() {
+    await window._rhLoad((typeof _activeAgent !== 'undefined' && _activeAgent) ? _activeAgent.id : '');
+    if (_sdModel) _sdRender(_sdModel);
+    _sdApplyRouteCards();
+    const pods = document.getElementById('dashPodsContainer');
+    if (pods && !pods.classList.contains('hidden') && typeof dashRender === 'function') dashRender();
+};
+
+function _rhAgo(at) {
+    if (!at) return '';
+    const s = Math.max(0, Math.floor(Date.now() / 1000) - at);
+    if (s < 60)   return 'just now';
+    if (s < 3600) return Math.floor(s / 60) + 'm ago';
+    return Math.floor(s / 3600) + 'h ago';
+}
+
+function _sdHealthDot(h, noHost) {
+    if (h) {
+        const when = (h.manual ? 'pinged ' : 'checked ') + _rhAgo(h.at);
+        const sv   = h.servers || {};
+        if (h.state === 'up') {
+            const what = h.self ? 'Online (self)'
+                : h.unverified ? 'Proxy answered ' + h.status_code + ', backend not verified' + (h.note ? '. ' + h.note : '')
+                : (h.source === 'traefik' || h.source === 'servers') ? 'Backend up, ' + sv.up + ' of ' + sv.total + ' servers'
+                : h.via_target ? 'Backend online · ' + h.latency_ms + 'ms'
+                : 'Online · ' + h.latency_ms + 'ms (' + h.status_code + ')';
+            return { cls: 'status-online', title: what + ' · ' + when };
+        }
+        if (h.state === 'degraded') {
+            const which = (h.down_servers || []).length ? ' (' + h.down_servers.join(', ') + ' down)' : '';
+            return { cls: 'status-checking', title: 'Backend degraded, ' + sv.up + ' of ' + sv.total + ' servers up' + which + ' · ' + when };
+        }
+        if (h.state === 'down') {
+            const why = (h.source === 'traefik' || h.source === 'servers') ? 'Backend down, 0 of ' + sv.total + ' servers up'
+                : 'Unreachable' + (h.error ? ': ' + h.error : '');
+            return { cls: 'status-offline', title: why + ' · ' + when };
+        }
+        if (h.state === 'pending') {
+            return { cls: 'status-checking', title: 'Last check failed' + (h.error ? ': ' + h.error : '') + ', confirming on the next pass' };
+        }
+    }
+    if (_rhMeta.loaded && !_rhMeta.enabled) return { cls: 'status-unknown', title: 'Router loaded, route checks are off in Settings' };
+    if (noHost) return { cls: 'status-unknown', title: 'Router loaded, the rule has no host to check. Set a link on the Dashboard and it will be checked' };
+    return { cls: 'status-unknown', title: 'Router loaded, not checked yet' };
+}
+
+function _sdApplyRouteCards() {
     if (!_sdApiStatusMap) return;
     const map = _sdApiStatusMap;
     document.querySelectorAll('.route-card').forEach(card => {
@@ -1044,10 +1159,9 @@ function _sdApplyRouteCards(ping) {
         card.dataset.apistatus = apiStatus || 'unknown';
         card.dataset.apibound = (entry && entry.unbound) ? 'unbound' : '';
         if (entry) card.dataset.eps = entry.eps.join('|');
-        if (apiStatus === 'enabled') {
-            statusEl.className = 'status-dot status-online';
-            statusEl.title = 'Enabled';
-        } else if (apiStatus === 'disabled') {
+        const health = window._rhGet(card.dataset.rid) || window._rhGet(routeName);
+        card.dataset.health = !health ? '' : health.state === 'down' ? 'unreachable' : health.state;
+        if (apiStatus === 'disabled') {
             statusEl.className = 'status-dot status-offline';
             statusEl.title = apiError ? 'Error: ' + apiError : 'Disabled';
             if (apiError) {
@@ -1063,32 +1177,18 @@ function _sdApplyRouteCards(ping) {
         } else if (apiStatus === 'warning') {
             statusEl.className = 'status-dot status-checking';
             statusEl.title = apiError ? 'Warning: ' + apiError : 'Warning';
-        } else if (apiStatus) {
+        } else if (apiStatus && apiStatus !== 'enabled') {
             statusEl.className = 'status-dot status-unknown';
             statusEl.title = 'Status: ' + ((entry && entry.raw) || apiStatus);
-        } else if (ping) {
-            const proto = card.dataset.protocol;
-            if (proto === 'http' && card.dataset.enabled !== 'false') {
-                const domains = (card.dataset.domains || '').split('|').filter(d => d && !d.includes('{') && !d.includes('*'));
-                const domain = domains[0];
-                if (domain) {
-                    const tgt = card.dataset.target || '';
-                    const pingUrl = '/api/ping?url=' + encodeURIComponent('https://' + domain)
-                        + (tgt ? '&fallback=' + encodeURIComponent(tgt) : '');
-                    fetch(pingUrl)
-                        .then(r => r.json())
-                        .then(data => {
-                            statusEl.className = data.ok ? 'status-dot status-online' : 'status-dot status-offline';
-                            statusEl.title = data.ok
-                                ? (data.self ? 'Online (self)'
-                                   : data.via_target ? 'Backend online · ' + data.latency_ms + 'ms'
-                                   : 'Online · ' + data.latency_ms + 'ms (' + data.status_code + ')')
-                                : 'Unreachable' + (data.error ? ': ' + data.error : '');
-                        })
-                        .catch(() => { statusEl.className = 'status-dot status-unknown'; statusEl.title = 'Ping failed'; });
-                    return;
-                }
-            }
+        } else if (apiStatus === 'enabled' && card.dataset.protocol !== 'http') {
+            statusEl.className = 'status-dot status-online';
+            statusEl.title = 'Enabled, stream routes are not reachability checked';
+        } else if (apiStatus === 'enabled' || health) {
+            const hosts = (card.dataset.domains || '').split('|').filter(d => d && !d.includes('{') && !d.includes('*'));
+            const d = _sdHealthDot(health, !hosts.length);
+            statusEl.className = 'status-dot ' + d.cls;
+            statusEl.title = d.title;
+        } else {
             statusEl.className = 'status-dot status-unknown';
             statusEl.title = 'Status unknown (API unavailable)';
         }
@@ -1098,15 +1198,17 @@ function _sdApplyRouteCards(ping) {
 async function loadOverviewStats() {
     const runServer = _activeAgent ? _activeAgent.id : '';
     try {
-        const [overview, routers, services, middlewares, version, entrypoints] = await Promise.allSettled([
+        const [overview, routers, services, middlewares, version, entrypoints, health] = await Promise.allSettled([
             agentFetch('/api/traefik/overview').then(r => r.json()),
             agentFetch('/api/traefik/routers').then(r => r.json()),
             agentFetch('/api/traefik/services').then(r => r.json()),
             agentFetch('/api/traefik/middlewares').then(r => r.json()),
             agentFetch('/api/traefik/version').then(r => r.json()),
             agentFetch('/api/traefik/entrypoints').then(r => r.json()),
+            fetch('/api/routes/health' + (runServer ? '?agent_id=' + encodeURIComponent(runServer) : '')).then(r => r.json()),
         ]);
         if (runServer !== (_activeAgent ? _activeAgent.id : '')) return;
+        if (health.status === 'fulfilled') _rhIngest(health.value);
 
         const val = (res, fallback) => {
             if (res.status !== 'fulfilled') return fallback;
@@ -1168,7 +1270,7 @@ async function loadOverviewStats() {
                 eps: _sdUsing(p.raw),
             };
         });
-        _sdApplyRouteCards(true);
+        _sdApplyRouteCards();
         if (typeof filterRoutes === 'function' && document.getElementById('searchRoutes')) filterRoutes();
 
         if (model.entrypoints.length && !_activeAgent) {

@@ -249,8 +249,11 @@ These run inside the container on their own schedule, so an instance nobody has 
 | CrowdSec | 5 min | Host and agents | one aggregated message per window |
 | Updates | daily | Host | a new Traefik Manager or Traefik release, once per version |
 | Storage | 5 min | Host and agents | a config, backup or static config directory that cannot be written |
+| Routes | 5 min, adjustable | Host and agents | a route's backend unreachable or degraded, and reachable again |
 
 Each fires once per change, not once per cycle.
+
+The route check covers every enabled HTTP route with a concrete host, or with a link set on the Dashboard, which is how a wildcard route gets checked. Where the service has a Traefik health check, that result is used. Otherwise the route is requested through the proxy and a 502, 503 or 504 means down, with the backend address tried directly before giving up. A redirect to another host (forward auth answering first) proves nothing, so the backend is checked directly: refused or no route is down, unresolvable or timed out is reported as unverified rather than guessed. A service with several servers and no health check has each server checked directly, so one dead member reads as degraded; when Traefik Manager cannot reach the servers itself, the route is judged through the proxy instead. A route counts as down after two failed checks in a row. The toggle and interval (1, 5, 15 or 30 minutes) live under Settings - Notifications - Route checks, and the same result drives the status dot on the Routes tab and the Dashboard.
 
 Messages from an agent are prefixed with its name, so `VPS One: Traefik API is unreachable`
 tells you which server without opening the app. Host messages carry no prefix.

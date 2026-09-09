@@ -1,4 +1,4 @@
-const CACHE_NAME = 'traefik-manager-v1.13.3';
+const CACHE_NAME = 'traefik-manager-v1.13.4';
 
 const STATIC_ASSETS = [];
 

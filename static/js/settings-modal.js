@@ -581,6 +581,10 @@ async function openSettingsModal(panel) {
         document.getElementById('settingsCrowdSecUrl').value      = data.crowdsec_lapi_url || '';
         document.getElementById('settingsCrowdSecAlertLimit').value = data.crowdsec_alert_limit || '';
         window._tmAlertLimit = data.crowdsec_alert_limit || '';
+        _routeCheckState = data.route_check_enabled !== false;
+        document.getElementById('toggle-route-check')?.classList.toggle('on', _routeCheckState);
+        const rcSel = document.getElementById('routeCheckInterval');
+        if (rcSel) rcSel.value = String(data.route_check_interval || 300);
         const csKeyHint = document.getElementById('crowdsecKeySetHint');
         if (csKeyHint) csKeyHint.classList.toggle('hidden', !data.crowdsec_api_key_set);
         const csMidEl = document.getElementById('settingsCrowdSecMachineId');
@@ -1221,6 +1225,41 @@ async function loadGeoipSettings() {
         const btn = document.getElementById('geoipUpdateBtn');
         if (btn) btn.innerHTML = r.available ? '<i class="ph-bold ph-arrows-clockwise text-xs"></i> Update' : '<i class="ph-bold ph-download-simple text-xs"></i> Download';
     } catch(_) {}
+}
+
+let _routeCheckState = true;
+
+async function _saveRouteCheck(body) {
+    const res = await fetch('/api/settings/route-health', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+        body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(await _errText(res, 'Failed to save'));
+    if (typeof window._rhPoll === 'function') window._rhPoll();
+}
+
+async function toggleRouteCheck() {
+    _routeCheckState = !_routeCheckState;
+    const tog = document.getElementById('toggle-route-check');
+    if (tog) tog.classList.toggle('on', _routeCheckState);
+    try {
+        await _saveRouteCheck({ enabled: _routeCheckState });
+        showToast(_routeCheckState ? 'Route checks on' : 'Route checks off', 'success');
+    } catch (e) {
+        _routeCheckState = !_routeCheckState;
+        if (tog) tog.classList.toggle('on', _routeCheckState);
+        showToast(e.message || 'Failed to save', 'error');
+    }
+}
+
+async function saveRouteCheckInterval(value) {
+    try {
+        await _saveRouteCheck({ interval: parseInt(value, 10) });
+        showToast('Route check interval saved', 'success');
+    } catch (e) {
+        showToast(e.message || 'Failed to save', 'error');
+    }
 }
 
 async function toggleGeoip() {

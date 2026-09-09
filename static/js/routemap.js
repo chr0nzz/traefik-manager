@@ -1,5 +1,5 @@
 const RM_GROUP_COLORS = ['#f0883e','#a371f7','#24a1de','#3fb950','#e2c041','#58a6ff','#ff7b72'];
-const RM_ICON_CDN = 'https://cdn.jsdelivr.net/gh/selfhst/icons/png';
+const RM_ICON_CDN = 'https://cdn.jsdelivr.net/gh/selfhst/icons@main/png';
 
 let _rmConfig    = { custom_groups: [], route_overrides: {} };
 let _rmAllRoutes = [];
@@ -120,6 +120,7 @@ window.rmEnsureData = async function(force, opts) {
             if (wantSvc && svcRes && svcRes.ok) {
                 const sd = await svcRes.json();
                 _rmSvcStatus = _rmStatusMap(_rmProtoRows(sd), sv => {
+                    if (!(sv.loadBalancer && sv.loadBalancer.healthCheck)) return null;
                     const map = sv.serverStatus;
                     if (!map || typeof map !== 'object') return null;
                     const keys = Object.keys(map);
