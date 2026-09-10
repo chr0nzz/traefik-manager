@@ -147,3 +147,14 @@ def test_the_service_list_follows_the_selected_agent():
     assert "agentFetch(" in ensure, 'the live list must come from the agent that is selected'
     assert "_activeAgent ? '/api/agents/'" in ensure, 'the config list must come from that agent too'
     assert 'window._tmServices = null' in js, 'switching context has to drop the cache'
+
+
+def test_the_internal_provider_uses_one_icon_and_opens_its_own_tab():
+    dash = _js('dashboard.js')
+    line = [ln for ln in dash.splitlines() if ln.strip().startswith('internal:')][0]
+    assert "tab: 'internal'" in line, 'the provider chip should open the Internal tab, not the live view'
+    assert 'ph-gear-six' not in line, 'a gear reads as settings, and settings already own that icon'
+    icon = 'ph-traffic-signal'
+    assert icon in line
+    for name in ('core.js', 'tab-internal.js'):
+        assert icon in _js(name), '%s uses a different icon for the same thing' % name

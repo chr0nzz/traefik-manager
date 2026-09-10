@@ -27,7 +27,7 @@ async function refreshInternalTab() {
             return;
         }
         if (_allInternalRoutes.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-circles-four text-5xl block mb-3 opacity-30"></i><p class="font-medium">No Traefik internal routes found</p><p class="text-xs mt-1">Traefik serves these itself. The dashboard, API and ping live here</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-traffic-signal text-5xl block mb-3 opacity-30"></i><p class="font-medium">No Traefik internal routes found</p><p class="text-xs mt-1">Traefik serves these itself. The dashboard, API and ping live here</p></div>`;
             return;
         }
 
@@ -104,7 +104,7 @@ async function openInternalRouteDetail(idx) {
 
     document.getElementById('detailEditBtn').style.display = 'none';
 
-    const badge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-gear-six"></i> internal</span>`;
+    const badge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-traffic-signal"></i> internal</span>`;
 
     const appData = {
         id:           (r.name || '').split('@')[0],

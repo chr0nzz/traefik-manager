@@ -18,7 +18,7 @@ const SD_PROV = {
     zookeeper:         { g: 'ph-database',      tab: 'zookeeper' },
     http:              { g: 'ph-link',          tab: 'http_provider' },
     file:              { g: 'ph-file-text',     tab: 'services' },
-    internal:          { g: 'ph-gear-six',      tab: 'live' },
+    internal:          { g: 'ph-traffic-signal', tab: 'internal' },
 };
 
 const SD_CARD_META = {
@@ -476,7 +476,7 @@ function _sdEpGlyphs(ep, info) {
         g.push(['ph-bold ph-lock-simple-open', 'd-off',
             'No entry-point-level TLS, and no router on it reports TLS either']);
     }
-    if (info.internalOnly) g.push(['ph-bold ph-gear-six', 'd-off', 'Serves internal routers only']);
+    if (info.internalOnly) g.push(['ph-bold ph-traffic-signal', 'd-off', 'Serves internal routers only']);
     if (pp.length) g.push(['ph-bold ph-shield-check', 'd-off', 'PROXY protocol trusted from ' + pp.join(', ')]);
     return g.map(x => '<i class="' + x[0] + ' d-glyph ' + x[1] + '" title="' + _esc(x[2]) + '"></i>').join('');
 }

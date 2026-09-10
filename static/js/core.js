@@ -73,7 +73,7 @@ const TAB_DEFS = [
     { id: 'etcd',          label: 'etcd',            icon: 'ph-database' },
     { id: 'consul',        label: 'Consul KV',       icon: 'ph-database' },
     { id: 'zookeeper',     label: 'ZooKeeper',       icon: 'ph-database' },
-    { id: 'internal',      label: 'Internal',        icon: 'ph-gear-six' },
+    { id: 'internal',      label: 'Internal',        icon: 'ph-traffic-signal' },
     { id: 'http_provider', label: 'HTTP Provider',   icon: 'ph-link' },
     { id: 'file_external', label: 'File (external)', icon: 'ph-file-text' },
 ];
