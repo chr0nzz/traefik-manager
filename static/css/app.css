@@ -371,6 +371,16 @@ html.tm-compact-stats .sig-root .sig-ep-n { font-size: 12px; }
     .sig-root .sig-card .lg-pct { display: block; }
 }
 @container sigstats (min-width: 560px) { .sig-root .sig-grid > .lg-wide { grid-column: span 2; } }
+@container sigstats (min-width: 1080px) {
+    .sig-root #csGrid > .lg-wide { grid-column: span 1; }
+    .sig-root #csGrid > [data-card="scenarios"].lg-wide { grid-column: span 2; }
+}
+@container sigstats (min-width: 560px) {
+    html.tm-compact-stats .sig-root #csGrid > .lg-wide,
+    .sig-root .sig-compact #csGrid > .lg-wide { grid-column: span 1; }
+    html.tm-compact-stats .sig-root #csGrid > [data-card="scenarios"].lg-wide,
+    .sig-root .sig-compact #csGrid > [data-card="scenarios"].lg-wide { grid-column: span 2; }
+}
 
 .sig-root .sig-compact .sig-grid > .lg-wide,
 html.tm-compact-stats .sig-root .sig-grid > .lg-wide { grid-column: span 2; }
