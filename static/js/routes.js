@@ -670,7 +670,11 @@ async function refreshRoutes() {
             return;
         }
         const data = await res.json();
-        if (data.services) window._tmServices = data.services;
+        if (data.services) {
+            const keep = (window._tmServices || {}).live;
+            window._tmServices = Object.assign({ live: keep || { http: [], tcp: [], udp: [] } }, data.services);
+            if (!keep) window._tmServices = null;
+        }
         renderRouteGrid(data.apps || []);
         renderMwGrid(data.middlewares || []);
         loadOverviewStats();

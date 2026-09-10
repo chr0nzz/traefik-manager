@@ -131,3 +131,19 @@ def test_the_internal_tab_exists_and_is_read_only():
     assert 'internal' in settings_mod.OPTIONAL_TABS, 'it must be toggleable like the other provider tabs'
     idx = open(os.path.join(root, 'templates', 'index.html'), encoding='utf-8').read()
     assert 'tabs/tab_internal.html' in idx
+
+
+def test_a_route_refresh_does_not_wipe_the_provider_services():
+    js = _js('routes.js')
+    at = js.index('if (data.services)')
+    block = js[at:at + 400]
+    assert '.live' in block, \
+        'refreshRoutes overwriting the cache with the file only shape drops every provider service from the picker'
+
+
+def test_the_service_list_follows_the_selected_agent():
+    js = _js('routes.js')
+    ensure = js[js.index('async function _ensureServicesList'):js.index('async function _populateServiceRefSelect')]
+    assert "agentFetch(" in ensure, 'the live list must come from the agent that is selected'
+    assert "_activeAgent ? '/api/agents/'" in ensure, 'the config list must come from that agent too'
+    assert 'window._tmServices = null' in js, 'switching context has to drop the cache'

@@ -563,7 +563,7 @@ function _tmMwCard(mw, showCf) {
                        : chained ? 'used in a chain' : 'unused';
     const yaml = String(mw.yaml || '').split('\n').slice(0, 4).join('\n');
     const rail = `<span class="tm-rail tm-rail-sm" onclick="event.stopPropagation()">` +
-        (_faNeedsLimit(mw.yaml) ? `<button type="button" class="tm-btn" title="No response size limit set - Traefik 3.7 warns about this. Click to add one" data-mw='${mwJson}' onclick="event.stopPropagation();addFaLimit(this)"><i class="ph-bold ph-warning" style="color:var(--amber)"></i></button>` : '') +
+        (_faNeedsLimit(mw.yaml) ? `<button type="button" class="tm-btn" title="No response size limit set - Traefik 3.7 warns about this. Click to add one" data-mw='${mwJson}' onclick="event.stopPropagation();addFaLimit(this)"><i class="ph-bold ph-warning" style="color:var(--yellow)"></i></button>` : '') +
         `<button type="button" class="tm-btn" title="Edit" data-mw='${mwJson}' onclick="event.stopPropagation();handleMwEdit(this)"><i class="ph-bold ph-pencil-simple"></i></button>` +
         `<button type="button" class="tm-btn" title="Delete" onclick="event.stopPropagation();deleteMw(${_jsArg(mw.name)}${cfArg})"><i class="ph-bold ph-trash"></i></button>` +
         '</span>';

@@ -309,3 +309,34 @@ def test_an_agent_middleware_obeys_the_same_name_rule(client, monkeypatch):
                   middlewareContent=body, agent_id='a1')
     assert r.status_code < 400, r.get_data(as_text=True)[:200]
     assert 'xxx (yyy)' in _mws(fake)
+
+
+def test_an_agent_route_naming_an_internal_service_is_listed(client, monkeypatch):
+    fake = _install(monkeypatch)
+    fake.files['dynamic.yml'] = {'http': {'routers': {
+        'redir': {'rule': 'Host(`r.example.com`)', 'service': 'noop@internal'},
+        'dash': {'rule': 'Host(`d.example.com`)', 'service': 'api@internal'}},
+        'services': {}}}
+    data = client.get('/api/agents/a1/routes', headers=HDR).get_json()
+    names = [a['name'] for a in data['apps']]
+    assert 'redir' in names and 'dash' in names, \
+        'the agent route list must match the host rule: your file, your route (%r)' % names
+
+
+def test_the_host_and_the_agent_agree_on_internal_services(client, monkeypatch):
+    from conftest import write_config
+    write_config("""
+http:
+  routers:
+    redir:
+      rule: Host(`r.example.com`)
+      service: noop@internal
+  services: {}
+""")
+    host = [a['name'] for a in client.get('/api/routes', headers=HDR).get_json()['apps']]
+    fake = _install(monkeypatch)
+    fake.files['dynamic.yml'] = {'http': {'routers': {
+        'redir': {'rule': 'Host(`r.example.com`)', 'service': 'noop@internal'}}, 'services': {}}}
+    agent = [a['name'] for a in client.get('/api/agents/a1/routes', headers=HDR).get_json()['apps']]
+    assert ('redir' in host) == ('redir' in agent) is True, \
+        'host %r and agent %r must not drift' % (host, agent)
