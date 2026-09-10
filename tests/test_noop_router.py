@@ -29,7 +29,7 @@ def test_a_noop_router_is_listed_instead_of_silently_dropped(client):
     assert app['target'] == 'noop@internal', 'a backendless route should say so, not read N/A'
 
 
-def test_traefiks_other_internal_services_stay_hidden(client):
+def test_a_route_you_wrote_is_listed_whatever_service_it_names(client):
     write_config("""
 http:
   routers:
@@ -39,7 +39,13 @@ http:
   services: {}
 """)
     names = [a['name'] for a in client.get('/api/routes', headers=HDR).get_json()['apps']]
-    assert 'dash' not in names, 'only noop is meant to become visible'
+    assert 'dash' in names, 'a router in your own config file must not be hidden by the service it names'
+
+
+def test_traefiks_own_routers_are_not_in_the_routes_list(client):
+    names = [a['name'] for a in client.get('/api/routes', headers=HDR).get_json()['apps']]
+    assert not [n for n in names if str(n).endswith('@internal')], \
+        'Traefik generates those, they belong in the Internal tab: %r' % names
 
 
 def test_a_noop_router_survives_an_edit(client):
@@ -91,3 +97,37 @@ def test_a_redirect_is_plain_up_when_there_is_no_backend_to_verify():
     r = reachability.probe('https://r.example.com', '', ssrf=lambda u: True, head=head, verify_backend=False)
     assert r['ok'] is True and 'unverified' not in r, r
     assert len(calls) == 1, 'nothing else should be probed'
+
+
+def _js(name):
+    import os
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return open(os.path.join(root, 'static', 'js', name), encoding='utf-8').read()
+
+
+def test_the_picker_offers_every_providers_services():
+    js = _js('routes.js')
+    body = js[js.index('async function _populateServiceRefSelect'):js.index('function _updateRefTarget')]
+    assert 'This config' in body, 'your own services must stay grouped and first'
+    assert '(read only)' in body, 'a service from a provider is not editable here and should say so'
+    assert 'noop@internal' in body and "proto === 'http'" in body, \
+        'noop is HTTP only and must be offered even when the Traefik API is down'
+    ensure = js[js.index('async function _ensureServicesList'):js.index('async function _populateServiceRefSelect')]
+    assert "agentFetch('/api/traefik/services')" in ensure, \
+        'the live list is what carries services from other providers, same as middlewares'
+    assert "sv.provider !== 'file'" in ensure, 'file services already come from the config, do not list them twice'
+
+
+def test_the_internal_tab_exists_and_is_read_only():
+    js = _js('tab-internal.js')
+    assert "getProvider(r) === 'internal'" in js
+    assert "document.getElementById('detailEditBtn').style.display = 'none'" in js, \
+        'Traefik owns these, they must not offer an edit button'
+    import os
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    core = open(os.path.join(root, 'static', 'js', 'core.js'), encoding='utf-8').read()
+    assert "'internal'" in core and "refreshInternalTab()" in core, 'the tab is never reachable'
+    from core import settings as settings_mod
+    assert 'internal' in settings_mod.OPTIONAL_TABS, 'it must be toggleable like the other provider tabs'
+    idx = open(os.path.join(root, 'templates', 'index.html'), encoding='utf-8').read()
+    assert 'tabs/tab_internal.html' in idx

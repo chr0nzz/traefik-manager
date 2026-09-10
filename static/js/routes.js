@@ -172,13 +172,25 @@ function setServiceRefMode(proto, on, opts) {
 
 async function _ensureServicesList() {
     if (window._tmServices) return window._tmServices;
+    const out = { http: [], tcp: [], udp: [], live: { http: [], tcp: [], udp: [] } };
+    try {
+        const live = await agentFetch('/api/traefik/services').then(r => r.json());
+        ['http', 'tcp', 'udp'].forEach(pr => {
+            out.live[pr] = (live[pr] || []).map(sv => ({
+                name: String(sv.name || ''),
+                provider: sv.provider || String(sv.name || '').split('@')[1] || ''
+            })).filter(sv => sv.name && sv.provider && sv.provider !== 'file');
+        });
+    } catch (e) {}
     try {
         const url = _activeAgent ? '/api/agents/' + _activeAgent.id + '/routes' : '/api/routes';
         const res = await fetch(url, { headers: { 'X-Requested-With': 'fetch' } });
         const data = await res.json();
-        window._tmServices = data.services || { http: [], tcp: [], udp: [] };
+        const own = data.services || { http: [], tcp: [], udp: [] };
+        ['http', 'tcp', 'udp'].forEach(pr => { out[pr] = own[pr] || []; });
+        window._tmServices = out;
     } catch (e) {
-        window._tmServices = { http: [], tcp: [], udp: [] };
+        window._tmServices = out;
     }
     return window._tmServices;
 }
@@ -186,14 +198,24 @@ async function _ensureServicesList() {
 async function _populateServiceRefSelect(proto, selected) {
     const sel = _svcRefSelect(proto);
     if (!sel) return;
-    const svcs = (await _ensureServicesList())[proto] || [];
-    sel.innerHTML = svcs.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('');
-    if (proto === 'http') {
-        sel.insertAdjacentHTML('beforeend',
-            `<option value="noop@internal">noop@internal (no backend, middleware only)</option>`);
+    const data = await _ensureServicesList();
+    const own  = data[proto] || [];
+    const live = ((data.live || {})[proto] || []);
+    const groups = {};
+    live.forEach(sv => { (groups[sv.provider] = groups[sv.provider] || []).push(sv.name); });
+    if (proto === 'http' && !(groups.internal || []).includes('noop@internal')) {
+        groups.internal = (groups.internal || []).concat('noop@internal');
     }
-    if (selected && !svcs.includes(selected)) {
-        sel.insertAdjacentHTML('afterbegin', `<option value="${_esc(selected)}">${_esc(selected)}</option>`);
+    const opt = n => `<option value="${_esc(n)}">${_esc(n)}</option>`;
+    let html = own.length ? `<optgroup label="This config">${own.map(opt).join('')}</optgroup>` : '';
+    Object.keys(groups).sort().forEach(pr => {
+        const names = [...new Set(groups[pr])].sort();
+        html += `<optgroup label="${_esc(pr)} (read only)">${names.map(opt).join('')}</optgroup>`;
+    });
+    sel.innerHTML = html;
+    const known = own.concat(live.map(sv => sv.name)).concat(groups.internal || []);
+    if (selected && !known.includes(selected)) {
+        sel.insertAdjacentHTML('afterbegin', opt(selected));
     }
     if (selected) sel.value = selected;
     _updateRefTarget(proto);

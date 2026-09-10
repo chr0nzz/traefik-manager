@@ -46,7 +46,7 @@ async function _recordNotification(msg, type, category) {
     } catch (e) {}
 }
 
-const OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'certs', 'tls', 'crowdsec', 'plugins', 'logs', 'static'];
+const OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'internal', 'certs', 'tls', 'crowdsec', 'plugins', 'logs', 'static'];
 
 let _visibleTabsCache = {};
 let _localTabsCache   = {};
@@ -73,6 +73,7 @@ const TAB_DEFS = [
     { id: 'etcd',          label: 'etcd',            icon: 'ph-database' },
     { id: 'consul',        label: 'Consul KV',       icon: 'ph-database' },
     { id: 'zookeeper',     label: 'ZooKeeper',       icon: 'ph-database' },
+    { id: 'internal',      label: 'Internal',        icon: 'ph-gear-six' },
     { id: 'http_provider', label: 'HTTP Provider',   icon: 'ph-link' },
     { id: 'file_external', label: 'File (external)', icon: 'ph-file-text' },
 ];
@@ -93,7 +94,7 @@ const SIDE_NAV_GROUPS = [
     { label: 'Traffic',        tabs: ['dashboard', 'services', 'middlewares', 'live', 'routemap'] },
     { label: 'Observability',  tabs: ['logs', 'crowdsec'] },
     { label: 'Infrastructure', tabs: ['certs', 'tls', 'plugins', 'static'] },
-    { label: 'Providers',      tabs: ['docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external'] },
+    { label: 'Providers',      tabs: ['docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'internal'] },
 ];
 
 function _tabVisible(tab) {
@@ -316,6 +317,7 @@ function switchTab(tab) {
     if (tab === 'consul')        refreshConsulTab();
     if (tab === 'zookeeper')     refreshZookeeperTab();
     if (tab === 'http_provider') refreshHttpProviderTab();
+    if (tab === 'internal')      refreshInternalTab();
     if (tab === 'file_external') refreshFileExternalTab();
     if (tab === 'certs')         refreshCertsTab();
     if (tab === 'tls')           refreshTlsOptionsTab();

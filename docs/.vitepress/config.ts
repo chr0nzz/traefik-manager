@@ -122,6 +122,7 @@ export default defineConfig({
           { text: 'ZooKeeper', link: '/tab-zookeeper' },
           { text: 'HTTP Provider', link: '/tab-http_provider' },
           { text: 'File (External)', link: '/tab-file_external' },
+          { text: 'Internal', link: '/tab-internal' },
         ],
       },
       {
