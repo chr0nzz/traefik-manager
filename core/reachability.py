@@ -115,7 +115,7 @@ def pool_result(pool: dict) -> dict:
     return out
 
 
-def probe(url: str, fallback: str = '', ssrf=None, head=None) -> dict:
+def probe(url: str, fallback: str = '', ssrf=None, head=None, verify_backend: bool = True) -> dict:
     ssrf = ssrf or ssrf_ok
     head = head or requests.head
 
@@ -134,7 +134,7 @@ def probe(url: str, fallback: str = '', ssrf=None, head=None) -> dict:
         return {'ok': False, 'latency_ms': ms, 'status_code': code,
                 'error': f'The proxy answered {code}, the backend is not reachable'}
 
-    auth_host = redirect_target_host(url, code, location)
+    auth_host = redirect_target_host(url, code, location) if verify_backend else ''
     if auth_host:
         verdict, alt, why = _backend(fallback, ssrf, head)
         if alt:

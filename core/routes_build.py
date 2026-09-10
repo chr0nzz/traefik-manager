@@ -295,6 +295,8 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
                 target_url = _server_field(servers, 'url', 'Unknown')
         if target_url == 'N/A' and api_svc_urls:
             target_url = api_svc_urls.get(f'http:{svc_key}', 'N/A')
+        if target_url == 'N/A' and str(svc_name).endswith('@internal'):
+            target_url = str(svc_name)
         app_id = f"{config_file}::{rname}" if (env.MULTI_CONFIG and config_file) else rname
         tls_http = rdata.get('tls', {})
         tls_on   = 'tls' in rdata and rdata.get('tls') is not False

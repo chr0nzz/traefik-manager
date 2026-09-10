@@ -6,7 +6,7 @@ const ATK_EV_CAP       = 400;
 const ATK_SUBSCRIBED   = { capi: 1, lists: 1 };
 const ATK_BY_HAND      = { cscli: 1, manual: 1 };
 let _csDecStale = '';
-const ATK_ALERT_ONLY   = { asn: 1, cc: 1, uri: 1, user: 1, agent: 1, verb: 1, outcome: 1 };
+const ATK_ALERT_ONLY   = { asn: 1, cc: 1, uri: 1, user: 1, agent: 1, verb: 1, router: 1, host: 1, outcome: 1 };
 const ATK_PULL_SCOPE   = /^(capi|lists)$/i;
 const ATK_DEC_ONLY     = { origin: 1, type: 1 };
 
@@ -32,7 +32,7 @@ let _csBanType    = 'ban';
 let _csAgeTimer   = null;
 let _csSearchTimer = null;
 
-const _atkFacet = { scenario: '', ip: '', asn: '', cc: '', uri: '', user: '', agent: '', verb: '', origin: '', type: '', outcome: '' };
+const _atkFacet = { scenario: '', ip: '', asn: '', cc: '', uri: '', user: '', agent: '', verb: '', router: '', host: '', origin: '', type: '', outcome: '' };
 let _atkView  = 'alerts';
 let _atkPage  = 1;
 let _atkOpen  = '';
@@ -138,6 +138,8 @@ function _atkParseAlert(a, i) {
         range: s.range || '',
         lat: (typeof s.latitude === 'number') ? s.latitude : null,
         lon: (typeof s.longitude === 'number') ? s.longitude : null,
+        routers: meta.traefik_router_name_leaf || meta.traefik_router_name || [],
+        hosts: meta.target_fqdn || [],
         uris: meta.target_uri || [],
         users: meta.target_user || [],
         verbs: meta.method || [],
@@ -446,6 +448,8 @@ function _atkMatchAlert(a, q, skip) {
     if (on('cc') && a.cc !== f.cc) return false;
     if (on('uri') && a.uris.indexOf(f.uri) < 0) return false;
     if (on('user') && a.users.indexOf(f.user) < 0) return false;
+    if (on('router') && a.routers.indexOf(f.router) < 0) return false;
+    if (on('host') && a.hosts.indexOf(f.host) < 0) return false;
     if (on('verb') && a.verbs.indexOf(f.verb) < 0) return false;
     if (on('agent') && a.uas.map(_uaShort).indexOf(f.agent) < 0) return false;
     if (on('outcome')) {
@@ -456,7 +460,8 @@ function _atkMatchAlert(a, q, skip) {
     }
     if (q) {
         const hay = (a.ip + ' ' + a.scenario + ' ' + a.asName + ' ' + a.cc + ' ' + a.message + ' ' + a.machine + ' '
-            + a.uris.join(' ') + ' ' + a.uas.join(' ') + ' ' + a.users.join(' ') + ' ' + a.range).toLowerCase();
+            + a.uris.join(' ') + ' ' + a.uas.join(' ') + ' ' + a.users.join(' ') + ' ' + a.range + ' '
+            + a.routers.join(' ') + ' ' + a.hosts.join(' ')).toLowerCase();
         if (hay.indexOf(q) < 0) return false;
     }
     return true;
@@ -844,6 +849,67 @@ function _atkCardScenarios(d) {
             + _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-lightning', n: list.length - leaky.length, label: 'trigger', tag: 'span',
                 tip: 'Trigger buckets have capacity 0 and fire on the first matching event. Capacity and leakspeed carry no meaning for these' }),
         sub: _atkSub('worst <b>' + _esc(_scenShort(list[0].key)) + '</b>', _sdNum(evTotal) + ' events rolled up'),
+        body: rb.body, tail: rb.tail
+    });
+}
+
+function _atkKnownRoute(name) {
+    const bare = String(name || '').split('@')[0];
+    if (!bare) return '';
+    const pool = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
+    const hit = pool.find(x => String(x.name || '').split('@')[0] === bare);
+    return hit ? String(hit.name) : '';
+}
+
+function _atkCardRoutes(d) {
+    const key = 'routes';
+    const accent = 'var(--purple)';
+    const ic = 'ph-fill ph-arrows-split';
+    const title = 'Targeted routes';
+    if (!d.alertsOk) {
+        return _atkBlindCard({
+            key: key, wide: true, accent: accent, ic: ic, title: title,
+            state: 'needs a watcher login', sub: 'routers live in <b>alert.meta[]</b>',
+            note: 'CrowdSec writes <code>traefik_router_name</code> and <code>target_fqdn</code> into an alert only when they are listed in its context file. '
+                + 'They name the router and the host an attacker went through. ' + ATK_MACHINE_NOTE,
+            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: 'Open Settings, System Monitoring, CrowdSec'
+        });
+    }
+    if (!d.retained) {
+        return _atkCalmCard(key, accent, ic, title, true, 'nothing was aimed at',
+            'Routers come from alert-level <code>meta[]</code>. No scenario fired, so nothing wrote one.',
+            _atkOwnFlag(d.own));
+    }
+    if (!d.alerts.length) {
+        return _atkFilteredCard(key, accent, ic, title, true, d.retained);
+    }
+    if (!d.alerts.some(a => a.routers.length || a.hosts.length)) {
+        return _atkCalmCard(key, accent, ic, title, true, 'no router in the evidence',
+            'Add <code>traefik_router_name</code> and <code>target_fqdn</code> to your CrowdSec context file and they appear here, '
+            + 'naming the route each attack came through.', '');
+    }
+    const list = _atkRank(d.alerts, a => a.routers, { weight: a => a.events, kind: a => a.hosts[0] || '' });
+    const hosts = _atkRank(d.alerts, a => a.hosts, { weight: a => a.events });
+    const withR = d.alerts.filter(a => a.routers.length).length;
+    const rb = _atkRankBody(list, {
+        noun: 'routers', unitN: 'hits',
+        label: e => String(e.key).split('@')[0],
+        kindLabel: e => Array.from(e.kinds.keys())[0] || '',
+        glyph: e => _atkKnownRoute(e.key)
+            ? '<i class="ph-bold ph-arrows-split"></i>'
+            : '<i class="ph-bold ph-question"></i>',
+        go: e => _atkSpec({ router: e.key }),
+        tipName: e => _atkKnownRoute(e.key) ? e.key : e.key + ', no route of that name here'
+    });
+    return _atkCard({
+        key: key, cls: 'lg-wide', accent: accent, ic: ic, title: title,
+        total: _sdNum(list.length) + '<span class="lg-unit">routers</span>',
+        flags: hosts.slice(0, 3).map(h => _atkFlag({
+            cls: 'd-blue', ic: 'ph-bold ph-globe', n: h.n, label: h.key,
+            go: _atkSpec({ host: h.key }), tip: _sdNum(h.n) + ' alerts named ' + h.key + '. Click to filter the evidence below'
+        })).join(''),
+        sub: _atkSub(list.length ? 'most wanted <b>' + _esc(String(list[0].key).split('@')[0]) + '</b>' : 'no routers',
+            _sdNum(withR) + ' of ' + _sdNum(d.alerts.length) + ' alerts name a router'),
         body: rb.body, tail: rb.tail
     });
 }
@@ -1301,6 +1367,17 @@ function _atkAlertOpen(a) {
         + ' <span class="atk-none">events_count is the bucket counter and is normally larger than the sampled events array the LAPI returns</span>');
     push('window', _esc(_atkStamp(a.start) + ' to ' + _atkStamp(a.stop))
         + ' <span class="atk-none">' + _esc(_lgSpanTxt(Math.max(0, a.stop - a.start))) + '</span>');
+    if (a.routers.length) {
+        const known = a.routers.map(rn => _atkKnownRoute(rn)).filter(Boolean);
+        push('router', a.routers.map(rn => _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-arrows-split', n: '', label: String(rn).split('@')[0],
+                go: _atkSpec({ router: rn }), tip: 'Filter the evidence to this router' })).join(' ')
+            + known.map(rn => ' <button type="button" class="route-deep-chip" onclick="_openRouteByName(' + _jsArg(rn) + ')" title="Open this route">'
+                + '<i class="ph-bold ph-arrow-square-out"></i>open</button>').join(''));
+    }
+    if (a.hosts.length) {
+        push('host', a.hosts.map(h => _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-globe', n: '', label: h,
+            go: _atkSpec({ host: h }), tip: 'Filter the evidence to this host' })).join(' '));
+    }
     if (a.uris.length) {
         push('paths', a.uris.map(u => _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-file-dashed', n: '', label: u,
             go: _atkSpec({ uri: u }), tip: 'Filter the evidence to this path' })).join(' '));
@@ -1536,7 +1613,7 @@ function _csRender() {
     } else {
         const cards = [
             _atkCardSources(d), _atkCardNetworks(d), _atkCardScenarios(d),
-            _atkCardTargets(d), _atkCardAgents(d), _atkCardBans(d),
+            _atkCardTargets(d), _atkCardRoutes(d), _atkCardAgents(d), _atkCardBans(d),
         ].join('');
         geo = _atkGeoPanel(_csAlerts.filter(a => _atkMatchAlert(a, _atkQuery.toLowerCase(), { cc: 1 })));
         inner += '<div class="sig-grid" id="csGrid">' + cards + '</div>'

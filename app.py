@@ -1490,6 +1490,14 @@ def api_service_ownership(name):
     return jsonify({'ok': True, 'owned': adopt})
 
 
+NOOP_SERVICE = 'noop@internal'
+
+
+def _hidden_internal(app: dict) -> bool:
+    svc = str(app.get('service_name') or '')
+    return svc.endswith('@internal') and svc != NOOP_SERVICE
+
+
 def _disabled_router_name(key: str) -> str:
     return key.split('::', 1)[1] if '::' in key else key
 
@@ -5066,7 +5074,7 @@ def _collect_file_services(configs):
 @login_required
 def api_routes():
     apps, middlewares = _build_all_apps(include_external=False)
-    apps = [a for a in apps if not (a.get('service_name') or '').endswith('@internal')]
+    apps = [a for a in apps if not _hidden_internal(a)]
     return jsonify({'apps': apps, 'middlewares': middlewares,
                     'configErrors': _get_config_parse_errors(),
                     'services': _collect_file_services(load_config(_p) for _p in env.CONFIG_PATHS)})
@@ -5405,7 +5413,7 @@ def _static_cert_resolvers():
 def index():
     settings    = load_settings()
     apps, middlewares = _build_all_apps(include_external=False)
-    apps = [a for a in apps if not (a.get('service_name') or '').endswith('@internal')]
+    apps = [a for a in apps if not _hidden_internal(a)]
     auth_on    = _auth_required()
     _ack       = bool(load_settings().get('auth_external_ack'))
     no_auth    = not _auth_required() and not _ack

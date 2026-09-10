@@ -96,6 +96,10 @@ def service_health(app: dict, index: dict):
     return index.get(name) or index.get(cfg_mod.svc_key(name))
 
 
+def is_internal(app: dict) -> bool:
+    return str(app.get('service_name') or '').endswith('@internal')
+
+
 def _fallback(app: dict) -> str:
     target = str(app.get('target') or '')
     return target if target.startswith(('http://', 'https://')) else ''
@@ -131,7 +135,10 @@ def observe(app: dict, url: str, index: dict, probe=None, server_probe=None) -> 
         if direct['down_servers']:
             obs['down_servers'] = direct['down_servers']
         return obs
-    result = (probe or reachability.probe)(url, _fallback(app))
+    if is_internal(app):
+        result = (probe or reachability.probe)(url, '', verify_backend=False)
+    else:
+        result = (probe or reachability.probe)(url, _fallback(app))
     obs = {'state': 'up' if result.get('ok') else 'down', 'source': 'ping'}
     for field in ('latency_ms', 'status_code', 'error', 'via_target', 'unverified', 'note'):
         if result.get(field) is not None:

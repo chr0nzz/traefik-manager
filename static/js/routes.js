@@ -188,6 +188,10 @@ async function _populateServiceRefSelect(proto, selected) {
     if (!sel) return;
     const svcs = (await _ensureServicesList())[proto] || [];
     sel.innerHTML = svcs.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('');
+    if (proto === 'http') {
+        sel.insertAdjacentHTML('beforeend',
+            `<option value="noop@internal">noop@internal (no backend, middleware only)</option>`);
+    }
     if (selected && !svcs.includes(selected)) {
         sel.insertAdjacentHTML('afterbegin', `<option value="${_esc(selected)}">${_esc(selected)}</option>`);
     }

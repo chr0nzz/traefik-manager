@@ -36,6 +36,10 @@ The config file chip appears in the footer only when your routes span more than 
 
 ## Detail panel
 
+A route can point at **noop@internal** instead of a backend, for a router whose whole job is a
+middleware, such as a redirect. Choose **Use a service** and pick it from the list. Traefik answers
+these itself, so there is no backend to check and the route is not health checked. It is HTTP only.
+
 Route, service and middleware names accept anything Traefik does, except `@ / , : { }` and names over 100 characters. Spaces and brackets are fine.
 
 Click a card, or **More - View Details**. The panel shows a traffic flow diagram (entry points, router, service), then Router Details, TLS, Middlewares and Service sections, filled from the Traefik API where it is reachable. Middleware chips open the middleware they name.

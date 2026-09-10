@@ -28,7 +28,7 @@ Everything lives in one panel, rendered from a single state:
 
 1. **Verdict** - one plain-language line with the headline numbers next to it, and a red or yellow spine when something is wrong.
 2. **Window row** - how many alerts the LAPI still retains, the span they cover, how many bans are in force, any active filters, and a scope note that is honest about what is being summarised.
-3. **Six cards** - the attack narrative, left to right.
+3. **Seven cards** - the attack narrative, left to right.
 4. **Runtime row** - six capability facts, green when present and muted when not.
 5. **Geography** - the shared map and country list, fed from what CrowdSec already resolved.
 6. **Attack evidence** - the alert feed, paginated, with a row detail panel.
@@ -45,6 +45,7 @@ The **compact stat cards** setting (**Settings → Interface**) applies here exa
 | **Networks** | distinct ASNs | Ranked by `source.as_name`, with the AS number as the row kind and a country flag glyph. A `ranges` flag counts distinct `source.range` CIDRs. |
 | **Scenarios** | alerts | Ranked on **alerts**, not decisions. The row kind carries the real bucket shape, `leaky 10/10s` or `trigger`. Flags count leaky against trigger buckets. |
 | **Targeted paths** | distinct paths | URIs from the alert-level `meta[]`. The verb flags (`GET`, `POST`, ...) are deep links. On an SSH-only host the same card becomes **Targeted accounts** and ranks `target_user` instead. |
+| **Targeted routes** | distinct routers | Which Traefik router and host an attack came through, from `traefik_router_name_leaf` (or the full chain) and `target_fqdn` in the alert `meta[]`. The host flags are deep links. A row whose router matches a route you have gets a route glyph; one that does not gets a question mark. See [Context](#context) below, since CrowdSec only writes these when you ask it to. |
 | **Tooling** | distinct user agents | Shortened product tokens (`curl/8.5.0`, `masscan/1.3`). The row kind separates a real `tool` from a copied `browser string`. |
 | **Bans in force** | active decisions | The doorway to the decisions view. The strip covers every decision grouped by origin: solid for your own detections, yellow for hand-added, rings for subscribed. The footer is four deep links, plus static `other` and `wide` items when a decision falls outside the four known origins or is Range or Country scoped. |
 
@@ -65,11 +66,13 @@ Every count is clickable and filters the feed below. Filters combine with AND, c
 | An account row on an SSH-only host | `user` |
 | A verb flag | `verb` |
 | A tooling row | `agent` |
+| A targeted route row, or **router** in a row detail | `router` |
+| A host flag, or **host** in a row detail | `host` |
 | `crowdsec` / `by hand` / `CAPI` / `lists` | `origin`, and switches to the decisions view |
 | `ban` / `captcha` on the Bans card | `type`, and switches to the decisions view |
 | `local detections only` in the window row | `origin=subscribed` in the decisions view, the CAPI and blocklist rows the cards leave out |
 
-`origin` and `type` only exist on decisions, so following one switches the view automatically unless the link named a view itself. `asn`, `cc`, `uri`, `verb`, `user`, `agent` and `outcome` only exist on alerts; if one is still active while you are looking at decisions the window row says so rather than silently dropping it.
+`origin` and `type` only exist on decisions, so following one switches the view automatically unless the link named a view itself. `asn`, `cc`, `uri`, `verb`, `user`, `agent`, `router`, `host` and `outcome` only exist on alerts; if one is still active while you are looking at decisions the window row says so rather than silently dropping it.
 
 ### Attack evidence
 
@@ -103,6 +106,31 @@ Below the form, **Custom Decisions** lists every decision you added by hand, eac
 - **Capacity and leakspeed only mean something above zero.** A trigger bucket has capacity 0 and fires on the first matching event, so the burst-versus-prober read does not apply to it. The row kind says `trigger` rather than pretending otherwise.
 - **`duration` counts down live.** It is not the length originally requested, so a `4h` ban reads back as `3h57m11s`.
 - **Decisions carry no enrichment.** `/v1/decisions` returns seven fields: `value`, `type`, `scope`, `origin`, `scenario`, `duration`, `id`. No country, no ASN, no events, no time.
+
+## Context
+
+The alert `meta[]` is the only place this tab can learn what an attacker went after, and CrowdSec
+writes into it only the fields listed in its context file, normally
+`/etc/crowdsec/console/context.yaml`. That is why the Targeted paths, Tooling and Targeted routes
+cards can be empty on a working setup: nothing is broken, the fields were never asked for.
+
+To name the router and host in the evidence, add:
+
+```yaml
+traefik_router_name_leaf:
+  - evt.Meta.traefik_router_name_leaf
+traefik_router_name:
+  - evt.Meta.traefik_router_name
+target_fqdn:
+  - evt.Meta.target_fqdn
+```
+
+The `crowdsecurity/traefik-logs` parser fills these from Traefik's access log. It also exposes
+`traefik_router_name_root` and `traefik_router_name_intermediate` when a request passes through a
+chain of routers. Reload CrowdSec after editing, and note that only alerts raised after the change
+carry the new fields.
+
+Where a router matches a route in Traefik Manager, the row detail offers a link that opens it.
 
 ## Geolocation
 
