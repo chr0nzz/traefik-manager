@@ -353,7 +353,7 @@ function _initRouteYamlMonaco(content) {
 
 async function openRouteYamlEditor(id) {
     _routeYamlId = id;
-    const name = id.includes('::') ? id.split('::')[1] : id;
+    const name = id.includes('::') ? id.slice(id.indexOf('::') + 2) : id;
     const title = document.getElementById('routeYamlPopoutTitle');
     if (title) title.textContent = `Raw YAML - ${name}`;
     try {

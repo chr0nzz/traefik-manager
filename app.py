@@ -61,6 +61,7 @@ from core import notifications as _noti
 from core import notify_providers as _notify_providers
 from core import monitor as _monitor
 from core import reachability as _reach
+from core import names as _naming
 from core import route_health as _rh
 from core import updates as _updates
 from core import traefik as _trae
@@ -1489,7 +1490,8 @@ def api_service_ownership(name):
     return jsonify({'ok': True, 'owned': adopt})
 
 
-_SERVICE_NAME_RE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,62}$')
+def _disabled_router_name(key: str) -> str:
+    return key.split('::', 1)[1] if '::' in key else key
 
 
 def _service_routers_using(configs, name: str) -> list:
@@ -1644,8 +1646,9 @@ def api_service_save():
     original  = str(data.get('originalName') or '').strip()
     cfg_raw   = str(data.get('configFile') or '').strip()
     children  = data.get('children') or []
-    if not _SERVICE_NAME_RE.match(name):
-        return jsonify({'ok': False, 'error': 'Use letters, numbers, dots, dashes or underscores'}), 400
+    name_err = _naming.name_error(name)
+    if name_err:
+        return jsonify({'ok': False, 'error': name_err}), 400
     if kind not in _composite.TYPES + ('loadBalancer',):
         return jsonify({'ok': False,
                         'error': 'Choose load balancer, weighted, mirroring or failover'}), 400
@@ -1653,7 +1656,9 @@ def api_service_save():
         return jsonify({'ok': False,
                         'error': 'Failover takes two backends: the one that serves and the '
                                  'one that takes over'}), 400
-    block, owned, _names = _composite.build(name, kind, children)
+    hc_sent  = 'healthCheck' in data and kind == 'loadBalancer'
+    lb_extra = {'healthCheck': _healthcheck_block(data.get('healthCheck'))} if hc_sent else None
+    block, owned, _names = _composite.build(name, kind, children, lb_extra=lb_extra)
     if not block:
         return jsonify({'ok': False, 'error': 'Add at least one backend'}), 400
     clash = _stream_service_proto(name) or (_stream_service_proto(original) if original else '')
@@ -1716,7 +1721,17 @@ def api_service_save():
                                   else f"{_loop} already routes back to {name}, which would "
                                        f"make a cycle Traefik cannot load")}), 400
 
-    _composite.merge_into(section, name, block, owned)
+    if hc_sent:
+        _prev_def = section.get(original or name)
+        _prev_hc  = (_prev_def.get('loadBalancer') or {}).get('healthCheck') \
+            if isinstance(_prev_def, dict) and isinstance(_prev_def.get('loadBalancer'), dict) else None
+        _new_hc   = (block.get('loadBalancer') or {}).get('healthCheck')
+        if isinstance(_prev_hc, dict) and isinstance(_new_hc, dict):
+            for _k, _v in _prev_hc.items():
+                if _k not in _HC_KNOWN:
+                    _new_hc.setdefault(_k, _v)
+    _composite.merge_into(section, name, block, owned,
+                          extra_authored=('healthCheck',) if hc_sent else ())
     for gone in _composite.drop_orphan_children(section, name, set(owned)):
         ledger.pop(_svc_ledger_key(gone, agent_id), None)
     if kind in _composite.TYPES:
@@ -2146,6 +2161,9 @@ def api_route_ping():
     self_domain = (settings.get('self_route') or {}).get('domain', '').strip().lower()
     if self_domain and host.lower() == self_domain:
         return jsonify({'ok': True, 'latency_ms': 0, 'status_code': 200, 'self': True})
+    pool = _reach.pool_health(request.args.getlist('servers'), ssrf=_ssrf_ok, head=requests.head)
+    if pool:
+        return jsonify(_reach.pool_result(pool))
     return jsonify(_reach.probe(url, fallback, ssrf=_ssrf_ok, head=requests.head))
 
 def _apr1_hash(password: str, salt: str) -> str:
@@ -4751,7 +4769,7 @@ def _clean_duration(value):
         return ''
     if v.isdigit():
         return v + 's'
-    return v if re.match(r'^\d+(ms|s|m|h)$', v) else ''
+    return v if re.match(r'^(\d+(ms|s|m|h))+$', v) else ''
 
 
 def _backend_servers(rows, key, scheme_default='http'):
@@ -4788,6 +4806,11 @@ def _sticky_block(sticky):
     return {'cookie': cookie}
 
 
+_HC_DURATIONS = ('interval', 'unhealthyInterval', 'timeout')
+_HC_TEXT      = ('scheme', 'mode', 'hostname', 'method')
+_HC_KNOWN     = ('path', 'port', 'status', 'followRedirects', 'headers') + _HC_DURATIONS + _HC_TEXT
+
+
 def _healthcheck_block(hc):
     if not isinstance(hc, dict) or not hc.get('enabled'):
         return None
@@ -4795,10 +4818,25 @@ def _healthcheck_block(hc):
     if not path:
         return None
     block = {'path': path}
-    for field in ('interval', 'timeout'):
+    for field in _HC_DURATIONS:
         val = _clean_duration(hc.get(field))
         if val:
             block[field] = val
+    for field in _HC_TEXT:
+        val = str(hc.get(field) or '').strip()
+        if val:
+            block[field] = val
+    for field in ('port', 'status'):
+        val = str(hc.get(field) or '').strip()
+        if val.isdigit():
+            block[field] = int(val)
+    if hc.get('followRedirects') is False:
+        block['followRedirects'] = False
+    headers = hc.get('headers')
+    if isinstance(headers, dict):
+        clean = {str(k).strip(): str(v) for k, v in headers.items() if str(k).strip()}
+        if clean:
+            block['headers'] = clean
     return block
 
 
@@ -4851,7 +4889,7 @@ def _service_in_disabled_snapshots(target: str, exclude_router: str) -> bool:
     for key, snap in disabled.items():
         if not isinstance(snap, dict):
             continue
-        if str(key).split('::')[-1] == exclude_router:
+        if _disabled_router_name(str(key)) == exclude_router:
             continue
         router = snap.get('router')
         if isinstance(router, dict) and _svc_key(router.get('service', '')) == target:
@@ -4888,7 +4926,7 @@ def _disabled_key(disabled, full_id, plain_id, prefix=''):
     for key in disabled:
         if prefix and not key.startswith(prefix):
             continue
-        if key.split('::')[-1] == plain_id:
+        if _disabled_router_name(key) == plain_id:
             return key
     return None
 
@@ -5447,6 +5485,12 @@ def save_entry():
             if fetch:
                 return jsonify({'ok': False, 'message': 'Service name is required'}), 400
             flash("Service name is required", "error")
+            return redirect(url_for('index'))
+        svc_name_err = _naming.name_error(svc_name)
+        if svc_name_err:
+            if fetch:
+                return jsonify({'ok': False, 'message': svc_name_err}), 400
+            flash(svc_name_err, "error")
             return redirect(url_for('index'))
         if protocol not in ('http', 'tcp', 'udp'):
             if fetch:
@@ -6074,6 +6118,12 @@ def save_middleware():
             if fetch:
                 return jsonify({'ok': False, 'message': 'Middleware name is required'}), 400
             flash("Middleware name is required", "error")
+            return redirect(url_for('index'))
+        mw_name_err = _naming.name_error(mw_name)
+        if mw_name_err:
+            if fetch:
+                return jsonify({'ok': False, 'message': mw_name_err}), 400
+            flash(mw_name_err, "error")
             return redirect(url_for('index'))
         if not mw_content:
             if fetch:

@@ -46,8 +46,19 @@ copied, so changes to that service follow automatically. The generated children 
 the list and shown on their parent's card; searching reveals them.
 
 An HTTP `@file` service opened from its card or detail panel shows an **Edit** button, whoever
-wrote it. Editing keeps settings the form does not manage - `sticky`, `healthCheck`,
-`service.middlewares`, mirror body options - and only replaces what you changed. Change the name
+wrote it. Editing keeps settings the form does not manage - `sticky`, `service.middlewares`,
+mirror body options - and only replaces what you changed.
+
+### Health check
+
+A plain load balancer has a **Health check** section covering every field Traefik takes: path,
+interval, timeout, interval when down, method, expected status, scheme, port, host header, mode
+and headers. Only `path` is required.
+
+Without one, Traefik reports every server as up and keeps sending traffic to a dead one, so a pool
+of two or more servers with no health check carries a warning on its card that opens this section.
+The route form edits `path`, `interval` and `timeout` on its own service; the other fields set here
+survive a route save. Change the name
 in that form to rename the service: the old key and its generated children go, and the new name
 takes over their ownership.
 

@@ -222,7 +222,7 @@ function renderServicesTable() {
                         <div class="tm-title">${proto !== 'HTTP' ? `<span class="tm-proto tm-proto-${proto.toLowerCase()}">${proto}</span>` : ''}<span class="tm-name">${_esc(name)}</span></div>
                         <div class="tm-sub">${_esc(type || 'service')} \u00b7 ${_esc(provider)}${ownerName ? ' \u00b7 backend of ' + _esc(ownerName) : ''}</div>
                     </div>
-                    <span class="tm-rail tm-rail-sm" onclick="event.stopPropagation()"><button type="button" class="tm-btn" title="Details" onclick="event.stopPropagation();openSvcDetail(${globalIdx})"><i class="ph-bold ph-info"></i></button>${_svcEditable(s) ? `<button type="button" class="tm-btn" title="Edit" onclick="event.stopPropagation();openServiceModal(_allServices[${globalIdx}])"><i class="ph-bold ph-pencil-simple"></i></button>` : ''}</span>
+                    <span class="tm-rail tm-rail-sm" onclick="event.stopPropagation()">${_svcNeedsHealthCheck(s) ? `<button type="button" class="tm-btn" title="More than one server and no health check - Traefik reports them all as up and keeps sending traffic to a dead one. Click to add one" onclick="event.stopPropagation();openServiceModal(_allServices[${globalIdx}])"><i class="ph-bold ph-warning" style="color:var(--yellow)"></i></button>` : ''}<button type="button" class="tm-btn" title="Details" onclick="event.stopPropagation();openSvcDetail(${globalIdx})"><i class="ph-bold ph-info"></i></button>${_svcEditable(s) ? `<button type="button" class="tm-btn" title="Edit" onclick="event.stopPropagation();openServiceModal(_allServices[${globalIdx}])"><i class="ph-bold ph-pencil-simple"></i></button>` : ''}</span>
                 </div>
                 ${rows ? `<div class="tm-vals">${rows}</div>` : ''}
                 <div class="tm-foot"><span class="tm-meta">${meta}</span>${usedTxt ? `<span class="tm-cf">${_esc(usedTxt)}</span>` : ''}</div>
@@ -547,6 +547,83 @@ function closeSvcDetail() {
 
 let _svcRowSeq = 0;
 
+function toggleSvcHealth() {
+    const body = document.getElementById('svcHealthAdvBody');
+    const chev = document.getElementById('svcHealthChevron');
+    if (!body) return;
+    const open = body.style.display === 'none';
+    body.style.display = open ? '' : 'none';
+    if (chev) chev.className = 'ph-bold text-xs ' + (open ? 'ph-caret-down' : 'ph-caret-right');
+}
+
+function _svcHcSync() {
+    const on = !!document.getElementById('svcHcEnabled')?.checked;
+    const body = document.getElementById('svcHcBody');
+    if (body) body.style.display = on ? '' : 'none';
+}
+
+function addSvcHcHeader(data) {
+    const wrap = document.getElementById('svcHcHeaders');
+    if (!wrap) return;
+    const d = data || {};
+    const row = document.createElement('div');
+    row.className = 'svc-hc-hdr flex gap-2 mb-2';
+    row.innerHTML = '<input type="text" class="input-field svc-hc-k" placeholder="Header" value="' + _esc(d.k || '') + '">'
+        + '<input type="text" class="input-field svc-hc-v" placeholder="Value" value="' + _esc(d.v || '') + '">'
+        + '<button type="button" class="btn-secondary text-xs" style="height:32px;padding:0 10px" onclick="this.closest(\'.svc-hc-hdr\').remove()"><i class="ph-bold ph-x text-xs"></i></button>';
+    wrap.appendChild(row);
+}
+
+function _svcHcFill(hc) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = (v === undefined || v === null) ? '' : String(v); };
+    const on = !!(hc && hc.path);
+    const en = document.getElementById('svcHcEnabled');
+    if (en) en.checked = on;
+    set('svcHcPath', hc && hc.path);
+    set('svcHcInterval', hc && hc.interval);
+    set('svcHcTimeout', hc && hc.timeout);
+    set('svcHcUnhealthy', hc && hc.unhealthyInterval);
+    set('svcHcMethod', hc && hc.method);
+    set('svcHcStatus', hc && hc.status);
+    set('svcHcScheme', (hc && hc.scheme) || '');
+    set('svcHcPort', hc && hc.port);
+    set('svcHcHostname', hc && hc.hostname);
+    set('svcHcMode', (hc && hc.mode) || '');
+    const follow = document.getElementById('svcHcFollow');
+    if (follow) follow.checked = !(hc && hc.followRedirects === false);
+    const wrap = document.getElementById('svcHcHeaders');
+    if (wrap) wrap.innerHTML = '';
+    Object.entries((hc && hc.headers) || {}).forEach(([k, v]) => addSvcHcHeader({ k: k, v: v }));
+    const body = document.getElementById('svcHealthAdvBody');
+    const chev = document.getElementById('svcHealthChevron');
+    if (body) body.style.display = on ? '' : 'none';
+    if (chev) chev.className = 'ph-bold text-xs ' + (on ? 'ph-caret-down' : 'ph-caret-right');
+    _svcHcSync();
+}
+
+function _collectHealthCheck() {
+    const val = id => (document.getElementById(id)?.value || '').trim();
+    const headers = {};
+    document.querySelectorAll('#svcHcHeaders .svc-hc-hdr').forEach(r => {
+        const k = (r.querySelector('.svc-hc-k')?.value || '').trim();
+        if (k) headers[k] = (r.querySelector('.svc-hc-v')?.value || '').trim();
+    });
+    return {
+        enabled: !!document.getElementById('svcHcEnabled')?.checked,
+        path: val('svcHcPath'), interval: val('svcHcInterval'), timeout: val('svcHcTimeout'),
+        unhealthyInterval: val('svcHcUnhealthy'), method: val('svcHcMethod'), status: val('svcHcStatus'),
+        scheme: val('svcHcScheme'), port: val('svcHcPort'), hostname: val('svcHcHostname'),
+        mode: val('svcHcMode'),
+        followRedirects: !!document.getElementById('svcHcFollow')?.checked,
+        headers: headers,
+    };
+}
+
+function _svcNeedsHealthCheck(s) {
+    const lb = s.loadBalancer || {};
+    return !lb.healthCheck && (lb.servers || []).length > 1 && _svcEditable(s);
+}
+
 function _svcTypeChanged() {
     const kind = document.getElementById('svcType')?.value || 'weighted';
     const hint = document.getElementById('svcTypeHint');
@@ -557,6 +634,8 @@ function _svcTypeChanged() {
             : 'The first backend serves; the second takes over if it fails.';
     }
     const plain = kind === 'loadBalancer';
+    const hcSection = document.getElementById('svcHealthSection');
+    if (hcSection) hcSection.style.display = plain ? '' : 'none';
     const addBtn = document.querySelector('#svcRows')?.previousElementSibling?.querySelector('button');
     if (addBtn) {
         const over = kind === 'failover' && document.querySelectorAll('#svcRows .svc-row').length >= 2;
@@ -683,6 +762,7 @@ async function openServiceModal(existing) {
     } else {
         await addServiceRow();
     }
+    _svcHcFill(existing && !_compositeTypeOf(existing) ? (existing.loadBalancer || {}).healthCheck : null);
     _svcTypeChanged();
     document.getElementById('serviceModal')?.classList.add('open');
     document.getElementById('svcBackdrop')?.classList.add('open');
@@ -744,8 +824,10 @@ async function saveServiceModal() {
     const show = (msg) => { if (err) { err.textContent = msg; err.style.display = ''; } };
     const name = (document.getElementById('svcName')?.value || '').trim();
     const children = _collectServiceRows();
+    const healthCheck = _collectHealthCheck();
     if (!name) return show('Give the service a name.');
     if (!children.length) return show('Add at least one backend.');
+    if (healthCheck.enabled && !healthCheck.path) return show('A health check needs a path to poll.');
     const btn = document.getElementById('svcSaveBtn');
     if (btn) btn.disabled = true;
     try {
@@ -757,6 +839,7 @@ async function saveServiceModal() {
                 name,
                 type: document.getElementById('svcType')?.value || 'weighted',
                 originalName: (document.getElementById('svcOriginalName')?.value || '').trim(),
+                healthCheck,
                 configFile: _svcTargetConfigFile(),
                 agent_id: _activeAgent ? _activeAgent.id : '',
                 children,

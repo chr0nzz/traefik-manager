@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const Version = "1.13.4"
+const Version = "1.13.5"
 
 type Config struct {
 	APIKey                    string

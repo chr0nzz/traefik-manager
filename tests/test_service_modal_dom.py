@@ -216,3 +216,48 @@ def test_a_new_service_defaults_to_a_plain_load_balancer():
     assert m, 'the opener moved'
     assert ": 'loadBalancer');" in m.group(1), \
         'the common case is a plain service, weighted is the special one'
+
+
+HC_FIELDS = ('svcHcEnabled', 'svcHcPath', 'svcHcInterval', 'svcHcTimeout', 'svcHcUnhealthy',
+             'svcHcMethod', 'svcHcStatus', 'svcHcScheme', 'svcHcPort', 'svcHcHostname',
+             'svcHcMode', 'svcHcFollow', 'svcHcHeaders')
+
+
+def test_the_modal_can_author_every_health_check_field_traefik_supports():
+    html = _read('templates', 'modals', 'service_modal.html')
+    for el in HC_FIELDS:
+        assert f'id="{el}"' in html, f'missing {el}'
+
+
+def test_the_health_check_is_collected_and_sent():
+    js = _read('static', 'js', 'services.js')
+    m = re.search(r'function _collectHealthCheck\(\) \{(.*?)\n\}', js, re.S)
+    assert m, 'the collector moved'
+    body = m.group(1)
+    for field in ('path', 'interval', 'timeout', 'unhealthyInterval', 'method', 'status',
+                  'scheme', 'port', 'hostname', 'mode', 'followRedirects', 'headers'):
+        assert field in body, f'{field} is never collected'
+    assert 'healthCheck,' in js, 'the payload never carries the health check'
+    assert "show('A health check needs a path to poll.')" in js
+
+
+def test_editing_a_service_loads_its_existing_health_check():
+    js = _read('static', 'js', 'services.js')
+    assert '_svcHcFill(existing && !_compositeTypeOf(existing) ? (existing.loadBalancer || {}).healthCheck : null)' in js, \
+        'opening the editor must show the health check already in the file, or saving would drop it'
+
+
+def test_only_a_plain_pool_shows_the_section():
+    js = _read('static', 'js', 'services.js')
+    m = re.search(r'function _svcTypeChanged\(\) \{(.*?)\n\}', js, re.S)
+    assert "hcSection.style.display = plain ? '' : 'none'" in m.group(1)
+
+
+def test_a_multi_server_pool_without_one_is_flagged_on_the_card():
+    js = _read('static', 'js', 'services.js')
+    m = re.search(r'function _svcNeedsHealthCheck\(s\) \{(.*?)\n\}', js, re.S)
+    assert m, 'the predicate moved'
+    body = m.group(1)
+    assert '!lb.healthCheck' in body and "(lb.servers || []).length > 1" in body
+    assert '_svcNeedsHealthCheck(s) ?' in js, 'the card never renders the warning'
+    assert 'var(--yellow)' in js[js.index('_svcNeedsHealthCheck(s) ?'):][:600]

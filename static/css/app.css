@@ -178,6 +178,7 @@ body > footer { flex-shrink: 0; }
 .sig-root .sig-ep-row:hover { background: color-mix(in srgb, var(--blue) 5%, transparent); box-shadow: inset 2px 0 0 var(--blue); }
 .sig-root .sig-ep-row:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; background: color-mix(in srgb, var(--blue) 5%, transparent); }
 .sig-root .sig-ep-row[data-health="down"] { box-shadow: inset 2px 0 0 var(--red); }
+.sig-root .sig-ep-row[data-health="warn"] { box-shadow: inset 2px 0 0 var(--yellow); }
 .sig-root .sig-ep-row[data-health="down"]:hover, .sig-root .sig-ep-row[data-health="down"]:focus-visible { background: color-mix(in srgb, var(--red) 6%, transparent); box-shadow: inset 2px 0 0 var(--red); }
 .sig-root .sig-ep-row[data-health="warn"] { box-shadow: inset 2px 0 0 var(--yellow); }
 .sig-root .sig-ep-row[data-health="warn"]:hover, .sig-root .sig-ep-row[data-health="warn"]:focus-visible { background: color-mix(in srgb, var(--yellow) 7%, transparent); box-shadow: inset 2px 0 0 var(--yellow); }

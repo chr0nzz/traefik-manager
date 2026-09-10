@@ -42,6 +42,7 @@ const sandbox = {
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     },
 };
+sandbox.window = sandbox;
 sandbox.globalThis = sandbox;
 
 const ctx = vm.createContext(sandbox);
@@ -252,7 +253,7 @@ test('a load balancer with no serverStatus is still unchecked', () => {
 
 test('a composite never moves the backends up and down counts', () => {
     const objs = svcModel([
-        svc('lb@file', { serverStatus: { a: 'UP', b: 'UP' } }),
+        svc('lb@file', { loadBalancer: { healthCheck: { path: '/' } }, serverStatus: { a: 'UP', b: 'UP' } }),
         svc('w@file',  { weighted: { services: [{ name: 'lb@file' }] } }),
     ]);
     const b = _sdBackendRoll(objs);
@@ -279,7 +280,7 @@ test('services with no health data at all still say so', () => {
 test('the tally, the groups and the aria line all surface composites', () => {
     const objs = svcModel([
         svc('w@file',  { weighted: { services: [] } }),
-        svc('lb@file', { serverStatus: { a: 'UP' } }),
+        svc('lb@file', { loadBalancer: { healthCheck: { path: '/' } }, serverStatus: { a: 'UP' } }),
     ]);
     const card = _sdCardModel('service', objs, noOv, true);
     assert.equal(card.t.composite, 1);

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Traefik Manager API
-  version: 1.13.3
+  version: 1.13.5
   description: |
     REST API powering the Traefik Manager web UI and official mobile app.
 
@@ -1300,6 +1300,22 @@ paths:
         "400":
           description: Invalid theme
 
+  /api/settings/route-health:
+    post:
+      tags: [Settings]
+      summary: Turn route reachability checks on or off and set the interval
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                interval: { type: integer, enum: [60, 300, 900, 1800] }
+      responses:
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "400": { description: Interval is not one of the allowed values }
+        "200": { description: Saved }
   /api/settings/geoip:
     post:
       tags: [Settings]
@@ -2527,6 +2543,39 @@ paths:
                   version: { type: string, example: "1.0.0-beta3" }
                   repo: { type: string, example: "https://github.com/chr0nzz/traefik-manager" }
 
+  /api/routes/health:
+    get:
+      tags: [Routes]
+      summary: Last background reachability result per route
+      parameters:
+        - { name: agent_id, in: query, schema: { type: string }, description: Omit for the Host }
+      responses:
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "404": { description: Agent not found }
+        "200":
+          description: "State per route id. Routes appear after their first check."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled: { type: boolean }
+                  interval: { type: integer }
+                  checked_at: { type: [integer, "null"] }
+                  routes:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        state: { type: string, enum: [up, degraded, down, pending] }
+                        source: { type: string, enum: [traefik, servers, ping, self] }
+                        pending: { type: boolean }
+                        servers: { type: object, properties: { up: { type: integer }, total: { type: integer } } }
+                        down_servers: { type: array, items: { type: string } }
+                        latency_ms: { type: [integer, "null"] }
+                        status_code: { type: integer }
+                        error: { type: string }
+                        at: { type: integer }
   /api/routes/all:
     get:
       tags: [Routes & Middlewares]
@@ -3236,6 +3285,7 @@ paths:
       parameters:
         - { name: url, in: query, required: true, schema: { type: string } }
         - { name: fallback, in: query, schema: { type: string }, description: Tried if the first attempt fails }
+        - { name: servers, in: query, schema: { type: array, items: { type: string } }, style: form, explode: true, description: "Two or more backend server URLs; each is checked directly so a dead member reads as degraded" }
       responses:
         "401": { $ref: '#/components/responses/Unauthorized' }
         "400": { description: "Invalid URL, or the target is blocked by the SSRF guard" }
@@ -3250,3 +3300,7 @@ paths:
                   latency_ms: { type: [integer, "null"] }
                   status_code: { type: integer }
                   self: { type: boolean }
+                  state: { type: string, enum: [up, degraded, down] }
+                  source: { type: string }
+                  servers: { type: object, properties: { up: { type: integer }, total: { type: integer } } }
+                  down_servers: { type: array, items: { type: string } }

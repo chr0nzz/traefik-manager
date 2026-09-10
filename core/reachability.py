@@ -1,10 +1,12 @@
 import ipaddress
 import socket
 import time
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urljoin, urlparse
 
 import requests
 
+POOL_WORKERS = 6
 UNREACHABLE = (502, 503, 504)
 REDIRECTS   = (301, 302, 303, 307, 308)
 TIMEOUT     = 5
@@ -89,6 +91,28 @@ def _backend(fallback, ssrf, head):
 def backend_state(url: str, ssrf=None, head=None) -> str:
     verdict, _alt, _why = _backend(url, ssrf or ssrf_ok, head or requests.head)
     return verdict
+
+
+def pool_health(urls, ssrf=None, head=None):
+    clean = [str(u) for u in (urls or []) if str(u).startswith(('http://', 'https://'))]
+    if len(clean) < 2:
+        return None
+    probe = backend_state if (ssrf is None and head is None) else (lambda u: backend_state(u, ssrf, head))
+    with ThreadPoolExecutor(max_workers=min(POOL_WORKERS, len(clean))) as pool:
+        verdicts = list(pool.map(probe, clean))
+    if 'unknown' in verdicts:
+        return None
+    return {'up': verdicts.count('up'), 'total': len(clean),
+            'down_servers': [u for u, v in zip(clean, verdicts) if v != 'up']}
+
+
+def pool_result(pool: dict) -> dict:
+    state = 'down' if pool['up'] == 0 else ('degraded' if pool['up'] < pool['total'] else 'up')
+    out = {'ok': pool['up'] > 0, 'state': state, 'source': 'servers',
+           'servers': {'up': pool['up'], 'total': pool['total']}}
+    if pool['down_servers']:
+        out['down_servers'] = pool['down_servers']
+    return out
 
 
 def probe(url: str, fallback: str = '', ssrf=None, head=None) -> dict:

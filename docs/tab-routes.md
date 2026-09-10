@@ -24,7 +24,7 @@ With no routes yet the tab shows an **Add Route** prompt instead of a blank grid
 | Status | All / Active / Inactive |
 | Protocol | All / HTTP / TCP / UDP |
 
-The heartbeat button pings every enabled HTTP route that has a concrete host right now and sets each card's status dot from the answer. The next background check replaces it. The schedule is set under Settings - Notifications - Route checks.
+The heartbeat button pings every enabled HTTP route that has a concrete host right now and sets each card's status dot from the answer. A route with more than one backend server has each server checked, so one dead member reads as degraded rather than online. The next background check replaces it. The schedule is set under Settings - Notifications - Route checks.
 
 ## Views
 
@@ -35,6 +35,8 @@ In grid view the name sits on the top line with small glyphs for anything worth 
 The config file chip appears in the footer only when your routes span more than one file.
 
 ## Detail panel
+
+Route, service and middleware names accept anything Traefik does, except `@ / , : { }` and names over 100 characters. Spaces and brackets are fine.
 
 Click a card, or **More - View Details**. The panel shows a traffic flow diagram (entry points, router, service), then Router Details, TLS, Middlewares and Service sections, filled from the Traefik API where it is reachable. Middleware chips open the middleware they name.
 
