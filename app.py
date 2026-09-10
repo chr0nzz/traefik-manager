@@ -4815,9 +4815,7 @@ def _healthcheck_block(hc):
     if not isinstance(hc, dict) or not hc.get('enabled'):
         return None
     path = str(hc.get('path') or '').strip()
-    if not path:
-        return None
-    block = {'path': path}
+    block = {'path': path} if path else {}
     for field in _HC_DURATIONS:
         val = _clean_duration(hc.get(field))
         if val:

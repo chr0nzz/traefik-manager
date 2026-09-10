@@ -355,10 +355,13 @@ def test_turning_the_health_check_off_removes_it(client):
     assert 'healthCheck' not in _svc('pool')['loadBalancer'], _svc('pool')
 
 
-def test_a_health_check_needs_a_path(client):
-    _save(client, 'pool', [_manual('a:80')], kind='loadBalancer', healthCheck=_hc())
-    _save(client, 'pool', [_manual('a:80')], kind='loadBalancer', healthCheck={'enabled': True, 'path': '  '})
-    assert 'healthCheck' not in _svc('pool')['loadBalancer']
+def test_a_health_check_without_a_path_probes_the_server_root(client):
+    r = _save(client, 'pool', [_manual('a:80')], kind='loadBalancer',
+              healthCheck={'enabled': True, 'path': '  ', 'interval': '10s', 'timeout': '3s'})
+    assert r.status_code == 200, r.get_json()
+    hc = _svc('pool')['loadBalancer']['healthCheck']
+    assert hc == {'interval': '10s', 'timeout': '3s'}, \
+        'Traefik gates on the healthCheck block, not on the path, so a pathless check is valid: %r' % (hc,)
 
 
 def test_a_client_that_sends_no_health_check_still_keeps_the_existing_one(client):

@@ -238,7 +238,6 @@ def test_the_health_check_is_collected_and_sent():
                   'scheme', 'port', 'hostname', 'mode', 'followRedirects', 'headers'):
         assert field in body, f'{field} is never collected'
     assert 'healthCheck,' in js, 'the payload never carries the health check'
-    assert "show('A health check needs a path to poll.')" in js
 
 
 def test_editing_a_service_loads_its_existing_health_check():

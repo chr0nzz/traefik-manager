@@ -827,7 +827,6 @@ async function saveServiceModal() {
     const healthCheck = _collectHealthCheck();
     if (!name) return show('Give the service a name.');
     if (!children.length) return show('Add at least one backend.');
-    if (healthCheck.enabled && !healthCheck.path) return show('A health check needs a path to poll.');
     const btn = document.getElementById('svcSaveBtn');
     if (btn) btn.disabled = true;
     try {

@@ -47,13 +47,13 @@ All `/api/` endpoints return JSON. The form endpoints `POST /save`, `POST /delet
 
 Common status codes:
 
-| Code | Meaning |
-|---|---|
-| `400` | Invalid or missing parameters |
-| `401` | Not authenticated, or the session expired |
-| `403` | CSRF token missing or invalid |
-| `404` | Object not found |
-| `429` | Rate limit exceeded |
+| Code  | Meaning                                                                       |
+| -------| -------------------------------------------------------------------------------|
+| `400` | Invalid or missing parameters                                                 |
+| `401` | Not authenticated, or the session expired                                     |
+| `403` | CSRF token missing or invalid                                                 |
+| `404` | Object not found                                                              |
+| `429` | Rate limit exceeded                                                           |
 | `502` | An upstream (Traefik, an agent, CrowdSec, a remote repo) could not be reached |
 
 State-changing endpoints (POST / PUT / DELETE / PATCH) require an `X-CSRF-Token` header when using session auth. API key requests skip this.
@@ -1452,7 +1452,7 @@ Each `manual` backend becomes its own child service named `<name>-backend-<n>`, 
 carry its own weight. A `service` backend is referenced by name and never copied, so changes to it
 follow automatically.
 
-`healthCheck` is accepted when `type` is `loadBalancer`: `{ "enabled": true, "path": "/up", "interval": "10s", "timeout": "3s", "unhealthyInterval": "1m", "method": "HEAD", "status": 204, "scheme": "https", "port": 8080, "hostname": "probe.local", "mode": "grpc", "followRedirects": false, "headers": { "X-Probe": "tm" } }`. Only `path` is required; `enabled: false` removes the block. Omit the key entirely and an existing health check is left untouched.
+`healthCheck` is accepted when `type` is `loadBalancer`: `{ "enabled": true, "path": "/up", "interval": "10s", "timeout": "3s", "unhealthyInterval": "1m", "method": "HEAD", "status": 204, "scheme": "https", "port": 8080, "hostname": "probe.local", "mode": "grpc", "followRedirects": false, "headers": { "X-Probe": "tm" } }`. Every field is optional; with no `path` Traefik probes the server root. `enabled: false` removes the block. Omit the key entirely and an existing health check is left untouched.
 
 `type` is `loadBalancer`, `weighted`, `mirroring` or `failover`. For `mirroring` use `percent`
 instead of `weight`; the first backend is the one that serves. `failover` takes exactly two

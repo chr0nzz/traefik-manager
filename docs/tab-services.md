@@ -53,7 +53,7 @@ mirror body options - and only replaces what you changed.
 
 A plain load balancer has a **Health check** section covering every field Traefik takes: path,
 interval, timeout, interval when down, method, expected status, scheme, port, host header, mode
-and headers. Only `path` is required.
+and headers. All are optional; with no path Traefik probes the server root.
 
 Without one, Traefik reports every server as up and keeps sending traffic to a dead one, so a pool
 of two or more servers with no health check carries a warning on its card that opens this section.
