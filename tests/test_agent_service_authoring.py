@@ -223,3 +223,89 @@ def test_force_deleting_on_an_agent_strips_the_reference(client, monkeypatch):
     assert 'auth' not in (fake.files['dynamic.yml']['http'].get('middlewares') or {})
     assert not fake.files['dynamic.yml']['http']['routers']['web'].get('middlewares'), \
         'the agent router kept a reference to a middleware that no longer exists'
+
+
+def _agent_lb(fake, name):
+    return ((fake.files['dynamic.yml'].get('http') or {}).get('services') or {}).get(name, {}).get('loadBalancer')
+
+
+def test_a_health_check_is_authored_on_an_agent(client, monkeypatch):
+    fake = _install(monkeypatch)
+    r = client.post('/api/services', headers=HDR, json={
+        'name': 'pool', 'type': 'loadBalancer', 'agent_id': 'a1',
+        'children': [_manual('10.0.0.1:80'), _manual('10.0.0.2:80')],
+        'healthCheck': {'enabled': True, 'path': '/up', 'interval': '10s',
+                        'method': 'HEAD', 'port': '8080'}})
+    assert r.status_code == 200, r.get_json()
+    hc = _agent_lb(fake, 'pool')['healthCheck']
+    assert hc == {'path': '/up', 'interval': '10s', 'method': 'HEAD', 'port': 8080}, hc
+
+
+def test_a_pathless_health_check_reaches_the_agent(client, monkeypatch):
+    fake = _install(monkeypatch)
+    r = client.post('/api/services', headers=HDR, json={
+        'name': 'pool', 'type': 'loadBalancer', 'agent_id': 'a1',
+        'children': [_manual('10.0.0.1:80'), _manual('10.0.0.2:80')],
+        'healthCheck': {'enabled': True, 'path': '', 'interval': '10s', 'timeout': '3s'}})
+    assert r.status_code == 200, r.get_json()
+    assert _agent_lb(fake, 'pool')['healthCheck'] == {'interval': '10s', 'timeout': '3s'}
+
+
+def test_turning_it_off_removes_it_on_an_agent(client, monkeypatch):
+    fake = _install(monkeypatch)
+    body = {'name': 'pool', 'type': 'loadBalancer', 'agent_id': 'a1',
+            'children': [_manual('10.0.0.1:80')],
+            'healthCheck': {'enabled': True, 'path': '/up'}}
+    client.post('/api/services', headers=HDR, json=body)
+    assert _agent_lb(fake, 'pool')['healthCheck'] == {'path': '/up'}
+    body['healthCheck'] = {'enabled': False}
+    r = client.post('/api/services', headers=HDR, json=body)
+    assert r.status_code == 200, r.get_json()
+    assert 'healthCheck' not in _agent_lb(fake, 'pool')
+
+
+def test_an_agent_service_obeys_the_same_name_rule(client, monkeypatch):
+    fake = _install(monkeypatch)
+    for bad in ('a@file', 'a/b', 'a,b', 'a:b'):
+        r = client.post('/api/services', headers=HDR, json={
+            'name': bad, 'type': 'loadBalancer', 'agent_id': 'a1',
+            'children': [_manual('10.0.0.1:80')]})
+        assert r.status_code == 400, 'the agent path accepted %r' % bad
+    r = client.post('/api/services', headers=HDR, json={
+        'name': 'xxx (yyy)', 'type': 'loadBalancer', 'agent_id': 'a1',
+        'children': [_manual('10.0.0.1:80')]})
+    assert r.status_code == 200, r.get_json()
+    assert 'xxx (yyy)' in _svcs(fake)
+
+
+def _routers(fake):
+    return sorted((fake.files['dynamic.yml'].get('http') or {}).get('routers') or {})
+
+
+def _mws(fake):
+    return sorted((fake.files['dynamic.yml'].get('http') or {}).get('middlewares') or {})
+
+
+def test_an_agent_route_obeys_the_same_name_rule(client, monkeypatch):
+    from conftest import post_form
+    fake = _install(monkeypatch)
+    r = post_form(client, '/save', serviceName='a@file', subdomain='sub', protocol='http',
+                  scheme='http', targetIp='10.0.0.5', targetPort='80', agent_id='a1')
+    assert r.status_code == 400, 'the agent route path accepted a name with @'
+    r = post_form(client, '/save', serviceName='xxx (yyy)', subdomain='sub', protocol='http',
+                  scheme='http', targetIp='10.0.0.5', targetPort='80', agent_id='a1')
+    assert r.status_code < 400, r.get_data(as_text=True)[:200]
+    assert 'xxx (yyy)' in _routers(fake)
+
+
+def test_an_agent_middleware_obeys_the_same_name_rule(client, monkeypatch):
+    from conftest import post_form
+    fake = _install(monkeypatch)
+    body = 'headers:\n  customRequestHeaders:\n    X-Test: "1"'
+    r = post_form(client, '/save-middleware', middlewareName='a/b', mwProtocol='http',
+                  middlewareContent=body, agent_id='a1')
+    assert r.status_code == 400, 'the agent middleware path accepted a name with /'
+    r = post_form(client, '/save-middleware', middlewareName='xxx (yyy)', mwProtocol='http',
+                  middlewareContent=body, agent_id='a1')
+    assert r.status_code < 400, r.get_data(as_text=True)[:200]
+    assert 'xxx (yyy)' in _mws(fake)
