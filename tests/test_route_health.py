@@ -278,3 +278,15 @@ def test_the_check_is_registered_with_the_monitor(app_module):
     from core import monitor
     names = [name for name, _i, _fn in monitor._checks]
     assert 'routes' in names
+
+
+def test_a_negated_host_is_not_the_host_we_check(mon):
+    from core import config as cfg
+    assert cfg.rule_hosts('Host(`a.example.com`) && !Host(`b.example.com`)') == ['a.example.com']
+    assert cfg.rule_hosts('!Host(`b.example.com`) && Host(`a.example.com`)') == ['a.example.com']
+    assert cfg.rule_hosts('! Host(`b.example.com`)') == []
+    assert cfg.rule_hosts('Host(`a.example.com`) || Host(`c.example.com`)') == ['a.example.com', 'c.example.com']
+    probe = _Probe()
+    app = dict(_app('x'), rule='!Host(`nope.example.com`) && Host(`real.example.com`)')
+    rh.check(_host([app]), now=0, probe=probe, settings=ON)
+    assert [u for u, _f in probe.calls] == ['https://real.example.com'], probe.calls

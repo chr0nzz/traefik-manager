@@ -70,7 +70,6 @@ def _delete_self_route(router_name: str = 'traefik-manager') -> None:
 
 
 def _detect_self_route_domain() -> str:
-    import re
     for cfg_path in env.CONFIG_PATHS:
         if not os.path.exists(cfg_path):
             continue
@@ -86,17 +85,15 @@ def _detect_self_route_domain() -> str:
                 servers = ((svc.get('loadBalancer') or {}).get('servers') or [])
                 urls = [str(s.get('url', '')) for s in servers if s.get('url')]
                 if any('traefik-manager' in u or ':5000' in u for u in urls):
-                    rule = rdata.get('rule', '')
-                    m = re.search(r'Host\(`([^`]+)`\)', rule)
-                    if m:
-                        return m.group(1)
+                    hosts = config.rule_hosts(rdata.get('rule', ''))
+                    if hosts:
+                        return hosts[0]
         except Exception:
             continue
     return ''
 
 
 def _detect_self_route_from_own_labels() -> tuple[str, str]:
-    import re
     try:
         import docker as _docker
         client = _docker.from_env()
@@ -109,9 +106,9 @@ def _detect_self_route_from_own_labels() -> tuple[str, str]:
             svc_url = ''
             for k, v in labels.items():
                 if k.startswith('traefik.http.routers.') and k.endswith('.rule'):
-                    m = re.search(r'Host\(`([^`]+)`\)', v)
-                    if m:
-                        domain = m.group(1)
+                    hosts = config.rule_hosts(v)
+                    if hosts:
+                        domain = hosts[0]
                 if k.startswith('traefik.http.services.') and k.endswith('.loadbalancer.server.url'):
                     svc_url = v
             if domain:
@@ -122,7 +119,6 @@ def _detect_self_route_from_own_labels() -> tuple[str, str]:
 
 
 def _find_existing_self_route(hostname: str) -> dict:
-    import re
     for cfg_path in env.CONFIG_PATHS:
         if not os.path.exists(cfg_path):
             continue
@@ -133,9 +129,8 @@ def _find_existing_self_route(hostname: str) -> dict:
             routers  = (data.get('http') or {}).get('routers') or {}
             services = (data.get('http') or {}).get('services') or {}
             for rname, rdata in routers.items():
-                rule = rdata.get('rule', '')
-                m = re.search(r'Host\(`([^`]+)`\)', rule)
-                if m and m.group(1).lower() == hostname.lower():
+                hosts = config.rule_hosts(rdata.get('rule', ''))
+                if hosts and hosts[0].lower() == hostname.lower():
                     svc_name = (rdata.get('service') or '').split('@')[0]
                     svc = services.get(svc_name) or {}
                     servers = ((svc.get('loadBalancer') or {}).get('servers') or [])

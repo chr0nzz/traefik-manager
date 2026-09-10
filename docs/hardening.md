@@ -42,16 +42,21 @@ If you use the forwardAuth wizards, enabling this is strongly recommended.
 
 > **No 3.6.x release has either option.** Traefik does not ignore an option it does not know - it refuses to start with `field not found, node: underscoreHeadersStrategy`, taking the proxy down until the file is corrected. Traefik Manager only offers the field on versions that actually have it, and writes whichever name your Traefik supports.
 
-Upgrading to 3.7.12 or newer is the real fix. Traefik Manager reads either name, so switching over is just re-saving the entry point.
+Upgrading to 3.7.13 or newer is the real fix. Before 3.7.13 even `aliasHeadersStrategy` could be bypassed by smuggling the header name as a request trailer (CVE-2026-88004), so the option alone was never enough. Traefik Manager reads either name, so switching over is just re-saving the entry point.
 
 ### Related advisories
 
-| Advisory | Severity | Fixed in |
-|---|---|---|
-| [GHSA-rf44-j88r-hh8c](https://github.com/traefik/traefik/security/advisories/GHSA-rf44-j88r-hh8c) - ForwardAuth identity spoofing via dot-form header aliases | Moderate (CVSS 5.3) | **2.11.56 / 3.7.12** |
-| **CVE-2026-39858** - underscore aliases of *forwarded* headers (e.g. `X_Forwarded_Proto`) bypassing ForwardAuth | High (CVSS 7.8) | **2.11.43 / 3.6.14 / 3.7.0-rc.2** |
+| Advisory                                                                                                                                                                                                             | Severity            | Fixed in                          |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ---------------------| -----------------------------------|
+| [GHSA-rf44-j88r-hh8c](https://github.com/traefik/traefik/security/advisories/GHSA-rf44-j88r-hh8c) - ForwardAuth identity spoofing via dot-form header aliases                                                        | Moderate (CVSS 5.3) | **2.11.56 / 3.7.12**              |
+| **CVE-2026-39858** - underscore aliases of *forwarded* headers (e.g. `X_Forwarded_Proto`) bypassing ForwardAuth                                                                                                      | High (CVSS 7.8)     | **2.11.43 / 3.6.14 / 3.7.0-rc.2** |
+| [CVE-2026-88007](https://github.com/traefik/traefik/security/advisories/GHSA-qqjf-53cj-pwvv) - HTTP/3 backend connection reuse leaks NTLM and Kerberos identity between clients                                      | Critical            | **2.11.57 / 3.7.13**              |
+| [CVE-2026-88009](https://github.com/traefik/traefik/security/advisories/GHSA-f52w-8j3h-j724) - rootless request target routes as `/` but is forwarded verbatim, bypassing path rules, forwardAuth and the access log | High                | **2.11.57 / 3.7.13**              |
+| [CVE-2026-88008](https://github.com/traefik/traefik/security/advisories/GHSA-w4v4-9rw7-5326) - h2c upgrade headers forwarded to the backend let a client tunnel past every middleware                                | High                | **2.11.57 / 3.7.13**              |
+| [CVE-2026-88004](https://github.com/traefik/traefik/security/advisories/GHSA-v67p-phpq-fc8x) - `aliasHeadersStrategy` and forwarded header stripping bypassed via request trailers                                   | High                | **3.7.13**                        |
+| [CVE-2026-88010](https://github.com/traefik/traefik/security/advisories/GHSA-8fcf-v89g-xpg6) - BasicAuth request coalescing reintroduces a username enumeration timing oracle                                        | Moderate            | **3.7.13**                        |
 
-Both are fixed by upgrading Traefik, not by configuration. Traefik Manager warns you when your running version is affected, and says which release to move to.
+All of these are fixed by upgrading Traefik, not by configuration. Traefik Manager warns you when your running version is affected, and says which release to move to.
 
 ---
 

@@ -52,7 +52,7 @@ fi
 
 docker network create tmshot-net >/dev/null
 docker run -d --name tmshot-traefik --network tmshot-net \
-  -v "$WORK/traefik:/etc/traefik:ro" traefik:v3.6 >/dev/null
+  -v "$WORK/traefik:/etc/traefik:ro" traefik:v3.7 >/dev/null
 
 docker run -d --name tmshot-cs --network tmshot-net \
   -v "$HERE/cs_stub.py:/cs_stub.py:ro" python:3-slim python3 /cs_stub.py >/dev/null

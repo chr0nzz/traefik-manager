@@ -434,11 +434,13 @@ function _dashLaunchInfo(r, ov) {
     if (!rule) return { url: null, why: 'no rule, nothing to open. <b>Set a link in edit</b>', glyph: 'ph-bold ph-link-break' };
     let picked = null, hosts = 0, wild = false;
     _dskRuleBranches(rule).forEach(b => {
-        const m = b.match(/Host\(`([^`]+)`\)/);
-        if (!m) return;
-        if (m[1].indexOf('*') >= 0) { wild = true; return; }
+        const hostRe = /(!?)\s*Host\(`([^`]+)`\)/g;
+        let m, host = null;
+        while ((m = hostRe.exec(b))) { if (m[1] !== '!') { host = m[2]; break; } }
+        if (!host) return;
+        if (host.indexOf('*') >= 0) { wild = true; return; }
         hosts++;
-        if (!picked) picked = { host: m[1], path: (b.match(/PathPrefix\(`([^`]+)`\)/) || [])[1] || '' };
+        if (!picked) picked = { host: host, path: (b.match(/PathPrefix\(`([^`]+)`\)/) || [])[1] || '' };
     });
     if (!picked) {
         const why = wild

@@ -1,4 +1,3 @@
-import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 
@@ -17,9 +16,6 @@ WORKERS          = 6
 SECTION          = 'routes'
 META             = 'routes_meta'
 
-_HOST_RE = re.compile(r'Host\(`([^`]+)`\)')
-
-
 def enabled(settings=None) -> bool:
     settings = settings if settings is not None else settings_mod.load_settings()
     return bool(settings.get('route_check_enabled', True))
@@ -35,7 +31,7 @@ def interval(settings=None) -> int:
 
 
 def route_url(app: dict) -> str:
-    for host in _HOST_RE.findall(str(app.get('rule') or '')):
+    for host in cfg_mod.rule_hosts(app.get('rule')):
         if '*' in host or '{' in host:
             continue
         return ('https' if app.get('tls') else 'http') + '://' + host

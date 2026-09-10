@@ -214,6 +214,13 @@ def save_config(data, path=None):
     logger.info(f"Configuration saved: {path}")
 
 
+_RULE_HOST_RE = re.compile(r'(!?)\s*Host\(`([^`]+)`\)')
+
+
+def rule_hosts(rule) -> list:
+    return [m.group(2) for m in _RULE_HOST_RE.finditer(str(rule or '')) if m.group(1) != '!']
+
+
 def svc_key(name):
     if not isinstance(name, str):
         return ''

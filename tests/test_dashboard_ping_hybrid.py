@@ -151,3 +151,18 @@ def test_the_hidden_roll_up_names_both_kinds():
     assert "(hDown ? ', ' + hDown + ' of them down' : '') + (hWarn ? ', ' + hWarn + ' of them degraded' : '')" in body, \
         'the +N more aria label still collapses degraded into down'
     assert body.count('class="dsk-more-w"') == 1 and body.count('class="dsk-more-n"') == 1
+
+
+def test_the_dashboard_launch_url_skips_a_negated_host():
+    src = _src()
+    body = _fn('_dashLaunchInfo', src)
+    assert "m[1] !== '!'" in body, 'a negated Host() must not become the launch URL'
+    stub = ("const _esc = s => String(s == null ? '' : s);\n" + _fn('_dskRuleBranches', src) + '\n'
+            + _fn('_dskWebUrl', src) + '\n' + body
+            + "\nconsole.log(JSON.stringify([_dashLaunchInfo({ rule: 'Host(`a.example.com`) && !Host(`b.example.com`)', tls: true }, {}).url,"
+              " _dashLaunchInfo({ rule: '!Host(`b.example.com`) && Host(`a.example.com`)', tls: true }, {}).url,"
+              " _dashLaunchInfo({ rule: '!Host(`b.example.com`)', tls: true }, {}).url]));")
+    out = subprocess.run(['node', '-e', stub], capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr
+    got = json.loads(out.stdout.strip().splitlines()[-1])
+    assert got == ['https://a.example.com', 'https://a.example.com', None], got

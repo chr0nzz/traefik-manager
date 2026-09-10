@@ -361,6 +361,63 @@ function dismissTmUpdatePopup() {
 
 const TRAEFIK_ADVISORIES = [
     {
+        id: 'CVE-2026-88007',
+        severity: 'Critical',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-qqjf-53cj-pwvv',
+        forwardAuthRelated: false,
+        summary: 'HTTP/3 backend connection reuse leaks NTLM and Kerberos identity between clients',
+        fixedIn: 'v3.7.13 or v2.11.57',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj < 2) return true;
+            if (maj === 2) return min === 11 && pat <= 56;
+            if (maj === 3) return (min < 7) || (min === 7 && pat <= 12);
+            return false;
+        },
+    },
+    {
+        id: 'CVE-2026-88009',
+        severity: 'High',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-f52w-8j3h-j724',
+        forwardAuthRelated: true,
+        summary: 'Rootless request target routes as / but is forwarded verbatim, bypassing path rules, forwardAuth and access logs',
+        fixedIn: 'v3.7.13 or v2.11.57',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj < 2) return true;
+            if (maj === 2) return (min < 11) || (min === 11 && pat <= 56);
+            if (maj === 3) return (min < 7) || (min === 7 && pat <= 12);
+            return false;
+        },
+    },
+    {
+        id: 'CVE-2026-88008',
+        severity: 'High',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-w4v4-9rw7-5326',
+        forwardAuthRelated: true,
+        summary: 'h2c upgrade headers forwarded to the backend let a client tunnel past the whole middleware chain',
+        fixedIn: 'v3.7.13 or v2.11.57',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj === 2) return min === 11 && pat >= 26 && pat <= 56;
+            if (maj === 3) return (min > 4 && min < 7) || (min === 4 && pat >= 2) || (min === 7 && pat <= 12);
+            return false;
+        },
+    },
+    {
+        id: 'CVE-2026-88004',
+        severity: 'High',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-v67p-phpq-fc8x',
+        forwardAuthRelated: true,
+        summary: 'Header name sanitization (aliasHeadersStrategy, forwarded header stripping) bypassed via request trailers',
+        fixedIn: 'v3.7.13',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj === 3) return (min >= 2 && min < 7) || (min === 7 && pat <= 12);
+            return false;
+        },
+    },
+    {
         id: 'CVE-2026-39858',
         severity: 'High',
         url: 'https://github.com/traefik/traefik/security/advisories/GHSA-5m6w-wvh7-57vm',
@@ -387,6 +444,19 @@ const TRAEFIK_ADVISORIES = [
             if (maj < 2) return true;
             if (maj === 2) return (min < 11) || (min === 11 && pat <= 55);
             if (maj === 3) return (min < 7) || (min === 7 && pat <= 11);
+            return false;
+        },
+    },
+    {
+        id: 'CVE-2026-88010',
+        severity: 'Moderate',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-8fcf-v89g-xpg6',
+        forwardAuthRelated: false,
+        summary: 'BasicAuth request coalescing reintroduces a username enumeration timing oracle',
+        fixedIn: 'v3.7.13',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj === 3) return (min === 6 && pat >= 11) || (min === 7 && pat <= 12);
             return false;
         },
     },
