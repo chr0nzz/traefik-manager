@@ -2,7 +2,7 @@ import glob
 import os
 import re
 
-import yaml
+from core.config import yaml_safe
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -59,7 +59,7 @@ def test_the_env_examples_invent_nothing():
 def test_the_sample_manager_yml_is_read_back_as_written(tmp_path, monkeypatch):
     import core.env as env_mod
     import core.settings as settings_mod
-    sample = yaml.safe_load(_read('manager.yml'))
+    sample = yaml_safe.load(_read('manager.yml'))
     cfg = tmp_path / 'cfg'
     cfg.mkdir()
     (cfg / 'manager.yml').write_text(_read('manager.yml'), encoding='utf-8')
@@ -74,7 +74,7 @@ def test_the_sample_manager_yml_is_read_back_as_written(tmp_path, monkeypatch):
 
 
 def test_the_sample_covers_every_oidc_key():
-    sample = yaml.safe_load(_read('manager.yml'))
+    sample = yaml_safe.load(_read('manager.yml'))
     oidc = [k for k in sample if k.startswith('oidc_')]
     assert len(oidc) == 10, f'the sample has {len(oidc)} oidc keys, the code has 10: {sorted(oidc)}'
 
