@@ -657,7 +657,20 @@ function _clearRouteViews(message) {
     if (message) showToast(message, 'error');
 }
 
+function _paintRoutes(data) {
+    if (data.services) {
+        const keep = (window._tmServices || {}).live;
+        window._tmServices = Object.assign({ live: keep || { http: [], tcp: [], udp: [] } }, data.services);
+        if (!keep) window._tmServices = null;
+    }
+    renderRouteGrid(data.apps || []);
+    renderMwGrid(data.middlewares || []);
+    loadOverviewStats();
+    _renderConfigErrorBanner(data.configErrors || []);
+}
+
 async function refreshRoutes() {
+    tabCacheHydrate('routes', _paintRoutes);
     try {
         let res;
         if (_activeAgent) {
@@ -670,15 +683,9 @@ async function refreshRoutes() {
             return;
         }
         const data = await res.json();
-        if (data.services) {
-            const keep = (window._tmServices || {}).live;
-            window._tmServices = Object.assign({ live: keep || { http: [], tcp: [], udp: [] } }, data.services);
-            if (!keep) window._tmServices = null;
-        }
-        renderRouteGrid(data.apps || []);
-        renderMwGrid(data.middlewares || []);
-        loadOverviewStats();
-        _renderConfigErrorBanner(data.configErrors || []);
+        _paintRoutes(data);
+        tabCachePut('routes', { apps: data.apps || [], middlewares: data.middlewares || [],
+                                services: data.services || null, configErrors: data.configErrors || [] });
     } catch(e) {
         console.error('refreshRoutes failed:', e);
         _clearRouteViews(_netErrText(e, 'Could not load routes'));

@@ -1,5 +1,6 @@
 let _allLogLines     = [];
 let _currentLogLines = 100;
+const LG_CACHE_LINES = 1000;
 let _logCountryFilter = '';
 let _logParsed  = [];
 let _logRows    = [];
@@ -68,9 +69,19 @@ function _lgScrollEl() {
 
 document.addEventListener('visibilitychange', () => { if (typeof _lgAutoSync === 'function') _lgAutoSync(); });
 
+function _lgHydrate(c) {
+    _allLogLines = Array.isArray(c.lines) ? c.lines : [];
+    _logParsed   = _allLogLines.map(raw => ({ raw, e: parseLogLine(raw) }));
+    _lgStamp     = c.at || Date.now();
+    _lgLoadError = '';
+    _lgBind();
+    renderLogs();
+}
+
 async function refreshLogs(silent) {
     const container = document.getElementById('logsContent');
     const stats = document.getElementById('logStats');
+    if (!silent && tabCacheHydrate('logs', _lgHydrate)) silent = true;
     const keepScroll = silent ? (_lgScrollEl() || {}).scrollTop || 0 : 0;
     if (!silent) container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading logs...</p></div>`;
     try {
@@ -107,6 +118,7 @@ async function refreshLogs(silent) {
         _allLogLines = res.lines || [];
         _logParsed = _allLogLines.map(raw => ({ raw, e: parseLogLine(raw) }));
         _lgStamp = Date.now();
+        tabCachePut('logs', { lines: _allLogLines.slice(-LG_CACHE_LINES), at: _lgStamp });
         await loadGeoStatus();
         if (_geoEnabled && _geoAvailable) {
             await geoLookup(_logParsed.map(o => o.e && o.e.ip).filter(Boolean));

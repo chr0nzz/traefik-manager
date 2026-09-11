@@ -264,7 +264,7 @@
             <i class="ph-bold ph-caret-double-left" id="sideNavCollapseIcon"></i><span class="side-nav-toggle-label">Collapse</span>
         </button>
         {% if auth_enabled %}
-        <form method="POST" action="{{ url_for('logout') }}">
+        <form method="POST" action="{{ url_for('logout') }}" onsubmit="tabCacheClear()">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" id="sideNavLogoutBtn" title="Sign out">
                 <i class="ph-bold ph-sign-out"></i><span class="side-nav-toggle-label">Sign out</span>
@@ -369,6 +369,7 @@ function _csrfHeaders() {
     return { 'X-CSRF-Token': token };
 }
 
+window._tmAssetVersion = '{{ asset_version }}';
 let _activeAgent = null;
 const _agentRegistry = {};
 let _agentList = [];

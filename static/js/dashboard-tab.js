@@ -984,6 +984,12 @@ window.refreshDashboardTab = async function() {
     const deg     = document.getElementById('dashDegraded');
     _dskBind();
 
+    if (!_dashDrawn && window.rmHydrate()) {
+        _dashDrawn = true;
+        dashRenderProviderFilters();
+        dashRender();
+    }
+
     if (!_dashDrawn) {
         if (loading) loading.classList.remove('hidden');
         if (pods)  pods.classList.add('hidden');

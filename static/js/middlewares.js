@@ -852,9 +852,22 @@ let _pluginEditName  = null;
 let _pluginStaticMonaco = null;
 let _pluginMwMonaco = null;
 
+function _pluginsHydrate(c) {
+    _allPlugins = Array.isArray(c.plugins) ? c.plugins : [];
+    _pluginCanManage = !!c.canManage;
+    const addBtn = document.getElementById('pluginAddBtnWrap');
+    if (addBtn) addBtn.style.display = _pluginCanManage ? 'flex' : 'none';
+    setTabCount('plugins', _allPlugins.length);
+    _pluginCatalog = {};
+    renderPluginsVerdict();
+    renderPluginCards();
+}
+
 async function refreshPluginsTab() {
     const container = document.getElementById('pluginsContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading plugins...</p></div>`;
+    if (!tabCacheHydrate('plugins', _pluginsHydrate)) {
+        container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading plugins...</p></div>`;
+    }
     try {
         const availP = _activeAgent
             ? agentFetch('/api/static/status').then(r => r.json()).then(d => ({ available: d.configured === true })).catch(() => ({ available: false }))
@@ -903,6 +916,7 @@ async function refreshPluginsTab() {
         }
 
         if (plugins.length === 0) {
+            tabCachePut('plugins', null);
             const addHint = _pluginCanManage
                 ? `<button onclick="openPluginForm()" class="btn-primary text-xs mt-3"><i class="ph-bold ph-plus"></i> Add Plugin</button>`
                 : `<p class="text-xs max-w-sm mx-auto mt-1">Add plugins under <code class="font-mono">experimental.plugins</code> in your <code class="font-mono">traefik.yml</code>.</p>`;
@@ -916,6 +930,7 @@ async function refreshPluginsTab() {
         }
 
         _allPlugins = plugins;
+        tabCachePut('plugins', { plugins: plugins, canManage: _pluginCanManage });
         setTabCount('plugins', plugins.length);
         _pluginCatalog = {};
         renderPluginsVerdict();

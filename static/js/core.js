@@ -426,7 +426,7 @@ function _dCount(n) {
 
 async function _errText(res, fallback) {
     if (res && res.status === 502) return 'Cannot reach the agent. Check that it is running and reachable.';
-    if (res && res.status === 401) return 'Session expired. Sign in again.';
+    if (res && res.status === 401) { tabCacheClear(); return 'Session expired. Sign in again.'; }
     if (res && res.status === 403) return 'Not allowed. Your session may have expired.';
     if (res && res.status === 404) return fallback + ' (not found)';
     try {
@@ -455,6 +455,63 @@ function _netErrText(err, fallback) {
         return 'No response from Traefik Manager. Check that it is still running.';
     }
     return msg ? `${fallback}: ${msg.slice(0, 200)}` : fallback;
+}
+
+
+const TAB_CACHE_PREFIX = 'tm.tab.';
+const _tabCacheHydrated = new Set();
+
+function _tabCacheKey(name) {
+    const who = (typeof _activeAgent !== 'undefined' && _activeAgent) ? _activeAgent.id : 'host';
+    return TAB_CACHE_PREFIX + (window._tmAssetVersion || '0') + '.' + who + '.' + name;
+}
+
+function tabCacheGet(name) {
+    try {
+        const raw = sessionStorage.getItem(_tabCacheKey(name));
+        return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
+}
+
+function _tabCacheKeys(suffix) {
+    const out = [];
+    try {
+        for (let i = 0; i < sessionStorage.length; i++) {
+            const k = sessionStorage.key(i);
+            if (k && k.startsWith(TAB_CACHE_PREFIX) && (!suffix || k.endsWith('.' + suffix))) out.push(k);
+        }
+    } catch (_) {}
+    return out;
+}
+
+function tabCacheDrop(name) {
+    _tabCacheKeys(name).forEach(k => { try { sessionStorage.removeItem(k); } catch (_) {} });
+}
+
+function tabCacheClear() {
+    tabCacheDrop('');
+    _tabCacheHydrated.clear();
+}
+
+function tabCachePut(name, data) {
+    let raw;
+    try { raw = JSON.stringify(data); } catch (_) { return false; }
+    const key = _tabCacheKey(name);
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try { sessionStorage.setItem(key, raw); return true; }
+        catch (_) { tabCacheDrop('crowdsec'); }
+    }
+    return false;
+}
+
+function tabCacheHydrate(name, paint) {
+    const key = _tabCacheKey(name);
+    if (_tabCacheHydrated.has(key)) return false;
+    const data = tabCacheGet(name);
+    if (data === null) return false;
+    _tabCacheHydrated.add(key);
+    try { paint(data); } catch (e) { console.error('tabCacheHydrate failed:', e); return false; }
+    return true;
 }
 
 

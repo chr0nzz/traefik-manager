@@ -143,7 +143,22 @@ window.rmEnsureData = async function(force, opts) {
     }
     _rmDataLoaded = true;
     _rmLoadedAt   = Date.now();
+    tabCachePut('routemap', { routes: _rmAllRoutes, eps: _rmAllEps, config: _rmConfig, routerStatus: _rmRouterStatus,
+                              svcStatus: _rmSvcStatus, svcLoaded: _rmSvcLoaded, statusBlind: _rmStatusBlind });
     return true;
+};
+
+window.rmHydrate = function() {
+    if (_rmDataLoaded || _rmAllRoutes.length) return true;
+    return tabCacheHydrate('routemap', c => {
+        _rmAllRoutes    = Array.isArray(c.routes) ? c.routes : [];
+        _rmAllEps       = c.eps || {};
+        _rmConfig       = c.config || _rmConfig;
+        _rmRouterStatus = c.routerStatus || {};
+        _rmSvcStatus    = c.svcStatus || {};
+        _rmSvcLoaded    = !!c.svcLoaded;
+        _rmStatusBlind  = c.statusBlind !== false;
+    });
 };
 
 (function() {
@@ -409,6 +424,12 @@ window.rmClearFilters = function() {
 };
 
 window.refreshRoutemapTab = async function(force) {
+    if (!_rmDrawn && !force && window.rmHydrate()) {
+        _rmDrawn = true;
+        rmRenderProviderFilters();
+        rmRenderEpFilters();
+        rmRender();
+    }
     if (!_rmDrawn || force) {
         document.getElementById('rmLoading').classList.remove('hidden');
         document.getElementById('rmTopoContainer').classList.add('hidden');
