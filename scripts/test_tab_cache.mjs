@@ -30,7 +30,7 @@ function harness(storage, agent) {
 const TAB_CACHE_PREFIX = 'tm.tab.';
 ${block}
 ${hydrate}
-return { tabCacheGet, tabCachePut, tabCacheDrop, tabCacheClear, tabCacheHydrate, _tabCacheKey,
+return { tabCacheGet, tabCachePut, tabCacheDrop, tabCacheClear, tabCacheHydrate, tabCacheForgetAll, _tabCacheKey,
          setAgent(a) { _activeAgent = a; } };
 `;
     const window = { _tmAssetVersion: '1.14.0-abc' };
@@ -76,6 +76,9 @@ console.log('hydrate once per key');
     api.tabCachePut('logs', { lines: ['c'] });
     check('clear resets the once guard', api.tabCacheHydrate('logs', () => paints++) === true && paints === 3);
     check('paint that throws is reported as no hydrate', api.tabCacheHydrate('nope', () => { throw new Error('x'); }) === false);
+    api.tabCacheForgetAll();
+    check('forget all keeps the data', api.tabCacheGet('logs') !== null);
+    check('forget all lets the same server hydrate again', api.tabCacheHydrate('logs', () => paints++) === true && paints === 4);
 }
 
 console.log('quota');

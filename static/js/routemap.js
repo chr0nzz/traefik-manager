@@ -148,8 +148,19 @@ window.rmEnsureData = async function(force, opts) {
     return true;
 };
 
+window.rmServerChanged = function() {
+    _rmAllRoutes    = [];
+    _rmAllEps       = {};
+    _rmConfig       = { custom_groups: [], route_overrides: {} };
+    _rmRouterStatus = {};
+    _rmSvcStatus    = {};
+    _rmSvcLoaded    = false;
+    _rmStatusBlind  = true;
+    window.rmInvalidateData();
+};
+
 window.rmHydrate = function() {
-    if (_rmDataLoaded || _rmAllRoutes.length) return true;
+    if (_rmDataLoaded) return true;
     return tabCacheHydrate('routemap', c => {
         _rmAllRoutes    = Array.isArray(c.routes) ? c.routes : [];
         _rmAllEps       = c.eps || {};

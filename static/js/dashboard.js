@@ -744,8 +744,27 @@ function _sdBackendTxt(b, total) {
     return total ? 'no health checks configured' : '';
 }
 
+function _sdShowSkeleton() {
+    const panel = document.getElementById('statsPanel');
+    if (panel && _sdSkeletonHtml !== null) panel.innerHTML = _sdSkeletonHtml;
+}
+
+window._sdServerChanged = function() {
+    _rhMap = {};
+    _rhMeta.loaded = false;
+    _rhMeta.checked_at = null;
+    _sdApiStatusMap = null;
+    _sdModel = null;
+    _sdScope = null;
+    const cached = tabCacheGet('stats');
+    if (cached && cached.overview !== undefined) _sdApplyPayloads(cached);
+    else _sdShowSkeleton();
+};
+
 function _sdRender(model) {
     _sdBind();
+    const panel = document.getElementById('statsPanel');
+    if (_sdSkeletonHtml === null && panel) _sdSkeletonHtml = panel.innerHTML;
     const gridEl = document.getElementById('statsGrid');
     const verdEl = document.getElementById('sigVerdict');
     const keyEl  = document.getElementById('sigKey');
@@ -1046,6 +1065,7 @@ function _sdRender(model) {
 }
 
 let _sdApiStatusMap = null;
+let _sdSkeletonHtml = null;
 let _rhMap  = {};
 const _rhMeta = { enabled: true, interval: 300, checked_at: null, loaded: false };
 window._rhMeta = _rhMeta;
@@ -1204,6 +1224,56 @@ function _sdApplyRouteCards() {
     });
 }
 
+function _sdApplyPayloads(p) {
+    if (p.version && p.version.Version) {
+        _currentVersion = p.version.Version;
+        document.getElementById('versionText').textContent = 'v' + _currentVersion;
+        const vtm = document.getElementById('versionTextMobile');
+        if (vtm) vtm.textContent = 'v' + _currentVersion;
+        if (tmPref('showTraefikBadge')) {
+            document.getElementById('versionBadge')?.classList.remove('hidden');
+            document.getElementById('versionBadgeMobile')?.classList.remove('hidden');
+            document.getElementById('versionBadgeMobile')?.classList.add('flex');
+        }
+    }
+
+    const model = _sdBuild({
+        overview:    p.overview || null,
+        routers:     p.routers || null,
+        services:    p.services || null,
+        middlewares: p.middlewares || null,
+        version:     p.version || null,
+        entrypoints: Array.isArray(p.entrypoints) ? p.entrypoints : [],
+    });
+
+    if (_sdScope) {
+        const known = new Set();
+        ['http', 'stream', 'service', 'middleware'].forEach(k => model.objs[k].forEach(o => known.add(o.provider)));
+        if (!known.has(_sdScope)) _sdScope = null;
+    }
+
+    _sdStamp = Date.now();
+    _sdModel = model;
+    _sdRender(model);
+
+    setTabCount('docker', model.pairs.filter(p => p.obj.provider === 'docker').length || '-');
+    if (model.avail.service) setTabCount('live', model.counts.allSvc);
+
+    _sdApiStatusMap = {};
+    model.pairs.forEach(pair => {
+        _sdApiStatusMap[pair.obj.short] = {
+            status: pair.obj.status,
+            raw: pair.obj.rawStatus,
+            error: pair.obj.errors,
+            unbound: !!pair.obj.unbound,
+            eps: _sdUsing(pair.raw),
+        };
+    });
+    _sdApplyRouteCards();
+    if (typeof filterRoutes === 'function' && document.getElementById('searchRoutes')) filterRoutes();
+    return model;
+}
+
 async function loadOverviewStats() {
     const runServer = _activeAgent ? _activeAgent.id : '';
     try {
@@ -1226,61 +1296,27 @@ async function loadOverviewStats() {
             return v;
         };
 
-        const apiUp = version.status === 'fulfilled' && version.value && version.value.Version;
-        const dotColor = apiUp ? 'var(--green)' : 'var(--red)';
-        const dotEl  = document.getElementById('apiStatusDot');
-        const dotElM = document.getElementById('apiStatusDotMobile');
-        if (dotEl)  dotEl.style.background  = dotColor;
-        if (dotElM) dotElM.style.background = dotColor;
-
-        if (apiUp) {
-            _currentVersion = version.value.Version;
-            document.getElementById('versionText').textContent = 'v' + _currentVersion;
-            const vtm = document.getElementById('versionTextMobile');
-            if (vtm) vtm.textContent = 'v' + _currentVersion;
-            if (tmPref('showTraefikBadge')) {
-                document.getElementById('versionBadge')?.classList.remove('hidden');
-                document.getElementById('versionBadgeMobile')?.classList.remove('hidden');
-                document.getElementById('versionBadgeMobile')?.classList.add('flex');
-            }
-            checkForUpdate(_currentVersion);
-            checkTraefikAdvisories(_currentVersion);
-        }
-
-        const model = _sdBuild({
+        const payloads = {
             overview:    val(overview, null),
             routers:     val(routers, null),
             services:    val(services, null),
             middlewares: val(middlewares, null),
             version:     val(version, null),
             entrypoints: (entrypoints.status === 'fulfilled' && Array.isArray(entrypoints.value)) ? entrypoints.value : [],
-        });
-
-        if (_sdScope) {
-            const known = new Set();
-            ['http', 'stream', 'service', 'middleware'].forEach(k => model.objs[k].forEach(o => known.add(o.provider)));
-            if (!known.has(_sdScope)) _sdScope = null;
+        };
+        const apiUp = !!(payloads.version && payloads.version.Version);
+        const dotColor = apiUp ? 'var(--green)' : 'var(--red)';
+        const dotEl  = document.getElementById('apiStatusDot');
+        const dotElM = document.getElementById('apiStatusDotMobile');
+        if (dotEl)  dotEl.style.background  = dotColor;
+        if (dotElM) dotElM.style.background = dotColor;
+        if (apiUp) {
+            checkForUpdate(payloads.version.Version);
+            checkTraefikAdvisories(payloads.version.Version);
         }
 
-        _sdStamp = Date.now();
-        _sdModel = model;
-        _sdRender(model);
-
-        setTabCount('docker', model.pairs.filter(p => p.obj.provider === 'docker').length || '-');
-        if (model.avail.service) setTabCount('live', model.counts.allSvc);
-
-        _sdApiStatusMap = {};
-        model.pairs.forEach(p => {
-            _sdApiStatusMap[p.obj.short] = {
-                status: p.obj.status,
-                raw: p.obj.rawStatus,
-                error: p.obj.errors,
-                unbound: !!p.obj.unbound,
-                eps: _sdUsing(p.raw),
-            };
-        });
-        _sdApplyRouteCards();
-        if (typeof filterRoutes === 'function' && document.getElementById('searchRoutes')) filterRoutes();
+        tabCachePut('stats', payloads);
+        const model = _sdApplyPayloads(payloads);
 
         if (model.entrypoints.length && !_activeAgent) {
             const epNames = model.entrypoints.map(e => e.name);

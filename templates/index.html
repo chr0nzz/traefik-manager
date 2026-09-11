@@ -604,7 +604,9 @@ function switchServer(agentId) {
     _inflightCertResolvers = null;
     _customDomains = [];
     if (agent) document.getElementById('selfRouteEpWarning')?.remove();
-    if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData();
+    if (typeof tabCacheForgetAll === 'function') tabCacheForgetAll();
+    if (typeof window.rmServerChanged === 'function') window.rmServerChanged();
+    if (typeof window._sdServerChanged === 'function') window._sdServerChanged();
     if (agent) {
         const stored = JSON.parse(localStorage.getItem('tm_tabs_agent_' + agent.id) || '{}');
         const hub = agent.visible_tabs || {};

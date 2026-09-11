@@ -525,6 +525,10 @@ function tabCacheClear() {
     _tabCacheHydrated.clear();
 }
 
+function tabCacheForgetAll() {
+    _tabCacheHydrated.clear();
+}
+
 function tabCachePut(name, data) {
     let raw;
     try { raw = JSON.stringify(data); } catch (_) { return false; }
