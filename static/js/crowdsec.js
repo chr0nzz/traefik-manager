@@ -373,7 +373,7 @@ function _atkGo(spec) {
         return;
     }
     if ('cfg' in p) { _atkOpenCsSettings(); return; }
-    if ('reload' in p) { _csDecPage = null; _csDecKey = ''; refreshCrowdSecTab(); return; }
+    if ('reload' in p) { _csDecPage = null; _csDecKey = ''; refreshCrowdSecTab(true); return; }
     if ('unban' in p) { csUnban(Number(p.unban)); return; }
     if ('ban' in p) { openCsBanModal(p.ban); return; }
     if ('page' in p) { _atkPage = Math.max(1, parseInt(p.page, 10) || 1); _atkOpen = ''; _csRender(); _atkRevealFeed(); return; }
@@ -488,11 +488,11 @@ function csGeo_click(cc) { _atkGo(_atkSpec({ cc: _atkCc(cc) })); }
 function clearCsCountryFilter() { _atkFacet.cc = ''; _atkPage = 1; _csRender(); }
 
 let _csRefreshing = false, _csRefreshQueued = false;
-async function refreshCrowdSecTab() {
+async function refreshCrowdSecTab(manual) {
     if (_csRefreshing) { _csRefreshQueued = true; return; }
     _csRefreshing = true;
     try {
-        await _csRefreshInner();
+        await _csRefreshInner(manual === true);
     } finally {
         _csRefreshing = false;
         _csSchedulePoll();
@@ -592,7 +592,7 @@ async function _csApplySummary(sum) {
     }
 }
 
-async function _csRefreshInner() {
+async function _csRefreshInner(manual) {
     const el = document.getElementById('csStats');
     if (!el) return;
     if (!_activeAgent && !window._hostCsEnabled) { _csSetConfigured(false); return; }
@@ -644,6 +644,7 @@ async function _csRefreshInner() {
         _csFetched = Date.now();
         const age = document.getElementById('atkAge');
         if (age) age.textContent = _sdAgo(_csFetched);
+        if (manual) showToast('CrowdSec is up to date, nothing changed since the last read', 'success', false);
         return;
     }
     await _csApplySummary(sum);

@@ -458,6 +458,38 @@ function _netErrText(err, fallback) {
 }
 
 
+const REFRESH_SPIN_MIN_MS = 400;
+const _refreshCallRe = /^\s*(refresh\w*)\(([^)]*)\)\s*;?\s*$/;
+
+function _refreshSpinTarget(el) {
+    const btn = el && el.closest ? el.closest('button[onclick]') : null;
+    if (!btn || !btn.querySelector('.ph-arrows-clockwise')) return null;
+    return _refreshCallRe.test(btn.getAttribute('onclick') || '') ? btn : null;
+}
+
+function _spinRefreshButton(btn) {
+    const icon = btn.querySelector('.ph-arrows-clockwise');
+    const code = btn.getAttribute('onclick');
+    let result;
+    btn.disabled = true;
+    if (icon) icon.classList.add('animate-spin');
+    try { result = new Function('return ' + code)(); } catch (e) { console.error('refresh failed:', e); }
+    const done = Promise.allSettled([Promise.resolve(result), new Promise(r => setTimeout(r, REFRESH_SPIN_MIN_MS))]);
+    done.then(() => {
+        btn.disabled = false;
+        if (icon) icon.classList.remove('animate-spin');
+    });
+    return done;
+}
+
+document.addEventListener('click', e => {
+    const btn = _refreshSpinTarget(e.target);
+    if (!btn || btn.disabled) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    _spinRefreshButton(btn);
+}, true);
+
 const TAB_CACHE_PREFIX = 'tm.tab.';
 const _tabCacheHydrated = new Set();
 
