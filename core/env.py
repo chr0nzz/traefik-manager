@@ -2,7 +2,7 @@ import logging
 import os
 
 GITHUB_REPO = "chr0nzz/traefik-manager"
-APP_VERSION = "1.13.5"
+APP_VERSION = "1.14.0"
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
