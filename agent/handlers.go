@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
@@ -602,37 +603,30 @@ const (
 	csMaxPages = 200
 )
 
-func (a *App) crowdsecDecisionsHandler(w http.ResponseWriter, r *http.Request) {
-	if a.cfg.CrowdSecLAPIURL == "" {
-		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
-		return
-	}
+func (a *App) csActiveDecisions(ctx context.Context, forceFull bool) ([]json.RawMessage, string, error) {
 	now := time.Now().UTC()
-	all := []json.RawMessage{}
-	cursor := int64(0)
 
 	if csStreamable {
-		rows, _, err := a.csDecisionsStream(r.Context(), r.URL.Query().Get("full") == "1")
+		rows, mode, err := a.csDecisionsStream(ctx, forceFull)
 		if err == nil {
-			a.writeActiveDecisions(w, rows, now)
-			return
+			return csFilterActive(rows, now), csStaleNoteFromMode(mode), nil
 		}
 		if strings.Contains(err.Error(), "LAPI 404") || strings.Contains(err.Error(), "LAPI 405") {
 			log.Printf("crowdsec: LAPI has no /v1/decisions/stream, falling back to the paged walk")
 			csStreamable = false
 		} else {
-			jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
-			return
+			return nil, "", err
 		}
 	}
 
+	all := []json.RawMessage{}
+	cursor := int64(0)
 	for page := 0; page < csMaxPages; page++ {
 		path := fmt.Sprintf("/v1/decisions?limit=%d&id_gt=%d", csPageSize, cursor)
-		chunk, err := a.csPageJSON(r.Context(), path, false)
+		chunk, err := a.csPageJSON(ctx, path, false)
 		if err != nil {
 			if page == 0 {
-				jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
-				return
+				return nil, "", err
 			}
 			break
 		}
@@ -662,9 +656,159 @@ func (a *App) crowdsecDecisionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		cursor = maxID
 	}
+	return all, "", nil
+}
 
+func (a *App) crowdsecDecisionsHandler(w http.ResponseWriter, r *http.Request) {
+	if a.cfg.CrowdSecLAPIURL == "" {
+		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		return
+	}
+	rows, staleNote, err := a.csActiveDecisions(r.Context(), r.URL.Query().Get("full") == "1")
+	if err != nil {
+		jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(all)
+	if staleNote != "" {
+		w.Header().Set("X-CS-Stale", staleNote)
+	}
+	json.NewEncoder(w).Encode(rows)
+}
+
+func (a *App) crowdsecDecisionsSearchHandler(w http.ResponseWriter, r *http.Request) {
+	if a.cfg.CrowdSecLAPIURL == "" {
+		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		return
+	}
+	rows, staleNote, err := a.csActiveDecisions(r.Context(), false)
+	if err != nil {
+		jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+	if staleNote != "" {
+		w.Header().Set("X-CS-Stale", staleNote)
+	}
+
+	q := r.URL.Query()
+	page := 1
+	if n, perr := strconv.Atoi(q.Get("page")); perr == nil && n >= 1 {
+		page = n
+	}
+	per := 20
+	if n, perr := strconv.Atoi(q.Get("per")); perr == nil && n >= 1 && n <= 200 {
+		per = n
+	}
+
+	originFilter := strings.ToLower(strings.TrimSpace(q.Get("origin")))
+	typeFilter := strings.ToLower(strings.TrimSpace(q.Get("type")))
+	ipFilter := strings.TrimSpace(q.Get("ip"))
+	scenarioFilter := strings.TrimSpace(q.Get("scenario"))
+	term := strings.ToLower(strings.TrimSpace(q.Get("q")))
+
+	parsed := make([]csSearchRow, 0, len(rows))
+	for _, raw := range rows {
+		var d struct {
+			ID       int64  `json:"id"`
+			Origin   string `json:"origin"`
+			Type     string `json:"type"`
+			Value    string `json:"value"`
+			Scope    string `json:"scope"`
+			Scenario string `json:"scenario"`
+		}
+		if json.Unmarshal(raw, &d) != nil {
+			continue
+		}
+		originKey := strings.ToLower(strings.TrimSpace(d.Origin))
+		parsed = append(parsed, csSearchRow{
+			raw: raw, id: d.ID, origin: originKey, typ: strings.ToLower(d.Type),
+			value: d.Value, scope: d.Scope, scenario: d.Scenario,
+			own: originKey != "capi" && originKey != "lists",
+		})
+	}
+
+	matchOrigin := func(d csSearchRow) bool {
+		switch originFilter {
+		case "":
+			return true
+		case "subscribed":
+			return d.origin == "capi" || d.origin == "lists"
+		case "own":
+			return d.own
+		case "byhand":
+			return d.origin == "cscli" || d.origin == "manual"
+		default:
+			return d.origin == originFilter
+		}
+	}
+	matchType := func(d csSearchRow) bool { return typeFilter == "" || d.typ == typeFilter }
+	matchIP := func(d csSearchRow) bool { return ipFilter == "" || d.value == ipFilter }
+	matchScenario := func(d csSearchRow) bool { return scenarioFilter == "" || d.scenario == scenarioFilter }
+	matchQ := func(d csSearchRow) bool {
+		if term == "" {
+			return true
+		}
+		hay := strings.ToLower(d.value + " " + d.scenario + " " + d.origin + " " + d.scope + " " + d.typ)
+		return strings.Contains(hay, term)
+	}
+
+	var filtered []csSearchRow
+	facetOrigin, facetType := 0, 0
+	for _, d := range parsed {
+		if matchOrigin(d) && matchType(d) && matchIP(d) && matchScenario(d) && matchQ(d) {
+			filtered = append(filtered, d)
+		}
+		if matchOrigin(d) && matchQ(d) {
+			facetOrigin++
+		}
+		if matchType(d) && matchQ(d) {
+			facetType++
+		}
+	}
+
+	sort.SliceStable(filtered, func(i, j int) bool {
+		if filtered[i].own != filtered[j].own {
+			return filtered[i].own
+		}
+		return filtered[i].id > filtered[j].id
+	})
+
+	total := len(filtered)
+	pages := 1
+	if total > 0 {
+		pages = (total + per - 1) / per
+	}
+	if page > pages {
+		page = pages
+	}
+	start := (page - 1) * per
+	if start > total {
+		start = total
+	}
+	end := start + per
+	if end > total {
+		end = total
+	}
+	outRows := make([]json.RawMessage, 0, end-start)
+	for _, d := range filtered[start:end] {
+		outRows = append(outRows, d.raw)
+	}
+
+	jsonOK(w, map[string]any{
+		"rows": outRows, "total": total, "page": page, "pages": pages, "per": per,
+		"facet_totals": map[string]any{"origin": facetOrigin, "type": facetType},
+	})
+}
+
+type csSearchRow struct {
+	raw      json.RawMessage
+	id       int64
+	origin   string
+	typ      string
+	value    string
+	scope    string
+	scenario string
+	own      bool
 }
 
 func (a *App) crowdsecAlertsHandler(w http.ResponseWriter, r *http.Request) {
@@ -678,8 +822,8 @@ func (a *App) crowdsecAlertsHandler(w http.ResponseWriter, r *http.Request) {
 			limit = n
 		}
 	}
-	chunk, err := a.csPageJSON(r.Context(),
-		fmt.Sprintf("/v1/alerts?limit=%d&with_decisions=false", limit), true)
+	forceFull := r.URL.Query().Get("full") == "1"
+	chunk, _, _, err := a.csAlerts(r.Context(), limit, forceFull)
 	if err != nil {
 		jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
 		return
@@ -769,6 +913,7 @@ func (a *App) crowdsecAddDecisionHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	csCacheReset()
+	csAlertCacheReset()
 	jsonOK(w, map[string]any{"ok": true})
 }
 
@@ -1838,7 +1983,7 @@ func csCacheReset() {
 	csCache.sync = time.Time{}
 }
 
-func (a *App) csDecisionsStream(ctx context.Context, forceFull bool) ([]json.RawMessage, bool, error) {
+func (a *App) csDecisionsStream(ctx context.Context, forceFull bool) ([]json.RawMessage, string, error) {
 	fp := a.csFingerprint()
 	csCache.mu.Lock()
 	defer csCache.mu.Unlock()
@@ -1852,21 +1997,22 @@ func (a *App) csDecisionsStream(ctx context.Context, forceFull bool) ([]json.Raw
 	resp, err := a.csRequest(ctx, http.MethodGet, path, nil, false)
 	if err != nil {
 		if csCache.ready && csCache.fp == fp {
-			return csCacheItems(), true, nil
+			return csCacheItems(), csStaleMode(csCacheDecisionAge(), err), nil
 		}
-		return nil, false, err
+		return nil, "", err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
+		lapiErr := fmt.Errorf("LAPI %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
 		if csCache.ready && csCache.fp == fp && resp.StatusCode >= 500 {
-			return csCacheItems(), true, nil
+			return csCacheItems(), csStaleMode(csCacheDecisionAge(), lapiErr), nil
 		}
-		return nil, false, fmt.Errorf("LAPI %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+		return nil, "", lapiErr
 	}
 	var payload csStreamPayload
 	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
-		return nil, false, fmt.Errorf("LAPI 404: stream payload not understood: %w", err)
+		return nil, "", fmt.Errorf("LAPI 404: stream payload not understood: %w", err)
 	}
 	if full {
 		csCache.items = map[int64]json.RawMessage{}
@@ -1884,7 +2030,17 @@ func (a *App) csDecisionsStream(ctx context.Context, forceFull bool) ([]json.Raw
 	csCache.fp = fp
 	csCache.ready = true
 	csCache.sync = time.Now()
-	return csCacheItems(), false, nil
+	if full {
+		return csCacheItems(), "full", nil
+	}
+	return csCacheItems(), "delta", nil
+}
+
+func csCacheDecisionAge() time.Duration {
+	if csCache.sync.IsZero() {
+		return 0
+	}
+	return time.Since(csCache.sync)
 }
 
 func csCacheItems() []json.RawMessage {
@@ -1897,7 +2053,33 @@ func csCacheItems() []json.RawMessage {
 
 var csStreamable = true
 
-func (a *App) writeActiveDecisions(w http.ResponseWriter, rows []json.RawMessage, now time.Time) {
+const csStaleAfter = 15 * time.Minute
+
+func csStaleMode(age time.Duration, err error) string {
+	if age >= csStaleAfter {
+		return fmt.Sprintf("stale:%d:%s", int(age.Seconds()), err.Error())
+	}
+	return "cache"
+}
+
+func csStaleNoteFromMode(mode string) string {
+	if !strings.HasPrefix(mode, "stale:") {
+		return ""
+	}
+	parts := strings.SplitN(mode, ":", 3)
+	if len(parts) != 3 {
+		return "CrowdSec has not answered recently, so these decisions are the last ones read and may be out of date."
+	}
+	return fmt.Sprintf("CrowdSec has not answered for %ss, so these decisions are the last ones read and may be "+
+		"out of date. %s", parts[1], parts[2])
+}
+
+func csTruthy(v string) bool {
+	v = strings.ToLower(strings.TrimSpace(v))
+	return v == "1" || v == "true" || v == "yes"
+}
+
+func csFilterActive(rows []json.RawMessage, now time.Time) []json.RawMessage {
 	active := make([]json.RawMessage, 0, len(rows))
 	for _, raw := range rows {
 		var d struct {
@@ -1910,8 +2092,309 @@ func (a *App) writeActiveDecisions(w http.ResponseWriter, rows []json.RawMessage
 		}
 		active = append(active, raw)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(active)
+	return active
+}
+
+type csAlertCacheData struct {
+	mu     sync.Mutex
+	items  map[int64]json.RawMessage
+	fp     string
+	limit  int
+	ready  bool
+	synced time.Time
+}
+
+var csAlertCache = &csAlertCacheData{items: map[int64]json.RawMessage{}}
+
+const csAlertFreshWindow = 5 * time.Second
+
+func csAlertCacheReset() {
+	csAlertCache.mu.Lock()
+	defer csAlertCache.mu.Unlock()
+	csAlertCache.items = map[int64]json.RawMessage{}
+	csAlertCache.fp = ""
+	csAlertCache.limit = 0
+	csAlertCache.ready = false
+	csAlertCache.synced = time.Time{}
+}
+
+func csAlertItems() []json.RawMessage {
+	out := make([]json.RawMessage, 0, len(csAlertCache.items))
+	for _, v := range csAlertCache.items {
+		out = append(out, v)
+	}
+	sort.Slice(out, func(i, j int) bool { return decID(out[i]) > decID(out[j]) })
+	return out
+}
+
+func csAlertTrimToLimit(limit int) {
+	if limit <= 0 || len(csAlertCache.items) <= limit {
+		return
+	}
+	ids := make([]int64, 0, len(csAlertCache.items))
+	for id := range csAlertCache.items {
+		ids = append(ids, id)
+	}
+	sort.Slice(ids, func(i, j int) bool { return ids[i] > ids[j] })
+	keep := make(map[int64]json.RawMessage, limit)
+	for _, id := range ids[:limit] {
+		keep[id] = csAlertCache.items[id]
+	}
+	csAlertCache.items = keep
+}
+
+func (a *App) csAlerts(ctx context.Context, limit int, forceFull bool) ([]json.RawMessage, string, int, error) {
+	fp := a.csFingerprint()
+	csAlertCache.mu.Lock()
+	defer csAlertCache.mu.Unlock()
+
+	now := time.Now()
+	age := time.Duration(0)
+	if !csAlertCache.synced.IsZero() {
+		age = now.Sub(csAlertCache.synced)
+	}
+	readyForFP := csAlertCache.ready && csAlertCache.fp == fp && csAlertCache.limit == limit
+
+	if !forceFull && readyForFP && age < csAlertFreshWindow {
+		return csAlertItems(), "cache", 200, nil
+	}
+
+	full := forceFull || !readyForFP || age > csStreamResync
+	path := fmt.Sprintf("/v1/alerts?limit=%d&with_decisions=false", limit)
+	if !full {
+		path = fmt.Sprintf("/v1/alerts?since=%ds&limit=%d&with_decisions=false", int(age.Seconds())+60, limit)
+	}
+	resp, err := a.csRequest(ctx, http.MethodGet, path, nil, true)
+	if err != nil {
+		if readyForFP {
+			return csAlertItems(), csStaleMode(age, err), 0, nil
+		}
+		return nil, "", 0, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		lapiErr := fmt.Errorf("LAPI %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+		if readyForFP {
+			return csAlertItems(), csStaleMode(age, lapiErr), resp.StatusCode, nil
+		}
+		return nil, "", resp.StatusCode, lapiErr
+	}
+	var payload []json.RawMessage
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		if readyForFP {
+			return csAlertItems(), csStaleMode(age, err), 0, nil
+		}
+		return nil, "", 0, err
+	}
+	if full {
+		csAlertCache.items = map[int64]json.RawMessage{}
+	}
+	for _, raw := range payload {
+		if id := decID(raw); id != 0 {
+			csAlertCache.items[id] = raw
+		}
+	}
+	csAlertTrimToLimit(limit)
+	csAlertCache.fp = fp
+	csAlertCache.limit = limit
+	csAlertCache.ready = true
+	csAlertCache.synced = now
+	if full {
+		return csAlertItems(), "full", 200, nil
+	}
+	return csAlertItems(), "delta", 200, nil
+}
+
+type csDecisionsSummary struct {
+	OK         bool              `json:"ok"`
+	Error      string            `json:"error"`
+	Stale      string            `json:"stale"`
+	Total      int               `json:"total"`
+	Own        int               `json:"own"`
+	Subscribed int               `json:"subscribed"`
+	Wide       int               `json:"wide"`
+	Origins    map[string]int    `json:"origins"`
+	Types      map[string]int    `json:"types"`
+	Rows       []json.RawMessage `json:"rows"`
+	RowsMore   int               `json:"rows_more"`
+}
+
+type csAlertsSummary struct {
+	OK     bool             `json:"ok"`
+	Error  string           `json:"error"`
+	Status int              `json:"status"`
+	Limit  int              `json:"limit"`
+	Capped bool             `json:"capped"`
+	Rows   []map[string]any `json:"rows"`
+}
+
+const csSummaryRowCap = 500
+
+func (a *App) csSummaryDecisions(ctx context.Context, forceFull bool) (csDecisionsSummary, []int64, map[string]bool) {
+	block := csDecisionsSummary{Origins: map[string]int{}, Types: map[string]int{}, Rows: []json.RawMessage{}}
+	rows, staleNote, err := a.csActiveDecisions(ctx, forceFull)
+	if err != nil {
+		block.Error = err.Error()
+		return block, nil, map[string]bool{}
+	}
+	block.OK = true
+	block.Stale = staleNote
+
+	valueSet := map[string]bool{}
+	type ownRow struct {
+		raw json.RawMessage
+		id  int64
+	}
+	var ownRows []ownRow
+	ids := make([]int64, 0, len(rows))
+	for _, raw := range rows {
+		var d struct {
+			ID     int64  `json:"id"`
+			Origin string `json:"origin"`
+			Type   string `json:"type"`
+			Scope  string `json:"scope"`
+			Value  string `json:"value"`
+		}
+		if json.Unmarshal(raw, &d) != nil {
+			continue
+		}
+		block.Total++
+		ids = append(ids, d.ID)
+		originKey := strings.ToLower(strings.TrimSpace(d.Origin))
+		subscribed := originKey == "capi" || originKey == "lists"
+		if subscribed {
+			block.Subscribed++
+		} else {
+			block.Own++
+		}
+		if d.Scope != "Ip" {
+			block.Wide++
+		}
+		if d.Scope == "Ip" || d.Scope == "Range" {
+			valueSet[d.Value] = true
+		}
+		block.Origins[originKey]++
+		block.Types[strings.ToLower(d.Type)]++
+		if !subscribed && originKey != "crowdsec" {
+			ownRows = append(ownRows, ownRow{raw: raw, id: d.ID})
+		}
+	}
+	sort.Slice(ownRows, func(i, j int) bool { return ownRows[i].id > ownRows[j].id })
+	if len(ownRows) > csSummaryRowCap {
+		block.RowsMore = len(ownRows) - csSummaryRowCap
+		ownRows = ownRows[:csSummaryRowCap]
+	}
+	block.Rows = make([]json.RawMessage, 0, len(ownRows))
+	for _, r := range ownRows {
+		block.Rows = append(block.Rows, r.raw)
+	}
+	return block, ids, valueSet
+}
+
+var csAlertTrimKeys = []string{
+	"id", "uuid", "scenario", "scenario_version", "events_count", "capacity",
+	"leakspeed", "simulated", "machine_id", "message", "start_at", "stop_at", "created_at", "source", "meta",
+}
+
+func csTrimAlert(raw json.RawMessage, valueSet map[string]bool, decisionsOK bool) map[string]any {
+	var full map[string]any
+	if json.Unmarshal(raw, &full) != nil {
+		return map[string]any{}
+	}
+	out := make(map[string]any, len(csAlertTrimKeys)+1)
+	for _, k := range csAlertTrimKeys {
+		if v, ok := full[k]; ok {
+			out[k] = v
+		}
+	}
+	if decisionsOK {
+		ip := ""
+		if src, ok := full["source"].(map[string]any); ok {
+			if v, ok := src["ip"].(string); ok && v != "" {
+				ip = v
+			} else if v, ok := src["value"].(string); ok {
+				ip = v
+			}
+		}
+		out["handled"] = valueSet[ip]
+	}
+	return out
+}
+
+func (a *App) csSummaryAlerts(ctx context.Context, limit int, forceFull, decisionsOK bool,
+	valueSet map[string]bool) (csAlertsSummary, []int64) {
+	block := csAlertsSummary{Limit: limit, Rows: []map[string]any{}}
+	rows, _, status, err := a.csAlerts(ctx, limit, forceFull)
+	if err != nil {
+		block.Error = err.Error()
+		block.Status = status
+		return block, nil
+	}
+	block.OK = true
+	block.Status = 200
+	block.Capped = limit > 0 && len(rows) >= limit
+	ids := make([]int64, 0, len(rows))
+	block.Rows = make([]map[string]any, 0, len(rows))
+	for _, raw := range rows {
+		ids = append(ids, decID(raw))
+		block.Rows = append(block.Rows, csTrimAlert(raw, valueSet, decisionsOK))
+	}
+	return block, ids
+}
+
+func csSummaryVersion(decisionIDs, alertIDs []int64, decisionsOK, alertsOK bool) string {
+	dCopy := append([]int64(nil), decisionIDs...)
+	sort.Slice(dCopy, func(i, j int) bool { return dCopy[i] < dCopy[j] })
+	aCopy := append([]int64(nil), alertIDs...)
+	sort.Slice(aCopy, func(i, j int) bool { return aCopy[i] < aCopy[j] })
+
+	toCSV := func(ids []int64) string {
+		parts := make([]string, len(ids))
+		for i, id := range ids {
+			parts[i] = strconv.FormatInt(id, 10)
+		}
+		return strings.Join(parts, ",")
+	}
+	dFlag, aFlag := "0", "0"
+	if decisionsOK {
+		dFlag = "1"
+	}
+	if alertsOK {
+		aFlag = "1"
+	}
+	raw := toCSV(dCopy) + "|" + toCSV(aCopy) + "|" + dFlag + aFlag
+	sum := sha1.Sum([]byte(raw))
+	return hex.EncodeToString(sum[:])[:16]
+}
+
+func (a *App) crowdsecSummaryHandler(w http.ResponseWriter, r *http.Request) {
+	if a.cfg.CrowdSecLAPIURL == "" {
+		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		return
+	}
+	q := r.URL.Query()
+	forceFull := csTruthy(q.Get("full"))
+	limit := a.cfg.CrowdSecAlertLimit
+	if v := q.Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 && n <= 100000 {
+			limit = n
+		}
+	}
+
+	decisionsBlock, decisionIDs, valueSet := a.csSummaryDecisions(r.Context(), forceFull)
+	alertsBlock, alertIDs := a.csSummaryAlerts(r.Context(), limit, forceFull, decisionsBlock.OK, valueSet)
+	version := csSummaryVersion(decisionIDs, alertIDs, decisionsBlock.OK, alertsBlock.OK)
+
+	if v := strings.TrimSpace(q.Get("version")); v != "" && v == version {
+		jsonOK(w, map[string]any{"version": version, "unchanged": true})
+		return
+	}
+	jsonOK(w, map[string]any{
+		"version":   version,
+		"decisions": decisionsBlock,
+		"alerts":    alertsBlock,
+	})
 }
 
 func bakBaseName(n string) string {

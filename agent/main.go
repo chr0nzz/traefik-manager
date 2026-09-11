@@ -247,6 +247,10 @@ func (a *App) router(w http.ResponseWriter, r *http.Request) {
 		a.crowdsecAddDecisionHandler(w, r)
 	case p == "/api/crowdsec/alerts" && m == http.MethodGet:
 		a.crowdsecAlertsHandler(w, r)
+	case p == "/api/crowdsec/summary" && m == http.MethodGet:
+		a.crowdsecSummaryHandler(w, r)
+	case p == "/api/crowdsec/decisions/search" && m == http.MethodGet:
+		a.crowdsecDecisionsSearchHandler(w, r)
 	case strings.HasPrefix(p, "/api/crowdsec/decisions/") && m == http.MethodDelete:
 		id := strings.TrimPrefix(p, "/api/crowdsec/decisions/")
 		a.crowdsecProxy(w, r, http.MethodDelete, "/v1/decisions/"+id)

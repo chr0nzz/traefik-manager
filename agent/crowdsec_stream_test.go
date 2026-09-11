@@ -65,7 +65,6 @@ func newStreamStub(t *testing.T, supportStream bool) (*httptest.Server, *[]strin
 	return srv, &paths
 }
 
-
 func TestAgentDecisionsUseStreamAndThenDelta(t *testing.T) {
 	resetCSCache()
 	srv, paths := newStreamStub(t, true)
