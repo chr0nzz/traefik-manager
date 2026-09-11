@@ -574,15 +574,27 @@ function addSvcHcHeader(data) {
     wrap.appendChild(row);
 }
 
+function _svcDurationShort(v) {
+    const s = String(v === undefined || v === null ? '' : v).trim();
+    const m = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?(?:(\d+)ms)?$/.exec(s);
+    if (!m || !s) return s;
+    const parts = [];
+    if (m[1] && Number(m[1])) parts.push(m[1] + 'h');
+    if (m[2] && Number(m[2])) parts.push(m[2] + 'm');
+    if (m[3] && Number(m[3])) parts.push(m[3] + 's');
+    if (m[4] && Number(m[4])) parts.push(m[4] + 'ms');
+    return parts.length ? parts.join('') : s;
+}
+
 function _svcHcFill(hc) {
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = (v === undefined || v === null) ? '' : String(v); };
-    const on = !!(hc && hc.path);
+    const on = !!(hc && typeof hc === 'object' && Object.keys(hc).length);
     const en = document.getElementById('svcHcEnabled');
     if (en) en.checked = on;
     set('svcHcPath', hc && hc.path);
-    set('svcHcInterval', hc && hc.interval);
-    set('svcHcTimeout', hc && hc.timeout);
-    set('svcHcUnhealthy', hc && hc.unhealthyInterval);
+    set('svcHcInterval', _svcDurationShort(hc && hc.interval));
+    set('svcHcTimeout', _svcDurationShort(hc && hc.timeout));
+    set('svcHcUnhealthy', _svcDurationShort(hc && hc.unhealthyInterval));
     set('svcHcMethod', hc && hc.method);
     set('svcHcStatus', hc && hc.status);
     set('svcHcScheme', (hc && hc.scheme) || '');

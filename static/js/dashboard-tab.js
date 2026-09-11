@@ -787,6 +787,8 @@ function _dskAgo(at) {
     return 'checked ' + Math.floor(sec / 3600) + 'h ago';
 }
 
+const DSK_HIT_MS = 2400;
+
 function _dskTogglePod(name, force) {
     const entry = _dskPods.get(name);
     const grid  = document.getElementById('dashPodsGrid');
@@ -801,6 +803,9 @@ function _dskTogglePod(name, force) {
     if (force === true) {
         const bad = fresh.querySelector('[data-health="down"]') || fresh.querySelector('[data-health="warn"]');
         if (bad) {
+            const hits = fresh.querySelectorAll('.dsk-row[data-health="down"], .dsk-row[data-health="warn"], .dsk-tile[data-health="down"], .dsk-tile[data-health="warn"]');
+            hits.forEach(el => el.classList.add('dsk-hit'));
+            setTimeout(() => hits.forEach(el => el.classList.remove('dsk-hit')), DSK_HIT_MS);
             bad.scrollIntoView({ block: 'nearest' });
             bad.focus({ preventScroll: true });
             return;

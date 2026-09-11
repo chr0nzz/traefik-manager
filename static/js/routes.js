@@ -2276,15 +2276,26 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     const svcServers = svcLoadBalancer ? (svcLoadBalancer.servers || []) : [{ url: app.target }];
     const svcPassHostHeader = svcLoadBalancer ? (svcLoadBalancer.passHostHeader !== false ? 'true' : 'false') : '-';
     const svcStatus = liveService ? (liveService.status || '-') : '-';
+    const svcServerStatus = (liveService && liveService.serverStatus && typeof liveService.serverStatus === 'object') ? liveService.serverStatus : null;
+    const svcChecked = !!(svcServerStatus && Object.keys(svcServerStatus).length && svcLoadBalancer && svcLoadBalancer.healthCheck);
+    const svcUp = svcServerStatus ? Object.values(svcServerStatus).filter(v => String(v).toUpperCase() === 'UP').length : 0;
+    const svcTotal = svcServerStatus ? Object.keys(svcServerStatus).length : 0;
 
-    const svcServerRows = svcServers.map((s, i) => [
-        `Server ${i + 1}`,
-        s.url || s.address || '-',
-        false
-    ]);
+    const svcServerRows = svcServers.map((s, i) => {
+        const url = s.url || s.address || '-';
+        const st = svcServerStatus ? svcServerStatus[url] : undefined;
+        if (st === undefined) return [`Server ${i + 1}`, url, false];
+        const up = String(st).toUpperCase() === 'UP';
+        return [`Server ${i + 1}`,
+            `<span class="d-state d-flat ${up ? 'd-on' : 'd-bad'}"><span class="status-dot ${up ? 'status-online' : 'status-offline'}"></span>${up ? 'UP' : 'DOWN'}</span> <span class="font-mono">${_esc(url)}</span>`,
+            true];
+    });
+    const svcHealthTxt = !svcChecked ? ''
+        : svcUp === svcTotal ? `<span class="text-xs ml-2" style="color:var(--muted)">${svcUp} of ${svcTotal} servers up</span>`
+        : `<span class="text-xs ml-2 font-semibold" style="color:${svcUp === 0 ? 'var(--red)' : 'var(--yellow)'}">${svcUp === 0 ? 'all' : svcTotal - svcUp + ' of'} ${svcTotal} servers down</span>`;
 
     const svcRows = [
-        ['Status', svcStatus !== '-' ? _dState(svcStatus === 'enabled' ? 'Enabled' : svcStatus) : '-', svcStatus !== '-'],
+        ['Status', svcStatus !== '-' ? _dState(svcStatus === 'enabled' ? 'Enabled' : svcStatus) + svcHealthTxt : '-', svcStatus !== '-'],
         ['Type', app.serviceType && app.serviceType !== 'loadBalancer' ? app.serviceType : 'Load Balancer', false],
         ['Pass Host Header', svcPassHostHeader, false],
         ...(app.containerAddr ? [['Container', app.containerAddr, false]] : []),

@@ -200,7 +200,11 @@ function _sdObj(raw, kind, ctx) {
             if (o.composite) { o.reason = o.composite + ' service, health lives on its children'; return o; }
             o.cell = 'idle'; o.reason = 'no health check configured'; o.unchecked = true; return o;
         }
-        if (o.backends.down > 0) {
+        if (o.backends.down > 0 && o.backends.up === 0) {
+            o.cell = 'err';
+            o.reason = 'all ' + o.backends.total + ' backends DOWN';
+            o.down = true;
+        } else if (o.backends.down > 0) {
             o.cell = 'warn';
             o.reason = o.backends.down + ' of ' + o.backends.total + ' backends DOWN';
             o.degraded = true;
@@ -383,6 +387,7 @@ function _sdSubOffender(objs, tail) {
     const more = worst.length - 1;
     const head = '<b>' + _esc(first.name || first.short) + '</b> ';
     const count = more > 0 ? ', +' + _sdNum(more) + ' more' : '';
+    if (tail && !more && String(first.reason || '').toLowerCase() === String(tail).toLowerCase()) tail = '';
     const parts = _sdSubParts(head + _esc(_sdTerse(first.reason)) + count, tail);
     parts.full = _sdPlain(head + _esc(first.reason) + count + (tail ? SD_SEP + tail : ''));
     return parts;
@@ -837,7 +842,8 @@ function _sdRender(model) {
         sub: v.total === 0 ? _sdSubPlain(emptyTxt('service')) : _sdSubOffender(v.objs, backendTxt),
         flags: [
             v.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle',            v.t.disabled, 'disabled',      'tab=live;svcstatus=error',   v.groups.disabled),
-            v.t.degraded && _sdExc('d-warn', 'ph-fill ph-arrow-fat-line-down', v.t.degraded, 'backends down', 'tab=live;svcstatus=warning', v.groups.degraded),
+            v.t.down     && _sdExc('d-bad',  'ph-fill ph-arrow-fat-line-down', v.t.down,     'backends down', 'tab=live;svcstatus=error',   v.groups.down),
+            v.t.degraded && _sdExc('d-warn', 'ph-fill ph-warning-diamond',     v.t.degraded, 'degraded',      'tab=live;svcstatus=warning', v.groups.degraded),
             v.t.warning  && _sdExc('d-warn', 'ph-fill ph-warning',             v.t.warning,  'warnings',      'tab=live;svcstatus=warning', v.groups.warning),
             v.t.composite && _sdExc('d-off', 'ph-bold ph-share-network',        v.t.composite, 'composite',    'tab=live',                   v.groups.composite),
         ].filter(Boolean),
@@ -899,7 +905,8 @@ function _sdRender(model) {
         if (m.http.t.warning)        items.push(_sdExc('d-warn', 'ph-fill ph-warning',             m.http.t.warning,        'router warnings',      'tab=services;proto=http;apistatus=warning',  m.http.groups.warning));
         if (m.stream.t.disabled)     items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.stream.t.disabled,     'stream disabled',      sGo + ';apistatus=disabled',                  m.stream.groups.disabled));
         if (m.service.t.disabled)    items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.service.t.disabled,    'services disabled',    'tab=live;svcstatus=error',                   m.service.groups.disabled));
-        if (m.service.t.degraded)    items.push(_sdExc('d-warn', 'ph-fill ph-arrow-fat-line-down', m.service.t.degraded,    'backends down',        'tab=live;svcstatus=warning',                 m.service.groups.degraded));
+        if (m.service.t.down)        items.push(_sdExc('d-bad',  'ph-fill ph-arrow-fat-line-down', m.service.t.down,        'services down',        'tab=live;svcstatus=error',                   m.service.groups.down));
+        if (m.service.t.degraded)    items.push(_sdExc('d-warn', 'ph-fill ph-warning-diamond',     m.service.t.degraded,    'services degraded',    'tab=live;svcstatus=warning',                 m.service.groups.degraded));
         if (m.service.t.warning)     items.push(_sdExc('d-warn', 'ph-fill ph-warning',             m.service.t.warning,     'service warnings',     'tab=live;svcstatus=warning',                 m.service.groups.warning));
         if (m.middleware.t.disabled) items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.middleware.t.disabled, 'middlewares disabled', 'tab=middlewares',                            m.middleware.groups.disabled));
 

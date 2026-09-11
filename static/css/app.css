@@ -840,6 +840,7 @@ label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); 
 
 .sig-root .dsk-row { position: relative; display: grid; align-items: center; grid-template-columns: 34px minmax(0, 1fr) 56px; grid-template-areas: "ic id rail" "ic note rail"; column-gap: 9px; row-gap: 2px; min-width: 0; padding: 5px 2px 5px 4px; border-radius: 6px; border-top: 1px solid var(--border); color: inherit; transition: background .12s, box-shadow .12s, opacity .12s; }
 .sig-root .dsk-row:first-child { border-top: none; }
+.sig-root .dsk-row.dsk-hit, .sig-root .dsk-tile.dsk-hit { animation: pulse .8s ease-in-out 3; }
 .sig-root .dsk-row:hover, .sig-root .dsk-row:focus-within { background: color-mix(in srgb, var(--blue) 6%, transparent); box-shadow: inset 2px 0 0 var(--blue); }
 .sig-root .dsk-row[data-health="warn"] { box-shadow: inset 2px 0 0 var(--yellow); }
 .sig-root .dsk-row[data-health="warn"]:hover, .sig-root .dsk-row[data-health="warn"]:focus-within { background: color-mix(in srgb, var(--yellow) 7%, transparent); box-shadow: inset 2px 0 0 var(--yellow); }

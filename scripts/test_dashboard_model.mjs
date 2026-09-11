@@ -293,8 +293,11 @@ test('the tally, the groups and the aria line all surface composites', () => {
 
 test('a composite that does report server status is still judged on it', () => {
     const o = svcModel([svc('w@file', { weighted: { services: [] }, serverStatus: { a: 'DOWN' } })])[0];
-    assert.equal(o.degraded, true);
-    assert.equal(o.cell, 'warn');
+    assert.equal(o.down, true, 'every server down is down, not degraded');
+    assert.equal(o.cell, 'err');
+    const p = svcModel([svc('p@file', { loadBalancer: {}, serverStatus: { a: 'DOWN', b: 'UP' } })])[0];
+    assert.equal(p.degraded, true);
+    assert.equal(p.cell, 'warn');
 });
 
 test('the services card carries a composite chip so composites are visible, not silent', () => {
