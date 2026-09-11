@@ -32,14 +32,17 @@ def test_neither_by_hand_origin_is_treated_as_a_subscription():
 def test_the_by_hand_chip_matches_both_origins():
     js = _js()
     assert "origin: 'byhand'" in js
-    m = re.search(r"f\.origin === 'byhand'.*?\n", js)
-    assert m and 'ATK_BY_HAND' in m.group(0), \
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(root, 'app.py'), encoding='utf-8') as fh:
+        src = fh.read()
+    m = re.search(r"def _cs_is_byhand\(d: dict\) -> bool:\n(.*?)\n", src)
+    assert m and 'cscli' in m.group(1) and 'manual' in m.group(1), \
         'clicking the chip must show manual decisions as well as cscli ones'
 
 
 def test_the_other_bucket_no_longer_swallows_manual():
     js = _js()
-    m = re.search(r'const otherOwn = own\.filter\(([^;]*)\);', js)
+    m = re.search(r'const otherNames = Object\.keys\(origins\)\.filter\(([^;]*)\);', js)
     assert m, 'the other bucket moved'
     assert 'ATK_BY_HAND' in m.group(1)
 

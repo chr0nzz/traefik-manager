@@ -1973,9 +1973,7 @@ def _cs_age_text(seconds: int) -> str:
     return f"{minutes} minute{'s' if minutes != 1 else ''}"
 
 
-@app.route('/api/crowdsec/decisions')
-@login_required
-def api_cs_decisions():
+def _cs_decisions_gate():
     lapi = _cs_lapi_url()
     key  = _cs_api_key()
     if not lapi:
@@ -1983,58 +1981,90 @@ def api_cs_decisions():
     if not key and not _cs_has_cert():
         return jsonify({'error': 'No bouncer API key or client certificate. CrowdSec only accepts a bouncer key '
                                  'or a TLS client certificate on /v1/decisions, the machine token is refused there'}), 503
+    return None
+
+
+def _cs_active_decisions(force_full: bool = False):
+    lapi = _cs_lapi_url()
+    key  = _cs_api_key()
+    all_decisions = None
+    stale_note = ''
+    if _crowd._cs_stream_cache.get('streamable', True):
+        try:
+            all_decisions, _mode = _crowd.cs_decisions_stream(force_full=force_full)
+            if str(_mode).startswith('stale:'):
+                _, _age, _why = str(_mode).split(':', 2)
+                stale_note = (f'CrowdSec has not answered for {_cs_age_text(int(_age))}, so these '
+                              f'decisions are the last ones read and may be out of date. {_why}')
+        except CrowdSecUnavailable as e:
+            if 'HTTP 404' in str(e) or 'HTTP 405' in str(e):
+                logger.info("CrowdSec LAPI has no /v1/decisions/stream, falling back to the paged walk")
+                _crowd._cs_stream_cache['streamable'] = False
+                all_decisions = None
+            else:
+                raise
+    if all_decisions is None:
+        all_decisions = []
+        cursor = 0
+        for _page in range(CS_MAX_PAGES):
+            try:
+                chunk = _cs_request_strict('GET', f'/v1/decisions?limit={CS_PAGE_SIZE}&id_gt={cursor}',
+                                           lapi=lapi, key=key)
+            except CrowdSecUnavailable:
+                if all_decisions:
+                    logger.warning(f"CrowdSec decisions walk failed at page {_page + 1}, "
+                                   f"returning the {len(all_decisions)} rows already read")
+                    break
+                raise
+            if not isinstance(chunk, list) or not chunk:
+                break
+            all_decisions.extend(chunk)
+            ids = [d.get('id') for d in chunk if isinstance(d.get('id'), int)]
+            if not ids:
+                break
+            cursor = max(ids)
+            if len(chunk) < CS_PAGE_SIZE:
+                break
+    now = datetime.now(timezone.utc)
+    active = []
+    for d in all_decisions:
+        until = d.get('until')
+        if until:
+            try:
+                exp = datetime.fromisoformat(until.replace('Z', '+00:00'))
+                if exp < now:
+                    continue
+            except Exception:
+                pass
+        active.append(d)
+    return active, stale_note
+
+
+def _cs_origin_key(d: dict) -> str:
+    return str(d.get('origin') or '').strip().lower()
+
+
+def _cs_is_subscribed(d: dict) -> bool:
+    return _cs_origin_key(d) in ('capi', 'lists')
+
+
+def _cs_is_own(d: dict) -> bool:
+    return not _cs_is_subscribed(d)
+
+
+def _cs_is_byhand(d: dict) -> bool:
+    return _cs_origin_key(d) in ('cscli', 'manual')
+
+
+@app.route('/api/crowdsec/decisions')
+@login_required
+def api_cs_decisions():
+    gate = _cs_decisions_gate()
+    if gate:
+        return gate
     force_full = request.args.get('full') in ('1', 'true', 'yes')
     try:
-        all_decisions = None
-        stale_note = ''
-        if _crowd._cs_stream_cache.get('streamable', True):
-            try:
-                all_decisions, _mode = _crowd.cs_decisions_stream(force_full=force_full)
-                if str(_mode).startswith('stale:'):
-                    _, _age, _why = str(_mode).split(':', 2)
-                    stale_note = (f'CrowdSec has not answered for {_cs_age_text(int(_age))}, so these '
-                                  f'decisions are the last ones read and may be out of date. {_why}')
-            except CrowdSecUnavailable as e:
-                if 'HTTP 404' in str(e) or 'HTTP 405' in str(e):
-                    logger.info("CrowdSec LAPI has no /v1/decisions/stream, falling back to the paged walk")
-                    _crowd._cs_stream_cache['streamable'] = False
-                    all_decisions = None
-                else:
-                    raise
-        if all_decisions is None:
-            all_decisions = []
-            cursor = 0
-            for _page in range(CS_MAX_PAGES):
-                try:
-                    chunk = _cs_request_strict('GET', f'/v1/decisions?limit={CS_PAGE_SIZE}&id_gt={cursor}',
-                                               lapi=lapi, key=key)
-                except CrowdSecUnavailable:
-                    if all_decisions:
-                        logger.warning(f"CrowdSec decisions walk failed at page {_page + 1}, "
-                                       f"returning the {len(all_decisions)} rows already read")
-                        break
-                    raise
-                if not isinstance(chunk, list) or not chunk:
-                    break
-                all_decisions.extend(chunk)
-                ids = [d.get('id') for d in chunk if isinstance(d.get('id'), int)]
-                if not ids:
-                    break
-                cursor = max(ids)
-                if len(chunk) < CS_PAGE_SIZE:
-                    break
-        now = datetime.now(timezone.utc)
-        active = []
-        for d in all_decisions:
-            until = d.get('until')
-            if until:
-                try:
-                    exp = datetime.fromisoformat(until.replace('Z', '+00:00'))
-                    if exp < now:
-                        continue
-                except Exception:
-                    pass
-            active.append(d)
+        active, stale_note = _cs_active_decisions(force_full)
         if stale_note:
             logger.warning(f"CrowdSec decisions served from a stale cache: {stale_note}")
             resp = jsonify(active)
@@ -2047,47 +2077,209 @@ def api_cs_decisions():
         logger.exception("CrowdSec decisions error")
         return jsonify({'error': str(e)}), 500
 
+CS_SEARCH_PER_DEFAULT = 20
+CS_SEARCH_PER_MAX = 200
+
+
+@app.route('/api/crowdsec/decisions/search')
+@login_required
+def api_cs_decisions_search():
+    gate = _cs_decisions_gate()
+    if gate:
+        return gate
+    try:
+        active, stale_note = _cs_active_decisions()
+    except CrowdSecUnavailable as e:
+        return jsonify({'error': str(e)}), 502
+    except Exception as e:
+        logger.exception("CrowdSec decisions search error")
+        return jsonify({'error': str(e)}), 500
+
+    q          = request.args.get('q', '').strip().lower()
+    origin_f   = request.args.get('origin', '').strip()
+    type_f     = request.args.get('type', '').strip().lower()
+    ip_f       = request.args.get('ip', '').strip()
+    scenario_f = request.args.get('scenario', '').strip()
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
+    page = max(1, page)
+    try:
+        per = int(request.args.get('per', CS_SEARCH_PER_DEFAULT))
+    except ValueError:
+        per = CS_SEARCH_PER_DEFAULT
+    per = max(1, min(CS_SEARCH_PER_MAX, per))
+
+    def _match(d, use_origin=True, use_type=True, use_ip=True, use_scenario=True, use_q=True):
+        if use_origin and origin_f:
+            if origin_f == 'subscribed':
+                ok = _cs_is_subscribed(d)
+            elif origin_f == 'own':
+                ok = _cs_is_own(d)
+            elif origin_f == 'byhand':
+                ok = _cs_is_byhand(d)
+            else:
+                ok = _cs_origin_key(d) == origin_f.strip().lower()
+            if not ok:
+                return False
+        if use_type and type_f and str(d.get('type') or '').strip().lower() != type_f:
+            return False
+        if use_ip and ip_f and d.get('value') != ip_f:
+            return False
+        if use_scenario and scenario_f and d.get('scenario') != scenario_f:
+            return False
+        if use_q and q:
+            hay = ' '.join([str(d.get('value') or ''), str(d.get('scenario') or ''), _cs_origin_key(d),
+                            str(d.get('scope') or ''), str(d.get('type') or '')]).lower()
+            if q not in hay:
+                return False
+        return True
+
+    rows = [d for d in active if _match(d)]
+    rows.sort(key=lambda d: (0 if _cs_is_own(d) else 1, -(d.get('id') or 0)))
+    total = len(rows)
+    per_pages = -(-total // per) if total else 0
+    pages = max(1, per_pages)
+    page  = min(page, pages)
+    start = (page - 1) * per
+    page_rows = rows[start:start + per]
+    facet_totals = {
+        'origin': sum(1 for d in active if _match(d, use_type=False, use_ip=False, use_scenario=False)),
+        'type': sum(1 for d in active if _match(d, use_origin=False, use_ip=False, use_scenario=False)),
+    }
+    resp = jsonify({'rows': page_rows, 'total': total, 'page': page, 'pages': pages,
+                    'per': per, 'facet_totals': facet_totals})
+    if stale_note:
+        resp.headers['X-CS-Stale'] = stale_note
+    return resp
+
+CS_SUMMARY_ROW_CAP = 500
+CS_SUMMARY_ALERT_KEYS = ('id', 'uuid', 'scenario', 'scenario_version', 'events_count', 'capacity',
+                         'leakspeed', 'simulated', 'machine_id', 'message', 'start_at', 'stop_at',
+                         'created_at', 'source', 'meta')
+
+
+@app.route('/api/crowdsec/summary')
+@login_required
+def api_cs_summary():
+    lapi = _cs_lapi_url()
+    if not lapi:
+        return jsonify({'error': 'CrowdSec not configured'}), 503
+    force_full = request.args.get('full') in ('1', 'true', 'yes')
+    key = _cs_api_key()
+
+    decisions_block = {'ok': True, 'error': '', 'stale': '', 'total': 0, 'own': 0, 'subscribed': 0,
+                       'wide': 0, 'origins': {}, 'types': {}, 'rows': [], 'rows_more': 0}
+    active = []
+    if not key and not _cs_has_cert():
+        decisions_block['ok'] = False
+        decisions_block['error'] = ('No bouncer API key or client certificate. CrowdSec only accepts a bouncer key '
+                                    'or a TLS client certificate on /v1/decisions, the machine token is refused there')
+    else:
+        try:
+            active, stale_note = _cs_active_decisions(force_full)
+            decisions_block['stale'] = stale_note
+        except CrowdSecUnavailable as e:
+            decisions_block['ok'] = False
+            decisions_block['error'] = str(e)
+        except Exception as e:
+            logger.exception("CrowdSec summary decisions error")
+            decisions_block['ok'] = False
+            decisions_block['error'] = str(e)
+
+    if decisions_block['ok']:
+        origins   = {}
+        types     = {}
+        own_rows  = []
+        own_count = 0
+        subscribed_count = 0
+        wide_count = 0
+        for d in active:
+            okey = _cs_origin_key(d)
+            origins[okey] = origins.get(okey, 0) + 1
+            tkey = str(d.get('type') or '').strip().lower()
+            types[tkey] = types.get(tkey, 0) + 1
+            if _cs_is_subscribed(d):
+                subscribed_count += 1
+            else:
+                own_count += 1
+                if okey != 'crowdsec':
+                    own_rows.append(d)
+            if str(d.get('scope') or '') != 'Ip':
+                wide_count += 1
+        own_rows.sort(key=lambda d: -(d.get('id') or 0))
+        decisions_block['total'] = len(active)
+        decisions_block['own'] = own_count
+        decisions_block['subscribed'] = subscribed_count
+        decisions_block['wide'] = wide_count
+        decisions_block['origins'] = origins
+        decisions_block['types'] = types
+        decisions_block['rows'] = own_rows[:CS_SUMMARY_ROW_CAP]
+        decisions_block['rows_more'] = max(0, len(own_rows) - CS_SUMMARY_ROW_CAP)
+
+    alert_limit = cs_alert_limit()
+    alerts_block = {'ok': True, 'error': '', 'status': 200, 'limit': alert_limit, 'capped': False, 'rows': []}
+    alert_rows_raw = []
+    try:
+        alert_rows_raw, _mode = _crowd.cs_alerts(alert_limit, force_full=force_full)
+        alerts_block['capped'] = bool(alert_limit and len(alert_rows_raw) >= alert_limit)
+    except CrowdSecUnavailable as e:
+        alerts_block['ok'] = False
+        alerts_block['error'] = str(e)
+        alerts_block['status'] = getattr(e, 'status', 0) or 0
+    except Exception as e:
+        logger.exception("CrowdSec summary alerts error")
+        alerts_block['ok'] = False
+        alerts_block['error'] = str(e)
+        alerts_block['status'] = 0
+
+    if alerts_block['ok']:
+        handled_values = set()
+        if decisions_block['ok']:
+            handled_values = {d.get('value') for d in active if d.get('scope') in ('Ip', 'Range')}
+        trimmed = []
+        for a in alert_rows_raw:
+            row = {k: a[k] for k in CS_SUMMARY_ALERT_KEYS if k in a}
+            if decisions_block['ok']:
+                src = a.get('source') or {}
+                row['handled'] = (src.get('ip') or src.get('value')) in handled_values
+            trimmed.append(row)
+        trimmed.sort(key=lambda r: -(r.get('id') or 0))
+        alerts_block['rows'] = trimmed
+
+    dec_ids = sorted({d.get('id') for d in active if isinstance(d.get('id'), int)}) if decisions_block['ok'] else []
+    alert_ids = (sorted({a.get('id') for a in alert_rows_raw if isinstance(a.get('id'), int)})
+                if alerts_block['ok'] else [])
+    raw = (','.join(str(i) for i in dec_ids) + '|' + ','.join(str(i) for i in alert_ids) + '|' +
+          ('1' if decisions_block['ok'] else '0') + ('1' if alerts_block['ok'] else '0'))
+    version = hashlib.sha1(raw.encode('utf-8')).hexdigest()[:16]
+
+    req_version = request.args.get('version', '')
+    if req_version and req_version == version:
+        return jsonify({'version': version, 'unchanged': True})
+    return jsonify({'version': version, 'decisions': decisions_block, 'alerts': alerts_block})
+
 @app.route('/api/crowdsec/alerts')
 @login_required
 def api_cs_alerts():
     lapi = _cs_lapi_url()
     if not (lapi and (_cs_api_key() or _cs_has_machine())):
         return jsonify({'error': 'CrowdSec not configured'}), 503
+    force_full = request.args.get('full') in ('1', 'true', 'yes')
+    _limit = cs_alert_limit()
     try:
-        if _cs_has_machine():
-            token = _cs_jwt(lapi)
-            if not token:
-                return jsonify({'error': 'CrowdSec machine login failed - check CROWDSEC_MACHINE_ID / CROWDSEC_MACHINE_PASSWORD '
-                                         'or the client certificate'}), 502
-            headers = {'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
-        else:
-            headers = {'X-Api-Key': _cs_api_key(), 'Accept': 'application/json'}
-        _limit = cs_alert_limit()
-        _url = f"{lapi.rstrip('/')}/v1/alerts?limit={_limit}&with_decisions=false"
-        resp = requests.get(_url, headers=headers, timeout=cs_timeout(), **_cs_tls_kwargs())
-        if resp.status_code == 401 and _cs_has_machine():
-            logger.info("CrowdSec refused the machine token on /v1/alerts, logging in again")
-            _crowd.cs_jwt_reset()
-            token = _cs_jwt(lapi)
-            if token:
-                headers = {'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
-                resp = requests.get(_url, headers=headers, timeout=cs_timeout(), **_cs_tls_kwargs())
-        if not resp.ok:
-            try:
-                msg = resp.json().get('message') or resp.json().get('error') or resp.text
-            except Exception:
-                msg = resp.text
-            return jsonify({'error': f'LAPI {resp.status_code}: {msg}'}), resp.status_code
-        alerts = resp.json() if resp.content else []
-        if not isinstance(alerts, list):
-            alerts = []
-        out = jsonify(alerts)
-        out.headers['X-CS-Alert-Limit'] = str(_limit)
-        out.headers['X-CS-Alert-Capped'] = '1' if (_limit and len(alerts) >= _limit) else '0'
-        return out
+        alerts, _mode = _crowd.cs_alerts(_limit, force_full=force_full)
+    except CrowdSecUnavailable as e:
+        status = getattr(e, 'status', 0) or 0
+        return jsonify({'error': str(e)}), (status if status >= 400 else 502)
     except Exception as e:
         logger.exception("CrowdSec alerts error")
         return jsonify({'error': str(e)}), 500
+    out = jsonify(alerts)
+    out.headers['X-CS-Alert-Limit'] = str(_limit)
+    out.headers['X-CS-Alert-Capped'] = '1' if (_limit and len(alerts) >= _limit) else '0'
+    return out
 
 @app.route('/api/crowdsec/decisions', methods=['POST'])
 @csrf_protect
@@ -2124,6 +2316,7 @@ def api_cs_add_decision():
     if result is None:
         return jsonify({'error': 'Failed to add decision - check LAPI permissions'}), 502
     _crowd.cs_stream_reset()
+    _crowd.cs_alerts_reset()
     return jsonify({'ok': True})
 
 @app.route('/api/crowdsec/decisions/<int:decision_id>', methods=['DELETE'])

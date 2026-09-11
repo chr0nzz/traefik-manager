@@ -80,7 +80,7 @@ def test_the_bans_card_says_when_its_numbers_are_old():
 def test_the_client_reads_the_header():
     with open(os.path.join(ROOT, 'static', 'js', 'crowdsec.js'), encoding='utf-8') as fh:
         js = fh.read()
-    assert "headers.get('X-CS-Stale')" in js
+    assert '_csDecStale = _csLapiOk ? String(dec.stale' in js
     assert 'stale: _csDecStale' in js
 
 

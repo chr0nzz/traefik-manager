@@ -2466,6 +2466,91 @@ paths:
         "502":
           description: LAPI unreachable or returned an error
 
+  /api/crowdsec/summary:
+    get:
+      tags: [CrowdSec]
+      summary: Decision counts and trimmed alerts in one response
+      description: |
+        What the CrowdSec tab draws: decision counts by origin and type, the decisions added by hand,
+        and the retained alerts trimmed to the fields the UI uses. Pass the last `version` to get
+        `{ "version", "unchanged": true }` when nothing changed. `full=1` forces a full resync of both caches.
+        Failures inside a block are reported with `ok: false` and `error`, not as an HTTP error.
+      parameters:
+        - name: version
+          in: query
+          required: false
+          schema: { type: string }
+        - name: full
+          in: query
+          required: false
+          schema: { type: string, enum: ["1"] }
+      responses:
+        "200":
+          description: Summary, or unchanged marker
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version: { type: string, example: "3f9c1d2e8a7b6c5d" }
+                  unchanged: { type: boolean }
+                  decisions:
+                    type: object
+                    properties:
+                      ok: { type: boolean }
+                      error: { type: string }
+                      stale: { type: string }
+                      total: { type: integer }
+                      own: { type: integer }
+                      subscribed: { type: integer }
+                      wide: { type: integer }
+                      origins: { type: object, additionalProperties: { type: integer } }
+                      types: { type: object, additionalProperties: { type: integer } }
+                      rows: { type: array, items: { type: object } }
+                      rows_more: { type: integer }
+                  alerts:
+                    type: object
+                    properties:
+                      ok: { type: boolean }
+                      error: { type: string }
+                      status: { type: integer }
+                      limit: { type: integer }
+                      capped: { type: boolean }
+                      rows: { type: array, items: { type: object } }
+        "503":
+          description: CrowdSec not configured
+
+  /api/crowdsec/decisions/search:
+    get:
+      tags: [CrowdSec]
+      summary: One page of active decisions, filtered on the server
+      parameters:
+        - { name: q, in: query, required: false, schema: { type: string } }
+        - { name: origin, in: query, required: false, schema: { type: string }, description: "subscribed, own, byhand, or a literal origin" }
+        - { name: type, in: query, required: false, schema: { type: string } }
+        - { name: ip, in: query, required: false, schema: { type: string } }
+        - { name: scenario, in: query, required: false, schema: { type: string } }
+        - { name: page, in: query, required: false, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: per, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200, default: 20 } }
+      responses:
+        "200":
+          description: Page of decisions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rows: { type: array, items: { type: object } }
+                  total: { type: integer }
+                  page: { type: integer }
+                  pages: { type: integer }
+                  per: { type: integer }
+                  facet_totals:
+                    type: object
+                    properties:
+                      origin: { type: integer }
+                      type: { type: integer }
+
   /api/crowdsec/alerts:
     get:
       tags: [CrowdSec]

@@ -1679,7 +1679,7 @@ Delete a template. Succeeds even if the id does not exist.
 
 ### `GET /api/crowdsec/decisions`
 
-List active CrowdSec decisions (bans, captchas, bypasses). Expired ones are filtered out. Pass `?full=1` to force a full stream refresh instead of an incremental one.
+List active CrowdSec decisions (bans, captchas, bypasses). Expired ones are filtered out. Pass `?full=1` to force a full stream refresh instead of an incremental one. This is the whole list, 56,000 rows on a host with the community blocklist; the UI reads `/api/crowdsec/summary` and `/api/crowdsec/decisions/search` instead.
 
 `503` when no LAPI URL is configured, or when there is no bouncer API key and no client certificate - `/v1/decisions` refuses the machine token. `502` when the LAPI cannot be reached.
 
@@ -1700,9 +1700,58 @@ List active CrowdSec decisions (bans, captchas, bypasses). Expired ones are filt
 
 ---
 
+### `GET /api/crowdsec/summary`
+
+Everything the CrowdSec tab draws, in one small response: decision counts, the decisions added by hand, and the retained alerts trimmed to the fields the UI uses. `?version=<v>` returns `{ "version": "<v>", "unchanged": true }` when nothing changed since that version, so a background refresh costs one tiny request. `?full=1` forces a full resync of both caches.
+
+`503` when no LAPI URL is configured. Every other failure is reported inside the block it belongs to with `ok: false` and `error`, so a bouncer key without a machine login still gets decisions and a machine login without a bouncer key still gets alerts.
+
+| Field | Notes |
+|-------|-------|
+| `version` | Changes when the active decision set or the alert set changes |
+| `decisions.ok`, `decisions.error`, `decisions.stale` | `stale` carries the same text as the `X-CS-Stale` header when the cache is served stale |
+| `decisions.total`, `own`, `subscribed`, `wide` | Active decisions, the ones not from CAPI or lists, and the Range or Country scoped ones |
+| `decisions.origins`, `decisions.types` | Counts keyed by lowercase origin and type |
+| `decisions.rows`, `decisions.rows_more` | Decisions added by hand or from an unknown origin, newest first, at most 500 |
+| `alerts.ok`, `alerts.error`, `alerts.status` | `status` is the upstream HTTP code |
+| `alerts.limit`, `alerts.capped` | The alert limit and whether the read hit it |
+| `alerts.rows` | Alerts trimmed to `id`, `uuid`, `scenario`, `scenario_version`, `events_count`, `capacity`, `leakspeed`, `simulated`, `machine_id`, `message`, `start_at`, `stop_at`, `created_at`, `source`, `meta`, plus `handled` when decisions were read |
+
+```json
+{
+  "version": "3f9c1d2e8a7b6c5d",
+  "decisions": { "ok": true, "error": "", "stale": "", "total": 56358, "own": 4, "subscribed": 56354, "wide": 0,
+                 "origins": { "crowdsec": 4, "capi": 56354 }, "types": { "ban": 56358 }, "rows": [], "rows_more": 0 },
+  "alerts": { "ok": true, "error": "", "status": 200, "limit": 500, "capped": false,
+              "rows": [{ "id": 4, "scenario": "crowdsecurity/http-probing", "source": { "ip": "1.2.3.4" }, "handled": true }] }
+}
+```
+
+---
+
+### `GET /api/crowdsec/decisions/search`
+
+One page of active decisions, filtered on the server. Same errors as `GET /api/crowdsec/decisions`.
+
+| Query | Notes |
+|-------|-------|
+| `q` | Substring match over value, scenario, origin, scope and type |
+| `origin` | `subscribed` (CAPI and lists), `own` (everything else), `byhand` (cscli and manual), or a literal origin |
+| `type`, `ip`, `scenario` | Exact match |
+| `page`, `per` | Page from 1, `per` 1-200, default 20 |
+
+Own decisions come first, then newest first. `facet_totals.origin` and `facet_totals.type` count the rows matching only that filter plus `q`, which is what the filter chips show.
+
+```json
+{ "rows": [{ "id": 1, "value": "1.2.3.4", "type": "ban", "origin": "cscli" }],
+  "total": 123, "page": 1, "pages": 7, "per": 20, "facet_totals": { "origin": 500, "type": 123 } }
+```
+
+---
+
 ### `GET /api/crowdsec/alerts`
 
-List recent CrowdSec alerts. The default cap is 500, configurable with the `crowdsec_alert_limit` setting or `CROWDSEC_ALERT_LIMIT`; the applied cap is returned in the `X-CS-Alert-Limit` header, and `X-CS-Alert-Capped` is `1` when the result hit it.
+List recent CrowdSec alerts. The default cap is 500, configurable with the `crowdsec_alert_limit` setting or `CROWDSEC_ALERT_LIMIT`; the applied cap is returned in the `X-CS-Alert-Limit` header, and `X-CS-Alert-Capped` is `1` when the result hit it. Served from a cache that is refreshed with the LAPI's `since` filter and fully resynced hourly; `?full=1` forces the full resync.
 
 **Response**
 

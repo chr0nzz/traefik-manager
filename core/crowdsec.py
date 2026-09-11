@@ -20,6 +20,7 @@ except ImportError:
 _cs_jwt_cache = {'token': '', 'expiry': None}
 
 CS_STREAM_RESYNC_SECONDS = 3600
+CS_STREAM_WRITE_SECONDS = 300
 CS_STREAM_FRESH_DEFAULT = 5
 _cs_stream_lock = threading.Lock()
 _cs_stream_cache = {'fp': '', 'items': {}, 'synced': None, 'ready': False, 'streamable': True}
@@ -116,7 +117,9 @@ def _cs_has_machine() -> bool:
 
 
 class CrowdSecUnavailable(Exception):
-    pass
+    def __init__(self, message, status=0):
+        super().__init__(message)
+        self.status = status
 
 
 def _cs_request_strict(method: str, path: str, lapi: str = None, key: str = None, **kwargs):
@@ -238,12 +241,13 @@ def cs_stream_fresh_seconds() -> int:
 
 
 @contextmanager
-def _cs_file_lock(blocking: bool = True):
+def _cs_file_lock(blocking: bool = True, path: str = None):
+    lock_path = (path or _cs_stream_path()) + '.lock'
     fh   = None
     held = True
     if fcntl is not None:
         try:
-            fh = open(_cs_stream_lock_path(), 'a+')
+            fh = open(lock_path, 'a+')
         except OSError:
             fh = None
         if fh is not None:
@@ -270,15 +274,17 @@ def _cs_file_lock(blocking: bool = True):
                 pass
 
 
-def _cs_shared_read(fp: str, known: dict = None) -> dict:
+def _cs_shared_read(fp: str, known: dict = None, path: str = None, match: dict = None) -> dict:
+    match = match or {}
+    path  = path or _cs_stream_path()
     empty = {'fp': fp, 'items': {}, 'synced': None, 'ready': False, 'owner': 0, 'stamp': None}
-    path  = _cs_stream_path()
+    empty.update(match)
     try:
         st = os.stat(path)
     except OSError:
         return empty
     stamp = (st.st_mtime_ns, st.st_size)
-    if known is not None and known['stamp'] == stamp:
+    if known is not None and known.get('stamp') == stamp:
         return known
     try:
         with open(path, 'r') as f:
@@ -287,24 +293,29 @@ def _cs_shared_read(fp: str, known: dict = None) -> dict:
         return empty
     if not isinstance(doc, dict) or doc.get('fp') != fp or not isinstance(doc.get('items'), dict):
         return empty
+    if any(doc.get(k) != v for k, v in match.items()):
+        return empty
     try:
         synced = datetime.fromtimestamp(float(doc.get('synced') or 0), timezone.utc)
     except (TypeError, ValueError, OSError, OverflowError):
         return empty
-    return {'fp': fp, 'items': doc['items'], 'synced': synced, 'ready': True,
-            'owner': doc.get('owner') or 0, 'stamp': stamp}
+    result = {'fp': fp, 'items': doc['items'], 'synced': synced, 'ready': True,
+              'owner': doc.get('owner') or 0, 'stamp': stamp}
+    result.update(match)
+    return result
 
 
-def _cs_shared_write(fp: str, items: dict, synced: datetime):
-    path = _cs_stream_path()
+def _cs_shared_write(fp: str, items: dict, synced: datetime, path: str = None, extra: dict = None):
+    path = path or _cs_stream_path()
     tmp  = f"{path}.tmp.{os.getpid()}.{threading.get_ident()}"
+    doc  = {'fp': fp, 'synced': synced.timestamp(), 'owner': os.getpid(), 'items': items}
+    doc.update(extra or {})
     try:
         with open(tmp, 'w') as f:
-            json.dump({'fp': fp, 'synced': synced.timestamp(), 'owner': os.getpid(), 'items': items},
-                      f, separators=(',', ':'))
+            json.dump(doc, f, separators=(',', ':'))
         os.replace(tmp, path)
     except (OSError, ValueError) as e:
-        logger.warning(f"CrowdSec decision cache write failed: {e}")
+        logger.warning(f"CrowdSec cache write failed: {e}")
     finally:
         if os.path.exists(tmp):
             try:
@@ -363,6 +374,12 @@ def _cs_stale_mode(age, err):
     return 'cache'
 
 
+def _cs_write_due(doc: dict, now: datetime, changed: bool) -> bool:
+    if changed or not doc['ready'] or not doc['synced']:
+        return True
+    return (now - doc['synced']).total_seconds() >= CS_STREAM_WRITE_SECONDS
+
+
 def cs_decisions_stream(force_full: bool = False):
     fp  = _cs_fingerprint()
     now = datetime.now(timezone.utc)
@@ -389,10 +406,118 @@ def cs_decisions_stream(force_full: bool = False):
             if not isinstance(payload, dict):
                 raise CrowdSecUnavailable('LAPI stream returned an unexpected payload')
             items = _cs_apply_stream(payload, {} if full else doc['items'])
-            _cs_shared_write(fp, items, now)
-            doc = {'fp': fp, 'items': items, 'synced': now, 'ready': True,
-                   'owner': os.getpid(), 'stamp': None}
+            changed = full or bool(payload.get('new') or payload.get('deleted'))
+            if _cs_write_due(doc, now, changed):
+                _cs_shared_write(fp, items, now)
+                doc = {'fp': fp, 'items': items, 'synced': now, 'ready': True,
+                       'owner': os.getpid(), 'stamp': None}
             return _cs_mirror(doc), ('full' if full else 'delta')
+
+
+_cs_alert_lock = threading.Lock()
+_cs_alert_cache = {'fp': '', 'limit': -1, 'items': {}, 'synced': None, 'ready': False}
+
+
+def _cs_alerts_path() -> str:
+    return os.path.join(env.CONFIG_DIR, 'crowdsec-alerts.json')
+
+
+def _cs_alert_fp() -> str:
+    return _cs_fingerprint() + '|' + _cs_machine_id()
+
+
+def _cs_alert_fetch(path: str) -> list:
+    lapi = _cs_lapi_url().rstrip('/')
+    if _cs_has_machine():
+        token = _cs_jwt(lapi)
+        if not token:
+            raise CrowdSecUnavailable('CrowdSec machine login failed - check CROWDSEC_MACHINE_ID / '
+                                      'CROWDSEC_MACHINE_PASSWORD or the client certificate', 502)
+        headers = {'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
+    else:
+        headers = {'X-Api-Key': _cs_api_key(), 'Accept': 'application/json'}
+    try:
+        resp = requests.get(f"{lapi}{path}", headers=headers, timeout=cs_timeout(), **_cs_tls_kwargs())
+    except Exception as e:
+        raise CrowdSecUnavailable(f'CrowdSec LAPI unreachable: {e}', 0) from e
+    if resp.status_code == 401 and _cs_has_machine():
+        logger.info("CrowdSec refused the machine token on /v1/alerts, logging in again")
+        cs_jwt_reset()
+        token = _cs_jwt(lapi)
+        if token:
+            headers = {'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
+            try:
+                resp = requests.get(f"{lapi}{path}", headers=headers, timeout=cs_timeout(), **_cs_tls_kwargs())
+            except Exception as e:
+                raise CrowdSecUnavailable(f'CrowdSec LAPI unreachable: {e}', 0) from e
+    if not resp.ok:
+        try:
+            body = resp.json()
+            msg  = body.get('message') or body.get('error') or resp.text
+        except Exception:
+            msg = resp.text
+        raise CrowdSecUnavailable(f'LAPI {resp.status_code}: {msg}', resp.status_code)
+    alerts = resp.json() if resp.content else []
+    return alerts if isinstance(alerts, list) else []
+
+
+def _cs_alert_mirror(doc: dict):
+    _cs_alert_cache.update({'fp': doc['fp'], 'limit': doc.get('limit', -1), 'items': doc['items'],
+                            'synced': doc['synced'], 'ready': doc['ready']})
+    return sorted(doc['items'].values(), key=lambda a: a.get('id') or 0, reverse=True)
+
+
+def cs_alerts_reset():
+    with _cs_alert_lock:
+        _cs_alert_cache.update({'fp': '', 'limit': -1, 'items': {}, 'synced': None, 'ready': False})
+        with _cs_file_lock(path=_cs_alerts_path()):
+            try:
+                os.unlink(_cs_alerts_path())
+            except OSError:
+                pass
+
+
+def cs_alerts(limit: int, force_full: bool = False):
+    fp   = _cs_alert_fp()
+    now  = datetime.now(timezone.utc)
+    path = _cs_alerts_path()
+    with _cs_alert_lock:
+        doc = _cs_shared_read(fp, path=path, match={'limit': limit})
+        if not force_full and _cs_fresh(doc, now):
+            return _cs_alert_mirror(doc), 'cache'
+        with _cs_file_lock(blocking=not doc['ready'], path=path) as held:
+            doc = _cs_shared_read(fp, known=doc, path=path, match={'limit': limit})
+            if doc['ready'] and (not held or (not force_full and _cs_fresh(doc, now))):
+                return _cs_alert_mirror(doc), 'cache'
+            if not held:
+                raise CrowdSecUnavailable('The CrowdSec alert cache is being refreshed')
+            stale = bool(doc['synced'] and (now - doc['synced']).total_seconds() > CS_STREAM_RESYNC_SECONDS)
+            full  = force_full or not doc['ready'] or stale
+            try:
+                if full:
+                    rows  = _cs_alert_fetch(f'/v1/alerts?limit={limit}&with_decisions=false')
+                    items = {str(a['id']): a for a in rows if isinstance(a, dict) and a.get('id') is not None}
+                else:
+                    age   = int((now - doc['synced']).total_seconds())
+                    rows  = _cs_alert_fetch(f'/v1/alerts?since={age + 60}s&limit={limit}&with_decisions=false')
+                    items = dict(doc['items'])
+                    for a in rows:
+                        if isinstance(a, dict) and a.get('id') is not None:
+                            items[str(a['id'])] = a
+                    if limit > 0 and len(items) > limit:
+                        keep  = sorted(items, key=lambda k: int(k), reverse=True)[:limit]
+                        items = {k: items[k] for k in keep}
+            except CrowdSecUnavailable as e:
+                if doc['ready']:
+                    age = int((now - doc['synced']).total_seconds()) if doc['synced'] else None
+                    return _cs_alert_mirror(doc), _cs_stale_mode(age, e)
+                raise
+            changed = full or set(items) != set(doc['items'])
+            if _cs_write_due(doc, now, changed):
+                _cs_shared_write(fp, items, now, path=path, extra={'limit': limit})
+                doc = {'fp': fp, 'items': items, 'synced': now, 'ready': True,
+                       'owner': os.getpid(), 'stamp': None, 'limit': limit}
+            return _cs_alert_mirror(doc), ('full' if full else 'delta')
 
 
 CS_ALERT_POLL_LIMIT = 200

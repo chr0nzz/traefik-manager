@@ -88,11 +88,11 @@ def test_the_proxy_forwards_x_headers_but_not_credentials():
 
 def test_the_frontend_reads_the_cap_headers():
     js = _read('static', 'js', 'crowdsec.js')
-    assert "headers.get('X-CS-Alert-Capped')" in js
-    assert "headers.get('X-CS-Alert-Limit')" in js
+    assert '_csAltCapped = alt.capped === true' in js
+    assert '_csAltLimit  = parseInt(alt.limit, 10)' in js
 
 
 def test_the_hub_passes_its_limit_to_agents_only():
     js = _read('static', 'js', 'crowdsec.js')
-    body = js.split('function _csAlertLimitParam', 1)[1].split('\n}', 1)[0]
+    body = js.split('function _csLimitParam', 1)[1].split('\n}', 1)[0]
     assert '_activeAgent' in body, 'the Host applies its own limit server-side already'

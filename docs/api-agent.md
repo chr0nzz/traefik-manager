@@ -44,7 +44,9 @@ TM handles authentication automatically when proxying calls through `/api/agents
 | POST | `/api/static/restart` | Restart Traefik (requires `RESTART_METHOD`) |
 | GET | `/api/crowdsec/decisions` | CrowdSec active decisions (requires CrowdSec config) |
 | POST | `/api/crowdsec/decisions` | Add a decision - body: `{"value": "<ip>", "type": "ban", "duration": "24h", "reason": "..."}`; `type` is `ban`, `captcha` or `bypass` |
-| GET | `/api/crowdsec/alerts` | CrowdSec recent alerts - `?limit=N` (0 to 100000, defaults to `CROWDSEC_ALERT_LIMIT`). Returns `X-CS-Alert-Limit` and `X-CS-Alert-Capped` (`1` when the response hit the limit) |
+| GET | `/api/crowdsec/alerts` | CrowdSec recent alerts - `?limit=N` (0 to 100000, defaults to `CROWDSEC_ALERT_LIMIT`), `?full=1` forces a full resync of the alert cache. Returns `X-CS-Alert-Limit` and `X-CS-Alert-Capped` (`1` when the response hit the limit) |
+| GET | `/api/crowdsec/summary` | Decision counts, decisions added by hand and trimmed alerts in one response - `?version=<v>` answers `{"version", "unchanged": true}` when nothing changed, `?limit=N` as for alerts, `?full=1` resyncs both caches. Same shape as the Host endpoint |
+| GET | `/api/crowdsec/decisions/search` | One page of active decisions filtered on the agent - `q`, `origin`, `type`, `ip`, `scenario`, `page`, `per`. Same shape as the Host endpoint |
 | DELETE | `/api/crowdsec/decisions/<id>` | Unban an IP |
 | GET | `/api/backups` | List local `.bak` backup files |
 | POST | `/api/backup/create` | Create `.bak` backups for all config files (one per file) |

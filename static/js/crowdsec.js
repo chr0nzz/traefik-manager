@@ -10,15 +10,21 @@ const ATK_ALERT_ONLY   = { asn: 1, cc: 1, uri: 1, user: 1, agent: 1, verb: 1, ro
 const ATK_PULL_SCOPE   = /^(capi|lists)$/i;
 const ATK_DEC_ONLY     = { origin: 1, type: 1 };
 
-let _csDecisions  = [];
+let _csDecSum     = null;
+let _csVersion    = '';
+let _csPaintedKey = '';
+let _csDecPage    = null;
+let _csDecKey     = '';
+let _csPollTimer  = null;
+const CS_POLL_MS  = 60000;
 let _csAlerts     = [];
 let _csLapiOk     = false;
 let _csAlertsOk   = false;
 let _csAltStatus  = 0;
 
-function _csAlertLimitParam() {
+function _csLimitParam() {
     const n = parseInt(window._tmAlertLimit || '0', 10);
-    return (_activeAgent && n > 0) ? ('?limit=' + n) : '';
+    return (_activeAgent && n > 0) ? ('limit=' + n) : '';
 }
 let _csAltCapped  = false;
 let _csAltLimit   = 0;
@@ -367,7 +373,7 @@ function _atkGo(spec) {
         return;
     }
     if ('cfg' in p) { _atkOpenCsSettings(); return; }
-    if ('reload' in p) { refreshCrowdSecTab(); return; }
+    if ('reload' in p) { _csDecPage = null; _csDecKey = ''; refreshCrowdSecTab(); return; }
     if ('unban' in p) { csUnban(Number(p.unban)); return; }
     if ('ban' in p) { openCsBanModal(p.ban); return; }
     if ('page' in p) { _atkPage = Math.max(1, parseInt(p.page, 10) || 1); _atkOpen = ''; _csRender(); _atkRevealFeed(); return; }
@@ -467,19 +473,6 @@ function _atkMatchAlert(a, q, skip) {
     return true;
 }
 
-function _atkMatchDec(d, q) {
-    const f = _atkFacet;
-    if (f.type && d.type !== f.type) return false;
-    if (f.origin === 'subscribed') { if (d.own) return false; }
-    else if (f.origin === 'own') { if (!d.own) return false; }
-    else if (f.origin === 'byhand') { if (!ATK_BY_HAND[d.origin]) return false; }
-    else if (f.origin && d.origin !== f.origin) return false;
-    if (f.ip && d.value !== f.ip) return false;
-    if (f.scenario && d.scenario !== f.scenario) return false;
-    if (q && (d.value + ' ' + d.scenario + ' ' + d.origin + ' ' + d.scope + ' ' + d.type).toLowerCase().indexOf(q) < 0) return false;
-    return true;
-}
-
 function _csCountryCounts(alerts) {
     const counts = {};
     alerts.forEach(a => {
@@ -502,8 +495,19 @@ async function refreshCrowdSecTab() {
         await _csRefreshInner();
     } finally {
         _csRefreshing = false;
+        _csSchedulePoll();
         if (_csRefreshQueued) { _csRefreshQueued = false; refreshCrowdSecTab(); }
     }
+}
+
+function _csSchedulePoll() {
+    clearTimeout(_csPollTimer);
+    _csPollTimer = setTimeout(() => {
+        _csPollTimer = null;
+        const here = typeof _activeTab !== 'undefined' && _activeTab === 'crowdsec';
+        if (here && _csConfigured && document.visibilityState === 'visible') refreshCrowdSecTab();
+        else _csSchedulePoll();
+    }, CS_POLL_MS);
 }
 
 function _csSetConfigured(on) {
@@ -524,84 +528,55 @@ function _csSetConfigured(on) {
     if (agentName && onAgent) agentName.textContent = _activeAgent.name || 'this agent';
 }
 
-function _csSkeleton() {
+function _csSpinner() {
     const el = document.getElementById('csStats');
     if (!el) return;
-    const sk = w => '<span class="sig-sk" style="width:' + w + ';height:14px;display:block"></span>';
-    const card = () => '<article class="sig-card" style="--tm-accent:var(--muted)">'
-        + '<div class="sig-head"><span class="sig-ic"><i class="ph-bold ph-circle-dashed"></i></span>'
-        + '<span class="sig-title">' + sk('68%') + '</span></div>'
-        + '<div class="sig-metric"><span class="sig-sk" style="width:74px;height:24px;display:block"></span></div>'
-        + '<div style="margin-top:10px">' + sk('100%') + '</div></article>';
-    el.innerHTML = '<div class="sig-wrap"><div class="sig-grid">' + new Array(6).fill(0).map(card).join('') + '</div></div>';
+    el.innerHTML = '<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading CrowdSec...</p></div>';
 }
 
-async function _csRefreshInner() {
-    const el = document.getElementById('csStats');
-    if (!el) return;
-    if (!_activeAgent && !window._hostCsEnabled) { _csSetConfigured(false); return; }
-    _csSetConfigured(true);
-    _csSkeleton();
-    let decRes, altRes;
-    try {
-        [decRes, altRes] = await Promise.all([
-            agentFetch('/api/crowdsec/decisions'),
-            agentFetch('/api/crowdsec/alerts' + (_csAlertLimitParam())),
-        ]);
-    } catch (e) {
-        _csLapiOk = false; _csAlertsOk = false;
-        _csDecErr = _netErrText(e, 'Could not reach the CrowdSec LAPI');
-        _csAltErr = _csDecErr;
-        _csDecStale = '';
-        _csDecisions = []; _csAlerts = [];
-        _csAltCapped = false; _csAltLimit = 0;
-        _csFetched = Date.now();
-        _csRender();
-        return;
-    }
-    if (decRes.status === 404 && _activeAgent) { _csSetConfigured(false); return; }
+function _csEmptyDec() {
+    return { ok: false, error: '', stale: '', total: 0, own: 0, subscribed: 0, wide: 0, origins: {}, types: {}, rows: [], rows_more: 0 };
+}
 
-    _csDecErr = ''; _csAltErr = ''; _csAltStatus = altRes.status;
-    if (decRes.ok) {
-        _csLapiOk = true;
-        _csDecStale = decRes.headers.get('X-CS-Stale') || '';
-        let raw = null;
-        try { raw = await decRes.json(); } catch (_) { raw = null; }
-        _csDecisions = (Array.isArray(raw) ? raw : []).map(_atkParseDecision);
-    } else {
-        _csLapiOk = false;
-        _csDecisions = [];
-        _csDecStale = '';
-        _csDecErr = 'CrowdSec LAPI unavailable (HTTP ' + decRes.status + ')';
-        try { _csDecErr = (await decRes.json()).error || _csDecErr; } catch (_) {}
-        if (/\b403\b/.test(_csDecErr) && !/bouncer/i.test(_csDecErr)) {
-            _csDecErr += '. CrowdSec only accepts a bouncer key on /v1/decisions, the machine token is refused there, so CROWDSEC_API_KEY has to be set as well.';
-        }
-    }
-    if (altRes.ok) {
-        _csAlertsOk = true;
-        _csAltCapped = altRes.headers.get('X-CS-Alert-Capped') === '1';
-        _csAltLimit  = parseInt(altRes.headers.get('X-CS-Alert-Limit') || '0', 10) || 0;
-        let raw = null;
-        try { raw = await altRes.json(); } catch (_) { raw = null; }
-        _csAlerts = (Array.isArray(raw) ? raw : [])
-            .filter(a => !ATK_PULL_SCOPE.test(String(((a || {}).source || {}).scope || '')))
-            .map(_atkParseAlert);
-    } else {
-        _csAlertsOk = false;
-        _csAlerts = [];
-        try { _csAltErr = (await altRes.json()).error || ''; } catch (_) { _csAltErr = ''; }
-    }
+function _csApplyDown(why) {
+    _csDecSum = _csEmptyDec();
+    _csLapiOk = false; _csAlertsOk = false;
+    _csDecErr = why; _csAltErr = why; _csDecStale = '';
+    _csAlerts = []; _csAltCapped = false; _csAltLimit = 0; _csAltStatus = 0; _csSpan = 0;
+    _csVersion = ''; _csDecPage = null; _csDecKey = '';
+    _csFetched = Date.now();
+}
 
-    const bannedIps = new Set();
-    _csDecisions.forEach(d => { if (d.value && (d.scope === 'Ip' || d.scope === 'Range')) bannedIps.add(d.value); });
-    _csAlerts.forEach(a => {
-        a.known = _csLapiOk;
-        a.handled = _csLapiOk && !a.simulated && bannedIps.has(a.ip);
-    });
+async function _csApplySummary(sum) {
+    const dec = Object.assign(_csEmptyDec(), (sum && sum.decisions) || {});
+    const alt = Object.assign({ ok: false, error: '', status: 0, limit: 0, capped: false, rows: [] }, (sum && sum.alerts) || {});
+    dec.rows = (Array.isArray(dec.rows) ? dec.rows : []).map(_atkParseDecision);
+    dec.origins = dec.origins && typeof dec.origins === 'object' ? dec.origins : {};
+    dec.types = dec.types && typeof dec.types === 'object' ? dec.types : {};
+    _csDecSum   = dec;
+    _csLapiOk   = dec.ok === true;
+    _csDecStale = _csLapiOk ? String(dec.stale || '') : '';
+    _csDecErr   = _csLapiOk ? '' : (dec.error || 'CrowdSec LAPI unavailable');
+    if (!_csLapiOk && /\b403\b/.test(_csDecErr) && !/bouncer/i.test(_csDecErr)) {
+        _csDecErr += '. CrowdSec only accepts a bouncer key on /v1/decisions, the machine token is refused there, so CROWDSEC_API_KEY has to be set as well.';
+    }
+    _csAlertsOk  = alt.ok === true;
+    _csAltStatus = parseInt(alt.status, 10) || 0;
+    _csAltErr    = _csAlertsOk ? '' : String(alt.error || '');
+    _csAltCapped = alt.capped === true;
+    _csAltLimit  = parseInt(alt.limit, 10) || 0;
+    _csAlerts = (Array.isArray(alt.rows) ? alt.rows : [])
+        .filter(a => !ATK_PULL_SCOPE.test(String(((a || {}).source || {}).scope || '')))
+        .map((a, i) => {
+            const row = _atkParseAlert(a, i);
+            row.known = _csLapiOk;
+            row.handled = _csLapiOk && !row.simulated && a.handled === true;
+            return row;
+        });
     _csAlerts.sort((x, y) => y.start - x.start);
     _csSpan = _csAlerts.length > 1 ? (_csAlerts[0].start - _csAlerts[_csAlerts.length - 1].start) : 0;
-    _csDecisions.sort((a, b) => (b.own ? 1 : 0) - (a.own ? 1 : 0) || (b.id || 0) - (a.id || 0));
+    _csVersion = String((sum && sum.version) || '');
+    _csDecPage = null; _csDecKey = '';
 
     _csHostGeo = false;
     if (_csAlerts.length && !_csAlerts.some(a => a.cn)) {
@@ -615,10 +590,107 @@ async function _csRefreshInner() {
             });
         }
     }
+}
 
+async function _csRefreshInner() {
+    const el = document.getElementById('csStats');
+    if (!el) return;
+    if (!_activeAgent && !window._hostCsEnabled) { _csSetConfigured(false); return; }
+    _csSetConfigured(true);
+    const key = _tabCacheKey('crowdsec');
+    let painted = _csPaintedKey === key;
+    if (!painted) {
+        _csVersion = '';
+        const cached = tabCacheGet('crowdsec');
+        if (cached && cached.decisions && cached.alerts) {
+            await _csApplySummary(cached);
+            _csFetched = cached.at || Date.now();
+            _atkPage = 1; _atkOpen = '';
+            _csRenderBanRecent();
+            _csRender();
+            painted = true;
+            _csPaintedKey = key;
+        } else {
+            _csSpinner();
+        }
+    }
+    const params = [];
+    const lim = _csLimitParam();
+    if (lim) params.push(lim);
+    if (painted && _csVersion) params.push('version=' + encodeURIComponent(_csVersion));
+    let res;
+    try {
+        res = await agentFetch('/api/crowdsec/summary' + (params.length ? '?' + params.join('&') : ''));
+    } catch (e) {
+        const why = _netErrText(e, 'Could not reach the CrowdSec LAPI');
+        if (painted) { showToast(why, 'error'); return; }
+        _csApplyDown(why);
+        _csPaintedKey = key;
+        _csRender();
+        return;
+    }
+    if (res.status === 404 && _activeAgent) { _csSetConfigured(false); return; }
+    let sum = null;
+    try { sum = await res.json(); } catch (_) { sum = null; }
+    if (!res.ok || !sum || typeof sum !== 'object') {
+        const why = (sum && sum.error) || ('CrowdSec summary failed (HTTP ' + res.status + ')');
+        if (painted) { showToast(why, 'error'); return; }
+        _csApplyDown(why);
+        _csPaintedKey = key;
+        _csRender();
+        return;
+    }
+    if (sum.unchanged && painted && sum.version === _csVersion) {
+        _csFetched = Date.now();
+        const age = document.getElementById('atkAge');
+        if (age) age.textContent = _sdAgo(_csFetched);
+        return;
+    }
+    await _csApplySummary(sum);
     _csFetched = Date.now();
-    _atkPage = 1;
+    tabCachePut('crowdsec', Object.assign({ at: _csFetched }, sum));
+    if (!painted) { _atkPage = 1; _atkOpen = ''; }
+    _csPaintedKey = key;
     _csRenderBanRecent();
+    _csRender();
+}
+
+function _csDecSpec() {
+    const f = _atkFacet;
+    const inDec = _atkView === 'decisions';
+    const spec = { origin: f.origin || '', type: f.type || '', ip: f.ip || '', scenario: f.scenario || '',
+                   q: inDec ? _atkQuery : '', page: inDec ? _atkPage : 1, per: ATK_FEED_PAGE };
+    spec.key = _csVersion + '|' + JSON.stringify(spec);
+    return spec;
+}
+
+function _csDecNeeded(spec) {
+    return _atkView === 'decisions' || !!(spec.origin || spec.type || spec.ip || spec.scenario);
+}
+
+async function _csDecFetch(spec) {
+    _csDecKey = spec.key;
+    const qs = ['origin', 'type', 'ip', 'scenario', 'q', 'page', 'per']
+        .filter(k => spec[k] !== '' && spec[k] !== undefined && spec[k] !== null)
+        .map(k => k + '=' + encodeURIComponent(spec[k])).join('&');
+    let page = { rows: [], total: 0, page: 1, pages: 1, per: ATK_FEED_PAGE, facet_totals: {}, key: spec.key, error: '' };
+    try {
+        const res = await agentFetch('/api/crowdsec/decisions/search?' + qs);
+        let data = null;
+        try { data = await res.json(); } catch (_) { data = null; }
+        if (res.ok && data && Array.isArray(data.rows)) {
+            page = { rows: data.rows.map(_atkParseDecision), total: Number(data.total) || 0,
+                     page: Number(data.page) || 1, pages: Number(data.pages) || 1, per: Number(data.per) || ATK_FEED_PAGE,
+                     facet_totals: (data.facet_totals && typeof data.facet_totals === 'object') ? data.facet_totals : {},
+                     key: spec.key, error: '' };
+        } else {
+            page.error = (data && data.error) || ('HTTP ' + res.status);
+        }
+    } catch (e) {
+        page.error = _netErrText(e, 'Could not read decisions');
+    }
+    if (_csDecKey !== spec.key) return;
+    _csDecPage = page;
     _csRender();
 }
 
@@ -1056,18 +1128,23 @@ function _atkCardBans(d) {
             go: 'cfg=lapi', goLabel: 'settings', goTip: 'Check the LAPI URL and the bouncer key in Settings'
         });
     }
-    const dec = d.decisions;
-    const own = dec.filter(x => x.own);
-    const subscribed = dec.filter(x => !x.own);
-    const local = own.filter(x => x.origin === 'crowdsec');
-    const hand = own.filter(x => x.origin !== 'crowdsec');
-    const cscli = own.filter(x => ATK_BY_HAND[x.origin]);
-    const otherOwn = own.filter(x => x.origin !== 'crowdsec' && !ATK_BY_HAND[x.origin]);
-    const capi = dec.filter(x => x.origin === 'capi');
-    const lists = dec.filter(x => x.origin === 'lists');
-    const bans = dec.filter(x => x.type === 'ban');
-    const captcha = dec.filter(x => x.type === 'captcha');
-    const wide = dec.filter(x => x.scope !== 'Ip');
+    const sum = d.decSum;
+    const origins = sum.origins;
+    const nOrigin = k => Number(origins[k]) || 0;
+    const total = sum.total;
+    const own = sum.own;
+    const subscribed = sum.subscribed;
+    const local = nOrigin('crowdsec');
+    const hand = Math.max(0, own - local);
+    const cscli = nOrigin('cscli') + nOrigin('manual');
+    const otherNames = Object.keys(origins).filter(k => k !== 'crowdsec' && !ATK_BY_HAND[k] && !ATK_SUBSCRIBED[k] && nOrigin(k) > 0);
+    const otherOwn = otherNames.reduce((a, k) => a + nOrigin(k), 0);
+    const capi = nOrigin('capi');
+    const lists = nOrigin('lists');
+    const bans = Number(sum.types.ban) || 0;
+    const captcha = Number(sum.types.captcha) || 0;
+    const wide = sum.wide;
+    const rows = sum.rows;
     const lab = x => x.value + ' - ' + x.type + ', ' + (x.origin || 'unknown') + ', ' + _scenShort(x.scenario)
         + (x.duration ? ', ' + x.duration + ' left' : '') + (x.scope !== 'Ip' ? ', ' + x.scope + ' scope' : '');
     return _atkCard({
@@ -1075,31 +1152,31 @@ function _atkCardBans(d) {
         ic: d.stale ? 'ph-fill ph-clock-countdown' : 'ph-fill ph-shield-check',
         title: d.stale ? 'Bans in force (stale)' : 'Bans in force',
         note: d.stale ? _esc(d.stale) : undefined,
-        total: _sdNum(dec.length),
-        flags: _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-prohibit', n: bans.length, label: 'ban',
+        total: _sdNum(total),
+        flags: _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-prohibit', n: bans, label: 'ban',
                 go: _atkSpec({ type: 'ban' }), tip: 'Show only ban decisions in the decisions view' })
-            + (captcha.length ? _atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-puzzle-piece', n: captcha.length, label: 'captcha',
+            + (captcha ? _atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-puzzle-piece', n: captcha, label: 'captcha',
                 go: _atkSpec({ type: 'captcha' }), tip: 'Show only captcha decisions' }) : ''),
-        sub: _atkSub('<b>' + _sdNum(own.length) + '</b> from this host', _sdNum(subscribed.length) + ' subscribed'),
+        sub: _atkSub('<b>' + _sdNum(own) + '</b> from this host', _sdNum(subscribed) + ' subscribed'),
         body: _atkStrip([
-            { cls: 'sig-cell-warn', n: hand.length, at: i => lab(hand[i]) },
-            { cls: 'atk-cell-own', n: local.length, at: i => lab(local[i]) },
-            { cls: 'sig-cell-idle', n: subscribed.length, at: i => lab(subscribed[i]) }
-        ], _sdNum(dec.length) + ' decisions, ' + _sdNum(own.length) + ' from this host',
+            { cls: 'sig-cell-warn', n: hand, at: i => (i < rows.length ? lab(rows[i]) : 'added by hand') },
+            { cls: 'atk-cell-own', n: local, at: () => 'raised by your own scenarios' },
+            { cls: 'sig-cell-idle', n: subscribed, at: () => 'subscribed from a blocklist' }
+        ], _sdNum(total) + ' decisions, ' + _sdNum(own) + ' from this host',
             { noun: 'decisions', empty: 'nothing blocked' }),
-        foot: _atkProv({ ic: 'ph-bold ph-crosshair', n: local.length, label: 'crowdsec', go: _atkSpec({ origin: 'crowdsec' }),
+        foot: _atkProv({ ic: 'ph-bold ph-crosshair', n: local, label: 'crowdsec', go: _atkSpec({ origin: 'crowdsec' }),
                 tip: 'Raised by your own scenarios. These are the only decisions that prove something reached this host' })
-            + _atkProv({ ic: 'ph-bold ph-terminal', n: cscli.length, label: 'by hand', cls: 'sig-prov-warn', go: _atkSpec({ origin: 'byhand' }),
+            + _atkProv({ ic: 'ph-bold ph-terminal', n: cscli, label: 'by hand', cls: 'sig-prov-warn', go: _atkSpec({ origin: 'byhand' }),
                 tip: 'Added by hand, from this UI or from the CLI. CrowdSec labels these cscli or manual depending on its version' })
-            + _atkProv({ ic: 'ph-bold ph-users-three', n: capi.length, label: 'CAPI', go: _atkSpec({ origin: 'capi' }),
+            + _atkProv({ ic: 'ph-bold ph-users-three', n: capi, label: 'CAPI', go: _atkSpec({ origin: 'capi' }),
                 tip: 'Pulled from the central API community blocklist. Preventive, not evidence of an attack on you' })
-            + _atkProv({ ic: 'ph-bold ph-list-bullets', n: lists.length, label: 'lists', go: _atkSpec({ origin: 'lists' }),
+            + _atkProv({ ic: 'ph-bold ph-list-bullets', n: lists, label: 'lists', go: _atkSpec({ origin: 'lists' }),
                 tip: 'Pulled from a subscribed third party blocklist' })
-            + (otherOwn.length ? _atkProv({ ic: 'ph-bold ph-dots-three-circle', n: otherOwn.length, label: 'other', go: '',
-                tip: 'Origins outside the four CrowdSec uses today: ' + Array.from(new Set(otherOwn.map(x => x.origin || 'blank'))).join(', ')
+            + (otherOwn ? _atkProv({ ic: 'ph-bold ph-dots-three-circle', n: otherOwn, label: 'other', go: '',
+                tip: 'Origins outside the four CrowdSec uses today: ' + otherNames.map(k => k || 'blank').join(', ')
                     + '. Counted as yours, because only CAPI and lists are subscriptions' }) : '')
-            + (wide.length ? _atkProv({ ic: 'ph-bold ph-selection-all', n: wide.length, label: 'wide', go: '',
-                tip: _sdNum(wide.length) + ' decisions are Range or Country scoped, so they cover far more addresses than one row suggests. '
+            + (wide ? _atkProv({ ic: 'ph-bold ph-selection-all', n: wide, label: 'wide', go: '',
+                tip: _sdNum(wide) + ' decisions are Range or Country scoped, so they cover far more addresses than one row suggests. '
                     + 'The loose and banned split above matches on the exact address, so a source covered only by one of these reads as loose' }) : ''),
         go: 'view=decisions', goLabel: 'decisions', goTip: 'Open the decisions view, the secondary table behind the alert stream'
     });
@@ -1141,13 +1218,13 @@ function _atkVerdict(d, sel) {
         items.push(_atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-key', n: '',
             label: d.altStatus ? '/v1/alerts returns ' + d.altStatus : 'alerts not readable',
             tip: (d.altErr || 'A bouncer API key cannot read alerts.') + ' That is a permission boundary, not an absence of attacks' }));
-        items.push(_atkFlag({ cls: 'd-on', ic: 'ph-bold ph-shield-check', n: d.decisions.length, label: 'bans in force',
+        items.push(_atkFlag({ cls: 'd-on', ic: 'ph-bold ph-shield-check', n: d.decTotal, label: 'bans in force',
             go: 'view=decisions', tip: 'The decisions view works on a bouncer key alone' }));
         items.push(_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: 'add machine login', go: ATK_NEEDS_MACHINE,
             tip: 'Set CROWDSEC_MACHINE_ID and CROWDSEC_MACHINE_PASSWORD' }));
     } else if (!d.retained) {
         ic = 'ph-fill ph-moon-stars'; txt = 'Nothing tripped a scenario';
-        items.push(_atkFlag({ cls: 'd-on', ic: 'ph-bold ph-shield-check', n: d.decisions.length, label: 'bans standing',
+        items.push(_atkFlag({ cls: 'd-on', ic: 'ph-bold ph-shield-check', n: d.decTotal, label: 'bans standing',
             go: 'view=decisions', tip: d.own
                 ? _sdNum(d.own) + ' of them were raised here rather than subscribed, but no alert in the retained window explains them'
                 : 'All of them subscribed, none earned by an attack on this host' }));
@@ -1212,7 +1289,7 @@ function _atkKeyRow(d, sel) {
     }
     html += d.lapiOk
         ? '<span class="sig-key-item lg-static" title="Active decisions after expired rows are dropped. The cursor walk stops at 200 pages of 1000, so 200,000 is the undocumented ceiling">'
-            + '<i class="ph-bold ph-shield-check"></i><b>' + _sdNum(d.decisions.length) + '</b>bans</span>'
+            + '<i class="ph-bold ph-shield-check"></i><b>' + _sdNum(d.decTotal) + '</b>bans</span>'
         : '<span class="sig-key-item sig-key-empty" title="The decisions read failed. Zero would be an invention, so this says nothing instead">'
             + '<i class="ph-bold ph-shield-check"></i><b>?</b>bans</span>';
     if (facets.length || _atkQuery) {
@@ -1452,12 +1529,12 @@ function _atkPager(page, pages, total, from, to, noun) {
 
 function _atkFeed(d, sel) {
     const alertsN = sel.alerts.length;
-    const decN = sel.decisions.length;
+    const decN = sel.decTotal === null ? 0 : sel.decTotal;
     const isAlerts = _atkView === 'alerts';
     const altBlind = !d.alertsOk;
     const decBlind = !d.lapiOk;
     const alertsTxt = altBlind ? '?' : _sdNum(alertsN);
-    const decTxt = decBlind ? '?' : _sdNum(decN);
+    const decTxt = decBlind ? '?' : (sel.decTotal === null ? '...' : _sdNum(decN));
     const altTip = (d.altErr || 'A bouncer API key cannot read alerts.') + ' Zero is not the same as none';
     const decTip = (d.decErr || 'The decisions read failed.') + ' Zero would be an invention, so this says nothing instead';
     const headBlind = isAlerts ? altBlind : decBlind;
@@ -1508,6 +1585,21 @@ function _atkFeed(d, sel) {
         return '<section class="sig-ep atk-feed">' + head + body + '</section>';
     }
 
+    if (!isAlerts && sel.decLoading) {
+        const body = '<div class="atk-empty"><i class="ph-light ph-spinner-gap animate-spin"></i>'
+            + '<div class="atk-empty-t">Reading decisions</div>'
+            + '<p class="lg-note">The decisions view is paged on the server, so only the rows on screen travel to the browser.</p></div>';
+        return '<section class="sig-ep atk-feed">' + head + body + '</section>';
+    }
+    if (!isAlerts && sel.decError) {
+        const body = '<div class="atk-empty"><i class="ph-fill ph-plugs"></i>'
+            + '<div class="atk-empty-t">Decisions could not be read</div>'
+            + '<p class="lg-note"><code>' + _esc(sel.decError) + '</code></p>'
+            + '<div class="atk-empty-do">'
+            + _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-arrows-clockwise', n: '', label: 'read again', go: 'reload=1', tip: 'Refetch' })
+            + '</div></div>';
+        return '<section class="sig-ep atk-feed">' + head + body + '</section>';
+    }
     const rows = isAlerts ? sel.alerts : sel.decisions;
     if (!rows.length) {
         const filtered = _atkActive().length || _atkQuery;
@@ -1527,21 +1619,24 @@ function _atkFeed(d, sel) {
             + '</div>';
         return '<section class="sig-ep atk-feed">' + head + body + '</section>';
     }
-    const pages = Math.max(1, Math.ceil(rows.length / ATK_FEED_PAGE));
-    const page = Math.min(_atkPage, pages);
-    const from = (page - 1) * ATK_FEED_PAGE;
-    const slice = rows.slice(from, from + ATK_FEED_PAGE);
+    const pages = isAlerts ? Math.max(1, Math.ceil(rows.length / ATK_FEED_PAGE)) : sel.decPages;
+    const page = isAlerts ? Math.min(_atkPage, pages) : sel.decPage;
+    const from = (page - 1) * (isAlerts ? ATK_FEED_PAGE : sel.decPer);
+    const slice = isAlerts ? rows.slice(from, from + ATK_FEED_PAGE) : rows;
+    const totalRows = isAlerts ? rows.length : sel.decTotal;
     const body = '<div class="sig-ep-rows' + (isAlerts ? '' : ' atk-decs') + '">'
         + slice.map(isAlerts ? _atkAlertRow : _atkDecisionRow).join('') + '</div>'
-        + _atkPager(page, pages, rows.length, from + 1, from + slice.length, isAlerts ? 'alerts' : 'decisions');
+        + _atkPager(page, pages, totalRows, from + 1, from + slice.length, isAlerts ? 'alerts' : 'decisions');
     return '<section class="sig-ep atk-feed">' + head + body + '</section>';
 }
 
 function _atkSelect() {
     const q = _atkQuery.toLowerCase();
-    const dq = _atkView === 'decisions' ? q : '';
     const alerts = _csAlerts.filter(a => _atkMatchAlert(a, q));
-    const decisions = _csDecisions.filter(x => _atkMatchDec(x, dq));
+    const spec = _csDecSpec();
+    const need = _csLapiOk && _csDecNeeded(spec);
+    const page = (need && _csDecPage && _csDecPage.key === spec.key) ? _csDecPage : null;
+    if (need && !page && _csDecKey !== spec.key) _csDecFetch(spec);
     const ips = new Set(alerts.map(a => a.ip));
     const bannedIps = new Set(alerts.filter(a => a.handled).map(a => a.ip));
     const facetHits = {};
@@ -1550,18 +1645,23 @@ function _atkSelect() {
         const saved = {};
         live.forEach(k => { saved[k] = _atkFacet[k]; });
         live.forEach(k => {
+            if (ATK_DEC_ONLY[k]) { facetHits[k] = page ? (Number(page.facet_totals[k]) || 0) : 0; return; }
             live.forEach(o => { _atkFacet[o] = (o === k) ? saved[o] : ''; });
-            facetHits[k] = ATK_DEC_ONLY[k]
-                ? _csDecisions.filter(x => _atkMatchDec(x, dq)).length
-                : _csAlerts.filter(a => _atkMatchAlert(a, q)).length;
+            facetHits[k] = _csAlerts.filter(a => _atkMatchAlert(a, q)).length;
         });
         live.forEach(k => { _atkFacet[k] = saved[k]; });
     }
+    const sum = _csDecSum || _csEmptyDec();
     return {
-        alerts: alerts, decisions: decisions,
+        alerts: alerts,
+        decisions: page ? page.rows : [],
+        decTotal: page ? page.total : (need ? null : sum.total),
+        decPage: page ? page.page : 1, decPages: page ? page.pages : 1, decPer: page ? page.per : ATK_FEED_PAGE,
+        decLoading: need && !page,
+        decError: page ? page.error : '',
         sources: ips.size, banned: bannedIps.size,
         sim: alerts.filter(a => a.simulated).length,
-        subscribed: _csDecisions.filter(x => !x.own).length,
+        subscribed: sum.subscribed,
         scenarios: new Set(alerts.map(a => a.scenario)).size,
         facetHits: facetHits,
     };
@@ -1594,9 +1694,10 @@ function _csRender() {
         lapiOk: _csLapiOk, alertsOk: _csAlertsOk, altStatus: _csAltStatus, altErr: _csAltErr, decErr: _csDecErr,
         capped: _csAltCapped, limit: _csAltLimit,
         stale: _csDecStale,
-        alerts: sel.alerts, decisions: _csDecisions, span: _csSpan, fetched: _csFetched,
+        alerts: sel.alerts, decSum: _csDecSum || _csEmptyDec(), decTotal: sel.decTotal === null ? (_csDecSum ? _csDecSum.total : 0) : sel.decTotal,
+        span: _csSpan, fetched: _csFetched,
         retained: _csAlerts.length,
-        own: _csDecisions.filter(x => x.own).length,
+        own: _csDecSum ? _csDecSum.own : 0,
         oldest: _csAlerts.length ? _csAlerts[_csAlerts.length - 1].start : 0,
         newest: _csAlerts.length ? _csAlerts[0].start : 0,
         enrich: _csAlerts.some(a => a.cn || a.asName),
@@ -1660,8 +1761,9 @@ function _csRenderBanRecent() {
             + '<code>/v1/decisions</code> needs a bouncer API key, so this list is unknown rather than empty</div>';
         return;
     }
-    const mine = _csDecisions.filter(d => d.origin !== 'crowdsec' && d.own);
-    if (countEl) countEl.textContent = mine.length ? _sdNum(mine.length) : '';
+    const mine = _csDecSum ? _csDecSum.rows : [];
+    const more = _csDecSum ? (Number(_csDecSum.rows_more) || 0) : 0;
+    if (countEl) countEl.textContent = mine.length ? _sdNum(mine.length + more) : '';
     if (!mine.length) {
         el.innerHTML = '<div class="text-center py-6 text-xs" style="color:var(--muted)">No custom decisions yet - decisions you add appear here</div>';
         return;
@@ -1675,7 +1777,8 @@ function _csRenderBanRecent() {
         + (d.id
             ? '<button onclick="csUnban(' + Number(d.id) + ')" class="btn-icon text-xs flex-shrink-0" title="Unban, delete this decision" style="color:var(--red)"><i class="ph-bold ph-trash"></i></button>'
             : '<span class="text-xs flex-shrink-0" style="color:var(--muted);opacity:.6">syncing...</span>')
-        + '</div>').join('');
+        + '</div>').join('')
+        + (more ? '<div class="text-center py-2 text-xs" style="color:var(--muted)">' + _sdNum(more) + ' more in the decisions view</div>' : '');
 }
 
 function _setCsBanType(type, btn) {

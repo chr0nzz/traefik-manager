@@ -87,8 +87,12 @@ def test_the_alerts_endpoint_retries_too():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     with open(os.path.join(root, 'app.py'), encoding='utf-8') as fh:
         src = fh.read()
+    with open(os.path.join(root, 'core', 'crowdsec.py'), encoding='utf-8') as fh:
+        core_src = fh.read()
     start = src.index('def api_cs_alerts(')
     body = src[start:src.index('\n@app.route', start)]
-    assert 'cs_jwt_reset()' in body, \
-        'this endpoint builds its own header, so it needs the retry of its own'
-    assert 'resp.status_code == 401' in body
+    assert '_crowd.cs_alerts(' in body, 'the alerts endpoint reads the shared alert cache'
+    fetch = core_src[core_src.index('def _cs_alert_fetch('):core_src.index('\ndef ', core_src.index('def _cs_alert_fetch(') + 10)]
+    assert 'cs_jwt_reset()' in fetch, \
+        'the alert fetch builds its own header, so it needs the retry of its own'
+    assert 'resp.status_code == 401' in fetch
