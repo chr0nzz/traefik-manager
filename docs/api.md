@@ -47,13 +47,13 @@ All `/api/` endpoints return JSON. The form endpoints `POST /save`, `POST /delet
 
 Common status codes:
 
-| Code | Meaning |
-|---|---|
-| `400` | Invalid or missing parameters |
-| `401` | Not authenticated, or the session expired |
-| `403` | CSRF token missing or invalid |
-| `404` | Object not found |
-| `429` | Rate limit exceeded |
+| Code  | Meaning                                                                       |
+| -------| -------------------------------------------------------------------------------|
+| `400` | Invalid or missing parameters                                                 |
+| `401` | Not authenticated, or the session expired                                     |
+| `403` | CSRF token missing or invalid                                                 |
+| `404` | Object not found                                                              |
+| `429` | Rate limit exceeded                                                           |
 | `502` | An upstream (Traefik, an agent, CrowdSec, a remote repo) could not be reached |
 
 State-changing endpoints (POST / PUT / DELETE / PATCH) require an `X-CSRF-Token` header when using session auth. API key requests skip this.
@@ -1417,12 +1417,15 @@ Send a `HEAD` request to a route's domain from the TM server and return latency.
 |---|---|
 | `url` | Full URL to ping (must start with `http://` or `https://`) |
 | `fallback` | Optional second URL, tried when the first attempt fails |
+| `servers` | Optional, repeatable. Two or more backend server URLs. Each is checked directly and the answer describes the pool, so a dead member reads as degraded instead of online |
 
 ```json
 { "ok": true, "latency_ms": 42, "status_code": 200 }
 ```
 
 On failure: `{ "ok": false, "error": "Timeout", "latency_ms": null }`
+
+With two or more `servers` the reply is `{ "ok": true, "state": "degraded", "source": "servers", "servers": { "up": 1, "total": 2 }, "down_servers": ["http://10.0.0.22:80"] }`. `state` is `up`, `degraded` or `down`; `ok` is false only when every server is down. Each server passes the SSRF guard on its own, and if any is unreachable for a reason that proves nothing (DNS failure, timeout) the pool is ignored and the route is checked through the proxy instead. Fewer than two `servers` is ignored.
 
 A URL pointing at TM's own hostname, or at the configured self-route domain, short-circuits to `{ "ok": true, "latency_ms": 0, "status_code": 200, "self": true }` without a request. A successful fallback adds `"via_target": true`. Targets that fail the SSRF guard return `400`.
 
@@ -1448,6 +1451,8 @@ Create or update a composite service without going through a route.
 Each `manual` backend becomes its own child service named `<name>-backend-<n>`, so every row can
 carry its own weight. A `service` backend is referenced by name and never copied, so changes to it
 follow automatically.
+
+`healthCheck` is accepted when `type` is `loadBalancer`: `{ "enabled": true, "path": "/up", "interval": "10s", "timeout": "3s", "unhealthyInterval": "1m", "method": "HEAD", "status": 204, "scheme": "https", "port": 8080, "hostname": "probe.local", "mode": "grpc", "followRedirects": false, "headers": { "X-Probe": "tm" } }`. Every field is optional; with no `path` Traefik probes the server root. `enabled: false` removes the block. Omit the key entirely and an existing health check is left untouched.
 
 `type` is `loadBalancer`, `weighted`, `mirroring` or `failover`. For `mirroring` use `percent`
 instead of `weight`; the first backend is the one that serves. `failover` takes exactly two

@@ -221,3 +221,47 @@ def test_icon_urls_are_pinned_to_the_branch_the_cdn_keeps_fresh():
                 if 'selfhst/icons' in line and 'selfhst/icons@main' not in line:
                     hits.append('%s:%d' % (os.path.basename(path), i))
     assert not hits, 'the unversioned jsDelivr path serves icons months out of date, pin @main: %r' % hits
+
+
+def test_a_degraded_route_is_counted_not_just_coloured():
+    res = _stats_run("""
+const objs = [{ name: 'pool@file', short: 'pool', status: 'enabled', cell: 'ok', reason: '', kind: 'http' },
+              { name: 'ok@file', short: 'ok', status: 'enabled', cell: 'ok', reason: '', kind: 'http' }];
+_rhIngest({ enabled: true, routes: { pool: { state: 'degraded', source: 'servers', servers: { up: 1, total: 2 }, down_servers: ['http://10.0.0.22:80'], at: 990 } } });
+_sdApplyHealth(objs);
+const t = _sdTally(objs);
+console.log(JSON.stringify({ cell: objs[0].cell, degraded: t.degraded, down: t.down, warn: t.warn, ok: t.ok, aria: _sdAria('HTTP routers', 2, t) }));
+""")
+    assert res['cell'] == 'warn' and res['degraded'] == 1 and res['down'] == 0, res
+    assert res['ok'] == 1 and '1 degraded' in res['aria'], res
+
+
+def test_a_recovered_pool_stops_being_counted_as_degraded():
+    res = _stats_run("""
+const objs = [{ name: 'pool@file', short: 'pool', status: 'enabled', cell: 'ok', reason: '', kind: 'http' }];
+_rhIngest({ enabled: true, routes: { pool: { state: 'degraded', source: 'servers', servers: { up: 1, total: 2 }, at: 900 } } });
+_sdApplyHealth(objs);
+const before = _sdTally(objs).degraded;
+_rhIngest({ enabled: true, routes: { pool: { state: 'up', source: 'servers', servers: { up: 2, total: 2 }, at: 1200 } } });
+_sdApplyHealth(objs);
+console.log(JSON.stringify({ before, after: _sdTally(objs).degraded, cell: objs[0].cell }));
+""")
+    assert res == {'before': 1, 'after': 0, 'cell': 'ok'}, \
+        'a degraded flag that is never reset keeps counting after the pool recovers: %r' % res
+
+
+def test_the_degraded_count_reaches_the_card_the_verdict_and_the_entry_points():
+    dash = _read('static', 'js', 'dashboard.js')
+    assert "'degraded', hGo + ';apistatus=degraded'" in dash, 'the HTTP routers card needs a degraded flag'
+    assert "'backends degraded'" in dash, 'the verdict line needs a degraded item'
+    assert 'if (o.degraded) i.degraded++' in dash, 'entry point rows must count degraded routes'
+    assert "degradedN, 'degraded', base + ';apistatus=degraded'" in dash, \
+        'an entry point degraded flag must filter to degraded, not to warning'
+
+
+def test_all_servers_up_without_a_health_check_proves_nothing():
+    dash = _read('static', 'js', 'dashboard.js')
+    body = dash[dash.index('function _sdBackends(s) {'):dash.index('function _sdComposite(s) {')]
+    assert 'up === keys.length && !(s.loadBalancer && s.loadBalancer.healthCheck)' in body, \
+        'Traefik marks every server UP without a health check, so an all-up report is not evidence'
+    assert 'return { total: keys.length' in body, 'a report containing a DOWN is real health data either way'

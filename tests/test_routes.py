@@ -498,3 +498,49 @@ def test_load_balancing_checkboxes_are_wired_to_their_panels(client):
         assert tag is not None, '%s is missing from the route modal' % box
         assert '_lbSyncToggles()' in tag.split('>')[0], (
             '%s has no handler, so its panel never opens' % box)
+
+
+def test_a_route_save_keeps_health_check_fields_the_route_form_cannot_edit(client):
+    post_form(client, "/save", serviceName='pool', subdomain='pool.example.com',
+              protocol='http', scheme='http', targetIp='10.0.0.1', targetPort='80',
+              backendsJsonHttp=json.dumps({
+                  'servers': [{'scheme': 'http', 'host': '10.0.0.1', 'port': '80'}],
+                  'healthCheck': {'enabled': True, 'path': '/hz', 'interval': '10s'}}))
+
+    import io
+    from ruamel.yaml import YAML
+    cfg = read_config()
+    cfg['http']['services']['pool-service']['loadBalancer']['healthCheck'].update(
+        {'method': 'HEAD', 'port': 8080, 'headers': {'X-Probe': 'tm'}})
+    buf = io.StringIO()
+    YAML().dump(cfg, buf)
+    write_config(buf.getvalue())
+
+    r = post_form(client, "/save", serviceName='pool', subdomain='pool.example.com',
+                  protocol='http', scheme='http', targetIp='10.0.0.1', targetPort='80',
+                  isEdit='true', originalId='pool',
+                  backendsJsonHttp=json.dumps({
+                      'servers': [{'scheme': 'http', 'host': '10.0.0.1', 'port': '80'},
+                                  {'scheme': 'http', 'host': '10.0.0.2', 'port': '80'}],
+                      'healthCheck': {'enabled': True, 'path': '/hz', 'interval': '30s'}}))
+    assert r.status_code < 400, r.data[:200]
+
+    hc = read_config()['http']['services']['pool-service']['loadBalancer']['healthCheck']
+    assert hc['interval'] == '30s', 'the route form owns interval'
+    assert hc['method'] == 'HEAD' and hc['port'] == 8080 and hc['headers'] == {'X-Probe': 'tm'}, \
+        'the route form truncated fields it has no editor for: %r' % (hc,)
+
+
+def test_turning_the_health_check_off_in_the_route_form_removes_the_whole_block(client):
+    post_form(client, "/save", serviceName='pool', subdomain='pool.example.com',
+              protocol='http', scheme='http', targetIp='10.0.0.1', targetPort='80',
+              backendsJsonHttp=json.dumps({
+                  'servers': [{'scheme': 'http', 'host': '10.0.0.1', 'port': '80'}],
+                  'healthCheck': {'enabled': True, 'path': '/hz'}}))
+    post_form(client, "/save", serviceName='pool', subdomain='pool.example.com',
+              protocol='http', scheme='http', targetIp='10.0.0.1', targetPort='80',
+              isEdit='true', originalId='pool',
+              backendsJsonHttp=json.dumps({
+                  'servers': [{'scheme': 'http', 'host': '10.0.0.1', 'port': '80'}],
+                  'healthCheck': {'enabled': False, 'path': '/hz'}}))
+    assert 'healthCheck' not in read_config()['http']['services']['pool-service']['loadBalancer']

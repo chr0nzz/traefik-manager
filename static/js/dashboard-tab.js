@@ -654,17 +654,18 @@ function dashBuildIconTile(r, s) {
 }
 
 function _dskAlarm(meta, down, warn) {
+    let html = '';
     if (down) {
-        return '<button type="button" class="sig-flag dsk-alarm" data-dsk="' + _esc(_dskSpec({ act: 'alarm', pod: meta.name })) + '"'
+        html += '<button type="button" class="sig-flag dsk-alarm" data-dsk="' + _esc(_dskSpec({ act: 'alarm', pod: meta.name })) + '"'
             + ' title="' + down + ' route' + (down === 1 ? '' : 's') + ' in ' + _esc(meta.name) + ' need attention">'
             + '<i class="ph-fill ph-warning-octagon"></i><b>' + down + '</b><span class="sig-fl">down</span></button>';
     }
     if (warn) {
-        return '<button type="button" class="sig-flag dsk-alarm dsk-alarm-warn" data-dsk="' + _esc(_dskSpec({ act: 'alarm', pod: meta.name })) + '"'
+        html += '<button type="button" class="sig-flag dsk-alarm dsk-alarm-warn" data-dsk="' + _esc(_dskSpec({ act: 'alarm', pod: meta.name })) + '"'
             + ' title="' + warn + ' route' + (warn === 1 ? '' : 's') + ' in ' + _esc(meta.name) + ' have a backend server down">'
             + '<i class="ph-fill ph-warning"></i><b>' + warn + '</b><span class="sig-fl">degraded</span></button>';
     }
-    return '';
+    return html;
 }
 
 function dashBuildPod(entry) {
@@ -722,12 +723,12 @@ function dashBuildPod(entry) {
         btn.setAttribute('aria-label', open
             ? 'Show fewer ' + noun + ' in ' + meta.name + ', ' + list.length + ' shown'
             : 'Show ' + hidden.length + ' more ' + noun + ' in ' + meta.name
-              + (hDown ? ', ' + hDown + ' of them down' : (hWarn ? ', ' + hWarn + ' of them degraded' : '')));
+              + (hDown ? ', ' + hDown + ' of them down' : '') + (hWarn ? ', ' + hWarn + ' of them degraded' : ''));
         btn.innerHTML = open
             ? '<i class="ph-bold ph-caret-up"></i>show less'
             : '<i class="ph-bold ph-caret-down"></i><b>' + hidden.length + '</b> more'
-              + (hDown ? ' <span class="dsk-more-n">\u00b7 ' + hDown + ' down</span>'
-                       : (hWarn ? ' <span class="dsk-more-w">\u00b7 ' + hWarn + ' degraded</span>' : ''));
+              + (hDown ? ' <span class="dsk-more-n">\u00b7 ' + hDown + ' down</span>' : '')
+              + (hWarn ? ' <span class="dsk-more-w">\u00b7 ' + hWarn + ' degraded</span>' : '');
         pod.appendChild(btn);
     }
     return pod;

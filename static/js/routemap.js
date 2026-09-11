@@ -120,13 +120,13 @@ window.rmEnsureData = async function(force, opts) {
             if (wantSvc && svcRes && svcRes.ok) {
                 const sd = await svcRes.json();
                 _rmSvcStatus = _rmStatusMap(_rmProtoRows(sd), sv => {
-                    if (!(sv.loadBalancer && sv.loadBalancer.healthCheck)) return null;
                     const map = sv.serverStatus;
                     if (!map || typeof map !== 'object') return null;
                     const keys = Object.keys(map);
                     if (!keys.length) return null;
                     let up = 0;
                     keys.forEach(k => { if (String(map[k]).toUpperCase() === 'UP') up++; });
+                    if (up === keys.length && !(sv.loadBalancer && sv.loadBalancer.healthCheck)) return null;
                     return { up: up, total: keys.length };
                 });
             }

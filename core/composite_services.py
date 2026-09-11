@@ -58,7 +58,11 @@ def build(route_name: str, composite_type: str, children: list, lb_extra: dict =
         servers = [{'url': _child_url(c)} for c in children if c['kind'] == MANUAL]
         if not servers:
             return None, {}, []
-        return {'loadBalancer': {'servers': servers}}, {}, []
+        lb = {'servers': servers}
+        for key, value in (lb_extra or {}).items():
+            if value is not None:
+                lb[key] = value
+        return {'loadBalancer': lb}, {}, []
     if composite_type not in TYPES:
         return None, {}, []
 
@@ -96,7 +100,8 @@ def build(route_name: str, composite_type: str, children: list, lb_extra: dict =
 AUTHORED_KEYS = ('services', 'service', 'mirrors', 'fallback', 'servers')
 
 
-def merge_into(section: dict, parent_name: str, block: dict, owned: dict) -> None:
+def merge_into(section: dict, parent_name: str, block: dict, owned: dict, extra_authored=()) -> None:
+    authored = AUTHORED_KEYS + tuple(extra_authored)
     existing = section.get(parent_name)
     if isinstance(existing, dict):
         for stale in TYPES + ('loadBalancer', 'highestRandomWeight'):
@@ -105,7 +110,7 @@ def merge_into(section: dict, parent_name: str, block: dict, owned: dict) -> Non
         for key, value in block.items():
             current = existing.get(key)
             if isinstance(current, dict) and isinstance(value, dict):
-                for inner in AUTHORED_KEYS:
+                for inner in authored:
                     if inner in value:
                         current[inner] = value[inner]
                     elif inner in current:

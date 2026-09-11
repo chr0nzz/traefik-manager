@@ -108,14 +108,46 @@ def test_the_plate_still_tags_the_dot_with_the_route_id():
 
 def test_the_browser_does_not_believe_server_status_without_a_health_check():
     routemap = _read_js('routemap.js')
-    guard = routemap[routemap.index('_rmSvcStatus = _rmStatusMap('):routemap.index('const map = sv.serverStatus;')]
-    assert 'sv.loadBalancer.healthCheck' in guard, \
+    guard = routemap[routemap.index('_rmSvcStatus = _rmStatusMap('):routemap.index('return { up: up, total: keys.length };')]
+    assert 'up === keys.length && !(sv.loadBalancer && sv.loadBalancer.healthCheck)' in guard, \
         'Traefik reports every server UP without a health check, the dashboard must not paint green from it'
     dash = _read_js('dashboard.js')
     body = dash[dash.index('function _sdBackends(s) {'):dash.index('function _sdComposite(s) {')]
-    assert 's.loadBalancer.healthCheck' in body
+    assert 'up === keys.length && !(s.loadBalancer && s.loadBalancer.healthCheck)' in body
 
 
 def _read_js(name):
     with open(os.path.join(ROOT, 'static', 'js', name), encoding='utf-8') as fh:
         return fh.read()
+
+
+def _alarm(down, warn):
+    src = _src()
+    stub = ("const _esc = s => String(s == null ? '' : s);\n"
+            "function _dskSpec(p) { return JSON.stringify(p); }\n"
+            + _fn('_dskAlarm', src)
+            + "\nconsole.log(JSON.stringify(_dskAlarm({ name: 'Media' }, %d, %d)));" % (down, warn))
+    out = subprocess.run(['node', '-e', stub], capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr
+    return json.loads(out.stdout.strip().splitlines()[-1])
+
+
+def test_a_pod_with_both_a_down_and_a_degraded_route_reports_both():
+    html = _alarm(1, 1)
+    assert '1</b><span class="sig-fl">down' in html, html
+    assert '1</b><span class="sig-fl">degraded' in html, \
+        'the degraded count is swallowed whenever a down route is present: %r' % html
+
+
+def test_a_pod_with_only_one_kind_reports_only_that_kind():
+    assert '"sig-fl">degraded' not in _alarm(2, 0)
+    assert '"sig-fl">down' not in _alarm(0, 3)
+    assert _alarm(0, 0) == ''
+
+
+def test_the_hidden_roll_up_names_both_kinds():
+    src = _src()
+    body = src[src.index('const hidden = list.slice(limit);'):src.index('pod.appendChild(btn);')]
+    assert "(hDown ? ', ' + hDown + ' of them down' : '') + (hWarn ? ', ' + hWarn + ' of them degraded' : '')" in body, \
+        'the +N more aria label still collapses degraded into down'
+    assert body.count('class="dsk-more-w"') == 1 and body.count('class="dsk-more-n"') == 1

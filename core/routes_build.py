@@ -105,6 +105,21 @@ def _composite_child_lb(services: dict, svc_def) -> dict:
     return {}
 
 
+ROUTE_HC_FIELDS = ('path', 'interval', 'timeout')
+
+
+def _merge_healthcheck(current, new_hc: dict) -> dict:
+    if not isinstance(current, dict):
+        return new_hc
+    merged = dict(current)
+    for key in ROUTE_HC_FIELDS:
+        if key in new_hc:
+            merged[key] = new_hc[key]
+        else:
+            merged.pop(key, None)
+    return merged
+
+
 def _merge_service(section: dict, name: str, new_lb: dict, server_key: str, transport_name: str,
                    managed_backends: bool = False) -> None:
     existing = section.get(name)
@@ -123,11 +138,14 @@ def _merge_service(section: dict, name: str, new_lb: dict, server_key: str, tran
     else:
         existing_lb['servers'] = new_servers
     if managed_backends:
-        for key in ('sticky', 'healthCheck'):
-            if key in new_lb:
-                existing_lb[key] = new_lb[key]
-            elif key in existing_lb:
-                del existing_lb[key]
+        if 'sticky' in new_lb:
+            existing_lb['sticky'] = new_lb['sticky']
+        elif 'sticky' in existing_lb:
+            del existing_lb['sticky']
+        if 'healthCheck' in new_lb:
+            existing_lb['healthCheck'] = _merge_healthcheck(existing_lb.get('healthCheck'), new_lb['healthCheck'])
+        elif 'healthCheck' in existing_lb:
+            del existing_lb['healthCheck']
     if 'passHostHeader' in new_lb:
         existing_lb['passHostHeader'] = new_lb['passHostHeader']
     elif 'passHostHeader' in existing_lb:

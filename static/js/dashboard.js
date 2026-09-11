@@ -106,13 +106,13 @@ function _sdUsing(r) {
 }
 
 function _sdBackends(s) {
-    if (!(s && s.loadBalancer && s.loadBalancer.healthCheck)) return null;
-    const m = s.serverStatus;
+    const m = s && s.serverStatus;
     if (!m || typeof m !== 'object') return null;
     const keys = Object.keys(m);
     if (!keys.length) return null;
     let up = 0;
     keys.forEach(k => { if (String(m[k]).toUpperCase() === 'UP') up++; });
+    if (up === keys.length && !(s.loadBalancer && s.loadBalancer.healthCheck)) return null;
     return { total: keys.length, up: up, down: keys.length - up };
 }
 
@@ -527,14 +527,17 @@ function _sdEpKind(ep, info) {
 
 function _sdEpRow(ep, info) {
     const p = _sdEpProto(ep, info);
-    const health = info.err > 0 ? 'down' : (!info.blind && info.n === 0) ? 'idle' : 'up';
+    const health = info.err > 0 ? 'down' : (!info.blind && info.n === 0) ? 'idle' : (info.warn > 0 ? 'warn' : 'up');
     const base = 'tab=services;proto=' + p.key + ';ep=' + ep.name;
     const go = _sdExc('', '', info.n, 'routers', base, info.objs).go;
     const flags = [];
     const disabledN = info.err - (info.down || 0);
     if (disabledN) flags.push(_sdExc('d-bad',  'ph-fill ph-x-circle', disabledN,  'disabled', base + ';apistatus=disabled', info.objs.filter(o => o.cell === 'err' && !o.down)));
     if (info.down) flags.push(_sdExc('d-bad',  'ph-fill ph-warning-octagon', info.down, 'unreachable', base + ';apistatus=unreachable', info.objs.filter(o => o.down)));
-    if (info.warn) flags.push(_sdExc('d-warn', 'ph-fill ph-warning',  info.warn, 'warnings', base + ';apistatus=warning', info.objs.filter(o => o.cell === 'warn')));
+    const degradedN = info.degraded || 0;
+    const warnN = info.warn - degradedN;
+    if (degradedN) flags.push(_sdExc('d-warn', 'ph-fill ph-warning-diamond', degradedN, 'degraded', base + ';apistatus=degraded', info.objs.filter(o => o.degraded)));
+    if (warnN) flags.push(_sdExc('d-warn', 'ph-fill ph-warning',  warnN, 'warnings', base + ';apistatus=warning', info.objs.filter(o => o.cell === 'warn' && !o.degraded)));
     const flagHtml = flags.length
         ? flags.map(f => _sdFlag(f, false)).join('')
         : info.blind ? '<span class="sig-idle-txt">no data</span>'
@@ -546,7 +549,7 @@ function _sdEpRow(ep, info) {
         : info.n === 0
         ? 'no routers bound to ' + ep.name
         : _sdNum(info.n) + ' router' + (info.n === 1 ? '' : 's') + ' on ' + ep.name
-          + ((info.err || info.warn) ? ': ' + (info.err - (info.down || 0)) + ' disabled, ' + (info.down || 0) + ' unreachable, ' + info.warn + ' warnings' : ', all live');
+          + ((info.err || info.warn) ? ': ' + (info.err - (info.down || 0)) + ' disabled, ' + (info.down || 0) + ' unreachable, ' + degradedN + ' degraded, ' + warnN + ' warnings' : ', all live');
     return '<div class="sig-ep-row" data-health="' + health + '" tabindex="0" role="button" data-sd="' + _esc(go) + '">'
          + '<span class="sig-ep-id"><span class="d-proto ' + p.cls + ' sig-proto">' + p.tag + '</span>'
          + '<span class="sig-ep-name">' + _esc(ep.name) + '</span>' + _sdEpGlyphs(ep, info) + '</span>'
@@ -778,6 +781,7 @@ function _sdRender(model) {
         flags: [
             h.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle', h.t.disabled, 'disabled',   hGo + ';apistatus=disabled', h.groups.disabled),
             h.t.down     && _sdExc('d-bad',  'ph-fill ph-warning-octagon', h.t.down, 'unreachable', hGo + ';apistatus=unreachable', h.groups.down),
+            h.t.degraded && _sdExc('d-warn', 'ph-fill ph-warning-diamond', h.t.degraded, 'degraded', hGo + ';apistatus=degraded', h.groups.degraded),
             h.t.warning  && _sdExc('d-warn', 'ph-fill ph-warning',  h.t.warning,  'warnings',   hGo + ';apistatus=warning',  h.groups.warning),
             h.t.unbound  && _sdExc('d-off',  'ph-bold ph-plug',     h.t.unbound,  'unbound',    hGo + ';apistatus=unbound',  h.groups.unbound),
             h.t.unknown  && _sdExc('d-off',  'ph-bold ph-question', h.t.unknown,  'unreported', hGo,                         h.groups.unknown),
@@ -872,6 +876,7 @@ function _sdRender(model) {
         const items = [];
         if (m.http.t.disabled)       items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.http.t.disabled,       'routers disabled',     'tab=services;proto=http;apistatus=disabled', m.http.groups.disabled));
         if (m.http.t.down)           items.push(_sdExc('d-bad',  'ph-fill ph-warning-octagon',     m.http.t.down,           'backends unreachable', 'tab=services;proto=http;apistatus=unreachable', m.http.groups.down));
+        if (m.http.t.degraded)       items.push(_sdExc('d-warn', 'ph-fill ph-warning-diamond',     m.http.t.degraded,       'backends degraded',    'tab=services;proto=http;apistatus=degraded', m.http.groups.degraded));
         if (m.http.t.warning)        items.push(_sdExc('d-warn', 'ph-fill ph-warning',             m.http.t.warning,        'router warnings',      'tab=services;proto=http;apistatus=warning',  m.http.groups.warning));
         if (m.stream.t.disabled)     items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.stream.t.disabled,     'stream disabled',      sGo + ';apistatus=disabled',                  m.stream.groups.disabled));
         if (m.service.t.disabled)    items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.service.t.disabled,    'services disabled',    'tab=live;svcstatus=error',                   m.service.groups.disabled));
@@ -971,7 +976,7 @@ function _sdRender(model) {
             const epBlind = !av.http;
             const info = new Map();
             eps.forEach(ep => info.set(ep.name, {
-                n: 0, err: 0, warn: 0, idle: 0, ok: 0, down: 0, tls: false,
+                n: 0, err: 0, warn: 0, idle: 0, ok: 0, down: 0, degraded: 0, tls: false,
                 httpN: 0, tcpN: 0, udpN: 0, blind: epBlind, objs: [],
                 cells: { err: [], warn: [], idle: [], ok: 0, blind: epBlind },
                 providers: new Set(), internalOnly: false,
@@ -989,6 +994,7 @@ function _sdRender(model) {
                     i.providers.add(o.provider);
                     i.objs.push(o);
                     if (o.down) i.down++;
+                    if (o.degraded) i.degraded++;
                     if (o.cell === 'ok') { i.ok++; i.cells.ok++; }
                     else { i[o.cell]++; i.cells[o.cell].push((o.name || o.short) + ': ' + (o.reason || o.cell)); }
                 });
@@ -1047,14 +1053,14 @@ window._rhGet  = function(rid) { return (rid && _rhMap[rid]) || null; };
 window._rhByName = function(name) {
     if (!name) return null;
     if (_rhMap[name]) return _rhMap[name];
-    const hit = Object.keys(_rhMap).find(rid => rid.split('::').pop() === name);
+    const hit = Object.keys(_rhMap).find(rid => (rid.includes('::') ? rid.slice(rid.indexOf('::') + 2) : rid) === name);
     return hit ? _rhMap[hit] : null;
 };
 
 function _sdApplyHealth(objs) {
     (objs || []).forEach(o => {
         if (o.baseCell === undefined) { o.baseCell = o.cell; o.baseReason = o.reason; }
-        o.cell = o.baseCell; o.reason = o.baseReason; o.down = false;
+        o.cell = o.baseCell; o.reason = o.baseReason; o.down = false; o.degraded = false;
         if (o.status !== 'enabled' || o.baseCell !== 'ok') return;
         const h = window._rhByName(o.short);
         if (!h) return;
@@ -1087,10 +1093,11 @@ function _rhIngest(data) {
 
 window._rhRemember = function(rid, res) {
     if (!rid || !res) return;
-    _rhMap[rid] = { state: res.ok ? 'up' : 'down', source: 'ping', manual: true,
+    _rhMap[rid] = { state: res.state || (res.ok ? 'up' : 'down'), source: res.source || 'ping', manual: true,
                     at: Math.floor(Date.now() / 1000), latency_ms: res.latency_ms,
                     status_code: res.status_code, error: res.error, via_target: res.via_target, self: res.self,
-                    unverified: res.unverified, note: res.note };
+                    unverified: res.unverified, note: res.note,
+                    servers: res.servers, down_servers: res.down_servers };
 };
 
 window._rhLoad = async function(server) {
@@ -1146,13 +1153,14 @@ function _sdHealthDot(h, noHost) {
     return { cls: 'status-unknown', title: 'Router loaded, not checked yet' };
 }
 
+window._rhDot = _sdHealthDot;
+
 function _sdApplyRouteCards() {
     if (!_sdApiStatusMap) return;
     const map = _sdApiStatusMap;
     document.querySelectorAll('.route-card').forEach(card => {
         const routeName = card.dataset.routekey || '';
         const statusEl = card.querySelector('.status-dot');
-        if (!statusEl) return;
         const entry = map[routeName];
         const apiStatus = entry ? entry.status : null;
         const apiError  = (entry && entry.error.length) ? entry.error.join(' · ') : null;
@@ -1161,6 +1169,7 @@ function _sdApplyRouteCards() {
         if (entry) card.dataset.eps = entry.eps.join('|');
         const health = window._rhGet(card.dataset.rid) || window._rhGet(routeName);
         card.dataset.health = !health ? '' : health.state === 'down' ? 'unreachable' : health.state;
+        if (!statusEl) return;
         if (apiStatus === 'disabled') {
             statusEl.className = 'status-dot status-offline';
             statusEl.title = apiError ? 'Error: ' + apiError : 'Disabled';

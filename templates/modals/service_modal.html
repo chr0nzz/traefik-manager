@@ -14,7 +14,7 @@
             <input type="hidden" id="svcOriginalName" value="">
             <div>
                 <label>Name</label>
-                <input type="text" id="svcName" class="input-field" placeholder="api-pool" autocomplete="off">
+                <input type="text" id="svcName" maxlength="100" class="input-field" placeholder="api-pool" autocomplete="off">
                 <p class="text-xs mt-1" style="color:var(--muted)">Letters, numbers, dots, dashes and underscores.</p>
             </div>
             <div>
@@ -35,6 +35,49 @@
                     </button>
                 </div>
                 <div id="svcRows"></div>
+            </div>
+            <div id="svcHealthSection">
+                <button type="button" onclick="toggleSvcHealth()" class="text-xs flex items-center gap-1" style="background:none;border:none;cursor:pointer;padding:0;color:var(--muted)">
+                    <i id="svcHealthChevron" class="ph-bold ph-caret-right text-xs"></i>
+                    <span class="font-semibold uppercase tracking-wider">Health check</span>
+                </button>
+                <div id="svcHealthAdvBody" class="mt-2 p-3 rounded-lg space-y-3" style="display:none;background:var(--input-bg);border:1px solid var(--border)">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="svcHcEnabled" onchange="_svcHcSync()" class="rounded" style="accent-color:var(--blue)">
+                            <label for="svcHcEnabled" class="text-sm" style="margin:0;color:var(--text)">Poll the servers</label>
+                        </div>
+                        <span class="tm-info-btn" data-tip="Traefik polls this path on every server and stops sending traffic to the ones that fail. Without it Traefik reports every server as up, so a dead server keeps receiving requests."><i class="ph-bold ph-info"></i></span>
+                    </div>
+                    <div id="svcHcBody" style="display:none" class="space-y-3">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div><label>Path</label><input type="text" id="svcHcPath" class="input-field" placeholder="/ (server root)"></div>
+                            <div><label>Interval</label><input type="text" id="svcHcInterval" class="input-field" placeholder="30s"></div>
+                            <div><label>Timeout</label><input type="text" id="svcHcTimeout" class="input-field" placeholder="5s"></div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div><label>Method</label><input type="text" id="svcHcMethod" class="input-field" placeholder="GET"></div>
+                            <div><label>Expected status</label><input type="number" id="svcHcStatus" class="input-field" placeholder="any 2xx or 3xx"></div>
+                            <div><label>Interval when down</label><input type="text" id="svcHcUnhealthy" class="input-field" placeholder="same as interval"></div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div><label>Scheme</label><select id="svcHcScheme" class="input-field"><option value="">same as server</option><option value="http">http</option><option value="https">https</option></select></div>
+                            <div><label>Port</label><input type="number" id="svcHcPort" class="input-field" placeholder="same as server"></div>
+                            <div><label>Host header</label><input type="text" id="svcHcHostname" class="input-field" placeholder="optional"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label>Mode</label><select id="svcHcMode" class="input-field"><option value="">http</option><option value="grpc">grpc</option></select></div>
+                            <div class="flex items-end pb-1"><label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" id="svcHcFollow" checked class="rounded" style="accent-color:var(--blue)"> Follow redirects</label></div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="mb-0">Headers</label>
+                                <button type="button" onclick="addSvcHcHeader()" class="btn-secondary text-xs" style="height:24px;padding:0 8px"><i class="ph-bold ph-plus text-xs"></i> Add header</button>
+                            </div>
+                            <div id="svcHcHeaders"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div id="svcConfigFileSelectWrap">
                 <label>Config file</label>

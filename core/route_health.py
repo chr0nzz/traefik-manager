@@ -109,7 +109,9 @@ def servers_health(app: dict, server_probe=None):
     urls = [str(u) for u in (app.get('servers') or []) if str(u).startswith(('http://', 'https://'))]
     if len(urls) < 2:
         return None
-    verdicts = [(server_probe or reachability.backend_state)(u) for u in urls]
+    if server_probe is None:
+        return reachability.pool_health(urls)
+    verdicts = [server_probe(u) for u in urls]
     if 'unknown' in verdicts:
         return None
     up = verdicts.count('up')

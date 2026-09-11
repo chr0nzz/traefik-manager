@@ -63,8 +63,16 @@ def test_mirroring_and_failover_services_can_be_created(client):
 
 
 def test_a_bad_name_is_refused(client):
-    for bad in ('', 'has space', 'has@provider', 'x' * 80, '-leading'):
+    for bad in ('', 'has@provider', 'has/slash', 'has,comma', 'has:colon', 'tpl{{x}}',
+                '.', '..', 'x' * 101):
         assert _save(client, bad, [_manual('a:80')]).status_code == 400, bad
+
+
+def test_a_name_traefik_accepts_is_no_longer_refused(client):
+    for good in ('xxx (yyy)', 'has space', '-leading', 'x' * 80, 'caf\u00e9', 'a+b', 'a[1]'):
+        r = _save(client, good, [_manual('a:80')], kind='loadBalancer')
+        assert r.status_code == 200, (good, r.get_json())
+        assert _svc(good) is not None, good
 
 
 def test_a_service_with_no_backends_is_refused(client):
@@ -316,3 +324,80 @@ tcp:
 """)
     r = _save(client, 'webpool', [_manual('10.0.0.5:80')], kind='loadBalancer')
     assert r.status_code == 200, r.get_json()
+
+
+def _hc(**over):
+    hc = {'enabled': True, 'path': '/up'}
+    hc.update(over)
+    return hc
+
+
+def test_a_health_check_is_written_with_every_field_traefik_takes(client):
+    r = _save(client, 'pool', [_manual('a:80'), _manual('b:80')], kind='loadBalancer',
+              healthCheck=_hc(interval='10s', timeout='3s', unhealthyInterval='1m30s',
+                              method='HEAD', status='204', scheme='https', port='8080',
+                              hostname='probe.local', mode='grpc', followRedirects=False,
+                              headers={'X-Probe': 'tm', '': 'dropped'}))
+    assert r.status_code == 200, r.get_json()
+    hc = _svc('pool')['loadBalancer']['healthCheck']
+    assert hc == {'path': '/up', 'interval': '10s', 'timeout': '3s', 'unhealthyInterval': '1m30s',
+                  'scheme': 'https', 'mode': 'grpc', 'hostname': 'probe.local', 'method': 'HEAD',
+                  'port': 8080, 'status': 204, 'followRedirects': False,
+                  'headers': {'X-Probe': 'tm'}}, hc
+
+
+def test_turning_the_health_check_off_removes_it(client):
+    _save(client, 'pool', [_manual('a:80')], kind='loadBalancer', healthCheck=_hc())
+    assert _svc('pool')['loadBalancer']['healthCheck']['path'] == '/up'
+    r = _save(client, 'pool', [_manual('a:80')], kind='loadBalancer',
+              healthCheck={'enabled': False, 'path': '/up'})
+    assert r.status_code == 200, r.get_json()
+    assert 'healthCheck' not in _svc('pool')['loadBalancer'], _svc('pool')
+
+
+def test_a_health_check_without_a_path_probes_the_server_root(client):
+    r = _save(client, 'pool', [_manual('a:80')], kind='loadBalancer',
+              healthCheck={'enabled': True, 'path': '  ', 'interval': '10s', 'timeout': '3s'})
+    assert r.status_code == 200, r.get_json()
+    hc = _svc('pool')['loadBalancer']['healthCheck']
+    assert hc == {'interval': '10s', 'timeout': '3s'}, \
+        'Traefik gates on the healthCheck block, not on the path, so a pathless check is valid: %r' % (hc,)
+
+
+def test_a_client_that_sends_no_health_check_still_keeps_the_existing_one(client):
+    write_config("""
+http:
+  routers: {}
+  services:
+    theirs:
+      loadBalancer:
+        servers:
+          - url: http://old:80
+        healthCheck:
+          path: /up
+          method: HEAD
+""")
+    r = _save(client, 'theirs', [_manual('new:80')], kind='loadBalancer')
+    assert r.status_code == 200, r.get_json()
+    assert _svc('theirs')['loadBalancer']['healthCheck'] == {'path': '/up', 'method': 'HEAD'}
+
+
+def test_a_health_check_field_we_do_not_know_survives_an_edit(client):
+    write_config("""
+http:
+  routers: {}
+  services:
+    theirs:
+      loadBalancer:
+        servers:
+          - url: http://old:80
+        healthCheck:
+          path: /up
+          somethingTraefikAddedLater: keepme
+""")
+    r = _save(client, 'theirs', [_manual('new:80')], kind='loadBalancer', healthCheck=_hc(path='/hz'))
+    assert r.status_code == 200, r.get_json()
+    hc = _svc('theirs')['loadBalancer']['healthCheck']
+    assert hc['path'] == '/hz', 'the editor owns the fields it shows'
+    assert hc['somethingTraefikAddedLater'] == 'keepme', \
+        'a field the editor does not show must not be dropped: %r' % (hc,)
