@@ -1,6 +1,6 @@
 # Running on Unraid
 
-Traefik Manager ships an Unraid template. It is not in Community Applications yet, so install it as a user template.
+Traefik Manager ships an Unraid template, kept in [chr0nzz/unraid-templates](https://github.com/chr0nzz/unraid-templates). It is not in Community Applications yet, so install it as a user template.
 
 ::: warning Template Repositories is gone
 Older guides tell you to paste a repository URL into **Apps - Settings - Template Repositories**. Unraid removed that field in favour of Community Applications, so there is nowhere to paste it. Use the steps below instead.
@@ -14,7 +14,7 @@ Open a terminal on your Unraid server and run:
 
 ```bash
 wget -O /boot/config/plugins/dockerMan/templates-user/my-traefik-manager.xml \
-  https://raw.githubusercontent.com/chr0nzz/traefik-manager/main/unraid/traefik-manager.xml
+  https://raw.githubusercontent.com/chr0nzz/unraid-templates/main/templates/traefik-manager.xml
 ```
 
 Then:
