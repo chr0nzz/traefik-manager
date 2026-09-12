@@ -260,8 +260,22 @@
                         </div>
                         <span class="tm-info-btn" data-tip="Adds a tls.domains block with main: domain.com and sans: *.domain.com. Use with DNS challenge resolvers (Cloudflare, Route 53, etc.) to issue wildcard certs."><i class="ph-bold ph-info"></i></span>
                     </div>
-                    <input type="hidden" name="tlsWildcardMain" id="tlsWildcardMain">
-                    <input type="hidden" name="tlsWildcardSans" id="tlsWildcardSans">
+                    <div id="wildcardFields" style="display:none" class="space-y-2">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label style="margin:0">Certificate domain</label>
+                                <span class="tm-info-btn" data-tip="The main entry of the tls.domains block. Traefik asks your resolver for a certificate covering this name."><i class="ph-bold ph-info"></i></span>
+                            </div>
+                            <input type="text" name="tlsWildcardMain" id="tlsWildcardMain" class="input-field font-mono text-sm" placeholder="example.com">
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label style="margin:0">Extra domains</label>
+                                <span class="tm-info-btn" data-tip="One per line, written as sans. A wildcard needs a DNS challenge resolver such as Cloudflare or Route 53."><i class="ph-bold ph-info"></i></span>
+                            </div>
+                            <textarea name="tlsWildcardSans" id="tlsWildcardSans" class="input-field font-mono text-sm" rows="2" placeholder="*.example.com"></textarea>
+                        </div>
+                    </div>
                     <div>
                         <label>Cert Resolver</label>
                         <select name="certResolver" id="certResolver" class="input-field" onchange="toggleWildcardSection(this.value)">

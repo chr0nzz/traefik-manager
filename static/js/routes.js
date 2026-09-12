@@ -495,6 +495,7 @@ function _resetRouteForm() {
     const wcChk = document.getElementById('wildcardCheckbox'); if (wcChk) wcChk.checked = false;
     const mainEl = document.getElementById('tlsWildcardMain'); if (mainEl) mainEl.value = '';
     const sansEl = document.getElementById('tlsWildcardSans'); if (sansEl) sansEl.value = '';
+    _showWildcardFields(false);
     ['http', 'tcp', 'udp'].forEach(pr => setServiceRefMode(pr, false));
     setProtocol('http');
     _resetHeadersPreset();
@@ -1730,11 +1731,18 @@ function toggleWildcardSection(resolverVal) {
     }
 }
 
+function _showWildcardFields(on) {
+    const box = document.getElementById('wildcardFields');
+    if (box) box.style.display = on ? '' : 'none';
+}
+
 function _onWildcardToggle(checked) {
     const mainEl = document.getElementById('tlsWildcardMain');
     const sansEl = document.getElementById('tlsWildcardSans');
+    _showWildcardFields(checked);
     if (!mainEl || !sansEl) return;
     if (!checked) { mainEl.value = ''; sansEl.value = ''; return; }
+    if (mainEl.value.trim() || sansEl.value.trim()) return;
     const domSel = document.getElementById('domainSelect');
     let base = '';
     if (window._domainChipSelected && window._domainChipSelected.size) {
@@ -1816,8 +1824,10 @@ async function cloneRoute(btn) {
             const sansEl = document.getElementById('tlsWildcardSans');
             if (mainEl) mainEl.value = first.main || '';
             if (sansEl) sansEl.value = (first.sans || []).join('\n');
+            _showWildcardFields(true);
         } else if (chk) {
             chk.checked = false;
+            _showWildcardFields(false);
         }
     } else if (proto === 'tcp') {
         document.getElementById('tcpRule').value = app.rule || '';
@@ -1921,6 +1931,7 @@ async function handleEdit(btn) {
             const sansEl = document.getElementById('tlsWildcardSans');
             if (mainEl) mainEl.value = first.main || '';
             if (sansEl) sansEl.value = (first.sans || []).join('\n');
+            _showWildcardFields(true);
         } else if (wChk) {
             wChk.checked = false;
             _onWildcardToggle(false);
