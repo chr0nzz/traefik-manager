@@ -338,6 +338,27 @@ function _buildConfigSelectOptions(sel, files, allowNew) {
     files.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f; sel.appendChild(o); });
 }
 
+let _agentConfigFiles = { id: '', files: null, inflight: null };
+
+function _dropConfigFilesCache() {
+    _agentConfigFiles = { id: '', files: null, inflight: null };
+}
+
+function _agentConfigFileNames() {
+    const id = _activeAgent ? _activeAgent.id : '';
+    if (_agentConfigFiles.id !== id) _agentConfigFiles = { id, files: null, inflight: null };
+    const entry = _agentConfigFiles;
+    if (entry.files) return Promise.resolve(entry.files);
+    if (!entry.inflight) {
+        entry.inflight = agentFetch('/api/configs').then(r => r.json()).then(data => {
+            entry.files = (data.files || []).map(f => f.name).sort();
+            return entry.files;
+        });
+        entry.inflight.catch(() => {}).then(() => { entry.inflight = null; });
+    }
+    return entry.inflight;
+}
+
 async function _populateConfigFileSelect(which) {
     const isRoute = which === 'route';
     const isPluginMw = which === 'pluginMw';
@@ -354,9 +375,7 @@ async function _populateConfigFileSelect(which) {
     if (_activeAgent) {
         if (wrap) wrap.style.display = '';
         try {
-            const r = await agentFetch('/api/configs');
-            const data = await r.json();
-            const files = (data.files || []).map(f => f.name).sort();
+            const files = await _agentConfigFileNames();
             _buildConfigSelectOptions(sel, files, true);
             sel.value = files.length === 1 ? files[0] : '';
             onChange(sel);
@@ -898,15 +917,35 @@ function _copyCode(btn, text) {
     });
 }
 
+let _tlsOptionsCache = { server: null, list: null, inflight: null };
+
+function _dropTlsOptionsCache() {
+    _tlsOptionsCache = { server: null, list: null, inflight: null };
+}
+
+function _tlsOptionNames() {
+    const server = (typeof _activeAgent !== 'undefined' && _activeAgent) ? _activeAgent.id : '';
+    if (_tlsOptionsCache.server !== server) _tlsOptionsCache = { server, list: null, inflight: null };
+    const entry = _tlsOptionsCache;
+    if (entry.list) return Promise.resolve(entry.list);
+    if (!entry.inflight) {
+        entry.inflight = fetch('/api/tls-options' + (server ? '?server=' + encodeURIComponent(server) : ''))
+            .then(r => r.json()).then(opts => {
+                entry.list = (Array.isArray(opts) ? opts : []).map(o => o.name).filter(Boolean);
+                return entry.list;
+            });
+        entry.inflight.catch(() => {}).then(() => { entry.inflight = null; });
+    }
+    return entry.inflight;
+}
+
 async function _populateTlsOptionsSelect() {
     const sel = document.getElementById('tlsOptionsProfileSelect');
     if (!sel) return;
     const current = sel.value;
     try {
-        const res = await fetch('/api/tls-options');
-        const opts = await res.json();
-        const inner = `<option value="">None (default)</option>` + opts.map(o => `<option value="${_esc(o.name)}">${_esc(o.name)}</option>`).join('');
-        sel.innerHTML = inner;
+        const names = await _tlsOptionNames();
+        sel.innerHTML = `<option value="">None (default)</option>` + names.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('');
         sel.value = current;
     } catch(e) {}
 }

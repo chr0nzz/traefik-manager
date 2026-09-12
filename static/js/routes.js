@@ -170,29 +170,38 @@ function setServiceRefMode(proto, on, opts) {
     if (typeof currentProto !== 'undefined' && currentProto === proto) setProtocol(proto);
 }
 
+let _inflightServicesList = null;
+
 async function _ensureServicesList() {
-    if (window._tmServices) return window._tmServices;
-    const out = { http: [], tcp: [], udp: [], live: { http: [], tcp: [], udp: [] } };
-    try {
-        const live = await agentFetch('/api/traefik/services').then(r => r.json());
-        ['http', 'tcp', 'udp'].forEach(pr => {
-            out.live[pr] = (live[pr] || []).map(sv => ({
-                name: String(sv.name || ''),
-                provider: sv.provider || String(sv.name || '').split('@')[1] || ''
-            })).filter(sv => sv.name && sv.provider && sv.provider !== 'file');
-        });
-    } catch (e) {}
-    try {
-        const url = _activeAgent ? '/api/agents/' + _activeAgent.id + '/routes' : '/api/routes';
-        const res = await fetch(url, { headers: { 'X-Requested-With': 'fetch' } });
-        const data = await res.json();
-        const own = data.services || { http: [], tcp: [], udp: [] };
-        ['http', 'tcp', 'udp'].forEach(pr => { out[pr] = own[pr] || []; });
-        window._tmServices = out;
-    } catch (e) {
-        window._tmServices = out;
-    }
-    return window._tmServices;
+    const have = window._tmServices;
+    if (have && have.liveLoaded) return have;
+    if (_inflightServicesList) return _inflightServicesList;
+    const server = _activeAgent ? _activeAgent.id : '';
+    _inflightServicesList = (async () => {
+        const out = Object.assign({ http: [], tcp: [], udp: [], live: { http: [], tcp: [], udp: [] }, liveLoaded: false },
+                                  window._tmServices || {});
+        const jobs = [agentFetch('/api/traefik/services').then(r => r.json()).then(live => {
+            ['http', 'tcp', 'udp'].forEach(pr => {
+                out.live[pr] = (live[pr] || []).map(sv => ({
+                    name: String(sv.name || ''),
+                    provider: sv.provider || String(sv.name || '').split('@')[1] || ''
+                })).filter(sv => sv.name && sv.provider && sv.provider !== 'file');
+            });
+            out.liveLoaded = true;
+        }).catch(() => {})];
+        if (!window._tmServices) {
+            const url = _activeAgent ? '/api/agents/' + _activeAgent.id + '/routes' : '/api/routes';
+            jobs.push(fetch(url, { headers: { 'X-Requested-With': 'fetch' } }).then(r => r.json()).then(data => {
+                const own = data.services || {};
+                ['http', 'tcp', 'udp'].forEach(pr => { out[pr] = own[pr] || []; });
+            }).catch(() => {}));
+        }
+        await Promise.all(jobs);
+        if ((_activeAgent ? _activeAgent.id : '') === server) window._tmServices = out;
+        return out;
+    })();
+    _inflightServicesList.catch(() => {}).then(() => { _inflightServicesList = null; });
+    return _inflightServicesList;
 }
 
 async function _populateServiceRefSelect(proto, selected) {
@@ -466,8 +475,7 @@ function _applyStreamingPreset(on) {
     _renderStreamingState(!!on);
 }
 
-async function openModal() {
-    _routeWasComposite = false;
+function _resetRouteForm() {
     closeOtherPanels('appModal');
     document.getElementById('isEdit').value = 'false';
     document.getElementById('modalTitle').innerText = 'Add Route';
@@ -479,13 +487,6 @@ async function openModal() {
         if (el) el.value = '';
     });
     setHttpRuleMode('simple');
-    await Promise.all([
-        _initEntrypointChips('http', []),
-        _initEntrypointChips('tcp', []),
-        _initEntrypointChips('udp', []),
-        _initMiddlewareChips([]),
-        _initMiddlewareChips([], 'tcp')
-    ]);
     setTcpTlsMode('none', document.getElementById('tcpTlsNone'));
     const crHttp = document.getElementById('certResolver');
     if (crHttp) { crHttp.value = (!_activeAgent && availableCertResolvers.length > 0) ? availableCertResolvers[0] : '__disabled__'; toggleWildcardSection(crHttp.value); }
@@ -495,21 +496,64 @@ async function openModal() {
     const mainEl = document.getElementById('tlsWildcardMain'); if (mainEl) mainEl.value = '';
     const sansEl = document.getElementById('tlsWildcardSans'); if (sansEl) sansEl.value = '';
     ['http', 'tcp', 'udp'].forEach(pr => setServiceRefMode(pr, false));
-    await _ensureServicesList();
-    ['http', 'tcp', 'udp'].forEach(pr => _populateServiceRefSelect(pr, ''));
     setProtocol('http');
     _resetHeadersPreset();
     _resetStreamingPreset();
     const tlsOptSel = document.getElementById('tlsOptionsProfileSelect');
     if (tlsOptSel) tlsOptSel.value = '';
-    _populateTlsOptionsSelect();
     _updateRouteModalForAgent();
     _initDomainChips([]);
+}
+
+let _routeFillToken = 0;
+
+async function _fillRouteSelects(app, proto, opts) {
+    const token = ++_routeFillToken;
+    const fresh = () => token === _routeFillToken;
+    const lock  = !!(opts && opts.lock);
+    const ownedHdr = (app && app.headersPreset && app.headersPreset.owned) ? app.name + '-headers' : null;
+    const mwsFor = pr => (app && pr === proto) ? (app.middlewares || []).filter(m => m !== ownedHdr) : [];
+    const epsFor = pr => (app && pr === proto) ? (app.entryPoints || []) : [];
+    const step = fn => Promise.resolve().then(fn).catch(e => console.error('Route form load failed:', e));
     await Promise.all([
-        _populateConfigFileSelect('route'),
-        _loadAgentResolversIntoSelects()
+        step(async () => {
+            const data = await _ensureServicesList();
+            if (!fresh()) return;
+            const ref = app ? _detectServiceRef(app, proto, data[proto] || []) : { refMode: false, raw: '' };
+            await Promise.all(['http', 'tcp', 'udp'].map(pr => _populateServiceRefSelect(pr, (pr === proto && ref.refMode) ? ref.raw : '')));
+            if (!fresh()) return;
+            ['http', 'tcp', 'udp'].forEach(pr => { if (pr !== proto) setServiceRefMode(pr, false); });
+            if (app) setServiceRefMode(proto, ref.refMode, lock ? { lockManual: ref.refMode } : undefined);
+        }),
+        step(async () => {
+            await _initMiddlewareChips(mwsFor('http'));
+            if (fresh() && app && proto === 'http') _applyHeadersPreset(app.headersPreset);
+        }),
+        step(() => _initMiddlewareChips(mwsFor('tcp'), 'tcp')),
+        step(() => _initEntrypointChips('http', epsFor('http'))),
+        step(() => _initEntrypointChips('tcp', epsFor('tcp'))),
+        step(() => _initEntrypointChips('udp', epsFor('udp'))),
+        step(async () => {
+            await _populateTlsOptionsSelect();
+            const sel = document.getElementById('tlsOptionsProfileSelect');
+            if (fresh() && sel) sel.value = app ? (app.tlsOptionsProfile || '') : '';
+        }),
+        step(async () => {
+            await _populateConfigFileSelect('route');
+            if (!fresh() || !app || !app.configFile) return;
+            const cfSel = document.getElementById('configFileSelect');
+            if (cfSel) cfSel.value = app.configFile;
+            document.getElementById('configFile').value = app.configFile;
+        }),
+        step(() => _loadAgentResolversIntoSelects()),
     ]);
+}
+
+async function openModal() {
+    _routeWasComposite = false;
+    _resetRouteForm();
     _openRoutePanel();
+    await _fillRouteSelects(null, 'http');
 }
 
 function _openRoutePanel() {
@@ -659,9 +703,9 @@ function _clearRouteViews(message) {
 
 function _paintRoutes(data) {
     if (data.services) {
-        const keep = (window._tmServices || {}).live;
-        window._tmServices = Object.assign({ live: keep || { http: [], tcp: [], udp: [] } }, data.services);
-        if (!keep) window._tmServices = null;
+        const prev = window._tmServices || {};
+        window._tmServices = Object.assign({ live: prev.live || { http: [], tcp: [], udp: [] }, liveLoaded: !!prev.liveLoaded },
+                                           data.services);
     }
     renderRouteGrid(data.apps || []);
     renderMwGrid(data.middlewares || []);
@@ -670,6 +714,7 @@ function _paintRoutes(data) {
 }
 
 async function refreshRoutes() {
+    if (typeof _dropConfigFilesCache === 'function') _dropConfigFilesCache();
     tabCacheHydrate('routes', _paintRoutes);
     try {
         let res;
@@ -1733,24 +1778,15 @@ function _applyHttpRuleToForm(rule) {
 
 async function cloneRoute(btn) {
     const app = JSON.parse(btn.getAttribute('data-app'));
-    await openModal();
+    _routeWasComposite = false;
+    _resetRouteForm();
     document.getElementById('modalTitle').innerText = 'Clone Route';
     document.getElementById('serviceName').value = (app.name || '') + '-copy';
     _populateBackends(app.protocol || 'http', app.servers);
     _applyLbAdvanced(app);
-    const cfSel = document.getElementById('configFileSelect');
-    if (app.configFile) {
-        document.getElementById('configFile').value = app.configFile;
-        if (cfSel) cfSel.value = app.configFile;
-    }
+    if (app.configFile) document.getElementById('configFile').value = app.configFile;
     const proto = app.protocol || 'http';
     setProtocol(proto);
-    const _cloneSvcList = (await _ensureServicesList())[proto] || [];
-    const _cloneRef = _detectServiceRef(app, proto, _cloneSvcList);
-    if (_cloneRef.refMode) {
-        await _populateServiceRefSelect(proto, _cloneRef.raw);
-        setServiceRefMode(proto, true);
-    }
     if (proto === 'http') {
         _applyHttpRuleToForm(app.rule || '');
         const _cloneComposite = !!app.serviceType && app.serviceType !== 'loadBalancer';
@@ -1759,10 +1795,6 @@ async function cloneRoute(btn) {
         const parts = target.split(':');
         document.getElementById('targetIp').value = parts[0] || '';
         document.getElementById('targetPort').value = _cloneComposite ? '' : (parts[1] || '80');
-        const _ownedHdr = (app.headersPreset && app.headersPreset.owned) ? app.name + '-headers' : null;
-        await _initMiddlewareChips((app.middlewares || []).filter(m => m !== _ownedHdr));
-        _applyHeadersPreset(app.headersPreset);
-        await _initEntrypointChips('http', app.entryPoints || []);
         document.getElementById('scheme').value = targetScheme;
         document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
         _applyStreamingPreset(app.streaming);
@@ -1787,18 +1819,11 @@ async function cloneRoute(btn) {
         } else if (chk) {
             chk.checked = false;
         }
-        const tlsOptSel = document.getElementById('tlsOptionsProfileSelect');
-        if (tlsOptSel) {
-            await _populateTlsOptionsSelect();
-            tlsOptSel.value = app.tlsOptionsProfile || '';
-        }
     } else if (proto === 'tcp') {
         document.getElementById('tcpRule').value = app.rule || '';
         const target = (app.target || '').split(':');
         document.getElementById('targetIpTcp').value = target[0] || '';
         document.getElementById('targetPortTcp').value = target[1] || '';
-        await _initEntrypointChips('tcp', app.entryPoints || []);
-        await _initMiddlewareChips(app.middlewares || [], 'tcp');
         const tlsMode = app.tls ? (app.tls.passthrough ? 'passthrough' : 'tls') : 'none';
         setTcpTlsMode(tlsMode, document.getElementById(tlsMode === 'passthrough' ? 'tcpTlsPassthrough' : tlsMode === 'tls' ? 'tcpTlsTls' : 'tcpTlsNone'));
         const crTcp = document.getElementById('certResolverTcp');
@@ -1807,8 +1832,9 @@ async function cloneRoute(btn) {
         const target = (app.target || '').split(':');
         document.getElementById('targetIpUdp').value = target[0] || '';
         document.getElementById('targetPortUdp').value = target[1] || '';
-        await _initEntrypointChips('udp', app.entryPoints || []);
     }
+    _openRoutePanel();
+    await _fillRouteSelects(app, proto, { lock: false });
 }
 
 let _routeMenuCard = null;
@@ -1867,24 +1893,13 @@ async function handleEdit(btn) {
     }
     _applyLbAdvanced(app);
 
-    const _svcList = (await _ensureServicesList())[proto] || [];
-    const _ref = _detectServiceRef(app, proto, _svcList);
-    ['http', 'tcp', 'udp'].forEach(pr => { if (pr !== proto) setServiceRefMode(pr, false); });
-    await _populateServiceRefSelect(proto, _ref.refMode ? _ref.raw : '');
-    setServiceRefMode(proto, _ref.refMode, { lockManual: _ref.refMode });
-
     if (proto === 'http') {
         _applyHttpRuleToForm(app.rule || '');
-
         const targetScheme = (app.target || '').startsWith('https://') ? 'https' : 'http';
         let target = app.target.replace('http://','').replace('https://','');
         const parts = target.split(':');
         document.getElementById('targetIp').value = parts[0];
         document.getElementById('targetPort').value = parts[1] || '80';
-        const _ownedHdr = (app.headersPreset && app.headersPreset.owned) ? app.name + '-headers' : null;
-        await _initMiddlewareChips((app.middlewares || []).filter(m => m !== _ownedHdr));
-        _applyHeadersPreset(app.headersPreset);
-        await _initEntrypointChips('http', app.entryPoints || []);
         document.getElementById('scheme').value = targetScheme;
         document.getElementById('passHostHeader').checked = app.passHostHeader !== false;
         _applyStreamingPreset(app.streaming);
@@ -1910,40 +1925,24 @@ async function handleEdit(btn) {
             wChk.checked = false;
             _onWildcardToggle(false);
         }
-        const tlsOptSel2 = document.getElementById('tlsOptionsProfileSelect');
-        if (tlsOptSel2) {
-            await _populateTlsOptionsSelect();
-            tlsOptSel2.value = app.tlsOptionsProfile || '';
-        }
-
     } else if (proto === 'tcp') {
         document.getElementById('tcpRule').value = app.rule || '';
         const target = (app.target || '').split(':');
         document.getElementById('targetIpTcp').value = target[0] || '';
         document.getElementById('targetPortTcp').value = target[1] || '';
-        await _initEntrypointChips('tcp', app.entryPoints || []);
-        await _initMiddlewareChips(app.middlewares || [], 'tcp');
         const tlsMode2 = app.tls ? (app.tls.passthrough ? 'passthrough' : 'tls') : 'none';
         setTcpTlsMode(tlsMode2, document.getElementById(tlsMode2 === 'passthrough' ? 'tcpTlsPassthrough' : tlsMode2 === 'tls' ? 'tcpTlsTls' : 'tcpTlsNone'));
         const crTcp = document.getElementById('certResolverTcp');
         if (crTcp && app.certResolver) _ensureResolverOption(crTcp, app.certResolver);
-
     } else if (proto === 'udp') {
         const target = (app.target || '').split(':');
         document.getElementById('targetIpUdp').value = target[0] || '';
         document.getElementById('targetPortUdp').value = target[1] || '';
-        await _initEntrypointChips('udp', app.entryPoints || []);
     }
-
-    await _populateConfigFileSelect('route');
-    const cfSel = document.getElementById('configFileSelect');
-    if (app.configFile) {
-        if (cfSel) cfSel.value = app.configFile;
-        document.getElementById('configFile').value = app.configFile;
-    }
-    await _loadAgentResolversIntoSelects();
     _openRoutePanel();
+    await _fillRouteSelects(app, proto, { lock: true });
 }
+
 let _routeViewMode = tmPref('routeViewMode');
 let _bulkMode = false;
 let _bulkSelected = new Set();

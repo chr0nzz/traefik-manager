@@ -602,6 +602,8 @@ function switchServer(agentId) {
     _inflightEntrypoints = null;
     _inflightMiddlewares = null;
     _inflightCertResolvers = null;
+    _inflightServicesList = null;
+    if (typeof _dropConfigFilesCache === 'function') _dropConfigFilesCache();
     _customDomains = [];
     if (agent) document.getElementById('selfRouteEpWarning')?.remove();
     if (typeof tabCacheForgetAll === 'function') tabCacheForgetAll();

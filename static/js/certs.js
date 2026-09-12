@@ -357,6 +357,7 @@ async function saveTlsOption() {
             closeTlsOptionModal();
             showToast('TLS profile saved');
             refreshTlsOptionsTab();
+            _dropTlsOptionsCache();
             _populateTlsOptionsSelect();
         } else {
             showToast(json.error || json.message || 'Save failed', 'error');
@@ -379,6 +380,7 @@ async function deleteTlsOption(name, configFile) {
         if (json.ok) {
             showToast('TLS profile deleted');
             refreshTlsOptionsTab();
+            _dropTlsOptionsCache();
             _populateTlsOptionsSelect();
         } else {
             showToast(json.error || json.message || 'Delete failed', 'error');

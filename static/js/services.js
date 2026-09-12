@@ -760,25 +760,27 @@ async function openServiceModal(existing) {
     if (del) del.style.display = existing ? '' : 'none';
     const rows = document.getElementById('svcRows');
     if (rows) rows.innerHTML = '';
-    await _populateConfigFileSelect('service');
-    if (existing && !_compositeTypeOf(existing)) {
-        const urls = ((existing.loadBalancer || {}).servers || [])
-            .map(sv => sv.url || sv.address).filter(Boolean);
-        if (urls.length) {
-            for (const u of urls) await addServiceRow(_svcUrlToRow(u));
-        } else {
-            await addServiceRow();
-        }
-    } else if (existing) {
-        for (const c of _compositeChildren(existing).map(_svcChildToRow)) await addServiceRow(c);
-    } else {
-        await addServiceRow();
-    }
-    _svcHcFill(existing && !_compositeTypeOf(existing) ? (existing.loadBalancer || {}).healthCheck : null);
-    _svcTypeChanged();
     document.getElementById('serviceModal')?.classList.add('open');
     document.getElementById('svcBackdrop')?.classList.add('open');
     if (!setDetailDockOpen(true)) document.body.style.overflow = 'hidden';
+    const fillRows = async () => {
+        if (existing && !_compositeTypeOf(existing)) {
+            const urls = ((existing.loadBalancer || {}).servers || [])
+                .map(sv => sv.url || sv.address).filter(Boolean);
+            if (urls.length) {
+                for (const u of urls) await addServiceRow(_svcUrlToRow(u));
+            } else {
+                await addServiceRow();
+            }
+        } else if (existing) {
+            for (const c of _compositeChildren(existing).map(_svcChildToRow)) await addServiceRow(c);
+        } else {
+            await addServiceRow();
+        }
+    };
+    await Promise.all([_populateConfigFileSelect('service'), fillRows()]);
+    _svcHcFill(existing && !_compositeTypeOf(existing) ? (existing.loadBalancer || {}).healthCheck : null);
+    _svcTypeChanged();
 }
 
 function _compositeTypeOf(s) {

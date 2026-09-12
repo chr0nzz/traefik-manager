@@ -33,7 +33,8 @@ function openMwModal() {
     const mwCfHid = document.getElementById('mwConfigFile');
     const newMwInput = document.getElementById('newMwFileName');
     if (newMwInput) { newMwInput.style.display = 'none'; newMwInput.value = ''; }
-    _populateConfigFileSelect('mw').then(() => { _openMwPanel(); });
+    _openMwPanel();
+    _populateConfigFileSelect('mw');
     const mwTplSel = document.getElementById('mwTemplate');
     if (mwTplSel) mwTplSel.value = '';
     setMwProtocol('http');
@@ -647,15 +648,15 @@ async function handleMwEdit(btn) {
     if (origProtoEl2) origProtoEl2.value = mwProto;
     setMwMode('yaml');
     _showMwWizard('');
+    _openMwPanel();
+    _initMwMonaco(mw.yaml.trim());
+    _loadCustomMwTemplates();
     await _populateConfigFileSelect('mw');
     const cfSel = document.getElementById('mwConfigFileSelect');
     if (mw.configFile) {
         if (cfSel) cfSel.value = mw.configFile;
         document.getElementById('mwConfigFile').value = mw.configFile;
     }
-    _openMwPanel();
-    _initMwMonaco(mw.yaml.trim());
-    _loadCustomMwTemplates();
 }
 
 async function _loadCustomMwTemplates() {
