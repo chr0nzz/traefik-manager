@@ -1,0 +1,34 @@
+<div class="detail-backdrop" id="certDeleteBackdrop" onclick="closeCertDeleteModal()"></div>
+<div class="detail-panel detail-panel-form" id="certDeleteModal">
+    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card);border-bottom:1px solid var(--border)">
+        <div class="flex items-center gap-3">
+            <i class="ph-bold ph-trash" style="color:var(--red)"></i>
+            <h2 class="font-bold text-sm" style="color:var(--text)">Remove certificate</h2>
+        </div>
+        <button type="button" onclick="closeCertDeleteModal()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
+    </div>
+
+    <div class="px-6 py-5 space-y-4">
+        <p class="text-xs" style="color:var(--muted)">Removes this entry from <code class="font-mono">acme.json</code> so Traefik stops renewing it.</p>
+
+        <div class="rounded-lg px-3 py-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
+            <div class="font-mono text-sm" style="color:var(--text)" id="certDelMain"></div>
+            <div class="text-xs mt-0.5" style="color:var(--muted)" id="certDelSub"></div>
+        </div>
+
+        <div class="rounded-lg px-3 py-2.5 flex items-start gap-2 text-xs" style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);color:var(--text)">
+            <i class="ph-bold ph-warning-circle shrink-0" style="color:var(--red);margin-top:1px"></i>
+            <span><strong>Traefik is restarted straight after.</strong> It only reads <code class="font-mono">acme.json</code> at startup, so without a restart this change would be undone the next time it saves. A backup of the file is taken first.</span>
+        </div>
+
+        <div class="rounded-lg px-3 py-2.5 flex items-start gap-2 text-xs" id="certDelReissue" style="background:rgba(210,153,34,0.06);border:1px solid rgba(210,153,34,0.25);color:var(--text)">
+            <i class="ph-bold ph-hourglass-high shrink-0" style="color:var(--yellow);margin-top:1px"></i>
+            <span>If a router still serves one of these domains, Traefik issues a fresh certificate on startup. Let's Encrypt allows <strong>5 identical certificates per week</strong>, so repeated removals can lock the domain out until that window clears.</span>
+        </div>
+    </div>
+
+    <div class="detail-panel-foot flex justify-end gap-2 px-6 py-4">
+        <button type="button" onclick="closeCertDeleteModal()" class="btn-secondary">Cancel</button>
+        <button type="button" id="certDelConfirmBtn" onclick="confirmCertDelete()" class="btn-primary" style="background:var(--red);border-color:var(--red)">Remove &amp; restart</button>
+    </div>
+</div>

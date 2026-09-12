@@ -552,6 +552,7 @@ async function openSettingsModal(panel) {
     document.body.style.overflow = 'hidden';
     _updateSettingsSidebarForAgent(!!_activeAgent);
     requestAnimationFrame(_settleSettingsLayout);
+    _refreshCertDeleteRow();
 
     if (window.innerWidth < 640 && !panel) {
         document.getElementById('settingsMobileRoot').style.display = 'flex';
@@ -1237,6 +1238,41 @@ async function _saveRouteCheck(body) {
     });
     if (!res.ok) throw new Error(await _errText(res, 'Failed to save'));
     if (typeof window._rhPoll === 'function') window._rhPoll();
+}
+
+let _certDeleteState = false;
+
+async function _refreshCertDeleteRow() {
+    const row = document.getElementById('certDeleteRow');
+    if (!row) return;
+    let state = { available: false, enabled: false };
+    try {
+        const srv = (typeof _activeAgent !== 'undefined' && _activeAgent) ? _activeAgent.id : '';
+        const res = await fetch('/api/certs/manage' + (srv ? '?server=' + encodeURIComponent(srv) : ''));
+        if (res.ok) state = await res.json();
+    } catch (e) {}
+    row.style.display = state.available ? '' : 'none';
+    _certDeleteState = !!state.enabled;
+    document.getElementById('toggle-cert-delete')?.classList.toggle('on', _certDeleteState);
+}
+
+async function toggleCertDelete() {
+    const want = !_certDeleteState;
+    _certDeleteState = want;
+    document.getElementById('toggle-cert-delete')?.classList.toggle('on', want);
+    try {
+        const res = await fetch('/api/settings/cert-delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+            body: JSON.stringify({ enabled: want }),
+        });
+        if (!res.ok) throw new Error('save failed');
+        showToast(want ? 'Certificate removal is on' : 'Certificate removal is off');
+    } catch (e) {
+        _certDeleteState = !want;
+        document.getElementById('toggle-cert-delete')?.classList.toggle('on', !want);
+        showToast('Could not save that setting', 'error');
+    }
 }
 
 async function toggleRouteCheck() {

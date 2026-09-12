@@ -440,6 +440,33 @@ List TLS certificates from ACME (`acme.json`) and from `tls.certificates` entrie
 
 When nothing could be read, the response also carries an `error` string.
 
+### `GET /api/certs/manage`
+
+Whether this server can remove certificates from `acme.json`. Pass `?server=<agent-id>` for an agent.
+
+| Field | Description |
+|---|---|
+| `available` | `acme.json` is writable and a restart method is configured |
+| `writable` | The mount is read-write |
+| `restart_method` | The configured method, empty when there is none |
+| `enabled` | The Settings opt-in |
+| `reason` | Why it is not available |
+| `paths` | acme.json files that would be edited |
+
+### `POST /api/certs/delete`
+
+Remove certificate entries from `acme.json` and restart Traefik. Requires `available` and `enabled` above.
+
+```json
+{ "server": "", "certs": [{ "resolver": "letsencrypt", "main": "old.example.com" }] }
+```
+
+Answers `{"ok": true, "removed": 1, "backup": "acme.json.20260912_191028.bak", "restarted": true}`. `403` when the opt-in is off, the mount is read-only or no restart method is set; `404` when nothing matched.
+
+### `POST /api/settings/cert-delete`
+
+Body `{"enabled": true}`. Turns the opt-in on or off.
+
 ### `GET /api/certs/usage`
 
 Which certificates nothing uses, and which were issued by a resolver that no longer exists. Pass `?server=<agent-id>` for an agent; without it the Host is analysed.

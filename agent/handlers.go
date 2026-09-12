@@ -2411,3 +2411,234 @@ func bakBaseName(n string) string {
 	}
 	return base
 }
+
+func acmeWritable(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil || info.IsDir() {
+		return false
+	}
+	fh, err := os.OpenFile(path, os.O_WRONLY, 0o600)
+	if err != nil {
+		return false
+	}
+	fh.Close()
+	return true
+}
+
+func (a *App) certsStatusHandler(w http.ResponseWriter, r *http.Request) {
+	paths := acmeJSONPaths(a.cfg.ACMEJSONPath)
+	found := []string{}
+	for _, p := range paths {
+		if acmeWritable(p) {
+			found = append(found, p)
+		}
+	}
+	restart := a.cfg.RestartMethod == "proxy" || a.cfg.RestartMethod == "socket" || a.cfg.RestartMethod == "poison-pill"
+	writable := len(paths) > 0 && len(found) == len(paths)
+	reason := ""
+	switch {
+	case len(paths) == 0:
+		reason = "ACME_JSON_PATH is not set on this agent"
+	case !writable:
+		reason = "acme.json is mounted read only on this agent"
+	case !restart:
+		reason = "no RESTART_METHOD is configured on this agent, and Traefik only reads acme.json at startup"
+	}
+	method := ""
+	if restart {
+		method = a.cfg.RestartMethod
+	}
+	jsonOK(w, map[string]any{
+		"available": writable && restart, "writable": writable,
+		"restart_method": method, "reason": reason, "paths": found,
+	})
+}
+
+type certDeleteBody struct {
+	Certs []struct {
+		Resolver string `json:"resolver"`
+		Main     string `json:"main"`
+	} `json:"certs"`
+}
+
+func (a *App) certsDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	var body certDeleteBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || len(body.Certs) == 0 {
+		jsonError(w, "nothing was selected", http.StatusBadRequest)
+		return
+	}
+	paths := acmeJSONPaths(a.cfg.ACMEJSONPath)
+	if len(paths) == 0 {
+		jsonError(w, "ACME_JSON_PATH is not set on this agent", http.StatusForbidden)
+		return
+	}
+	restart := a.cfg.RestartMethod == "proxy" || a.cfg.RestartMethod == "socket" || a.cfg.RestartMethod == "poison-pill"
+	if !restart {
+		jsonError(w, "no RESTART_METHOD is configured on this agent, and Traefik only reads acme.json at startup", http.StatusForbidden)
+		return
+	}
+	wanted := map[string]bool{}
+	for _, c := range body.Certs {
+		if c.Main != "" {
+			wanted[c.Resolver+"\x00"+c.Main] = true
+		}
+	}
+	removed := 0
+	saved := ""
+	for _, path := range paths {
+		if !acmeWritable(path) {
+			jsonError(w, "acme.json is mounted read only on this agent", http.StatusForbidden)
+			return
+		}
+		count, bak, err := acmeRemove(path, wanted, a)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		removed += count
+		if bak != "" {
+			saved = bak
+		}
+	}
+	if removed == 0 {
+		jsonError(w, "no matching certificate was found", http.StatusNotFound)
+		return
+	}
+	restarted := a.restartAfterCertChange(r)
+	jsonOK(w, map[string]any{"ok": true, "removed": removed, "backup": filepath.Base(saved), "restarted": restarted})
+}
+
+func acmeRemove(path string, wanted map[string]bool, a *App) (int, string, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return 0, "", fmt.Errorf("could not read %s: %w", filepath.Base(path), err)
+	}
+	var store map[string]json.RawMessage
+	if len(bytes.TrimSpace(raw)) > 0 {
+		if err := json.Unmarshal(raw, &store); err != nil {
+			return 0, "", fmt.Errorf("%s is not valid JSON, nothing was changed: %w", filepath.Base(path), err)
+		}
+	}
+	removed := 0
+	out := map[string]json.RawMessage{}
+	for name, blob := range store {
+		var section map[string]json.RawMessage
+		if err := json.Unmarshal(blob, &section); err != nil {
+			out[name] = blob
+			continue
+		}
+		key := ""
+		for _, candidate := range []string{"Certificates", "certificates"} {
+			if _, ok := section[candidate]; ok {
+				key = candidate
+				break
+			}
+		}
+		if key == "" {
+			out[name] = blob
+			continue
+		}
+		var entries []json.RawMessage
+		if err := json.Unmarshal(section[key], &entries); err != nil {
+			out[name] = blob
+			continue
+		}
+		kept := []json.RawMessage{}
+		for _, entry := range entries {
+			var probe struct {
+				Domain struct {
+					Main string `json:"main"`
+				} `json:"domain"`
+			}
+			if json.Unmarshal(entry, &probe) == nil && wanted[name+"\x00"+probe.Domain.Main] {
+				removed++
+				continue
+			}
+			kept = append(kept, entry)
+		}
+		encoded, err := json.Marshal(kept)
+		if err != nil {
+			return 0, "", err
+		}
+		section[key] = encoded
+		merged, err := json.Marshal(section)
+		if err != nil {
+			return 0, "", err
+		}
+		out[name] = merged
+	}
+	if removed == 0 {
+		return 0, "", nil
+	}
+	data, err := json.MarshalIndent(out, "", "  ")
+	if err != nil {
+		return 0, "", err
+	}
+	bak, err := acmeBackup(path, a)
+	if err != nil {
+		return 0, "", err
+	}
+	if err := acmeWriteInPlace(path, data); err != nil {
+		return 0, "", err
+	}
+	return removed, bak, nil
+}
+
+func acmeBackup(path string, a *App) (string, error) {
+	dir := a.backupDir()
+	if err := os.MkdirAll(dir, 0o750); err != nil {
+		return "", err
+	}
+	dest := filepath.Join(dir, filepath.Base(path)+"."+time.Now().UTC().Format("20060102_150405")+".bak")
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	if err := os.WriteFile(dest, raw, 0o600); err != nil {
+		return "", err
+	}
+	return dest, os.Chmod(dest, 0o600)
+}
+
+func acmeWriteInPlace(path string, data []byte) error {
+	fh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0o600)
+	if err != nil {
+		return err
+	}
+	defer fh.Close()
+	if _, err := fh.Write(data); err != nil {
+		return err
+	}
+	if err := fh.Truncate(int64(len(data))); err != nil {
+		return err
+	}
+	if err := fh.Sync(); err != nil {
+		return err
+	}
+	return os.Chmod(path, 0o600)
+}
+
+func (a *App) restartAfterCertChange(r *http.Request) bool {
+	switch a.cfg.RestartMethod {
+	case "poison-pill":
+		if a.cfg.SignalFilePath == "" {
+			return false
+		}
+		return os.WriteFile(a.cfg.SignalFilePath, []byte("restart"), 0o644) == nil
+	case "socket", "proxy":
+		if err := a.dockerPreflight(r.Context()); err != nil {
+			a.failuref("restart", "Traefik restart after a certificate change failed: %v", err)
+			return false
+		}
+		go func() {
+			time.Sleep(400 * time.Millisecond)
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+			defer cancel()
+			if err := a.dockerRestart(ctx); err != nil {
+				a.failuref("restart", "Traefik restart after a certificate change failed: %v", err)
+			}
+		}()
+		return true
+	}
+	return false
+}

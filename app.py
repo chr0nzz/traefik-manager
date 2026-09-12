@@ -64,6 +64,7 @@ from core import reachability as _reach
 from core import names as _naming
 from core import providers as _providers
 from core import cert_usage as _cert_usage
+from core import acme_store as _acme
 from core import route_health as _rh
 from core import updates as _updates
 from core import traefik as _trae
@@ -3734,6 +3735,110 @@ def api_certs_usage():
     result   = _cert_usage.analyze(certs, apps, configs, _host_cert_resolvers(),
                                    routers_ok=ok, configs_ok=not _get_config_parse_errors())
     return jsonify(result)
+
+
+def _host_cert_manage_state():
+    paths    = _settings.get_acme_json_paths()
+    resolved = [p for p in (_readable_config_path(x) for x in paths) if p and os.path.isfile(p)]
+    writable = bool(resolved) and all(_acme.writable(p) for p in resolved)
+    method   = _get_restart_method()
+    restart  = method in ('proxy', 'socket', 'poison-pill')
+    if not resolved:
+        reason = 'acme.json is not mounted'
+    elif not writable:
+        reason = 'acme.json is mounted read only'
+    elif not restart:
+        reason = 'no restart method is configured, and Traefik only reads acme.json at startup'
+    else:
+        reason = ''
+    return {'available': writable and restart, 'writable': writable, 'restart_method': method if restart else '',
+            'enabled': bool(load_settings().get('cert_delete_enabled')), 'reason': reason, 'paths': resolved}
+
+
+@app.route('/api/certs/manage')
+@login_required
+def api_certs_manage():
+    server = str(request.args.get('server', '')).strip()
+    if not server:
+        return jsonify(_host_cert_manage_state())
+    agent = _agent_by_id(server)
+    if not agent:
+        return jsonify({'error': 'Unknown server'}), 404
+    try:
+        resp = _agent_request(agent, 'GET', '/api/traefik/certs/status')
+        if resp.status_code != 200:
+            return jsonify({'available': False, 'writable': False, 'restart_method': '',
+                            'enabled': False, 'reason': 'this agent is too old to manage certificates', 'paths': []})
+        state = resp.json() or {}
+    except Exception as e:
+        return jsonify({'available': False, 'writable': False, 'restart_method': '',
+                        'enabled': False, 'reason': str(e), 'paths': []})
+    state['enabled'] = bool(load_settings().get('cert_delete_enabled'))
+    state['available'] = bool(state.get('available'))
+    return jsonify(state)
+
+
+@app.route('/api/certs/delete', methods=['POST'])
+@csrf_protect
+@login_required
+def api_certs_delete():
+    data   = request.get_json(silent=True) or {}
+    server = str(data.get('server', '')).strip()
+    wanted = [(str(c.get('resolver', '')), str(c.get('main', '')))
+              for c in (data.get('certs') or []) if isinstance(c, dict) and c.get('main')]
+    if not wanted:
+        return jsonify({'error': 'Nothing was selected'}), 400
+    if not load_settings().get('cert_delete_enabled'):
+        return jsonify({'error': 'Certificate deletion is switched off in Settings'}), 403
+
+    if server:
+        agent = _agent_by_id(server)
+        if not agent:
+            return jsonify({'error': 'Unknown server'}), 404
+        try:
+            resp = _agent_request(agent, 'POST', '/api/traefik/certs/delete',
+                                  json={'certs': [{'resolver': r, 'main': m} for r, m in wanted]})
+            return jsonify(resp.json() or {}), resp.status_code
+        except Exception as e:
+            return jsonify({'error': str(e)}), 502
+
+    state = _host_cert_manage_state()
+    if not state['available']:
+        return jsonify({'error': state['reason'] or 'Certificates cannot be edited here'}), 403
+
+    removed = 0
+    saved   = None
+    try:
+        for path in state['paths']:
+            count, backup_path = _acme.remove(path, wanted)
+            removed += count
+            saved = backup_path or saved
+    except _acme.AcmeStoreError as e:
+        return jsonify({'error': str(e)}), 500
+    except OSError as e:
+        logger.exception("acme.json write failed")
+        return jsonify({'error': f'Could not write acme.json: {e}'}), 500
+    if not removed:
+        return jsonify({'error': 'No matching certificate was found'}), 404
+
+    ok, err = trigger_traefik_restart()
+    logger.info(f"Removed {removed} certificate(s) from acme.json, backup at {saved}")
+    add_notification('warning', f"{removed} certificate(s) removed from acme.json", category='traefik')
+    return jsonify({'ok': True, 'removed': removed, 'backup': os.path.basename(saved or ''),
+                    'restarted': ok, 'restart_error': '' if ok else err})
+
+
+@app.route('/api/settings/cert-delete', methods=['POST'])
+@csrf_protect
+@login_required
+def api_save_cert_delete():
+    data     = request.get_json(silent=True) or {}
+    existing = load_settings()
+    save_settings(domains=existing['domains'], cert_resolver=existing['cert_resolver'],
+                  traefik_api_url=existing['traefik_api_url'], auth_enabled=existing['auth_enabled'],
+                  password_hash=existing['password_hash'], visible_tabs=existing['visible_tabs'],
+                  cert_delete_enabled=bool(data.get('enabled')))
+    return jsonify({'ok': True, 'enabled': bool(data.get('enabled'))})
 
 
 @app.route('/api/traefik/certs')

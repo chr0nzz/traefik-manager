@@ -222,6 +222,10 @@ func (a *App) router(w http.ResponseWriter, r *http.Request) {
 		a.traefikProxy(w, r, "/api/version")
 	case p == "/api/traefik/logs" && m == http.MethodGet:
 		a.logsHandler(w, r)
+	case p == "/api/traefik/certs/status" && m == http.MethodGet:
+		a.certsStatusHandler(w, r)
+	case p == "/api/traefik/certs/delete" && m == http.MethodPost:
+		a.certsDeleteHandler(w, r)
 	case p == "/api/traefik/certs" && m == http.MethodGet:
 		a.certsHandler(w, r)
 	case p == "/api/traefik/plugins" && m == http.MethodGet:
