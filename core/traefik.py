@@ -50,7 +50,7 @@ def _traefik_next_page(resp, page):
     nxt = int(raw)
     return nxt if nxt > page else 0
 
-def traefik_api_get_all(path):
+def traefik_api_get_all(path, complete=None):
     sep = '&' if '?' in path else '?'
     out = None
     page = 1
@@ -58,11 +58,15 @@ def traefik_api_get_all(path):
         query = f"{sep}per_page={TRAEFIK_PAGE_SIZE}" + (f"&page={page}" if page > 1 else '')
         resp = _traefik_request(f"{path}{query}")
         if resp is None:
+            if complete is not None:
+                complete.append(False)
             return out
         try:
             chunk = resp.json()
         except Exception as e:
             logger.debug(f"Traefik API returned an unreadable body: {e}")
+            if complete is not None:
+                complete.append(False)
             return out
         if not isinstance(chunk, list):
             return chunk
@@ -73,10 +77,13 @@ def traefik_api_get_all(path):
         page = nxt
     return out
 
-def _fetch_traefik_routers_and_services():
+def _fetch_traefik_routers_and_services(complete=None):
     all_routers  = {}
     all_services = {}
     for proto in ('http', 'tcp', 'udp'):
-        all_routers[proto]  = traefik_api_get_all(f'/api/{proto}/routers')  or []
+        fetched = traefik_api_get_all(f'/api/{proto}/routers', complete)
+        if fetched is None and complete is not None:
+            complete.append(False)
+        all_routers[proto]  = fetched or []
         all_services[proto] = traefik_api_get_all(f'/api/{proto}/services') or []
     return all_routers, all_services

@@ -350,6 +350,7 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
                      'middlewares': _to_list(rdata.get('middlewares')), 'entryPoints': _to_list(rdata.get('entryPoints')),
                      'protocol': 'tcp', 'tls': tls_tcp, 'enabled': True,
                      'certResolver': tls_tcp.get('certResolver', '') if isinstance(tls_tcp, dict) else '',
+                     'tlsDomains': tls_tcp.get('domains', []) if isinstance(tls_tcp, dict) else [],
                      'serviceType': _service_type(tcp_svcs.get(svc_key)),
                      'servers': [str(s.get('address', '')) for s in (cfg_mod.as_dict(cfg_mod.as_dict(tcp_svcs.get(svc_key)).get('loadBalancer')).get('servers') or []) if isinstance(s, dict) and s.get('address')],
                      'priority': rdata.get('priority'),
@@ -443,6 +444,8 @@ def _build_external_routes(all_routers: dict, svc_urls: dict, include_internal=F
                 'entryPoints':  r.get('entryPoints') or [],
                 'protocol':     proto,
                 'tls':          bool(tls),
+                'certResolver': cfg_mod.as_dict(tls).get('certResolver', '') if tls else '',
+                'tlsDomains':   cfg_mod.as_dict(tls).get('domains', []) or [] if tls else [],
                 'enabled':      r.get('status', 'enabled') == 'enabled',
                 'provider':     provider,
                 'configFile':   '',
@@ -465,7 +468,7 @@ def _entrypoint_mw_map() -> dict:
     except Exception:
         return {}
 
-def _build_all_apps(include_external=True, include_internal=False):
+def _build_all_apps(include_external=True, include_internal=False, complete=None):
     all_apps = []
     all_middlewares = []
     loaded = [(os.path.basename(p) if (env.MULTI_CONFIG or env.ACTIVE_CONFIG_DIR) else '', cfg_mod._load_config_display(p)) for p in env.CONFIG_PATHS]
@@ -481,7 +484,7 @@ def _build_all_apps(include_external=True, include_internal=False):
             combined_udp.setdefault(k, v)
     ep_mw_map = _entrypoint_mw_map()
     if include_external:
-        all_routers, all_services = traefik_mod._fetch_traefik_routers_and_services()
+        all_routers, all_services = traefik_mod._fetch_traefik_routers_and_services(complete)
         api_svc_urls  = _traefik_service_url_map(all_services)
         router_ep_map = _traefik_router_ep_map(all_routers)
     else:

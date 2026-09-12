@@ -440,6 +440,27 @@ List TLS certificates from ACME (`acme.json`) and from `tls.certificates` entrie
 
 When nothing could be read, the response also carries an `error` string.
 
+### `GET /api/certs/usage`
+
+Which certificates nothing uses, and which were issued by a resolver that no longer exists. Pass `?server=<agent-id>` for an agent; without it the Host is analysed.
+
+```json
+{ "certs": [ ... ], "unused_known": true, "why": "", "resolvers_known": true }
+```
+
+| Field | Description |
+|---|---|
+| `certs[].main` | Primary domain, matching `/api/traefik/certs` |
+| `certs[].resolver` | ACME resolver name, or `file` |
+| `certs[].source` | acme.json file the certificate came from |
+| `certs[].expired` | Already past its expiry |
+| `certs[].unused` | No router serves a domain it covers. Always `false` when `unused_known` is `false` |
+| `certs[].orphaned` | Its resolver is not in the static config. Always `false` when `resolvers_known` is `false` |
+| `certs[].why` | Why this certificate could not be judged |
+| `unused_known` | Whether unused could be determined at all |
+| `why` | Why it could not, when `unused_known` is `false` |
+| `resolvers_known` | Whether the static config could be read |
+
 ---
 
 ### `GET /api/traefik/logs`

@@ -216,9 +216,27 @@ def save_config(data, path=None):
 
 _RULE_HOST_RE = re.compile(r'(!?)\s*Host\(`([^`]+)`\)')
 
+_RULE_HOST_ANY_RE = re.compile(
+    r'(!?)\s*\b(?:Host|HostSNI)\(\s*((?:(?:`[^`]*`|"(?:[^"\\]|\\.)*")\s*,?\s*)+)\)', re.IGNORECASE)
+_RULE_VALUE_RE  = re.compile(r'`([^`]*)`|"((?:[^"\\]|\\.)*)"')
+_RULE_REGEXP_RE = re.compile(r'\b(?:HostRegexp|HostSNIRegexp)\s*\(', re.IGNORECASE)
+
 
 def rule_hosts(rule) -> list:
     return [m.group(2) for m in _RULE_HOST_RE.finditer(str(rule or '')) if m.group(1) != '!']
+
+
+def rule_host_patterns(rule) -> tuple:
+    text = str(rule or '')
+    hosts = []
+    for match in _RULE_HOST_ANY_RE.finditer(text):
+        if match.group(1) == '!':
+            continue
+        for backtick, quoted in _RULE_VALUE_RE.findall(match.group(2)):
+            value = (backtick or quoted).replace('\\"', '"').strip()
+            if value:
+                hosts.append(value)
+    return hosts, bool(_RULE_REGEXP_RE.search(text))
 
 
 def svc_key(name):

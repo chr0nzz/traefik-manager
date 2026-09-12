@@ -562,11 +562,22 @@ def test_routers_and_services_report_traefik_reachability(client, app_module, mo
             path + ' must say the API is unreachable, not answer 200 with empty lists'
         assert body['http'] == [] and body['tcp'] == [] and body['udp'] == []
 
-    monkeypatch.setattr(app_module, 'traefik_api_get_all', lambda p: [])
+    monkeypatch.setattr(app_module, 'traefik_api_get_all', lambda p, complete=None: [])
     for path in ('/api/traefik/routers', '/api/traefik/services'):
         body = client.get(path).get_json()
         assert body['reachable'] is True, \
             'an estate with genuinely zero routers is reachable, not blind'
+        assert body['complete'] is True, \
+            'every protocol answered, so the list is whole'
+
+
+def test_one_protocol_failing_is_not_a_complete_router_list(client, app_module, monkeypatch):
+    monkeypatch.setattr(app_module, 'traefik_api_get_all',
+                        lambda p, complete=None: [] if '/http/' in p else None)
+    body = client.get('/api/traefik/routers').get_json()
+    assert body['reachable'] is True, 'http answered, so Traefik is up'
+    assert body['complete'] is False, \
+        'tcp never answered, so an unlisted tcp router would look like it does not exist'
 
 
 def test_dashboard_config_read_drops_a_hand_written_javascript_link(client, app_module):

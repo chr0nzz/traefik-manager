@@ -11,6 +11,19 @@ A summary strip counts your certificates, how many expire within 7 and within 30
 
 Certificates are **read-only** - they are issued and renewed automatically by Traefik. To revoke or force a renewal, do so via your Traefik configuration.
 
+## Certificates nothing uses
+
+Traefik renews every certificate in `acme.json` whether or not a router still needs it, and it never removes the section belonging to a resolver you have deleted. Both show up here.
+
+| Flag | Meaning |
+|---|---|
+| `unused` | No router on this server serves a domain this certificate covers |
+| `no resolver` | The certificate resolver that issued it is not in the static config any more |
+
+A wildcard certificate counts as used when a router serves any name it covers, `*.example.com` for `app.example.com`. A certificate pre-issued through `tls.domains` on a route counts as used even though no rule names it, and so does the `defaultGeneratedCert` in `tls.stores`. Routes you have switched off still count, because turning one back on with its certificate deleted means a fresh issue.
+
+`unused` is only ever shown when the picture is complete. If Traefik's API did not answer for every protocol, a config file failed to parse, a router matches hosts by regular expression, or a catch-all router exists that any certificate could serve, the summary strip says so and no certificate is called unused. `no resolver` needs the static config mounted; without it no resolver is judged.
+
 ## Enabling the tab
 
 ### During setup wizard

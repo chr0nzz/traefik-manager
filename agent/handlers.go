@@ -143,14 +143,14 @@ func (a *App) traefikFetchProto(ctx context.Context, traefikPath string) (json.R
 			if i == 0 {
 				return json.RawMessage("[]"), err
 			}
-			break
+			return json.RawMessage("[]"), fmt.Errorf("page %d of %s: %w", page, traefikPath, err)
 		}
 		var chunk []json.RawMessage
 		if err := json.Unmarshal(body, &chunk); err != nil {
 			if i == 0 {
 				return body, nil
 			}
-			break
+			return json.RawMessage("[]"), fmt.Errorf("page %d of %s: %w", page, traefikPath, err)
 		}
 		all = append(all, chunk...)
 		if len(chunk) == 0 || next <= page {
@@ -171,9 +171,16 @@ func (a *App) routersHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "traefik unavailable at "+a.cfg.TraefikAPIURL+": "+err.Error(), http.StatusBadGateway)
 		return
 	}
-	tcpR, _ := a.traefikFetchProto(r.Context(), "/api/tcp/routers")
-	udpR, _ := a.traefikFetchProto(r.Context(), "/api/udp/routers")
-	jsonOK(w, map[string]json.RawMessage{"http": httpR, "tcp": tcpR, "udp": udpR})
+	tcpR, tcpErr := a.traefikFetchProto(r.Context(), "/api/tcp/routers")
+	udpR, udpErr := a.traefikFetchProto(r.Context(), "/api/udp/routers")
+	out := map[string]any{"http": httpR, "tcp": tcpR, "udp": udpR, "complete": tcpErr == nil && udpErr == nil}
+	if tcpErr != nil {
+		out["tcp_error"] = tcpErr.Error()
+	}
+	if udpErr != nil {
+		out["udp_error"] = udpErr.Error()
+	}
+	jsonOK(w, out)
 }
 
 func (a *App) servicesHandler(w http.ResponseWriter, r *http.Request) {

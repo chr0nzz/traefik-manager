@@ -63,6 +63,7 @@ from core import monitor as _monitor
 from core import reachability as _reach
 from core import names as _naming
 from core import providers as _providers
+from core import cert_usage as _cert_usage
 from core import route_health as _rh
 from core import updates as _updates
 from core import traefik as _trae
@@ -1444,9 +1445,13 @@ def api_overview():
     return jsonify(traefik_api_get('/api/overview') or {})
 
 def _traefik_proto_payload(kind):
-    fetched = {p: traefik_api_get_all(f'/api/{p}/{kind}') for p in ('http', 'tcp', 'udp')}
+    fetched  = {}
+    complete = []
+    for proto in ('http', 'tcp', 'udp'):
+        fetched[proto] = traefik_api_get_all(f'/api/{proto}/{kind}', complete)
     out = {p: (v or []) for p, v in fetched.items()}
     out['reachable'] = any(v is not None for v in fetched.values())
+    out['complete']  = all(v is not None for v in fetched.values()) and not complete
     return out
 
 
@@ -3636,15 +3641,11 @@ def api_plugins_install():
     return jsonify(result)
 
 
-@app.route('/api/traefik/certs')
-@login_required
-def api_certs():
+def _acme_certs_from_paths(acme_paths):
     import json as _json
-    certs = []
+    certs  = []
     errors = []
-
-    acme_paths = _settings.get_acme_json_paths()
-    found_any  = False
+    found_any = False
     for configured in acme_paths:
         acme_path = _readable_config_path(configured)
         if not (acme_path and os.path.exists(acme_path)):
@@ -3669,6 +3670,80 @@ def api_certs():
         except Exception as e:
             logger.exception("Error reading acme.json")
             errors.append(f'{os.path.basename(acme_path)}: {e}')
+    return certs, errors, found_any
+
+
+def _host_cert_resolvers():
+    path = _get_static_config_path()
+    if not path or not os.path.exists(path):
+        return None
+    try:
+        with open(path, 'r') as f:
+            data = _yaml_safe.load(f) or {}
+    except Exception:
+        logger.debug("Failed to read certificatesResolvers from static config", exc_info=True)
+        return None
+    resolvers = data.get('certificatesResolvers')
+    if not isinstance(resolvers, dict) or not resolvers:
+        return None
+    return [str(k).strip() for k in resolvers if str(k).strip()]
+
+
+def _agent_cert_resolvers_or_none(agent):
+    try:
+        resp = _agent_request(agent, 'GET', '/api/static')
+        if resp.status_code != 200:
+            return None
+        data = _yaml_safe.load((resp.json() or {}).get('content', '')) or {}
+    except Exception:
+        logger.debug("Failed to read agent certificatesResolvers", exc_info=True)
+        return None
+    resolvers = data.get('certificatesResolvers')
+    if not isinstance(resolvers, dict) or not resolvers:
+        return None
+    return [str(k).strip() for k in resolvers if str(k).strip()]
+
+
+@app.route('/api/certs/usage')
+@login_required
+def api_certs_usage():
+    server = str(request.args.get('server', '')).strip()
+    if server:
+        agent = _agent_by_id(server)
+        if not agent:
+            return jsonify({'error': 'Unknown server'}), 404
+        try:
+            resp  = _agent_request(agent, 'GET', '/api/traefik/certs')
+            certs = (resp.json() or {}).get('certs') or [] if resp.ok else []
+        except Exception:
+            certs = []
+        payload   = _agent_routes_payload(agent, server)
+        apps      = payload.get('apps') or []
+        configs   = list(_agent_load_configs(agent).values())
+        resolvers = _agent_cert_resolvers_or_none(agent)
+        ok        = not payload.get('configErrors')
+        result    = _cert_usage.analyze(certs, apps, configs, resolvers, routers_ok=ok, configs_ok=ok)
+        return jsonify(result)
+
+    certs, _errors, _found = _acme_certs_from_paths(_settings.get_acme_json_paths())
+    certs.extend(_certs_from_tls_configs())
+    complete = []
+    apps, _mws = _build_all_apps(include_external=True, include_internal=True, complete=complete)
+    configs  = [_cfg._load_config_display(p) for p in env.CONFIG_PATHS]
+    ok       = not complete
+    result   = _cert_usage.analyze(certs, apps, configs, _host_cert_resolvers(),
+                                   routers_ok=ok, configs_ok=not _get_config_parse_errors())
+    return jsonify(result)
+
+
+@app.route('/api/traefik/certs')
+@login_required
+def api_certs():
+    certs = []
+    errors = []
+
+    acme_paths = _settings.get_acme_json_paths()
+    certs, errors, found_any = _acme_certs_from_paths(acme_paths)
     if not acme_paths or not found_any:
         errors.append('Set ACME_JSON_PATH env var or configure the path in Settings. '
                       'Several files can be given comma-separated, or point it at a directory.')
@@ -7032,6 +7107,9 @@ def _agent_routes_payload(agent, agent_id):
         s_resp = _agent_request(agent, 'GET', '/api/traefik/services')
         all_routers  = r_resp.json()  if r_resp.ok  else {}
         all_services = s_resp.json()  if s_resp.ok  else {}
+        if r_resp.ok and all_routers.get('complete') is False:
+            config_errors.append({'file': "Agent Traefik API",
+                                  'error': all_routers.get('tcp_error') or all_routers.get('udp_error') or 'router list incomplete'})
         if not r_resp.ok:
             try:
                 err = r_resp.json().get('error') or r_resp.text

@@ -1,4 +1,11 @@
 let _allCerts   = [];
+let _certUsage  = { certs: [], unused_known: false, why: '', resolvers_known: false };
+
+function _certKey(c) { return (c.source || '') + '|' + (c.resolver || '') + '|' + (c.main || ''); }
+
+function _certVerdict(c) {
+    return _certUsage.certs.find(u => _certKey(u) === _certKey(c)) || null;
+}
 
 function filterCerts() { renderCertCards(); }
 
@@ -24,6 +31,10 @@ function renderCertsVerdict() {
     if (expiring) flags.push({ cls: 'd-warn', ic: 'ph-fill ph-hourglass-high', n: expiring, label: 'under 30d' });
     if (!critical && !expiring) flags.push({ cls: 'd-on', ic: 'ph-bold ph-check', n: '', label: 'none expiring soon' });
     if (resolvers > 1) flags.push({ cls: 'd-off', ic: 'ph-bold ph-certificate', n: resolvers, label: 'resolvers' });
+    const unused   = _certUsage.certs.filter(u => u.unused).length;
+    const orphaned = _certUsage.certs.filter(u => u.orphaned).length;
+    if (unused)   flags.push({ cls: 'd-warn', ic: 'ph-bold ph-plugs', n: unused, label: 'unused' });
+    if (orphaned) flags.push({ cls: 'd-warn', ic: 'ph-bold ph-link-break', n: orphaned, label: 'no resolver' });
     _tvStrip('certsVerdict', {
         health: critical ? 'down' : expiring ? 'warn' : 'up',
         ic: critical ? 'ph-fill ph-warning-octagon' : expiring ? 'ph-fill ph-hourglass-high' : 'ph-fill ph-check-circle',
@@ -31,8 +42,38 @@ function renderCertsVerdict() {
            : expiring ? _sdNum(expiring) + ' expiring within 30 days'
            : 'All certificates healthy',
         flags,
-        meta: next !== null ? 'next expiry in <b>' + _sdNum(next) + 'd</b>' : '',
+        meta: [next !== null ? 'next expiry in <b>' + _sdNum(next) + 'd</b>' : '',
+               _certUsage.why ? _esc(_certUsage.why) : ''].filter(Boolean).join(' · '),
     });
+}
+
+function _certFlags(c) {
+    const v = _certVerdict(c);
+    if (!v) return [];
+    const out = [];
+    if (v.orphaned) out.push('no resolver');
+    if (v.unused)   out.push('unused');
+    return out;
+}
+
+function _certFlagClass(c) { return _certFlags(c).length ? ' tm-warn' : ''; }
+
+function _certFlagText(c) {
+    const flags = _certFlags(c);
+    if (!flags.length) return '';
+    const v = _certVerdict(c) || {};
+    const why = v.orphaned ? 'no certificate resolver by this name is configured any more'
+                           : 'no router on this server serves a domain this certificate covers';
+    return ` · <span title="${_esc(why)}">${_esc(flags.join(' · '))}</span>`;
+}
+
+async function _loadCertUsage() {
+    _certUsage = { certs: [], unused_known: false, why: '', resolvers_known: false };
+    try {
+        const srv = _tlsSrv();
+        const res = await fetch('/api/certs/usage' + (srv ? '?server=' + encodeURIComponent(srv) : ''));
+        if (res.ok) _certUsage = await res.json();
+    } catch (e) {}
 }
 
 function renderCertCards() {
@@ -75,7 +116,7 @@ function renderCertCards() {
                 </div>
             </div>
             ${vals ? `<div class="tm-vals">${vals}</div>` : ''}
-            <div class="tm-foot"><span class="tm-meta">expires ${_esc(expiryStr)}${extra.length ? ` · ${extra.length + 1} domains` : ''}</span>${daysLeft !== null ? `<span class="tm-cf" style="color:${expiryColor}">${daysLeft}d left</span>` : ''}</div>
+            <div class="tm-foot"><span class="tm-meta${_certFlagClass(c)}">expires ${_esc(expiryStr)}${extra.length ? ` · ${extra.length + 1} domains` : ''}${_certFlagText(c)}</span>${daysLeft !== null ? `<span class="tm-cf" style="color:${expiryColor}">${daysLeft}d left</span>` : ''}</div>
         </div>`;
     }).join('');
     document.getElementById('certsContent').innerHTML =
@@ -122,6 +163,9 @@ async function refreshCertsTab() {
 
         _allCerts = certs;
         setTabCount('certs', certs.length);
+        renderCertsVerdict();
+        renderCertCards();
+        await _loadCertUsage();
         renderCertsVerdict();
         renderCertCards();
     } catch(e) {

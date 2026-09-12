@@ -740,6 +740,43 @@ paths:
                         version: { type: string }
                   error: { type: string }
 
+  /api/certs/usage:
+    get:
+      tags: [Traefik]
+      summary: Certificates nothing uses
+      description: >-
+        Which certificates no router serves, and which were issued by a resolver that is no
+        longer configured. `unused` is only asserted when the router list and every config file
+        could be read in full; otherwise `unused_known` is false and `why` says what is missing.
+      parameters:
+        - in: query
+          name: server
+          schema: { type: string }
+          description: Agent id. Omit for the Host.
+      responses:
+        "200":
+          description: Usage verdicts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  certs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        main:     { type: string, example: "app.example.com" }
+                        resolver: { type: string, example: "cloudflare" }
+                        source:   { type: string, example: "acme.json" }
+                        expired:  { type: boolean }
+                        unused:   { type: boolean }
+                        orphaned: { type: boolean }
+                        why:      { type: string }
+                  unused_known:    { type: boolean }
+                  why:             { type: string }
+                  resolvers_known: { type: boolean }
+        "404": { description: Unknown server }
   /api/traefik/certs:
     get:
       tags: [Traefik]
