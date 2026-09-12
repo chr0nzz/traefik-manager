@@ -58,6 +58,13 @@ function _certFlags(c) {
 
 function _certFlagClass(c) { return _certFlags(c).length ? ' tm-warn' : ''; }
 
+function _certDeleteRail(c, main, resolver, sans) {
+    if (!_certCanDelete() || resolver === 'file') return '';
+    return `<span class="tm-rail" onclick="event.stopPropagation()">`
+        + `<button type="button" class="tm-btn" title="Remove from acme.json" onclick="event.stopPropagation();openCertDeleteModal(${_jsArg(main)},${_jsArg(resolver)},${_jsArg(c.source || '')},${_jsArg((sans || []).join(','))})">`
+        + `<i class="ph-bold ph-trash"></i></button></span>`;
+}
+
 function _certFlagText(c) {
     const flags = _certFlags(c);
     if (!flags.length) return '';
@@ -65,6 +72,65 @@ function _certFlagText(c) {
     const why = v.orphaned ? 'no certificate resolver by this name is configured any more'
                            : 'no router on this server serves a domain this certificate covers';
     return ` · <span title="${_esc(why)}">${_esc(flags.join(' · '))}</span>`;
+}
+
+let _certManage = { available: false, enabled: false, reason: '' };
+let _certPending = null;
+
+function _certCanDelete() { return !!(_certManage.available && _certManage.enabled); }
+
+async function _loadCertManage() {
+    _certManage = { available: false, enabled: false, reason: '' };
+    try {
+        const srv = _tlsSrv();
+        const res = await fetch('/api/certs/manage' + (srv ? '?server=' + encodeURIComponent(srv) : ''));
+        if (res.ok) _certManage = await res.json();
+    } catch (e) {}
+}
+
+function openCertDeleteModal(main, resolver, source, sans) {
+    _certPending = { main, resolver, source };
+    document.getElementById('certDelMain').textContent = main;
+    const extra = (sans || '').split(',').filter(d => d && d !== main);
+    document.getElementById('certDelSub').textContent =
+        resolver + (extra.length ? ' \u00b7 ' + extra.length + ' more domain' + (extra.length === 1 ? '' : 's') : '');
+    closeOtherPanels('certDeleteModal');
+    document.getElementById('certDeleteModal').classList.add('open');
+    document.getElementById('certDeleteBackdrop').classList.add('open');
+}
+
+function closeCertDeleteModal() {
+    document.getElementById('certDeleteModal')?.classList.remove('open');
+    document.getElementById('certDeleteBackdrop')?.classList.remove('open');
+    _certPending = null;
+}
+
+async function confirmCertDelete() {
+    if (!_certPending) return;
+    const btn = document.getElementById('certDelConfirmBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Removing...'; }
+    try {
+        const res = await fetch('/api/certs/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+            body: JSON.stringify({ server: _tlsSrv(), certs: [_certPending] }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok || !body.ok) {
+            showToast(body.error || 'Could not remove the certificate', 'error');
+            return;
+        }
+        closeCertDeleteModal();
+        showToast(body.restarted
+            ? 'Certificate removed, Traefik is restarting'
+            : 'Certificate removed, but Traefik did not restart' + (body.restart_error ? ': ' + body.restart_error : ''),
+            body.restarted ? 'success' : 'error');
+        refreshCertsTab();
+    } catch (e) {
+        showToast(_netErrText(e, 'Could not remove the certificate'), 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Remove & restart'; }
+    }
 }
 
 async function _loadCertUsage() {
@@ -114,9 +180,10 @@ function renderCertCards() {
                     <div class="tm-title"><span class="tm-name">${_esc(main)}</span></div>
                     <div class="tm-sub">${_esc(resolver)}</div>
                 </div>
+                ${_certDeleteRail(cert, main, resolver, sans)}
             </div>
             ${vals ? `<div class="tm-vals">${vals}</div>` : ''}
-            <div class="tm-foot"><span class="tm-meta${_certFlagClass(c)}">expires ${_esc(expiryStr)}${extra.length ? ` · ${extra.length + 1} domains` : ''}${_certFlagText(c)}</span>${daysLeft !== null ? `<span class="tm-cf" style="color:${expiryColor}">${daysLeft}d left</span>` : ''}</div>
+            <div class="tm-foot"><span class="tm-meta${_certFlagClass(cert)}">expires ${_esc(expiryStr)}${extra.length ? ` · ${extra.length + 1} domains` : ''}${_certFlagText(cert)}</span>${daysLeft !== null ? `<span class="tm-cf" style="color:${expiryColor}">${daysLeft}d left</span>` : ''}</div>
         </div>`;
     }).join('');
     document.getElementById('certsContent').innerHTML =
@@ -165,7 +232,7 @@ async function refreshCertsTab() {
         setTabCount('certs', certs.length);
         renderCertsVerdict();
         renderCertCards();
-        await _loadCertUsage();
+        await Promise.all([_loadCertUsage(), _loadCertManage()]);
         renderCertsVerdict();
         renderCertCards();
     } catch(e) {
