@@ -75,7 +75,7 @@ Open **http://your-server:5000** and the setup wizard takes it from there.
 
 **Services** - build a load balancer, weighted, mirroring or failover service on its own, or balance a route across a mix of raw addresses and existing services with a weight on each row. Services Traefik Manager did not write stay read only until you take them over, which records ownership without touching the file.
 
-**Middlewares** - 30 wizards covering auth, rate limiting, headers, CORS, redirects, prefixes, error pages and TLS client certificates, plus a raw YAML editor and your own reusable templates.
+**Middlewares** - 35 wizards covering auth, rate limiting, headers, CORS, redirects, prefixes, error pages and TLS client certificates, plus a raw YAML editor and your own reusable templates.
 
 **Dashboard and Route Map** - a homepage-style grid of your apps with icons and health, and a topology map from entry point through middlewares to backend, coloured per hop.
 
@@ -85,7 +85,7 @@ Open **http://your-server:5000** and the setup wizard takes it from there.
 
 **Notifications** - nine destinations: Discord, Slack, ntfy, Gotify, Pushover, Pushbullet, Telegram, UnifiedPush and generic webhooks. Route events to each one by category and severity, with quiet hours, hourly or daily digests, and errors that break through anyway. Desktop notifications while a tab is open.
 
-**Background monitoring** - certificate expiry, Traefik and agent reachability, CrowdSec activity, GeoIP freshness and new releases are checked on a schedule by the server, so alerts arrive whether or not the interface is open.
+**Background monitoring** - the server checks your routes on a schedule and tells you when a backend goes down or a pool degrades, alongside certificate expiry, Traefik and agent reachability, CrowdSec activity, GeoIP freshness and new releases. Alerts arrive whether or not the interface is open.
 
 **Static config editor** - edit `traefik.yml` from the UI and apply it with a one-click restart, via socket proxy, poison pill or direct socket.
 
