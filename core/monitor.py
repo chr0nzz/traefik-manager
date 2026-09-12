@@ -8,12 +8,14 @@ import time
 import requests
 
 from core import agents_http as agents_http_mod
+from core import agents_store as agents_store_mod
 from core import certs as certs_mod
 from core import config as cfg_mod
 from core import crowdsec as crowdsec_mod
 from core import env
 from core import geoip as geoip_mod
 from core import notifications
+from core import providers as providers_mod
 from core import settings as settings_mod
 from core import traefik as traefik_mod
 from core.env import logger
@@ -37,6 +39,13 @@ GEOIP_STALE_DAYS  = 35
 AGENT_TIMEOUT     = 5
 LOOP_TICK         = 15
 HOST_SERVER       = 'host'
+
+TAB_LABELS = {
+    'docker': 'Docker', 'swarm': 'Swarm', 'kubernetes': 'Kubernetes', 'nomad': 'Nomad',
+    'ecs': 'ECS', 'consulcatalog': 'Consul Catalog', 'consul': 'Consul', 'etcd': 'etcd',
+    'redis': 'Redis', 'zookeeper': 'ZooKeeper', 'http_provider': 'HTTP provider',
+    'internal': 'Internal',
+}
 KEY_SEP           = '|'
 
 _state     = {}
@@ -252,12 +261,12 @@ def _agent_certs(agent):
     return [c for c in ((data or {}).get('certs') or []) if isinstance(c, dict)]
 
 
-def _agent_traefik_up(agent) -> bool:
+def _agent_overview(agent):
     try:
-        return _agent_json(agent, '/api/traefik/overview') is not None
+        return _agent_json(agent, '/api/traefik/overview')
     except Exception as e:
         logger.debug(f"Traefik check failed for agent {agent.get('name', '')}: {e}")
-        return False
+        return None
 
 
 def _cert_alert(name, main, resolver, days):
@@ -323,13 +332,13 @@ def _check_certs():
 def _traefik_sources(servers):
     sources = []
     try:
-        sources.append((HOST_SERVER, '', traefik_mod.traefik_api_get('/api/overview') is not None))
+        sources.append((HOST_SERVER, '', traefik_mod.traefik_api_get('/api/overview')))
     except Exception:
         logger.exception("Traefik check failed for the host")
     for server, name, agent in servers:
         try:
             if _agent_usable(agent):
-                sources.append((server, name, _agent_traefik_up(agent)))
+                sources.append((server, name, _agent_overview(agent)))
         except Exception:
             logger.exception(f"Traefik check failed for agent {name}")
     return sources
@@ -339,7 +348,9 @@ def _check_traefik():
     state   = _migrate_host_keys(_section('traefik'))
     servers = _agent_servers()
     raised  = []
-    for server, name, up in _traefik_sources(servers):
+    for server, name, overview in _traefik_sources(servers):
+        raised.extend(_apply_provider_tabs(server, name, overview))
+        up   = overview is not None
         key  = _server_key(server, 'up')
         prev = state.get(key)
         state[key] = up
@@ -482,6 +493,64 @@ def _check_geoip():
     if was_stale:
         return []
     return [('warning', f"GeoIP database is out of date and could not be updated: {info}", 'update')]
+
+
+_provider_seen = {}
+
+
+def _apply_provider_tabs(server, name, overview):
+    found = providers_mod.tabs_from_overview(overview)
+    if not found or _provider_seen.get(server) == found:
+        return []
+    _provider_seen[server] = set(found)
+    try:
+        turned = (_enable_host_provider_tabs(found) if server == HOST_SERVER
+                  else _enable_agent_provider_tabs(server, found))
+    except Exception:
+        _provider_seen.pop(server, None)
+        logger.exception(f"Could not enable provider tabs for {name or 'the host'}")
+        return []
+    return [('info', _server_msg(name, f"{TAB_LABELS.get(tab, tab)} routers found, the {TAB_LABELS.get(tab, tab)} tab is now shown"), 'config')
+            for tab in turned]
+
+
+def _enable_host_provider_tabs(found):
+    settings  = settings_mod.load_settings()
+    seen      = list(settings.get('provider_tabs_seen') or [])
+    fresh     = providers_mod.newly_seen(found, seen)
+    if not fresh:
+        return []
+    tabs = dict(settings.get('visible_tabs') or {})
+    turned = [t for t in fresh if not tabs.get(t)]
+    for tab in fresh:
+        tabs[tab] = True
+    settings_mod.save_settings(
+        domains=settings['domains'], cert_resolver=settings['cert_resolver'],
+        traefik_api_url=settings['traefik_api_url'], auth_enabled=settings['auth_enabled'],
+        password_hash=settings['password_hash'], visible_tabs=tabs,
+        provider_tabs_seen=seen + fresh)
+    return turned
+
+
+def _enable_agent_provider_tabs(agent_id, found):
+    agents = agents_store_mod.load_agents()
+    turned = []
+    for agent in agents:
+        if agent.get('id') != agent_id:
+            continue
+        seen  = list(agent.get('provider_tabs_seen') or [])
+        fresh = providers_mod.newly_seen(found, seen)
+        if not fresh:
+            return []
+        tabs   = dict(agent.get('visible_tabs') or {})
+        turned = [t for t in fresh if not tabs.get(t)]
+        for tab in fresh:
+            tabs[tab] = True
+        agent['visible_tabs']       = tabs
+        agent['provider_tabs_seen'] = seen + fresh
+        agents_store_mod.save_agents_file(agents)
+        break
+    return turned
 
 
 def _check_storage():

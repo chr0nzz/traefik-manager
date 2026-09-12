@@ -630,6 +630,7 @@
                         <span class="sc-sec-label">Provider tabs</span>
                         <span class="sc-sec-rule"></span>
                     </div>
+                    <p class="wz-note" id="wzDetectedTabs" style="display:none">Switched on for every provider Traefik is reporting right now. Turn any of them off if you would rather not see it.</p>
                     <div class="tab-grid">
                         <div class="tab-toggle-row" onclick="toggleSetupTab('docker')">
                             <span class="tab-toggle-label"><i class="ph-bold ph-cube"></i> Docker</span>
@@ -960,6 +961,17 @@ function _passwordError(pw, label) {
 const TEMP_PW_MODE = {{ 'true' if temp_password_mode else 'false' }};
 let currentStep = 0;
 const setupTabs = { dashboard: false, routemap: false, docker: false, certs: false, plugins: false, logs: false };
+const DETECTED_TABS = {{ detected_tabs | tojson }};
+DETECTED_TABS.forEach(t => { setupTabs[t] = true; });
+
+function _paintSetupTabs() {
+    Object.keys(setupTabs).forEach(t => {
+        const el = document.getElementById('sw-' + t);
+        if (el) el.classList.toggle('on', !!setupTabs[t]);
+    });
+    const note = document.getElementById('wzDetectedTabs');
+    if (note && DETECTED_TABS.length) note.style.display = '';
+}
 const MAX_STEP   = TEMP_PW_MODE ? 6 : 7;
 
 const STEPS = [
@@ -1291,6 +1303,8 @@ function submitSetup() {
 
     document.getElementById('setupForm').submit();
 }
+
+_paintSetupTabs();
 
 {% endif %}
 

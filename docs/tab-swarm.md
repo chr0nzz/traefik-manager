@@ -15,6 +15,8 @@ Routes are **read-only** - edit them via your Docker Swarm service labels.
 
 ## Enabling the tab
 
+This tab switches itself on the first time Traefik reports routers from this provider, and the setup wizard pre-selects it when the provider is already running. Turn it off and it stays off.
+
 | Where | Path |
 |---|---|
 | Setup wizard | Monitoring step → Provider tabs → Swarm |

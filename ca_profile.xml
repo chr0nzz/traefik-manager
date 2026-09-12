@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<Profile>
+  <Name>chr0nzz</Name>
+  <DisplayName>chr0nzz</DisplayName>
+  <Icon>https://raw.githubusercontent.com/chr0nzz/traefik-manager/main/static/icons/icon.png</Icon>
+  <WebPage>https://traefik-manager.xyzlab.dev</WebPage>
+  <Project>https://github.com/chr0nzz/traefik-manager</Project>
+  <Support>https://github.com/chr0nzz/traefik-manager/issues</Support>
+  <Overview>Templates for Traefik Manager, a web UI for managing Traefik routes, services, middlewares and certificates.</Overview>
+</Profile>

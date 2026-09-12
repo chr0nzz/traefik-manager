@@ -14,179 +14,67 @@
   <Icon>https://raw.githubusercontent.com/chr0nzz/traefik-manager/main/static/icons/icon.png</Icon>
   <TemplateURL>https://raw.githubusercontent.com/chr0nzz/traefik-manager/main/unraid/traefik-manager.xml</TemplateURL>
   <ExtraParams>--restart=unless-stopped</ExtraParams>
-  <DateInstalled></DateInstalled>
-  <DonateText></DonateText>
-  <DonateLink></DonateLink>
+  <License>GPL-3.0</License>
+  <MinVer>6.12</MinVer>
   <Requires>Traefik must be running and its API must be reachable from this container.</Requires>
 
-  <!-- Port -->
-  <Config Name="Web UI Port" Target="5000" Default="5000" Mode="tcp"
-    Description="Port to access the Traefik Manager web UI."
-    Type="Port" Display="always" Required="true" Mask="false">5000</Config>
-
-  <!-- Required paths -->
-  <Config Name="Config Directory" Target="/app/config" Default="/mnt/user/appdata/traefik-manager/config"
-    Mode="rw"
-    Description="Stores manager.yml (settings, password, API keys) and the session signing key. Must be persistent."
-    Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/traefik-manager/config</Config>
-
-  <Config Name="Backups Directory" Target="/app/backups" Default="/mnt/user/appdata/traefik-manager/backups"
-    Mode="rw"
-    Description="Timestamped backups of your dynamic config are saved here before every change."
-    Type="Path" Display="always" Required="false" Mask="false">/mnt/user/appdata/traefik-manager/backups</Config>
-
-  <!-- Core env vars -->
-  <Config Name="Traefik API URL" Target="TRAEFIK_API_URL" Default="http://traefik:8080"
-    Description="URL of the Traefik API. Usually http://traefik:8080 when on the same Docker network."
-    Type="Variable" Display="always" Required="true" Mask="false">http://traefik:8080</Config>
-
-  <Config Name="Traefik API Username" Target="TRAEFIK_API_USER" Default=""
-    Description="Optional: basic-auth username for the Traefik API, if your API/dashboard is protected by a basicAuth middleware."
-    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
-
-  <Config Name="Traefik API Password" Target="TRAEFIK_API_PASSWORD" Default=""
-    Description="Optional: basic-auth password for the Traefik API. Only needed if TRAEFIK_API_USER is set."
-    Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
-
-  <Config Name="Domains" Target="DOMAINS" Default="example.com"
-    Description="Comma-separated list of base domains shown in the Add Route form. Example: example.com,home.lab"
-    Type="Variable" Display="always" Required="true" Mask="false">example.com</Config>
-
-  <Config Name="Cert Resolver" Target="CERT_RESOLVER" Default="cloudflare"
-    Description="Default ACME certificate resolver name from your traefik.yml. Comma-separate multiple resolvers."
-    Type="Variable" Display="always" Required="false" Mask="false">cloudflare</Config>
-
-  <!-- Config file options (set only one) -->
-  <Config Name="Config File Path (single file)" Target="CONFIG_PATH" Default="/app/config/dynamic.yml"
-    Description="Path inside the container to your Traefik dynamic config file. Use this for a single config file. Mount the file via the path mapping below. Leave blank if using CONFIG_DIR or CONFIG_PATHS."
-    Type="Variable" Display="always" Required="false" Mask="false">/app/config/dynamic.yml</Config>
-
-  <Config Name="Config Directory Path (multi-file)" Target="CONFIG_DIR" Default=""
-    Description="Path inside the container to a directory containing multiple .yml config files. All .yml files in this directory will be loaded. Use instead of CONFIG_PATH when managing multiple files. Leave blank if using CONFIG_PATH."
-    Type="Variable" Display="always" Required="false" Mask="false"></Config>
-
-  <Config Name="Config Paths (explicit list)" Target="CONFIG_PATHS" Default=""
-    Description="Comma-separated list of full config file paths inside the container. Use instead of CONFIG_PATH for 2-5 named files. Example: /app/config/routes.yml,/app/config/services.yml. Leave blank if using CONFIG_PATH or CONFIG_DIR."
-    Type="Variable" Display="always" Required="false" Mask="false"></Config>
-
-  <!-- Optional monitoring mounts -->
-  <Config Name="Certs Tab - acme.json" Target="/app/acme.json" Default=""
-    Mode="ro"
-    Description="Optional: path to your Traefik acme.json file on the host. Required for the Certs tab. Mount read-only."
-    Type="Path" Display="advanced" Required="false" Mask="false"></Config>
-
-  <Config Name="Static Config / Plugins Tab - traefik.yml" Target="/app/traefik.yml" Default=""
-    Mode="rw"
-    Description="Optional: path to your Traefik static config file (traefik.yml) on the host. Required for the Plugins tab and the Static Config editor. Mount read-write to allow editing; read-only enables the Plugins tab only. Also set the Static Config Path variable below to /app/traefik.yml."
-    Type="Path" Display="advanced" Required="false" Mask="false"></Config>
-
-  <Config Name="Static Config Path" Target="STATIC_CONFIG_PATH" Default=""
-    Description="Path inside the container to the static config (traefik.yml) you mounted above. Set to /app/traefik.yml to enable the Static Config editor and Plugins tab. Leave blank if not mounting traefik.yml."
-    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
-
-  <Config Name="Logs Tab - access.log" Target="/app/logs/access.log" Default=""
-    Mode="ro"
-    Description="Optional: path to your Traefik access log file on the host. Required for the Logs tab. Enable access logging in traefik.yml first: accessLog: filePath: /logs/access.log. Mount read-only."
-    Type="Path" Display="advanced" Required="false" Mask="false"></Config>
-
-  <!-- Static config editor -->
-  <Config Name="Restart Method" Target="RESTART_METHOD" Default="proxy"
-    Description="How Traefik Manager restarts Traefik after a static config change. Options: proxy (socket proxy - recommended), socket (direct Docker socket), poison-pill (signal file, requires watcher sidecar). Leave empty to disable automatic restart."
-    Type="Variable" Display="advanced" Required="false" Mask="false">proxy</Config>
-
-  <Config Name="Traefik Container Name" Target="TRAEFIK_CONTAINER" Default="traefik"
-    Description="Name of the Traefik Docker container to restart. Used by the proxy and socket restart methods."
-    Type="Variable" Display="advanced" Required="false" Mask="false">traefik</Config>
-
-  <Config Name="Docker Host (socket proxy)" Target="DOCKER_HOST" Default=""
-    Description="Docker host URL for the socket proxy restart method. Example: tcp://socket-proxy:2375. Only set when RESTART_METHOD=proxy."
-    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
-
-  <Config Name="Signal File Path (poison pill)" Target="SIGNAL_FILE_PATH" Default="/signals/restart.sig"
-    Description="Path to the signal file written by Traefik Manager to trigger a Traefik restart. Only used when RESTART_METHOD=poison-pill. Mount a shared volume to /signals in both this container and the watcher sidecar."
-    Type="Variable" Display="advanced" Required="false" Mask="false">/signals/restart.sig</Config>
-
-  <Config Name="Docker Socket (direct)" Target="/var/run/docker.sock" Default=""
-    Mode="ro"
-    Description="Optional: mount the Docker socket for the direct socket restart method (RESTART_METHOD=socket). Host path: /var/run/docker.sock"
-    Type="Path" Display="advanced" Required="false" Mask="false"></Config>
-
-  <!-- Auth -->
-  <Config Name="Admin Password" Target="ADMIN_PASSWORD" Default=""
-    Description="Optional: set a fixed admin password. If left empty a temporary password is generated on first start - check the container log for it."
-    Type="Variable" Display="always" Required="false" Mask="true"></Config>
-
-  <Config Name="Cookie Secure" Target="COOKIE_SECURE" Default="false"
-    Description="Set to true when accessing Traefik Manager over HTTPS (e.g. behind a Traefik reverse proxy with TLS). Required for session cookies to work correctly over HTTPS."
-    Type="Variable" Display="always" Required="false" Mask="false">false</Config>
-
-  <Config Name="Auth Enabled" Target="AUTH_ENABLED" Default="true"
-    Description="Set to false to disable built-in login. Only use this when Traefik Manager is protected by an external auth provider such as Authentik or Authelia."
-    Type="Variable" Display="advanced" Required="false" Mask="false">true</Config>
-
-  <!-- CrowdSec (optional) -->
-  <Config Name="CrowdSec LAPI URL" Target="CROWDSEC_LAPI_URL" Default=""
-    Description="Optional: CrowdSec Local API URL (e.g. http://crowdsec:8080) to enable the CrowdSec tab. Can also be set in Settings."
-    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
-
-  <Config Name="CrowdSec API Key" Target="CROWDSEC_API_KEY" Default=""
-    Description="Optional: CrowdSec bouncer API key, used to read decisions. Generate with: cscli bouncers add traefik-manager"
-    Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
-
-  <Config Name="CrowdSec Machine ID" Target="CROWDSEC_MACHINE_ID" Default=""
-    Description="Optional: CrowdSec machine login, required to view Alerts and to unban (bouncer keys cannot). Create with: cscli machines add traefik-manager --auto"
-    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
-
-  <Config Name="CrowdSec Machine Password" Target="CROWDSEC_MACHINE_PASSWORD" Default=""
-    Description="Optional: password for the CrowdSec machine login above. Found in /etc/crowdsec/local_api_credentials.yaml."
-    Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
-
-  <!-- Advanced -->
-  <Config Name="Settings File Path" Target="SETTINGS_PATH" Default="/app/config/manager.yml"
-    Description="Path inside the container to the Traefik Manager settings file. Change this if you want to store it separately from the dynamic config."
-    Type="Variable" Display="advanced" Required="false" Mask="false">/app/config/manager.yml</Config>
-
-  <Config Name="Backup Directory Path" Target="BACKUP_DIR" Default="/app/backups"
-    Description="Path inside the container where backups are written. Change this if you mount a custom backup volume at a different path."
-    Type="Variable" Display="advanced" Required="false" Mask="false">/app/backups</Config>
-
-  <Config Name="Inactivity Timeout (minutes)" Target="INACTIVITY_TIMEOUT_MINUTES" Default="120"
-    Description="Minutes of inactivity before a non-remembered session is logged out."
-    Type="Variable" Display="advanced" Required="false" Mask="false">120</Config>
-
-  <Config Name="OTP Encryption Key" Target="OTP_ENCRYPTION_KEY" Default=""
-    Description="Fernet key for encrypting the 2FA TOTP secret at rest. Auto-generated on first start if not set. Set this if you want to manage the key yourself or ensure it survives config volume replacement. Generate with: python3 -c &quot;from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())&quot;"
-    Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
-
-  <Config Name="Secret Key" Target="SECRET_KEY" Default=""
-    Description="Session signing key. Auto-generated on first start and saved to /app/config/.secret_key. Set this explicitly to ensure sessions survive a full config wipe, or to share a key across multiple instances."
-    Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
-
-  <Config Name="Trusted Proxy Hops" Target="PROXY_FIX_HOPS" Default="1"
-    Description="How many reverse-proxy hops to trust when reading X-Forwarded-For. With Cloudflare in front of Traefik in front of this container, set 2 so the login and audit log record the real client. Set 0 to ignore the header entirely. Only count hops you actually control - each trusted hop is one more entry a client could forge."
-    Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
-
-  <Config Name="Skip Traefik API TLS Verification" Target="TRAEFIK_INSECURE_SKIP_VERIFY" Default="false"
-    Description="Set true when the Traefik API URL is https with a self-signed or Cloudflare Origin certificate."
-    Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
-
-  <Config Name="acme.json Path" Target="ACME_JSON_PATH" Default=""
-    Description="Path to acme.json inside the container, when it is not the default /app/acme.json. Accepts several files comma-separated, or a directory whose .json files are all read - Traefik writes one storage file per certificate resolver."
-    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
-
-  <Config Name="Access Log Path" Target="ACCESS_LOG_PATH" Default=""
-    Description="Path to the Traefik access log inside the container, when it is not the default /app/logs/access.log."
-    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
-
-  <Config Name="Plugins Directory" Target="PLUGINS_DIR" Default=""
-    Description="Path to Traefik's local plugins directory, for the Plugins tab."
-    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
-
-  <Config Name="Backup Retention" Target="BACKUP_KEEP_COUNT" Default="0"
-    Description="Keep only the last N backups per config file. 0 keeps every backup."
-    Type="Variable" Display="advanced" Required="false" Mask="false">0</Config>
-
-  <Config Name="GeoIP Database Path" Target="GEOIP_DB_PATH" Default=""
-    Description="Path to a custom MaxMind-format .mmdb for IP geolocation. Leave empty to use the free DB-IP Lite database, downloaded on demand. Lookups run locally - no IP leaves the server."
-    Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Web UI Port" Target="5000" Default="5000" Mode="tcp" Description="Port to access the Traefik Manager web UI." Type="Port" Display="always" Required="true" Mask="false">5000</Config>
+  <Config Name="Config Directory" Target="/app/config" Default="/mnt/user/appdata/traefik-manager/config" Mode="rw" Description="Stores manager.yml (settings, password, API keys) and the session signing key. Must be persistent." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/traefik-manager/config</Config>
+  <Config Name="Backups Directory" Target="/app/backups" Default="/mnt/user/appdata/traefik-manager/backups" Mode="rw" Description="Timestamped backups of your dynamic config are saved here before every change." Type="Path" Display="always" Required="false" Mask="false">/mnt/user/appdata/traefik-manager/backups</Config>
+  <Config Name="Traefik API URL" Target="TRAEFIK_API_URL" Default="http://traefik:8080" Description="URL of the Traefik API. Usually http://traefik:8080 when on the same Docker network." Type="Variable" Display="always" Required="true" Mask="false">http://traefik:8080</Config>
+  <Config Name="Traefik API Username" Target="TRAEFIK_API_USER" Default="" Description="Optional: basic-auth username for the Traefik API, if your API/dashboard is protected by a basicAuth middleware." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Traefik API Password" Target="TRAEFIK_API_PASSWORD" Default="" Description="Optional: basic-auth password for the Traefik API. Only needed if TRAEFIK_API_USER is set." Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="Domains" Target="DOMAINS" Default="example.com" Description="Comma-separated list of base domains shown in the Add Route form. Example: example.com,home.lab" Type="Variable" Display="always" Required="true" Mask="false">example.com</Config>
+  <Config Name="Cert Resolver" Target="CERT_RESOLVER" Default="cloudflare" Description="Default ACME certificate resolver name from your traefik.yml. Comma-separate multiple resolvers." Type="Variable" Display="always" Required="false" Mask="false">cloudflare</Config>
+  <Config Name="Config File Path (single file)" Target="CONFIG_PATH" Default="/app/config/dynamic.yml" Description="Path inside the container to your Traefik dynamic config file. Use this for a single config file. Mount the file via the path mapping below. Leave blank if using CONFIG_DIR or CONFIG_PATHS." Type="Variable" Display="always" Required="false" Mask="false">/app/config/dynamic.yml</Config>
+  <Config Name="Config Directory Path (multi-file)" Target="CONFIG_DIR" Default="" Description="Path inside the container to a directory containing multiple .yml config files. All .yml files in this directory will be loaded. Use instead of CONFIG_PATH when managing multiple files. Leave blank if using CONFIG_PATH." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Config Paths (explicit list)" Target="CONFIG_PATHS" Default="" Description="Comma-separated list of full config file paths inside the container. Use instead of CONFIG_PATH for 2-5 named files. Example: /app/config/routes.yml,/app/config/services.yml. Leave blank if using CONFIG_PATH or CONFIG_DIR." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Certs Tab - acme.json" Target="/app/acme.json" Default="" Mode="ro" Description="Optional: path to your Traefik acme.json file on the host. Required for the Certs tab. Mount read-only." Type="Path" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Static Config / Plugins Tab - traefik.yml" Target="/app/traefik.yml" Default="" Mode="rw" Description="Optional: path to your Traefik static config file (traefik.yml) on the host. Required for the Plugins tab and the Static Config editor. Mount read-write to allow editing; read-only enables the Plugins tab only. Also set the Static Config Path variable below to /app/traefik.yml." Type="Path" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Static Config Path" Target="STATIC_CONFIG_PATH" Default="" Description="Path inside the container to the static config (traefik.yml) you mounted above. Set to /app/traefik.yml to enable the Static Config editor and Plugins tab. Leave blank if not mounting traefik.yml." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Logs Tab - access.log" Target="/app/logs/access.log" Default="" Mode="ro" Description="Optional: path to your Traefik access log file on the host. Required for the Logs tab. Enable access logging in traefik.yml first: accessLog: filePath: /logs/access.log. Mount read-only." Type="Path" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Restart Method" Target="RESTART_METHOD" Default="proxy" Description="How Traefik Manager restarts Traefik after a static config change. Options: proxy (socket proxy - recommended), socket (direct Docker socket), poison-pill (signal file, requires watcher sidecar). Leave empty to disable automatic restart." Type="Variable" Display="advanced" Required="false" Mask="false">proxy</Config>
+  <Config Name="Traefik Container Name" Target="TRAEFIK_CONTAINER" Default="traefik" Description="Name of the Traefik Docker container to restart. Used by the proxy and socket restart methods." Type="Variable" Display="advanced" Required="false" Mask="false">traefik</Config>
+  <Config Name="Docker Host (socket proxy)" Target="DOCKER_HOST" Default="" Description="Docker host URL for the socket proxy restart method. Example: tcp://socket-proxy:2375. Only set when RESTART_METHOD=proxy." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Signal File Path (poison pill)" Target="SIGNAL_FILE_PATH" Default="/signals/restart.sig" Description="Path to the signal file written by Traefik Manager to trigger a Traefik restart. Only used when RESTART_METHOD=poison-pill. Mount a shared volume to /signals in both this container and the watcher sidecar." Type="Variable" Display="advanced" Required="false" Mask="false">/signals/restart.sig</Config>
+  <Config Name="Docker Socket (direct)" Target="/var/run/docker.sock" Default="" Mode="ro" Description="Optional: mount the Docker socket for the direct socket restart method (RESTART_METHOD=socket). Host path: /var/run/docker.sock" Type="Path" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Admin Password" Target="ADMIN_PASSWORD" Default="" Description="Optional: set a fixed admin password. If left empty a temporary password is generated on first start - check the container log for it." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="Cookie Secure" Target="COOKIE_SECURE" Default="false" Description="Set to true when accessing Traefik Manager over HTTPS (e.g. behind a Traefik reverse proxy with TLS). Required for session cookies to work correctly over HTTPS." Type="Variable" Display="always" Required="false" Mask="false">false</Config>
+  <Config Name="Auth Enabled" Target="AUTH_ENABLED" Default="true" Description="Set to false to disable built-in login. Only use this when Traefik Manager is protected by an external auth provider such as Authentik or Authelia." Type="Variable" Display="advanced" Required="false" Mask="false">true</Config>
+  <Config Name="CrowdSec LAPI URL" Target="CROWDSEC_LAPI_URL" Default="" Description="Optional: CrowdSec Local API URL (e.g. http://crowdsec:8080) to enable the CrowdSec tab. Can also be set in Settings." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="CrowdSec API Key" Target="CROWDSEC_API_KEY" Default="" Description="Optional: CrowdSec bouncer API key, used to read decisions. Generate with: cscli bouncers add traefik-manager" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="CrowdSec Machine ID" Target="CROWDSEC_MACHINE_ID" Default="" Description="Optional: CrowdSec machine login, required to view Alerts and to unban (bouncer keys cannot). Create with: cscli machines add traefik-manager --auto" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="CrowdSec Machine Password" Target="CROWDSEC_MACHINE_PASSWORD" Default="" Description="Optional: password for the CrowdSec machine login above. Found in /etc/crowdsec/local_api_credentials.yaml." Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="Settings File Path" Target="SETTINGS_PATH" Default="/app/config/manager.yml" Description="Path inside the container to the Traefik Manager settings file. Change this if you want to store it separately from the dynamic config." Type="Variable" Display="advanced" Required="false" Mask="false">/app/config/manager.yml</Config>
+  <Config Name="Backup Directory Path" Target="BACKUP_DIR" Default="/app/backups" Description="Path inside the container where backups are written. Change this if you mount a custom backup volume at a different path." Type="Variable" Display="advanced" Required="false" Mask="false">/app/backups</Config>
+  <Config Name="Inactivity Timeout (minutes)" Target="INACTIVITY_TIMEOUT_MINUTES" Default="120" Description="Minutes of inactivity before a non-remembered session is logged out." Type="Variable" Display="advanced" Required="false" Mask="false">120</Config>
+  <Config Name="OTP Encryption Key" Target="OTP_ENCRYPTION_KEY" Default="" Description="Fernet key for encrypting the 2FA TOTP secret at rest. Auto-generated on first start if not set. Set this if you want to manage the key yourself or ensure it survives config volume replacement. Generate with: python3 -c &quot;from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())&quot;" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="Secret Key" Target="SECRET_KEY" Default="" Description="Session signing key. Auto-generated on first start and saved to /app/config/.secret_key. Set this explicitly to ensure sessions survive a full config wipe, or to share a key across multiple instances." Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="Trusted Proxy Hops" Target="PROXY_FIX_HOPS" Default="1" Description="How many reverse-proxy hops to trust when reading X-Forwarded-For. With Cloudflare in front of Traefik in front of this container, set 2 so the login and audit log record the real client. Set 0 to ignore the header entirely. Only count hops you actually control - each trusted hop is one more entry a client could forge." Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
+  <Config Name="Skip Traefik API TLS Verification" Target="TRAEFIK_INSECURE_SKIP_VERIFY" Default="false" Description="Set true when the Traefik API URL is https with a self-signed or Cloudflare Origin certificate." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="acme.json Path" Target="ACME_JSON_PATH" Default="" Description="Path to acme.json inside the container, when it is not the default /app/acme.json. Accepts several files comma-separated, or a directory whose .json files are all read - Traefik writes one storage file per certificate resolver." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Access Log Path" Target="ACCESS_LOG_PATH" Default="" Description="Path to the Traefik access log inside the container, when it is not the default /app/logs/access.log." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Plugins Directory" Target="PLUGINS_DIR" Default="" Description="Path to Traefik's local plugins directory, for the Plugins tab." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Backup Retention" Target="BACKUP_KEEP_COUNT" Default="0" Description="Keep only the last N backups per config file. 0 keeps every backup." Type="Variable" Display="advanced" Required="false" Mask="false">0</Config>
+  <Config Name="GeoIP Database Path" Target="GEOIP_DB_PATH" Default="" Description="Path to a custom MaxMind-format .mmdb for IP geolocation. Leave empty to use the free DB-IP Lite database, downloaded on demand. Lookups run locally - no IP leaves the server." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Log Level" Target="LOG_LEVEL" Default="info" Description="Logging verbosity. One of debug, info, warning, error." Type="Variable" Display="advanced" Required="false" Mask="false">info</Config>
+  <Config Name="Base Path" Target="BASE_PATH" Default="" Description="Serve Traefik Manager under a sub path instead of its own hostname, for example /tm. Leave blank to serve at the root." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="CrowdSec Alert Limit" Target="CROWDSEC_ALERT_LIMIT" Default="" Description="How many CrowdSec alerts to read at once. Leave blank for the default of 500." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="CrowdSec Client Certificate" Target="CROWDSEC_CLIENT_CERT" Default="" Description="Path inside the container to a TLS client certificate for the CrowdSec LAPI, when it requires mTLS instead of an API key." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="CrowdSec Client Key" Target="CROWDSEC_CLIENT_KEY" Default="" Description="Path inside the container to the private key for the CrowdSec client certificate." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="CrowdSec CA Certificate" Target="CROWDSEC_CA_CERT" Default="" Description="Path inside the container to the CA that signed the CrowdSec LAPI certificate." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="CrowdSec Connect Timeout" Target="CROWDSEC_CONNECT_TIMEOUT" Default="" Description="Seconds to wait for the CrowdSec LAPI to accept a connection. Leave blank for the default." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="CrowdSec Read Timeout" Target="CROWDSEC_READ_TIMEOUT" Default="" Description="Seconds to wait for a CrowdSec LAPI response. Leave blank for the default." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="OIDC Enabled" Target="OIDC_ENABLED" Default="false" Description="Set true to sign in with an OpenID Connect provider such as Authentik, Authelia or Keycloak." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="OIDC Provider URL" Target="OIDC_PROVIDER_URL" Default="" Description="Issuer URL of your OIDC provider, for example https://auth.example.com/application/o/traefik-manager/" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="OIDC Client ID" Target="OIDC_CLIENT_ID" Default="" Description="Client ID issued by your OIDC provider." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="OIDC Client Secret" Target="OIDC_CLIENT_SECRET" Default="" Description="Client secret issued by your OIDC provider." Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="OIDC Display Name" Target="OIDC_DISPLAY_NAME" Default="" Description="Name shown on the sign in button, for example Authentik." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="OIDC Allowed Emails" Target="OIDC_ALLOWED_EMAILS" Default="" Description="Comma-separated list of email addresses allowed to sign in." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="OIDC Allowed Groups" Target="OIDC_ALLOWED_GROUPS" Default="" Description="Comma-separated list of groups allowed to sign in." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="OIDC Groups Claim" Target="OIDC_GROUPS_CLAIM" Default="" Description="Name of the token claim that carries group membership. Defaults to groups." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="OIDC Allow Any Authenticated" Target="OIDC_ALLOW_ANY_AUTHENTICATED" Default="false" Description="Set true to let anyone your provider authenticates sign in, instead of listing emails or groups." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="OIDC Auto Sign In" Target="OIDC_AUTO_LOGIN" Default="false" Description="Set true to send visitors straight to the provider instead of showing the login form." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="Agent API Rate Limit" Target="AGENT_API_RATE_LIMIT" Default="" Description="Requests per minute allowed on the agent API. Leave blank for the default." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Extra CA Bundle" Target="REQUESTS_CA_BUNDLE" Default="" Description="Path inside the container to a CA bundle, when Traefik or CrowdSec use a private certificate authority." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
 </Container>

@@ -113,7 +113,7 @@ Full [documentation](https://traefik-manager.xyzlab.dev/).
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/docker.png" width="20" height="20"> Docker              | [Compose, networking, behind Traefik](https://traefik-manager.xyzlab.dev/docker.html) |
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/podman.png" width="20" height="20"> Podman              | [Rootless, Quadlet, SELinux](https://traefik-manager.xyzlab.dev/podman.html)          |
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/linux.png" width="20" height="20"> Linux                | [Native Python and systemd](https://traefik-manager.xyzlab.dev/linux.html)            |
-| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/unraid.png" width="20" height="20"> Unraid              | [Community Applications template](https://traefik-manager.xyzlab.dev/unraid.html)     |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/unraid.png" width="20" height="20"> Unraid              | [Template install and appdata paths](https://traefik-manager.xyzlab.dev/unraid.html)     |
 | <img src="docs/public/images/icon.png" width="20" height="20"> Agent                                                 | [TMA for multi-server management](https://traefik-manager.xyzlab.dev/agent.html)      |
 
 ---

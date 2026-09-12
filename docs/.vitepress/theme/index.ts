@@ -5,7 +5,6 @@ import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 import mediumZoom from 'medium-zoom'
 import GitHubStars from './components/GitHubStars.vue'
 import MobileRelease from './components/MobileRelease.vue'
-import UnraidCAStatus from './components/UnraidCAStatus.vue'
 import ComposeUpgrader from './components/ComposeUpgrader.vue'
 import ShowcaseMockup from './components/ShowcaseMockup.vue'
 import HomeHero from './components/HomeHero.vue'
@@ -42,7 +41,6 @@ export default {
   enhanceApp({ app }: { app: any }) {
     enhanceAppWithTabs(app)
     app.component('MobileRelease', MobileRelease)
-    app.component('UnraidCAStatus', UnraidCAStatus)
     app.component('ComposeUpgrader', ComposeUpgrader)
     app.component('ShowcaseMockup', ShowcaseMockup)
   },

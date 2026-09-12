@@ -186,6 +186,8 @@ Read-only tabs that pull live data from the Traefik API - no extra mounts, just 
 
 > Traefik Manager's own routes are automatically excluded from the File provider tab.
 
+Provider tabs switch themselves on the first time Traefik reports routers from that provider, on the Host and on each agent separately. The setup wizard pre-selects the providers Traefik is already running. A tab you turn off stays off.
+
 ---
 
 ## Configuration

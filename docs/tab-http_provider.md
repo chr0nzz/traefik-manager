@@ -15,6 +15,8 @@ Routes are **read-only** - edit them at the endpoint Traefik polls.
 
 ## Enabling the tab
 
+This tab switches itself on the first time Traefik reports routers from this provider, and the setup wizard pre-selects it when the provider is already running. Turn it off and it stays off.
+
 | Where | Path |
 |---|---|
 | Setup wizard | Monitoring step → Provider tabs → HTTP Provider |

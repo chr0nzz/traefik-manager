@@ -1,20 +1,29 @@
 # Running on Unraid
 
-Traefik Manager installs on Unraid from a custom template hosted at [unraid.xyzlab.dev/tm](https://unraid.xyzlab.dev/tm).
+Traefik Manager ships an Unraid template. It is not in Community Applications yet, so install it as a user template.
+
+::: warning Template Repositories is gone
+Older guides tell you to paste a repository URL into **Apps - Settings - Template Repositories**. Unraid removed that field in favour of Community Applications, so there is nowhere to paste it. Use the steps below instead.
+:::
 
 ---
 
-## Install via Community Applications
+## Install the template
 
-1. Open the **Apps** tab in your Unraid dashboard
-2. Click the **Settings** icon (top right) and go to **Template Repositories**
-3. Add this URL to your repository list:
-   ```
-   https://unraid.xyzlab.dev/tm
-   ```
-4. Click **Save**, then **Done**
-5. Search for **Traefik Manager** in the Apps tab
-6. Click **Install**
+Open a terminal on your Unraid server and run:
+
+```bash
+wget -O /boot/config/plugins/dockerMan/templates-user/my-traefik-manager.xml \
+  https://raw.githubusercontent.com/chr0nzz/traefik-manager/main/unraid/traefik-manager.xml
+```
+
+Then:
+
+1. Open the **Docker** tab and click **Add Container**
+2. Pick **traefik-manager** from the **Template** dropdown, under *User templates*
+3. Fill in the fields below and click **Apply**
+
+The template survives reboots and array stops because it lives on the flash drive. To update it later, run the same command again.
 
 
 ---
@@ -173,4 +182,4 @@ Traefik Manager needs to reach the Traefik API. The simplest way on Unraid is to
 
 ## Updating
 
-Click **Check for Updates** in the Unraid Docker tab. Traefik Manager follows semantic versioning - patch releases are safe to apply immediately. Check the [release notes](https://github.com/chr0nzz/traefik-manager/releases) before applying minor or major updates.
+Click **Check for Updates** in the Unraid Docker tab. That updates the image, not the template: to pick up new fields added to the template, re-run the `wget` above and the Docker tab will offer them on the next edit. Traefik Manager follows semantic versioning - patch releases are safe to apply immediately. Check the [release notes](https://github.com/chr0nzz/traefik-manager/releases) before applying minor or major updates.

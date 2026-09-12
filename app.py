@@ -62,6 +62,7 @@ from core import notify_providers as _notify_providers
 from core import monitor as _monitor
 from core import reachability as _reach
 from core import names as _naming
+from core import providers as _providers
 from core import route_health as _rh
 from core import updates as _updates
 from core import traefik as _trae
@@ -408,6 +409,14 @@ def _best_entrypoint() -> str:
     if eps:
         return eps[0].get('name', 'websecure')
     return 'websecure'
+
+
+def _detect_provider_tabs() -> list:
+    try:
+        return sorted(_providers.tabs_from_overview(traefik_api_get('/api/overview')))
+    except Exception:
+        logger.debug("Could not read the Traefik providers for the setup wizard")
+        return []
 
 
 def _detect_setup_self_route() -> tuple[str, str]:
@@ -982,7 +991,8 @@ def setup():
                            temp_password_mode=temp_password_mode,
                            detected_self_domain=detected_domain,
                            detected_self_svc=detected_svc,
-                           detected_self_entry_point=detected_entry_point)
+                           detected_self_entry_point=detected_entry_point,
+                           detected_tabs=_detect_provider_tabs())
 
 
 def _setup_open() -> bool:
