@@ -7,7 +7,16 @@ let _staticPendingChanges  = false;
 let _staticSectionEdits    = false;
 let _staticSaved           = false;
 
-function _confirm(message, title, okLabel, typeWord) {
+function _confirm(message, title, okLabel, typeWord, opts) {
+    return _confirmWith({ message, title, okLabel, typeWord, ...(opts || {}) }).then(r => r.ok);
+}
+
+function _confirmWith(o) {
+    const { message, title, okLabel, typeWord } = o || {};
+    const notes   = (o && o.notes) || [];
+    const check   = (o && o.checkbox) || null;
+    const danger  = (o && o.danger !== undefined) ? o.danger
+                    : /delete|remove|revoke|reset/i.test(String(okLabel || ''));
     return new Promise(resolve => {
         const overlay = document.getElementById('customConfirmOverlay');
         const msg     = document.getElementById('customConfirmMsg');
@@ -24,6 +33,22 @@ function _confirm(message, title, okLabel, typeWord) {
         if (wrap)   wrap.style.display = word ? '' : 'none';
         if (wordEl) wordEl.textContent = word;
         if (input) { input.value = ''; input.placeholder = word; }
+        const noteBox  = document.getElementById('customConfirmNotes');
+        const checkWrap = document.getElementById('customConfirmCheckWrap');
+        const checkBox  = document.getElementById('customConfirmCheck');
+        const checkLbl  = document.getElementById('customConfirmCheckLabel');
+        if (noteBox) {
+            noteBox.innerHTML = notes.map(n =>
+                '<div class="rounded-lg px-3 py-2.5 flex items-start gap-2 text-xs" '
+                + 'style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);color:var(--text)">'
+                + '<i class="ph-bold ph-warning-circle shrink-0" style="color:var(--red);margin-top:1px"></i>'
+                + '<span>' + _esc(n) + '</span></div>').join('');
+            noteBox.style.display = notes.length ? 'flex' : 'none';
+        }
+        if (checkWrap) checkWrap.style.display = check ? 'flex' : 'none';
+        if (checkBox)  checkBox.checked = !!(check && check.checked);
+        if (checkLbl)  checkLbl.textContent = check ? String(check.label || '') : '';
+        if (ok) ok.classList.toggle('btn-red', !!danger);
         const matches = () => !word || (input && input.value.trim().toUpperCase() === word.toUpperCase());
         const sync = () => { if (ok) ok.disabled = !matches(); };
         sync();
@@ -40,7 +65,8 @@ function _confirm(message, title, okLabel, typeWord) {
             if (input)  input.oninput  = null;
             if (wordEl) { wordEl.onclick = null; wordEl.textContent = word; }
             document.removeEventListener('keydown', onKey);
-            resolve(val && matches());
+            if (ok) ok.classList.remove('btn-red');
+            resolve({ ok: !!(val && matches()), checked: !!(checkBox && checkBox.checked) });
         };
         if (input)  input.oninput   = sync;
         if (wordEl) wordEl.onclick  = () => {

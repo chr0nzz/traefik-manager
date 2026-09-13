@@ -228,7 +228,6 @@ def load_settings() -> dict:
         'route_check_enabled':  True,
         'route_check_interval': 300,
         'provider_tabs_seen':   [],
-        'cert_delete_enabled':  False,
         'notification_channels': [],
         'notifications_read_until': 0,
         'webhook_url':          '',
@@ -378,8 +377,6 @@ def load_settings() -> dict:
             merged['geoip_db_path'] = str(data['geoip_db_path']).strip()
         if 'route_check_enabled' in data:
             merged['route_check_enabled'] = bool(data['route_check_enabled'])
-        if 'cert_delete_enabled' in data:
-            merged['cert_delete_enabled'] = bool(data['cert_delete_enabled'])
         if 'provider_tabs_seen' in data and isinstance(data['provider_tabs_seen'], list):
             merged['provider_tabs_seen'] = [str(t) for t in data['provider_tabs_seen'] if str(t) in OPTIONAL_TABS]
         if 'route_check_interval' in data:
@@ -490,7 +487,7 @@ def _write_settings(domains, cert_resolver, traefik_api_url,
                   default_theme=None, ui_prefs=None,
                   geoip_enabled=None, geoip_db_path=None,
                   route_check_enabled=None, route_check_interval=None,
-                  provider_tabs_seen=None, cert_delete_enabled=None):
+                  provider_tabs_seen=None):
     if visible_tabs is None:
         visible_tabs = {t: False for t in OPTIONAL_TABS}
     _cur = load_settings()
@@ -534,8 +531,6 @@ def _write_settings(domains, cert_resolver, traefik_api_url,
         route_check_interval = _cur.get('route_check_interval', 300)
     if provider_tabs_seen is None:
         provider_tabs_seen = _cur.get('provider_tabs_seen', [])
-    if cert_delete_enabled is None:
-        cert_delete_enabled = _cur.get('cert_delete_enabled', False)
     if access_log_path is None:
         access_log_path = _cur.get('access_log_path', '')
     if static_config_path is None:
@@ -657,7 +652,6 @@ def _write_settings(domains, cert_resolver, traefik_api_url,
         'route_check_enabled':  bool(route_check_enabled),
         'route_check_interval': int(route_check_interval or 300),
         'provider_tabs_seen':   [str(t) for t in (provider_tabs_seen or []) if str(t) in OPTIONAL_TABS],
-        'cert_delete_enabled':  bool(cert_delete_enabled),
         'oidc_groups_claim':    oidc_groups_claim,
         'notification_channels': _dump_channels(notification_channels),
         'notifications_read_until': int(notifications_read_until or 0),

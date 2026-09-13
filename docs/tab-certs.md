@@ -26,7 +26,7 @@ A wildcard certificate counts as used when a router serves any name it covers, `
 
 ## Removing a certificate
 
-Off by default and read-only until you opt in. Nothing appears in the interface until all three steps below are done.
+Read-only until you allow it. Both steps below are needed, and until then nothing about removal appears in the interface.
 
 ### 1. Mount `acme.json` read-write
 
@@ -135,15 +135,11 @@ services:
 
 The trade-offs are covered in full under [Static config](static.md#restart-methods).
 
-### 3. Switch it on
-
-**Settings - Interface - Tabs - Remove certificates from acme.json**.
-
-That row is hidden until steps 1 and 2 are done, so if you cannot see it, one of them is missing. The Certs tab then shows a remove button on each ACME certificate.
-
 ### Removing
 
-Removing takes a timestamped backup of `acme.json` first, edits the file in place so a bind mount stays attached, keeps the mode at `600`, leaves the ACME account untouched, and restarts Traefik.
+Each ACME certificate then gets a remove button, and **Select** in the toolbar turns on checkboxes for removing several at once, with **Select all unused** for the common case. A whole batch costs one Traefik restart.
+
+Removing takes a timestamped backup of `acme.json` first, edits the file in place so a bind mount stays attached, keeps the mode at `600`, leaves the ACME account untouched, and restarts Traefik. Deleting a route offers to remove its certificate at the same time, when no other route still needs it.
 
 ::: warning Deleting a certificate a route still needs re-issues it
 Traefik requests a fresh certificate for any domain a router still serves. Let's Encrypt allows five identical certificates per week, so repeated removals of the same domains can lock you out until that window clears.
@@ -165,7 +161,7 @@ Go to **Settings - System Monitoring - Tab Visibility** and enable Certs.
 
 ### ACME certificates (acme.json)
 
-Point traefik-manager at your `acme.json` with the `ACME_JSON_PATH` environment variable (default: `/app/acme.json`), or with the acme.json Path field under **Settings - System Monitoring - File Paths**, which wins over the env var. Mount it read-only (`:ro`) to view certificates and see which of them nothing uses. To also remove them, follow [Removing a certificate](#removing-a-certificate) above, which needs a read-write mount and stays switched off until you enable it.
+Point traefik-manager at your `acme.json` with the `ACME_JSON_PATH` environment variable (default: `/app/acme.json`), or with the acme.json Path field under **Settings - System Monitoring - File Paths**, which wins over the env var. Mount it read-only (`:ro`) to view certificates and see which of them nothing uses. To also remove them, follow [Removing a certificate](#removing-a-certificate) above, which needs a read-write mount and a restart method.
 
 :::tabs
 == Docker / Podman

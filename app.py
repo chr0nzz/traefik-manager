@@ -3690,8 +3690,8 @@ def _host_cert_manage_state():
         reason = 'no restart method is configured, and Traefik only reads acme.json at startup'
     else:
         reason = ''
-    return {'available': writable and restart, 'writable': writable, 'restart_method': method if restart else '',
-            'enabled': bool(load_settings().get('cert_delete_enabled')), 'reason': reason, 'paths': resolved}
+    return {'available': writable and restart, 'writable': writable,
+            'restart_method': method if restart else '', 'reason': reason, 'paths': resolved}
 
 
 @app.route('/api/certs/manage')
@@ -3707,12 +3707,11 @@ def api_certs_manage():
         resp = _agent_request(agent, 'GET', '/api/traefik/certs/status')
         if resp.status_code != 200:
             return jsonify({'available': False, 'writable': False, 'restart_method': '',
-                            'enabled': False, 'reason': 'this agent is too old to manage certificates', 'paths': []})
+                            'reason': 'this agent is too old to manage certificates', 'paths': []})
         state = resp.json() or {}
     except Exception as e:
         return jsonify({'available': False, 'writable': False, 'restart_method': '',
-                        'enabled': False, 'reason': str(e), 'paths': []})
-    state['enabled'] = bool(load_settings().get('cert_delete_enabled'))
+                        'reason': str(e), 'paths': []})
     state['available'] = bool(state.get('available'))
     return jsonify(state)
 
@@ -3727,9 +3726,6 @@ def api_certs_delete():
               for c in (data.get('certs') or []) if isinstance(c, dict) and c.get('main')]
     if not wanted:
         return jsonify({'error': 'Nothing was selected'}), 400
-    if not load_settings().get('cert_delete_enabled'):
-        return jsonify({'error': 'Certificate deletion is switched off in Settings'}), 403
-
     if server:
         agent = _agent_by_id(server)
         if not agent:
@@ -3765,15 +3761,6 @@ def api_certs_delete():
     add_notification('warning', f"{removed} certificate(s) removed from acme.json", category='traefik')
     return jsonify({'ok': True, 'removed': removed, 'backup': os.path.basename(saved or ''),
                     'restarted': ok, 'restart_error': '' if ok else err})
-
-
-@app.route('/api/settings/cert-delete', methods=['POST'])
-@csrf_protect
-@login_required
-def api_save_cert_delete():
-    data     = request.get_json(silent=True) or {}
-    update_settings(cert_delete_enabled=bool(data.get('enabled')))
-    return jsonify({'ok': True, 'enabled': bool(data.get('enabled'))})
 
 
 @app.route('/api/traefik/certs')

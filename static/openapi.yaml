@@ -760,7 +760,6 @@ paths:
                   available:      { type: boolean }
                   writable:       { type: boolean }
                   restart_method: { type: string, example: "proxy" }
-                  enabled:        { type: boolean }
                   reason:         { type: string }
                   paths:          { type: array, items: { type: string } }
         "404": { description: Unknown server }
@@ -799,22 +798,8 @@ paths:
                   backup:    { type: string }
                   restarted: { type: boolean }
         "400": { description: Nothing was selected }
-        "403": { description: Switched off, read only, or no restart method }
+        "403": { description: Read only, or no restart method }
         "404": { description: No matching certificate }
-  /api/settings/cert-delete:
-    post:
-      tags: [Settings]
-      summary: Turn certificate removal on or off
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                enabled: { type: boolean }
-      responses:
-        "200": { description: Saved }
   /api/certs/usage:
     get:
       tags: [Traefik]

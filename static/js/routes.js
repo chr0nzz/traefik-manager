@@ -649,10 +649,28 @@ async function saveRouteAjax(event) {
     }
 }
 
+async function _routeCertOption(ids) {
+    if (typeof _certsForRoutes !== 'function') return null;
+    try {
+        const certs = await _certsForRoutes(ids);
+        if (!certs.length) return null;
+        const names = certs.map(c => c.main);
+        return { certs, label: 'Also remove ' + (names.length === 1 ? 'its certificate ' + names[0]
+                 : 'their ' + names.length + ' certificates') + ' from acme.json and restart Traefik' };
+    } catch (e) { return null; }
+}
+
 async function deleteRoute(id, configFile) {
     const shown = String(id).includes('::') ? String(id).split('::').slice(1).join('::') : String(id);
     const where = configFile ? ' from ' + configFile : '';
-    if (!await _confirm('Delete route "' + shown + '"' + where + '? This removes it from the config file and stops serving it.', 'Delete Route', 'Delete', 'DELETE')) return;
+    const certOpt = await _routeCertOption([id]);
+    const answer = await _confirmWith({
+        message: 'Delete route "' + shown + '"' + where + '? This removes it from the config file and stops serving it.',
+        title: 'Delete Route', okLabel: 'Delete', typeWord: 'DELETE',
+        checkbox: certOpt ? { label: certOpt.label, checked: false } : null,
+    });
+    if (!answer.ok) return;
+    const alsoCerts = answer.checked && certOpt ? certOpt.certs : null;
     const data = new FormData();
     data.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
     if (configFile) data.append('configFile', configFile);
@@ -662,7 +680,11 @@ async function deleteRoute(id, configFile) {
         if (!res.ok) { showToast(await _errText(res, 'Error deleting route'), 'error'); return; }
         const json = await res.json();
         showToast(json.message || json.error || 'Error deleting route', json.ok ? 'success' : 'error');
-        if (json.ok) { refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); }
+        if (json.ok) {
+            refreshRoutes(); fetchNotifications();
+            if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData();
+            if (alsoCerts && typeof removeCerts === 'function') await removeCerts(alsoCerts, { confirmed: true });
+        }
     } catch(e) { showToast(_netErrText(e, 'Error deleting route'), 'error'); }
 }
 
@@ -2010,10 +2032,19 @@ async function bulkDisable() {
     _bulkSelected.clear(); updateBulkBar(); refreshRoutes();
 }
 
+function _routeNameList(ids, limit = 6) {
+    const pool  = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
+    const names = ids.map(id => (pool.find(a => String(a.id) === String(id)) || {}).name || id);
+    if (names.length <= limit) return names.join(', ');
+    return names.slice(0, limit).join(', ') + ` and ${names.length - limit} more`;
+}
+
 async function bulkDelete() {
     const ids = [..._bulkSelected];
     if (!ids.length) return;
-    if (!await _confirm(`Delete ${ids.length} route${ids.length > 1 ? 's' : ''}? This removes them from the config files and stops serving them.`, 'Bulk Delete', 'Delete', 'DELETE')) return;
+    if (!await _confirm(`Delete ${ids.length} route${ids.length > 1 ? 's' : ''}: ${_routeNameList(ids)}? `
+                        + 'This removes them from the config files and stops serving them.',
+                        'Bulk Delete', 'Delete', 'DELETE')) return;
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     let failed = 0, firstErr = '';
     for (const id of ids) {

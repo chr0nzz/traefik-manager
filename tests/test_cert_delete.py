@@ -118,12 +118,22 @@ def test_writable_tells_a_read_only_mount_apart(store, monkeypatch):
     assert acme_store.writable(str(store.parent / 'missing.json')) is False
 
 
-def test_deleting_needs_the_setting_switched_on(client, store, monkeypatch):
+def test_deleting_needs_a_restart_method(client, store, monkeypatch):
     from core import settings as settings_mod
     monkeypatch.setattr(settings_mod, 'get_acme_json_paths', lambda: [str(store)])
+    monkeypatch.setenv('RESTART_METHOD', '')
     res = client.post('/api/certs/delete', json={'certs': [{'resolver': 'gone', 'main': 'old.example.com'}]}, headers=HDR)
     assert res.status_code == 403
-    assert 'Settings' in res.get_json()['error']
+    assert 'restart' in res.get_json()['error'], \
+        'without a restart Traefik keeps serving the certificate we just deleted'
+
+
+def test_nothing_asks_the_user_to_switch_removal_on(client):
+    assert client.post('/api/settings/cert-delete', json={'enabled': True}, headers=HDR).status_code == 404, \
+        'the opt-in was removed, a read-write mount and a restart method are the whole gate'
+    for parts in (('core', 'settings.py'), ('app.py',), ('static', 'js', 'certs.js'),
+                  ('static', 'js', 'settings-modal.js'), ('templates', 'modals', 'settings_modal.html')):
+        assert 'cert_delete_enabled' not in _read(*parts), '/'.join(parts)
 
 
 def test_deleting_needs_something_selected(client):
@@ -145,67 +155,61 @@ def test_the_gate_explains_what_is_missing(client, store, monkeypatch):
     assert 'restart' in body['reason'], 'without a restart the edit silently reverts'
 
 
-def test_the_settings_row_hides_itself_until_it_can_be_used():
-    html = _read('templates', 'modals', 'settings_modal.html')
-    assert 'id="certDeleteRow" style="display:none"' in html, \
-        'it must stay hidden like the static config row until the mount allows it'
-    js = _read('static', 'js', 'settings-modal.js')
-    assert '_refreshCertDeleteRow' in js and "'/api/certs/manage'" in js
-    assert "row.style.display = state.available ? '' : 'none'" in js
-
-
-def test_the_delete_button_waits_for_both_gates():
+def test_the_delete_button_follows_the_mount():
     js = _read('static', 'js', 'certs.js')
     assert 'function _certCanDelete()' in js
-    assert '_certManage.available && _certManage.enabled' in js, \
-        'a writable mount alone must not expose a destructive button'
+    assert '_certManage.available' in js, \
+        'a read-only mount must not expose a destructive button'
     assert "resolver === 'file'" in js, 'a file certificate is not in acme.json'
 
 
-def test_the_confirm_panel_reuses_the_existing_styling():
-    html = _read('templates', 'modals', 'cert_delete_modal.html')
-    assert 'class="detail-backdrop"' in html and 'detail-panel detail-panel-form' in html
-    assert 'detail-panel-foot' in html
-    assert 'btn-secondary' in html and 'btn-primary' in html
-    assert 'class="btn-primary btn-red"' in html, \
-        'a solid red fill is louder than anything else in the app, use the tinted variant'
-    assert 'style="background:var(--red)' not in html, 'colour belongs in the stylesheet'
-    assert 'restarted' in html.lower(), 'the restart is the part people need warning about'
+def test_removal_uses_the_same_confirm_as_every_other_delete():
     js = _read('static', 'js', 'certs.js')
-    opener = js[js.index('function openCertDeleteModal('):js.index('function closeCertDeleteModal(')]
-    assert 'setDetailDockOpen(true)' in opener, \
-        'without docking the panel floats over the page in Fluid mode instead of shifting it'
-    closer = js[js.index('function closeCertDeleteModal('):js.index('async function confirmCertDelete(')]
-    assert 'setDetailDockOpen(false)' in closer and "document.body.style.overflow = ''" in closer
-    assert '5 identical certificates per week' in html, 'deleting can burn the rate limit'
+    body = js[js.index('async function removeCerts('):js.index('async function _loadCertUsage(')]
+    assert "_confirmWith(" in body, 'a bespoke panel meant one confirm style for certificates and another everywhere else'
+    assert "typeWord: 'DELETE'" in body, (
+        'removing a certificate can trigger a reissue and spend a rate limit, so it needs at least '
+        'the friction of deleting a route')
+    assert 'notes' in body and 'restarted afterwards' in body, 'the warnings have to survive the move'
+    assert "Let's Encrypt allows five identical certificates per week" in body
+    assert not os.path.exists(os.path.join(ROOT, 'templates', 'modals', 'cert_delete_modal.html')), \
+        'the panel was replaced, it should not linger'
     idx = _read('templates', 'index.html')
-    assert "modals/cert_delete_modal.html" in idx
+    assert 'cert_delete_modal' not in idx
 
 
-def test_a_certificate_backup_can_be_found_and_restored(client, store, monkeypatch):
-    import app as app_mod
-    from core import env as env_mod
-    from core import settings as settings_mod
-    monkeypatch.setattr(settings_mod, 'get_acme_json_paths', lambda: [str(store)])
-    monkeypatch.setattr(env_mod, 'BACKUP_DIR', app_mod.BACKUP_DIR)
-    _removed, backup = acme_store.remove(str(store), [('letsencrypt', 'drop.example.com')])
-    name = os.path.basename(backup)
+def test_the_rate_limit_warning_only_appears_when_it_applies():
+    js = _read('static', 'js', 'certs.js')
+    body = js[js.index('async function removeCerts('):js.index('async function _loadCertUsage(')]
+    assert 'if (inUse)' in body, \
+        'warning about reissue when every selected certificate is already dead is noise'
 
-    listed = {b['name']: b['kind'] for b in client.get('/api/backups').get_json()}
-    assert listed.get(name) == 'certs', \
-        'a certificate backup listed as a route backup sends people to the wrong restore button'
 
-    res = client.post('/api/restore/' + name, headers=HDR)
-    assert res.status_code == 200, res.get_json()
-    after = json.loads(store.read_text())
-    assert [c['domain']['main'] for c in after['letsencrypt']['Certificates']] == \
-        ['keep.example.com', 'drop.example.com'], 'restoring must bring the removed certificate back'
-    assert stat.S_IMODE(os.stat(str(store)).st_mode) & 0o077 == 0
+def test_the_shared_confirm_gained_notes_a_checkbox_and_a_red_button():
+    js = _read('static', 'js', 'static-config.js')
+    body = js[js.index('function _confirmWith(o)'):js.index('let _staticParsedData')]
+    assert "ok.classList.toggle('btn-red'" in body, 'a destructive confirm should not look like a save'
+    assert 'customConfirmNotes' in body and 'customConfirmCheck' in body
+    assert "resolve({ ok:" in body, 'the checkbox answer has to come back to the caller'
+    old_api = js[js.index('function _confirm(message'):js.index('function _confirmWith(o)')]
+    assert '.then(r => r.ok)' in old_api, \
+        'every existing caller expects a boolean, changing that would break them all'
+    html = _read('templates', 'index.html')
+    for el in ('customConfirmNotes', 'customConfirmCheckWrap', 'customConfirmCheck', 'customConfirmCheckLabel'):
+        assert f'id="{el}"' in html, f'{el} missing from the dialog'
+
+
+def test_a_bulk_route_delete_names_the_routes():
+    js = _read('static', 'js', 'routes.js')
+    body = js[js.index('async function bulkDelete()'):js.index('async function bulkToggle(')] \
+        if 'async function bulkToggle(' in js else js[js.index('async function bulkDelete()'):][:1200]
+    assert '_routeNameList(ids)' in body, \
+        'telling someone they are deleting "2 routes" does not let them check it is the right two'
 
 
 def test_a_restart_shows_the_waiting_screen_not_a_toast():
     js = _read('static', 'js', 'certs.js')
-    body = js[js.index('async function confirmCertDelete('):js.index('async function _loadCertUsage(')]
+    body = js[js.index('async function removeCerts('):js.index('async function _loadCertUsage(')]
     assert '_showRestartOverlay()' in body and '_waitForReconnect(' in body, (
         'Traefik Manager sits behind Traefik, so restarting it takes the interface down. '
         'A toast leaves the user looking at a dead page')
@@ -255,9 +259,10 @@ def test_the_docs_say_how_to_turn_it_on():
     assert re.search(r'- \S*acme\.json:/app/acme\.json:rw', section), \
         'say :rw rather than dropping :ro, so the change reads as deliberate'
     assert ':rw,z' in section, 'Podman needs the SELinux flag kept alongside the mode'
-    assert 'Settings - Interface - Tabs' in section
-    for step in ('### 1.', '### 2.', '### 3.'):
-        assert step in section, f'{step} missing, the three gates need to be three steps'
+    for step in ('### 1.', '### 2.'):
+        assert step in section, f'{step} missing, the two gates need to be two steps'
+    assert '### 3.' not in section, 'there is no third gate, removal works once the mount and restart are set'
+    assert 'Settings - Interface - Tabs' not in section, 'nothing has to be switched on'
 
 
 def test_the_agent_can_be_asked_and_told():

@@ -4,11 +4,22 @@
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
             <input type="text" id="certsSearch" oninput="filterCerts()" placeholder="Search certificates..." class="input-field pl-9">
         </div>
+        <div id="certBulkWrap" class="flex gap-1 p-1 rounded-lg" style="display:none;background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="toggleCertBulkMode()" id="certBulkBtn" class="proto-btn text-xs px-3 py-1.5" title="Select certificates to remove"><i class="ph-bold ph-check-square"></i> Select</button>
+        </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
             <button onclick="refreshCertsTab()" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>
     </div>
     <div id="certsVerdict" class="sig-root mb-4" data-note="TLS certificates are managed automatically by Traefik's ACME resolver. Renew or revoke them via your Traefik config."></div>
+    <div id="certBulkBar" style="display:none;position:sticky;bottom:16px;z-index:50;margin-bottom:12px">
+        <div class="flex items-center gap-2 px-4 py-3 rounded-xl" style="background:var(--card);border:1px solid var(--blue);box-shadow:0 4px 24px rgba(0,0,0,0.3)">
+            <span id="certBulkCount" class="text-sm font-semibold" style="color:var(--text)">0 selected</span>
+            <div class="flex-1"></div>
+            <button onclick="selectUnusedCerts()" class="proto-btn text-xs px-3 py-1.5" style="border-radius:6px"><i class="ph-bold ph-plugs" style="margin-right:4px"></i>Select all unused</button>
+            <button onclick="bulkRemoveCerts()" class="proto-btn text-xs px-3 py-1.5" style="border-radius:6px;color:var(--red)"><i class="ph-bold ph-trash" style="margin-right:4px"></i>Remove</button>
+        </div>
+    </div>
     <div id="certsContent">
         <div class="text-center py-16" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>

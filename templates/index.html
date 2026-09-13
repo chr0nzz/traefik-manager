@@ -100,6 +100,11 @@
     <div style="max-width:380px;width:90%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:0 16px 48px rgba(0,0,0,0.4);">
         <p class="font-semibold text-sm mb-1" style="color:var(--text)" id="customConfirmTitle"></p>
         <p class="text-sm mb-6" style="color:var(--muted);line-height:1.6" id="customConfirmMsg"></p>
+        <div id="customConfirmNotes" style="display:none;margin:-12px 0 18px;gap:8px;flex-direction:column"></div>
+        <label id="customConfirmCheckWrap" style="display:none;margin:-6px 0 18px;align-items:flex-start;gap:8px;cursor:pointer">
+            <input type="checkbox" id="customConfirmCheck" class="rounded" style="accent-color:var(--red);margin-top:2px;flex-shrink:0">
+            <span class="text-xs" style="color:var(--text)" id="customConfirmCheckLabel"></span>
+        </label>
         <div id="customConfirmTypeWrap" style="display:none;margin:-12px 0 18px">
             <label class="text-xs block mb-1.5" style="color:var(--muted)">Type <button type="button" id="customConfirmWord" title="Click to copy" style="color:var(--red);letter-spacing:0.06em;font-weight:700;background:none;border:none;padding:0 2px;cursor:copy;font-size:inherit;font-family:inherit">DELETE</button> to confirm</label>
             <input type="text" id="customConfirmType" class="input-field" autocomplete="off" spellcheck="false" placeholder="DELETE">
@@ -352,7 +357,6 @@
 {% include 'modals/ip_diagnostic_modal.html' %}
 
 {% include 'modals/trusted_ips_modal.html' %}
-{% include 'modals/cert_delete_modal.html' %}
 
 {% include 'modals/detail_panels.html' %}
 

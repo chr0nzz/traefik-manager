@@ -51,7 +51,7 @@ def test_concurrent_settings_writes_all_survive(client):
     from core import settings as settings_mod
     jobs = [('/api/settings/theme', {'default_theme': 'dark'}),
             ('/api/settings/route-health', {'enabled': True, 'interval': 900}),
-            ('/api/settings/cert-delete', {'enabled': True})]
+            ('/api/settings/backup-retention', {'backup_keep_count': 3})]
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(jobs)) as ex:
             codes = [f.result() for f in [
@@ -61,7 +61,7 @@ def test_concurrent_settings_writes_all_survive(client):
 
         got  = settings_mod.load_settings()
         want = {'default_theme': 'dark', 'route_check_enabled': True,
-                'route_check_interval': 900, 'cert_delete_enabled': True}
+                'route_check_interval': 900, 'backup_keep_count': 3}
         lost = [k for k, v in want.items() if got.get(k) != v]
         assert not lost, (
             'these settings were written but did not survive: %s. save_settings rewrites the whole '
@@ -69,7 +69,7 @@ def test_concurrent_settings_writes_all_survive(client):
     finally:
         client.post('/api/settings/theme', json={'default_theme': 'system'}, headers=HDR)
         client.post('/api/settings/route-health', json={'enabled': True, 'interval': 300}, headers=HDR)
-        client.post('/api/settings/cert-delete', json={'enabled': False}, headers=HDR)
+        client.post('/api/settings/backup-retention', json={'backup_keep_count': 0}, headers=HDR)
 
 
 def test_one_save_does_not_revert_another(client):

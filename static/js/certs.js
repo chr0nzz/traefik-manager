@@ -69,8 +69,14 @@ function _certLeft(days) {
 
 function _certDeleteRail(c, main, resolver, sans) {
     if (!_certCanDelete() || resolver === 'file') return '';
+    if (_certBulk) {
+        return `<span class="tm-rail" onclick="event.stopPropagation()">`
+            + `<input type="checkbox" class="bulk-check" ${_certPicked.has(_certKey(c)) ? 'checked' : ''} `
+            + `onchange="toggleCertPick(${_jsArg(_certKey(c))})" `
+            + `style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer"></span>`;
+    }
     return `<span class="tm-rail" onclick="event.stopPropagation()">`
-        + `<button type="button" class="tm-btn" title="Remove from acme.json" onclick="event.stopPropagation();openCertDeleteModal(${_jsArg(main)},${_jsArg(resolver)},${_jsArg(c.source || '')},${_jsArg((sans || []).join(','))})">`
+        + `<button type="button" class="tm-btn" title="Remove from acme.json" onclick="event.stopPropagation();removeCerts([{main:${_jsArg(main)},resolver:${_jsArg(resolver)},source:${_jsArg(c.source || '')}}])">`
         + `<i class="ph-bold ph-trash"></i></button></span>`;
 }
 
@@ -83,13 +89,54 @@ function _certFlagText(c) {
     return ` · <span title="${_esc(why)}">${_esc(flags.join(' · '))}</span>`;
 }
 
-let _certManage = { available: false, enabled: false, reason: '' };
-let _certPending = null;
+let _certManage = { available: false, reason: '' };
 
-function _certCanDelete() { return !!(_certManage.available && _certManage.enabled); }
+function _certCanDelete() { return !!_certManage.available; }
+
+let _certBulk = false;
+const _certPicked = new Set();
+
+function toggleCertBulkMode() {
+    _certBulk = !_certBulk;
+    if (!_certBulk) _certPicked.clear();
+    document.getElementById('certBulkBtn')?.classList.toggle('active-http', _certBulk);
+    _paintCertBulkBar();
+    renderCertCards();
+}
+
+function toggleCertPick(key) {
+    if (_certPicked.has(key)) _certPicked.delete(key);
+    else _certPicked.add(key);
+    _paintCertBulkBar();
+}
+
+function selectUnusedCerts() {
+    _allCerts.forEach(c => {
+        const v = _certVerdict(c);
+        if (v && v.unused && c.resolver && c.resolver !== 'file') _certPicked.add(_certKey(c));
+    });
+    _paintCertBulkBar();
+    renderCertCards();
+}
+
+function _paintCertBulkBar() {
+    const bar = document.getElementById('certBulkBar');
+    if (bar) bar.style.display = (_certBulk && _certPicked.size) ? '' : 'none';
+    const n = document.getElementById('certBulkCount');
+    if (n) n.textContent = _certPicked.size + ' selected';
+}
+
+function bulkRemoveCerts() {
+    const rows = _allCerts.filter(c => _certPicked.has(_certKey(c)));
+    _certPicked.clear();
+    _certBulk = false;
+    document.getElementById('certBulkBtn')?.classList.remove('active-http');
+    _paintCertBulkBar();
+    return removeCerts(rows);
+}
 
 async function _loadCertManage() {
-    _certManage = { available: false, enabled: false, reason: '' };
+    _certManage = { available: false, reason: '' };
     try {
         const srv = _tlsSrv();
         const res = await fetch('/api/certs/manage' + (srv ? '?server=' + encodeURIComponent(srv) : ''));
@@ -97,46 +144,83 @@ async function _loadCertManage() {
     } catch (e) {}
 }
 
-function openCertDeleteModal(main, resolver, source, sans) {
-    _certPending = { main, resolver, source };
-    document.getElementById('certDelMain').textContent = main;
-    const extra = (sans || '').split(',').filter(d => d && d !== main);
-    document.getElementById('certDelSub').textContent =
-        resolver + (extra.length ? ' \u00b7 ' + extra.length + ' more domain' + (extra.length === 1 ? '' : 's') : '');
-    closeOtherPanels('certDeleteModal');
-    document.getElementById('certDeleteModal').classList.add('open');
-    document.getElementById('certDeleteBackdrop').classList.add('open');
-    if (!setDetailDockOpen(true)) document.body.style.overflow = 'hidden';
+async function _certsForRoutes(ids) {
+    const pool = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
+    const hosts = new Set();
+    (ids || []).forEach(id => {
+        const app = pool.find(a => String(a.id) === String(id));
+        if (!app || !app.tls) return;
+        [...String(app.rule || '').matchAll(/Host(?:SNI)?\(`([^`]+)`\)/g)].forEach(m => {
+            const h = m[1].trim().toLowerCase();
+            if (h && h !== '*') hosts.add(h);
+        });
+    });
+    if (!hosts.size) return [];
+    await Promise.all([_loadCertUsage(), _loadCertManage()]);
+    if (!_certCanDelete()) return [];
+    let certs = [];
+    try {
+        const res = await agentFetch('/api/traefik/certs');
+        certs = ((await res.json()) || {}).certs || [];
+    } catch (e) { return []; }
+    const stillUsed = new Set();
+    pool.forEach(a => {
+        if (!a.tls || ids.map(String).includes(String(a.id))) return;
+        [...String(a.rule || '').matchAll(/Host(?:SNI)?\(`([^`]+)`\)/g)]
+            .forEach(m => stillUsed.add(m[1].trim().toLowerCase()));
+    });
+    return certs.filter(c => c.resolver && c.resolver !== 'file'
+        && [c.main, ...(c.sans || [])].some(d => hosts.has(String(d).trim().toLowerCase()))
+        && ![c.main, ...(c.sans || [])].some(d => stillUsed.has(String(d).trim().toLowerCase())));
 }
 
-function closeCertDeleteModal() {
-    setDetailDockOpen(false);
-    document.getElementById('certDeleteModal')?.classList.remove('open');
-    document.getElementById('certDeleteBackdrop')?.classList.remove('open');
-    document.body.style.overflow = '';
-    _certPending = null;
+async function removeCerts(rows, opts) {
+    const list = (rows || []).filter(c => c && c.main);
+    if (!list.length) return;
+    if (opts && opts.confirmed) return _sendCertRemoval(list);
+    const names = list.map(c => c.main);
+    const shown = names.length <= 6 ? names.join(', ')
+                : names.slice(0, 6).join(', ') + ' and ' + (names.length - 6) + ' more';
+    const inUse = list.filter(c => {
+        const v = _certUsage.certs.find(u => _certKey(u) === _certKey(c));
+        return v && !v.unused;
+    }).length;
+
+    const notes = ['Traefik is restarted afterwards. It only reads acme.json at startup, so without that the change would be undone.'];
+    if (inUse) {
+        notes.push((inUse === 1 ? 'One of these still serves a route, so Traefik requests a new certificate for it'
+                    : inUse + ' of these still serve routes, so Traefik requests new certificates for them')
+                   + " on startup. Let's Encrypt allows five identical certificates per week.");
+    }
+    notes.push('A copy of acme.json is saved to your backups first, and can be restored from Settings, Backups, Certificates.');
+
+    const answer = await _confirmWith({
+        message: list.length === 1
+            ? 'Remove ' + shown + ' from acme.json?'
+            : 'Remove ' + list.length + ' certificates from acme.json: ' + shown + '?',
+        title: list.length === 1 ? 'Remove Certificate' : 'Remove Certificates',
+        okLabel: 'Remove', typeWord: 'DELETE', notes,
+    });
+    if (!answer.ok) return;
+    return _sendCertRemoval(list);
 }
 
-async function confirmCertDelete() {
-    if (!_certPending) return;
-    const btn = document.getElementById('certDelConfirmBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Removing...'; }
+async function _sendCertRemoval(list) {
     try {
         const res = await fetch('/api/certs/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
-            body: JSON.stringify({ server: _tlsSrv(), certs: [_certPending] }),
+            body: JSON.stringify({ server: _tlsSrv(), certs: list.map(c => ({ resolver: c.resolver, main: c.main })) }),
         });
         const body = await res.json().catch(() => ({}));
         if (!res.ok || !body.ok) {
             showToast(body.error || 'Could not remove the certificate', 'error');
             return;
         }
-        closeCertDeleteModal();
         if (!body.restarted) {
-            showToast('Certificate removed, but Traefik did not restart'
+            showToast('Removed ' + body.removed + ', but Traefik did not restart'
                 + (body.restart_error ? ': ' + body.restart_error : '')
-                + '. It will come back on the next restart until then.', 'error');
+                + '. The change is undone until it does.', 'error');
             refreshCertsTab();
             return;
         }
@@ -145,12 +229,10 @@ async function confirmCertDelete() {
             _waitForReconnect(false);
             return;
         }
-        showToast('Certificate removed, Traefik is restarting');
+        showToast('Removed ' + body.removed + ', Traefik is restarting');
         refreshCertsTab();
     } catch (e) {
         showToast(_netErrText(e, 'Could not remove the certificate'), 'error');
-    } finally {
-        if (btn) { btn.disabled = false; btn.textContent = 'Remove & restart'; }
     }
 }
 
@@ -254,6 +336,8 @@ async function refreshCertsTab() {
         renderCertsVerdict();
         renderCertCards();
         await Promise.all([_loadCertUsage(), _loadCertManage()]);
+        const bulkWrap = document.getElementById('certBulkWrap');
+        if (bulkWrap) bulkWrap.style.display = _certCanDelete() ? '' : 'none';
         renderCertsVerdict();
         renderCertCards();
     } catch(e) {
