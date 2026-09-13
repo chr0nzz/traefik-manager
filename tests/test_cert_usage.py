@@ -103,6 +103,37 @@ def test_a_passthrough_route_terminates_no_tls_here():
     assert cu.terminates_tls(apps[0]) is False
 
 
+def test_a_wildcard_request_does_not_make_every_sibling_look_used():
+    certs = [_cert('sonarr.example.com'), _cert('dead.example.com'),
+             _cert('example.com', ['*.example.com'])]
+    apps  = [_app('Host(`sonarr.example.com`)', tls_domains=[{'main': 'example.com', 'sans': ['*.example.com']}])]
+    out   = _verdict(certs, apps)
+    verdicts = {r['main']: r['unused'] for r in out['certs']}
+    assert verdicts['dead.example.com'] is True, \
+        'one route asking for a wildcard hid every dead per-subdomain certificate'
+    assert verdicts['sonarr.example.com'] is False, 'a route serves it'
+    assert verdicts['example.com'] is False, 'this is the certificate that was asked for'
+
+
+def test_a_wildcard_certificate_still_covers_what_a_route_serves():
+    certs = [_cert('example.com', ['*.example.com']), _cert('dead.example.com')]
+    apps  = [_app('Host(`app.example.com`)')]
+    verdicts = {r['main']: r['unused'] for r in _verdict(certs, apps)['certs']}
+    assert verdicts['example.com'] is False, 'app.example.com is served from it'
+    assert verdicts['dead.example.com'] is True
+
+
+def test_a_generated_default_certificate_is_matched_exactly_too():
+    configs = [{'tls': {'stores': {'default': {'defaultGeneratedCert': {
+        'resolver': 'le', 'domain': {'main': 'fallback.example.org', 'sans': ['*.example.org']}}}}}}]
+    certs = [_cert('fallback.example.org', ['*.example.org']), _cert('dead.example.org')]
+    verdicts = {r['main']: r['unused'] for r in
+                _verdict(certs, [_app('Host(`app.example.com`)')], configs=configs)['certs']}
+    assert verdicts['fallback.example.org'] is False
+    assert verdicts['dead.example.org'] is True, \
+        'the generated certificate names a wildcard, it does not serve every subdomain'
+
+
 def test_a_pre_issued_certificate_is_not_unused():
     apps = [_app('Host(`app.example.com`)', tls_domains=[{'main': '*.other.com', 'sans': ['other.com']}])]
     out  = _verdict([_cert('*.other.com')], apps)

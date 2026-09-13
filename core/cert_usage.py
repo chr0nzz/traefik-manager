@@ -75,9 +75,10 @@ def terminates_tls(app) -> bool:
 
 
 def served_names(apps) -> tuple:
-    names   = set()
-    opaque  = False
-    catch   = False
+    hosts     = set()
+    requested = set()
+    opaque    = False
+    catch     = False
     for app in apps or []:
         if not isinstance(app, dict):
             continue
@@ -91,15 +92,16 @@ def served_names(apps) -> tuple:
                 continue
             if clean == '*' and tls_on:
                 catch = True
-            names.add(clean)
+            hosts.add(clean)
         for entry in app.get('tlsDomains') or []:
             if not isinstance(entry, dict):
                 continue
-            names.add(normalize(entry.get('main')))
+            requested.add(normalize(entry.get('main')))
             for san in entry.get('sans') or []:
-                names.add(normalize(san))
-    names.discard('')
-    return names, opaque, catch
+                requested.add(normalize(san))
+    hosts.discard('')
+    requested.discard('')
+    return hosts, requested, opaque, catch
 
 
 def generated_cert_names(configs) -> set:
@@ -128,8 +130,8 @@ def is_expired(cert, now=None) -> bool:
 
 
 def analyze(certs, apps, configs=(), resolvers=None, routers_ok=True, configs_ok=True, now=None) -> dict:
-    names, opaque, catch = served_names(apps)
-    names |= generated_cert_names(configs)
+    hosts, requested, opaque, catch = served_names(apps)
+    requested |= generated_cert_names(configs)
 
     if not routers_ok:
         unused_block = UNKNOWN_NO_ROUTERS
@@ -157,8 +159,9 @@ def analyze(certs, apps, configs=(), resolvers=None, routers_ok=True, configs_ok
         elif not domains:
             row['why'] = 'this certificate names no domain'
         else:
-            row['unused'] = not any(router_pattern_covers(served, domain)
-                                    for served in names for domain in domains)
+            serves_a_host = any(router_pattern_covers(served, domain)
+                                for served in hosts for domain in domains)
+            row['unused'] = not (serves_a_host or (domains & requested))
         if cert.get('resolver') and cert.get('resolver') != FILE_RESOLVER:
             if known is None:
                 row['resolver_why'] = UNKNOWN_NO_STATIC

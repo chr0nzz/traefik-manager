@@ -14,12 +14,13 @@ function renderCertsVerdict() {
     if (!document.getElementById('certsVerdict')) return;
     if (!_allCerts.length) { _tvStrip('certsVerdict', null); return; }
     const now = Date.now();
-    let critical = 0, expiring = 0, next = null;
+    let critical = 0, expiring = 0, expired = 0, next = null;
     _allCerts.forEach(c => {
         if (!c.not_after) return;
         const exp = new Date(c.not_after);
         if (isNaN(exp)) return;
         const d = Math.ceil((exp - now) / 86400000);
+        if (d < 0) { expired++; return; }
         if (d < 7) critical++;
         else if (d < 30) expiring++;
         if (next === null || d < next) next = d;
@@ -27,18 +28,20 @@ function renderCertsVerdict() {
     const resolvers = new Set(_allCerts.map(c => c.resolver).filter(Boolean)).size;
     const flags = [{ cls: 'd-off', ic: 'ph-bold ph-shield-check', n: _allCerts.length,
                      label: _allCerts.length === 1 ? 'certificate' : 'certificates' }];
+    if (expired)  flags.push({ cls: 'd-bad', ic: 'ph-fill ph-x-circle', n: expired, label: 'expired' });
     if (critical) flags.push({ cls: 'd-bad', ic: 'ph-fill ph-warning-octagon', n: critical, label: 'under 7d' });
     if (expiring) flags.push({ cls: 'd-warn', ic: 'ph-fill ph-hourglass-high', n: expiring, label: 'under 30d' });
-    if (!critical && !expiring) flags.push({ cls: 'd-on', ic: 'ph-bold ph-check', n: '', label: 'none expiring soon' });
+    if (!expired && !critical && !expiring) flags.push({ cls: 'd-on', ic: 'ph-bold ph-check', n: '', label: 'none expiring soon' });
     if (resolvers > 1) flags.push({ cls: 'd-off', ic: 'ph-bold ph-certificate', n: resolvers, label: 'resolvers' });
     const unused   = _certUsage.certs.filter(u => u.unused).length;
     const orphaned = _certUsage.certs.filter(u => u.orphaned).length;
     if (unused)   flags.push({ cls: 'd-warn', ic: 'ph-bold ph-plugs', n: unused, label: 'unused' });
     if (orphaned) flags.push({ cls: 'd-warn', ic: 'ph-bold ph-link-break', n: orphaned, label: 'no resolver' });
     _tvStrip('certsVerdict', {
-        health: critical ? 'down' : expiring ? 'warn' : 'up',
-        ic: critical ? 'ph-fill ph-warning-octagon' : expiring ? 'ph-fill ph-hourglass-high' : 'ph-fill ph-check-circle',
-        txt: critical ? _sdNum(critical) + ' expiring within 7 days'
+        health: (expired || critical) ? 'down' : expiring ? 'warn' : 'up',
+        ic: (expired || critical) ? 'ph-fill ph-warning-octagon' : expiring ? 'ph-fill ph-hourglass-high' : 'ph-fill ph-check-circle',
+        txt: expired  ? _sdNum(expired) + (expired === 1 ? ' certificate has expired' : ' certificates have expired')
+           : critical ? _sdNum(critical) + ' expiring within 7 days'
            : expiring ? _sdNum(expiring) + ' expiring within 30 days'
            : 'All certificates healthy',
         flags,
@@ -57,6 +60,12 @@ function _certFlags(c) {
 }
 
 function _certFlagClass(c) { return _certFlags(c).length ? ' tm-warn' : ''; }
+
+function _certLeft(days) {
+    if (days > 0) return days + 'd left';
+    if (days === 0) return 'expires today';
+    return days === -1 ? 'expired yesterday' : 'expired ' + Math.abs(days) + 'd ago';
+}
 
 function _certDeleteRail(c, main, resolver, sans) {
     if (!_certCanDelete() || resolver === 'file') return '';
@@ -183,7 +192,7 @@ function renderCertCards() {
                 ${_certDeleteRail(cert, main, resolver, sans)}
             </div>
             ${vals ? `<div class="tm-vals">${vals}</div>` : ''}
-            <div class="tm-foot"><span class="tm-meta${_certFlagClass(cert)}">expires ${_esc(expiryStr)}${extra.length ? ` · ${extra.length + 1} domains` : ''}${_certFlagText(cert)}</span>${daysLeft !== null ? `<span class="tm-cf" style="color:${expiryColor}">${daysLeft}d left</span>` : ''}</div>
+            <div class="tm-foot"><span class="tm-meta${_certFlagClass(cert)}">${daysLeft !== null && daysLeft < 0 ? 'expired' : 'expires'} ${_esc(expiryStr)}${extra.length ? ` · ${extra.length + 1} domains` : ''}${_certFlagText(cert)}</span>${daysLeft !== null ? `<span class="tm-cf" style="color:${expiryColor}">${_certLeft(daysLeft)}</span>` : ''}</div>
         </div>`;
     }).join('');
     document.getElementById('certsContent').innerHTML =
