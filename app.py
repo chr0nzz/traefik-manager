@@ -64,6 +64,7 @@ from core import reachability as _reach
 from core import names as _naming
 from core import providers as _providers
 from core import cert_usage as _cert_usage
+from core import locks as _locks
 from core import acme_store as _acme
 from core import route_health as _rh
 from core import updates as _updates
@@ -5514,22 +5515,32 @@ def _sanitize_route_overrides(overrides):
 
 
 def _write_groups_config(data, server=''):
-    doc = _read_groups_file()
-    scope = {
-        'custom_groups':   list(data.get('custom_groups', []) or []),
-        'route_overrides': _sanitize_route_overrides(data.get('route_overrides', {})),
-    }
-    key = _groups_scope_key(server)
-    if key:
-        servers = dict(doc.get('servers') or {})
-        servers[key] = scope
-        doc['servers'] = servers
-    else:
-        doc['custom_groups'] = scope['custom_groups']
-        doc['route_overrides'] = scope['route_overrides']
-    _y = SafeYAML(typ='safe')
-    with open(GROUPS_CONFIG_FILE, 'w') as f:
-        _y.dump(doc, f)
+    with _locks.file_lock(GROUPS_CONFIG_FILE):
+        doc = _read_groups_file()
+        scope = {
+            'custom_groups':   list(data.get('custom_groups', []) or []),
+            'route_overrides': _sanitize_route_overrides(data.get('route_overrides', {})),
+        }
+        key = _groups_scope_key(server)
+        if key:
+            servers = dict(doc.get('servers') or {})
+            servers[key] = scope
+            doc['servers'] = servers
+        else:
+            doc['custom_groups'] = scope['custom_groups']
+            doc['route_overrides'] = scope['route_overrides']
+        _y = SafeYAML(typ='safe')
+        tmp = f"{GROUPS_CONFIG_FILE}.tmp.{os.getpid()}.{threading.get_ident()}"
+        try:
+            with open(tmp, 'w') as f:
+                _y.dump(doc, f)
+            _cfg._replace_or_copy(tmp, GROUPS_CONFIG_FILE)
+        finally:
+            if os.path.exists(tmp):
+                try:
+                    os.unlink(tmp)
+                except OSError:
+                    pass
 
 @app.route('/api/dashboard/config', methods=['GET'])
 @login_required

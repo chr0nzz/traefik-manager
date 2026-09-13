@@ -7,7 +7,7 @@ from io import StringIO
 
 from ruamel.yaml import YAML
 
-from core import env
+from core import env, locks
 from core.env import logger
 
 
@@ -54,7 +54,8 @@ def _replace_or_copy(tmp: str, path: str):
         if path not in _INPLACE_PATHS:
             _INPLACE_PATHS.add(path)
             logger.info(f"{path} is a bind-mounted file, writing through it in place")
-        shutil.copyfile(tmp, path)
+        with locks.file_lock(path):
+            shutil.copyfile(tmp, path)
 
 
 def safe_file_path(path: str) -> str:

@@ -1,8 +1,17 @@
+import functools
 import os
 import threading
 
-from core import agents_store, config, crypto, env
+from core import agents_store, config, crypto, env, locks
 from core.env import logger
+
+
+def serialized(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        with locks.file_lock(env.SETTINGS_PATH):
+            return fn(*args, **kwargs)
+    return wrapper
 
 OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'internal', 'certs', 'tls', 'crowdsec', 'plugins', 'logs', 'static']
 
@@ -433,6 +442,7 @@ def load_settings() -> dict:
         logger.warning(f"Could not load manager.yml, using defaults: {e}")
         return defaults
 
+@serialized
 def save_settings(domains, cert_resolver, traefik_api_url,
                   auth_enabled=True, auth_external_ack=None, password_hash='', visible_tabs=None,
                   must_change_password=None, setup_password_reset=None, setup_complete=None,

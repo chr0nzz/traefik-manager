@@ -43,11 +43,6 @@ def _geoip_reader():
         except Exception:
             logger.exception("GeoIP database open failed")
             return None
-        if st['reader'] is not None:
-            try:
-                st['reader'].close()
-            except Exception:
-                pass
         st.update({'reader': reader, 'path': path, 'mtime': mtime})
         _geoip_cache.clear()
         return reader
