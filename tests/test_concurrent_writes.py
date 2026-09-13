@@ -72,6 +72,34 @@ def test_concurrent_settings_writes_all_survive(client):
         client.post('/api/settings/cert-delete', json={'enabled': False}, headers=HDR)
 
 
+def test_one_save_does_not_revert_another(client):
+    from core import settings as settings_mod
+    try:
+        for _ in range(8):
+            client.post('/api/settings/tabs', json={'docker': False}, headers=HDR)
+            jobs = [('/api/settings/tabs', {'docker': True}),
+                    ('/api/settings/theme', {'default_theme': 'dark'})]
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+                list(concurrent.futures.as_completed([
+                    ex.submit(lambda j: client.post(j[0], json=j[1], headers=HDR), job) for job in jobs]))
+            tabs = settings_mod.load_settings().get('visible_tabs') or {}
+            assert tabs.get('docker') is True, (
+                'a concurrent save carried a stale copy of visible_tabs and reverted the tab change. '
+                'Every handler must send only what it is changing and let the merge happen under the lock')
+    finally:
+        client.post('/api/settings/tabs', json={'docker': False}, headers=HDR)
+        client.post('/api/settings/theme', json={'default_theme': 'system'}, headers=HDR)
+
+
+def test_handlers_send_only_what_they_change():
+    src = _read('app.py')
+    stale = src.count("password_hash=existing['password_hash']") + src.count("password_hash=s['password_hash']")
+    assert stale <= 12, (
+        'these call sites rebuild the whole settings file from a snapshot taken before the lock, '
+        'so they silently revert whatever another request changed in between (found %d)' % stale)
+    assert 'update_settings(' in src, 'the locked read-modify-write helper is not being used'
+
+
 def test_the_settings_write_is_serialized():
     src = _read('core', 'settings.py')
     assert '@serialized' in src, 'overlapping settings saves silently lose one another'

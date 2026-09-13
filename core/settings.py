@@ -13,6 +13,22 @@ def serialized(fn):
             return fn(*args, **kwargs)
     return wrapper
 
+
+CARRIED = ('domains', 'cert_resolver', 'traefik_api_url', 'auth_enabled', 'password_hash', 'visible_tabs')
+
+
+@serialized
+def save_settings(*args, **kwargs):
+    return _write_settings(*args, **kwargs)
+
+
+@serialized
+def update_settings(**changes):
+    current = load_settings()
+    fields  = {k: current.get(k) for k in CARRIED}
+    fields.update(changes)
+    return _write_settings(**fields)
+
 OPTIONAL_TABS = ['dashboard', 'routemap', 'docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'internal', 'certs', 'tls', 'crowdsec', 'plugins', 'logs', 'static']
 
 
@@ -442,8 +458,7 @@ def load_settings() -> dict:
         logger.warning(f"Could not load manager.yml, using defaults: {e}")
         return defaults
 
-@serialized
-def save_settings(domains, cert_resolver, traefik_api_url,
+def _write_settings(domains, cert_resolver, traefik_api_url,
                   auth_enabled=True, auth_external_ack=None, password_hash='', visible_tabs=None,
                   must_change_password=None, setup_password_reset=None, setup_complete=None,
                   otp_secret=None, otp_enabled=None,

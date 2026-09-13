@@ -27,4 +27,5 @@ def test_adopting_a_service_never_writes_config(app_module):
     for writer in ('save_config', 'write_config', 'atomic_write', 'create_backup'):
         assert writer not in body, \
             f'adopting must touch the ledger only, but the view calls {writer}'
-    assert 'save_settings' in body
+    assert 'update_settings' in body or 'save_settings' in body, \
+        'adopting has to record ownership in the settings ledger'
