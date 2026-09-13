@@ -149,6 +149,17 @@ Every removal is listed under **Settings - Backups - Certificates**, and restori
 
 This works on agents too. The agent needs its own read-write `acme.json` mount and its own `RESTART_METHOD`; the Certs tab reads that from the agent rather than assuming.
 
+## Filtering
+
+| Filter | Shows |
+|---|---|
+| Domain | Certificates covering that registered domain, wildcards included |
+| Unused | Certificates no router on this server serves |
+| No resolver | Certificates issued by a resolver that is gone from the static config |
+| Expiring | Expired, or expiring within 30 days |
+
+Search matches the main domain and every SAN. The domain list is built from the store and hides itself when everything sits under one domain.
+
 ## Enabling the tab
 
 ### During setup wizard

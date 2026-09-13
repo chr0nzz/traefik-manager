@@ -4,6 +4,15 @@
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
             <input type="text" id="certsSearch" oninput="filterCerts()" placeholder="Search certificates..." class="input-field pl-9">
         </div>
+        <select id="certDomainFilter" onchange="filterCerts()" class="input-field text-xs" style="width:auto;min-width:9rem">
+            <option value="">All domains</option>
+        </select>
+        <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
+            <button onclick="filterCertsBy('all')" id="certf-all" class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+            <button onclick="filterCertsBy('unused')" id="certf-unused" class="proto-btn text-xs px-3 py-1.5" title="Certificates no router serves">Unused</button>
+            <button onclick="filterCertsBy('orphaned')" id="certf-orphaned" class="proto-btn text-xs px-3 py-1.5" title="Issued by a resolver that is gone from the static config">No resolver</button>
+            <button onclick="filterCertsBy('expiring')" id="certf-expiring" class="proto-btn text-xs px-3 py-1.5" title="Expired, or expiring within 30 days">Expiring</button>
+        </div>
         <div id="certBulkWrap" class="flex gap-1 p-1 rounded-lg" style="display:none;background:var(--input-bg); border:1px solid var(--border)">
             <button onclick="toggleCertBulkMode()" id="certBulkBtn" class="proto-btn text-xs px-3 py-1.5" title="Bulk select">
                 <i class="ph-bold ph-selection"></i>

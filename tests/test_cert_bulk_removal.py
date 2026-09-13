@@ -52,7 +52,7 @@ def test_the_restart_screen_can_hand_back_instead_of_reloading():
     assert 'location.reload()' in body, 'the static config editor still needs the full reload'
     certs = _read('static', 'js', 'certs.js')
     send = certs[certs.index('async function _sendCertRemoval('):certs.index('async function _loadCertUsage(')]
-    assert '_waitForReconnect(false, back)' in send
+    assert '_waitForReconnect(false, () => back(body.removed))' in send
     assert 'refreshCertsTab()' in send, 'the tab still shows the certificate that was just removed otherwise'
     assert 'location.reload' not in send
 
@@ -90,3 +90,32 @@ def test_the_confirmation_reads_as_a_dialog_not_a_wall_of_capitals():
     assert 'checkboxAsync' in body and 'showCheck' in body
     assert "checkWrap.style.display !== 'none'" in body, \
         'a checkbox that never appeared must not come back checked from a previous dialog'
+
+
+def test_the_restart_screen_is_up_before_the_request_leaves():
+    js = _read('static', 'js', 'certs.js')
+    body = js[js.index('async function _sendCertRemoval('):js.index('async function _loadCertUsage(')]
+    assert body.index('_showRestartOverlay()') < body.index("fetch('/api/certs/delete'"), (
+        'the server restarts Traefik before it answers, so on a host behind that Traefik the reply '
+        'never arrives and an overlay shown afterwards is never shown at all')
+    assert 'res.status === 502 || res.status === 504' in body, \
+        'the proxy answers 502 while Traefik is coming back, that is the restart, not a failure'
+    catch = body[body.index('} catch (e) {'):]
+    assert '_waitForReconnect(true' in catch, \
+        'a request that dies with the connection means the restart happened, not that it failed'
+
+
+def test_the_certs_tab_can_be_filtered():
+    html = _read('templates', 'tabs', 'tab_certs.html')
+    assert 'id="certDomainFilter"' in html, 'a store with 145 certificates needs narrowing by domain'
+    for kind in ('all', 'unused', 'orphaned', 'expiring'):
+        assert 'id="certf-%s"' % kind in html
+    assert html.count('proto-btn active-http') >= 1, 'the filter group marks the active one like every other tab'
+    js = _read('static', 'js', 'certs.js')
+    for fn in ('function filterCertsBy(', 'function _certBaseDomain(', 'function _certMatchesFilter(',
+               'function _paintCertDomainFilter('):
+        assert fn in js, fn
+    body = js[js.index('function renderCertCards()'):]
+    body = body[:body.index('const cards = items.map')]
+    assert '_certMatchesFilter(cert)' in body and '_certBaseDomain(d) === domain' in body, \
+        'the filters have to actually narrow the rendered list'

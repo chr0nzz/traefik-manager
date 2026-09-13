@@ -7,7 +7,55 @@ function _certVerdict(c) {
     return _certUsage.certs.find(u => _certKey(u) === _certKey(c)) || null;
 }
 
+let _certFilter = 'all';
+
+function filterCertsBy(kind) {
+    _certFilter = kind || 'all';
+    ['all', 'unused', 'orphaned', 'expiring'].forEach(k => {
+        document.getElementById('certf-' + k)?.classList.toggle('active-http', k === _certFilter);
+    });
+    renderCertCards();
+}
+
 function filterCerts() { renderCertCards(); }
+
+function _certBaseDomain(name) {
+    const parts = String(name || '').replace(/^\*\./, '').toLowerCase().split('.').filter(Boolean);
+    return parts.length <= 2 ? parts.join('.') : parts.slice(-2).join('.');
+}
+
+function _certDomains(cert) {
+    return [cert.main, ...(cert.sans || [])].filter(Boolean);
+}
+
+function _paintCertDomainFilter() {
+    const sel = document.getElementById('certDomainFilter');
+    if (!sel) return;
+    const seen = new Map();
+    _allCerts.forEach(c => _certDomains(c).forEach(d => {
+        const base = _certBaseDomain(d);
+        if (base) seen.set(base, (seen.get(base) || 0) + 1);
+    }));
+    const names = [...seen.keys()].sort();
+    const keep  = names.includes(sel.value) ? sel.value : '';
+    sel.innerHTML = '<option value="">All domains</option>'
+        + names.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('');
+    sel.value = keep;
+    sel.style.display = names.length > 1 ? '' : 'none';
+}
+
+function _certMatchesFilter(cert) {
+    const v = _certVerdict(cert) || {};
+    if (_certFilter === 'unused')   return !!v.unused;
+    if (_certFilter === 'orphaned') return !!v.orphaned;
+    if (_certFilter === 'expiring') {
+        if (!cert.not_after) return false;
+        const exp = new Date(cert.not_after);
+        if (isNaN(exp)) return false;
+        return Math.ceil((exp - Date.now()) / 86400000) < 30;
+    }
+    return true;
+}
 
 
 function renderCertsVerdict() {
@@ -210,35 +258,51 @@ async function removeCerts(rows, opts) {
 }
 
 async function _sendCertRemoval(list) {
+    const canWait = typeof _showRestartOverlay === 'function'
+                 && typeof _hideRestartOverlay === 'function'
+                 && typeof _waitForReconnect === 'function';
+    const back = (removed) => {
+        const n = removed || list.length;
+        showToast('Removed ' + n + (n === 1 ? ' certificate' : ' certificates'));
+        refreshCertsTab();
+    };
+    const stop = (msg) => {
+        if (canWait) _hideRestartOverlay();
+        showToast(msg, 'error');
+    };
+    if (canWait) _showRestartOverlay();
     try {
         const res = await fetch('/api/certs/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
             body: JSON.stringify({ server: _tlsSrv(), certs: list.map(c => ({ resolver: c.resolver, main: c.main })) }),
         });
+        if (canWait && (res.status === 502 || res.status === 504)) {
+            _waitForReconnect(true, () => back());
+            return;
+        }
         const body = await res.json().catch(() => ({}));
         if (!res.ok || !body.ok) {
-            showToast(body.error || 'Could not remove the certificate', 'error');
+            stop(body.error || 'Could not remove the certificate');
             return;
         }
         if (!body.restarted) {
-            showToast('Removed ' + body.removed + ', but Traefik did not restart'
-                + (body.restart_error ? ': ' + body.restart_error : '')
-                + '. The change is undone until it does.', 'error');
+            stop('Removed ' + body.removed + ', but Traefik did not restart'
+                 + (body.restart_error ? ': ' + body.restart_error : '')
+                 + '. The change is undone until it does.');
             refreshCertsTab();
             return;
         }
-        const back = () => {
-            showToast('Removed ' + body.removed + (body.removed === 1 ? ' certificate' : ' certificates'));
-            refreshCertsTab();
-        };
-        if (typeof _showRestartOverlay === 'function' && typeof _waitForReconnect === 'function') {
-            _showRestartOverlay();
-            _waitForReconnect(false, back);
+        if (canWait) {
+            _waitForReconnect(false, () => back(body.removed));
             return;
         }
-        back();
+        back(body.removed);
     } catch (e) {
+        if (canWait) {
+            _waitForReconnect(true, () => back());
+            return;
+        }
         showToast(_netErrText(e, 'Could not remove the certificate'), 'error');
     }
 }
@@ -255,12 +319,17 @@ async function _loadCertUsage() {
 function renderCertCards() {
     const q   = (document.getElementById('certsSearch')?.value || '').toLowerCase();
     const now = Date.now();
+    const domain = document.getElementById('certDomainFilter')?.value || '';
     const items = _allCerts.filter(cert =>
-        !q || (cert.main||'').toLowerCase().includes(q) || (cert.sans||[]).some(d => d.toLowerCase().includes(q))
+        (!q || (cert.main||'').toLowerCase().includes(q) || (cert.sans||[]).some(d => d.toLowerCase().includes(q)))
+        && (!domain || _certDomains(cert).some(d => _certBaseDomain(d) === domain))
+        && _certMatchesFilter(cert)
     );
     if (items.length === 0) {
+        const narrowed = _certFilter !== 'all' || domain || q;
         document.getElementById('certsContent').innerHTML =
-            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No certificates match your search</div>`;
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">`
+            + (narrowed ? 'No certificates match these filters' : 'No certificates') + `</div>`;
         return;
     }
     const cards = items.map(cert => {
@@ -340,6 +409,7 @@ async function refreshCertsTab() {
 
         _allCerts = certs;
         setTabCount('certs', certs.length);
+        _paintCertDomainFilter();
         renderCertsVerdict();
         renderCertCards();
         await Promise.all([_loadCertUsage(), _loadCertManage()]);

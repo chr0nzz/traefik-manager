@@ -12,11 +12,12 @@ function el(id) {
                           toggle(c, on) { on ? this.o.classes.add(c) : this.o.classes.delete(c); } } };
 }
 
-function harness(deleteBody) {
+function harness(deleteBody, mode) {
     const nodes = {};
-    for (const id of ['certBulkBar', 'certBulkCount', 'certBulkBtn', 'certBulkWrap', 'certsContent'])
+    for (const id of ['certBulkBar', 'certBulkCount', 'certBulkBtn', 'certBulkWrap', 'certsContent',
+                      'certDomainFilter', 'certf-all', 'certf-unused', 'certf-orphaned', 'certf-expiring'])
         { nodes[id] = el(id); nodes[id].classList.o = nodes[id]; }
-    const log = { toasts: [], posted: null, reloaded: false, overlay: 'none', shown: false, refreshed: 0, rendered: 0 };
+    const log = { toasts: [], posted: null, reloaded: false, overlay: 'none', shown: false, waited: null, refreshed: 0, rendered: 0 };
     const ctx = {
         console,
         document: { getElementById: id => nodes[id] || null, querySelectorAll: () => [], body: { style: {} } },
@@ -32,13 +33,16 @@ function harness(deleteBody) {
         _showRestartOverlay: () => { log.overlay = 'flex'; log.shown = true; },
         _hideRestartOverlay: () => { log.overlay = 'none'; },
         _waitForReconnect: async (immediate, onBack) => {
+            log.waited = { immediate: !!immediate };
             if (typeof onBack === 'function') { log.overlay = 'none'; onBack(); }
             else log.reloaded = true;
         },
         fetch: async (url, opt) => {
             if (String(url).startsWith('/api/certs/delete')) {
                 log.posted = JSON.parse(opt.body);
-                return { ok: true, json: async () => deleteBody };
+                if (mode === 'connection-lost') throw new TypeError('Failed to fetch');
+                if (mode === 'bad-gateway') return { ok: false, status: 502, json: async () => ({}) };
+                return { ok: true, status: 200, json: async () => deleteBody };
             }
             return { ok: true, json: async () => ({}) };
         },
@@ -132,7 +136,95 @@ console.log('a restart that did not happen');
     check('the user is told the change is undone until Traefik restarts',
           log.toasts.length === 1 && log.toasts[0][1] === 'error' && /did not restart/.test(log.toasts[0][0]),
           JSON.stringify(log.toasts));
-    check('no restart screen is shown for a restart that never ran', log.shown === false);
+    check('the restart screen is taken back down when the server says it never restarted',
+          log.overlay === 'none');
+    check('no reconnect is waited on', log.waited === null);
+}
+
+console.log('the restart kills the reply on the way back');
+{
+    const { ctx, log } = harness(null, 'connection-lost');
+    await vm.runInContext(`(async () => {
+        toggleCertBulkMode();
+        toggleCertPick(_certKey(_allCerts[0]));
+        toggleCertPick(_certKey(_allCerts[1]));
+        await bulkRemoveCerts();
+    })()`, ctx);
+    check('the restart screen is up before the request leaves, so losing the reply cannot hide it',
+          log.shown === true);
+    check('a lost reply is treated as the restart it is, not an error toast',
+          !log.toasts.some(t => t[1] === 'error'), JSON.stringify(log.toasts));
+    check('it reconnects without waiting to watch the server go down first',
+          log.waited && log.waited.immediate === true, JSON.stringify(log.waited));
+    check('the tab comes back by itself', log.refreshed === 1 && log.reloaded === false);
+}
+
+console.log('the proxy answers 502 while Traefik comes back');
+{
+    const { ctx, log } = harness(null, 'bad-gateway');
+    await vm.runInContext(`(async () => {
+        toggleCertBulkMode();
+        toggleCertPick(_certKey(_allCerts[0]));
+        await bulkRemoveCerts();
+    })()`, ctx);
+    check('the restart screen stays up', log.shown === true && log.overlay === 'none');
+    check('no error toast', !log.toasts.some(t => t[1] === 'error'), JSON.stringify(log.toasts));
+    check('it reconnects immediately', log.waited && log.waited.immediate === true);
+}
+
+console.log('filtering a long list down');
+{
+    const { ctx, nodes } = harness({ ok: true, removed: 1, restarted: true });
+    nodes.certDomainFilter.options = [];
+    vm.runInContext(`
+        _allCerts = [
+            { resolver: 'le',  main: 'a.one.dev',  sans: ['www.one.dev'], not_after: '2099-01-01T00:00:00Z' },
+            { resolver: 'le',  main: 'b.one.dev',  sans: [],  not_after: '2099-01-01T00:00:00Z' },
+            { resolver: 'le',  main: 'c.two.app',  sans: [],  not_after: '2000-01-01T00:00:00Z' },
+            { resolver: 'old', main: 'd.four.net', sans: [],  not_after: '2099-01-01T00:00:00Z' },
+        ];
+        _certUsage = { certs: [
+            { resolver: 'le',  main: 'a.one.dev',  unused: true,  orphaned: false },
+            { resolver: 'le',  main: 'b.one.dev',  unused: false, orphaned: false },
+            { resolver: 'le',  main: 'c.two.app',  unused: false, orphaned: false },
+            { resolver: 'old', main: 'd.four.net', unused: false, orphaned: true },
+        ] };
+        var _shown = [];
+        renderCertCards = () => {
+            const q = '';
+            const domain = __nodes.certDomainFilter.value || '';
+            _shown = _allCerts.filter(c =>
+                (!domain || _certDomains(c).some(d => _certBaseDomain(d) === domain)) && _certMatchesFilter(c));
+        };
+    `, Object.assign(ctx, { __nodes: nodes }));
+
+    check('a wildcard and its bare domain group together', vm.runInContext("_certBaseDomain('*.one.dev')", ctx) === 'one.dev');
+    check('a deep subdomain groups under its registered domain',
+          vm.runInContext("_certBaseDomain('a.b.c.one.dev')", ctx) === 'one.dev');
+
+    vm.runInContext('filterCertsBy("all"); renderCertCards();', ctx);
+    check('all shows everything', vm.runInContext('_shown.length', ctx) === 4);
+    vm.runInContext('filterCertsBy("unused"); renderCertCards();', ctx);
+    check('unused shows only what no router serves', vm.runInContext('_shown.map(c => c.main).join()', ctx) === 'a.one.dev');
+    check('the unused button is the active one', nodes['certf-unused'].classes.has('active-http'));
+    check('and all is no longer active', !nodes['certf-all'].classes.has('active-http'));
+    vm.runInContext('filterCertsBy("orphaned"); renderCertCards();', ctx);
+    check('no resolver shows only the orphans', vm.runInContext('_shown.map(c => c.main).join()', ctx) === 'd.four.net');
+    vm.runInContext('filterCertsBy("expiring"); renderCertCards();', ctx);
+    check('expiring includes one already past its date', vm.runInContext('_shown.map(c => c.main).join()', ctx) === 'c.two.app');
+    vm.runInContext('filterCertsBy("all");', ctx);
+    nodes.certDomainFilter.value = 'one.dev';
+    vm.runInContext('renderCertCards();', ctx);
+    check('a domain narrows to that domain only', vm.runInContext('_shown.map(c => c.main).join()', ctx) === 'a.one.dev,b.one.dev');
+    nodes.certDomainFilter.value = '';
+
+    vm.runInContext('_paintCertDomainFilter();', ctx);
+    check('the domain list is built from the store', /one\.dev/.test(nodes.certDomainFilter.innerHTML)
+          && /four\.net/.test(nodes.certDomainFilter.innerHTML), nodes.certDomainFilter.innerHTML);
+    check('it hides itself when there is only one domain to pick', (() => {
+        vm.runInContext("_allCerts = [{ resolver: 'le', main: 'a.one.dev', sans: [] }]; _paintCertDomainFilter();", ctx);
+        return nodes.certDomainFilter.style.display === 'none';
+    })());
 }
 
 console.log(fails ? `\n${fails} failed` : '\nall passed');
