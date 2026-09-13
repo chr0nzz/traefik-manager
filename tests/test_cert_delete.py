@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import stat
 
 import pytest
@@ -166,7 +167,16 @@ def test_the_confirm_panel_reuses_the_existing_styling():
     assert 'class="detail-backdrop"' in html and 'detail-panel detail-panel-form' in html
     assert 'detail-panel-foot' in html
     assert 'btn-secondary' in html and 'btn-primary' in html
+    assert 'class="btn-primary btn-red"' in html, \
+        'a solid red fill is louder than anything else in the app, use the tinted variant'
+    assert 'style="background:var(--red)' not in html, 'colour belongs in the stylesheet'
     assert 'restarted' in html.lower(), 'the restart is the part people need warning about'
+    js = _read('static', 'js', 'certs.js')
+    opener = js[js.index('function openCertDeleteModal('):js.index('function closeCertDeleteModal(')]
+    assert 'setDetailDockOpen(true)' in opener, \
+        'without docking the panel floats over the page in Fluid mode instead of shifting it'
+    closer = js[js.index('function closeCertDeleteModal('):js.index('async function confirmCertDelete(')]
+    assert 'setDetailDockOpen(false)' in closer and "document.body.style.overflow = ''" in closer
     assert '5 identical certificates per week' in html, 'deleting can burn the rate limit'
     idx = _read('templates', 'index.html')
     assert "modals/cert_delete_modal.html" in idx
@@ -193,6 +203,18 @@ def test_a_certificate_backup_can_be_found_and_restored(client, store, monkeypat
     assert stat.S_IMODE(os.stat(str(store)).st_mode) & 0o077 == 0
 
 
+def test_a_restart_shows_the_waiting_screen_not_a_toast():
+    js = _read('static', 'js', 'certs.js')
+    body = js[js.index('async function confirmCertDelete('):js.index('async function _loadCertUsage(')]
+    assert '_showRestartOverlay()' in body and '_waitForReconnect(' in body, (
+        'Traefik Manager sits behind Traefik, so restarting it takes the interface down. '
+        'A toast leaves the user looking at a dead page')
+    settings = _read('static', 'js', 'settings-modal.js')
+    restore = settings[settings.index('async function restoreBackup('):settings.index('async function deleteBackup(')]
+    assert '_showRestartOverlay()' in restore, 'restoring a certificate store restarts Traefik too'
+    assert 'data.restarted' in restore, 'a config restore does not restart anything, keep its toast'
+
+
 def test_restoring_a_certificate_store_restarts_traefik():
     src = _read('app.py')
     body = src[src.index('def api_restore(filename):'):src.index('@app.route(\'/api/backup/create\'')]
@@ -217,6 +239,25 @@ def test_the_backups_pane_has_somewhere_to_show_them():
     assert "b.kind === 'certs'" in js
     assert "certTab.style.display = certs.length ? '' : 'none'" in js, \
         'an empty tab on every install would be noise'
+
+
+def test_the_docs_say_how_to_turn_it_on():
+    doc = _read('docs', 'tab-certs.md')
+    section = doc[doc.index('## Removing a certificate'):doc.index('## Enabling the tab')]
+    assert 'RESTART_METHOD=proxy' in section and 'RESTART_METHOD=poison-pill' in section, \
+        'pointing at another page is not instructions, the steps have to be runnable from here'
+    assert ':::tabs' in section, 'every other mount in these docs shows Docker and Linux side by side'
+    assert 'tecnativa/docker-socket-proxy' in section, \
+        'naming the proxy method without the sidecar leaves people with nothing to run'
+    assert 'CONTAINERS: 1' in section and 'internal: true' in section
+    assert 'Already using the Static Config editor' in section, \
+        'most people already have a restart method and only need the mount change'
+    assert re.search(r'- \S*acme\.json:/app/acme\.json:rw', section), \
+        'say :rw rather than dropping :ro, so the change reads as deliberate'
+    assert ':rw,z' in section, 'Podman needs the SELinux flag kept alongside the mode'
+    assert 'Settings - Interface - Tabs' in section
+    for step in ('### 1.', '### 2.', '### 3.'):
+        assert step in section, f'{step} missing, the three gates need to be three steps'
 
 
 def test_the_agent_can_be_asked_and_told():

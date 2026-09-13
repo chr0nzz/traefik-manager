@@ -26,13 +26,122 @@ A wildcard certificate counts as used when a router serves any name it covers, `
 
 ## Removing a certificate
 
-Off by default and read-only until you opt in. Three things have to be true before the Certs tab offers a remove button:
+Off by default and read-only until you opt in. Nothing appears in the interface until all three steps below are done.
 
-| | |
-|---|---|
-| `acme.json` is mounted **read-write** | Drop the `:ro` from the volume |
-| A restart method is configured | `RESTART_METHOD`, see [Static config](static.md). Traefik reads `acme.json` only at startup, so without a restart the change is undone the next time Traefik saves |
-| **Settings - Interface - Tabs - Remove certificates from acme.json** is on | The row only appears once the two above are met |
+### 1. Mount `acme.json` read-write
+
+Change the `:ro` to `:rw`. This is the only change to the volume.
+
+:::tabs
+== Docker
+```yaml
+volumes:
+  - /path/to/traefik/acme.json:/app/acme.json:rw     # was :ro
+```
+
+== Podman
+```yaml
+volumes:
+  - /path/to/traefik/acme.json:/app/acme.json:rw,z   # was :ro,z
+```
+
+== Linux (systemd)
+```ini
+Environment=ACME_JSON_PATH=/etc/traefik/acme.json
+```
+
+The `traefik-manager` service user needs write access to the file:
+
+```bash
+setfacl -m u:traefik-manager:rw /etc/traefik/acme.json
+```
+:::
+
+### 2. Set a restart method
+
+::: tip Already using the Static Config editor?
+Then you already have a restart method and this step is done. Step 1 is the only change you need.
+:::
+
+Traefik reads `acme.json` once at startup and rewrites the whole file whenever it saves, so a removal without a restart is undone the next time that happens. Traefik Manager will not offer the button without one.
+
+:::tabs
+== Socket proxy (recommended)
+
+Traefik Manager talks to a small proxy that only exposes container restart, so it never sees the full Docker socket. Add both services:
+
+```yaml
+services:
+  traefik-manager:
+    environment:
+      - RESTART_METHOD=proxy
+      - TRAEFIK_CONTAINER=traefik
+      - DOCKER_HOST=tcp://socket-proxy:2375
+    networks:
+      - traefik-net
+      - socket-proxy-net
+
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+      POST: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - socket-proxy-net
+
+networks:
+  socket-proxy-net:
+    internal: true
+```
+
+`CONTAINERS: 1` and `POST: 1` are the only permissions needed. The `internal: true` network keeps the proxy off the internet.
+
+== Poison pill
+
+No socket access at all. Traefik Manager touches a file on a shared volume and Traefik restarts itself.
+
+```yaml
+services:
+  traefik-manager:
+    environment:
+      - RESTART_METHOD=poison-pill
+      - SIGNAL_FILE_PATH=/signals/restart.sig
+    volumes:
+      - traefik-signals:/signals
+
+volumes:
+  traefik-signals:
+```
+
+Traefik needs the matching healthcheck and the same volume, see [Static config](static.md#restart-methods).
+
+== Direct socket
+
+Simplest, and the broadest access: Traefik Manager can reach any container on the host.
+
+```yaml
+services:
+  traefik-manager:
+    environment:
+      - RESTART_METHOD=socket
+      - TRAEFIK_CONTAINER=traefik
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+```
+:::
+
+The trade-offs are covered in full under [Static config](static.md#restart-methods).
+
+### 3. Switch it on
+
+**Settings - Interface - Tabs - Remove certificates from acme.json**.
+
+That row is hidden until steps 1 and 2 are done, so if you cannot see it, one of them is missing. The Certs tab then shows a remove button on each ACME certificate.
+
+### Removing
 
 Removing takes a timestamped backup of `acme.json` first, edits the file in place so a bind mount stays attached, keeps the mode at `600`, leaves the ACME account untouched, and restarts Traefik.
 
@@ -56,7 +165,7 @@ Go to **Settings - System Monitoring - Tab Visibility** and enable Certs.
 
 ### ACME certificates (acme.json)
 
-Point traefik-manager at your `acme.json` with the `ACME_JSON_PATH` environment variable (default: `/app/acme.json`), or with the acme.json Path field under **Settings - System Monitoring - File Paths**, which wins over the env var. Mount it read-only (`:ro`) to view certificates; read-write only if you want the Certs tab to remove them, which stays switched off until you enable it in Settings.
+Point traefik-manager at your `acme.json` with the `ACME_JSON_PATH` environment variable (default: `/app/acme.json`), or with the acme.json Path field under **Settings - System Monitoring - File Paths**, which wins over the env var. Mount it read-only (`:ro`) to view certificates and see which of them nothing uses. To also remove them, follow [Removing a certificate](#removing-a-certificate) above, which needs a read-write mount and stays switched off until you enable it.
 
 :::tabs
 == Docker / Podman

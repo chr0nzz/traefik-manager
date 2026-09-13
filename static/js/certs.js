@@ -106,11 +106,14 @@ function openCertDeleteModal(main, resolver, source, sans) {
     closeOtherPanels('certDeleteModal');
     document.getElementById('certDeleteModal').classList.add('open');
     document.getElementById('certDeleteBackdrop').classList.add('open');
+    if (!setDetailDockOpen(true)) document.body.style.overflow = 'hidden';
 }
 
 function closeCertDeleteModal() {
+    setDetailDockOpen(false);
     document.getElementById('certDeleteModal')?.classList.remove('open');
     document.getElementById('certDeleteBackdrop')?.classList.remove('open');
+    document.body.style.overflow = '';
     _certPending = null;
 }
 
@@ -130,10 +133,19 @@ async function confirmCertDelete() {
             return;
         }
         closeCertDeleteModal();
-        showToast(body.restarted
-            ? 'Certificate removed, Traefik is restarting'
-            : 'Certificate removed, but Traefik did not restart' + (body.restart_error ? ': ' + body.restart_error : ''),
-            body.restarted ? 'success' : 'error');
+        if (!body.restarted) {
+            showToast('Certificate removed, but Traefik did not restart'
+                + (body.restart_error ? ': ' + body.restart_error : '')
+                + '. It will come back on the next restart until then.', 'error');
+            refreshCertsTab();
+            return;
+        }
+        if (typeof _showRestartOverlay === 'function' && typeof _waitForReconnect === 'function') {
+            _showRestartOverlay();
+            _waitForReconnect(false);
+            return;
+        }
+        showToast('Certificate removed, Traefik is restarting');
         refreshCertsTab();
     } catch (e) {
         showToast(_netErrText(e, 'Could not remove the certificate'), 'error');

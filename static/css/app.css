@@ -536,6 +536,12 @@ select.input-field:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 .btn-primary:hover { background: color-mix(in srgb, var(--blue) 22%, transparent); border-color: color-mix(in srgb, var(--blue) 45%, transparent); }
 .btn-primary:active { transform: scale(0.97); }
+.btn-primary.btn-red {
+    background: color-mix(in srgb, var(--red) 14%, transparent);
+    color: var(--red);
+    border-color: color-mix(in srgb, var(--red) 30%, transparent);
+}
+.btn-primary.btn-red:hover { background: color-mix(in srgb, var(--red) 22%, transparent); border-color: color-mix(in srgb, var(--red) 45%, transparent); }
 
 .btn-secondary {
     background: var(--btn-secondary-bg);

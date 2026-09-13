@@ -1585,6 +1585,12 @@ async function restoreBackup(name) {
         if (!res.ok) { showToast(await _errText(res, 'Restore failed'), 'error'); return; }
         const data = await res.json();
         if (data.success || data.ok) {
+            if (data.restarted && typeof _showRestartOverlay === 'function' && typeof _waitForReconnect === 'function') {
+                closeSettingsModal();
+                _showRestartOverlay();
+                _waitForReconnect(false);
+                return;
+            }
             showToast('Backup restored successfully!', 'success');
             closeSettingsModal();
             setTimeout(() => location.reload(), 1500);
