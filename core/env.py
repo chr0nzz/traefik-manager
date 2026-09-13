@@ -48,13 +48,35 @@ SECRET_KEY_PATH    = os.path.join(CONFIG_DIR, '.secret_key')
 
 os.makedirs(GROUPS_CACHE_DIR, exist_ok=True)
 
+OWN_STATE_NAMES = ('manager.yml', 'notifications.yml', 'agents.yml', 'templates.yml', 'dashboard.yml')
+OWN_STATE_SUBDIRS = ('cache', 'geoip')
+
+
+def own_state(settings_path=None, backup_dir=None):
+    settings = os.path.abspath(settings_path or SETTINGS_PATH)
+    base     = os.path.dirname(settings)
+    files    = {settings} | {os.path.join(base, n) for n in OWN_STATE_NAMES}
+    dirs     = {backup_dir or BACKUP_DIR} | {os.path.join(base, d) for d in OWN_STATE_SUBDIRS}
+    return {os.path.realpath(f) for f in files}, {os.path.realpath(d) for d in dirs if d}
+
+
+def is_own_state(path, settings_path=None, backup_dir=None) -> bool:
+    files, dirs = own_state(settings_path, backup_dir)
+    real = os.path.realpath(path)
+    return real in files or any(real.startswith(d + os.sep) for d in dirs)
+
+
+def scan_config_dir(config_dir, settings_path=None, backup_dir=None) -> list:
+    import glob as _glob
+    found = _glob.glob(os.path.join(config_dir, '**', '*.yml'), recursive=True)
+    found += _glob.glob(os.path.join(config_dir, '**', '*.yaml'), recursive=True)
+    return sorted(p for p in found if not is_own_state(p, settings_path, backup_dir))
+
+
 _config_dir = os.environ.get('CONFIG_DIR', '').strip()
 ACTIVE_CONFIG_DIR = _config_dir
 if _config_dir:
-    import glob as _glob
-    _ymls  = _glob.glob(os.path.join(_config_dir, '**', '*.yml'),  recursive=True)
-    _yamls = _glob.glob(os.path.join(_config_dir, '**', '*.yaml'), recursive=True)
-    CONFIG_PATHS = sorted(_ymls + _yamls) or [os.path.join(_config_dir, 'dynamic.yml')]
+    CONFIG_PATHS = scan_config_dir(_config_dir) or [os.path.join(_config_dir, 'dynamic.yml')]
 else:
     _raw_paths = os.environ.get('CONFIG_PATHS', '').strip()
     if _raw_paths:

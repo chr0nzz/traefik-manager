@@ -115,6 +115,8 @@ Traefik Manager backs up:
 - All dynamic config files (`CONFIG_PATH`, `CONFIG_PATHS`, or `CONFIG_DIR`) - copied into `dynamic/`
 - The static config, if configured (`static_config_path` in `manager.yml`, or `STATIC_CONFIG_PATH`) - copied into `static/`
 
+Traefik Manager's own files are never pushed and are never read as Traefik config, even when `CONFIG_DIR` points at the folder that holds them: `manager.yml`, `agents.yml`, `notifications.yml`, `dashboard.yml`, `templates.yml`, the backup directory and the git clone inside it.
+
 The repository is organised into subfolders:
 
 ```

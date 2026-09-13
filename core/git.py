@@ -149,6 +149,9 @@ def _git_push_configs(action='backup', custom_message=None):
             os.makedirs(dyn_dir,    exist_ok=True)
             os.makedirs(static_dir, exist_ok=True)
             for p in env.CONFIG_PATHS:
+                if env.is_own_state(p):
+                    logger.warning(f"Not pushing {os.path.basename(p)}: it holds Traefik Manager's own settings, not Traefik config")
+                    continue
                 if os.path.exists(p):
                     shutil.copy2(p, os.path.join(dyn_dir, os.path.basename(p)))
             sp = settings_mod._get_static_config_path()
