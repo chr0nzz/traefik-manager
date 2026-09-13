@@ -114,6 +114,12 @@ from `manager.yml` and restart.
 | `INACTIVITY_TIMEOUT_MINUTES` | `120` | - | Log out after this many minutes of inactivity |
 | `OTP_ENCRYPTION_KEY` | _(auto-generated)_ | - | Fernet key for every secret stored encrypted in `manager.yml` |
 | `PROXY_FIX_HOPS` | `1` | - | Number of trusted proxy hops in front of Traefik Manager for `X-Forwarded-For` |
+| `WEB_CONCURRENCY` | `2` | - | Worker processes. Each costs about 50 MB. Raise for more fault isolation, not for speed |
+| `GUNICORN_THREADS` | `4` | - | Requests served at once per worker. Traefik Manager spends most of its time waiting on Traefik and on agents, so threads are what make pages load in parallel. `WEB_CONCURRENCY x GUNICORN_THREADS` is the total |
+| `GUNICORN_TIMEOUT` | `60` | - | Seconds before the supervisor restarts a worker that has stopped responding. A restart drops every request that worker is handling, so leave room above the 15 second agent timeout |
+| `GUNICORN_KEEPALIVE` | `5` | - | Seconds an idle connection is held open |
+| `GUNICORN_WORKER_CONNECTIONS` | `200` | - | Connections a worker will accept before new ones wait in the kernel backlog |
+| `GUNICORN_LOG_LEVEL` | `info` | - | Gunicorn's own log level |
 | `BASE_PATH` | _(none)_ | - | Serve Traefik Manager under a sub path, for example `/traefik-manager` |
 | `LOG_LEVEL` | `INFO` | - | Python log level: `DEBUG`, `INFO`, `WARNING`, `ERROR` |
 
