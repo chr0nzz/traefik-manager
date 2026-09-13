@@ -100,9 +100,11 @@ To enable the optional tabs, add path mappings in the Unraid template:
 
 | Tab | Host path | Container path | Mode |
 |---|---|---|---|
-| Certs | `/mnt/user/appdata/traefik/acme.json` | `/app/acme.json` | Read-only |
+| Certs | `/mnt/user/appdata/traefik/acme.json` | `/app/acme.json` | Read-only, or read-write to remove certificates |
 | Plugins + Static Config | `/mnt/user/appdata/traefik/traefik.yml` | `/app/traefik.yml` | Read-write |
 | Logs | `/mnt/user/appdata/traefik/logs/access.log` | `/app/logs/access.log` | Read-only |
+
+Read-only `acme.json` shows your certificates and marks the ones nothing uses. To also remove them from the Certs tab, set that mapping to read-write, pick a **Restart Method**, and switch removal on under **Settings - Interface - Tabs**. See [Certs tab](tab-certs.md#removing-a-certificate).
 
 For `traefik.yml` also set **Static Config Path** (`STATIC_CONFIG_PATH`) to `/app/traefik.yml` - unlike acme.json and access.log, that path has no built-in default. A read-only mount still lists plugins, but saving the static config or installing a plugin fails with a write error.
 

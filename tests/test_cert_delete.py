@@ -172,6 +172,53 @@ def test_the_confirm_panel_reuses_the_existing_styling():
     assert "modals/cert_delete_modal.html" in idx
 
 
+def test_a_certificate_backup_can_be_found_and_restored(client, store, monkeypatch):
+    import app as app_mod
+    from core import env as env_mod
+    from core import settings as settings_mod
+    monkeypatch.setattr(settings_mod, 'get_acme_json_paths', lambda: [str(store)])
+    monkeypatch.setattr(env_mod, 'BACKUP_DIR', app_mod.BACKUP_DIR)
+    _removed, backup = acme_store.remove(str(store), [('letsencrypt', 'drop.example.com')])
+    name = os.path.basename(backup)
+
+    listed = {b['name']: b['kind'] for b in client.get('/api/backups').get_json()}
+    assert listed.get(name) == 'certs', \
+        'a certificate backup listed as a route backup sends people to the wrong restore button'
+
+    res = client.post('/api/restore/' + name, headers=HDR)
+    assert res.status_code == 200, res.get_json()
+    after = json.loads(store.read_text())
+    assert [c['domain']['main'] for c in after['letsencrypt']['Certificates']] == \
+        ['keep.example.com', 'drop.example.com'], 'restoring must bring the removed certificate back'
+    assert stat.S_IMODE(os.stat(str(store)).st_mode) & 0o077 == 0
+
+
+def test_restoring_a_certificate_store_restarts_traefik():
+    src = _read('app.py')
+    body = src[src.index('def api_restore(filename):'):src.index('@app.route(\'/api/backup/create\'')]
+    assert 'trigger_traefik_restart()' in body, \
+        'Traefik reads acme.json once at startup, so a restore without a restart is undone'
+    assert '_acme.write_bytes_in_place' in body, \
+        'copying over a bind mounted acme.json detaches it from Traefik'
+    assert '_host_cert_manage_state()' in body, 'a read only mount must refuse rather than half work'
+
+
+def test_a_json_backup_is_accepted_by_the_validator():
+    src = _read('app.py')
+    line = [ln for ln in src.splitlines() if ln.startswith('_BACKUP_RE')][0]
+    assert 'json' in line, 'acme.json backups were listed but could never be restored'
+    assert 'yml' in line and 'yaml' in line, 'config backups must still restore'
+
+
+def test_the_backups_pane_has_somewhere_to_show_them():
+    html = _read('templates', 'modals', 'settings_modal.html')
+    assert 'id="backup-tab-certs"' in html and 'id="sm-cert-backups-list"' in html
+    js = _read('static', 'js', 'settings-modal.js')
+    assert "b.kind === 'certs'" in js
+    assert "certTab.style.display = certs.length ? '' : 'none'" in js, \
+        'an empty tab on every install would be noise'
+
+
 def test_the_agent_can_be_asked_and_told():
     go = _read('agent', 'handlers.go')
     assert 'func (a *App) certsStatusHandler(' in go and 'func (a *App) certsDeleteHandler(' in go

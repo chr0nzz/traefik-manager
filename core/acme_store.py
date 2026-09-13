@@ -66,7 +66,10 @@ def backup(path):
 
 
 def write_in_place(path, data):
-    body = json.dumps(data, indent=2).encode('utf-8')
+    return write_bytes_in_place(path, json.dumps(data, indent=2).encode('utf-8'))
+
+
+def write_bytes_in_place(path, body):
     try:
         before = os.stat(path)
     except OSError:

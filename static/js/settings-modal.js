@@ -1514,12 +1514,16 @@ async function loadBackups() {
         const kindOf  = b => b.kind || (/^traefik\.ya?ml\.\d{8}_\d{6}\.bak$/.test(b.name) ? 'static' : 'routes');
         const backups = rawArr.map(b => ({ ...b, kind: kindOf(b), modified: b.modified || b.date || '',
             restoreBlocked: isAgent && oldAgent && kindOf(b) === 'static' }));
-        const routes  = backups.filter(b => b.kind !== 'static');
+        const routes  = backups.filter(b => b.kind !== 'static' && b.kind !== 'certs');
         const statics = backups.filter(b => b.kind === 'static');
+        const certs   = backups.filter(b => b.kind === 'certs');
         const hasStaticSide = !isAgent || !!raw.static_configured || statics.length > 0;
         if (staticTab) staticTab.style.display = hasStaticSide ? '' : 'none';
         _renderBackupList('sm-backups-list', routes);
         _renderBackupList('sm-static-backups-list', statics);
+        _renderBackupList('sm-cert-backups-list', certs);
+        const certTab = document.getElementById('backup-tab-certs');
+        if (certTab) certTab.style.display = certs.length ? '' : 'none';
         if (isAgent && !hasStaticSide && document.getElementById('backup-sub-static')?.style.display !== 'none') {
             switchBackupTab('routes', document.getElementById('backup-tab-routes'));
         }

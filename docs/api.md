@@ -440,6 +440,10 @@ List TLS certificates from ACME (`acme.json`) and from `tls.certificates` entrie
 
 When nothing could be read, the response also carries an `error` string.
 
+### Restoring a certificate store
+
+`POST /api/restore/<filename>` also accepts an `acme.json` backup, which `GET /api/backups` reports with `kind: certs`. It writes the file back in place, keeps mode `600` and restarts Traefik, and answers `403` when the mount is read only or no restart method is set.
+
 ### `GET /api/certs/manage`
 
 Whether this server can remove certificates from `acme.json`. Pass `?server=<agent-id>` for an agent.

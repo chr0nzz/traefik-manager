@@ -79,7 +79,7 @@ editable directly from the route form.
 
 ### The Certs tab says permission denied on acme.json
 
-Traefik Manager only reads `acme.json` and never writes to it, so mount it `:ro`. Under Docker the container runs as root, so Traefik's required mode 600 reads fine and a permission error there means you gave the container a non-root `user:`. On a native Linux install the `traefik-manager` service user needs read access:
+Traefik Manager only reads `acme.json` unless you switch on certificate removal, so mount it `:ro` unless you want that. Under Docker the container runs as root, so Traefik's required mode 600 reads fine and a permission error there means you gave the container a non-root `user:`. On a native Linux install the `traefik-manager` service user needs read access:
 
 ```bash
 chmod o+r /etc/traefik/acme.json
@@ -178,8 +178,9 @@ It writes to a fixed set of paths, and backs up every config file before it touc
 | `BACKUP_DIR` (`/app/backups`) | A timestamped copy of each config file before every write. `BACKUP_KEEP_COUNT` prunes old ones |
 | The `SETTINGS_PATH` directory (`/app/config`) | `manager.yml` plus `agents.yml`, `templates.yml`, `notifications.yml`, `dashboard.yml`, `.secret_key`, `.otp_key`, a `cache/` directory, and a `geoip/` directory with a `.geoip.lock` beside it when IP geolocation is on |
 | `STATIC_CONFIG_PATH` | Your `traefik.yml`, only when it is mounted read-write and only when you save in the Static Config editor |
+| `ACME_JSON_PATH` | Your `acme.json`, only when it is mounted read-write, a restart method is set, and you switch removal on in Settings, and only when you remove a certificate or restore one |
 
-`acme.json` and the access log are read-only. Leave `STATIC_CONFIG_PATH` unset and Traefik's own config file is never opened for writing.
+The access log is only ever read. Leave `STATIC_CONFIG_PATH` unset and Traefik's own config file is never opened for writing; mount `acme.json` `:ro` and the certificate store never is either.
 
 ### How do I set the theme without opening the UI?
 

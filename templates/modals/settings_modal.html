@@ -804,6 +804,9 @@
                             <button class="auth-sub-tab" id="backup-tab-static" onclick="switchBackupTab('static', this)">
                                 <i class="ph-bold ph-sliders-horizontal"></i> Static Config
                             </button>
+                            <button class="auth-sub-tab" id="backup-tab-certs" onclick="switchBackupTab('certs', this)" style="display:none">
+                                <i class="ph-bold ph-shield-check"></i> Certificates
+                            </button>
                             <button class="auth-sub-tab" id="backup-tab-git" onclick="switchBackupTab('git', this)">
                                 <i class="ph-bold ph-git-branch"></i> Git
                             </button>
@@ -863,6 +866,27 @@
                                 </div>
                             </div>
                             <div id="sm-static-backups-list" style="flex:1;overflow-y:auto;min-height:0;margin-top:10px;">
+                                <div class="sc-empty">Loading...</div>
+                            </div>
+                        </div>
+
+                        <div id="backup-sub-certs" class="auth-sub-panel sig-root sc-root" style="display:none;flex-direction:column;gap:0;">
+                            <div style="flex-shrink:0;">
+                                <div class="sc-sec-head">
+                                    <i class="ph-bold ph-shield-check sc-sec-icon" style="color:var(--green)"></i>
+                                    <span class="sc-sec-label">Certificate store backups</span>
+                                    <span class="tm-info-btn" data-tip="Taken automatically before Traefik Manager removes a certificate from acme.json. Retention is one setting for both kinds of backup, change it under Dynamic Config."><i class="ph-bold ph-info"></i></span><span class="sc-sec-rule"></span>
+                                </div>
+                                <div class="sc-panel">
+                                    <div class="sc-set" data-health="warn">
+                                        <div class="sc-set-l">
+                                            <div class="sc-set-n">Restoring replaces every certificate in acme.json</div>
+                                            <div class="sc-set-d">A backup is taken first and Traefik is restarted afterwards, because it only reads acme.json at startup.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="sm-cert-backups-list" style="flex:1;overflow-y:auto;min-height:0;margin-top:10px;">
                                 <div class="sc-empty">Loading...</div>
                             </div>
                         </div>

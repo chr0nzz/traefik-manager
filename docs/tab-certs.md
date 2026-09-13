@@ -40,6 +40,8 @@ Removing takes a timestamped backup of `acme.json` first, edits the file in plac
 Traefik requests a fresh certificate for any domain a router still serves. Let's Encrypt allows five identical certificates per week, so repeated removals of the same domains can lock you out until that window clears.
 :::
 
+Every removal is listed under **Settings - Backups - Certificates**, and restoring one puts that copy of `acme.json` back and restarts Traefik. The tab only appears once there is a certificate backup to show. Retention follows the same setting as the other backups.
+
 This works on agents too. The agent needs its own read-write `acme.json` mount and its own `RESTART_METHOD`; the Certs tab reads that from the agent rather than assuming.
 
 ## Enabling the tab

@@ -3832,6 +3832,7 @@ def list_backups():
     ensure_backup_dir()
     static_path = _get_static_config_path()
     static_base = os.path.basename(static_path) if static_path else None
+    acme_bases  = {os.path.basename(p) for p in _settings.get_acme_json_paths()}
     _name_re    = re.compile(r'^(.+)\.(\d{8}_\d{6})\.bak$')
     backups = []
     for f in os.listdir(BACKUP_DIR):
@@ -3841,7 +3842,12 @@ def list_backups():
             m    = _name_re.match(f)
             orig   = m.group(1) if m else ''
             ts_str = m.group(2) if m else ''
-            kind = 'static' if static_base and orig == static_base else 'routes'
+            if orig in acme_bases:
+                kind = 'certs'
+            elif static_base and orig == static_base:
+                kind = 'static'
+            else:
+                kind = 'routes'
             backups.append({
                 'name':     f,
                 'size':     st.st_size,
@@ -3854,7 +3860,7 @@ def list_backups():
         del b['sort_key']
     return backups
 
-_BACKUP_RE = re.compile(r'^[a-zA-Z0-9._ -]+\.yml\.\d{8}_\d{6}\.bak$')
+_BACKUP_RE = re.compile(r'^[a-zA-Z0-9._ -]+\.(yml|yaml|json)\.\d{8}_\d{6}\.bak$')
 
 def _validated_backup_path(filename: str) -> str:
     if not _BACKUP_RE.match(filename):
@@ -4506,6 +4512,25 @@ def api_restore(filename):
             static_path = _get_static_config_path()
             if static_path and bname.startswith(os.path.basename(static_path) + '.'):
                 target_path = static_path
+        acme_target = None
+        if target_path is None:
+            for p in _settings.get_acme_json_paths():
+                resolved = _readable_config_path(p)
+                if resolved and bname.startswith(os.path.basename(resolved) + '.'):
+                    acme_target = resolved
+                    break
+        if acme_target:
+            state = _host_cert_manage_state()
+            if not state['available']:
+                return jsonify({'error': state['reason'] or 'acme.json cannot be written here'}), 403
+            with open(path, 'rb') as fh:
+                body = fh.read()
+            _acme.backup(acme_target)
+            _acme.write_bytes_in_place(acme_target, body)
+            ok, err = trigger_traefik_restart()
+            logger.info(f"Restored: {filename} -> {acme_target}")
+            add_notification('warning', f"Certificate store restored: {filename}", category='backup')
+            return jsonify({'success': True, 'restarted': ok, 'restart_error': '' if ok else err})
         if target_path is None:
             return jsonify({'error': f'No config file matches {filename!r}'}), 400
         create_backup(target_path)

@@ -85,7 +85,7 @@ from `manager.yml` and restart.
 
 | Variable | Default | Precedence | Description |
 |---|---|---|---|
-| `ACME_JSON_PATH` | `/app/acme.json` | Fallback `acme_json_path` | Path to `acme.json` for the Certificates tab. Accepts several files comma-separated, or a directory |
+| `ACME_JSON_PATH` | `/app/acme.json` | Fallback `acme_json_path` | Path to `acme.json` for the Certificates tab. Accepts several files comma-separated, or a directory. Read-only unless you opt in to removing certificates |
 | `ACCESS_LOG_PATH` | `/app/logs/access.log` | Fallback `access_log_path` | Path to access log for the Logs tab |
 | `PLUGINS_DIR` | _(unset)_ | - | Adds Traefik's plugins directory to the paths TM is allowed to read. Not needed for the Plugins tab, which reads `experimental.plugins` from the static config |
 | `GEOIP_DB_PATH` | _(auto-downloaded)_ | Fallback `geoip_db_path` | Path to a custom GeoIP `.mmdb` for [IP geolocation](geoip.md) |
@@ -611,6 +611,8 @@ volumes:
 Environment=ACME_JSON_PATH=/etc/traefik/acme.json
 ```
 :::
+
+Mounting it `:ro` is enough to see certificates and to know which of them nothing uses. Drop the `:ro`, set a [restart method](#restart-method), and switch removal on under **Settings - Interface - Tabs** to let the Certs tab delete a certificate Traefik keeps renewing. See [Certs tab](tab-certs.md#removing-a-certificate).
 
 ---
 

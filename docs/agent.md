@@ -28,7 +28,7 @@ When a remote agent is active:
 - **Plugins** - Lists and manages the plugins declared under `experimental.plugins` in the agent's static config (requires `STATIC_CONFIG_PATH`). Install from a pasted snippet, edit and remove all work against the agent's `traefik.yml`; the generated middleware snippet is written to the agent config file you pick in the install form (default `plugin-middlewares.yml`).
 - **Backups** (Settings - Backups) - Shows the agent's local `.bak` files. The agent creates one automatically before every config write, and you can create a manual backup at any time. In the Git sub-tab, **Use Host Repository** has the Host push this agent's config to the Host's git repository on a dedicated branch (no agent-side git config needed); otherwise the agent stays autonomous via its `GIT_BACKUP_*` env vars. The Static Config sub-tab appears when the agent has `STATIC_CONFIG_PATH` set (or already has static backups) and lists the `traefik.yml` backups separately from the route config backups.
 - **Logs** - Shows the agent's access log when `ACCESS_LOG_PATH` is set on the agent. The installer sets it when it deploys Traefik alongside the agent.
-- **Certificates** - Shows certs from the agent's `acme.json` when `ACME_JSON_PATH` is set. The installer sets it when it deploys Traefik alongside the agent.
+- **Certificates** - Shows certs from the agent's `acme.json` when `ACME_JSON_PATH` is set, and marks the ones nothing uses. The installer sets it when it deploys Traefik alongside the agent. To remove certificates on this server, mount its `acme.json` read-write and give the agent a `RESTART_METHOD`; the Certs tab reads both from the agent rather than assuming.
 - **CrowdSec** - If the agent has `CROWDSEC_LAPI_URL` plus a bouncer key, machine credentials, or both, the CrowdSec tab shows that server's attack surface: who is hitting it, from which networks, which scenarios fired, what they were going after, and the bans in force. The Host needs no access to that CrowdSec instance - every call is proxied through the agent. See [CrowdSec on an agent](#crowdsec-on-an-agent).
 - **Settings sidebar** - Authentication, Connection, Notifications and the CrowdSec credentials sub-tab are hidden while an agent is active; they only apply to the Host. An **API Keys** entry appears under Remote for the agent's own keys. CrowdSec on an agent is configured with env vars on the agent itself, not from the Host UI.
 
@@ -299,7 +299,7 @@ A directory is read **one level deep**, not recursively. Point it at the folder 
 
 | Variable | Default | Description |
 |---|---|---|
-| `ACME_JSON_PATH` | - | Path to `acme.json` - enables cert info reads. Accepts several files comma-separated, or a directory whose `.json` files are all read (Traefik writes one storage file per cert resolver) |
+| `ACME_JSON_PATH` | - | Path to `acme.json` - enables cert info reads. Accepts several files comma-separated, or a directory whose `.json` files are all read (Traefik writes one storage file per cert resolver). Mount it read-write, and set `RESTART_METHOD`, to allow removing certificates from this agent |
 | `ACCESS_LOG_PATH` | - | Path to Traefik access log file |
 | `PLUGINS_DIR` | - | Path to Traefik plugins directory |
 | `BACKUP_DIR` | `/app/backups` | Agent data directory. `.bak` files are written to `<BACKUP_DIR>/backups`, the API key store to `<BACKUP_DIR>/api_keys.json`, and the git clone to `<BACKUP_DIR>/git-repo` |

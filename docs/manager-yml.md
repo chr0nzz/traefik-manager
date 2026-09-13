@@ -534,6 +534,16 @@ Path to a custom GeoIP `.mmdb` database. Leave empty to use the free DB-IP Lite 
 geoip_db_path: /data/GeoLite2-Country.mmdb
 ```
 
+### `cert_delete_enabled`
+
+**Type:** boolean - **Default:** `false` - **Env:** none
+
+Lets the Certs tab remove a certificate from `acme.json`. The row only appears in Settings once `acme.json` is mounted read-write and a restart method is configured, and removal stays off until you switch it on. See [Certs tab](tab-certs.md#removing-a-certificate).
+
+```yaml
+cert_delete_enabled: false
+```
+
 ### `visible_tabs`
 
 **Type:** map of string - boolean - **Default:** all `false`

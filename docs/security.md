@@ -203,6 +203,18 @@ The socket proxy and poison-pill methods limit the blast radius if TM is comprom
 
 If you do not use the Static Config editor, do not mount `traefik.yml` read-write and do not set `RESTART_METHOD`.
 
+## Removing certificates
+
+The Certs tab can delete entries from `acme.json`, which is where Traefik keeps every issued certificate **and its private key**. It is off unless all three of these are true:
+
+- `acme.json` is mounted without `:ro`, giving TM write access to that store
+- a `RESTART_METHOD` is set, because Traefik only reads `acme.json` at startup
+- **Settings - Interface - Tabs - Remove certificates from acme.json** is switched on
+
+TM never reads or logs the key material, and only ever removes whole entries; the ACME account is left untouched. A timestamped copy of the file is written to `BACKUP_DIR` first, with mode `600`, which means **your backup directory then holds a copy of every private key** - treat it with the same care as the store itself. The file is rewritten in place rather than replaced, so a bind-mounted `acme.json` stays attached to Traefik, and its mode is kept at `600` because Traefik refuses to load a store that others can read.
+
+Leave `acme.json` mounted `:ro` and none of this is reachable.
+
 ---
 
 ## File permissions

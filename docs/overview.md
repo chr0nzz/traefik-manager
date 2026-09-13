@@ -147,7 +147,7 @@ Optional tabs - each requires a file mounted into the container.
 
 | Tab | Mount required | Description |
 |-----|----------------|-------------|
-| [Certificates](tab-certs.md) | `acme.json:/app/acme.json:ro` | TLS certificates with expiry tracking. `ACME_JSON_PATH` accepts several files or a directory, for setups with one resolver per storage file |
+| [Certificates](tab-certs.md) | `acme.json:/app/acme.json:ro` | TLS certificates with expiry tracking, and which of them nothing uses any more. `ACME_JSON_PATH` accepts several files or a directory, for setups with one resolver per storage file. Mount it read-write and set a restart method to also [remove](tab-certs.md#removing-a-certificate) certificates, which stays off until you switch it on |
 | [Plugins](tab-plugins.md) | `traefik.yml:/app/traefik.yml` plus `STATIC_CONFIG_PATH=/app/traefik.yml` (no default) | Plugins from your static config with the middlewares using each one, plus a guided install. Versions are checked against the catalog daily and flagged when one is out of date. Add `:ro` to keep the tab read-only |
 | [Logs](tab-logs.md) | `access.log:/app/logs/access.log:ro` | Access log analytics: status, latency, paths, clients and services as clickable cards over a live tail, with optional auto refresh and a [world map](geoip.md) |
 
