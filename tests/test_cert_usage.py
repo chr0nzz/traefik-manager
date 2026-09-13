@@ -170,6 +170,19 @@ def test_a_regexp_router_makes_the_answer_unknowable():
     assert out['unused_known'] is False and out['why'] == cu.UNKNOWN_REGEXP
 
 
+def test_a_plain_tcp_catch_all_does_not_claim_every_certificate():
+    certs = [_cert('app.example.com'), _cert('dead.example.com')]
+    apps  = [_app('Host(`app.example.com`)'),
+             _app('HostSNI(`*`)', tls=None, protocol='tcp')]
+    out = _verdict(certs, apps)
+    verdicts = {r['main']: r['unused'] for r in out['certs']}
+    assert out['unused_known'] is True, 'a route with no TLS serves no certificate at all'
+    assert verdicts['dead.example.com'] is True, (
+        'Traefik Manager writes HostSNI(`*`) for every TCP route without a subdomain, so one of '
+        'them marked every certificate on the server as used')
+    assert verdicts['app.example.com'] is False
+
+
 def test_a_catch_all_router_can_be_served_any_certificate():
     out = _verdict([_cert('old.example.com')], [_app('HostSNI(`*`)', protocol='tcp')])
     assert out['unused_known'] is False and out['why'] == cu.UNKNOWN_CATCH_ALL

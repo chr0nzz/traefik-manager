@@ -90,8 +90,10 @@ def served_names(apps) -> tuple:
             clean = normalize(pattern)
             if not clean:
                 continue
-            if clean == '*' and tls_on:
-                catch = True
+            if clean == '*':
+                if tls_on:
+                    catch = True
+                continue
             hosts.add(clean)
         for entry in app.get('tlsDomains') or []:
             if not isinstance(entry, dict):
