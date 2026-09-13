@@ -97,19 +97,26 @@
 {% endif %}
 
 <div id="customConfirmOverlay" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.5);backdrop-filter:blur(3px);align-items:center;justify-content:center;">
-    <div style="max-width:380px;width:90%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:0 16px 48px rgba(0,0,0,0.4);">
-        <p class="font-semibold text-sm mb-1" style="color:var(--text)" id="customConfirmTitle"></p>
-        <p class="text-sm mb-6" style="color:var(--muted);line-height:1.6" id="customConfirmMsg"></p>
-        <div id="customConfirmNotes" style="display:none;margin:-12px 0 18px;gap:8px;flex-direction:column"></div>
-        <label id="customConfirmCheckWrap" style="display:none;margin:-6px 0 18px;align-items:flex-start;gap:8px;cursor:pointer">
-            <input type="checkbox" id="customConfirmCheck" class="rounded" style="accent-color:var(--red);margin-top:2px;flex-shrink:0">
-            <span class="text-xs" style="color:var(--text)" id="customConfirmCheckLabel"></span>
-        </label>
-        <div id="customConfirmTypeWrap" style="display:none;margin:-12px 0 18px">
+    <div style="max-width:440px;width:90%;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,0.4);">
+        <div style="display:flex;align-items:center;gap:10px;padding:18px 22px 0">
+            <i id="customConfirmIcon" class="ph-bold ph-warning-circle" style="display:none;font-size:18px;color:var(--red);flex-shrink:0"></i>
+            <p class="font-semibold text-sm" style="color:var(--text);margin:0" id="customConfirmTitle"></p>
+        </div>
+        <div style="padding:10px 22px 0">
+            <p class="text-sm" style="color:var(--muted);line-height:1.6;margin:0" id="customConfirmMsg"></p>
+        </div>
+        <div id="customConfirmNotes" style="display:none;flex-direction:column;gap:8px;padding:14px 22px 0"></div>
+        <div id="customConfirmCheckWrap" style="display:none;padding:14px 22px 0">
+            <label class="confirm-opt">
+                <input type="checkbox" id="customConfirmCheck" style="accent-color:var(--red);margin-top:1px;flex-shrink:0;width:15px;height:15px;cursor:pointer">
+                <span id="customConfirmCheckLabel"></span>
+            </label>
+        </div>
+        <div id="customConfirmTypeWrap" style="display:none;padding:16px 22px 0">
             <label class="text-xs block mb-1.5" style="color:var(--muted)">Type <button type="button" id="customConfirmWord" title="Click to copy" style="color:var(--red);letter-spacing:0.06em;font-weight:700;background:none;border:none;padding:0 2px;cursor:copy;font-size:inherit;font-family:inherit">DELETE</button> to confirm</label>
             <input type="text" id="customConfirmType" class="input-field" autocomplete="off" spellcheck="false" placeholder="DELETE">
         </div>
-        <div class="flex gap-2 justify-end">
+        <div class="flex gap-2 justify-end" style="padding:18px 22px;margin-top:4px">
             <button id="customConfirmCancel" class="btn-secondary text-xs">Cancel</button>
             <button id="customConfirmOk" class="btn-primary text-xs">Confirm</button>
         </div>

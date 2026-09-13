@@ -543,6 +543,31 @@ select.input-field:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 .btn-primary.btn-red:hover { background: color-mix(in srgb, var(--red) 22%, transparent); border-color: color-mix(in srgb, var(--red) 45%, transparent); }
 
+.confirm-opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    cursor: pointer;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.55;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.confirm-opt:hover { border-color: color-mix(in srgb, var(--red) 35%, var(--border)); }
+
+.confirm-opt:has(input:checked) {
+    background: color-mix(in srgb, var(--red) 7%, transparent);
+    border-color: color-mix(in srgb, var(--red) 30%, transparent);
+}
+
 .btn-secondary {
     background: var(--btn-secondary-bg);
     color: var(--text);

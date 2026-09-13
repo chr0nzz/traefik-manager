@@ -655,21 +655,24 @@ async function _routeCertOption(ids) {
         const certs = await _certsForRoutes(ids);
         if (!certs.length) return null;
         const names = certs.map(c => c.main);
-        return { certs, label: 'Also remove ' + (names.length === 1 ? 'its certificate ' + names[0]
-                 : 'their ' + names.length + ' certificates') + ' from acme.json and restart Traefik' };
+        return { certs, label: (names.length === 1
+                 ? 'Also remove its certificate for ' + names[0]
+                 : 'Also remove their ' + names.length + ' certificates')
+                 + ', and restart Traefik so the change sticks' };
     } catch (e) { return null; }
 }
 
 async function deleteRoute(id, configFile) {
     const shown = String(id).includes('::') ? String(id).split('::').slice(1).join('::') : String(id);
     const where = configFile ? ' from ' + configFile : '';
-    const certOpt = await _routeCertOption([id]);
+    const pending = _routeCertOption([id]);
     const answer = await _confirmWith({
         message: 'Delete route "' + shown + '"' + where + '? This removes it from the config file and stops serving it.',
         title: 'Delete Route', okLabel: 'Delete', typeWord: 'DELETE',
-        checkbox: certOpt ? { label: certOpt.label, checked: false } : null,
+        checkboxAsync: pending.then(c => c ? { label: c.label, checked: false } : null),
     });
     if (!answer.ok) return;
+    const certOpt   = await pending;
     const alsoCerts = answer.checked && certOpt ? certOpt.certs : null;
     const data = new FormData();
     data.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
@@ -2042,9 +2045,16 @@ function _routeNameList(ids, limit = 6) {
 async function bulkDelete() {
     const ids = [..._bulkSelected];
     if (!ids.length) return;
-    if (!await _confirm(`Delete ${ids.length} route${ids.length > 1 ? 's' : ''}: ${_routeNameList(ids)}? `
-                        + 'This removes them from the config files and stops serving them.',
-                        'Bulk Delete', 'Delete', 'DELETE')) return;
+    const pending = _routeCertOption(ids);
+    const answer  = await _confirmWith({
+        message: `Delete ${ids.length} route${ids.length > 1 ? 's' : ''}: ${_routeNameList(ids)}? `
+                 + 'This removes them from the config files and stops serving them.',
+        title: 'Bulk Delete', okLabel: 'Delete', typeWord: 'DELETE',
+        checkboxAsync: pending.then(c => c ? { label: c.label, checked: false } : null),
+    });
+    if (!answer.ok) return;
+    const certOpt   = await pending;
+    const alsoCerts = answer.checked && certOpt ? certOpt.certs : null;
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     let failed = 0, firstErr = '';
     for (const id of ids) {
@@ -2072,6 +2082,7 @@ async function bulkDelete() {
     else showToast(`Deleted ${ids.length} route${ids.length > 1 ? 's' : ''}.`, 'success');
     _bulkSelected.clear(); updateBulkBar(); refreshRoutes(); fetchNotifications();
     if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData();
+    if (alsoCerts && typeof removeCerts === 'function') await removeCerts(alsoCerts, { confirmed: true });
 }
 
 function toggleRouteView() {

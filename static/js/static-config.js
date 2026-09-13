@@ -15,6 +15,7 @@ function _confirmWith(o) {
     const { message, title, okLabel, typeWord } = o || {};
     const notes   = (o && o.notes) || [];
     const check   = (o && o.checkbox) || null;
+    const later   = (o && o.checkboxAsync) || null;
     const danger  = (o && o.danger !== undefined) ? o.danger
                     : /delete|remove|revoke|reset/i.test(String(okLabel || ''));
     return new Promise(resolve => {
@@ -45,20 +46,30 @@ function _confirmWith(o) {
                 + '<span>' + _esc(n) + '</span></div>').join('');
             noteBox.style.display = notes.length ? 'flex' : 'none';
         }
-        if (checkWrap) checkWrap.style.display = check ? 'flex' : 'none';
-        if (checkBox)  checkBox.checked = !!(check && check.checked);
-        if (checkLbl)  checkLbl.textContent = check ? String(check.label || '') : '';
+        const showCheck = (c) => {
+            if (checkWrap) checkWrap.style.display = c ? '' : 'none';
+            if (checkBox)  checkBox.checked = !!(c && c.checked);
+            if (checkLbl)  checkLbl.textContent = c ? String(c.label || '') : '';
+        };
+        showCheck(check);
+        const icon = document.getElementById('customConfirmIcon');
+        if (icon) icon.style.display = danger ? '' : 'none';
         if (ok) ok.classList.toggle('btn-red', !!danger);
         const matches = () => !word || (input && input.value.trim().toUpperCase() === word.toUpperCase());
         const sync = () => { if (ok) ok.disabled = !matches(); };
         sync();
         if (overlay) overlay.style.display = 'flex';
         if (word && input) setTimeout(() => input.focus(), 60);
+        let open = true;
+        if (later) {
+            Promise.resolve(later).then(c => { if (open && c) showCheck(c); }).catch(() => {});
+        }
         const onKey = e => {
             if (e.key === 'Escape') done(false);
             if (e.key === 'Enter' && matches()) done(true);
         };
         const done = (val) => {
+            open = false;
             if (overlay) overlay.style.display = 'none';
             if (ok)     { ok.onclick = null; ok.disabled = false; }
             if (cancel) cancel.onclick = null;
@@ -66,7 +77,9 @@ function _confirmWith(o) {
             if (wordEl) { wordEl.onclick = null; wordEl.textContent = word; }
             document.removeEventListener('keydown', onKey);
             if (ok) ok.classList.remove('btn-red');
-            resolve({ ok: !!(val && matches()), checked: !!(checkBox && checkBox.checked) });
+            if (icon) icon.style.display = 'none';
+            resolve({ ok: !!(val && matches()),
+                      checked: !!(checkBox && checkBox.checked && checkWrap && checkWrap.style.display !== 'none') });
         };
         if (input)  input.oninput   = sync;
         if (wordEl) wordEl.onclick  = () => {
@@ -432,7 +445,7 @@ function _hideRestartOverlay() {
     if (el) el.style.display = 'none';
 }
 
-async function _waitForReconnect(immediate = false) {
+async function _waitForReconnect(immediate = false, onBack = null) {
     setTimeout(() => {
         const btn = document.getElementById('traefikRestartManualReload');
         if (btn) btn.style.display = 'inline-block';
@@ -458,7 +471,11 @@ async function _waitForReconnect(immediate = false) {
     while (true) {
         await new Promise(r => setTimeout(r, 1500));
         try {
-            if (await healthOk()) { location.reload(); return; }
+            if (await healthOk()) {
+                if (typeof onBack === 'function') { _hideRestartOverlay(); onBack(); }
+                else location.reload();
+                return;
+            }
         } catch(e) {}
     }
 }

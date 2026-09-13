@@ -121,18 +121,21 @@ function selectUnusedCerts() {
 
 function _paintCertBulkBar() {
     const bar = document.getElementById('certBulkBar');
-    if (bar) bar.style.display = (_certBulk && _certPicked.size) ? '' : 'none';
+    if (bar) bar.style.display = _certBulk ? '' : 'none';
     const n = document.getElementById('certBulkCount');
     if (n) n.textContent = _certPicked.size + ' selected';
 }
 
-function bulkRemoveCerts() {
+async function bulkRemoveCerts() {
     const rows = _allCerts.filter(c => _certPicked.has(_certKey(c)));
+    if (!rows.length) return;
+    const done = await removeCerts(rows);
+    if (done === false) return;
     _certPicked.clear();
     _certBulk = false;
     document.getElementById('certBulkBtn')?.classList.remove('active-http');
     _paintCertBulkBar();
-    return removeCerts(rows);
+    renderCertCards();
 }
 
 async function _loadCertManage() {
@@ -156,8 +159,9 @@ async function _certsForRoutes(ids) {
         });
     });
     if (!hosts.size) return [];
-    await Promise.all([_loadCertUsage(), _loadCertManage()]);
+    await _loadCertManage();
     if (!_certCanDelete()) return [];
+    await _loadCertUsage();
     let certs = [];
     try {
         const res = await agentFetch('/api/traefik/certs');
@@ -201,7 +205,7 @@ async function removeCerts(rows, opts) {
         title: list.length === 1 ? 'Remove Certificate' : 'Remove Certificates',
         okLabel: 'Remove', typeWord: 'DELETE', notes,
     });
-    if (!answer.ok) return;
+    if (!answer.ok) return false;
     return _sendCertRemoval(list);
 }
 
@@ -224,13 +228,16 @@ async function _sendCertRemoval(list) {
             refreshCertsTab();
             return;
         }
+        const back = () => {
+            showToast('Removed ' + body.removed + (body.removed === 1 ? ' certificate' : ' certificates'));
+            refreshCertsTab();
+        };
         if (typeof _showRestartOverlay === 'function' && typeof _waitForReconnect === 'function') {
             _showRestartOverlay();
-            _waitForReconnect(false);
+            _waitForReconnect(false, back);
             return;
         }
-        showToast('Removed ' + body.removed + ', Traefik is restarting');
-        refreshCertsTab();
+        back();
     } catch (e) {
         showToast(_netErrText(e, 'Could not remove the certificate'), 'error');
     }

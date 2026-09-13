@@ -137,7 +137,7 @@ The trade-offs are covered in full under [Static config](static.md#restart-metho
 
 ### Removing
 
-Each ACME certificate then gets a remove button, and **Select** in the toolbar turns on checkboxes for removing several at once, with **Select all unused** for the common case. A whole batch costs one Traefik restart.
+Each ACME certificate then gets a remove button. The selection button in the toolbar turns on checkboxes for removing several at once, with **Select unused** for the common case. A whole batch costs one Traefik restart.
 
 Removing takes a timestamped backup of `acme.json` first, edits the file in place so a bind mount stays attached, keeps the mode at `600`, leaves the ACME account untouched, and restarts Traefik. Deleting a route offers to remove its certificate at the same time, when no other route still needs it.
 
