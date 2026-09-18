@@ -395,7 +395,7 @@ function _dText(v, cls) {
 }
 
 function _dBool(on, yes, no) {
-    return `<span class="d-flat ${on ? 'd-on' : 'd-off'}">${on ? yes || 'Yes' : no || 'No'}</span>`;
+    return `<span class="d-flat ${on ? 'd-on' : 'd-off'}">${_esc(on ? yes || tc('label', 'Yes') : no || tc('label', 'No'))}</span>`;
 }
 
 function _dList(items, cls) {
@@ -408,14 +408,16 @@ function _dState(state) {
     const s = String(state || '').toLowerCase();
     const dot = s === 'enabled' ? 'status-online' : (s === 'disabled' || s === 'error') ? 'status-offline' : 'status-unknown';
     const cls = s === 'enabled' ? 'd-on' : (s === 'disabled' || s === 'error') ? 'd-bad' : 'd-off';
-    return `<span class="d-state d-flat ${cls}"><span class="status-dot ${dot}"></span>${_esc(state || t('Unknown'))}</span>`;
+    const label = s === 'enabled' ? tc('status', 'Enabled') : s === 'disabled' ? tc('status', 'Disabled') : s === 'error' ? tc('status', 'Error')
+        : s === 'warning' ? tc('status', 'Warning') : (state || t('Unknown'));
+    return `<span class="d-state d-flat ${cls}"><span class="status-dot ${dot}"></span>${_esc(label)}</span>`;
 }
 
 function renderSection(title, icon, rows) {
     const rowsHtml = rows.map(([key, val, isHtml]) => {
         const displayVal = isHtml ? val
             : `<span class="font-mono" style="color:var(--text)">${String(val).replace(/</g, '&lt;')}</span>`;
-        return `<div class="detail-key">${key}</div><div class="detail-val">${displayVal}</div>`;
+        return `<div class="detail-key">${_esc(key)}</div><div class="detail-val">${displayVal}</div>`;
     }).join('');
     return `<div class="detail-section">
         <div class="detail-section-header">
@@ -1202,17 +1204,17 @@ function classifyIp(ip) {
 }
 
 const _IP_CLASS_META = {
-    'public':     ['Public', 'ip-badge-public'],
-    'private':    ['Private', 'ip-badge-private'],
+    'public':     [tc('ip', 'Public'), 'ip-badge-public'],
+    'private':    [tc('ip', 'Private'), 'ip-badge-private'],
     'cgnat':      ['CGNAT', 'ip-badge-cgnat'],
-    'loopback':   ['Loopback', 'ip-badge-muted'],
-    'link-local': ['Link-local', 'ip-badge-muted'],
+    'loopback':   [tc('ip', 'Loopback'), 'ip-badge-muted'],
+    'link-local': [tc('ip', 'Link-local'), 'ip-badge-muted'],
     'unknown':    ['?', 'ip-badge-muted'],
 };
 
 function ipClassBadge(cls) {
     const [label, klass] = _IP_CLASS_META[cls] || _IP_CLASS_META['unknown'];
-    return `<span class="ip-badge ${klass}">${label}</span>`;
+    return `<span class="ip-badge ${klass}">${_esc(label)}</span>`;
 }
 
 function openIpDiagModal() {
@@ -1402,7 +1404,7 @@ function _renderNotifFilters() {
         return `<button class="notif-cat-chip${on ? ' active' : ''}" onclick="setNotifCategory(${_jsArg(cat)}, event)"`
              + ` title="${_esc(label)} (${count})" aria-label="${_esc(label)}"><i class="ph-bold ${icon}"></i></button>`;
     };
-    row.innerHTML = chip('', 'All', 'ph-stack', _notifData.length)
+    row.innerHTML = chip('', tc('filter', 'All'), 'ph-stack', _notifData.length)
         + present.map(c => chip(c, NOTIF_CATEGORY_LABELS[c] || c,
                                 NOTIF_CATEGORY_ICONS[c] || 'ph-circle',
                                 _notifData.filter(x => (x.category || 'config') === c).length)).join('');

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-18 16:29-0400\n"
+"POT-Creation-Date: 2026-09-18 17:21-0400\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -121,6 +121,11 @@ msgid "%(status)s is replaced with the response code."
 msgstr ""
 
 #. Used in the browser
+#, python-brace-format
+msgid "(+{count} more)"
+msgstr ""
+
+#. Used in the browser
 msgid "(0 to 1, optional)"
 msgstr ""
 
@@ -225,6 +230,11 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "+{count} codes"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "+{count} more"
 msgstr ""
 
@@ -234,6 +244,11 @@ msgid "+{count} more country"
 msgid_plural "+{count} more countries"
 msgstr[0] ""
 msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "+{count} more failing"
+msgstr ""
 
 #. Used in the browser
 #, python-brace-format
@@ -260,10 +275,6 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ", and that {span} is inside the watched path"
-msgstr ""
-
-#. Used in the browser
-msgid ", no scenario is in simulation mode"
 msgstr ""
 
 #. Used in the browser
@@ -411,6 +422,14 @@ msgid "30 days"
 msgstr ""
 
 msgid "30 minutes"
+msgstr ""
+
+#. Used in the browser
+msgid "301 permanent"
+msgstr ""
+
+#. Used in the browser
+msgid "302 temporary"
 msgstr ""
 
 msgid "4 hours"
@@ -650,6 +669,11 @@ msgid "Active"
 msgstr ""
 
 #. Used in the browser
+msgctxt "status"
+msgid "Active"
+msgstr ""
+
+#. Used in the browser
 msgid ""
 "Active decisions after expired rows are dropped. The cursor walk stops at"
 " 200 pages of 1000, so 200,000 is the undocumented ceiling"
@@ -760,6 +784,11 @@ msgstr ""
 msgid "Add channel"
 msgstr ""
 
+#. Used in the browser
+msgctxt "button"
+msgid "Add entrypoint"
+msgstr ""
+
 msgid "Add header"
 msgstr ""
 
@@ -770,8 +799,23 @@ msgid "Add more backends to load-balance across several servers."
 msgstr ""
 
 #. Used in the browser
+msgctxt "button"
+msgid "Add plugin"
+msgstr ""
+
+#. Used in the browser
 #, python-brace-format
 msgid "Add plugins under {experimental_plugins} in your {traefik_yml}."
+msgstr ""
+
+#. Used in the browser
+msgctxt "button"
+msgid "Add provider"
+msgstr ""
+
+#. Used in the browser
+msgctxt "button"
+msgid "Add resolver"
 msgstr ""
 
 msgid "Add service"
@@ -784,6 +828,7 @@ msgid ""
 "{docker_compose_yml}:"
 msgstr ""
 
+#. Used in the browser
 msgid "Add trusted proxy IPs to an entrypoint"
 msgstr ""
 
@@ -791,11 +836,6 @@ msgstr ""
 msgid ""
 "Add your LAPI URL plus a bouncer API key, machine credentials, or a mTLS "
 "client certificate in %(settings_system_monitoring)s."
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid "Add {addLabel}"
 msgstr ""
 
 #. Used in the browser
@@ -826,6 +866,11 @@ msgstr[1] ""
 #. Used in the browser
 msgctxt "button"
 msgid "Adding..."
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Address"
 msgstr ""
 
 #. Used in the browser
@@ -980,6 +1025,11 @@ msgstr ""
 
 #. Used in the browser
 msgctxt "button"
+msgid "All"
+msgstr ""
+
+#. Used in the browser
+msgctxt "filter"
 msgid "All"
 msgstr ""
 
@@ -1374,6 +1424,11 @@ msgstr ""
 msgid "Backend up, {up} of {total} servers"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Backends"
+msgstr ""
+
 msgctxt "setting"
 msgid "Backends"
 msgstr ""
@@ -1722,6 +1777,11 @@ msgctxt "label"
 msgid "Certificates"
 msgstr ""
 
+#. Used in the browser
+msgctxt "title"
+msgid "Certificates"
+msgstr ""
+
 msgid "Certificates and access logs"
 msgstr ""
 
@@ -1837,6 +1897,11 @@ msgid ""
 "%(roles)s."
 msgstr ""
 
+#. Used in the browser
+msgctxt "button"
+msgid "Clear"
+msgstr ""
+
 msgctxt "tooltip"
 msgid "Clear"
 msgstr ""
@@ -1896,6 +1961,13 @@ msgstr ""
 #. Used in the browser
 msgid "Click to filter to just those."
 msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Click to filter to the {n} failing request on {name}."
+msgid_plural "Click to filter to the {n} failing requests on {name}."
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 msgid "Click to inspect"
@@ -2057,6 +2129,11 @@ msgid "Config file"
 msgstr ""
 
 #. Used in the browser
+msgctxt "label"
+msgid "Configuration"
+msgstr ""
+
+#. Used in the browser
 msgctxt "setting"
 msgid "Configuration"
 msgstr ""
@@ -2187,6 +2264,10 @@ msgid ""
 msgstr ""
 
 msgid "Cookie name"
+msgstr ""
+
+#. Used in the browser
+msgid "Copied"
 msgstr ""
 
 #. Used in the browser
@@ -2331,6 +2412,11 @@ msgstr ""
 msgid ""
 "Countries below come straight from the alert, resolved by CrowdSec. No "
 "address is sent to the host GeoIP database"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Country"
 msgstr ""
 
 #. Used in the browser
@@ -2495,6 +2581,11 @@ msgid "DNS check resolvers {optional}"
 msgstr ""
 
 #. Used in the browser
+msgctxt "status"
+msgid "DOWN"
+msgstr ""
+
+#. Used in the browser
 msgid "Daily"
 msgstr ""
 
@@ -2537,6 +2628,11 @@ msgstr ""
 
 msgctxt "setting"
 msgid "Database"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Date"
 msgstr ""
 
 #. Used in the browser
@@ -2679,8 +2775,15 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Delete route \"{shown}\"{where}? This removes it from the config file and"
-" stops serving it."
+"Delete route \"{shown}\" from {file}? This removes it from the config "
+"file and stops serving it."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Delete route \"{shown}\"? This removes it from the config file and stops "
+"serving it."
 msgstr ""
 
 #. Used in the browser
@@ -2787,6 +2890,11 @@ msgid "Destination"
 msgstr ""
 
 #. Used in the browser
+msgctxt "label"
+msgid "Details"
+msgstr ""
+
+#. Used in the browser
 msgctxt "tooltip"
 msgid "Details"
 msgstr ""
@@ -2797,6 +2905,11 @@ msgid "Details for {name}"
 msgstr ""
 
 msgid "Detected from your existing configuration. Clear it to skip this step."
+msgstr ""
+
+#. Used in the browser
+msgctxt "group"
+msgid "Dev"
 msgstr ""
 
 #. Used in the browser
@@ -2894,6 +3007,11 @@ msgid "Disabled"
 msgstr ""
 
 #. Used in the browser
+msgctxt "status"
+msgid "Disabled"
+msgstr ""
+
+#. Used in the browser
 msgctxt "tooltip"
 msgid "Disabled"
 msgstr ""
@@ -2942,6 +3060,10 @@ msgid "Do not make this card clickable"
 msgstr ""
 
 msgid "Do not show it anywhere"
+msgstr ""
+
+#. Used in the browser
+msgid "Docker / Podman / Unraid:"
 msgstr ""
 
 msgid "Docker Compose"
@@ -3036,6 +3158,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "Drop (default)"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Duration"
 msgstr ""
 
 msgctxt "setting"
@@ -3184,6 +3311,11 @@ msgid "Enabled"
 msgstr ""
 
 #. Used in the browser
+msgctxt "status"
+msgid "Enabled"
+msgstr ""
+
+#. Used in the browser
 msgctxt "tooltip"
 msgid "Enabled"
 msgstr ""
@@ -3295,11 +3427,26 @@ msgid "Entrypoints"
 msgstr ""
 
 #. Used in the browser
+msgctxt "title"
+msgid "Entrypoints"
+msgstr ""
+
+#. Used in the browser
 #, python-brace-format
 msgid "Entrypoints {staticEpCount}"
 msgstr ""
 
 #. Used in the browser
+msgid "Error"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Error"
+msgstr ""
+
+#. Used in the browser
+msgctxt "status"
 msgid "Error"
 msgstr ""
 
@@ -3343,6 +3490,7 @@ msgstr ""
 msgid "Error: {error}"
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
 msgid "Errors"
 msgstr ""
@@ -3418,6 +3566,12 @@ msgid ""
 "confirmation."
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"Everything else in force came from a subscribed list rather than from "
+"something this host saw."
+msgstr ""
+
 msgid "Exit bulk mode"
 msgstr ""
 
@@ -3439,8 +3593,15 @@ msgid ""
 "rather than a wall of text."
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
 msgid "Explore"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgctxt "button"
+msgid "Explore {protocol}"
 msgstr ""
 
 #. Used in the browser
@@ -3641,6 +3802,11 @@ msgid ""
 "over"
 msgstr ""
 
+#. Used in the browser
+msgctxt "role"
+msgid "Fallback"
+msgstr ""
+
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when"
 " a backend stops answering"
@@ -3663,6 +3829,7 @@ msgid "File Paths"
 msgstr ""
 
 #. Used in the browser
+msgctxt "group"
 msgid "Files & Data"
 msgstr ""
 
@@ -4150,6 +4317,11 @@ msgid ""
 "for none."
 msgstr ""
 
+#. Used in the browser
+msgctxt "group"
+msgid "Home"
+msgstr ""
+
 msgctxt "button"
 msgid "Host"
 msgstr ""
@@ -4278,6 +4450,11 @@ msgctxt "button"
 msgid "Inactive"
 msgstr ""
 
+#. Used in the browser
+msgctxt "status"
+msgid "Inactive"
+msgstr ""
+
 msgid "Include Subdomains"
 msgstr ""
 
@@ -4290,6 +4467,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "Info"
+msgstr ""
+
+#. Used in the browser
+msgctxt "group"
+msgid "Infrastructure"
 msgstr ""
 
 #. Used in the browser
@@ -4621,6 +4803,11 @@ msgid "Link URL"
 msgstr ""
 
 #. Used in the browser
+msgctxt "ip"
+msgid "Link-local"
+msgstr ""
+
+#. Used in the browser
 msgid "Live data from Traefik API"
 msgstr ""
 
@@ -4780,6 +4967,11 @@ msgctxt "button"
 msgid "Logging"
 msgstr ""
 
+#. Used in the browser
+msgctxt "title"
+msgid "Logging"
+msgstr ""
+
 msgid "Logs"
 msgstr ""
 
@@ -4790,6 +4982,11 @@ msgstr ""
 
 msgctxt "setting"
 msgid "Logs"
+msgstr ""
+
+#. Used in the browser
+msgctxt "ip"
+msgid "Loopback"
 msgstr ""
 
 msgid "Machine Credentials"
@@ -4822,6 +5019,11 @@ msgstr ""
 msgid "Machine password configured"
 msgstr ""
 
+#. Used in the browser
+msgctxt "role"
+msgid "Main"
+msgstr ""
+
 msgctxt "heading"
 msgid "Maintenance"
 msgstr ""
@@ -4839,6 +5041,11 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Managed by {provider} - read only"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Management"
 msgstr ""
 
 msgid "Managing it later"
@@ -4890,6 +5097,11 @@ msgid "Max idle conns per host {optional}"
 msgstr ""
 
 msgid "Maximum of 10 API keys reached"
+msgstr ""
+
+#. Used in the browser
+msgctxt "group"
+msgid "Media"
 msgstr ""
 
 msgctxt "setting"
@@ -4997,6 +5209,11 @@ msgstr ""
 msgid "Minimum severity"
 msgstr ""
 
+#. Used in the browser
+msgctxt "role"
+msgid "Mirror"
+msgstr ""
+
 msgctxt "option"
 msgid "Mirroring"
 msgstr ""
@@ -5023,8 +5240,18 @@ msgid "Mode"
 msgstr ""
 
 #. Used in the browser
+msgctxt "label"
+msgid "Module"
+msgstr ""
+
+#. Used in the browser
 msgctxt "setting"
 msgid "Module"
+msgstr ""
+
+#. Used in the browser
+msgctxt "group"
+msgid "Monitoring"
 msgstr ""
 
 #. Used in the browser
@@ -5140,10 +5367,20 @@ msgid ""
 msgstr ""
 
 #. Used in the browser
+msgctxt "group"
+msgid "Network"
+msgstr ""
+
+#. Used in the browser
 msgid "Network Authentication Required"
 msgstr ""
 
 #. Used in the browser
+msgid "Networks"
+msgstr ""
+
+#. Used in the browser
+msgctxt "title"
 msgid "Networks"
 msgstr ""
 
@@ -5205,6 +5442,11 @@ msgid "New password must be at least 8 characters and at most 72 bytes."
 msgstr ""
 
 msgid "Next server"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "No"
 msgstr ""
 
 #. Used in the browser
@@ -5424,6 +5666,10 @@ msgstr ""
 
 #. Used in the browser
 msgid "No log lines in the fetched window."
+msgstr ""
+
+#. Used in the browser
+msgid "No matches here. Found in"
 msgstr ""
 
 msgid "No matching certificate was found"
@@ -5808,6 +6054,11 @@ msgid "OIDC saved"
 msgstr ""
 
 #. Used in the browser
+msgctxt "button"
+msgid "OK"
+msgstr ""
+
+#. Used in the browser
 #, python-brace-format
 msgid "OTLP HTTP endpoint {optional_default_localhost}"
 msgstr ""
@@ -5819,6 +6070,11 @@ msgstr ""
 
 #. Used in the browser
 msgctxt "label"
+msgid "Observability"
+msgstr ""
+
+#. Used in the browser
+msgctxt "title"
 msgid "Observability"
 msgstr ""
 
@@ -6036,6 +6292,11 @@ msgstr ""
 msgid "Opens the interactive API reference."
 msgstr ""
 
+#. Used in the browser
+msgctxt "title"
+msgid "Operations"
+msgstr ""
+
 msgid "Optimize for streaming (Jellyfin / Emby / Plex)"
 msgstr ""
 
@@ -6061,6 +6322,11 @@ msgstr ""
 msgid "Optional credentials for endpoints that require authentication."
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Options"
+msgstr ""
+
 #, python-format
 msgid "Or enter manually: %(otp_manual_secret)s"
 msgstr ""
@@ -6074,6 +6340,11 @@ msgstr ""
 msgid ""
 "Origins outside the four CrowdSec uses today: {map}. Counted as yours, "
 "because only CAPI and lists are subscriptions"
+msgstr ""
+
+#. Used in the browser
+msgctxt "group"
+msgid "Other"
 msgstr ""
 
 #. Used in the browser
@@ -6124,6 +6395,11 @@ msgid "Passthrough"
 msgstr ""
 
 #. Used in the browser
+msgctxt "label"
+msgid "Passthrough"
+msgstr ""
+
+#. Used in the browser
 msgid "Password"
 msgstr ""
 
@@ -6155,6 +6431,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "Paste the static config snippet"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Path"
 msgstr ""
 
 msgctxt "setting"
@@ -6202,6 +6483,11 @@ msgid "Paths saved to %(manager_yml)s"
 msgstr ""
 
 msgid "Paths to CA certificate files inside the container, one per line."
+msgstr ""
+
+#. Used in the browser
+msgctxt "status"
+msgid "Paused"
 msgstr ""
 
 #. Used in the browser
@@ -6346,6 +6632,12 @@ msgstr ""
 msgid "Plugin saved - restart Traefik to apply"
 msgstr ""
 
+msgid ""
+"Plugin versions come from your static config. The latest version is "
+"checked against the Traefik plugin catalog once a day; updating means "
+"changing the version in traefik.yml and restarting Traefik."
+msgstr ""
+
 msgid "Plugins"
 msgstr ""
 
@@ -6359,6 +6651,11 @@ msgid "Plugins"
 msgstr ""
 
 msgctxt "setting"
+msgid "Plugins"
+msgstr ""
+
+#. Used in the browser
+msgctxt "title"
 msgid "Plugins"
 msgstr ""
 
@@ -6429,6 +6726,21 @@ msgstr ""
 msgid "Preview failed"
 msgstr ""
 
+#. Used in the browser
+msgctxt "role"
+msgid "Primary"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Priority"
+msgstr ""
+
+#. Used in the browser
+msgctxt "ip"
+msgid "Private"
+msgstr ""
+
 msgid ""
 "Private key matching the client certificate. Path to a PEM file mounted "
 "into this container."
@@ -6436,6 +6748,11 @@ msgstr ""
 
 #, python-format
 msgid "Private ranges%(n10_0_0)s"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Profile"
 msgstr ""
 
 msgid "Profile Name"
@@ -6507,6 +6824,11 @@ msgid "Providers"
 msgstr ""
 
 #. Used in the browser
+msgctxt "title"
+msgid "Providers"
+msgstr ""
+
+#. Used in the browser
 #, python-brace-format
 msgid "Providers throttle {optional_e_g}"
 msgstr ""
@@ -6531,6 +6853,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "Proxy trusted"
+msgstr ""
+
+#. Used in the browser
+msgctxt "ip"
+msgid "Public"
 msgstr ""
 
 #. Used in the browser
@@ -6631,6 +6958,7 @@ msgstr ""
 msgid "Raw YAML - {name}"
 msgstr ""
 
+#. Used in the browser
 msgid "Raw YAML editor"
 msgstr ""
 
@@ -6796,6 +7124,7 @@ msgstr ""
 msgid "Released {name}"
 msgstr ""
 
+#. Used in the browser
 msgid "Reload from disk"
 msgstr ""
 
@@ -6986,6 +7315,11 @@ msgctxt "heading"
 msgid "Repository"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Repository"
+msgstr ""
+
 msgid "Repository URL"
 msgstr ""
 
@@ -7067,6 +7401,11 @@ msgstr ""
 
 #, python-format
 msgid "Resolved from inside the agent container. Sets %(crowdsec_lapi_url)s."
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Resolver"
 msgstr ""
 
 #, python-format
@@ -7678,6 +8017,16 @@ msgstr ""
 msgid "Scenarios"
 msgstr ""
 
+#. Used in the browser
+msgctxt "title"
+msgid "Scenarios"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Scheme"
+msgstr ""
+
 msgctxt "setting"
 msgid "Scheme"
 msgstr ""
@@ -7775,6 +8124,11 @@ msgid "Secure Headers"
 msgstr ""
 
 #. Used in the browser
+msgid "Security"
+msgstr ""
+
+#. Used in the browser
+msgctxt "group"
 msgid "Security"
 msgstr ""
 
@@ -7879,6 +8233,17 @@ msgid "Server URL"
 msgstr ""
 
 #. Used in the browser
+#, python-brace-format
+msgctxt "label"
+msgid "Server {n}"
+msgstr ""
+
+#. Used in the browser
+msgctxt "group"
+msgid "Servers"
+msgstr ""
+
+#. Used in the browser
 msgctxt "label"
 msgid "Servers"
 msgstr ""
@@ -7948,8 +8313,15 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
-msgid "Service {name} deleted{extra}"
+msgid "Service {name} deleted"
 msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Service {name} deleted and {n} route"
+msgid_plural "Service {name} deleted and {n} routes"
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
@@ -8278,6 +8650,11 @@ msgstr ""
 msgid "Single codes or ranges. Only these responses are replaced."
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Size"
+msgstr ""
+
 msgid "Skip TLS Verification"
 msgstr ""
 
@@ -8295,6 +8672,11 @@ msgid "Skipped {n} invalid entry:"
 msgid_plural "Skipped {n} invalid entries:"
 msgstr[0] ""
 msgstr[1] ""
+
+#. Used in the browser
+msgctxt "button"
+msgid "Slowest"
+msgstr ""
 
 msgid "Socket Proxy"
 msgstr ""
@@ -8506,6 +8888,11 @@ msgid "Success"
 msgstr ""
 
 #. Used in the browser
+msgctxt "status"
+msgid "Success"
+msgstr ""
+
+#. Used in the browser
 msgid ""
 "Sum of events_count, the raw log lines that rolled up into these alerts. "
 "Always larger than the alert count"
@@ -8546,6 +8933,11 @@ msgctxt "label"
 msgid "System"
 msgstr ""
 
+#. Used in the browser
+msgctxt "title"
+msgid "System"
+msgstr ""
+
 msgctxt "tooltip"
 msgid "System"
 msgstr ""
@@ -8556,6 +8948,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "TCP / UDP Routers"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "TLS"
 msgstr ""
 
 #. Used in the browser
@@ -8573,6 +8970,11 @@ msgid "TLS Options Profile"
 msgstr ""
 
 msgid "TLS Profile"
+msgstr ""
+
+msgid ""
+"TLS certificates are managed automatically by Traefik's ACME resolver. "
+"Renew or revoke them via your Traefik config."
 msgstr ""
 
 #. Used in the browser
@@ -9095,6 +9497,67 @@ msgid ""
 "here."
 msgstr ""
 
+msgid ""
+"These routes are discovered via Amazon ECS and are read-only. Edit them "
+"via your ECS task definitions."
+msgstr ""
+
+msgid ""
+"These routes are discovered via Consul service catalog and are read-only."
+" Edit them via your Consul service registrations."
+msgstr ""
+
+msgid ""
+"These routes are discovered via Docker Swarm labels and are read-only. "
+"Edit them via your Swarm service definitions."
+msgstr ""
+
+msgid ""
+"These routes are discovered via HashiCorp Nomad and are read-only. Edit "
+"them via your Nomad job definitions."
+msgstr ""
+
+msgid ""
+"These routes are managed by Docker labels and are read-only. Edit them "
+"via your container's labels."
+msgstr ""
+
+msgid ""
+"These routes are managed by Kubernetes (CRD, Ingress, or Gateway API) and"
+" are read-only. Edit them via your Kubernetes resources."
+msgstr ""
+
+msgid ""
+"These routes are sourced from an HTTP endpoint configured in Traefik and "
+"are read-only here."
+msgstr ""
+
+msgid ""
+"These routes are stored in Consul's key-value store and are read-only "
+"here. Edit them directly in Consul KV."
+msgstr ""
+
+msgid ""
+"These routes are stored in Redis and are read-only here. Edit them "
+"directly in your Redis KV store."
+msgstr ""
+
+msgid ""
+"These routes are stored in ZooKeeper and are read-only here. Edit them "
+"directly in your ZooKeeper instance."
+msgstr ""
+
+msgid ""
+"These routes are stored in etcd and are read-only here. Edit them "
+"directly in your etcd KV store."
+msgstr ""
+
+msgid ""
+"These routes come from external file provider configurations and are "
+"read-only here. Routes managed by traefik-manager are shown in the Routes"
+" tab instead."
+msgstr ""
+
 #. Used in the browser
 #, python-brace-format
 msgid "These rows are what {traefik_yml} declares. The"
@@ -9277,6 +9740,16 @@ msgstr ""
 msgid "Tooling"
 msgstr ""
 
+#. Used in the browser
+msgctxt "title"
+msgid "Tooling"
+msgstr ""
+
+#. Used in the browser
+msgctxt "button"
+msgid "Top"
+msgstr ""
+
 msgid "Topology connection map (Entry Points - Routes - Middlewares - Services)"
 msgstr ""
 
@@ -9352,6 +9825,9 @@ msgstr ""
 msgid "Traefik Manager update available"
 msgstr ""
 
+msgid "Traefik Manager version"
+msgstr ""
+
 #. Used in the browser
 #, python-brace-format
 msgid "Traefik Manager v{current}"
@@ -9373,6 +9849,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "Traefik Manager: warning"
+msgstr ""
+
+msgid ""
+"Traefik creates these itself. They are read-only here and are turned on "
+"or off in your static config."
 msgstr ""
 
 #. Used in the browser
@@ -9492,6 +9973,9 @@ msgid ""
 "fixed depth."
 msgstr ""
 
+msgid "Traefik version"
+msgstr ""
+
 msgid "Traefik version badge, highlights when an update is available."
 msgstr ""
 
@@ -9571,6 +10055,11 @@ msgstr ""
 msgid "Two-factor authentication"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Type"
+msgstr ""
+
 msgctxt "setting"
 msgid "Type"
 msgstr ""
@@ -9583,6 +10072,11 @@ msgid "Type it again so a typo does not lock you out."
 msgstr ""
 
 msgid "UDP routers don't support rules. Traffic is routed by entry point only."
+msgstr ""
+
+#. Used in the browser
+msgctxt "status"
+msgid "UP"
 msgstr ""
 
 #. Used in the browser
@@ -9706,6 +10200,11 @@ msgstr ""
 msgid "Upgrade Required"
 msgstr ""
 
+#. Used in the browser
+msgctxt "button"
+msgid "Upgrades"
+msgstr ""
+
 #, python-format
 msgid "Use %(action)s and %(timestamp)s as placeholders"
 msgstr ""
@@ -9805,6 +10304,11 @@ msgid "VerifyClientCertIfGiven"
 msgstr ""
 
 #. Used in the browser
+msgctxt "label"
+msgid "Version"
+msgstr ""
+
+#. Used in the browser
 msgctxt "setting"
 msgid "Version"
 msgstr ""
@@ -9844,6 +10348,11 @@ msgid "Visualizations"
 msgstr ""
 
 #. Used in the browser
+msgid "Warning"
+msgstr ""
+
+#. Used in the browser
+msgctxt "status"
 msgid "Warning"
 msgstr ""
 
@@ -9892,6 +10401,11 @@ msgid "Weight"
 msgstr ""
 
 msgctxt "option"
+msgid "Weighted"
+msgstr ""
+
+#. Used in the browser
+msgctxt "role"
 msgid "Weighted"
 msgstr ""
 
@@ -9969,6 +10483,11 @@ msgctxt "button"
 msgid "Wizard"
 msgstr ""
 
+#. Used in the browser
+msgctxt "button"
+msgid "Worst"
+msgstr ""
+
 msgid "Writes all OIDC settings above without changing the enabled state."
 msgstr ""
 
@@ -9980,6 +10499,11 @@ msgstr ""
 
 msgctxt "label"
 msgid "X-XSS-Protection"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Yes"
 msgstr ""
 
 msgid "You have stated that an external provider protects this instance."
@@ -10063,6 +10587,11 @@ msgstr ""
 #. Used in the browser
 msgctxt "label"
 msgid "accounts"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "accounts {names}"
 msgstr ""
 
 msgid "acme.json Path"
@@ -10152,7 +10681,15 @@ msgid "all"
 msgstr ""
 
 #. Used in the browser
+msgid "all 2xx"
+msgstr ""
+
+#. Used in the browser
 msgid "all current"
+msgstr ""
+
+#. Used in the browser
+msgid "all forwarding"
 msgstr ""
 
 #. Used in the browser
@@ -10269,6 +10806,11 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "backend unreachable, {error}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "backend {target}"
 msgstr ""
 
 #. Used in the browser
@@ -10406,6 +10948,10 @@ msgid "checked {floor}m ago"
 msgstr ""
 
 #. Used in the browser
+msgid "clean"
+msgstr ""
+
+#. Used in the browser
 msgctxt "button"
 msgid "clear"
 msgstr ""
@@ -10435,6 +10981,11 @@ msgid "client key, e.g. /certs/tma-client.key"
 msgstr ""
 
 #. Used in the browser
+msgctxt "label"
+msgid "composite"
+msgstr ""
+
+#. Used in the browser
 msgid "configured in traefik.yml"
 msgstr ""
 
@@ -10449,6 +11000,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "country"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "country {code}"
 msgstr ""
 
 #. Used in the browser
@@ -10479,6 +11035,11 @@ msgid "decisions"
 msgstr ""
 
 #. Used in the browser
+msgctxt "button"
+msgid "decisions"
+msgstr ""
+
+#. Used in the browser
 msgid "decisions only"
 msgstr ""
 
@@ -10498,6 +11059,11 @@ msgstr ""
 #. Used in the browser
 msgctxt "label"
 msgid "degraded"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "degraded: {routes}"
 msgstr ""
 
 #. Used in the browser
@@ -10525,12 +11091,25 @@ msgid "disabled"
 msgstr ""
 
 #. Used in the browser
+msgctxt "status"
+msgid "disabled"
+msgstr ""
+
+#. Used in the browser
 #, python-brace-format
 msgid "disabled - {v0}"
 msgstr ""
 
 #. Used in the browser
 msgid "disabled, not served by Traefik"
+msgstr ""
+
+#. Used in the browser
+msgid "docker off"
+msgstr ""
+
+#. Used in the browser
+msgid "docker on"
 msgstr ""
 
 #. Used in the browser
@@ -10581,6 +11160,7 @@ msgctxt "label"
 msgid "enabled"
 msgstr ""
 
+#. Used in the browser
 msgctxt "status"
 msgid "enabled"
 msgstr ""
@@ -10635,6 +11215,16 @@ msgid "every source banned"
 msgstr ""
 
 #. Used in the browser
+msgid "every source that tripped a scenario is banned"
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"every source that tripped a scenario is banned, no scenario is in "
+"simulation mode"
+msgstr ""
+
+#. Used in the browser
 msgctxt "label"
 msgid "expired"
 msgstr ""
@@ -10676,7 +11266,16 @@ msgid "file off"
 msgstr ""
 
 #. Used in the browser
+msgid "file on"
+msgstr ""
+
+#. Used in the browser
 msgid "file provider"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "file {path}"
 msgstr ""
 
 #. Used in the browser
@@ -10711,10 +11310,6 @@ msgstr ""
 
 #. Used in the browser
 msgid "geoip-enrich not installed on the reporting machine"
-msgstr ""
-
-#. Used in the browser
-msgid "got nothing but errors in this window"
 msgstr ""
 
 #. Used in the browser
@@ -10759,6 +11354,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "idle conn (90s)"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "idle {timeout}"
 msgstr ""
 
 #. Used in the browser
@@ -10890,6 +11490,15 @@ msgid "logo"
 msgstr ""
 
 #. Used in the browser
+msgid "loopback"
+msgstr ""
+
+#. Used in the browser
+msgctxt "button"
+msgid "loose"
+msgstr ""
+
+#. Used in the browser
 msgctxt "label"
 msgid "loose"
 msgstr ""
@@ -10916,6 +11525,11 @@ msgstr ""
 msgid "max size (MB)"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "max {version}"
+msgstr ""
+
 msgid "message required"
 msgstr ""
 
@@ -10928,8 +11542,17 @@ msgid "metrics on"
 msgstr ""
 
 #. Used in the browser
+#, python-brace-format
+msgid "metrics {provider}"
+msgstr ""
+
+#. Used in the browser
 msgctxt "label"
 msgid "middleware"
+msgstr ""
+
+#. Used in the browser
+msgid "middlewares"
 msgstr ""
 
 #. Used in the browser
@@ -11112,6 +11735,10 @@ msgid "no launch URL, wildcard host. {set_one_in}"
 msgstr ""
 
 #. Used in the browser
+msgid "no local detection in the retained window"
+msgstr ""
+
+#. Used in the browser
 msgid "no local scenario has fired in the retained window"
 msgstr ""
 
@@ -11236,12 +11863,22 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "no {field} in {meta}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "no {label} configured"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid "no {label} from provider {sdScope}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "no {parser}"
 msgstr ""
 
 #. Used in the browser
@@ -11447,6 +12084,10 @@ msgstr ""
 msgid "page {page} of {pages}"
 msgstr ""
 
+#. Used in the browser
+msgid "partial"
+msgstr ""
+
 msgid "password change required"
 msgstr ""
 
@@ -11513,7 +12154,16 @@ msgid "preview is required"
 msgstr ""
 
 #. Used in the browser
+msgid "private"
+msgstr ""
+
+#. Used in the browser
 msgid "provider breakdown needs the object list"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "provider {provider}"
 msgstr ""
 
 #. Used in the browser
@@ -11523,6 +12173,10 @@ msgstr ""
 
 #. Used in the browser
 msgid "proxyProtocol.insecure is on, the PROXY header is trusted from any source"
+msgstr ""
+
+#. Used in the browser
+msgid "public"
 msgstr ""
 
 msgid "quiet_hours must be HH:MM-HH:MM, for example 23:00-07:00"
@@ -11560,6 +12214,11 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "read {ago}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "read {timeout}"
 msgstr ""
 
 #. Used in the browser
@@ -11645,10 +12304,6 @@ msgid "retry"
 msgstr ""
 
 #. Used in the browser
-msgid "returned at least one error"
-msgstr ""
-
-#. Used in the browser
 msgid "router"
 msgstr ""
 
@@ -11696,6 +12351,11 @@ msgstr ""
 msgid "routers live in {alert_meta}"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "rule syntax {version}"
+msgstr ""
+
 msgid "same as interval"
 msgstr ""
 
@@ -11713,6 +12373,11 @@ msgstr ""
 #. Used in the browser
 msgctxt "label"
 msgid "scenarios"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "search \"{query}\""
 msgstr ""
 
 #. Used in the browser
@@ -11742,15 +12407,15 @@ msgid "selfh.st slug"
 msgstr ""
 
 #. Used in the browser
-msgid "served at least one failing request"
-msgstr ""
-
-#. Used in the browser
 msgid "service"
 msgstr ""
 
 #. Used in the browser
 msgid "service warnings"
+msgstr ""
+
+#. Used in the browser
+msgid "services"
 msgstr ""
 
 #. Used in the browser
@@ -11768,6 +12433,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "services down"
+msgstr ""
+
+#. Used in the browser
+msgctxt "button"
+msgid "settings"
 msgstr ""
 
 #. Used in the browser
@@ -11813,6 +12483,15 @@ msgid "span{b}"
 msgstr ""
 
 msgid "static"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "status {codes}"
+msgstr ""
+
+#. Used in the browser
+msgid "sticky"
 msgstr ""
 
 #. Used in the browser
@@ -11937,10 +12616,6 @@ msgid "to"
 msgstr ""
 
 #. Used in the browser
-msgid "to look at"
-msgstr ""
-
-#. Used in the browser
 msgctxt "label"
 msgid "tools"
 msgstr ""
@@ -11956,6 +12631,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "tracing on"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "tracing {provider}"
 msgstr ""
 
 #. Used in the browser
@@ -11978,6 +12658,11 @@ msgid "udp timeout {timeout}"
 msgstr ""
 
 msgid "ui_prefs must be an object"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "unbound"
 msgstr ""
 
 #. Used in the browser
@@ -12020,6 +12705,21 @@ msgid "unparsed"
 msgstr ""
 
 #. Used in the browser
+msgctxt "label"
+msgid "unreachable"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "unreachable: {routes}"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "unreported"
+msgstr ""
+
+#. Used in the browser
 #, python-brace-format
 msgid "unreported status \"{status}\""
 msgstr ""
@@ -12058,6 +12758,14 @@ msgstr ""
 
 #. Used in the browser
 msgid "updates available"
+msgstr ""
+
+#. Used in the browser
+msgid "upgrade"
+msgstr ""
+
+#. Used in the browser
+msgid "upgrades"
 msgstr ""
 
 #. Used in the browser
@@ -12174,6 +12882,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "warning"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "warnings"
 msgstr ""
 
 #. Used in the browser
@@ -12299,6 +13012,11 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{count} HTTP"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{count} account"
 msgid_plural "{count} accounts"
 msgstr[0] ""
@@ -12320,6 +13038,18 @@ msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
+msgid ""
+"{count} ban in force was raised on this host, but the alerts that earned "
+"it are outside the retention window or the decision was added by hand."
+msgid_plural ""
+"{count} bans in force were raised on this host, but the alerts that "
+"earned them are outside the retention window or the decision was added by"
+" hand."
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{count} certificate has expired"
 msgid_plural "{count} certificates have expired"
 msgstr[0] ""
@@ -12334,6 +13064,32 @@ msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{count} client error"
+msgid_plural "{count} client errors"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} client got nothing but errors in this window"
+msgid_plural "{count} clients got nothing but errors in this window"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} composite"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} country"
+msgid_plural "{count} countries"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{count} decision"
 msgid_plural "{count} decisions"
 msgstr[0] ""
@@ -12341,8 +13097,25 @@ msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{count} degraded"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} disabled"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{count} domain"
 msgid_plural "{count} domains"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} domain served at least one failing request"
+msgid_plural "{count} domains served at least one failing request"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -12367,10 +13140,20 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{count} healthy"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{count} hit"
 msgid_plural "{count} hits"
 msgstr[0] ""
 msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} idle"
+msgstr ""
 
 #. Used in the browser
 #, python-brace-format
@@ -12479,6 +13262,11 @@ msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{count} objects"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{count} of them degraded"
 msgstr ""
 
@@ -12525,6 +13313,35 @@ msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{count} path returned at least one error"
+msgid_plural "{count} paths returned at least one error"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} plugin"
+msgid_plural "{count} plugins"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{count} protocol upgrade, a websocket or a CONNECT tunnel, the longest "
+"held open for {span}. Traefik logs the whole connection lifetime as the "
+"duration, so these are left out of the average and the bands here. Click "
+"to list them."
+msgid_plural ""
+"{count} protocol upgrades, a websocket or a CONNECT tunnel, the longest "
+"held open for {span}. Traefik logs the whole connection lifetime as the "
+"duration, so these are left out of the average and the bands here. Click "
+"to list them."
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{count} route live"
 msgid_plural "{count} routes live"
 msgstr[0] ""
@@ -12553,8 +13370,22 @@ msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{count} router returned at least one error"
+msgid_plural "{count} routers returned at least one error"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{count} scenario"
 msgid_plural "{count} scenarios"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} server error"
+msgid_plural "{count} server errors"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -12567,6 +13398,20 @@ msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{count} service returned at least one error"
+msgid_plural "{count} services returned at least one error"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} slow request"
+msgid_plural "{count} slow requests"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{count} source"
 msgid_plural "{count} sources"
 msgstr[0] ""
@@ -12574,7 +13419,66 @@ msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{count} stream"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} subscribed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} unbound"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} unchecked"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} unreachable"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} unreported"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} untimed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{count} unused"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} update available"
+msgid_plural "{count} updates available"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} warning"
+msgid_plural "{count} warnings"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} {objects}: {details}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} {upgrades}, longest {span}"
 msgstr ""
 
 #. Used in the browser
@@ -12622,6 +13526,11 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "{down} of {total} servers down"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{duration} left"
 msgstr ""
 
 #. Used in the browser
@@ -12714,15 +13623,6 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "{from}-{to} of {total}"
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid ""
-"{held} protocol {heldWord}, a websocket or a CONNECT tunnel, the longest "
-"held open for {lgSpanTxt}. Traefik logs the whole connection lifetime as "
-"the duration, so these are left out of the average and the bands here. "
-"Click to list them."
 msgstr ""
 
 #. Used in the browser
@@ -12862,7 +13762,17 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{name} fallback"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{name} has no ACME email"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{name} mirror ({percent}%)"
 msgstr ""
 
 #. Used in the browser
@@ -12899,6 +13809,13 @@ msgstr ""
 #, python-brace-format
 msgid "{n} cipher suite"
 msgid_plural "{n} cipher suites"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{n} middleware: {names}"
+msgid_plural "{n} middlewares: {names}"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -12943,8 +13860,29 @@ msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{n} route in {pod} needs attention"
+msgid_plural "{n} routes in {pod} need attention"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{n} route is loaded."
 msgid_plural "{n} routes are loaded."
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{n} server"
+msgid_plural "{n} servers"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{n} thing to look at"
+msgid_plural "{n} things to look at"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -12954,6 +13892,16 @@ msgid "{n} trusted range"
 msgid_plural "{n} trusted ranges"
 msgstr[0] ""
 msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{ok} live"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{ok} live of {count} listed"
+msgstr ""
 
 #. Used in the browser
 #, python-brace-format
@@ -13076,6 +14024,11 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{scope} scope"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{scope} scope, in {range}, {kind}"
 msgstr ""
 
@@ -13098,6 +14051,13 @@ msgstr ""
 #, python-brace-format
 msgid "{servers_count} backends"
 msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{setting}: {n} range"
+msgid_plural "{setting}: {n} ranges"
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
@@ -13148,6 +14108,11 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "{srcs_count} sources, {loose_count} with no active ban"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{start} to {end}"
 msgstr ""
 
 #. Used in the browser
@@ -13244,6 +14209,11 @@ msgid ""
 "{truncated} objects are counted in the totals but were not returned by "
 "the list endpoint, so they are missing from the strips and provider "
 "counts."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{type} decision, origin {origin}"
 msgstr ""
 
 #. Used in the browser

@@ -768,7 +768,7 @@ function rmOpenPopup(type, nodeId, allRoutes, preFiltered) {
     const chip = (icon, label, val, color) => {
         if (!val) return '';
         const c = color ? `style="color:${color};border-color:${color}44;background:${color}11"` : '';
-        return `<span class="rm-detail-chip" ${c}><i class="ph-bold ${icon}"></i><span>${label}</span><b>${_esc(String(val))}</b></span>`;
+        return `<span class="rm-detail-chip" ${c}><i class="ph-bold ${icon}"></i><span>${_esc(label)}</span><b>${_esc(String(val))}</b></span>`;
     };
 
     let focusedRoutes = [];
@@ -776,33 +776,33 @@ function rmOpenPopup(type, nodeId, allRoutes, preFiltered) {
 
     if (type === 'group') {
         focusedRoutes = preFiltered || [];
-        detailsHtml   = chip('ph-git-branch', 'Routes', focusedRoutes.length);
+        detailsHtml   = chip('ph-git-branch', tc('label', 'Routes'), focusedRoutes.length);
     } else if (type === 'route') {
         const r = allRoutes.find(r => r.id === nodeId);
         if (!r) return;
         focusedRoutes = [r];
         const allDomains = [...(r.rule||'').matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
-        allDomains.forEach(d => { detailsHtml += chip('ph-globe', 'Domain', d); });
-        if (r.target && r.target !== 'N/A') detailsHtml += chip('ph-cube', 'Target', r.target);
-        detailsHtml += chip('ph-arrows-left-right', 'Protocol', (r.protocol||'http').toUpperCase());
+        allDomains.forEach(d => { detailsHtml += chip('ph-globe', tc('label', 'Domain'), d); });
+        if (r.target && r.target !== 'N/A') detailsHtml += chip('ph-cube', tc('label', 'Target'), r.target);
+        detailsHtml += chip('ph-arrows-left-right', tc('label', 'Protocol'), (r.protocol||'http').toUpperCase());
         _rmEps(r).forEach(ep => { detailsHtml += chip('ph-arrows-in', t('Entry Point'), ep); });
-        if (r.tls)          detailsHtml += chip('ph-lock', 'TLS', 'Enabled');
-        if (r.certResolver) detailsHtml += chip('ph-certificate', 'Resolver', r.certResolver);
-        if (!r.enabled)     detailsHtml += chip('ph-eye-slash', 'Status', 'Inactive');
-        if (r.provider && r.provider !== 'file') detailsHtml += chip('ph-package', 'Provider', r.provider);
+        if (r.tls)          detailsHtml += chip('ph-lock', tc('label', 'TLS'), tc('status', 'Enabled'));
+        if (r.certResolver) detailsHtml += chip('ph-certificate', tc('label', 'Resolver'), r.certResolver);
+        if (!r.enabled)     detailsHtml += chip('ph-eye-slash', tc('label', 'Status'), tc('status', 'Inactive'));
+        if (r.provider && r.provider !== 'file') detailsHtml += chip('ph-package', tc('label', 'Provider'), r.provider);
     } else if (type === 'ep') {
         focusedRoutes = allRoutes.filter(r => _rmEps(r).includes(nodeId));
         const addr = _rmAllEps[nodeId]?.address || '';
-        if (addr) detailsHtml += chip('ph-plugs-connected', 'Address', addr);
-        detailsHtml += chip('ph-git-branch', 'Routes', focusedRoutes.length);
+        if (addr) detailsHtml += chip('ph-plugs-connected', tc('label', 'Address'), addr);
+        detailsHtml += chip('ph-git-branch', tc('label', 'Routes'), focusedRoutes.length);
     } else if (type === 'mw') {
         focusedRoutes = allRoutes.filter(r => (r.middlewares||[]).includes(nodeId));
-        detailsHtml   = chip('ph-git-branch', 'Routes', focusedRoutes.length);
+        detailsHtml   = chip('ph-git-branch', tc('label', 'Routes'), focusedRoutes.length);
     } else if (type === 'svc') {
         focusedRoutes = allRoutes.filter(r => r.service_name === nodeId);
         const target  = focusedRoutes.find(r => r.target && r.target !== 'N/A')?.target || '';
-        if (target) detailsHtml += chip('ph-cube', 'Target', target);
-        detailsHtml += chip('ph-git-branch', 'Routes', focusedRoutes.length);
+        if (target) detailsHtml += chip('ph-cube', tc('label', 'Target'), target);
+        detailsHtml += chip('ph-git-branch', tc('label', 'Routes'), focusedRoutes.length);
     }
 
     document.getElementById('rmPopupDetails').innerHTML = detailsHtml;

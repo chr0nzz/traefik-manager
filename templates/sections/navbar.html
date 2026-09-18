@@ -14,13 +14,13 @@
             </div>
 
             <div class="flex items-center gap-2" id="navActions">
-                <button id="versionBadge" class="hidden nav-btn font-mono" data-navprio="30" title="Traefik version">
+                <button id="versionBadge" class="hidden nav-btn font-mono" data-navprio="30" title="{{ _('Traefik version') }}">
                     <span id="apiStatusDot" style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span>
                     <i class="ph-bold ph-git-branch"></i>
                     <span id="versionText">-</span>
                 </button>
                 <div id="updateBadge" class="hidden"></div>
-                <button id="tmVersionBadge" class="hidden nav-btn font-mono" data-navprio="25" title="Traefik Manager version">
+                <button id="tmVersionBadge" class="hidden nav-btn font-mono" data-navprio="25" title="{{ _('Traefik Manager version') }}">
                     <i class="ph-bold ph-package"></i>
                     <span id="tmVersionText">-</span>
                 </button>

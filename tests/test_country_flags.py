@@ -36,6 +36,6 @@ def test_every_flag_is_wrapped_in_the_flag_font():
 
 def test_the_log_detail_country_row_is_not_escaped_twice():
     logs = _read('static', 'js', 'logs.js')
-    assert "['Country', `${_flagEmoji(_g.country_code)} ${_esc(" in logs, \
+    assert "[tc('label', 'Country'), `${_flagEmoji(_g.country_code)} ${_esc(" in logs, \
         'the country name must be escaped before the row is marked as markup'
     assert '${html ? v : _esc(v)}' in logs, 'an escaped span would print its tag as text'

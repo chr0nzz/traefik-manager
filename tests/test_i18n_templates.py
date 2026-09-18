@@ -89,6 +89,10 @@ def test_every_message_in_the_templates_is_a_literal():
     ('<p>Traefik Manager</p><p>ACME_JSON_PATH</p><p>example.com, other.net</p><p>v1.14.0</p>', []),
     ('<input placeholder="websecure"><input placeholder="optional">', ['placeholder="optional" is not marked']),
     ('<script>const x = "Save the route";</script>', []),
+    ('<button class="font-mono" title="Traefik Manager version">v1</button>', ['title="Traefik Manager version" is not marked']),
+    ('<div data-note="These routes are read-only here."></div>', ['data-note="These routes are read-only here." is not marked']),
+    ('<input class="font-mono" placeholder="^/foo/(.*)">', []),
+    ('<div class="notranslate" title="Keep this"></div>', []),
 ])
 def test_untranslated_text_is_found(src, expected):
     messages = [p.message for p in tmi18n.untranslated_in(src, 'x.html')]

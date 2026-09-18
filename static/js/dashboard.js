@@ -384,7 +384,7 @@ function _sdSubOffender(objs, tail) {
     const first = worst[0];
     const more = worst.length - 1;
     const head = '<b>' + _esc(first.name || first.short) + '</b> ';
-    const count = more > 0 ? ', +' + _sdNum(more) + ' more' : '';
+    const count = more > 0 ? ', ' + th('+{count} more', { count: _sdNum(more) }) : '';
     if (tail && !more && String(first.reason || '').toLowerCase() === String(tail).toLowerCase()) tail = '';
     const parts = _sdSubParts(head + _esc(_sdTerse(first.reason)) + count, tail);
     parts.full = _sdPlain(head + _esc(first.reason) + count + (tail ? SD_SEP + tail : ''));
@@ -404,17 +404,17 @@ function _sdHealth(t) {
 function _sdAria(label, total, tally) {
     if (total === 0) return t('no {label} configured', { label });
     const bits = [];
-    if (tally.disabled)  bits.push(tally.disabled + ' disabled');
-    if (tally.down)      bits.push(tally.down + ' unreachable');
-    if (tally.warning)   bits.push(tally.warning + ' warnings');
-    if (tally.degraded)  bits.push(tally.degraded + ' degraded');
-    if (tally.unbound)   bits.push(tally.unbound + ' unbound');
-    if (tally.unused)    bits.push(tally.unused + ' unused');
-    if (tally.composite) bits.push(tally.composite + ' composite');
-    if (tally.unchecked) bits.push(tally.unchecked + ' unchecked');
-    if (tally.unknown)   bits.push(tally.unknown + ' unreported');
-    bits.push(_sdNum(tally.ok) + ' healthy');
-    return _sdNum(total) + ' ' + label + ': ' + bits.join(', ');
+    if (tally.disabled)  bits.push(t('{count} disabled', { count: tally.disabled }));
+    if (tally.down)      bits.push(t('{count} unreachable', { count: tally.down }));
+    if (tally.warning)   bits.push(tn('{count} warning', '{count} warnings', tally.warning, { count: tally.warning }));
+    if (tally.degraded)  bits.push(t('{count} degraded', { count: tally.degraded }));
+    if (tally.unbound)   bits.push(t('{count} unbound', { count: tally.unbound }));
+    if (tally.unused)    bits.push(t('{count} unused', { count: tally.unused }));
+    if (tally.composite) bits.push(t('{count} composite', { count: tally.composite }));
+    if (tally.unchecked) bits.push(t('{count} unchecked', { count: tally.unchecked }));
+    if (tally.unknown)   bits.push(t('{count} unreported', { count: tally.unknown }));
+    bits.push(t('{count} healthy', { count: _sdNum(tally.ok) }));
+    return t('{count} {objects}: {details}', { count: _sdNum(total), objects: label, details: bits.join(', ') });
 }
 
 function _sdAgo(ms) {
@@ -506,14 +506,14 @@ function _sdEpFacts(ep, info) {
     if (ep.http3) f.push('HTTP/3');
     if (red) {
         f.push(t('redirects to {to}', { to: red.to || t('another entry point') }));
-        f.push(red.permanent === false ? '302 temporary' : '301 permanent');
+        f.push(red.permanent === false ? t('302 temporary') : t('301 permanent'));
     }
     if (mws.length) f.push(mws.join(', '));
     if (pp.length) f.push('proxyProtocol ' + pp.join(' '));
     if (fh.length) f.push('forwardedHeaders ' + fh.join(' '));
     if (ep.udp && ep.udp.timeout && _sdEpProto(ep, info).key === 'udp') f.push(t('udp timeout {timeout}', { timeout: ep.udp.timeout }));
-    if (rt.idleTimeout && rt.idleTimeout !== '0s') f.push('idle ' + rt.idleTimeout);
-    if (rt.readTimeout && rt.readTimeout !== '0s') f.push('read ' + rt.readTimeout);
+    if (rt.idleTimeout && rt.idleTimeout !== '0s') f.push(t('idle {timeout}', { timeout: rt.idleTimeout }));
+    if (rt.readTimeout && rt.readTimeout !== '0s') f.push(t('read {timeout}', { timeout: rt.readTimeout }));
     if (ep.allowACMEByPass) f.push(t('ACME bypass allowed'));
     if (ep.reusePort) f.push('reusePort');
     return f;
@@ -542,12 +542,12 @@ function _sdEpRow(ep, info) {
     const go = _sdExc('', '', info.n, 'routers', base, info.objs).go;
     const flags = [];
     const disabledN = info.err - (info.down || 0);
-    if (disabledN) flags.push(_sdExc('d-bad',  'ph-fill ph-x-circle', disabledN,  'disabled', base + ';apistatus=disabled', info.objs.filter(o => o.cell === 'err' && !o.down)));
-    if (info.down) flags.push(_sdExc('d-bad',  'ph-fill ph-warning-octagon', info.down, 'unreachable', base + ';apistatus=unreachable', info.objs.filter(o => o.down)));
+    if (disabledN) flags.push(_sdExc('d-bad',  'ph-fill ph-x-circle', disabledN,  tc('label', 'disabled'), base + ';apistatus=disabled', info.objs.filter(o => o.cell === 'err' && !o.down)));
+    if (info.down) flags.push(_sdExc('d-bad',  'ph-fill ph-warning-octagon', info.down, tc('label', 'unreachable'), base + ';apistatus=unreachable', info.objs.filter(o => o.down)));
     const degradedN = info.degraded || 0;
     const warnN = info.warn - degradedN;
-    if (degradedN) flags.push(_sdExc('d-warn', 'ph-fill ph-warning-diamond', degradedN, 'degraded', base + ';apistatus=degraded', info.objs.filter(o => o.degraded)));
-    if (warnN) flags.push(_sdExc('d-warn', 'ph-fill ph-warning',  warnN, 'warnings', base + ';apistatus=warning', info.objs.filter(o => o.cell === 'warn' && !o.degraded)));
+    if (degradedN) flags.push(_sdExc('d-warn', 'ph-fill ph-warning-diamond', degradedN, tc('label', 'degraded'), base + ';apistatus=degraded', info.objs.filter(o => o.degraded)));
+    if (warnN) flags.push(_sdExc('d-warn', 'ph-fill ph-warning',  warnN, tc('label', 'warnings'), base + ';apistatus=warning', info.objs.filter(o => o.cell === 'warn' && !o.degraded)));
     const flagHtml = flags.length
         ? flags.map(f => _sdFlag(f, false)).join('')
         : info.blind ? `<span class="sig-idle-txt">${th('no data')}</span>`
@@ -741,7 +741,7 @@ function _sdBackendTxt(b, total) {
         bits.push(b.down === 0 ? t('{up} of {total} backends up', { up: _sdNum(b.up), total: _sdNum(b.total) })
                                : t('{down} of {total} backends down', { down: _sdNum(b.down), total: _sdNum(b.total) }));
     }
-    if (b.composite) bits.push(_sdNum(b.composite) + ' composite');
+    if (b.composite) bits.push(t('{count} composite', { count: _sdNum(b.composite) }));
     if (bits.length) return bits.join(SD_SEP);
     return total ? t('no health checks configured') : '';
 }
@@ -795,17 +795,17 @@ function _sdRender(model) {
     cards.push({
         key: 'http', total: h.total, health: _sdHealth(h.t), cells: h.cells, provs: h.provs,
         aria: _sdAria(t('HTTP routers'), h.total, h.t),
-        explore: hGo, exploreLabel: 'Explore',
+        explore: hGo, exploreLabel: tc('button', 'Explore'),
         sub: h.total === 0 ? _sdSubPlain(emptyTxt('http')) : _sdSubOffender(h.objs,
-            _sdNum(h.t.ok) + ' live' + (h.truncated ? ' of ' + _sdNum(h.objs.length) + ' listed' : '')
-            + (h.t.unbound ? SD_SEP + _sdNum(h.t.unbound) + ' unbound' : '')),
+            (h.truncated ? th('{ok} live of {count} listed', { ok: _sdNum(h.t.ok), count: _sdNum(h.objs.length) }) : th('{ok} live', { ok: _sdNum(h.t.ok) }))
+            + (h.t.unbound ? SD_SEP + th('{count} unbound', { count: _sdNum(h.t.unbound) }) : '')),
         flags: [
-            h.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle', h.t.disabled, 'disabled',   hGo + ';apistatus=disabled', h.groups.disabled),
-            h.t.down     && _sdExc('d-bad',  'ph-fill ph-warning-octagon', h.t.down, 'unreachable', hGo + ';apistatus=unreachable', h.groups.down),
-            h.t.degraded && _sdExc('d-warn', 'ph-fill ph-warning-diamond', h.t.degraded, 'degraded', hGo + ';apistatus=degraded', h.groups.degraded),
-            h.t.warning  && _sdExc('d-warn', 'ph-fill ph-warning',  h.t.warning,  'warnings',   hGo + ';apistatus=warning',  h.groups.warning),
-            h.t.unbound  && _sdExc('d-off',  'ph-bold ph-plug',     h.t.unbound,  'unbound',    hGo + ';apistatus=unbound',  h.groups.unbound),
-            h.t.unknown  && _sdExc('d-off',  'ph-bold ph-question', h.t.unknown,  'unreported', hGo,                         h.groups.unknown),
+            h.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle', h.t.disabled, tc('label', 'disabled'),   hGo + ';apistatus=disabled', h.groups.disabled),
+            h.t.down     && _sdExc('d-bad',  'ph-fill ph-warning-octagon', h.t.down, tc('label', 'unreachable'), hGo + ';apistatus=unreachable', h.groups.down),
+            h.t.degraded && _sdExc('d-warn', 'ph-fill ph-warning-diamond', h.t.degraded, tc('label', 'degraded'), hGo + ';apistatus=degraded', h.groups.degraded),
+            h.t.warning  && _sdExc('d-warn', 'ph-fill ph-warning',  h.t.warning,  tc('label', 'warnings'),   hGo + ';apistatus=warning',  h.groups.warning),
+            h.t.unbound  && _sdExc('d-off',  'ph-bold ph-plug',     h.t.unbound,  tc('label', 'unbound'),    hGo + ';apistatus=unbound',  h.groups.unbound),
+            h.t.unknown  && _sdExc('d-off',  'ph-bold ph-question', h.t.unknown,  tc('label', 'unreported'), hGo,                         h.groups.unknown),
         ].filter(Boolean),
     });
 
@@ -817,15 +817,15 @@ function _sdRender(model) {
     cards.push({
         key: 'stream', total: s.total, health: _sdHealth(s.t), cells: s.cells, provs: s.provs,
         aria: _sdAria(t('stream routers'), s.total, s.t),
-        explore: sGo, exploreLabel: 'Explore ' + streamProto.toUpperCase(),
+        explore: sGo, exploreLabel: tc('button', 'Explore {protocol}', { protocol: streamProto.toUpperCase() }),
         sub: s.total === 0 ? _sdSubPlain(emptyTxt('stream')) : _sdSubOffender(s.objs,
             '<span class="d-proto d-proto-tcp">TCP</span> ' + _sdNum(tcpN) + SD_SEP
           + '<span class="d-proto d-proto-udp">UDP</span> ' + _sdNum(udpN)
-          + (s.t.ok === s.total ? SD_SEP + 'all forwarding' : '')),
+          + (s.t.ok === s.total ? SD_SEP + th('all forwarding') : '')),
         flags: [
-            s.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle', s.t.disabled, 'disabled', sGo + ';apistatus=disabled', s.groups.disabled),
-            s.t.warning  && _sdExc('d-warn', 'ph-fill ph-warning',  s.t.warning,  'warnings', sGo + ';apistatus=warning',  s.groups.warning),
-            s.t.unbound  && _sdExc('d-off',  'ph-bold ph-plug',     s.t.unbound,  'unbound',  sGo + ';apistatus=unbound',  s.groups.unbound),
+            s.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle', s.t.disabled, tc('label', 'disabled'), sGo + ';apistatus=disabled', s.groups.disabled),
+            s.t.warning  && _sdExc('d-warn', 'ph-fill ph-warning',  s.t.warning,  tc('label', 'warnings'), sGo + ';apistatus=warning',  s.groups.warning),
+            s.t.unbound  && _sdExc('d-off',  'ph-bold ph-plug',     s.t.unbound,  tc('label', 'unbound'),  sGo + ';apistatus=unbound',  s.groups.unbound),
         ].filter(Boolean),
     });
 
@@ -834,29 +834,29 @@ function _sdRender(model) {
     const backendTxt = _sdBackendTxt(b, v.total);
     cards.push({
         key: 'service', total: v.total, health: _sdHealth(v.t), cells: v.cells, provs: v.provs,
-        aria: _sdAria('services', v.total, v.t),
-        explore: 'tab=live', exploreLabel: 'Explore',
+        aria: _sdAria(t('services'), v.total, v.t),
+        explore: 'tab=live', exploreLabel: tc('button', 'Explore'),
         sub: v.total === 0 ? _sdSubPlain(emptyTxt('service')) : _sdSubOffender(v.objs, backendTxt),
         flags: [
-            v.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle',            v.t.disabled, 'disabled',      'tab=live;svcstatus=error',   v.groups.disabled),
-            v.t.down     && _sdExc('d-bad',  'ph-fill ph-arrow-fat-line-down', v.t.down,     'down',          'tab=live;svcstatus=error',   v.groups.down),
-            v.t.degraded && _sdExc('d-warn', 'ph-fill ph-warning-diamond',     v.t.degraded, 'degraded',      'tab=live;svcstatus=warning', v.groups.degraded),
-            v.t.warning  && _sdExc('d-warn', 'ph-fill ph-warning',             v.t.warning,  'warnings',      'tab=live;svcstatus=warning', v.groups.warning),
-            v.t.composite && _sdExc('d-off', 'ph-bold ph-share-network',        v.t.composite, 'composite',    'tab=live',                   v.groups.composite),
+            v.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle',            v.t.disabled, tc('label', 'disabled'),      'tab=live;svcstatus=error',   v.groups.disabled),
+            v.t.down     && _sdExc('d-bad',  'ph-fill ph-arrow-fat-line-down', v.t.down,     tc('label', 'down'),          'tab=live;svcstatus=error',   v.groups.down),
+            v.t.degraded && _sdExc('d-warn', 'ph-fill ph-warning-diamond',     v.t.degraded, tc('label', 'degraded'),      'tab=live;svcstatus=warning', v.groups.degraded),
+            v.t.warning  && _sdExc('d-warn', 'ph-fill ph-warning',             v.t.warning,  tc('label', 'warnings'),      'tab=live;svcstatus=warning', v.groups.warning),
+            v.t.composite && _sdExc('d-off', 'ph-bold ph-share-network',        v.t.composite, tc('label', 'composite'),    'tab=live',                   v.groups.composite),
         ].filter(Boolean),
     });
 
     const w = m.middleware;
     cards.push({
         key: 'middleware', total: w.total, health: _sdHealth(w.t), cells: w.cells, provs: w.provs,
-        aria: _sdAria('middlewares', w.total, w.t),
-        explore: 'tab=middlewares', exploreLabel: 'Explore',
+        aria: _sdAria(t('middlewares'), w.total, w.t),
+        explore: 'tab=middlewares', exploreLabel: tc('button', 'Explore'),
         sub: w.total === 0 ? _sdSubPlain(emptyTxt('middleware')) : _sdSubOffender(w.objs,
             th('{max} in use', { max: _sdNum(Math.max(0, w.total - w.t.unused)) }) + (w.t.unused ? SD_SEP + th('{count} unused', { count: _sdNum(w.t.unused) }) : '')),
         flags: [
-            w.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle',   w.t.disabled, 'disabled', 'tab=middlewares', w.groups.disabled),
-            w.t.warning  && _sdExc('d-warn', 'ph-fill ph-warning',    w.t.warning,  'warnings', 'tab=middlewares', w.groups.warning),
-            w.t.unused   && _sdExc('d-off',  'ph-bold ph-link-break', w.t.unused,   'unused',   'tab=middlewares', w.groups.unused),
+            w.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle',   w.t.disabled, tc('label', 'disabled'), 'tab=middlewares', w.groups.disabled),
+            w.t.warning  && _sdExc('d-warn', 'ph-fill ph-warning',    w.t.warning,  tc('label', 'warnings'), 'tab=middlewares', w.groups.warning),
+            w.t.unused   && _sdExc('d-off',  'ph-bold ph-link-break', w.t.unused,   tc('label', 'unused'),   'tab=middlewares', w.groups.unused),
         ].filter(Boolean),
     });
 
@@ -916,7 +916,7 @@ function _sdRender(model) {
         else if (names.length === 2) where = `${th('all inside {b} and {b2}', { b: tmHtml(`<b>${_esc(names[0])}</b>`), b2: tmHtml(`<b>${_esc(names[1])}</b>`) })}`;
         else if (names.length > 2)   where = t('across {names_count} providers', { names_count: names.length });
         else if (b.total > 0)        where = t('{up} of {total} backends up', { up: _sdNum(b.up), total: _sdNum(b.total) });
-        else if (total4 > 0)         where = _sdNum(total4) + ' objects';
+        else if (total4 > 0)         where = th('{count} objects', { count: _sdNum(total4) });
 
         const shown = items.slice(0, 4);
         const rest  = items.length - shown.length;
@@ -977,7 +977,7 @@ function _sdRender(model) {
                      + ' title="' + _esc(on ? t('Clear the {p} scope', { p: k.p }) : t('Scope every card to {p}', { p: k.p })) + '">'
                      + glyph + '</button>';
             }).join('')}${caveats.length ? '<span class="sig-key-scope" data-sd="scope=" title="' + _esc(caveats.join(' ')) + '">'
-                  + '<i class="ph-bold ph-funnel"></i>' + (_sdScope ? _esc(_sdScope) : 'partial') + '</span>' : ''}`;
+                  + '<i class="ph-bold ph-funnel"></i>' + (_sdScope ? _esc(_sdScope) : th('partial')) + '</span>' : ''}`;
     }
 
     if (barEl) {
@@ -1017,9 +1017,9 @@ function _sdRender(model) {
                 if (!i.blind && i.n === 0) idleN++;
             });
             const summary = epBlind ? t('router list unavailable') : [
-                _sdNum(httpN) + ' HTTP',
-                strN  ? _sdNum(strN) + ' stream' : '',
-                idleN ? _sdNum(idleN) + ' idle' : '',
+                t('{count} HTTP', { count: _sdNum(httpN) }),
+                strN  ? t('{count} stream', { count: _sdNum(strN) }) : '',
+                idleN ? t('{count} idle', { count: _sdNum(idleN) }) : '',
             ].filter(Boolean).join(' · ');
             barEl.innerHTML = `<div class="sig-ep-head"><i class="ph-fill ph-door-open sig-ep-headic"></i><span class="sc-sec-label">${th('Entry Points')}</span><span class="d-n">${eps.length}</span><span class="sc-sec-rule"></span><span class="sig-ep-tot">${_esc(summary)}</span></div><div class="sig-ep-rows" id="entrypointsList">${eps.map(ep => _sdEpRow(ep, info.get(ep.name))).join('')}</div>`;
         } else {
@@ -1038,9 +1038,9 @@ function _sdRender(model) {
         if (feat) {
             const met = (feat.metrics && String(feat.metrics).toLowerCase() !== 'false') ? String(feat.metrics) : '';
             const tra = (feat.tracing && String(feat.tracing).toLowerCase() !== 'false') ? String(feat.tracing) : '';
-            f.push({ ic: 'ph-chart-line', t: met ? 'metrics ' + met : t('metrics off'), on: !!met, off: !met });
+            f.push({ ic: 'ph-chart-line', t: met ? t('metrics {provider}', { provider: met }) : t('metrics off'), on: !!met, off: !met });
             f.push({ ic: 'ph-scroll',     t: feat.accessLog ? t('access log on') : t('access log off'), on: !!feat.accessLog, off: !feat.accessLog });
-            f.push({ ic: 'ph-crosshair',  t: tra ? 'tracing ' + tra : t('tracing off'), on: !!tra, off: !tra });
+            f.push({ ic: 'ph-crosshair',  t: tra ? t('tracing {provider}', { provider: tra }) : t('tracing off'), on: !!tra, off: !tra });
         }
         rtEl.className = 'sig-runtime';
         rtEl.innerHTML = f.map(x => '<span class="sig-f ' + (x.on ? 'sig-f-on' : x.off ? 'sig-f-off' : '') + '">'

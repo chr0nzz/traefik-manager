@@ -168,12 +168,12 @@ window.rmOpenEditModal = function(routeId) {
     sel.innerHTML = `<option value="">${thc('option', 'Auto-detect')}</option>`;
     const allGroups = [
         ...(_rmConfig.custom_groups || []).map(g => g.name),
-        ...['Media','Monitoring','Infrastructure','Security','Home',t('Files & Data'),'Network','Dev','Servers','Other']
+        ...['Media','Monitoring','Infrastructure','Security','Home','Files & Data','Network','Dev','Servers','Other']
     ];
     allGroups.forEach(name => {
         const opt = document.createElement('option');
         opt.value = name;
-        opt.textContent = name;
+        opt.textContent = _dskGroupLabel(name);
         opt.selected = (ov.group || '') === name;
         sel.appendChild(opt);
     });
@@ -272,11 +272,27 @@ const POD_RULES = [
     { name: 'Infrastructure', icon: 'ph-wrench',              keywords: ['traefik','portainer','proxmox','cockpit','nginx','caddy','haproxy','watchtower','dozzle','komodo','flint','gitea','gitlab','forgejo','drone','jenkins','vault','consul','nomad','ansible','terraform','penpot','n8n','windmill'] },
     { name: 'Security',       icon: 'ph-shield-check',        keywords: ['authentik','authelia','vaultwarden','bitwarden','crowdsec','fail2ban','wireguard','vpn','keycloak','zitadel','casdoor','lldap','kanidm'] },
     { name: 'Home',           icon: 'ph-house',               keywords: ['homeassistant','home-assistant','nodered','node-red','esphome','zigbee2mqtt','z2m','frigate','scrypted','wyze','tuya','matter','openhabing'] },
-    { name: t('Files & Data'),   icon: 'ph-folder-open',         keywords: ['nextcloud','seafile','filebrowser','syncthing','paperless','mealie','tandoor','grocy','bookstack','wiki','notion','obsidian','miniflux','freshrss','wallabag','linkding','shlink'] },
+    { name: 'Files & Data',   icon: 'ph-folder-open',         keywords: ['nextcloud','seafile','filebrowser','syncthing','paperless','mealie','tandoor','grocy','bookstack','wiki','notion','obsidian','miniflux','freshrss','wallabag','linkding','shlink'] },
     { name: 'Network',        icon: 'ph-network',             keywords: ['pihole','adguard','unifi','technitium','bind','nginx-proxy','ddclient','cloudflare','tailscale','zerotier','headscale','netbird'] },
     { name: 'Dev',            icon: 'ph-code',                keywords: ['gitea','gitlab','forgejo','github','gogs','drone','jenkins','argocd','harbor','registry','sonar','nexus','artifactory','semaphore','woodpecker','act','renovate','dependabot','code-server','coder','vscode','jupyter','jupyterlab','mlflow','airflow','prefect','dagster'] },
     { name: 'Servers',        icon: 'ph-desktop-tower',       keywords: ['proxmox','cockpit','idrac','ilo','ipmi','esxi','xcp','xen','hyperv','kvm','pve','unraid','truenas','freenas','opnsense','pfsense','mikrotik','synology','qnap','asustor'] },
 ];
+
+function _dskGroupLabel(name) {
+    const labels = {
+        'Media': tc('group', 'Media'),
+        'Monitoring': tc('group', 'Monitoring'),
+        'Infrastructure': tc('group', 'Infrastructure'),
+        'Security': tc('group', 'Security'),
+        'Home': tc('group', 'Home'),
+        'Files & Data': tc('group', 'Files & Data'),
+        'Network': tc('group', 'Network'),
+        'Dev': tc('group', 'Dev'),
+        'Servers': tc('group', 'Servers'),
+        'Other': tc('group', 'Other'),
+    };
+    return Object.prototype.hasOwnProperty.call(labels, name) ? labels[name] : name;
+}
 
 const DASH_POD_LIMIT  = 6;
 const DASH_ICON_LIMIT = 24;
@@ -533,7 +549,7 @@ function _dskState(r) {
         s.dotTip = (chk.self ? t('Online (self)')
             : chk.unverified ? (chk.note ? t('Proxy answered {status_code}, backend not verified. {note}', { status_code: chk.status_code, note: chk.note }) : t('Proxy answered {status_code}, backend not verified', { status_code: chk.status_code }))
             : chk.via_target ? t('Backend online · {latency_ms}ms', { latency_ms: chk.latency_ms })
-            : 'Online \u00b7 ' + chk.latency_ms + 'ms (' + chk.status_code + ')') + ' \u00b7 ' + _dskAgo(chk.at);
+            : t('Online · {latency_ms}ms ({status_code})', { latency_ms: chk.latency_ms, status_code: chk.status_code })) + ' \u00b7 ' + _dskAgo(chk.at);
     } else if (chk && chk.state === 'pending') {
         s.dotTip = (chk.error ? t('Router loaded, the last check failed: {error}, confirming on the next pass', { error: chk.error }) : t('Router loaded, the last check failed, confirming on the next pass'));
     } else if (!_dskChecksOn()) {
@@ -570,14 +586,14 @@ function _dskRowTitle(r, s, name) {
     const bits = [];
     if (name !== r.name) bits.push(r.name);
     if (s.url) bits.push(s.url + ' \u2192 ' + (r.target && r.target !== 'N/A' ? r.target : (r.service_name || t('unknown backend'))));
-    else if (r.target && r.target !== 'N/A') bits.push('backend ' + r.target);
-    bits.push('provider ' + (r.provider || 'file'));
+    else if (r.target && r.target !== 'N/A') bits.push(t('backend {target}', { target: r.target }));
+    bits.push(t('provider {provider}', { provider: r.provider || 'file' }));
     const eps = r.entryPoints || [];
     if (eps.length) bits.push(t('entry point {eps}', { eps: eps.join(', ') }));
     const nsrv = (r.servers || []).length;
-    if (nsrv) bits.push(nsrv + (nsrv === 1 ? ' server' : ' servers'));
+    if (nsrv) bits.push(tn('{n} server', '{n} servers', nsrv));
     const mws = r.middlewares || [];
-    if (mws.length) bits.push(mws.length + ' middleware' + (mws.length === 1 ? '' : 's') + ': ' + mws.map(m => String(m).split('@')[0]).join(', '));
+    if (mws.length) bits.push(tn('{n} middleware: {names}', '{n} middlewares: {names}', mws.length, { names: mws.map(m => String(m).split('@')[0]).join(', ') }));
     if (r.certResolver) bits.push(t('cert resolver {certResolver}', { certResolver: r.certResolver }));
     if (r.healthCheck && Object.keys(r.healthCheck).length) bits.push(t('active health check'));
     if (s.hosts > 1) bits.push(t('{hosts} hosts in the rule, the first is used', { hosts: s.hosts }));
@@ -634,10 +650,10 @@ function dashBuildIconTile(r, s) {
 function _dskAlarm(meta, down, warn) {
     let html = '';
     if (down) {
-        html += `<button type="button" class="sig-flag dsk-alarm" data-dsk="${_esc(_dskSpec({ act: 'alarm', pod: meta.name }))}" title="${down} route${down === 1 ? '' : 's'} in ${_esc(meta.name)} need attention"><i class="ph-fill ph-warning-octagon"></i><b>${down}</b><span class="sig-fl">${thc('button', 'down')}</span></button>`;
+        html += `<button type="button" class="sig-flag dsk-alarm" data-dsk="${_esc(_dskSpec({ act: 'alarm', pod: meta.name }))}" title="${thn('{n} route in {pod} needs attention', '{n} routes in {pod} need attention', down, { pod: _dskGroupLabel(meta.name) })}"><i class="ph-fill ph-warning-octagon"></i><b>${down}</b><span class="sig-fl">${thc('button', 'down')}</span></button>`;
     }
     if (warn) {
-        html += `<button type="button" class="sig-flag dsk-alarm dsk-alarm-warn" data-dsk="${_esc(_dskSpec({ act: 'alarm', pod: meta.name }))}" title="${thn('{n} route in {pod} have a backend server down', '{n} routes in {pod} have a backend server down', warn, { pod: meta.name })}"><i class="ph-fill ph-warning"></i><b>${warn}</b><span class="sig-fl">${thc('button', 'degraded')}</span></button>`;
+        html += `<button type="button" class="sig-flag dsk-alarm dsk-alarm-warn" data-dsk="${_esc(_dskSpec({ act: 'alarm', pod: meta.name }))}" title="${thn('{n} route in {pod} have a backend server down', '{n} routes in {pod} have a backend server down', warn, { pod: _dskGroupLabel(meta.name) })}"><i class="ph-fill ph-warning"></i><b>${warn}</b><span class="sig-fl">${thc('button', 'degraded')}</span></button>`;
     }
     return html;
 }
@@ -661,7 +677,7 @@ function dashBuildPod(entry) {
 
     pod.innerHTML = '<div class="sig-ep-head">'
         + '<i class="ph-fill ' + _esc(meta.icon) + ' sig-ep-headic"></i>'
-        + '<span class="sc-sec-label">' + _esc(meta.name) + '</span>'
+        + '<span class="sc-sec-label">' + _esc(_dskGroupLabel(meta.name)) + '</span>'
         + '<span class="d-n">' + list.length + '</span>'
         + '<span class="sc-sec-rule"></span>'
         + _dskAlarm(meta, down, warn)
@@ -694,10 +710,10 @@ function dashBuildPod(entry) {
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
         btn.setAttribute('aria-controls', bodyId);
         btn.setAttribute('aria-label', open
-            ? (icons ? t('Show fewer apps in {name}, {count} shown', { name: meta.name, count: list.length })
-                     : t('Show fewer routes in {name}, {count} shown', { name: meta.name, count: list.length }))
-            : (icons ? tn('Show {n} more app in {name}', 'Show {n} more apps in {name}', hidden.length, { name: meta.name })
-                     : tn('Show {n} more route in {name}', 'Show {n} more routes in {name}', hidden.length, { name: meta.name }))
+            ? (icons ? t('Show fewer apps in {name}, {count} shown', { name: _dskGroupLabel(meta.name), count: list.length })
+                     : t('Show fewer routes in {name}, {count} shown', { name: _dskGroupLabel(meta.name), count: list.length }))
+            : (icons ? tn('Show {n} more app in {name}', 'Show {n} more apps in {name}', hidden.length, { name: _dskGroupLabel(meta.name) })
+                     : tn('Show {n} more route in {name}', 'Show {n} more routes in {name}', hidden.length, { name: _dskGroupLabel(meta.name) }))
               + (hDown ? ', ' + t('{count} of them down', { count: hDown }) : '')
               + (hWarn ? ', ' + t('{count} of them degraded', { count: hWarn }) : ''));
         btn.innerHTML = open

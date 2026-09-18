@@ -14,7 +14,7 @@
             <button onclick="refreshEcsTab()" class="proto-btn text-xs px-3 py-1.5" title="{{ pgettext('tooltip', 'Refresh') }}"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>
     </div>
-    <div id="ecsVerdict" class="sig-root mb-4" data-note="These routes are discovered via Amazon ECS and are read-only. Edit them via your ECS task definitions."></div>
+    <div id="ecsVerdict" class="sig-root mb-4" data-note="{{ _('These routes are discovered via Amazon ECS and are read-only. Edit them via your ECS task definitions.') }}"></div>
     <div id="ecsContent">
         <div class="text-center py-16" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>

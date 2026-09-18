@@ -1,4 +1,4 @@
-.PHONY: test lint coverage docs docs-dev agent-test i18n-tools i18n-extract i18n-check i18n-compile
+.PHONY: test lint coverage docs docs-dev agent-test i18n-tools i18n-extract i18n-check i18n-compile i18n-pseudo
 
 ACORN_VERSION = 8.18.0
 
@@ -31,3 +31,6 @@ i18n-check:
 
 i18n-compile:
 	pybabel compile -d locale -D messages --statistics
+
+i18n-pseudo:
+	python scripts/i18n/pseudo.py $(or $(OUT),/tmp/tm-pseudo-locale)

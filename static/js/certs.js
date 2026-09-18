@@ -546,7 +546,7 @@ function _tmTlsOptCard(o, i) {
     const mtls = o.clientAuthType && o.clientAuthType !== 'NoClientCert';
     const sub = [
         o.minVersion ? _tlsVer(o.minVersion) + '+' : '',
-        o.maxVersion ? 'max ' + _tlsVer(o.maxVersion) : '',
+        o.maxVersion ? t('max {version}', { version: _tlsVer(o.maxVersion) }) : '',
         o.sniStrict ? t('SNI strict') : '',
         mtls ? 'mTLS' : '',
     ].filter(Boolean).join(' \u00b7 ') || 'defaults';
@@ -630,7 +630,7 @@ function openTlsOptDetail(o) {
     const yamlHtml = o.yaml ? renderDetailBlock(t('Raw YAML'), 'ph-code',
         `<div class="rounded-lg p-3 overflow-x-auto" style="background:var(--input-bg);border:1px solid var(--border)"><pre class="text-xs font-mono leading-relaxed" style="color:var(--green);margin:0">${_esc(o.yaml)}</pre></div>`) : '';
     document.getElementById('tlsOptDetailContent').innerHTML =
-        `${renderSection('Profile', 'ph-lock-laminated', rows)}${usedByHtml}${yamlHtml}`;
+        `${renderSection(tc('label', 'Profile'), 'ph-lock-laminated', rows)}${usedByHtml}${yamlHtml}`;
     document.getElementById('tlsOptDetailPanel').classList.add('open');
     setDetailDockOpen(true);
     document.getElementById('tlsOptDetailBackdrop').classList.add('open');

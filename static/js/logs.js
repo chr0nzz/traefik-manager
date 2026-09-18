@@ -332,12 +332,12 @@ function _lgStatusName(s) { return s ? (HTTP_STATUS[s] || '') : 'tunnel'; }
 function _lgHeldOpen(e) { return e.status === 101 || e.status === 0; }
 
 const LG_IP_GLYPH = {
-    'public':     ['ph-bold ph-globe', 'public'],
-    'private':    ['ph-bold ph-house-line', 'private'],
+    'public':     ['ph-bold ph-globe', t('public')],
+    'private':    ['ph-bold ph-house-line', t('private')],
     'cgnat':      ['ph-bold ph-arrows-in', 'cgnat'],
-    'loopback':   ['ph-bold ph-circle-dashed', 'loopback'],
+    'loopback':   ['ph-bold ph-circle-dashed', t('loopback')],
     'link-local': ['ph-bold ph-circle-dashed', t('link local')],
-    'unknown':    ['ph-bold ph-circle-dashed', 'unknown'],
+    'unknown':    ['ph-bold ph-circle-dashed', t('unknown')],
 };
 
 function _lgSpec(obj) {
@@ -676,9 +676,9 @@ function _lgSubOffender(list, label) {
     if (!list.length) return t('nothing recorded');
     const o = list[0];
     let s = `<b>${_esc(label ? label(o) : o.key)}</b> ${th('{n} requests', { n: tmHtml(_sdNum(o.n)) })}`;
-    if (o.err) s += ', ' + _sdNum(o.worstN) + ' x ' + o.worst;
+    if (o.err) s += ', ' + _esc(_sdNum(o.worstN) + ' x ' + o.worst);
     const more = list.filter(x => x.err).length - (o.err ? 1 : 0);
-    if (more > 0) s += ', +' + more + ' more failing';
+    if (more > 0) s += ', ' + th('+{count} more failing', { count: more });
     return s;
 }
 
@@ -691,9 +691,8 @@ function _lgFailFlag(bad, opts) {
         ic: anyE5 ? 'ph-fill ph-x-circle' : 'ph-fill ph-warning',
         n: bad.length, label: opts.label,
         go: _lgSpec(Object.assign({}, opts.facet(worst), { status: _lgErrStatus(worst.e4, worst.e5) })),
-        tip: bad.length + ' ' + (bad.length === 1 ? opts.one : opts.many) + ' ' + opts.verb
-            + '. Click to filter to the ' + _sdNum(worst.err) + ' failing '
-            + (worst.err === 1 ? 'request' : 'requests') + ' on ' + name + '.'
+        tip: opts.summary(bad.length) + '. '
+            + tn('Click to filter to the {n} failing request on {name}.', 'Click to filter to the {n} failing requests on {name}.', worst.err, { name })
     });
 }
 
@@ -816,9 +815,9 @@ function _lgEmptyVerdict(meta) {
         txt = t('Nothing matches');
         const bits = [];
         _lgActiveFacets().forEach(k => bits.push(k + ' ' + _logFacet[k]));
-        if (_logCountryFilter) bits.push('country ' + _logCountryFilter);
-        if (meta.q) bits.push('search "' + meta.q + '"');
-        prose = t('0 of the last {fetched} lines are {bits}', { fetched: _sdNum(meta.fetched), bits: bits.join(' and ') });
+        if (_logCountryFilter) bits.push(t('country {code}', { code: _logCountryFilter }));
+        if (meta.q) bits.push(t('search "{query}"', { query: meta.q }));
+        prose = t('0 of the last {fetched} lines are {bits}', { fetched: _sdNum(meta.fetched), bits: bits.join(' ' + t('and') + ' ') });
         actions = _lgFlag({ cls: 'd-blue', ic: 'ph-bold ph-x', n: '', label: t('clear filters'), go: 'clear=all', tip: t('Clear every filter and the search box') })
             ;
         const wider = LG_LINE_STEPS.find(n => n > _currentLogLines);
@@ -837,11 +836,11 @@ function _lgEmptyVerdict(meta) {
 function _lgVerdict(v) {
     const items = [];
     let ic = 'ph-fill ph-check-circle', txt = t('All clean');
-    if (v.health === 'down') { ic = 'ph-fill ph-warning-octagon'; txt = _sdNum(v.s5) + ' server ' + (v.s5 === 1 ? 'error' : 'errors'); }
+    if (v.health === 'down') { ic = 'ph-fill ph-warning-octagon'; txt = tn('{count} server error', '{count} server errors', v.s5, { count: _sdNum(v.s5) }); }
     else if (v.health === 'warn') {
         ic = 'ph-fill ph-warning-circle';
-        txt = v.s4 ? _sdNum(v.s4) + ' client ' + (v.s4 === 1 ? 'error' : 'errors')
-                   : _sdNum(v.slow) + ' slow ' + (v.slow === 1 ? 'request' : 'requests');
+        txt = v.s4 ? tn('{count} client error', '{count} client errors', v.s4, { count: _sdNum(v.s4) })
+                   : tn('{count} slow request', '{count} slow requests', v.slow, { count: _sdNum(v.slow) });
     }
     v.codeRank.slice(0, 3).forEach(([code, n]) => {
         const bad = code >= 500;
@@ -889,7 +888,7 @@ function _lgStatusCard(rows, bucket, codeRank, total) {
         go: _lgSpec({ status: '5xx' }), tip: t('{s5} server errors. Click to filter the log list.', { s5 }) }));
     if (s4) flags.push(_lgFlag({ cls: 'd-warn', ic: 'ph-fill ph-warning', n: s4, label: '4xx',
         go: _lgSpec({ status: '4xx' }), tip: t('{s4} client errors. Click to filter the log list.', { s4 }) }));
-    if (!flags.length) flags.push(_lgOk('all 2xx'));
+    if (!flags.length) flags.push(_lgOk(t('all 2xx')));
 
     const groups = [
         { cls: 'sig-cell-err',  items: rows.filter(e => _lgStatusClass(e.status) === '5xx').map(_lgCellLabel) },
@@ -911,15 +910,15 @@ function _lgStatusCard(rows, bucket, codeRank, total) {
     let sub;
     if (codeRank.length) {
         sub = _lgSub(`<b>${codeRank[0][0]}</b> ${th('{toLowerCase} x{v1}', { toLowerCase: tmHtml(_lgStatusName(codeRank[0][0]).toLowerCase()), v1: tmHtml(_sdNum(codeRank[0][1])) })}`,
-            codeRank.length > 1 ? '+' + (codeRank.length - 1) + ' codes' : '');
+            codeRank.length > 1 ? th('+{count} codes', { count: codeRank.length - 1 }) : '');
     } else {
-        sub = _lgSub(`<b>${_sdNum(bucket['2xx'])}</b> ${th('ok{SD_SEP}{b} redirects', { SD_SEP: tmHtml(SD_SEP), b: tmHtml(`<b>${_sdNum(bucket['3xx'])}</b>`) })}`, 'clean');
+        sub = _lgSub(`<b>${_sdNum(bucket['2xx'])}</b> ${th('ok{SD_SEP}{b} redirects', { SD_SEP: tmHtml(SD_SEP), b: tmHtml(`<b>${_sdNum(bucket['3xx'])}</b>`) })}`, th('clean'));
     }
 
     return _lgCard({
         key: 'status', accent: 'var(--blue)', ic: 'ph-fill ph-pulse', title: t('Status Codes'),
         health: s5 ? 'down' : (s4 ? 'warn' : ''),
-        go: (s5 || s4) ? _lgSpec({ status: _lgErrStatus(s4, s5) }) : '', goLabel: 'Errors',
+        go: (s5 || s4) ? _lgSpec({ status: _lgErrStatus(s4, s5) }) : '', goLabel: tc('button', 'Errors'),
         goTip: t('Filter the log list to the {count} failing requests', { count: _sdNum(s4 + s5) }),
         total: _sdNum(total), flags: flags.join(''), sub: sub,
         body: _lgStrip(groups, aria),
@@ -932,9 +931,9 @@ function _lgStatusCard(rows, bucket, codeRank, total) {
 }
 
 function _lgLatencyCard(rows, timed, d) {
-    const heldWord = d.held === 1 ? 'upgrade' : 'upgrades';
+    const heldWord = d.held === 1 ? t('upgrade') : t('upgrades');
     const heldTip = d.held
-        ? t('{held} protocol {heldWord}, a websocket or a CONNECT tunnel, the longest held open for {lgSpanTxt}. Traefik logs the whole connection lifetime as the duration, so these are left out of the average and the bands here. Click to list them.', { held: _sdNum(d.held), heldWord, lgSpanTxt: _lgSpanTxt(d.heldMax.durMs) })
+        ? tn('{count} protocol upgrade, a websocket or a CONNECT tunnel, the longest held open for {span}. Traefik logs the whole connection lifetime as the duration, so these are left out of the average and the bands here. Click to list them.', '{count} protocol upgrades, a websocket or a CONNECT tunnel, the longest held open for {span}. Traefik logs the whole connection lifetime as the duration, so these are left out of the average and the bands here. Click to list them.', d.held, { count: _sdNum(d.held), span: _lgSpanTxt(d.heldMax.durMs) })
         : '';
     if (!timed.length) {
         return _lgCard({
@@ -943,7 +942,7 @@ function _lgLatencyCard(rows, timed, d) {
             sub: _lgSub(d.held ? th('nothing here is a completed response') : th('this access log format carries no duration')),
             body: `<p class="lg-note">${d.held ? th('Every duration in this window belongs to a connection Traefik held open rather than to a response it completed, so there is nothing to average. {tip}', { tip: heldTip }) : `${th("Traefik's generic {common} writer stops after the user agent, so no request duration reaches the log. Set {accesslog_format_json} in the static config for timings.", { common: tmHtml(`<code>common</code>`), accesslog_format_json: tmHtml(`<code>accessLog.format: json</code>`) })}`}</p>`,
             go: d.held ? _lgSpec({ dur: 'held' }) : 'cfg=accesslog',
-            goLabel: d.held ? 'Upgrades' : t('Static Config'),
+            goLabel: d.held ? tc('button', 'Upgrades') : t('Static Config'),
             goTip: d.held ? t('Filter the log list to the held-open connections') : t('Open the Static Config tab'),
             foot: d.held
                 ? _lgProv({ ic: 'ph-bold ph-plugs-connected', label: heldWord, n: d.held, go: _lgSpec({ dur: 'held' }), tip: heldTip })
@@ -962,12 +961,12 @@ function _lgLatencyCard(rows, timed, d) {
 
     const maxWhere = d.maxRow ? ' ' + d.maxRow.path : '';
     const tailBits = [];
-    if (d.held) tailBits.push(_sdNum(d.held) + ' ' + heldWord + ', longest ' + _lgSpanTxt(d.heldMax.durMs));
-    if (d.untimed > 0) tailBits.push(_sdNum(d.untimed) + ' untimed');
+    if (d.held) tailBits.push(th('{count} {upgrades}, longest {span}', { count: _sdNum(d.held), upgrades: heldWord, span: _lgSpanTxt(d.heldMax.durMs) }));
+    if (d.untimed > 0) tailBits.push(th('{count} untimed', { count: _sdNum(d.untimed) }));
     const sub = _lgSub(`${th('p50 {b}{SD_SEP}p95 {b2}{SD_SEP}max {b3}{maxWhere}', { b: tmHtml(`<b>${_lgMs(d.p50)}</b>`), SD_SEP: tmHtml(SD_SEP), b2: tmHtml(`<b>${_lgMs(d.p95)}</b>`), b3: tmHtml(`<b>${_lgMs(d.maxDur)}</b>`), maxWhere })}`,
         tailBits.join(SD_SEP));
 
-    const lab = e => _lgMs(e.durMs) + ' ' + e.method + ' ' + e.path + (e.ip ? ' from ' + e.ip : '');
+    const lab = e => _lgMs(e.durMs) + ' ' + e.method + ' ' + e.path + (e.ip ? ' ' + t('from {ip}', { ip: e.ip }) : '');
     const groups = [
         { cls: 'sig-cell-err',  items: timed.filter(e => e.durMs >= 2000).sort((a, b) => b.durMs - a.durMs).map(lab) },
         { cls: 'sig-cell-warn', items: timed.filter(e => e.durMs >= 100 && e.durMs < 2000).sort((a, b) => b.durMs - a.durMs).map(lab) },
@@ -978,7 +977,7 @@ function _lgLatencyCard(rows, timed, d) {
     return _lgCard({
         key: 'latency', accent: 'var(--teal)', ic: 'ph-fill ph-timer', title: t('Response Time'),
         health: d.vslow ? 'down' : (d.slow ? 'warn' : ''),
-        go: d.maxRow ? _lgSpec({ path: d.maxRow.path }) : '', goLabel: 'Slowest',
+        go: d.maxRow ? _lgSpec({ path: d.maxRow.path }) : '', goLabel: tc('button', 'Slowest'),
         goTip: d.maxRow ? t('Filter the log list to {path}', { path: d.maxRow.path }) : '',
         total: hero.n + (hero.u ? '<span class="lg-unit">' + hero.u + '</span>' : ''),
         flags: flags.join(''), sub: sub,
@@ -1014,7 +1013,7 @@ function _lgMethodsCard(rows, total) {
     });
     return _lgCard({
         key: 'methods', accent: 'var(--orange)', ic: 'ph-fill ph-swap', title: t('Methods'),
-        go: top ? _lgSpec({ method: top.key }) : '', goLabel: 'Top',
+        go: top ? _lgSpec({ method: top.key }) : '', goLabel: tc('button', 'Top'),
         goTip: top ? t('Filter the log list to {key}', { key: top.key }) : '',
         total: _sdNum(list.length), flags: flags.join(''), sub: sub,
         body: built.body, tail: built.tail
@@ -1032,7 +1031,7 @@ function _lgDomainsCard(rows, total, isJson) {
                 : `${th("Traefik's {common} format cannot record the request Host. Set {accesslog_format_json} in the static config to rank domains.", { common: tmHtml(`<code>common</code>`), accesslog_format_json: tmHtml(`<code>accessLog.format: json</code>`) })}`);
         return _lgCard({
             key: 'domains', cls: 'lg-blind', accent: 'var(--purple)', ic: 'ph-fill ph-globe-simple', title: t('Domains'),
-            go: sel ? 'clear=all' : 'cfg=accesslog', goLabel: sel ? 'Clear' : t('Static Config'),
+            go: sel ? 'clear=all' : 'cfg=accesslog', goLabel: sel ? tc('button', 'Clear') : t('Static Config'),
             goTip: sel ? t('Clear every filter and the search box') : t('Open the Static Config tab'),
             total: '-', flags: _lgOk(sel ? t('none in selection') : t('not logged'), 'ph-bold ph-info'),
             sub: _lgSub(sel ? th('no Host named in this selection') : (isJson ? th('no Host field in these lines') : th('the CLF access log has no Host field'))),
@@ -1044,8 +1043,8 @@ function _lgDomainsCard(rows, total, isJson) {
     const bad = list.filter(o => o.err);
     const failing = bad.length;
     const flags = failing
-        ? [_lgFailFlag(bad, { label: t('with errors'), one: 'domain', many: 'domains',
-            verb: t('served at least one failing request'), facet: o => ({ domain: o.key }) })]
+        ? [_lgFailFlag(bad, { label: t('with errors'),
+            summary: n => tn('{count} domain served at least one failing request', '{count} domains served at least one failing request', n, { count: _sdNum(n) }), facet: o => ({ domain: o.key }) })]
         : [_lgOk(t('all healthy'))];
     const built = _lgRankBody(list, { total: total, noun: 'domains', facet: o => ({ domain: o.key }) });
     const plain = rows.filter(e => e.scheme && e.scheme !== 'https').length;
@@ -1056,7 +1055,7 @@ function _lgDomainsCard(rows, total, isJson) {
     ].join('') : '';
     return _lgCard({
         key: 'domains', accent: 'var(--purple)', ic: 'ph-fill ph-globe-simple', title: t('Domains'),
-        go: _lgSpec({ domain: list[0].key }), goLabel: failing ? 'Worst' : 'Top',
+        go: _lgSpec({ domain: list[0].key }), goLabel: failing ? tc('button', 'Worst') : tc('button', 'Top'),
         goTip: t('Filter the log list to {key}', { key: list[0].key }),
         total: _sdNum(list.length), flags: flags.join(''),
         sub: _lgSub(_lgSubOffender(list)),
@@ -1085,8 +1084,8 @@ function _lgPathsCard(rows, total) {
     const failing = bad.length;
     const once = raw.filter(o => o.n === 1).length;
     const flags = failing
-        ? [_lgFailFlag(bad, { label: tc('label', 'failing'), one: 'path', many: 'paths',
-            verb: t('returned at least one error'), facet: o => ({ path: o.key }), name: o => o.label })]
+        ? [_lgFailFlag(bad, { label: tc('label', 'failing'),
+            summary: n => tn('{count} path returned at least one error', '{count} paths returned at least one error', n, { count: _sdNum(n) }), facet: o => ({ path: o.key }), name: o => o.label })]
         : [_lgOk(t('all healthy'))];
     const built = _lgRankBody(list, {
         total: total, noun: 'paths',
@@ -1097,7 +1096,7 @@ function _lgPathsCard(rows, total) {
     });
     return _lgCard({
         key: 'paths', cls: 'lg-wide', accent: 'var(--teal)', ic: 'ph-fill ph-path', title: t('Paths'),
-        go: list.length ? _lgSpec({ path: list[0].key }) : '', goLabel: failing ? 'Worst' : 'Top',
+        go: list.length ? _lgSpec({ path: list[0].key }) : '', goLabel: failing ? tc('button', 'Worst') : tc('button', 'Top'),
         goTip: list.length ? t('Filter the log list to {label}', { label: list[0].label || list[0].key }) : '',
         total: _sdNum(list.length), flags: flags.join(''),
         sub: _lgSub(_lgSubOffender(list, o => o.label)),
@@ -1115,13 +1114,13 @@ function _lgClientsCard(rows, total) {
     const list = _lgRank(rows, e => e.ip, e => classifyIp(e.ip));
     const bad = list.filter(o => o.err && o.err === o.n);
     const flags = bad.length
-        ? [_lgFailFlag(bad, { label: t('error only'), one: 'client', many: 'clients',
-            verb: t('got nothing but errors in this window'), facet: o => ({ ip: o.key }) })]
+        ? [_lgFailFlag(bad, { label: t('error only'),
+            summary: n => tn('{count} client got nothing but errors in this window', '{count} clients got nothing but errors in this window', n, { count: _sdNum(n) }), facet: o => ({ ip: o.key }) })]
         : [_lgOk(t('all served'))];
     const built = _lgRankBody(list, {
         total: total, noun: 'clients',
         facet: o => ({ ip: o.key }),
-        tipName: o => o.key + ', ' + (LG_IP_GLYPH[o.kind] || LG_IP_GLYPH.unknown)[1] + ' address',
+        tipName: o => o.key + ', ' + t('{v1} address', { v1: (LG_IP_GLYPH[o.kind] || LG_IP_GLYPH.unknown)[1] }),
         glyph: o => {
             const g = LG_IP_GLYPH[o.kind] || LG_IP_GLYPH.unknown;
             return '<i class="lg-g ' + g[0] + '" title="' + _esc(t('{v1} address', { v1: g[1] })) + '"></i>';
@@ -1136,7 +1135,7 @@ function _lgClientsCard(rows, total) {
     }).join('');
     return _lgCard({
         key: 'clients', accent: 'var(--blue)', ic: 'ph-fill ph-users-three', title: t('Clients'),
-        go: list.length ? _lgSpec({ ip: list[0].key }) : '', goLabel: list.some(o => o.err) ? 'Worst' : 'Top',
+        go: list.length ? _lgSpec({ ip: list[0].key }) : '', goLabel: list.some(o => o.err) ? tc('button', 'Worst') : tc('button', 'Top'),
         goTip: list.length ? t('Filter the log list to {key}', { key: list[0].key }) : '',
         total: _sdNum(list.length), flags: flags.join(''),
         sub: _lgSub(_lgSubOffender(list)),
@@ -1158,7 +1157,7 @@ function _lgServicesCard(rows, total, isJson) {
         return _lgCard({
             key: 'services', cls: 'lg-blind', accent: 'var(--green)', ic: 'ph-fill ph-hard-drives',
             title: useRouter ? t('Routers') : t('Services'),
-            go: sel ? 'clear=all' : 'cfg=accesslog', goLabel: sel ? 'Clear' : t('Static Config'),
+            go: sel ? 'clear=all' : 'cfg=accesslog', goLabel: sel ? tc('button', 'Clear') : t('Static Config'),
             goTip: sel ? t('Clear every filter and the search box') : t('Open the Static Config tab'),
             total: '-', flags: _lgOk(sel ? t('none in selection') : t('not logged'), 'ph-bold ph-info'),
             sub: _lgSub(sel ? th('no {what} named in this selection', { what })
@@ -1171,8 +1170,9 @@ function _lgServicesCard(rows, total, isJson) {
     const bad = list.filter(o => o.err);
     const failing = bad.length;
     const flags = failing
-        ? [_lgFailFlag(bad, { label: tc('label', 'failing'), one: what, many: what + 's',
-            verb: t('returned at least one error'), name: o => _sdShort(o.key),
+        ? [_lgFailFlag(bad, { label: tc('label', 'failing'),
+            summary: n => useRouter ? tn('{count} router returned at least one error', '{count} routers returned at least one error', n, { count: _sdNum(n) })
+                                    : tn('{count} service returned at least one error', '{count} services returned at least one error', n, { count: _sdNum(n) }), name: o => _sdShort(o.key),
             facet: o => (useRouter ? { router: o.key } : { service: o.key }) })]
         : [_lgOk(t('all healthy'))];
     const built = _lgRankBody(list, {
@@ -1189,7 +1189,7 @@ function _lgServicesCard(rows, total, isJson) {
         key: 'services', accent: 'var(--green)', ic: 'ph-fill ph-hard-drives',
         title: useRouter ? t('Routers') : t('Services'),
         go: _lgSpec(useRouter ? { router: list[0].key } : { service: list[0].key }),
-        goLabel: failing ? 'Worst' : 'Top',
+        goLabel: failing ? tc('button', 'Worst') : tc('button', 'Top'),
         goTip: t('Filter the log list to {key}', { key: list[0].key }),
         total: _sdNum(list.length), flags: flags.join(''),
         sub: _lgSub(_lgSubOffender(list, o => _sdShort(o.key)),
@@ -1349,22 +1349,22 @@ function openLogDetail(e) {
         `<span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded" style="background:color-mix(in srgb, ${sc} 12%, transparent);color:${sc};border:1px solid color-mix(in srgb, ${sc} 30%, transparent)">${e.status || '-'} ${_esc(_lgStatusName(e.status))}</span><span class="text-xs font-mono font-bold px-2 py-1 rounded" style="background:color-mix(in srgb, ${mc} 12%, transparent);color:${mc};border:1px solid color-mix(in srgb, ${mc} 30%, transparent)">${_esc(e.method)}</span>`;
     const _g = _geoCache[e.ip];
     const rows = [
-        ['Path', e.path], ['IP', e.ip], ['Date', e.date],
-        ...(_g && _g.country_code ? [['Country', `${_flagEmoji(_g.country_code)} ${_esc(_g.country_name || _g.country_code)}`, true]] : []),
-        ...(e.domain ? [['Domain', e.domain]] : []),
-        ...(e.scheme ? [['Scheme', e.scheme]] : []),
+        [tc('label', 'Path'), e.path], ['IP', e.ip], [tc('label', 'Date'), e.date],
+        ...(_g && _g.country_code ? [[tc('label', 'Country'), `${_flagEmoji(_g.country_code)} ${_esc(_g.country_name || _g.country_code)}`, true]] : []),
+        ...(e.domain ? [[tc('label', 'Domain'), e.domain]] : []),
+        ...(e.scheme ? [[tc('label', 'Scheme'), e.scheme]] : []),
         ...(e.ep ? [[t('Entry Point'), e.ep]] : []),
-        ...(e.size && e.size !== '-' ? [['Size', e.size]] : []),
-        ...(e.duration && e.duration !== '-' ? [['Duration', e.duration]] : []),
+        ...(e.size && e.size !== '-' ? [[tc('label', 'Size'), e.size]] : []),
+        ...(e.duration && e.duration !== '-' ? [[tc('label', 'Duration'), e.duration]] : []),
         ...(e.origin != null && e.origin !== e.status ? [[t('Origin Status'), t('{origin} {lgStatusName} (Traefik answered {status} itself)', { origin: e.origin, lgStatusName: _lgStatusName(e.origin), status: e.status })]] : []),
         ...(e.retries ? [[t('Retry Attempts'), String(e.retries)]] : []),
         ...(e.tls ? [['TLS', e.tls]] : []),
-        ...(e.router ? [['Router', e.router]] : []),
-        ...(e.service ? [['Service', e.service]] : []),
+        ...(e.router ? [[tc('label', 'Router'), e.router]] : []),
+        ...(e.service ? [[tc('label', 'Service'), e.service]] : []),
         ...(e.serviceUrl && e.serviceUrl !== '-' ? [[t('Backend URL'), e.serviceUrl]] : []),
     ];
     document.getElementById('ldGrid').innerHTML = rows.map(([k,v,html],i) =>
-        `<div class="flex items-start gap-3 px-4 py-2.5" style="${i<rows.length-1 ? 'border-bottom:1px solid var(--border)' : ''}"><span class="text-xs font-medium flex-shrink-0" style="color:var(--muted);min-width:80px">${k}</span><span class="text-xs font-mono break-all" style="color:var(--text)">${html ? v : _esc(v)}</span></div>`
+        `<div class="flex items-start gap-3 px-4 py-2.5" style="${i<rows.length-1 ? 'border-bottom:1px solid var(--border)' : ''}"><span class="text-xs font-medium flex-shrink-0" style="color:var(--muted);min-width:80px">${_esc(k)}</span><span class="text-xs font-mono break-all" style="color:var(--text)">${html ? v : _esc(v)}</span></div>`
     ).join('');
     document.getElementById('ldRaw').textContent = e.raw;
     document.getElementById('logDetailPanel').classList.add('open');

@@ -744,7 +744,7 @@ function _paintSettingsVerdict(noAuth) {
     el.style.display = '';
     el.dataset.health = 'down';
     el.innerHTML = '<i class="ph-fill ph-warning-octagon sig-verdict-ic"></i>'
-        + '<span class="sig-verdict-txt">' + items.length + (items.length === 1 ? ' thing' : ' things') + ` ${th('to look at')}</span>`
+        + '<span class="sig-verdict-txt">' + thn('{n} thing to look at', '{n} things to look at', items.length) + '</span>'
         + '<span class="sig-verdict-items">' + items.join('') + '</span>';
 }
 
@@ -2782,11 +2782,11 @@ function copyAgentKey() {
 }
 
 function copyAgentCompose() {
-    _agentCopy(document.getElementById('agentComposeOutput').textContent, 'Copied');
+    _agentCopy(document.getElementById('agentComposeOutput').textContent, t('Copied'));
 }
 
 function copyAgentRun() {
-    _agentCopy(document.getElementById('agentRunOutput').textContent, 'Copied');
+    _agentCopy(document.getElementById('agentRunOutput').textContent, t('Copied'));
 }
 
 function copyRotatedKey() {
@@ -3266,7 +3266,7 @@ function filterSettings() {
     if (!empty) return;
     if (!q || activeHits) { empty.style.display = 'none'; return; }
     empty.style.display = '';
-    empty.innerHTML = elsewhere.length ? 'No matches here. Found in '
+    empty.innerHTML = elsewhere.length ? th('No matches here. Found in') + ' '
           + elsewhere.map(e =>
               `<button type="button" class="settings-jump" onclick="switchSettingsPanel(${_jsArg(e.id)})">`
               + `${_esc(e.label)} <span>${_esc(e.hits)}</span></button>`).join(' ') : th('No settings match your search');

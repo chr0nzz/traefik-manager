@@ -175,7 +175,7 @@ function renderServicesTable() {
         const ownerName = ownedIdx.has(globalIdx) ? _svcOwnerName(_allServices, s) : '';
 
         const stColor = st === 'success' ? 'var(--green)' : st === 'error' ? 'var(--red)' : 'var(--yellow)';
-        const stLabel = st === 'success' ? 'Success'      : st === 'error' ? 'Error'      : 'Warning';
+        const stLabel = st === 'success' ? tc('status', 'Success') : st === 'error' ? tc('status', 'Error') : tc('status', 'Warning');
 
         const serverStatus  = s.serverStatus || {};
         const serverEntries = Object.entries(serverStatus);
@@ -202,19 +202,19 @@ function renderServicesTable() {
             const composite = (s.weighted?.services || []).map(x => `${x.name}${x.weight != null ? ` (${x.weight})` : ''}`)
                 .concat((s.highestRandomWeight?.services || []).map(x => `${x.name}${x.weight != null ? ` (${x.weight})` : ''}`))
                 .concat(s.mirroring?.service ? [s.mirroring.service] : [])
-                .concat((s.mirroring?.mirrors || []).map(m => `${m.name} mirror (${m.percent || 0}%)`))
+                .concat((s.mirroring?.mirrors || []).map(m => t('{name} mirror ({percent}%)', { name: m.name, percent: m.percent || 0 })))
                 .concat(s.failover?.service ? [s.failover.service] : [])
-                .concat(s.failover?.fallback ? [`${s.failover.fallback} fallback`] : []);
+                .concat(s.failover?.fallback ? [t('{name} fallback', { name: s.failover.fallback })] : []);
             const servers = (lb.servers || []).map(x => x.url || x.address).filter(Boolean)
                 .concat(composite);
             const rows = servers.slice(0, 2).map(u =>
                 `<div class="tm-val tm-val-target"><i class="ph-bold ph-arrow-elbow-down-right"></i><span class="tm-v">${_esc(u)}</span>${_tmCopy(u)}</div>`).join('')
                 + (servers.length > 2 ? `<div class="tm-val"><i class="ph-bold ph-dot" style="opacity:0"></i><span class="tm-more" title="${_esc(servers.join(', '))}">${th('+{count} more', { count: servers.length - 2 })}</span></div>` : '');
             const meta = [
-                composite.length ? '' : (servers.length ? `${servers.length} server${servers.length > 1 ? 's' : ''}` : ''),
+                composite.length ? '' : (servers.length ? thn('{n} server', '{n} servers', servers.length) : ''),
                 serverSummary ? `<span style="color:${srvColor}">${serverSummary}</span>` : '',
-                lb.sticky ? 'sticky' : '',
-                (lb.healthCheck ? t('health check') : ''),
+                lb.sticky ? th('sticky') : '',
+                (lb.healthCheck ? th('health check') : ''),
             ].filter(Boolean).join(' \u00b7 ');
             const usedTxt = usedBy.length ? tn('used by {n} route', 'used by {n} routes', usedBy.length) : '';
             return `<div class="tm-card" data-health="${st === 'error' ? 'down' : 'up'}" style="--tm-accent:${stColor}" onclick="openSvcDetail(${globalIdx})">
@@ -238,7 +238,7 @@ function renderServicesTable() {
                     ${type ? `<span class="svc-type-badge">${type}</span>` : ''}
                 </div>
                 <span class="svc-status-chip" style="color:${stColor};background:color-mix(in srgb,${stColor} 14%,transparent)">
-                    <span class="svc-status-dot" style="background:${stColor}"></span>${stLabel}
+                    <span class="svc-status-dot" style="background:${stColor}"></span>${_esc(stLabel)}
                 </span>
             </div>
             <div class="svc-card-name">${_esc(name)}${ownerName ? `<span class="svc-type-badge" style="margin-left:6px">${th('backend of {ownerName}', { ownerName })}</span>` : ''}</div>
@@ -283,12 +283,12 @@ function renderServicesTable() {
                 }).join('')}</div>`
                 : '<span style="color:var(--muted);font-size:11px">-</span>';
             return `<div class="svc-list-row svc-list-grid" onclick="openSvcDetail(${globalIdx})">
-                <div class="svc-list-col-status"><span class="svc-status-dot" style="background:${stColor}"></span><span class="d-flat rl-state" style="color:${stColor}">${st === 'success' ? 'Success' : st === 'error' ? 'Error' : 'Warning'}</span></div>
+                <div class="svc-list-col-status"><span class="svc-status-dot" style="background:${stColor}"></span><span class="d-flat rl-state" style="color:${stColor}">${st === 'success' ? thc('status', 'Success') : st === 'error' ? thc('status', 'Error') : thc('status', 'Warning')}</span></div>
                 <div class="svc-list-col-proto">
                     <span class="d-flat d-proto d-proto-${proto.toLowerCase()}">${proto}</span>
                     ${type ? `<span class="d-flat d-blue">${type}</span>` : ''}
                 </div>
-                <div class="svc-list-col-name">${_esc(name)}${ownerName ? ` <span class="d-flat d-off">backend of ${_esc(ownerName)}</span>` : ''}</div>
+                <div class="svc-list-col-name">${_esc(name)}${ownerName ? ` <span class="d-flat d-off">${th('backend of {owner}', { owner: ownerName })}</span>` : ''}</div>
                 <div class="svc-list-col-url overflow-hidden">${serverUrlHtml}</div>
                 <div class="svc-list-col-provider"><span class="d-flat d-off"><i class="ph-bold ph-database" style="font-size:10px;margin-right:4px"></i>${_esc(provider)}</span></div>
                 <div class="svc-list-col-servers">${serverSummary ? `<span class="d-flat" style="color:${srvColor}"><i class="ph-bold ph-hard-drives" style="font-size:10px;margin-right:4px"></i>${serverSummary}</span>` : '<span class="d-flat d-off">-</span>'}</div>
@@ -373,6 +373,12 @@ function _compositeChildren(s) {
     return out.filter(c => c.name);
 }
 
+function _compositeRoleLabel(role) {
+    const labels = { Weighted: tc('role', 'Weighted'), Main: tc('role', 'Main'), Mirror: tc('role', 'Mirror'),
+                     Primary: tc('role', 'Primary'), Fallback: tc('role', 'Fallback') };
+    return labels[role] || role;
+}
+
 function _svcBareName(name) {
     return String(name || '').split('@')[0];
 }
@@ -445,10 +451,10 @@ function openSvcDetail(idx) {
     const provider = (s.name || '').includes('@') ? s.name.split('@').pop() : 'file';
     const type = s.loadBalancer ? 'loadbalancer' : s.mirroring ? 'mirroring' : s.weighted ? 'weighted' : s.failover ? 'failover' : s.highestRandomWeight ? 'highestrandomweight' : '-';
     const status = s.status || 'unknown';
-    const stKind = status === 'enabled' ? ['status-online', 'd-on', 'Success']
-                 : status === 'disabled' || status === 'error' ? ['status-offline', 'd-bad', 'Error']
-                 : ['status-checking', 'd-warn', 'Warning'];
-    const statusBadge = `<span class="d-state d-flat ${stKind[1]}"><span class="status-dot ${stKind[0]}"></span>${stKind[2]}</span>`;
+    const stKind = status === 'enabled' ? ['status-online', 'd-on', tc('status', 'Success')]
+                 : status === 'disabled' || status === 'error' ? ['status-offline', 'd-bad', tc('status', 'Error')]
+                 : ['status-checking', 'd-warn', tc('status', 'Warning')];
+    const statusBadge = `<span class="d-state d-flat ${stKind[1]}"><span class="status-dot ${stKind[0]}"></span>${_esc(stKind[2])}</span>`;
 
     const lb = s.loadBalancer || {};
     const servers = lb.servers || [];
@@ -489,7 +495,7 @@ function openSvcDetail(idx) {
             <tbody>
                 ${children.map(c => `
                 <tr style="border-top:1px solid var(--border)">
-                    <td class="px-3 py-2.5 text-xs" style="color:var(--muted)">${_esc(c.role)}</td>
+                    <td class="px-3 py-2.5 text-xs" style="color:var(--muted)">${_esc(_compositeRoleLabel(c.role))}</td>
                     <td class="px-3 py-2.5">
                         <button type="button" class="route-deep-chip" onclick="_openServiceByName(${_jsArg(c.name)})" title="${th('Open service')}"><i class="ph-bold ph-stack"></i>${_esc(String(c.name).split('@')[0])}</button>
                     </td>
@@ -506,9 +512,9 @@ function openSvcDetail(idx) {
 
     const ownerName = _svcOwnerName(_allServices, s);
     const detailRows = [
-        ['Type', type, false],
-        ['Provider', _dText(provider, 'd-off'), true],
-        ['Status', statusBadge, true],
+        [tc('label', 'Type'), type, false],
+        [tc('label', 'Provider'), _dText(provider, 'd-off'), true],
+        [tc('label', 'Status'), statusBadge, true],
         [t('Pass Host Header'), passHostHeader === '-' ? '-' : _dBool(passHostHeader === 'true'), true],
     ];
     if (ownerName) {
@@ -520,9 +526,9 @@ function openSvcDetail(idx) {
     body.innerHTML =
         renderSection(t('Service Details'), 'ph-info', detailRows)
         + (children.length
-            ? renderDetailBlock('Backends', 'ph-tree-structure', childrenHtml, _dCount(children.length))
-            : renderDetailBlock('Servers', 'ph-globe', serversHtml, _dCount(servers.length)))
-        + (children.length && _svcProvider(s) === 'file' ? renderDetailBlock('Management', 'ph-user-gear', _svcOwnershipHtml(s)) : '')
+            ? renderDetailBlock(tc('label', 'Backends'), 'ph-tree-structure', childrenHtml, _dCount(children.length))
+            : renderDetailBlock(tc('label', 'Servers'), 'ph-globe', serversHtml, _dCount(servers.length)))
+        + (children.length && _svcProvider(s) === 'file' ? renderDetailBlock(tc('label', 'Management'), 'ph-user-gear', _svcOwnershipHtml(s)) : '')
         + renderDetailBlock(t('Used by Routers'), 'ph-git-branch', usedByHtml);
 
     const editBtn = document.getElementById('svcDetailEditBtn');
@@ -902,8 +908,9 @@ async function _sendServiceDelete(name, force) {
         }
         closeServiceModal();
         const d = body.deleted || {};
-        const extra = (d.routers || []).length ? ' and ' + d.routers.length + (d.routers.length === 1 ? ' route' : ' routes') : '';
-        showToast(t('Service {name} deleted{extra}', { name, extra }), 'success');
+        const routers = (d.routers || []).length;
+        showToast(routers ? tn('Service {name} deleted and {n} route', 'Service {name} deleted and {n} routes', routers, { name })
+                          : t('Service {name} deleted', { name }), 'success');
         window._tmServices = null;
         loadServices();
         if (extra && typeof refreshRoutes === 'function') refreshRoutes();

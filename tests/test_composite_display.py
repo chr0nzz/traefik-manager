@@ -2,6 +2,8 @@ import os
 import re
 import subprocess
 
+from js_i18n import i18n_prelude
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JS = os.path.join(ROOT, 'static', 'js', 'services.js')
 
@@ -17,6 +19,7 @@ def _composite_expression():
 def _run(service):
     expr = _composite_expression()
     script = (
+        i18n_prelude() +
         'const s = ' + service + ';\n'
         'const composite = ' + expr + ';\n'
         'console.log(JSON.stringify(composite));\n'
@@ -62,7 +65,7 @@ def _children(service):
         src = fh.read()
     m = re.search(r'(function _compositeChildren\(s\) \{.*?\n\})', src, re.S)
     assert m, 'the composite children helper moved'
-    script = m.group(1) + '\nconsole.log(JSON.stringify(_compositeChildren(' + service + ')));\n'
+    script = i18n_prelude() + m.group(1) + '\nconsole.log(JSON.stringify(_compositeChildren(' + service + ')));\n'
     out = subprocess.run(['node', '-e', script], capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
     import json
@@ -111,8 +114,8 @@ def test_the_panel_swaps_servers_for_backends_only_when_there_are_children():
     with open(JS, encoding='utf-8') as fh:
         src = fh.read()
     assert "children.length" in src
-    assert "renderDetailBlock('Backends'" in src
-    assert "renderDetailBlock('Servers'" in src, \
+    assert "renderDetailBlock(tc('label', 'Backends')" in src
+    assert "renderDetailBlock(tc('label', 'Servers')" in src, \
         'a plain load balancer must still show its Servers block'
 
 

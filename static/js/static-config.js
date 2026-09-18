@@ -858,7 +858,7 @@ function _scEpRow(name, ep) {
     const glyphs = [];
     if (ep.http3) glyphs.push(['ph-lightning', 'd-mw', t('HTTP/3 enabled')]);
     if (redir) glyphs.push(['ph-arrow-u-up-right', 'd-off', t('redirects to {redir}', { redir })]);
-    if (tips) glyphs.push(['ph-shield', 'd-blue', 'forwardedHeaders.trustedIPs: ' + tips + ' range(s)']);
+    if (tips) glyphs.push(['ph-shield', 'd-blue', tn('{setting}: {n} range', '{setting}: {n} ranges', tips, { setting: 'forwardedHeaders.trustedIPs' })]);
     if (uhs) glyphs.push(['ph-shield-check', 'd-on', _epHeaderStrategyKey() + ': ' + uhs]);
     let warn = '';
     if (insecureFwd) warn = t('forwardedHeaders.insecure is on, any client can set X-Forwarded-For');
@@ -1075,50 +1075,50 @@ function _scSetState(key, txt) {
     if (el) el.innerHTML = txt;
 }
 
-function _scWarnTxt(t) { return `<span class="d-warn">${_esc(t)}</span>`; }
+function _scWarnTxt(text) { return `<span class="d-warn">${_esc(text)}</span>`; }
 
 function _renderStaticFoldStates(d) {
     const api = d.api;
     const apiOn = _scHas(api);
     _scSetState('api', [
-        apiOn ? 'enabled' : _scWarnTxt('disabled'),
-        apiOn && (api || {}).dashboard !== false ? t('dashboard on') : t('dashboard off'),
-        (api || {}).insecure ? _scWarnTxt(t('insecure on')) : t('insecure off'),
-        (api || {}).debug ? t('debug on') : t('debug off'),
+        apiOn ? thc('status', 'enabled') : _scWarnTxt(tc('status', 'disabled')),
+        apiOn && (api || {}).dashboard !== false ? th('dashboard on') : th('dashboard off'),
+        (api || {}).insecure ? _scWarnTxt(t('insecure on')) : th('insecure off'),
+        (api || {}).debug ? th('debug on') : th('debug off'),
     ].join(' &middot; '));
 
     const log = d.log || {};
     _scSetState('log', [
-        log.level || 'ERROR',
-        log.format || 'text',
-        log.filePath || 'stdout',
-        _scHas(d.accessLog) ? t('access log on') : _scWarnTxt(t('access log off')),
+        _esc(log.level || 'ERROR'),
+        _esc(log.format || 'text'),
+        _esc(log.filePath || 'stdout'),
+        _scHas(d.accessLog) ? th('access log on') : _scWarnTxt(t('access log off')),
     ].join(' &middot; '));
 
     const prom = (d.metrics || {}).prometheus;
     _scSetState('observability', [
-        _scHas(d.ping) ? t('ping on') : t('ping off'),
-        _scHas(prom) ? t('metrics on') : t('metrics off'),
-        _scHas(d.tracing) ? t('tracing on') : t('tracing off'),
+        _scHas(d.ping) ? th('ping on') : th('ping off'),
+        _scHas(prom) ? th('metrics on') : th('metrics off'),
+        _scHas(d.tracing) ? th('tracing on') : th('tracing off'),
     ].join(' &middot; '));
 
     const g = d['global'] || {};
     const core = d.core || {};
     _scSetState('system', [
-        g.checkNewVersion === false ? t('version check off') : t('version check on'),
-        g.sendAnonymousUsage ? t('usage stats on') : t('usage stats off'),
-        'rule syntax ' + (core.defaultRuleSyntax === 'v2' ? 'v2' : 'v3'),
+        g.checkNewVersion === false ? th('version check off') : th('version check on'),
+        g.sendAnonymousUsage ? th('usage stats on') : th('usage stats off'),
+        th('rule syntax {version}', { version: core.defaultRuleSyntax === 'v2' ? 'v2' : 'v3' }),
     ].join(' &middot; '));
 
     const plugins = Object.keys((d.experimental || {}).plugins || {})
         .concat(Object.keys((d.experimental || {}).localPlugins || {}));
-    _scSetState('plugins', plugins.length ? _esc(plugins.join(' &middot; ')) : t('none installed'));
+    _scSetState('plugins', plugins.length ? plugins.map(_esc).join(' &middot; ') : th('none installed'));
 
     const prov = d.providers || {};
     const provBits = [];
-    if (_scHas(prov.docker)) provBits.push('docker on'); else provBits.push('docker off');
+    provBits.push(_scHas(prov.docker) ? t('docker on') : t('docker off'));
     if (_scHas(prov.file)) {
-        provBits.push('file ' + ((prov.file || {}).directory || (prov.file || {}).filename || 'on'));
+        provBits.push((prov.file || {}).directory || (prov.file || {}).filename ? t('file {path}', { path: (prov.file || {}).directory || (prov.file || {}).filename }) : t('file on'));
     } else {
         provBits.push(t('file off'));
     }
@@ -1292,7 +1292,7 @@ function _scProviderRow(key, label, on, addr, count, glyphs, warn) {
         `<span class="sig-flag ${cls}" title="${_esc(tip)}"><i class="ph-bold ${ic}"></i></span>`).join('');
     const n = count === null || count === undefined ? ''
         : (count === 0 ? '<span style="color:var(--muted);font-weight:400">-</span>' : _sdNum(count));
-    return `<div class="sig-ep-row"${health} role="button" tabindex="0" onclick="_scToggleProvider(${_jsArg(key)})"><span class="sig-ep-id"><span class="sig-ep-name">${_esc(label)}</span><span class="sig-idle-txt" style="color:${on ? 'var(--green)' : 'var(--muted)'}">${on ? 'enabled' : 'disabled'}</span></span><span class="sig-ep-addr">${_esc(addr || '')}</span><span class="sig-ep-strip"></span><span class="sig-ep-n">${n}</span><span class="sig-ep-flags"><span class="sc-rail"><span class="sc-rail-glyphs">${g}</span><span class="sc-rail-btns"><button type="button" class="sc-btn" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple"></i></button></span></span></span>${sub}</div>`;
+    return `<div class="sig-ep-row"${health} role="button" tabindex="0" onclick="_scToggleProvider(${_jsArg(key)})"><span class="sig-ep-id"><span class="sig-ep-name">${_esc(label)}</span><span class="sig-idle-txt" style="color:${on ? 'var(--green)' : 'var(--muted)'}">${on ? thc('status', 'enabled') : thc('status', 'disabled')}</span></span><span class="sig-ep-addr">${_esc(addr || '')}</span><span class="sig-ep-strip"></span><span class="sig-ep-n">${n}</span><span class="sig-ep-flags"><span class="sc-rail"><span class="sc-rail-glyphs">${g}</span><span class="sc-rail-btns"><button type="button" class="sc-btn" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple"></i></button></span></span></span>${sub}</div>`;
 }
 
 function _scRenderProviderRows(prov) {
@@ -1512,38 +1512,38 @@ function _buildStaticTabHTML() {
 function _scSectionHead(key, label, icon, color, countId, addLabel) {
     const count = countId ? `<span class="d-n sc-count" id="${countId}">0</span>` : '';
     const add = addLabel
-        ? `<div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)"><button onclick="openStaticAddForm(${_jsArg(key)})" class="proto-btn text-xs px-3 py-1.5" title="${th('Add {addLabel}', { addLabel: tmHtml(addLabel) })}"><i class="ph-bold ph-plus"></i></button></div>`
+        ? `<div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)"><button onclick="openStaticAddForm(${_jsArg(key)})" class="proto-btn text-xs px-3 py-1.5" title="${_esc(addLabel)}"><i class="ph-bold ph-plus"></i></button></div>`
         : '';
-    return `<div class="sc-sec-head" id="scHead-${key}"><i class="ph-bold ${icon} sc-sec-icon" style="color:${color}"></i><span class="sc-sec-label">${label}</span>${count}<span class="sc-sec-rule"></span>${add}</div>`;
+    return `<div class="sc-sec-head" id="scHead-${key}"><i class="ph-bold ${icon} sc-sec-icon" style="color:${color}"></i><span class="sc-sec-label">${_esc(label)}</span>${count}<span class="sc-sec-rule"></span>${add}</div>`;
 }
 
 function _scHeadActions() {
     const grp = (fn, icon, title) =>
         `<div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">`
-        + `<button type="button" onclick="${fn}" class="proto-btn text-xs px-3 py-1.5" title="${title}">`
+        + `<button type="button" onclick="${fn}" class="proto-btn text-xs px-3 py-1.5" title="${_esc(title)}">`
         + `<i class="ph-bold ${icon}"></i></button></div>`;
     return '<div class="sc-head-actions">'
-        + grp('openTrustedIpsHelper()', 'ph-shield-check', 'Add trusted proxy IPs to an entrypoint')
-        + grp('openStaticYamlPopout()', 'ph-code', 'Raw YAML editor')
-        + grp('refreshStaticTab()', 'ph-arrows-clockwise', 'Reload from disk')
+        + grp('openTrustedIpsHelper()', 'ph-shield-check', t('Add trusted proxy IPs to an entrypoint'))
+        + grp('openStaticYamlPopout()', 'ph-code', t('Raw YAML editor'))
+        + grp('refreshStaticTab()', 'ph-arrows-clockwise', t('Reload from disk'))
         + '</div>';
 }
 
 const SC_SECTIONS = [
-    ['entrypoints',   'Entrypoints',           'ph-door-open',   'var(--blue)',   'staticEpCount',       'Entrypoint'],
-    ['resolvers',     t('Certificate resolvers'), 'ph-certificate', 'var(--green)',  'staticResolverCount', 'Resolver'],
-    ['providers',     'Providers',             'ph-cloud',       'var(--teal)',   'staticProviderCount', 'Provider'],
-    ['api',           t('API and dashboard'),     'ph-gauge',       'var(--orange)', null,                  null],
-    ['log',           'Logging',               'ph-scroll',      '#ca8a04',       null,                  null],
-    ['observability', 'Observability',         'ph-heartbeat',   'var(--green)',  null,                  null],
-    ['system',        'System',                'ph-gear-six',    'var(--muted)',  null,                  null],
-    ['plugins',       'Plugins',               'ph-plug',        'var(--purple)', 'staticPluginCount',   'Plugin'],
+    ['entrypoints',   tc('title', 'Entrypoints'),           'ph-door-open',   'var(--blue)',   'staticEpCount',       tc('button', 'Add entrypoint')],
+    ['resolvers',     t('Certificate resolvers'),           'ph-certificate', 'var(--green)',  'staticResolverCount', tc('button', 'Add resolver')],
+    ['providers',     tc('title', 'Providers'),             'ph-cloud',       'var(--teal)',   'staticProviderCount', tc('button', 'Add provider')],
+    ['api',           t('API and dashboard'),               'ph-gauge',       'var(--orange)', null,                  null],
+    ['log',           tc('title', 'Logging'),               'ph-scroll',      '#ca8a04',       null,                  null],
+    ['observability', tc('title', 'Observability'),         'ph-heartbeat',   'var(--green)',  null,                  null],
+    ['system',        tc('title', 'System'),                'ph-gear-six',    'var(--muted)',  null,                  null],
+    ['plugins',       tc('title', 'Plugins'),               'ph-plug',        'var(--purple)', 'staticPluginCount',   tc('button', 'Add plugin')],
 ];
 
 const SC_GROUPS = [
     [t('Traffic in'),   ['entrypoints', 'providers']],
-    ['Certificates', ['resolvers']],
-    ['Operations',   ['api', 'log', 'observability', 'system', 'plugins']],
+    [tc('title', 'Certificates'), ['resolvers']],
+    [tc('title', 'Operations'),   ['api', 'log', 'observability', 'system', 'plugins']],
 ];
 
 const SC_LIST_SECTIONS = ['entrypoints', 'resolvers', 'providers', 'plugins'];
@@ -1575,7 +1575,7 @@ function _scFoldHead(key, label, icon, color, countId) {
     return `<button type="button" class="sc-fold-head" onclick="toggleStaticFold(${_jsArg(key)})">`
         + `<i class="ph-bold ph-caret-right sc-fold-caret"></i>`
         + `<i class="ph-bold ${icon} sc-sec-icon" style="color:${color}"></i>`
-        + `<span class="sc-sec-label">${label}</span>${count}`
+        + `<span class="sc-sec-label">${_esc(label)}</span>${count}`
         + `<span class="sc-sec-rule"></span>`
         + `<span class="sc-fold-state" id="scState-${key}"></span></button>`;
 }
@@ -1606,7 +1606,7 @@ function _buildStaticOnePage() {
     return '<div id="staticVerdict"></div>'
         + SC_GROUPS.map(([label, keys]) => {
             const body = keys.map(k => byKey[k] || '').join('');
-            return body ? `<div class="sc-grp">${label}</div>${body}` : '';
+            return body ? `<div class="sc-grp">${_esc(label)}</div>${body}` : '';
         }).join('');
 }
 
@@ -2180,7 +2180,7 @@ function _renderEpRuntimeWarning() {
         body  = `${th('After adding an entrypoint and restarting Traefik, ensure the port is accessible: {sudo_ufw_allow} For ports below 1024, Traefik needs {net_bind_service} capability or must run as root.', { sudo_ufw_allow: tmHtml(`<code class="font-mono block mt-1.5 mb-1 px-2 py-1 rounded" style="background:var(--input-bg);border:1px solid var(--border)">sudo ufw allow PORT/tcp</code>`), net_bind_service: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">NET_BIND_SERVICE</code>`) })}`;
     } else {
         title = t('New entrypoints require additional steps after saving');
-        body  = `<span class="font-medium" style="color:var(--text)">Docker / Podman / Unraid:</span> ${th('add the port under {ports} in your compose file and run {docker_compose_up}', { ports: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">ports:</code>`), docker_compose_up: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">docker compose up -d</code>`) })}
+        body  = `<span class="font-medium" style="color:var(--text)">${th('Docker / Podman / Unraid:')}</span> ${th('add the port under {ports} in your compose file and run {docker_compose_up}', { ports: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">ports:</code>`), docker_compose_up: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">docker compose up -d</code>`) })}
                  <span class="block mt-1"><span class="font-medium" style="color:var(--text)">${th('Native Linux:')}</span> ${th('open the port in your firewall, e.g. {sudo_ufw_allow}', { sudo_ufw_allow: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">sudo ufw allow PORT/tcp</code>`) })}</span>`;
     }
     el.innerHTML = _scNotice(t('entrypoints'), title, body);

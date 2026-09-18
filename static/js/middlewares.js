@@ -509,7 +509,7 @@ async function _sendMwDelete(name, configFile, force) {
         const json = await res.json().catch(() => null);
         if (res.status === 409 && json && (json.inUseBy || []).length) {
             const routes = json.inUseBy;
-            const shown = routes.slice(0, 5).join(', ') + (routes.length > 5 ? ' and ' + (routes.length - 5) + ' more' : '');
+            const shown = routes.length > 5 ? t('{items} and {count} more', { items: routes.slice(0, 5).join(', '), count: routes.length - 5 }) : routes.join(', ');
             const label = routes.length === 1 ? t('1 route') : t('{routes_count} routes', { routes_count: routes.length });
             if (await _confirm(t('"{name}" is still used by {shown}. Remove it from {label} and delete it?', { name, shown, label }),
                                t('Middleware In Use'), t('Remove and delete'), _confirmWordFor(name))) {
@@ -808,12 +808,12 @@ function renderMwDetailPanel(mw) {
         ? (((mw.yaml || '').match(/^\s+([\w-]+)\s*:/m) || [])[1] || '')
         : '';
 
-    rows.push(['Name', _dText(mw.name), true]);
-    if (kind) rows.push(['Type', _dText(kind) + (pluginName ? ` <span class="d-flat d-off">(${_esc(pluginName)})</span>` : ''), true]);
-    if (mw.type) rows.push(['Protocol', _dText((mw.type || '').toUpperCase()), true]);
-    if (mw.provider && mw.provider !== 'file') rows.push(['Provider', _dText(mw.provider, 'd-off'), true]);
-    if (mw.status && mw.status !== 'enabled') rows.push(['Status', `<span class="d-flat" style="color:var(--red)">${_esc(mw.status)}</span>`, true]);
-    if (mw.error) rows.push(['Error', `<span class="d-flat" style="color:var(--red)">${_esc(Array.isArray(mw.error) ? mw.error.join(', ') : mw.error)}</span>`, true]);
+    rows.push([tc('label', 'Name'), _dText(mw.name), true]);
+    if (kind) rows.push([tc('label', 'Type'), _dText(kind) + (pluginName ? ` <span class="d-flat d-off">(${_esc(pluginName)})</span>` : ''), true]);
+    if (mw.type) rows.push([tc('label', 'Protocol'), _dText((mw.type || '').toUpperCase()), true]);
+    if (mw.provider && mw.provider !== 'file') rows.push([tc('label', 'Provider'), _dText(mw.provider, 'd-off'), true]);
+    if (mw.status && mw.status !== 'enabled') rows.push([tc('label', 'Status'), `<span class="d-flat" style="color:var(--red)">${_esc(mw.status)}</span>`, true]);
+    if (mw.error) rows.push([tc('label', 'Error'), `<span class="d-flat" style="color:var(--red)">${_esc(Array.isArray(mw.error) ? mw.error.join(', ') : mw.error)}</span>`, true]);
     if (mw.configFile) rows.push([t('Config File'), _dText(mw.configFile, 'd-off'), true]);
 
     const routes = _mwRoutesUsing(mw);
@@ -833,11 +833,11 @@ function renderMwDetailPanel(mw) {
 
     let yamlHtml = '';
     if (mw.yaml) {
-        yamlHtml = renderDetailBlock('Configuration', 'ph-code',
+        yamlHtml = renderDetailBlock(tc('label', 'Configuration'), 'ph-code',
             `<div class="rounded-lg p-3 overflow-x-auto" style="background:var(--input-bg);border:1px solid var(--border)"><pre class="text-xs font-mono leading-relaxed whitespace-pre-wrap" style="color:var(--green);margin:0">${_esc(mw.yaml)}</pre></div>`);
     }
 
-    return `${renderSection('Details', 'ph-info', rows)}${usedHtml}${yamlHtml}`;
+    return `${renderSection(tc('label', 'Details'), 'ph-info', rows)}${usedHtml}${yamlHtml}`;
 }
 
 let _allPlugins = [];
@@ -1142,9 +1142,9 @@ async function _pluginSectionWrite(body) {
 async function deletePlugin(name) {
     const users = _pluginMwsUsing(name).map(m => m.name);
     if (users.length) {
-        const shown = users.slice(0, 5).join(', ') + (users.length > 5 ? ' and ' + (users.length - 5) + ' more' : '');
+        const shown = users.length > 5 ? t('{items} and {count} more', { items: users.slice(0, 5).join(', '), count: users.length - 5 }) : users.join(', ');
         await _confirm(t('"{name}" is still used by {shown}. Delete those middlewares first.', { name, shown }),
-                       t('Plugin In Use'), 'OK');
+                       t('Plugin In Use'), tc('button', 'OK'));
         return;
     }
     if (!await _confirm(t('Remove plugin "{name}"?', { name }), t('Remove Plugin'), tc('button', 'Remove'))) return;
@@ -1198,9 +1198,9 @@ function renderPluginsVerdict() {
     _tvStrip('pluginsVerdict', {
         health: updates ? 'warn' : 'up',
         ic: updates ? 'ph-fill ph-arrow-circle-up' : 'ph-fill ph-check-circle',
-        txt: updates ? _sdNum(updates) + (updates === 1 ? ' update available' : ' updates available')
+        txt: updates ? tn('{count} update available', '{count} updates available', updates, { count: _sdNum(updates) })
            : known ? t('All plugins current')
-           : _sdNum(_allPlugins.length) + (_allPlugins.length === 1 ? ' plugin' : ' plugins'),
+           : tn('{count} plugin', '{count} plugins', _allPlugins.length, { count: _sdNum(_allPlugins.length) }),
         flags,
         meta: known ? `${th('catalog checked {daily}', { daily: tmHtml(`<b>${th('daily')}</b>`) })}` : '',
     });
@@ -1264,14 +1264,14 @@ function openPluginDetail(idx) {
         ? `${_esc(version)} <span style="color:var(--green)"><i class="ph-bold ph-check"></i> ${thc('label', 'latest')}</span>`
         : _esc(version);
     const rows = [
-        ['Name',        _esc(name)],
-        ['Version',     versionVal],
-        ['Module',      _esc(moduleName || '-')],
-        ...(repoUrl ? [['Repository', `<a href="${_esc(repoUrl)}" target="_blank" style="color:var(--blue)">${_esc(repoUrl)} <i class="ph-bold ph-arrow-square-out text-sm"></i></a>`]] : []),
+        [tc('label', 'Name'),        _esc(name)],
+        [tc('label', 'Version'),     versionVal],
+        [tc('label', 'Module'),      _esc(moduleName || '-')],
+        ...(repoUrl ? [[tc('label', 'Repository'), `<a href="${_esc(repoUrl)}" target="_blank" style="color:var(--blue)">${_esc(repoUrl)} <i class="ph-bold ph-arrow-square-out text-sm"></i></a>`]] : []),
     ];
 
     const infoRows = rows.map(([k, v]) =>
-        [_esc(k), `<span class="font-mono" style="color:var(--text)">${v}</span>`, true]);
+        [k, `<span class="font-mono" style="color:var(--text)">${v}</span>`, true]);
 
     const settingsSection = p.settings ? `
         ${renderDetailBlock(t('Configuration Schema'), 'ph-sliders',

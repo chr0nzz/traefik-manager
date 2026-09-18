@@ -14,7 +14,7 @@
             <button onclick="refreshConsulTab()" class="proto-btn text-xs px-3 py-1.5" title="{{ pgettext('tooltip', 'Refresh') }}"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>
     </div>
-    <div id="consulVerdict" class="sig-root mb-4" data-note="These routes are stored in Consul's key-value store and are read-only here. Edit them directly in Consul KV."></div>
+    <div id="consulVerdict" class="sig-root mb-4" data-note="{{ _('These routes are stored in Consul\'s key-value store and are read-only here. Edit them directly in Consul KV.') }}"></div>
     <div id="consulContent">
         <div class="text-center py-16" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>

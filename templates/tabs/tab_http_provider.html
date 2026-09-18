@@ -14,7 +14,7 @@
             <button onclick="refreshHttpProviderTab()" class="proto-btn text-xs px-3 py-1.5" title="{{ pgettext('tooltip', 'Refresh') }}"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>
     </div>
-    <div id="httpProviderVerdict" class="sig-root mb-4" data-note="These routes are sourced from an HTTP endpoint configured in Traefik and are read-only here."></div>
+    <div id="httpProviderVerdict" class="sig-root mb-4" data-note="{{ _('These routes are sourced from an HTTP endpoint configured in Traefik and are read-only here.') }}"></div>
     <div id="httpProviderContent">
         <div class="text-center py-16" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>

@@ -537,7 +537,7 @@ def check_all(root=ROOT, require_tools=False, extract=True):
 
 VOID_TAGS = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'}
 UNTRANSLATED_SKIP_TAGS = {'script', 'style', 'code', 'pre', 'kbd', 'textarea', 'svg', 'samp', 'var'}
-TRANSLATABLE_ATTRS = ('title', 'placeholder', 'aria-label', 'alt', 'data-tip')
+TRANSLATABLE_ATTRS = ('title', 'placeholder', 'aria-label', 'alt', 'data-tip', 'data-note')
 LETTER_RE = re.compile(r'[^\W\d_]', re.UNICODE)
 LITERAL_WORDS = {
     'traefik', 'traefik manager', 'manager', 'crowdsec', 'docker', 'podman', 'kubernetes', 'unraid', "let's encrypt",
@@ -649,12 +649,15 @@ def _attr(tag, name):
     return None
 
 
-def _exempt(stack):
+def _exempt(stack, attrs=False):
     for name, tag in stack:
         cls = _attr(tag, 'class') or ''
-        if name in UNTRANSLATED_SKIP_TAGS or 'font-mono' in cls or 'notranslate' in cls:
+        if 'notranslate' in cls or (_attr(tag, 'translate') or '').lower() == 'no':
             return True
-        if (_attr(tag, 'translate') or '').lower() == 'no':
+        if attrs:
+            if name in ('script', 'style', 'svg'):
+                return True
+        elif name in UNTRANSLATED_SKIP_TAGS or 'font-mono' in cls:
             return True
     return False
 
@@ -666,10 +669,12 @@ def untranslated_in(src, where):
     for kind, val in template_tokens(src):
         if kind == 'tag':
             name, closing, selfclose = _tag_parts(val)
-            if name and not closing and not _exempt(stack + [(name, val)]):
+            if name and not closing and not _exempt(stack + [(name, val)], attrs=True):
                 for m in ATTR_VALUE_RE.finditer(val):
                     attr, value = m.group(1).lower(), m.group(3) if m.group(3) is not None else m.group(4)
                     if attr not in TRANSLATABLE_ATTRS or '{{' in value or '{%' in value:
+                        continue
+                    if attr == 'placeholder' and _exempt(stack + [(name, val)]):
                         continue
                     if not LETTER_RE.search(value) or is_literal(value):
                         continue

@@ -239,7 +239,7 @@ function _updateRefTarget(proto) {
     const owner = pool.find(a => a.protocol === proto && ((a.service_name || '').split('@')[0]) === bare
         && a.target && a.target !== 'N/A');
     if (owner) {
-        el.textContent = '\u2192 ' + owner.target + ((owner.servers || []).length > 1 ? ` (+${owner.servers.length - 1} more)` : '');
+        el.textContent = '\u2192 ' + owner.target + ((owner.servers || []).length > 1 ? ' ' + t('(+{count} more)', { count: owner.servers.length - 1 }) : '');
         el.style.display = '';
     } else {
         el.style.display = 'none';
@@ -665,10 +665,11 @@ async function _routeCertOption(ids) {
 
 async function deleteRoute(id, configFile) {
     const shown = String(id).includes('::') ? String(id).split('::').slice(1).join('::') : String(id);
-    const where = configFile ? ' from ' + configFile : '';
     const pending = _routeCertOption([id]);
     const answer = await _confirmWith({
-        message: t('Delete route "{shown}"{where}? This removes it from the config file and stops serving it.', { shown, where }),
+        message: configFile
+            ? t('Delete route "{shown}" from {file}? This removes it from the config file and stops serving it.', { shown, file: configFile })
+            : t('Delete route "{shown}"? This removes it from the config file and stops serving it.', { shown }),
         title: t('Delete Route'), okLabel: tc('button', 'Delete'), typeWord: _confirmWordFor(shown),
         checkboxAsync: pending.then(c => c ? { label: c.label, checked: false } : null),
     });
@@ -820,8 +821,8 @@ async function pingAllRoutes() {
     if (typeof _sdApplyRouteCards === 'function') _sdApplyRouteCards();
     const total = online + degraded + offline;
     const bits  = [];
-    if (offlineRoutes.length)  bits.push('unreachable: ' + offlineRoutes.join(', '));
-    if (degradedRoutes.length) bits.push('degraded: ' + degradedRoutes.join(', '));
+    if (offlineRoutes.length)  bits.push(t('unreachable: {routes}', { routes: offlineRoutes.join(', ') }));
+    if (degradedRoutes.length) bits.push(t('degraded: {routes}', { routes: degradedRoutes.join(', ') }));
     const type = bits.length ? 'warning' : 'info';
     const msg  = bits.length
         ? t('Ping all: {online}/{total} fully online - {bits}', { online, total, bits: bits.join(' - ') })
@@ -1046,7 +1047,7 @@ function renderRouteGrid(apps) {
                 ? `<i class="ph-bold ph-lock-simple d-glyph" style="color:var(--muted)" title="TLS${app.tlsOptionsProfile ? ' ' + _esc(app.tlsOptionsProfile) : ''}"></i>`
                 : `<i class="ph-bold ph-lock-simple-open d-glyph" style="color:var(--yellow)" title="${th('No TLS')}"></i>`))
                 + (app.insecureSkipVerify ? `<i class="ph-bold ph-shield-warning d-glyph" style="color:var(--orange)" title="${th('insecureSkipVerify - backend certificate not verified')}"></i>` : '');
-            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="svc-list-col-status" style="display:flex;align-items:center;gap:6px">${bulkCheckbox}<span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span><span class="d-flat ${enabled ? 'd-on' : 'd-off'} rl-state">${enabled ? 'Active' : 'Paused'}</span></div><div style="display:flex;align-items:center;gap:5px"><span class="d-flat d-proto d-proto-${proto}">${proto.toUpperCase()}</span>${listGlyphs}</div><div class="svc-list-col-name"><div style="display:flex;align-items:center;gap:5px">${iconHtml}<span class="truncate">${_esc(app.name)}</span></div></div><div class="rl-svc"><span class="d-flat d-off truncate" title="${_esc(app.service_name)}">${_esc(app.service_name)}</span></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1 ? `<span class="d-flat d-off" title="${th('{servers_count} backends', { servers_count: tmHtml((app.servers||[]).length) })}">+${(app.servers||[]).length-1}</span>` : ''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${epCompact}</div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${mwCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'More')}"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
+            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="svc-list-col-status" style="display:flex;align-items:center;gap:6px">${bulkCheckbox}<span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span><span class="d-flat ${enabled ? 'd-on' : 'd-off'} rl-state">${enabled ? thc('status', 'Active') : thc('status', 'Paused')}</span></div><div style="display:flex;align-items:center;gap:5px"><span class="d-flat d-proto d-proto-${proto}">${proto.toUpperCase()}</span>${listGlyphs}</div><div class="svc-list-col-name"><div style="display:flex;align-items:center;gap:5px">${iconHtml}<span class="truncate">${_esc(app.name)}</span></div></div><div class="rl-svc"><span class="d-flat d-off truncate" title="${_esc(app.service_name)}">${_esc(app.service_name)}</span></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1 ? `<span class="d-flat d-off" title="${th('{servers_count} backends', { servers_count: tmHtml((app.servers||[]).length) })}">+${(app.servers||[]).length-1}</span>` : ''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${epCompact}</div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${mwCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'More')}"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
         }
         return `<div class="card route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5">${bulkCheckbox}<span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}${tlsProfileBadge}<span class="status-dot status-checking" title="Checking..."></span></div><div class="flex items-center gap-1.5 mt-1.5">${iconHtml}<h3 class="font-bold text-sm truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3></div><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'More')}"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div>${cfBadge}</div></div>`;
     }).join('');
@@ -2263,8 +2264,8 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
             .map(x => String(x).trim()).filter(Boolean).join(' - ') || null;
     const isDisabled = app.enabled === false;
     const statusBadge = isDisabled
-        ? _dState('Disabled')
-        : _dState(status === 'enabled' ? 'Enabled' : status);
+        ? _dState('disabled')
+        : _dState(status);
     const errorBanner = routerError
         ? `<div class="mt-4 p-3 rounded-lg text-xs font-mono leading-relaxed" style="color:var(--red);background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.25);word-break:break-word"><i class="ph-bold ph-warning-circle" style="margin-right:6px"></i>${_esc(routerError)}</div>`
         : '';
@@ -2332,13 +2333,13 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     const priority = liveRouter ? (liveRouter.priority ?? '-') : '-';
 
     const routerRows = [
-        ['Status', statusBadge, true],
-        ['Provider', _dText(provider, 'd-off'), true],
-        ['Rule', rule || '-', false],
-        ['Name', (liveRouter ? liveRouter.name : app.name) || '-', false],
+        [tc('label', 'Status'), statusBadge, true],
+        [tc('label', 'Provider'), _dText(provider, 'd-off'), true],
+        [tc('label', 'Rule'), rule || '-', false],
+        [tc('label', 'Name'), (liveRouter ? liveRouter.name : app.name) || '-', false],
         [t('Entry Points'), _dList(routerEPs), true],
-        ['Service', app.service_name || '-', false],
-        ['Priority', String(priority), false],
+        [tc('label', 'Service'), app.service_name || '-', false],
+        [tc('label', 'Priority'), String(priority), false],
     ];
 
     
@@ -2346,12 +2347,12 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     let tlsSection = '';
     if (protocol === 'http' || protocol === 'tcp') {
         const tlsRows = [
-            ['TLS', _dBool(!!tlsData, 'Enabled', 'Disabled'), true],
+            [tc('label', 'TLS'), _dBool(!!tlsData, tc('status', 'Enabled'), tc('status', 'Disabled')), true],
             [t('Certificate Resolver'), tlsData ? (tlsData.certResolver || '-') : '-', false],
-            ['Options', tlsData ? (tlsData.options || 'default') : '-', false],
-            ['Passthrough', _dBool(protocol === 'tcp' && tlsData && !!tlsData.passthrough), true],
+            [tc('label', 'Options'), tlsData ? (tlsData.options || 'default') : '-', false],
+            [tc('label', 'Passthrough'), _dBool(protocol === 'tcp' && tlsData && !!tlsData.passthrough), true],
         ];
-        tlsSection = renderSection('TLS', 'ph-shield', tlsRows);
+        tlsSection = renderSection(tc('label', 'TLS'), 'ph-shield', tlsRows);
     }
 
     
@@ -2365,7 +2366,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
                     <i class="ph-light ph-stack text-2xl block mb-1 opacity-30"></i>
                     <p class="text-xs">${th('No middlewares configured')}</p>
                 </div>`;
-        mwSection = renderDetailBlock('Middlewares', 'ph-plugs-connected', mwBody,
+        mwSection = renderDetailBlock(tc('label', 'Middlewares'), 'ph-plugs-connected', mwBody,
             mws.length > 0 ? _dCount(mws.length) : '');
     }
 
@@ -2382,10 +2383,10 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     const svcServerRows = svcServers.map((s, i) => {
         const url = s.url || s.address || '-';
         const st = svcServerStatus ? svcServerStatus[url] : undefined;
-        if (st === undefined) return [`Server ${i + 1}`, url, false];
+        if (st === undefined) return [tc('label', 'Server {n}', { n: i + 1 }), url, false];
         const up = String(st).toUpperCase() === 'UP';
-        return [`Server ${i + 1}`,
-            `<span class="d-state d-flat ${up ? 'd-on' : 'd-bad'}"><span class="status-dot ${up ? 'status-online' : 'status-offline'}"></span>${up ? 'UP' : 'DOWN'}</span> <span class="font-mono">${_esc(url)}</span>`,
+        return [tc('label', 'Server {n}', { n: i + 1 }),
+            `<span class="d-state d-flat ${up ? 'd-on' : 'd-bad'}"><span class="status-dot ${up ? 'status-online' : 'status-offline'}"></span>${up ? thc('status', 'UP') : thc('status', 'DOWN')}</span> <span class="font-mono">${_esc(url)}</span>`,
             true];
     });
     const svcHealthTxt = !svcChecked ? ''
@@ -2393,10 +2394,10 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
         : `<span class="text-xs ml-2 font-semibold" style="color:${svcUp === 0 ? 'var(--red)' : 'var(--yellow)'}">${(svcUp === 0 ? th('all {total} servers down', { total: svcTotal }) : th('{down} of {total} servers down', { down: svcTotal - svcUp, total: svcTotal }))}</span>`;
 
     const svcRows = [
-        ['Status', svcStatus !== '-' ? _dState(svcStatus === 'enabled' ? 'Enabled' : svcStatus) + svcHealthTxt : '-', svcStatus !== '-'],
-        ['Type', app.serviceType && app.serviceType !== 'loadBalancer' ? app.serviceType : t('Load Balancer'), false],
+        [tc('label', 'Status'), svcStatus !== '-' ? _dState(svcStatus) + svcHealthTxt : '-', svcStatus !== '-'],
+        [tc('label', 'Type'), app.serviceType && app.serviceType !== 'loadBalancer' ? app.serviceType : t('Load Balancer'), false],
         [t('Pass Host Header'), svcPassHostHeader, false],
-        ...(app.containerAddr ? [['Container', app.containerAddr, false]] : []),
+        ...(app.containerAddr ? [[tc('label', 'Container'), app.containerAddr, false]] : []),
         ...svcServerRows,
     ];
 
@@ -2425,7 +2426,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     ${renderSection(t('Router Details'), 'ph-info', routerRows)}
     ${tlsSection}
     ${mwSection}
-    ${renderSection('Service', 'ph-lightning', svcRows)}
+    ${renderSection(tc('label', 'Service'), 'ph-lightning', svcRows)}
     ${labelsSection}
     `;
 }

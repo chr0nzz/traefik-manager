@@ -127,7 +127,7 @@ def _alarm(down, warn):
     src = _src()
     stub = (i18n_prelude() + "const _esc = s => String(s == null ? '' : s);\n"
             "function _dskSpec(p) { return JSON.stringify(p); }\n"
-            + _fn('_dskAlarm', src)
+            + _fn('_dskGroupLabel', src) + '\n' + _fn('_dskAlarm', src)
             + "\nconsole.log(JSON.stringify(_dskAlarm({ name: 'Media' }, %d, %d)));" % (down, warn))
     out = subprocess.run(['node', '-e', stub], capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
