@@ -5,7 +5,8 @@ from babel import Locale, UnknownLocaleError
 from babel.core import get_global
 from babel.support import Translations
 from flask import has_request_context, request
-from flask_babel import Babel, get_locale
+from flask_babel import Babel, get_locale, get_translations
+from markupsafe import escape
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOCALE_DIR = os.path.join(ROOT_DIR, 'locale')
@@ -187,6 +188,16 @@ class LocalePrefixMiddleware:
         return self.wsgi_app(environ, start_response)
 
 
+def install_escaped_gettext(jinja_env):
+    jinja_env.install_gettext_callables(
+        gettext=lambda s: escape(get_translations().ugettext(s)),
+        ngettext=lambda s, p, n: escape(get_translations().ungettext(s, p, n)),
+        newstyle=True,
+        pgettext=lambda c, s: escape(get_translations().upgettext(c, s)),
+        npgettext=lambda c, s, p, n: escape(get_translations().unpgettext(c, s, p, n)),
+    )
+
+
 def init_app(app, default_language):
     app.config['BABEL_DEFAULT_LOCALE'] = DEFAULT_TAG
     app.config['BABEL_TRANSLATION_DIRECTORIES'] = LOCALE_DIR
@@ -202,6 +213,7 @@ def init_app(app, default_language):
         return to_identifier(resolve_tag(_saved()))
 
     babel = Babel(app, locale_selector=_select)
+    install_escaped_gettext(app.jinja_env)
 
     @app.context_processor
     def _inject_locale():
