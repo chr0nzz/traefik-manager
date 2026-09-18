@@ -31,6 +31,7 @@ function harness(deleteBody, mode) {
         _tlsSrv: () => '',
         _esc: s => String(s),
         _jsArg: s => JSON.stringify(s),
+        _confirmWordFor: names => (names.length === 1 ? String(names[0]) : String(names.length)),
         _netErrText: (e, f) => f,
         _errText: async (r, f) => f,
         agentFetch: async () => ({ ok: true, json: async () => ({ certs: [] }) }),
@@ -106,6 +107,7 @@ console.log('removing several at once');
         await bulkRemoveCerts();
     })()`, ctx);
     check('both certificates were sent', log.posted && log.posted.certs.length === 2, JSON.stringify(log.posted));
+    check('removing two asks for the count, not DELETE', vm.runInContext('_confirmSeen.typeWord', ctx) === '2');
     check('the confirm names them', /a\.example\.com/.test(vm.runInContext('_confirmSeen.message', ctx))
           && /b\.example\.com/.test(vm.runInContext('_confirmSeen.message', ctx)),
           vm.runInContext('_confirmSeen.message', ctx));

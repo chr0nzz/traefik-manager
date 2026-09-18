@@ -7,6 +7,11 @@ let _staticPendingChanges  = false;
 let _staticSectionEdits    = false;
 let _staticSaved           = false;
 
+function _confirmWordFor(names) {
+    const list = (Array.isArray(names) ? names : [names]).map(n => String(n == null ? '' : n).trim()).filter(Boolean);
+    return list.length === 1 ? list[0] : String(list.length);
+}
+
 function _confirm(message, title, okLabel, typeWord, opts) {
     return _confirmWith({ message, title, okLabel, typeWord, ...(opts || {}) }).then(r => r.ok);
 }

@@ -671,7 +671,7 @@ async function deleteRoute(id, configFile) {
     const pending = _routeCertOption([id]);
     const answer = await _confirmWith({
         message: 'Delete route "' + shown + '"' + where + '? This removes it from the config file and stops serving it.',
-        title: 'Delete Route', okLabel: 'Delete', typeWord: 'DELETE',
+        title: 'Delete Route', okLabel: 'Delete', typeWord: _confirmWordFor(shown),
         checkboxAsync: pending.then(c => c ? { label: c.label, checked: false } : null),
     });
     if (!answer.ok) return;
@@ -2104,7 +2104,8 @@ async function bulkDelete() {
     const answer  = await _confirmWith({
         message: `Delete ${ids.length} route${ids.length > 1 ? 's' : ''}: ${_routeNameList(ids)}? `
                  + 'This removes them from the config files and stops serving them.',
-        title: 'Bulk Delete', okLabel: 'Delete', typeWord: 'DELETE',
+        title: 'Bulk Delete', okLabel: 'Delete',
+        typeWord: _confirmWordFor(ids.map(i => String(i).includes('::') ? String(i).split('::').slice(1).join('::') : String(i))),
         checkboxAsync: pending.then(c => c ? { label: c.label, checked: false } : null),
     });
     if (!answer.ok) return;

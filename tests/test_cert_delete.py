@@ -167,9 +167,11 @@ def test_removal_uses_the_same_confirm_as_every_other_delete():
     js = _read('static', 'js', 'certs.js')
     body = js[js.index('async function removeCerts('):js.index('async function _loadCertUsage(')]
     assert "_confirmWith(" in body, 'a bespoke panel meant one confirm style for certificates and another everywhere else'
-    assert "typeWord: 'DELETE'" in body, (
+    assert "typeWord: _confirmWordFor(names)" in body, (
         'removing a certificate can trigger a reissue and spend a rate limit, so it needs at least '
         'the friction of deleting a route')
+    assert "typeWord: _confirmWordFor(shown)" in _read('static', 'js', 'routes.js'), \
+        'a route delete and a certificate removal ask for the same typed confirmation'
     assert 'notes' in body and 'restarted afterwards' in body, 'the warnings have to survive the move'
     assert "Let's Encrypt allows five identical certificates per week" in body
     assert not os.path.exists(os.path.join(ROOT, 'templates', 'modals', 'cert_delete_modal.html')), \

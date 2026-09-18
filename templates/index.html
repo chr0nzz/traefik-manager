@@ -119,8 +119,8 @@
             </label>
         </div>
         <div id="customConfirmTypeWrap" style="display:none;padding:16px 22px 0">
-            <label class="text-xs block mb-1.5" style="color:var(--muted)">{% set confirm_word %}<button type="button" id="customConfirmWord" title="{{ _('Click to copy') }}" style="color:var(--red);letter-spacing:0.06em;font-weight:700;background:none;border:none;padding:0 2px;cursor:copy;font-size:inherit;font-family:inherit">DELETE</button>{% endset %}{{ _('Type %(confirm_word)s to confirm', confirm_word=confirm_word) }}</label>
-            <input type="text" id="customConfirmType" class="input-field" autocomplete="off" spellcheck="false" placeholder="DELETE">
+            <label class="text-xs block mb-1.5" style="color:var(--muted)">{% set confirm_word %}<button type="button" id="customConfirmWord" title="{{ _('Click to copy') }}" style="color:var(--red);font-weight:700;background:none;border:none;padding:0 2px;cursor:copy;font-size:inherit;font-family:inherit;word-break:break-all;text-align:left" translate="no"></button>{% endset %}{{ _('Type %(confirm_word)s to confirm', confirm_word=confirm_word) }}</label>
+            <input type="text" id="customConfirmType" class="input-field" autocomplete="off" spellcheck="false" placeholder="">
         </div>
         <div class="flex gap-2 justify-end" style="padding:18px 22px;margin-top:4px">
             <button id="customConfirmCancel" class="btn-secondary text-xs">{{ pgettext('button', 'Cancel') }}</button>

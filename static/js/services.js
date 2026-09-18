@@ -879,7 +879,7 @@ async function saveServiceModal() {
 async function deleteServiceFromModal() {
     const name = (document.getElementById('svcOriginalName')?.value || '').trim();
     if (!name) return;
-    if (!await _confirm('Delete the service ' + name + '? Its own backends are removed with it.', 'Delete Service', 'Delete', 'DELETE')) return;
+    if (!await _confirm('Delete the service ' + name + '? Its own backends are removed with it.', 'Delete Service', 'Delete', _confirmWordFor(name))) return;
     await _sendServiceDelete(name, false);
 }
 
@@ -897,7 +897,7 @@ async function _sendServiceDelete(name, force) {
             if (routes.length) parts.push('Delete ' + (routes.length === 1 ? 'the route ' : routes.length + ' routes: ') + show(routes));
             if (parents.length) parts.push('remove it from ' + show(parents) + (parents.length === 1 ? ' (which is deleted if nothing is left in it)' : ' (any left empty are deleted too)'));
             if (await _confirm('"' + name + '" is still in use. ' + parts.join(', and ') + ', then delete it?',
-                               'Service In Use', 'Delete all of it', 'DELETE')) {
+                               'Service In Use', 'Delete all of it', _confirmWordFor(name))) {
                 await _sendServiceDelete(name, true);
             }
             return;

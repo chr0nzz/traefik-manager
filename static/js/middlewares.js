@@ -494,7 +494,7 @@ async function saveMwAjax(event) {
 }
 
 async function deleteMw(name, configFile) {
-    if (!await _confirm('Delete middleware "' + name + '"?', 'Delete Middleware', 'Delete', 'DELETE')) return;
+    if (!await _confirm('Delete middleware "' + name + '"?', 'Delete Middleware', 'Delete', _confirmWordFor(name))) return;
     await _sendMwDelete(name, configFile, false);
 }
 
@@ -512,7 +512,7 @@ async function _sendMwDelete(name, configFile, force) {
             const shown = routes.slice(0, 5).join(', ') + (routes.length > 5 ? ' and ' + (routes.length - 5) + ' more' : '');
             const label = routes.length === 1 ? '1 route' : routes.length + ' routes';
             if (await _confirm('"' + name + '" is still used by ' + shown + '. Remove it from ' + label + ' and delete it?',
-                               'Middleware In Use', 'Remove and delete', 'DELETE')) {
+                               'Middleware In Use', 'Remove and delete', _confirmWordFor(name))) {
                 await _sendMwDelete(name, configFile, true);
             }
             return;

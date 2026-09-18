@@ -306,7 +306,7 @@ async function removeCerts(rows, opts) {
             ? 'Remove ' + shown + ' from acme.json' + where + '?'
             : 'Remove ' + list.length + ' certificates from acme.json' + where + ': ' + shown + '?',
         title: list.length === 1 ? 'Remove Certificate' : 'Remove Certificates',
-        okLabel: 'Remove', typeWord: 'DELETE', notes,
+        okLabel: 'Remove', typeWord: _confirmWordFor(names), notes,
     });
     if (!answer.ok) return false;
     return _sendCertRemoval(list, server);
