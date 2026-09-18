@@ -351,6 +351,15 @@ function switchAuthTab(id, btn) {
     if (panel) panel.style.display = 'flex';
 }
 
+function switchUiTab(id, btn) {
+    document.querySelectorAll('#mpanel-ui .auth-sub-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#mpanel-ui .auth-sub-panel').forEach(p => p.style.display = 'none');
+    if (btn) btn.classList.add('active');
+    const panel = document.getElementById('ui-sub-' + id);
+    if (panel) panel.style.display = 'flex';
+    _markSettingsChild('ui', id);
+}
+
 function switchSystemTab(id, btn) {
     document.querySelectorAll('#mpanel-system .auth-sub-tab').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('#mpanel-system .auth-sub-panel').forEach(p => p.style.display = 'none');
@@ -460,6 +469,7 @@ async function _loadAboutAgentInfo() {
 }
 
 const SETTINGS_CHILDREN = {
+    ui:      { first: 'general',     switch: (k) => switchUiTab(k, document.getElementById('ui-tab-' + k)) },
     system:  { first: 'tabs',        switch: (k) => switchSystemTab(k) },
     auth:    { first: 'password',    switch: (k) => switchAuthTab(k) },
     backups: { first: 'routes',      switch: (k) => switchBackupTab(k) },
@@ -1667,6 +1677,14 @@ function toggleIpDiagBtn() {
     if (t) t.classList.toggle('on', !show);
 }
 
+function toggleLangPickerBtn() {
+    const show = tmPref('showLangPicker');
+    tmSetPref('showLangPicker', !show);
+    document.documentElement.classList.toggle('tm-hide-lang', show);
+    const tog = document.getElementById('toggle-lang-picker');
+    if (tog) tog.classList.toggle('on', !show);
+}
+
 function toggleDocsLink() {
     const show = tmPref('showDocsLink');
     tmSetPref('showDocsLink', !show);
@@ -1862,6 +1880,8 @@ function loadUiTogglesIntoModal() {
     if (sh) sh.classList.toggle('on', tmPref('showShortcutsBtn'));
     const ipd = document.getElementById('toggle-ipdiag-btn');
     if (ipd) ipd.classList.toggle('on', tmPref('showIpDiagBtn'));
+    const lp = document.getElementById('toggle-lang-picker');
+    if (lp) lp.classList.toggle('on', tmPref('showLangPicker'));
     const ri = document.getElementById('toggle-route-icons');
     if (ri) ri.classList.toggle('on', tmPref('showRouteIcons'));
     loadGeoipSettings();

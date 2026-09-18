@@ -2,6 +2,7 @@ import os
 from functools import lru_cache
 
 from babel import Locale, UnknownLocaleError
+from babel.core import get_global
 from babel.support import Translations
 from flask import has_request_context, request
 from flask_babel import Babel, get_locale
@@ -10,7 +11,6 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOCALE_DIR = os.path.join(ROOT_DIR, 'locale')
 DOMAIN = 'messages'
 DEFAULT_TAG = 'en'
-COOKIE_NAME = 'tm_lang'
 URL_LOCALE_KEY = 'tm.url_locale'
 
 _PLURAL_SAMPLES = tuple(range(0, 201)) + (1000, 10000, 100000, 1000000)
@@ -89,12 +89,24 @@ def resolve_tag(default_language: str = '') -> str:
         return normalize(default_language, tags) or DEFAULT_TAG
     for candidate in (request.environ.get(URL_LOCALE_KEY),
                       request.args.get('lang'),
-                      request.cookies.get(COOKIE_NAME),
                       default_language):
         tag = normalize(candidate, tags)
         if tag:
             return tag
     return _accept_language(tags) or DEFAULT_TAG
+
+
+def flag_for(tag: str) -> str:
+    identifier = to_identifier(tag)
+    likely = get_global('likely_subtags')
+    full = likely.get(identifier) or likely.get(identifier.split('_')[0]) or identifier
+    try:
+        territory = Locale.parse(full).territory or ''
+    except (ValueError, UnknownLocaleError):
+        territory = ''
+    if len(territory) != 2 or not territory.isalpha():
+        return ''
+    return ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in territory.upper())
 
 
 def language_options() -> list:
@@ -105,7 +117,7 @@ def language_options() -> list:
             name = Locale.parse(identifier).get_display_name(identifier) or tag
         except (ValueError, UnknownLocaleError):
             name = tag
-        options.append({'tag': tag, 'name': name[:1].upper() + name[1:]})
+        options.append({'tag': tag, 'name': name[:1].upper() + name[1:], 'flag': flag_for(tag)})
     return options
 
 
@@ -180,12 +192,14 @@ def init_app(app, default_language):
     app.config['BABEL_TRANSLATION_DIRECTORIES'] = LOCALE_DIR
     app.config['BABEL_DOMAIN'] = DOMAIN
 
-    def _select():
+    def _saved():
         try:
-            fallback = default_language()
+            return normalize(default_language()) or ''
         except Exception:
-            fallback = ''
-        return to_identifier(resolve_tag(fallback))
+            return ''
+
+    def _select():
+        return to_identifier(resolve_tag(_saved()))
 
     babel = Babel(app, locale_selector=_select)
 
@@ -195,7 +209,10 @@ def init_app(app, default_language):
         return {
             'html_lang': tag,
             'html_dir': text_direction(tag),
+            'html_flag': flag_for(tag),
             'i18n_catalog': client_catalog(tag),
+            'language_options': language_options(),
+            'language_setting': _saved(),
         }
 
     return babel

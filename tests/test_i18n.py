@@ -130,12 +130,12 @@ def test_no_route_starts_with_a_language_code(app_module):
 @pytest.mark.parametrize('kwargs, expected', [
     ({'path': '/de/', 'headers': {'Accept-Language': 'zh-CN'}}, 'de'),
     ({'path': '/?lang=zh-hans', 'headers': {'Cookie': 'tm_lang=de'}}, 'zh-Hans'),
-    ({'path': '/', 'headers': {'Cookie': 'tm_lang=de'}, 'default': 'zh-Hans'}, 'de'),
+    ({'path': '/', 'headers': {'Cookie': 'tm_lang=de'}, 'default': 'zh-Hans'}, 'zh-Hans'),
     ({'path': '/', 'headers': {'Accept-Language': 'de'}, 'default': 'zh-Hans'}, 'zh-Hans'),
     ({'path': '/', 'headers': {'Accept-Language': 'de-AT,en;q=0.5'}}, 'de'),
     ({'path': '/', 'headers': {'Accept-Language': 'zh-CN'}}, 'zh-Hans'),
     ({'path': '/', 'headers': {'Accept-Language': 'ja'}}, 'en'),
-    ({'path': '/', 'headers': {'Cookie': 'tm_lang=ja'}}, 'en'),
+    ({'path': '/', 'headers': {'Cookie': 'tm_lang=de'}}, 'en'),
 ])
 def test_resolve_order(app_module, with_languages, kwargs, expected):
     path = kwargs['path']
@@ -182,9 +182,9 @@ def test_plural_map_follows_the_catalogue(locale_dir):
 
 def test_language_options_use_native_names(with_languages):
     assert i18n.language_options() == [
-        {'tag': 'en', 'name': 'English'},
-        {'tag': 'de', 'name': 'Deutsch'},
-        {'tag': 'zh-Hans', 'name': '中文 (简体)'},
+        {'tag': 'en', 'name': 'English', 'flag': '\U0001F1FA\U0001F1F8'},
+        {'tag': 'de', 'name': 'Deutsch', 'flag': '\U0001F1E9\U0001F1EA'},
+        {'tag': 'zh-Hans', 'name': '中文 (简体)', 'flag': '\U0001F1E8\U0001F1F3'},
     ]
 
 
@@ -225,3 +225,65 @@ def test_saved_language_applies_without_other_hints(client, with_languages):
     finally:
         client.post('/api/settings/language', json={'default_language': ''}, headers=HDR)
 
+
+
+def test_flags_come_from_the_likely_territory():
+    assert i18n.flag_for('fr') == '\U0001F1EB\U0001F1F7'
+    assert i18n.flag_for('ru') == '\U0001F1F7\U0001F1FA'
+    assert i18n.flag_for('es') == '\U0001F1EA\U0001F1F8'
+    assert i18n.flag_for('not a locale') == ''
+
+
+def _between(html, start, end):
+    i = html.index(start)
+    return html[i:html.index(end, i)]
+
+
+def test_navbar_picker_is_the_first_icon(client, with_languages):
+    html = client.get('/').get_data(as_text=True)
+    nav = _between(html, 'id="navActions"', 'id="navMoreWrap"')
+    assert nav.index('id="langPickerWrap"') < nav.index('nav-docs-link')
+    picker = _between(nav, 'id="langPickerWrap"', 'nav-docs-link')
+    assert 'class="tm-flag"' in picker
+    assert "setLanguage('')" in picker
+    assert picker.count('onclick="setLanguage(this.dataset.lang)"') == 3
+    assert 'data-lang="zh-Hans"' in picker
+
+
+def test_settings_lists_every_language_and_follow_system(client, with_languages):
+    client.post('/api/settings/language', json={'default_language': 'de'}, headers=HDR)
+    try:
+        html = client.get('/').get_data(as_text=True)
+    finally:
+        client.post('/api/settings/language', json={'default_language': ''}, headers=HDR)
+    section = _between(html, 'id="languageSection"', 'id="geoipSection"')
+    assert section.count('class="sc-set lang-row') == 4
+    assert 'lang-row active" data-lang="de"' in section
+    assert 'Follow system' in section
+    assert 'window.TM_LANGUAGE = "de"' in html
+
+
+def test_follow_system_is_marked_when_nothing_is_saved(client):
+    html = client.get('/').get_data(as_text=True)
+    section = _between(html, 'id="languageSection"', 'id="geoipSection"')
+    assert 'lang-row active" onclick="setLanguage(\'\')"' in section
+    assert 'window.TM_LANGUAGE = ""' in html
+
+
+def test_interface_is_split_into_sub_sections(client):
+    html = client.get('/').get_data(as_text=True)
+    for key in ('general', 'dashboard', 'navbar', 'tabs'):
+        assert f'id="ui-sub-{key}"' in html
+        assert f'id="msc-ui-{key}"' in html
+        assert f"openSettingsChild('ui', '{key}')" in html
+    general = _between(html, 'id="ui-sub-general"', 'id="ui-sub-dashboard"')
+    assert 'id="languageSection"' in general
+    navbar = _between(html, 'id="ui-sub-navbar"', 'id="ui-sub-tabs"')
+    assert 'id="toggle-lang-picker"' in navbar
+
+
+def test_the_picker_can_be_hidden(client):
+    assert settings_mod.sanitize_ui_prefs({'showLangPicker': 0}) == {'showLangPicker': False}
+    html = client.get('/').get_data(as_text=True)
+    assert "if (!pref('showLangPicker', true))   d.add('tm-hide-lang');" in html
+    assert 'html.tm-hide-lang .nav-lang-picker { display: none !important; }' in html

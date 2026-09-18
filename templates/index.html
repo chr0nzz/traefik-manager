@@ -19,6 +19,8 @@
     <script>
         window.TM_DEFAULT_THEME = '{{ default_theme }}' || 'dark';
         window.TM_UI_PREFS = {{ ui_prefs | tojson }};
+        window.TM_LANGUAGE = {{ language_setting | tojson }};
+        window.TM_LANGUAGE_TAGS = {{ language_options | map(attribute='tag') | list | tojson }};
         (function() {
             var server = window.TM_UI_PREFS || {};
             var t = localStorage.getItem('tm-theme') || window.TM_DEFAULT_THEME;
@@ -40,6 +42,7 @@
             if (!pref('showApiLink', false))     d.add('tm-hide-api');
             if (!pref('showShortcutsBtn', true)) d.add('tm-hide-shortcuts');
             if (!pref('showIpDiagBtn', true))    d.add('tm-hide-ipdiag');
+            if (!pref('showLangPicker', true))   d.add('tm-hide-lang');
             var _lm = pref('layoutMode', 'fluid');
             if (_lm === 'classic') _lm = 'fixed';
             if (_lm === 'fixed') d.add('tm-fixed');
@@ -61,6 +64,7 @@
         html.tm-hide-api .nav-api-link { display: none !important; }
         html.tm-hide-shortcuts .shortcuts-btn-wrap { display: none !important; }
         html.tm-hide-ipdiag .nav-ipdiag-btn { display: none !important; }
+        html.tm-hide-lang .nav-lang-picker { display: none !important; }
         .tm-theme-icon { display: none; }
         html[data-tm-pref="dark"] .tm-theme-icon[data-pref="dark"],
         html[data-tm-pref="light"] .tm-theme-icon[data-pref="light"],

@@ -61,7 +61,7 @@ The panel only ever describes the last N lines of the access log, chosen with th
 
 ### Compact mode
 
-**Settings → Interface → Compact stat cards** applies to this panel as well as the dashboard. The markup is identical in both densities; compact tightens spacing, shrinks the hero numbers, hides the share column and shows four rows per card instead of six, with the trailing summary line adjusted to match.
+**Settings → Interface → Dashboard → Compact stat cards** applies to this panel as well as the dashboard. The markup is identical in both densities; compact tightens spacing, shrinks the hero numbers, hides the share column and shows four rows per card instead of six, with the trailing summary line adjusted to match.
 
 ## What it shows
 
@@ -159,7 +159,7 @@ usermod -aG adm traefik-manager
 
 ## Geolocation
 
-When [IP geolocation](geoip.md) is enabled (**Settings → Interface → Geolocation**), the Logs tab adds a country flag next to each client IP, a **Geography** breakdown, and a shaded **world map** of where the requests came from. Click a country on the map or in the list to filter the log entries to it. Lookups run on the server against a local database, so no IP addresses are sent to any third party.
+When [IP geolocation](geoip.md) is enabled (**Settings → Interface → General → Geolocation**), the Logs tab adds a country flag next to each client IP, a **Geography** breakdown, and a shaded **world map** of where the requests came from. Click a country on the map or in the list to filter the log entries to it. Lookups run on the server against a local database, so no IP addresses are sent to any third party.
 
 ## Client IP diagnostic
 

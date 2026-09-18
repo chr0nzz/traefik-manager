@@ -75,6 +75,7 @@ UI_PREF_BOOLS = (
     'showStatCards', 'compactStatCards', 'showEntrypoints',
     'showDocsLink', 'showApiLink', 'showShortcutsBtn', 'showIpDiagBtn',
     'showTraefikBadge', 'showTmBadge', 'showRouteIcons', 'logsAutoRefresh',
+    'showLangPicker',
 )
 UI_PREF_VIEWS = ('routeViewMode', 'mwViewMode', 'svcViewMode')
 UI_PREF_SCOPES = ('statBarScope',)

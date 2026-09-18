@@ -120,6 +120,22 @@
                     <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-palette" style="color:var(--muted)"></i>Interface</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
+                <button class="settings-mobile-row is-child" onclick="openSettingsChild('ui', 'general')">
+                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-sliders-horizontal" style="color:var(--muted)"></i>General</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
+                <button class="settings-mobile-row is-child" onclick="openSettingsChild('ui', 'dashboard')">
+                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-squares-four" style="color:var(--muted)"></i>Dashboard</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
+                <button class="settings-mobile-row is-child" onclick="openSettingsChild('ui', 'navbar')">
+                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-navigation-arrow" style="color:var(--muted)"></i>Navbar</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
+                <button class="settings-mobile-row is-child" onclick="openSettingsChild('ui', 'tabs')">
+                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-tabs" style="color:var(--muted)"></i>Tabs</span>
+                    <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
+                </button>
                 <button class="settings-mobile-row" id="msb-auth-mobile" onclick="switchSettingsPanel('auth')">
                     <span style="display:flex;align-items:center;gap:12px;"><i class="ph-bold ph-lock-key" style="color:var(--muted)"></i>Authentication</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
@@ -196,6 +212,12 @@
                 <button class="modal-sidebar-btn active" id="msb-ui" onclick="switchSettingsPanel('ui', this)">
                     <i class="ph-bold ph-palette"></i> Interface
                 </button>
+                <div class="modal-sidebar-sub" id="mss-ui">
+                    <button type="button" class="modal-sidebar-btn is-child" id="msc-ui-general" onclick="openSettingsChild('ui', 'general')"><i class="ph-bold ph-sliders-horizontal"></i> General</button>
+                    <button type="button" class="modal-sidebar-btn is-child" id="msc-ui-dashboard" onclick="openSettingsChild('ui', 'dashboard')"><i class="ph-bold ph-squares-four"></i> Dashboard</button>
+                    <button type="button" class="modal-sidebar-btn is-child" id="msc-ui-navbar" onclick="openSettingsChild('ui', 'navbar')"><i class="ph-bold ph-navigation-arrow"></i> Navbar</button>
+                    <button type="button" class="modal-sidebar-btn is-child" id="msc-ui-tabs" onclick="openSettingsChild('ui', 'tabs')"><i class="ph-bold ph-tabs"></i> Tabs</button>
+                </div>
                 <button class="modal-sidebar-btn" id="msb-auth" onclick="switchSettingsPanel('auth', this)">
                     <i class="ph-bold ph-lock-key"></i> Authentication
                 </button>
@@ -1046,196 +1068,252 @@
                     </div>
                 </div>
 
-                <div class="modal-panel active sig-root sc-root" id="mpanel-ui">
-                    <div class="sc-lede">
-                        <div class="sc-lede-t">Interface<span class="tm-info-btn" data-tip="How Traefik Manager looks and which tabs it shows. Theme and layout, what appears on the dashboard and in the navigation bar, and IP geolocation for the Logs and CrowdSec tabs. All of it is per-browser except the default theme and the tab list."><i class="ph-bold ph-info"></i></span></div>
+                <div class="modal-panel active has-subnav" id="mpanel-ui" style="gap:0;padding:0;">
+                    <div class="sc-lede sc-lede-inset">
+                        <div class="sc-lede-t">Interface<span class="tm-info-btn" data-tip="How Traefik Manager looks and which tabs it shows. Theme, language and layout, what appears on the dashboard and in the navigation bar, and IP geolocation for the Logs and CrowdSec tabs. All of it is per-browser except the default theme, the language and the tab list."><i class="ph-bold ph-info"></i></span></div>
                     </div>
-                    <div style="margin-bottom:12px;">
-                        <div class="sc-sec-head"><i class="ph-bold ph-paint-brush sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Appearance</span><span class="sc-sec-rule"></span></div>
-                        <div class="sc-panel">
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Default theme</div>
-                                    <div class="sc-set-d">Also set by the theme toggle in the nav bar</div>
+                    <div style="display:flex;flex-direction:column;flex:1;min-height:0;">
+
+                        <div class="sub-tab-strip" style="display:flex;gap:2px;padding:12px 20px 0;border-bottom:1px solid var(--border);flex-shrink:0;">
+                            <button class="auth-sub-tab active" id="ui-tab-general" onclick="switchUiTab('general', this)">
+                                <i class="ph-bold ph-sliders-horizontal"></i> General
+                            </button>
+                            <button class="auth-sub-tab" id="ui-tab-dashboard" onclick="switchUiTab('dashboard', this)">
+                                <i class="ph-bold ph-squares-four"></i> Dashboard
+                            </button>
+                            <button class="auth-sub-tab" id="ui-tab-navbar" onclick="switchUiTab('navbar', this)">
+                                <i class="ph-bold ph-navigation-arrow"></i> Navbar
+                            </button>
+                            <button class="auth-sub-tab" id="ui-tab-tabs" onclick="switchUiTab('tabs', this)">
+                                <i class="ph-bold ph-tabs"></i> Tabs
+                            </button>
+                        </div>
+
+                        <div id="ui-sub-general" class="auth-sub-panel sig-root sc-root" style="display:flex;">
+                        <div style="margin-bottom:12px;">
+                            <div class="sc-sec-head"><i class="ph-bold ph-paint-brush sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Appearance</span><span class="sc-sec-rule"></span></div>
+                            <div class="sc-panel">
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Default theme</div>
+                                        <div class="sc-set-d">Also set by the theme toggle in the nav bar</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="flex gap-1 flex-shrink-0" style="margin-left:12px">
+                                        <button type="button" id="theme-opt-dark" onclick="setTheme('dark')" class="proto-btn" title="Dark" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-moon"></i></button>
+                                        <button type="button" id="theme-opt-light" onclick="setTheme('light')" class="proto-btn" title="Light" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-sun"></i></button>
+                                        <button type="button" id="theme-opt-system" onclick="setTheme('system')" class="proto-btn" title="System" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-desktop"></i></button>
+                                    </div></div>
                                 </div>
-                                <div class="sc-set-v"><div class="flex gap-1 flex-shrink-0" style="margin-left:12px">
-                                    <button type="button" id="theme-opt-dark" onclick="setTheme('dark')" class="proto-btn" title="Dark" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-moon"></i></button>
-                                    <button type="button" id="theme-opt-light" onclick="setTheme('light')" class="proto-btn" title="Light" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-sun"></i></button>
-                                    <button type="button" id="theme-opt-system" onclick="setTheme('system')" class="proto-btn" title="System" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-desktop"></i></button>
-                                </div></div>
-                            </div>
-                            <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Layout<span class="tm-info-btn" data-tip="Fluid fills the screen and the detail panel pushes the page aside. Fixed caps the content at a comfortable reading width, centres it with the navigation, and slides the detail panel over instead."><i class="ph-bold ph-info"></i></span></div>
-                                </div>
-                                <div class="sc-set-v flex gap-1 flex-shrink-0">
-                                    <button type="button" id="layout-fluid" onclick="setLayoutMode('fluid')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Fluid</button>
-                                    <button type="button" id="layout-fixed" onclick="setLayoutMode('fixed')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Fixed</button>
+                                <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Layout<span class="tm-info-btn" data-tip="Fluid fills the screen and the detail panel pushes the page aside. Fixed caps the content at a comfortable reading width, centres it with the navigation, and slides the detail panel over instead."><i class="ph-bold ph-info"></i></span></div>
+                                    </div>
+                                    <div class="sc-set-v flex gap-1 flex-shrink-0">
+                                        <button type="button" id="layout-fluid" onclick="setLayoutMode('fluid')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Fluid</button>
+                                        <button type="button" id="layout-fixed" onclick="setLayoutMode('fixed')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Fixed</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div style="margin-bottom:12px;" id="geoipSection">
-                        <div class="sc-sec-head"><i class="ph-bold ph-globe-hemisphere-west sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Geolocation</span><span class="tm-info-btn" data-tip="Set GEOIP_DB_PATH to use your own MaxMind or DB-IP .mmdb file instead of the bundled database, which refreshes monthly."><i class="ph-bold ph-info"></i></span><span class="sc-sec-rule"></span><a href="https://db-ip.com" target="_blank" rel="noopener" class="sc-sec-attrib">IP Geolocation by DB-IP (CC-BY 4.0)</a></div>
-                        <div class="sc-panel">
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">IP geolocation<span class="tm-info-btn" data-tip="Show country flags and a world map in the Logs and CrowdSec tabs. Lookups run on the server against a local database - no IPs leave your server."><i class="ph-bold ph-info"></i></span></div>
+                        <div style="margin-bottom:12px;" id="languageSection">
+                            <div class="sc-sec-head"><i class="ph-bold ph-translate sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">{{ _('Language') }}</span><span class="tm-info-btn" data-tip="{{ _('Saved in manager.yml, so the choice follows you to every browser. Follow system uses the language your browser asks for, and English when Traefik Manager does not have it. Also set by the flag in the nav bar.') }}"><i class="ph-bold ph-info"></i></span><span class="sc-sec-rule"></span></div>
+                            <div class="sc-panel">
+                                <div class="sc-set lang-row{% if not language_setting %} active{% endif %}" onclick="setLanguage('')" style="cursor:pointer">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n"><i class="ph-bold ph-desktop" style="width:20px;display:inline-block;color:var(--muted)"></i>{{ _('Follow system') }}</div>
+                                    </div>
+                                    <div class="sc-set-v">{% if not language_setting %}<i class="ph-bold ph-check" style="color:var(--blue)"></i>{% endif %}</div>
                                 </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-geoip" onclick="toggleGeoip()"><div class="toggle-knob"></div></div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Database</div>
-                                    <div class="sc-set-d" id="geoipDbStatus">Not downloaded</div>
+                                {% for lang in language_options %}
+                                <div class="sc-set lang-row{% if language_setting == lang.tag %} active{% endif %}" data-lang="{{ lang.tag }}" onclick="setLanguage(this.dataset.lang)" style="cursor:pointer">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n" lang="{{ lang.tag }}"><i class="tm-flag" style="width:20px;display:inline-block">{{ lang.flag }}</i>{{ lang.name }}</div>
+                                    </div>
+                                    <div class="sc-set-v">{% if language_setting == lang.tag %}<i class="ph-bold ph-check" style="color:var(--blue)"></i>{% endif %}</div>
                                 </div>
-                                <div class="sc-set-v"><button onclick="updateGeoipDb(this)" id="geoipUpdateBtn" class="btn-secondary text-xs py-1 px-2.5"><i class="ph-bold ph-download-simple text-xs"></i> Download</button></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="margin-bottom:12px;">
-                        <div class="sc-sec-head"><i class="ph-bold ph-squares-four sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Dashboard</span><span class="sc-sec-rule"></span></div>
-                        <div class="sc-panel">
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Show stat cards</div>
-                                    <div class="sc-set-d">HTTP Routers, TCP/UDP, Services and Middlewares overview</div>
-                                </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-ui-statcards" onclick="toggleUiPref('showStatCards')"><div class="toggle-knob"></div></div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Compact stat cards</div>
-                                    <div class="sc-set-d">Denser cards, four across, same totals and signal strip</div>
-                                </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-ui-compact-stats" onclick="toggleUiPref('compactStatCards')"><div class="toggle-knob"></div></div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Show entry points bar</div>
-                                    <div class="sc-set-d">Traefik entry points listed below the stat cards</div>
-                                </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-ui-entrypoints" onclick="toggleUiPref('showEntrypoints')"><div class="toggle-knob"></div></div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Show on</div>
-                                    <div class="sc-set-d">Which tabs show the stat cards and entry points</div>
-                                </div>
-                                <div class="sc-set-v"><div class="flex gap-1 flex-wrap justify-end">
-                                    <button type="button" id="scope-stats-dashboard" onclick="toggleStatTab('dashboard')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Dashboard</button>
-                                    <button type="button" id="scope-stats-services" onclick="toggleStatTab('services')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Routes</button>
-                                    <button type="button" id="scope-stats-middlewares" onclick="toggleStatTab('middlewares')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Middlewares</button>
-                                    <button type="button" id="scope-stats-live" onclick="toggleStatTab('live')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Services</button>
-                                </div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Dashboard categories</div>
-                                    <div class="sc-set-d">Rows with domains, or a compact grid of app icons</div>
-                                </div>
-                                <div class="sc-set-v"><div class="flex gap-1 flex-shrink-0" style="margin-left:12px">
-                                    <button type="button" id="dashdens-list" onclick="setDashPodDensity('list')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Rows</button>
-                                    <button type="button" id="dashdens-icons" onclick="setDashPodDensity('icons')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Icons</button>
-                                </div></div>
+                                {% endfor %}
                             </div>
                         </div>
-                    </div>
-                    <div style="margin-bottom:12px;">
-                        <div class="sc-sec-head"><i class="ph-bold ph-list-bullets sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Routes</span><span class="sc-sec-rule"></span></div>
-                        <div class="sc-panel">
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Show app icons</div>
-                                    <div class="sc-set-d">Display the app icon next to each route name, like the dashboard. Applies to host and agent routes.</div>
+                        <div style="margin-bottom:12px;" id="geoipSection">
+                            <div class="sc-sec-head"><i class="ph-bold ph-globe-hemisphere-west sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Geolocation</span><span class="tm-info-btn" data-tip="Set GEOIP_DB_PATH to use your own MaxMind or DB-IP .mmdb file instead of the bundled database, which refreshes monthly."><i class="ph-bold ph-info"></i></span><span class="sc-sec-rule"></span><a href="https://db-ip.com" target="_blank" rel="noopener" class="sc-sec-attrib">IP Geolocation by DB-IP (CC-BY 4.0)</a></div>
+                            <div class="sc-panel">
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">IP geolocation<span class="tm-info-btn" data-tip="Show country flags and a world map in the Logs and CrowdSec tabs. Lookups run on the server against a local database - no IPs leave your server."><i class="ph-bold ph-info"></i></span></div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-geoip" onclick="toggleGeoip()"><div class="toggle-knob"></div></div></div>
                                 </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-route-icons" onclick="toggleRouteIcons()"><div class="toggle-knob"></div></div></div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Database</div>
+                                        <div class="sc-set-d" id="geoipDbStatus">Not downloaded</div>
+                                    </div>
+                                    <div class="sc-set-v"><button onclick="updateGeoipDb(this)" id="geoipUpdateBtn" class="btn-secondary text-xs py-1 px-2.5"><i class="ph-bold ph-download-simple text-xs"></i> Download</button></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div style="margin-bottom:12px;">
-                        <div class="sc-sec-head"><i class="ph-bold ph-navigation-arrow sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Navbar</span><span class="sc-sec-rule"></span></div>
-                        <div class="sc-panel">
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Show Traefik version badge</div>
-                                    <div class="sc-set-d">Traefik version badge, highlights when an update is available.</div>
+                        </div>
+
+                        <div id="ui-sub-dashboard" class="auth-sub-panel sig-root sc-root" style="display:none;">
+                        <div style="margin-bottom:12px;">
+                            <div class="sc-sec-head"><i class="ph-bold ph-squares-four sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Dashboard</span><span class="sc-sec-rule"></span></div>
+                            <div class="sc-panel">
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Show stat cards</div>
+                                        <div class="sc-set-d">HTTP Routers, TCP/UDP, Services and Middlewares overview</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-ui-statcards" onclick="toggleUiPref('showStatCards')"><div class="toggle-knob"></div></div></div>
                                 </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-traefik-badge" onclick="toggleTraefikBadge()"><div class="toggle-knob"></div></div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Show Traefik Manager version badge</div>
-                                    <div class="sc-set-d">Traefik Manager Version badge, highlights when an update is available.</div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Compact stat cards</div>
+                                        <div class="sc-set-d">Denser cards, four across, same totals and signal strip</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-ui-compact-stats" onclick="toggleUiPref('compactStatCards')"><div class="toggle-knob"></div></div></div>
                                 </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-tm-badge" onclick="toggleTmBadge()"><div class="toggle-knob"></div></div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Show documentation link</div>
-                                    <div class="sc-set-d">Traefik Manager documentation.</div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Show entry points bar</div>
+                                        <div class="sc-set-d">Traefik entry points listed below the stat cards</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-ui-entrypoints" onclick="toggleUiPref('showEntrypoints')"><div class="toggle-knob"></div></div></div>
                                 </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-docs-link" onclick="toggleDocsLink()"><div class="toggle-knob"></div></div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Show API reference link</div>
-                                    <div class="sc-set-d">Opens the interactive API reference.</div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Show on</div>
+                                        <div class="sc-set-d">Which tabs show the stat cards and entry points</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="flex gap-1 flex-wrap justify-end">
+                                        <button type="button" id="scope-stats-dashboard" onclick="toggleStatTab('dashboard')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Dashboard</button>
+                                        <button type="button" id="scope-stats-services" onclick="toggleStatTab('services')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Routes</button>
+                                        <button type="button" id="scope-stats-middlewares" onclick="toggleStatTab('middlewares')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Middlewares</button>
+                                        <button type="button" id="scope-stats-live" onclick="toggleStatTab('live')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Services</button>
+                                    </div></div>
                                 </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-api-link" onclick="toggleApiLink()"><div class="toggle-knob"></div></div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Show keyboard shortcuts button</div>
-                                    <div class="sc-set-d">Quick reference panel for keyboard shortcuts.</div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Dashboard categories</div>
+                                        <div class="sc-set-d">Rows with domains, or a compact grid of app icons</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="flex gap-1 flex-shrink-0" style="margin-left:12px">
+                                        <button type="button" id="dashdens-list" onclick="setDashPodDensity('list')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Rows</button>
+                                        <button type="button" id="dashdens-icons" onclick="setDashPodDensity('icons')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Icons</button>
+                                    </div></div>
                                 </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-shortcuts-btn" onclick="toggleShortcutsBtn()"><div class="toggle-knob"></div></div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Show Client IP Diagnostic button</div>
-                                    <div class="sc-set-d">Read-only tool showing the client IP this instance sees for your request.</div>
-                                </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-ipdiag-btn" onclick="toggleIpDiagBtn()"><div class="toggle-knob"></div></div></div>
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <div class="sc-sec-head"><i class="ph-bold ph-tabs sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Tabs</span><span class="sc-sec-rule"></span></div>
-                        <div class="sc-panel">
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Dashboard</div>
-                                    <div class="sc-set-d">Routes grouped by category with app icons and per-card editing</div>
+                        <div style="margin-bottom:12px;">
+                            <div class="sc-sec-head"><i class="ph-bold ph-list-bullets sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Routes</span><span class="sc-sec-rule"></span></div>
+                            <div class="sc-panel">
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Show app icons</div>
+                                        <div class="sc-set-d">Display the app icon next to each route name, like the dashboard. Applies to host and agent routes.</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-route-icons" onclick="toggleRouteIcons()"><div class="toggle-knob"></div></div></div>
                                 </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-dashboard" onclick="toggleTabVisibility('dashboard')"><div class="toggle-knob"></div></div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Route Map</div>
-                                    <div class="sc-set-d">Topology connection map (Entry Points - Routes - Middlewares - Services)</div>
-                                </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-routemap" onclick="toggleTabVisibility('routemap')"><div class="toggle-knob"></div></div></div>
-                            </div>
-                                                        <div class="sc-set">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">TLS Options</div>
-                                    <div class="sc-set-d">Manage tls.options profiles in your dynamic config</div>
-                                </div>
-                                <div class="sc-set-v"><div class="toggle-switch" id="toggle-tls" onclick="toggleTabVisibility('tls')"><div class="toggle-knob"></div></div></div>
-                            </div>
-                            <div class="sc-set" id="staticTabToggleRow" style="display:none">
-                                <div class="sc-set-l">
-                                    <div class="sc-set-n">Static Config</div>
-                                    <div class="sc-set-d">Edit entrypoints, certificate resolvers, plugins and providers in traefik.yml</div>
-                                </div>
-                                <div class="sc-set-v"><div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">
-                                    <button type="button" id="scPlace-off" onclick="setStaticPlacement('off')" class="proto-btn text-xs px-3 py-1.5" title="Do not show it anywhere">Off</button>
-                                    <button type="button" id="scPlace-settings" onclick="setStaticPlacement('settings')" class="proto-btn text-xs px-3 py-1.5" title="Show it inside this Settings window">Settings</button>
-                                    <button type="button" id="scPlace-tab" onclick="setStaticPlacement('tab')" class="proto-btn text-xs px-3 py-1.5" title="Show it as its own tab in the side navigation">Tab</button>
-                                </div></div>
                             </div>
                         </div>
+                        </div>
+
+                        <div id="ui-sub-navbar" class="auth-sub-panel sig-root sc-root" style="display:none;">
+                        <div style="margin-bottom:12px;">
+                            <div class="sc-sec-head"><i class="ph-bold ph-navigation-arrow sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Navbar</span><span class="sc-sec-rule"></span></div>
+                            <div class="sc-panel">
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">{{ _('Show language selector') }}</div>
+                                        <div class="sc-set-d">{{ _('Flag that switches the interface language.') }}</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-lang-picker" onclick="toggleLangPickerBtn()"><div class="toggle-knob"></div></div></div>
+                                </div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Show Traefik version badge</div>
+                                        <div class="sc-set-d">Traefik version badge, highlights when an update is available.</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-traefik-badge" onclick="toggleTraefikBadge()"><div class="toggle-knob"></div></div></div>
+                                </div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Show Traefik Manager version badge</div>
+                                        <div class="sc-set-d">Traefik Manager Version badge, highlights when an update is available.</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-tm-badge" onclick="toggleTmBadge()"><div class="toggle-knob"></div></div></div>
+                                </div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Show documentation link</div>
+                                        <div class="sc-set-d">Traefik Manager documentation.</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-docs-link" onclick="toggleDocsLink()"><div class="toggle-knob"></div></div></div>
+                                </div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Show API reference link</div>
+                                        <div class="sc-set-d">Opens the interactive API reference.</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-api-link" onclick="toggleApiLink()"><div class="toggle-knob"></div></div></div>
+                                </div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Show keyboard shortcuts button</div>
+                                        <div class="sc-set-d">Quick reference panel for keyboard shortcuts.</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-shortcuts-btn" onclick="toggleShortcutsBtn()"><div class="toggle-knob"></div></div></div>
+                                </div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Show Client IP Diagnostic button</div>
+                                        <div class="sc-set-d">Read-only tool showing the client IP this instance sees for your request.</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-ipdiag-btn" onclick="toggleIpDiagBtn()"><div class="toggle-knob"></div></div></div>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+
+                        <div id="ui-sub-tabs" class="auth-sub-panel sig-root sc-root" style="display:none;">
+                        <div style="margin-bottom:12px;">
+                            <div class="sc-sec-head"><i class="ph-bold ph-tabs sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">Tabs</span><span class="sc-sec-rule"></span></div>
+                            <div class="sc-panel">
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Dashboard</div>
+                                        <div class="sc-set-d">Routes grouped by category with app icons and per-card editing</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-dashboard" onclick="toggleTabVisibility('dashboard')"><div class="toggle-knob"></div></div></div>
+                                </div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Route Map</div>
+                                        <div class="sc-set-d">Topology connection map (Entry Points - Routes - Middlewares - Services)</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-routemap" onclick="toggleTabVisibility('routemap')"><div class="toggle-knob"></div></div></div>
+                                </div>
+                                                            <div class="sc-set">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">TLS Options</div>
+                                        <div class="sc-set-d">Manage tls.options profiles in your dynamic config</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="toggle-switch" id="toggle-tls" onclick="toggleTabVisibility('tls')"><div class="toggle-knob"></div></div></div>
+                                </div>
+                                <div class="sc-set" id="staticTabToggleRow" style="display:none">
+                                    <div class="sc-set-l">
+                                        <div class="sc-set-n">Static Config</div>
+                                        <div class="sc-set-d">Edit entrypoints, certificate resolvers, plugins and providers in traefik.yml</div>
+                                    </div>
+                                    <div class="sc-set-v"><div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">
+                                        <button type="button" id="scPlace-off" onclick="setStaticPlacement('off')" class="proto-btn text-xs px-3 py-1.5" title="Do not show it anywhere">Off</button>
+                                        <button type="button" id="scPlace-settings" onclick="setStaticPlacement('settings')" class="proto-btn text-xs px-3 py-1.5" title="Show it inside this Settings window">Settings</button>
+                                        <button type="button" id="scPlace-tab" onclick="setStaticPlacement('tab')" class="proto-btn text-xs px-3 py-1.5" title="Show it as its own tab in the side navigation">Tab</button>
+                                    </div></div>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+
                     </div>
                 </div>
 

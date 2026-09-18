@@ -664,7 +664,7 @@ volumes:
 **Default:** _(auto-downloaded to `/app/config/geoip/dbip-country-lite.mmdb`, next to `manager.yml`. The location follows `SETTINGS_PATH`, not `CONFIG_DIR`.)_  
 **Fallback:** `geoip_db_path`
 
-Path to a MaxMind DB format (`.mmdb`) GeoIP database for [IP geolocation](geoip.md) in the Logs and CrowdSec tabs. Leave unset to use the free DB-IP Lite country database TM downloads automatically; set it to use your own (e.g. MaxMind GeoLite2). Geolocation must be enabled in **Settings → Interface → Geolocation**.
+Path to a MaxMind DB format (`.mmdb`) GeoIP database for [IP geolocation](geoip.md) in the Logs and CrowdSec tabs. Leave unset to use the free DB-IP Lite country database TM downloads automatically; set it to use your own (e.g. MaxMind GeoLite2). Geolocation must be enabled in **Settings → Interface → General → Geolocation**.
 
 :::tabs
 == Docker / Podman

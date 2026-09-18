@@ -505,10 +505,20 @@ How many timestamped `.bak` files to keep per config file. Set in **Settings - B
 
 **Type:** string - **Default:** `dark`
 
-The default theme for the UI and the login page. One of `dark`, `light`, or `system` (follows the OS preference). Set by the theme toggle in the nav bar or in **Settings - Interface - Appearance**.
+The default theme for the UI and the login page. One of `dark`, `light`, or `system` (follows the OS preference). Set by the theme toggle in the nav bar or in **Settings - Interface - General - Appearance**.
 
 ```yaml
 default_theme: light
+```
+
+### `default_language`
+
+**Type:** string - **Default:** `''`
+
+The interface language, for the UI and the login page. Empty follows each browser's language, falling back to English when Traefik Manager does not have it. Otherwise a language tag such as `de`, `fr` or `zh-Hans`, from the languages this release ships. Set by the flag in the nav bar or in **Settings - Interface - General - Language**. A tag that is not available is ignored and the browser's language is used.
+
+```yaml
+default_language: de
 ```
 
 ### `ui_prefs`
@@ -525,7 +535,7 @@ Display preferences, stored here rather than in the browser so they follow you a
 | `dashPodDensity` | `list` \| `icons` | `list` - dashboard categories as rows with domains, or a compact grid of app icons |
 | `statBarScope` | `all` \| `dashboard` | Which tabs show the stat cards and entry points. `all` (default) means Dashboard, Routes, Middlewares and Services; `dashboard` limits them to the Dashboard tab. Only these two values are stored - any other value (including `none` or a comma-separated list) is discarded when the file is loaded. |
 | `logsAutoRefresh` | boolean | `false` - poll the access log while the Logs tab is open and visible |
-| `showDocsLink`, `showApiLink`, `showShortcutsBtn`, `showIpDiagBtn` | boolean | `true`, `false`, `true`, `true` |
+| `showDocsLink`, `showApiLink`, `showShortcutsBtn`, `showIpDiagBtn`, `showLangPicker` | boolean | `true`, `false`, `true`, `true`, `true` |
 | `showTraefikBadge`, `showTmBadge`, `showRouteIcons` | boolean | `true`, `true`, `false` |
 | `routeViewMode`, `mwViewMode`, `svcViewMode` | `grid` \| `list` | `grid` |
 | `staticOpenSections`, `settingsOpenSections` | list | Which accordion sections were left open |
@@ -545,7 +555,7 @@ Unknown keys are dropped rather than stored. A few things stay in the browser de
 
 **Type:** boolean - **Default:** `false`
 
-Enables [IP geolocation](geoip.md) - country flags and a world map in the Logs and CrowdSec tabs. Toggle in **Settings - Interface - Geolocation**.
+Enables [IP geolocation](geoip.md) - country flags and a world map in the Logs and CrowdSec tabs. Toggle in **Settings - Interface - General - Geolocation**.
 
 ```yaml
 geoip_enabled: true

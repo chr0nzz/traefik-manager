@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-18 09:24-0400\n"
+"POT-Creation-Date: 2026-09-18 10:38-0400\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -17,4 +17,22 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
+
+msgid "Language"
+msgstr ""
+
+msgid ""
+"Saved in manager.yml, so the choice follows you to every browser. Follow "
+"system uses the language your browser asks for, and English when Traefik "
+"Manager does not have it. Also set by the flag in the nav bar."
+msgstr ""
+
+msgid "Follow system"
+msgstr ""
+
+msgid "Show language selector"
+msgstr ""
+
+msgid "Flag that switches the interface language."
+msgstr ""
 

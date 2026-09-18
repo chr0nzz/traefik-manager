@@ -732,6 +732,7 @@ const TM_PREF_DEFAULTS = {
     showStatCards: true, compactStatCards: false, showEntrypoints: true,
     showDocsLink: true, showApiLink: false, showShortcutsBtn: true,
     showIpDiagBtn: true, showTraefikBadge: true, showTmBadge: true,
+    showLangPicker: true,
     showRouteIcons: false,
     routeViewMode: 'grid', mwViewMode: 'grid', svcViewMode: 'grid',
     statBarScope: 'all',
@@ -824,6 +825,50 @@ function cycleTheme() {
     const cur = localStorage.getItem('tm-theme') || window.TM_DEFAULT_THEME || 'dark';
     const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
     setTheme(next);
+}
+
+function toggleLangMenu() {
+    const menu = document.getElementById('langPickerMenu');
+    if (!menu) return;
+    const opening = !menu.classList.contains('open');
+    document.querySelectorAll('.notif-panel.open').forEach(p => p.classList.remove('open'));
+    if (opening) menu.classList.add('open');
+}
+
+document.addEventListener('click', e => {
+    const wrap = document.getElementById('langPickerWrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('langPickerMenu')?.classList.remove('open');
+    }
+});
+
+function _tmLanguageUrl() {
+    const tags = window.TM_LANGUAGE_TAGS || [];
+    let path = _tmAppPath(window.location.pathname);
+    const first = path.split('/')[1] || '';
+    if (tags.includes(first)) path = path.slice(first.length + 1) || '/';
+    const params = new URLSearchParams(window.location.search);
+    params.delete('lang');
+    const query = params.toString();
+    return tmUrl(path) + (query ? '?' + query : '') + window.location.hash;
+}
+
+function setLanguage(tag) {
+    const value = tag || '';
+    document.getElementById('langPickerMenu')?.classList.remove('open');
+    if (value === (window.TM_LANGUAGE || '')) return;
+    fetch('/api/settings/language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+        body: JSON.stringify({ default_language: value })
+    })
+        .then(r => r.json().then(d => ({ ok: r.ok, d })))
+        .then(({ ok, d }) => {
+            if (!ok || !d.success) throw new Error(d.error || 'save failed');
+            window.TM_LANGUAGE = d.default_language;
+            window.location.href = _tmLanguageUrl();
+        })
+        .catch(() => showToast(t('Could not save the language'), 'error'));
 }
 
 const _autofillAllowed = new Set(['pwCurrent', 'pwNew', 'pwConfirm', 'otpVerifyCode']);

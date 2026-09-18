@@ -24,6 +24,29 @@
                     <i class="ph-bold ph-package"></i>
                     <span id="tmVersionText">-</span>
                 </button>
+                <div id="langPickerWrap" class="nav-lang-picker" data-navprio="12" style="position:relative;">
+                    <button type="button" id="langPickerBtn" onclick="toggleLangMenu()" class="nav-btn" title="{{ _('Language') }}" aria-haspopup="true">
+                        <i class="tm-flag" style="font-size:15px;line-height:1">{{ html_flag }}</i>
+                    </button>
+                    <div id="langPickerMenu" class="notif-panel">
+                        <div class="notif-item lang-opt{% if not language_setting %} active{% endif %}" onclick="setLanguage('')">
+                            <div class="flex items-center gap-2 py-1">
+                                <i class="ph-bold ph-desktop" style="width:18px;text-align:center;color:var(--muted)"></i>
+                                <div class="text-xs font-medium truncate" style="color:var(--text);flex:1;min-width:0">{{ _('Follow system') }}</div>
+                                {% if not language_setting %}<i class="ph-bold ph-check text-xs ml-auto flex-shrink-0" style="color:var(--blue)"></i>{% endif %}
+                            </div>
+                        </div>
+                        {% for lang in language_options %}
+                        <div class="notif-item lang-opt{% if language_setting == lang.tag %} active{% endif %}" data-lang="{{ lang.tag }}" onclick="setLanguage(this.dataset.lang)" lang="{{ lang.tag }}">
+                            <div class="flex items-center gap-2 py-1">
+                                <i class="tm-flag" style="width:18px;text-align:center">{{ lang.flag }}</i>
+                                <div class="text-xs font-medium truncate" style="color:var(--text);flex:1;min-width:0">{{ lang.name }}</div>
+                                {% if language_setting == lang.tag %}<i class="ph-bold ph-check text-xs ml-auto flex-shrink-0" style="color:var(--blue)"></i>{% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
                 <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="nav-btn nav-docs-link" data-navprio="10" title="Documentation">
                     <i class="ph-bold ph-book-open"></i>
                 </a>

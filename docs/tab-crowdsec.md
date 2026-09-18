@@ -35,7 +35,7 @@ Everything lives in one panel, rendered from a single state:
 
 Colour is rationed and means one thing everywhere: **colour marks what is not handled**. A host that CrowdSec is absorbing successfully renders grey even while being probed hard, because that is the truth. Yellow means a source tripped a scenario and holds no active decision. Red means a whole vector produced no ban at all. Bans in force are never red, because a ban is not a problem.
 
-The **compact stat cards** setting (**Settings → Interface**) applies here exactly as it does on the Dashboard and Logs tabs.
+The **compact stat cards** setting (**Settings → Interface → Dashboard**) applies here exactly as it does on the Dashboard and Logs tabs.
 
 ### Cards
 

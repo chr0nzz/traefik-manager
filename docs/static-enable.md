@@ -192,7 +192,7 @@ sudo systemctl restart traefik-manager
 
 ## Verify
 
-Open Traefik Manager - a **Static Config** row appears under **Settings → Interface** with three choices:
+Open Traefik Manager - a **Static Config** row appears under **Settings → Interface → Tabs** with three choices:
 
 | Choice | Where it appears |
 |---|---|
