@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-18 11:05-0400\n"
+"POT-Creation-Date: 2026-09-18 11:28-0400\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -17,16 +17,3104 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+#, python-format
+msgid "%(auth_verify)s is appended automatically"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(line_break)s⚠ A %(buffering)s/%(compress)s middleware is attached - "
+"remove it for smooth streaming and seeking."
+msgstr ""
+
+#, python-format
+msgid "%(n1)s Welcome"
+msgstr ""
+
+#, python-format
+msgid "%(n3)s Self route"
+msgstr ""
+
+#, python-format
+msgid "%(n4)s Monitoring"
+msgstr ""
+
+#, python-format
+msgid "%(n6)s Git backup"
+msgstr ""
+
+#, python-format
+msgid "%(n7)s Notifications"
+msgstr ""
+
+#, python-format
+msgid "%(n8)s Password"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(new_in_v1)s Static Config Editor lets you manage your Traefik static "
+"config from the UI. %(set_it_up)s"
+msgstr ""
+
+#, python-format
+msgid "%(status)s is replaced with the response code."
+msgstr ""
+
+msgid "(32+ character random string)"
+msgstr ""
+
+msgid "(Name: claim, one per line)"
+msgstr ""
+
+msgid "(bytes)"
+msgstr ""
+
+msgid "(bytes, optional - Traefik 3.7+)"
+msgstr ""
+
+msgctxt "option"
+msgid "(none)"
+msgstr ""
+
+msgid "(one CIDR or IP per line)"
+msgstr ""
+
+msgid "(one per line)"
+msgstr ""
+
+msgid "(one per line, * for all)"
+msgstr ""
+
+#, python-format
+msgid "(one per line, format: %(user_htpasswd_hash)s)"
+msgstr ""
+
+#, python-format
+msgid "(one per line, format: %(user_realm_md5hash)s)"
+msgstr ""
+
+msgid "(optional)"
+msgstr ""
+
+msgid "(regex, one per line - optional)"
+msgstr ""
+
+msgid "(responses smaller than this are not compressed)"
+msgstr ""
+
+msgid "(seconds)"
+msgstr ""
+
+msgid "(set - leave blank to keep)"
+msgstr ""
+
+msgid "+ New file..."
+msgstr ""
+
+#, python-format
+msgid "- controlled by %(auth_enabled)s env var"
+msgstr ""
+
+msgid "- restore it under Dashboard settings"
+msgstr ""
+
+msgid "/ (server root)"
+msgstr ""
+
+msgctxt "placeholder"
+msgid "/health"
+msgstr ""
+
+msgid "0 selected"
+msgstr ""
+
+msgid "1 hour"
+msgstr ""
+
+msgid "1 minute"
+msgstr ""
+
+msgid "1 year"
+msgstr ""
+
+msgid "1.2.3.4 or 1.2.3.0/24"
+msgstr ""
+
+msgid "15 minutes"
+msgstr ""
+
+msgid "24 hours"
+msgstr ""
+
+msgid "30 days"
+msgstr ""
+
+msgid "30 minutes"
+msgstr ""
+
+msgid "4 hours"
+msgstr ""
+
+msgid "5 minutes"
+msgstr ""
+
+msgid "7 days"
+msgstr ""
+
+#, python-format
+msgid ""
+"A backup is created automatically before every save. Restore from "
+"%(backups)s if something goes wrong."
+msgstr ""
+
+msgid "A backup is created automatically before restoring."
+msgstr ""
+
+msgid ""
+"A backup is taken first and Traefik is restarted afterwards, because it "
+"only reads acme.json at startup."
+msgstr ""
+
+msgid ""
+"A convenience list for the route form's host dropdown. It does not change"
+" your Traefik config, your TLS, or your routing - domains found in "
+"existing routes are picked up automatically, so this is just seeding."
+msgstr ""
+
+msgid "A label for the device this key belongs to."
+msgstr ""
+
+msgid ""
+"A personal access token with write access to that one repository. Stored "
+"encrypted, and never shown again after setup."
+msgstr ""
+
+msgid "A temporary password was generated at startup - check your container logs."
+msgstr ""
+
+msgid ""
+"A web interface for the routes, middlewares and services Traefik already "
+"serves. This setup takes about a minute: point it at your Traefik API, "
+"pick the views you want, and set a password. Everything here can be "
+"changed later in Settings."
+msgstr ""
+
+#, python-format
+msgid "ACME / certs path %(optional)s"
+msgstr ""
+
+msgid "ALPN Protocols"
+msgstr ""
+
+msgid "API & Dashboard"
+msgstr ""
+
+msgid "API Key"
+msgstr ""
+
+msgid "API Keys"
+msgstr ""
+
+msgid "API Reference"
+msgstr ""
+
+#, python-format
+msgid "API credentials %(optional)s"
+msgstr ""
+
+msgid "API key"
+msgstr ""
+
+#, python-format
+msgid "API key %(optional)s"
+msgstr ""
+
+msgid "API key configured"
+msgstr ""
+
+msgid ""
+"API key is hidden after first creation. Use the key already in your "
+"running agent compose - do not rotate unless you want to invalidate the "
+"old key and reconfigure your agent."
+msgstr ""
+
+msgctxt "button"
+msgid "About"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "About"
+msgstr ""
+
+msgid "Access Control"
+msgstr ""
+
+msgid "Access Log Path"
+msgstr ""
+
+#, python-format
+msgid "Access log path %(optional)s"
+msgstr ""
+
+msgid "Access logs not loaded"
+msgstr ""
+
+msgid "Access token"
+msgstr ""
+
+msgid "Acknowledge and hide"
+msgstr ""
+
+msgctxt "label"
+msgid "Actions"
+msgstr ""
+
+msgctxt "button"
+msgid "Active"
+msgstr ""
+
+msgctxt "button"
+msgid "Add"
+msgstr ""
+
+msgid "Add Agent"
+msgstr ""
+
+msgid "Add Channel"
+msgstr ""
+
+msgid "Add Decision"
+msgstr ""
+
+msgid "Add Key"
+msgstr ""
+
+msgid "Add Middleware"
+msgstr ""
+
+msgid "Add Plugin"
+msgstr ""
+
+msgid "Add Prefix"
+msgstr ""
+
+msgid "Add Route"
+msgstr ""
+
+msgid "Add Service"
+msgstr ""
+
+msgid "Add TLS Profile"
+msgstr ""
+
+msgid "Add Template"
+msgstr ""
+
+msgid "Add Vary Header"
+msgstr ""
+
+msgid "Add agent"
+msgstr ""
+
+msgid "Add backend"
+msgstr ""
+
+msgid "Add channel"
+msgstr ""
+
+msgid "Add header"
+msgstr ""
+
+msgid "Add key"
+msgstr ""
+
+msgid "Add more backends to load-balance across several servers."
+msgstr ""
+
+msgid "Add service"
+msgstr ""
+
+msgid "Add trusted proxy IPs to an entrypoint"
+msgstr ""
+
+#, python-format
+msgid ""
+"Add your LAPI URL plus a bouncer API key, machine credentials, or a mTLS "
+"client certificate in %(settings_system_monitoring)s."
+msgstr ""
+
+msgid "Address Traefik uses to reach this container on the internal network."
+msgstr ""
+
+#, python-format
+msgid ""
+"Adds %(trusted_ips)s to an entrypoint so Traefik believes "
+"%(x_forwarded_for)s from your proxies. This trust feeds logs, CrowdSec, "
+"%(ip_allow_list)s and the login limiter - check what reaches the app "
+"first with the %(ip_diagnostic)s."
+msgstr ""
+
+#, python-format
+msgid ""
+"Adds %(x_forwarded_tls)s carrying the PEM. Only forward this to a backend"
+" you trust."
+msgstr ""
+
+#, python-format
+msgid ""
+"Adds %(x_forwarded_tls)s. Traefik supports more fields than these, use "
+"the YAML editor for the rest."
+msgstr ""
+
+msgid ""
+"Adds a tls.domains block with main: domain.com and sans: *.domain.com. "
+"Use with DNS challenge resolvers (Cloudflare, Route 53, etc.) to issue "
+"wildcard certs."
+msgstr ""
+
+msgid "Advanced rule"
+msgstr ""
+
+msgid "After it finishes"
+msgstr ""
+
+msgctxt "setting"
+msgid "Agent"
+msgstr ""
+
+msgid "Agent URL"
+msgstr ""
+
+msgid "Agent docs"
+msgstr ""
+
+msgid "Agent name"
+msgstr ""
+
+msgctxt "button"
+msgid "Agents"
+msgstr ""
+
+msgctxt "heading"
+msgid "Agents"
+msgstr ""
+
+msgid "Alert limit"
+msgstr ""
+
+msgctxt "button"
+msgid "All"
+msgstr ""
+
+msgid "All Domains"
+msgstr ""
+
+msgid "All Entry Points"
+msgstr ""
+
+msgid "All Protocols"
+msgstr ""
+
+msgid "All Providers"
+msgstr ""
+
+msgid "All Status"
+msgstr ""
+
+msgid ""
+"All are rejected by default (secure). Check a character only if a backend"
+" genuinely needs it in the request path. Requires Traefik 3.7+."
+msgstr ""
+
+msgid "All domains"
+msgstr ""
+
+msgid "Allow any authenticated account"
+msgstr ""
+
+msgid "Allow encoded backslash"
+msgstr ""
+
+msgid "Allow encoded hash"
+msgstr ""
+
+msgid "Allow encoded percent"
+msgstr ""
+
+msgid "Allow encoded question mark"
+msgstr ""
+
+msgid "Allow encoded semicolon"
+msgstr ""
+
+msgid "Allow encoded slash"
+msgstr ""
+
+#, python-format
+msgid "Allowed CIDRs %(one_per_line)s"
+msgstr ""
+
+msgid "Allowed Emails"
+msgstr ""
+
+msgid "Allowed Groups"
+msgstr ""
+
+#, python-format
+msgid "Allowed Headers %(one_per_line)s"
+msgstr ""
+
+msgid "Allowed Methods"
+msgstr ""
+
+#, python-format
+msgid "Allowed Origins %(one_per_line)s"
+msgstr ""
+
+#, python-format
+msgid "Allowed origins %(one_per_line)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Allows %(average)s req/s sustained, with a %(burst)s of extra requests "
+"over the %(period)s."
+msgstr ""
+
+msgid ""
+"Already protected by an external provider such as Authelia, Authentik or "
+"a forward-auth middleware?"
+msgstr ""
+
+msgid "Also pass selected certificate fields"
+msgstr ""
+
+msgid "Also set by the theme toggle in the nav bar"
+msgstr ""
+
+msgid ""
+"An agent runs beside Traefik on a remote host so this instance can manage"
+" it. Pick how you want to install it."
+msgstr ""
+
+msgid ""
+"An overview of every router grouped by entry point, and a graph of how "
+"requests reach each service."
+msgstr ""
+
+msgid ""
+"Any HTTPS git remote: GitHub, GitLab, Gitea, Forgejo, or self-hosted. Use"
+" a private repository - your dynamic config is in it."
+msgstr ""
+
+#, python-format
+msgid "Any valid %(traefik_router_rule)s expression."
+msgstr ""
+
+msgid "Anything below this level is dropped for this channel."
+msgstr ""
+
+msgid "App Token"
+msgstr ""
+
+msgctxt "heading"
+msgid "Appearance"
+msgstr ""
+
+#, python-format
+msgid "Appends %(policy_name)s to the verify URL"
+msgstr ""
+
+msgid "Apply & Save"
+msgstr ""
+
+msgid ""
+"Assign a route to a group with the pencil on its card. A group disappears"
+" when nothing uses it."
+msgstr ""
+
+msgid ""
+"Assigns a tls.options profile to this router (e.g. min version, ciphers)."
+" Enable and manage profiles via the TLS Options tab in Settings - "
+"Interface - TABS."
+msgstr ""
+
+msgid "At least 8 characters"
+msgstr ""
+
+msgid "At least 8 characters. A long passphrase beats a short complicated one."
+msgstr ""
+
+msgctxt "setting"
+msgid "Attempts"
+msgstr ""
+
+#, python-format
+msgid "Auth Response Headers %(one_per_line)s"
+msgstr ""
+
+msgid "Auth Service URL"
+msgstr ""
+
+#, python-format
+msgid "Auth is %(auth_state)s"
+msgstr ""
+
+msgctxt "button"
+msgid "Authentication"
+msgstr ""
+
+msgctxt "heading"
+msgid "Authentication"
+msgstr ""
+
+msgid "Authentication is delegated"
+msgstr ""
+
+msgid ""
+"Authentication settings are not available - no password has been "
+"configured."
+msgstr ""
+
+msgid "Authenticator code"
+msgstr ""
+
+msgctxt "button"
+msgid "Auto"
+msgstr ""
+
+msgid "Auto refresh"
+msgstr ""
+
+msgid "Auto-detect the content type"
+msgstr ""
+
+msgid "Auto-push on config change"
+msgstr ""
+
+msgid "Auto-push on save"
+msgstr ""
+
+msgid "Automatic sign-in"
+msgstr ""
+
+msgid "Automatically push config changes to your repository"
+msgstr ""
+
+#, python-format
+msgid "Average %(req_s)s"
+msgstr ""
+
+msgctxt "button"
+msgid "Back"
+msgstr ""
+
+msgid "Backend service"
+msgstr ""
+
+msgctxt "setting"
+msgid "Backends"
+msgstr ""
+
+msgid "Backup dir"
+msgstr ""
+
+#, python-format
+msgid "Backup retention %(optional)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Backup retention on this agent is set via the %(backup_keep_count)s "
+"environment variable."
+msgstr ""
+
+msgctxt "button"
+msgid "Backups"
+msgstr ""
+
+msgctxt "heading"
+msgid "Backups"
+msgstr ""
+
+msgid "Backups → Git"
+msgstr ""
+
+msgctxt "button"
+msgid "Ban"
+msgstr ""
+
+msgid "Base URL of the Traefik API used for live stats."
+msgstr ""
+
+#, python-format
+msgid "Base URL of your OIDC provider (without %(well_known)s)"
+msgstr ""
+
+msgid "Basic Auth"
+msgstr ""
+
+msgid "Basic auth"
+msgstr ""
+
+#, python-format
+msgid "Basic auth %(optional)s"
+msgstr ""
+
+msgctxt "heading"
+msgid "Behaviour"
+msgstr ""
+
+msgid "Behind proxies - exclude proxy IPs"
+msgstr ""
+
+msgid "Behind proxies - trusted hop depth"
+msgstr ""
+
+msgid "Bouncer API key"
+msgstr ""
+
+#, python-format
+msgid ""
+"Bouncer API key, used to read %(decisions)s. Stored encrypted. Leave "
+"blank to use the %(crowdsec_api_key)s env var."
+msgstr ""
+
+msgid "Bouncer key, reads decisions."
+msgstr ""
+
+msgctxt "setting"
+msgid "Branch"
+msgstr ""
+
+msgid "Branch and username"
+msgstr ""
+
+msgid "Break through quiet hours"
+msgstr ""
+
+msgid "Browse Plugins"
+msgstr ""
+
+msgctxt "option"
+msgid "Buffering"
+msgstr ""
+
+msgid "Build backends"
+msgstr ""
+
+msgid "Built-in authentication"
+msgstr ""
+
+msgid "Bulk select"
+msgstr ""
+
+msgctxt "setting"
+msgid "Burst"
+msgstr ""
+
+msgctxt "button"
+msgid "Bypass"
+msgstr ""
+
+#, python-format
+msgid "Bypass Rules %(regex_one_per)s"
+msgstr ""
+
+msgid "CA Certificate"
+msgstr ""
+
+msgid "CA Files"
+msgstr ""
+
+msgid "CA certificate, e.g. /certs/ca.crt"
+msgstr ""
+
+msgid "CORS Headers"
+msgstr ""
+
+msgctxt "button"
+msgid "Cancel"
+msgstr ""
+
+msgid ""
+"Caps the auth server response body. Auth responses are tiny, so a small "
+"limit is safe."
+msgstr ""
+
+msgctxt "button"
+msgid "Captcha"
+msgstr ""
+
+#, python-format
+msgid ""
+"Capture groups are %(n1)s, %(n2)s and so on. In a compose file %(code)s "
+"must be written %(code2)s."
+msgstr ""
+
+msgid "Card settings"
+msgstr ""
+
+msgctxt "setting"
+msgid "Categories"
+msgstr ""
+
+msgid "Cert Resolver"
+msgstr ""
+
+msgid "Cert Resolvers"
+msgstr ""
+
+msgid ""
+"Cert resolver names for this server's Traefik, comma-separated. Resolvers"
+" already used by this server's routes are detected automatically from its"
+" Traefik API, so this is only needed for a resolver no route uses yet."
+msgstr ""
+
+msgid "Certificate domain"
+msgstr ""
+
+msgid "Certificate resolver"
+msgstr ""
+
+#, python-format
+msgid "Certificate resolver %(optional)s"
+msgstr ""
+
+msgid "Certificate store backups"
+msgstr ""
+
+msgid "Certificates"
+msgstr ""
+
+msgctxt "button"
+msgid "Certificates"
+msgstr ""
+
+msgctxt "label"
+msgid "Certificates"
+msgstr ""
+
+msgid "Certificates and access logs"
+msgstr ""
+
+msgid "Certificates no router serves"
+msgstr ""
+
+msgid ""
+"Certificates, Plugins and Logs each read a file that has to be mounted "
+"into this container. If it is not mounted yet, the view tells you the "
+"exact volume line to add. GeoIP resolves client addresses to countries in"
+" Logs and CrowdSec, downloading a free database on first use."
+msgstr ""
+
+msgctxt "setting"
+msgid "Certs"
+msgstr ""
+
+msgid "Change Password - Traefik Manager"
+msgstr ""
+
+msgid "Change password"
+msgstr ""
+
+msgid "Changes here can break Traefik"
+msgstr ""
+
+msgctxt "heading"
+msgid "Channels"
+msgstr ""
+
+msgid "Check route reachability"
+msgstr ""
+
+msgid ""
+"Check that Traefik Manager can reach it. The agent does not report its "
+"own address back, so the URL you entered is a guess until this passes."
+msgstr ""
+
+msgid ""
+"Check that Traefik Manager can reach this agent and that its key is "
+"accepted."
+msgstr ""
+
+msgctxt "label"
+msgid "Checking"
+msgstr ""
+
+msgid "Choose your views"
+msgstr ""
+
+msgid "Cipher Suites"
+msgstr ""
+
+msgid "Circuit Breaker"
+msgstr ""
+
+#, python-format
+msgid ""
+"Claim name that contains groups. Keycloak: %(groups)s, some providers: "
+"%(roles)s."
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Clear"
+msgstr ""
+
+msgid "Clear all"
+msgstr ""
+
+msgid "Clear every filter, the country selection and the search box"
+msgstr ""
+
+msgid "Clear filters"
+msgstr ""
+
+msgid "Clear the search"
+msgstr ""
+
+#, python-format
+msgid "Clears every saved CrowdSec setting from %(manager_yml)s."
+msgstr ""
+
+#, python-format
+msgid "Click %(middleware)s to add one"
+msgstr ""
+
+msgid "Click to copy"
+msgstr ""
+
+msgid "Client Auth Type"
+msgstr ""
+
+msgid "Client Certificate"
+msgstr ""
+
+msgid "Client Certificate mTLS"
+msgstr ""
+
+msgid "Client ID"
+msgstr ""
+
+msgid "Client IP Diagnostic"
+msgstr ""
+
+msgid "Client IP diagnostic"
+msgstr ""
+
+#, python-format
+msgid "Client IP source %(ipstrategy)s"
+msgstr ""
+
+msgid "Client Key"
+msgstr ""
+
+msgid "Client Secret"
+msgstr ""
+
+#, python-format
+msgid "Client Secret %(set_leave_blank)s"
+msgstr ""
+
+#, python-format
+msgid "Client certificate mTLS %(optional)s"
+msgstr ""
+
+msgctxt "button"
+msgid "Close"
+msgstr ""
+
+msgid "Close (Esc)"
+msgstr ""
+
+msgid "Close panel"
+msgstr ""
+
+msgid "Cloudflare edge ranges"
+msgstr ""
+
+msgctxt "button"
+msgid "Collapse"
+msgstr ""
+
+msgid "Collapse navigation"
+msgstr ""
+
+msgid "Combine backends as"
+msgstr ""
+
+msgid "Comma-separated group names. Leave empty to skip group check."
+msgstr ""
+
+msgid "Comma-separated. Leave empty to allow any verified account."
+msgstr ""
+
+msgid ""
+"Commit and push on every configuration change. With this off, you push by"
+" hand from the Backups pane."
+msgstr ""
+
+msgid ""
+"Commit every configuration change to a git repository, so you get "
+"history, diffs and a one-click restore to any earlier commit. Local file "
+"backups happen regardless - this adds an off-box copy. Leave the URL "
+"blank to skip."
+msgstr ""
+
+#, python-format
+msgid "Commit message %(optional)s"
+msgstr ""
+
+msgid "Commit message template"
+msgstr ""
+
+msgid "Compact stat cards"
+msgstr ""
+
+msgid "Compose and run commands"
+msgstr ""
+
+msgid "Config File"
+msgstr ""
+
+msgid "Config file"
+msgstr ""
+
+msgid "Configuration (YAML)"
+msgstr ""
+
+#, python-format
+msgid "Configure %(access_log_path)s in Settings"
+msgstr ""
+
+msgid "Configure manually"
+msgstr ""
+
+msgid ""
+"Configure paths and options, then copy the generated install commands to "
+"your remote server."
+msgstr ""
+
+msgctxt "button"
+msgid "Confirm"
+msgstr ""
+
+msgid "Confirm new password"
+msgstr ""
+
+msgid "Confirm password"
+msgstr ""
+
+msgctxt "label"
+msgid "Connect"
+msgstr ""
+
+msgid "Connect to Traefik"
+msgstr ""
+
+msgctxt "button"
+msgid "Connection"
+msgstr ""
+
+msgctxt "heading"
+msgid "Connection"
+msgstr ""
+
+msgctxt "setting"
+msgid "Connection"
+msgstr ""
+
+msgid "Container name"
+msgstr ""
+
+msgid "Content Type"
+msgstr ""
+
+msgid "Content-Type nosniff"
+msgstr ""
+
+msgctxt "button"
+msgid "Continue"
+msgstr ""
+
+msgid ""
+"Convenience list used to build Host() rules in the route form - it does "
+"not affect your Traefik configuration, TLS, or routing. Domains found in "
+"existing routes are added to the route form automatically, so this list "
+"is optional seeding."
+msgstr ""
+
+#, python-format
+msgid ""
+"Converts gRPC-Web requests to gRPC before forwarding. %(code)s allows any"
+" origin."
+msgstr ""
+
+msgid "Cookie name"
+msgstr ""
+
+msgctxt "button"
+msgid "Copy"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Copy"
+msgstr ""
+
+#, python-format
+msgid "Copy the value from %(local_api_credentials)s. Stored encrypted."
+msgstr ""
+
+msgid "Copy this key now"
+msgstr ""
+
 msgid "Could not save the language"
+msgstr ""
+
+msgctxt "button"
+msgid "Create"
+msgstr ""
+
+msgid "Create Backup"
+msgstr ""
+
+msgid "Create a Traefik route for this Traefik Manager instance."
+msgstr ""
+
+msgid "Create your first route to start managing your Traefik proxy."
+msgstr ""
+
+msgid ""
+"Create, edit and disable them through a form or raw YAML, written "
+"straight to your dynamic config file."
+msgstr ""
+
+#, python-format
+msgid ""
+"Creates a tool-managed %(middleware_name)s middleware: a Permissions-"
+"Policy plus common security headers (HSTS, nosniff, frame-deny, "
+"referrer). It stays a normal, editable file middleware in the Middlewares"
+" tab."
+msgstr ""
+
+msgctxt "heading"
+msgid "Credentials"
+msgstr ""
+
+msgctxt "setting"
+msgid "Credentials"
+msgstr ""
+
+msgid "Credentials for endpoints that require authentication."
+msgstr ""
+
+#, python-format
+msgid ""
+"CrowdSec Local API URL. Leave blank to use the %(crowdsec_lapi_url)s env "
+"var."
+msgstr ""
+
+msgid "CrowdSec credentials saved"
+msgstr ""
+
+msgid "CrowdSec not configured"
+msgstr ""
+
+msgid "Current password"
+msgstr ""
+
+msgid "Curve Preferences"
+msgstr ""
+
+msgid "Custom Decisions"
+msgstr ""
+
+msgid "Custom Error Pages"
+msgstr ""
+
+msgid "Custom URL"
+msgstr ""
+
+msgid "Custom groups"
+msgstr ""
+
+msgctxt "option"
+msgid "Custom…"
+msgstr ""
+
+msgctxt "button"
+msgid "Dark"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Dark"
+msgstr ""
+
+msgctxt "button"
+msgid "Dashboard"
+msgstr ""
+
+msgctxt "heading"
+msgid "Dashboard"
+msgstr ""
+
+msgctxt "label"
+msgid "Dashboard"
+msgstr ""
+
+msgctxt "setting"
+msgid "Dashboard"
+msgstr ""
+
+msgid "Dashboard categories"
+msgstr ""
+
+msgid "Dashboard data unavailable"
+msgstr ""
+
+msgid "Dashboard settings"
+msgstr ""
+
+msgid "Dashboard settings - custom groups and hidden apps"
+msgstr ""
+
+msgctxt "setting"
+msgid "Database"
+msgstr ""
+
+msgctxt "option"
+msgid "Default"
+msgstr ""
+
+msgid "Default theme"
+msgstr ""
+
+msgid "Defaults: port 8090, 300 requests per minute per IP."
+msgstr ""
+
+msgctxt "button"
+msgid "Delete"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Delete"
+msgstr ""
+
+msgid ""
+"Deletes the local clone only. Remote repository and commits are "
+"untouched; re-initialized on next push."
+msgstr ""
+
+msgid "Deliver errors right away even inside the quiet window."
+msgstr ""
+
+msgid "Deliver events to this channel."
+msgstr ""
+
+msgctxt "heading"
+msgid "Delivery"
+msgstr ""
+
+msgid "Denser cards, four across, same totals and signal strip"
+msgstr ""
+
+msgid "Describe this change, then Push Now"
+msgstr ""
+
+msgid "Desktop notifications"
+msgstr ""
+
+msgid ""
+"Desktop notifications are raised by the open tab itself, with no push "
+"service in between. The setting is stored in this browser only, so every "
+"browser you sign in from is set up separately."
+msgstr ""
+
+msgctxt "heading"
+msgid "Destination"
+msgstr ""
+
+msgid "Detected from your existing configuration. Clear it to skip this step."
+msgstr ""
+
+msgid "Device name"
+msgstr ""
+
+msgctxt "label"
+msgid "Diff"
+msgstr ""
+
+msgctxt "setting"
+msgid "Digest"
+msgstr ""
+
+msgid "Digest Auth"
+msgstr ""
+
+msgid "Direct Socket"
+msgstr ""
+
+msgid "Direct connection - Traefik is exposed directly"
+msgstr ""
+
+msgctxt "button"
+msgid "Disable"
+msgstr ""
+
+msgid ""
+"Disable cert check for HTTPS Traefik API URLs (use if self-signed or "
+"Cloudflare Origin cert)"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid ""
+"Disables certificate validation for the backend. Use for self-signed "
+"certs (e.g. Proxmox, Kasm). Adds insecureSkipVerify via a named "
+"serversTransport."
+msgstr ""
+
+msgctxt "label"
+msgid "Dismiss"
+msgstr ""
+
+msgid "Display Name"
+msgstr ""
+
+msgid "Display name"
+msgstr ""
+
+msgid ""
+"Display the app icon next to each route name, like the dashboard. Applies"
+" to host and agent routes."
+msgstr ""
+
+msgid "Do not make this card clickable"
+msgstr ""
+
+msgid "Do not show it anywhere"
+msgstr ""
+
+msgid "Docker Compose"
+msgstr ""
+
+msgid "Docker Run"
+msgstr ""
+
+msgid "Docker host"
+msgstr ""
+
+msgctxt "button"
+msgid "Docs"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Documentation"
+msgstr ""
+
+msgctxt "setting"
+msgid "Domain"
+msgstr ""
+
+msgid "Domain this Traefik Manager instance should be reachable on."
+msgstr ""
+
+msgctxt "setting"
+msgid "Domains"
+msgstr ""
+
+#, python-format
+msgid "Domains %(optional_comma_separated)s"
+msgstr ""
+
+msgid ""
+"Domains for route creation on this agent - lets you pick a domain chip "
+"instead of typing the full hostname."
+msgstr ""
+
+msgctxt "button"
+msgid "Done"
+msgstr ""
+
+msgctxt "button"
+msgid "Download"
+msgstr ""
+
+msgctxt "setting"
+msgid "Duration"
+msgstr ""
+
+msgid "Dynamic Config"
+msgstr ""
+
+msgid "Dynamic config backups"
+msgstr ""
+
+msgid "Dynamic config path"
+msgstr ""
+
+msgid ""
+"Each of these adds a tab to the navigation. Turn on what you use - an "
+"unused tab is just noise. All of them can be toggled later under "
+"Settings, so nothing here is a commitment."
+msgstr ""
+
+msgctxt "button"
+msgid "Edit"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Edit"
+msgstr ""
+
+msgid ""
+"Edit entrypoints, certificate resolvers, plugins and providers in "
+"traefik.yml"
+msgstr ""
+
+#, python-format
+msgid ""
+"Edit the middleware before saving - replace all placeholder values and "
+"any %(code)s template blocks with real values or Traefik will crash"
+msgstr ""
+
+msgctxt "button"
+msgid "Enable"
+msgstr ""
+
+msgid "Enable 2FA"
+msgstr ""
+
+msgid "Enable Git Backup"
+msgstr ""
+
+msgid "Enable git backup"
+msgstr ""
+
+msgid "Enable or disable built-in auth"
+msgstr ""
+
+msgctxt "setting"
+msgid "Enabled"
+msgstr ""
+
+msgid "Encoded Characters (Traefik 3.7+)"
+msgstr ""
+
+msgid ""
+"Ends every other browser session. This one stays signed in, and API keys "
+"keep working."
+msgstr ""
+
+msgid "Enter 6-digit code to confirm"
+msgstr ""
+
+msgid "Enter the 6-digit code from your authenticator app."
+msgstr ""
+
+msgid ""
+"Enter the name and URL for this remote agent. The URL is where TMA is "
+"reachable from this Traefik Manager instance."
+msgstr ""
+
+msgid "Enter your password to access Traefik Manager."
+msgstr ""
+
+msgid "Entry Point"
+msgstr ""
+
+msgid "Entry Points"
+msgstr ""
+
+msgid "Entry point"
+msgstr ""
+
+msgctxt "setting"
+msgid "Entrypoint"
+msgstr ""
+
+msgctxt "button"
+msgid "Entrypoints"
+msgstr ""
+
+msgctxt "button"
+msgid "Errors"
+msgstr ""
+
+msgctxt "setting"
+msgid "Every"
+msgstr ""
+
+msgid ""
+"Every enabled HTTP route on the Host and on each agent is requested from "
+"the server on this schedule. Where the service has a Traefik health check"
+" that result is used instead. A route counts as down after two failed "
+"checks in a row, and an alert goes to the channels below under the "
+"Traefik category, once when it goes down and once when it is back."
+msgstr ""
+
+msgid ""
+"Every enabled channel gets its own copy of an event, filtered by the "
+"categories, severity, digest and quiet hours set on it."
+msgstr ""
+
+msgid ""
+"Every save writes a timestamped copy of the config first, kept locally. "
+"Git backup adds an off-box copy with history, diffs and restore from any "
+"commit. Restoring overwrites your live config, so it takes a typed "
+"confirmation."
+msgstr ""
+
+msgid "Exit bulk mode"
+msgstr ""
+
+msgid "Expected status"
+msgstr ""
+
+msgid "Expired, or expiring within 30 days"
+msgstr ""
+
+msgctxt "button"
+msgid "Expiring"
+msgstr ""
+
+msgid "Expiry Date"
+msgstr ""
+
+msgid ""
+"Expiry dates from your ACME store, and the access log read as analytics "
+"rather than a wall of text."
+msgstr ""
+
+msgctxt "button"
+msgid "Explore"
+msgstr ""
+
+msgctxt "setting"
+msgid "Expression"
+msgstr ""
+
+msgid "Extra domains"
+msgstr ""
+
+msgctxt "option"
+msgid "Failover"
+msgstr ""
+
+msgid ""
+"Feeds the status dot on the Routes tab and the Dashboard, and alerts when"
+" a backend stops answering"
+msgstr ""
+
+msgid "File (external)"
+msgstr ""
+
+msgid "File Paths"
+msgstr ""
+
+msgid ""
+"Fill in every setting here and copy out a compose file or docker run "
+"command. Use this when the host is already set up, or when you want to "
+"review the config before it runs."
+msgstr ""
+
+msgid "Filter by address, scenario, network, path or agent..."
+msgstr ""
+
+msgid "Filter logs..."
+msgstr ""
+
+msgid "Filter middlewares..."
+msgstr ""
+
+msgctxt "label"
+msgid "Finish"
+msgstr ""
+
+msgid "Fit to screen"
+msgstr ""
+
+msgctxt "button"
+msgid "Fixed"
 msgstr ""
 
 msgid "Flag that switches the interface language."
 msgstr ""
 
+msgctxt "button"
+msgid "Fluid"
+msgstr ""
+
+msgid ""
+"Fluid fills the screen and the detail panel pushes the page aside. Fixed "
+"caps the content at a comfortable reading width, centres it with the "
+"navigation, and slides the detail panel over instead."
+msgstr ""
+
+msgid "Focus search"
+msgstr ""
+
+msgid "Follow redirects"
+msgstr ""
+
 msgid "Follow system"
 msgstr ""
 
+msgid ""
+"For a LAPI behind mutual TLS: cert, key and CA paths as mounted inside "
+"the agent container. Replaces the API key and machine login."
+msgstr ""
+
+#, python-format
+msgid ""
+"Forces %(pass_host_header)s and sets long %(forwarding_timeouts)s on "
+"%(transport)s. Entry-point %(responding_timeouts)s are global and static "
+"- adjust them in the Static Config editor if long transcodes still cut "
+"off."
+msgstr ""
+
+#, python-format
+msgid "Format: %(header_name_claim)s"
+msgstr ""
+
+msgid "Forward Auth"
+msgstr ""
+
+msgid "Forward Auth (Authelia)"
+msgstr ""
+
+msgid "Forward Auth (Authentik)"
+msgstr ""
+
+msgid "Forward Auth (Gatekeeper)"
+msgstr ""
+
+msgid "Forward Authorization header"
+msgstr ""
+
+#, python-format
+msgid "Forward Claims as Headers %(name_claim_one)s"
+msgstr ""
+
+msgid ""
+"Forward the original Host header to the backend. Disable if the backend "
+"needs to see its own hostname."
+msgstr ""
+
+msgid "Frame deny (anti-clickjacking)"
+msgstr ""
+
+#, python-format
+msgid "Full reference: %(tm_cli_docs)s"
+msgstr ""
+
+#, python-format
+msgid "GPL-3.0 licence · %(xyzlab_dev)s"
+msgstr ""
+
+msgid "Gatekeeper URL"
+msgstr ""
+
+msgctxt "button"
+msgid "General"
+msgstr ""
+
+msgctxt "button"
+msgid "Generate"
+msgstr ""
+
+msgid "Generate & Add"
+msgstr ""
+
+msgid "Generate a compose file by hand instead of using tm"
+msgstr ""
+
+msgid "Generate entry"
+msgstr ""
+
+msgid "Generic JSON"
+msgstr ""
+
+msgid "GeoIP lookup"
+msgstr ""
+
+msgctxt "heading"
+msgid "Geolocation"
+msgstr ""
+
+msgid "Get the agent compose"
+msgstr ""
+
+msgctxt "button"
+msgid "Git"
+msgstr ""
+
+msgid "Git Backup"
+msgstr ""
+
+msgid "Git backup"
+msgstr ""
+
+#, python-format
+msgid ""
+"Give this interface its own hostname through Traefik, so you can reach it"
+" over TLS instead of a published port. Writes a %(traefik_manager_self)s "
+"into your config directory. Skip it if you already route to this "
+"container yourself."
+msgstr ""
+
+msgid "Google Play"
+msgstr ""
+
+msgctxt "setting"
+msgid "Group"
+msgstr ""
+
+msgid "Groups Claim Key"
+msgstr ""
+
+msgid "Gzip Compress"
+msgstr ""
+
+msgid "HSTS (Strict Transport Security)"
+msgstr ""
+
+msgid "HSTS (force HTTPS)"
+msgstr ""
+
+msgid "HTTP Provider"
+msgstr ""
+
+msgid "HTTP Routers"
+msgstr ""
+
+msgid "HTTP Routers, TCP/UDP, Services and Middlewares overview"
+msgstr ""
+
+msgid "HTTP routers"
+msgstr ""
+
+msgctxt "setting"
+msgid "Headers"
+msgstr ""
+
+msgid "Health check"
+msgstr ""
+
+msgid "Hidden apps"
+msgstr ""
+
+msgid ""
+"Hidden apps stay off the dashboard only. They keep running and still "
+"appear on the Routes tab."
+msgstr ""
+
+msgctxt "button"
+msgid "Hide"
+msgstr ""
+
+msgid "Hide from the dashboard"
+msgstr ""
+
+msgctxt "heading"
+msgid "History"
+msgstr ""
+
+msgid ""
+"Hold messages inside this window and send them once it ends. Leave empty "
+"for none."
+msgstr ""
+
+msgctxt "button"
+msgid "Host"
+msgstr ""
+
+msgid "Host header"
+msgstr ""
+
+msgid "Host repository"
+msgstr ""
+
+msgid "HostSNI(`tcp.example.com`) or HostSNI(`*`)"
+msgstr ""
+
+msgctxt "setting"
+msgid "Hostname"
+msgstr ""
+
+msgid ""
+"How Traefik Manager looks and which tabs it shows. Theme, language and "
+"layout, what appears on the dashboard and in the navigation bar, and IP "
+"geolocation for the Logs and CrowdSec tabs. All of it is per-browser "
+"except the default theme, the language and the tab list."
+msgstr ""
+
+msgid ""
+"How Traefik Manager reaches your Traefik instance, and the defaults it "
+"offers when you build a route. The API URL is the only value here it "
+"cannot work without. Domains and certificate resolvers only seed the "
+"route form; they do not change your Traefik configuration."
+msgstr ""
+
+msgid ""
+"How Traefik reaches this container from inside the network. Normally the "
+"compose service name and port."
+msgstr ""
+
+#, python-format
+msgid ""
+"How many of the most recent alerts to read, 0 to 100000. Blank uses "
+"%(crowdsec_alert_limit)s, or 500. %(n0)s reads every alert, which is slow"
+" on a large LAPI. Applies to this server and to agents."
+msgstr ""
+
+msgctxt "setting"
+msgid "HttpOnly"
+msgstr ""
+
+msgid "I've saved the key"
+msgstr ""
+
+msgid "IP / Range"
+msgstr ""
+
+msgid "IP : Port"
+msgstr ""
+
+msgid "IP Allow List"
+msgstr ""
+
+msgid "IP Allow List (Private Ranges)"
+msgstr ""
+
+msgid "IP Geolocation by DB-IP (CC-BY 4.0)"
+msgstr ""
+
+msgid "IP geolocation"
+msgstr ""
+
+msgctxt "setting"
+msgid "Icon"
+msgstr ""
+
+msgctxt "button"
+msgid "Icons"
+msgstr ""
+
+#, python-format
+msgid ""
+"If a reverse proxy (Cloudflare, another Traefik, nginx) sits in front, "
+"the list must read the real client IP from %(x_forwarded_for)s instead of"
+" the proxy's connection IP - otherwise every request looks like it comes "
+"from the proxy."
+msgstr ""
+
+msgid ""
+"If you run CrowdSec, Traefik Manager can read its local API and show who "
+"is probing this host, from which networks, with which scenarios, and what"
+" is already blocked. Leave the URL blank to skip."
+msgstr ""
+
+msgid "In-Flight Limit"
+msgstr ""
+
+msgctxt "button"
+msgid "Inactive"
+msgstr ""
+
+msgid "Include Subdomains"
+msgstr ""
+
+msgctxt "label"
+msgid "Infrastructure"
+msgstr ""
+
+msgid "Initial Interval"
+msgstr ""
+
+msgid "Install as App"
+msgstr ""
+
+msgid "Install command"
+msgstr ""
+
+#, python-format
+msgid "Install with the tm CLI%(recommended)s"
+msgstr ""
+
+msgid "Installed against the latest published release."
+msgstr ""
+
+msgctxt "button"
+msgid "Interface"
+msgstr ""
+
+msgctxt "heading"
+msgid "Interface"
+msgstr ""
+
+msgctxt "setting"
+msgid "Internal"
+msgstr ""
+
+#, python-format
+msgid ""
+"Internal Traefik API - typically %(http_traefik_8080)s (not the public "
+"dashboard URL)"
+msgstr ""
+
+msgid "Internal service URL"
+msgstr ""
+
+msgctxt "setting"
+msgid "Interval"
+msgstr ""
+
+msgid "Interval when down"
+msgstr ""
+
+msgid "Intrusion Detection"
+msgstr ""
+
+msgid "Issued by a resolver that is gone from the static config"
+msgstr ""
+
+msgid "Issuer Common Name"
+msgstr ""
+
+msgid "It adopts an existing install"
+msgstr ""
+
+msgid "It will not be shown again."
+msgstr ""
+
+msgid "Keep last N backups per file"
+msgstr ""
+
+#, python-format
+msgid ""
+"Keep only the last N %(bak)s files per config file "
+"(%(backup_keep_count)s). 0 = keep all."
+msgstr ""
+
+msgid "Keyboard Shortcuts"
+msgstr ""
+
+msgid "Keyboard shortcuts"
+msgstr ""
+
+msgid ""
+"Keys that let external clients talk to this agent - the mobile app, a "
+"script, another tool. Each key is shown once when created and stored as a"
+" hash, so a lost key is replaced rather than recovered."
+msgstr ""
+
+msgid "LAPI Connection"
+msgstr ""
+
+msgid "Label for this destination in the channel list."
+msgstr ""
+
 msgid "Language"
+msgstr ""
+
+msgctxt "setting"
+msgid "Layout"
+msgstr ""
+
+msgid "Leave blank to keep existing"
+msgstr ""
+
+msgid "Leave blank to use route name"
+msgstr ""
+
+msgid ""
+"Leave blank to use the CROWDSEC_CLIENT_CERT / CROWDSEC_CLIENT_KEY / "
+"CROWDSEC_CA_CERT env vars."
+msgstr ""
+
+msgid ""
+"Leave blank to use the CROWDSEC_MACHINE_ID / CROWDSEC_MACHINE_PASSWORD "
+"env vars."
+msgstr ""
+
+msgid "Leave blank to use the route's URL"
+msgstr ""
+
+msgid "Leave empty if not required"
+msgstr ""
+
+msgid "Letters, numbers, dots, dashes and underscores."
+msgstr ""
+
+msgctxt "button"
+msgid "Light"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Light"
+msgstr ""
+
+msgid "Link URL"
+msgstr ""
+
+msgid "Live from the Traefik API"
+msgstr ""
+
+msgid "Load Balancer"
+msgstr ""
+
+msgid "Load balancing"
+msgstr ""
+
+msgid "Loading Consul Catalog routes..."
+msgstr ""
+
+msgid "Loading Consul KV routes..."
+msgstr ""
+
+msgid "Loading ECS routes..."
+msgstr ""
+
+msgid "Loading HTTP provider routes..."
+msgstr ""
+
+msgid "Loading Kubernetes routes..."
+msgstr ""
+
+msgid "Loading Nomad routes..."
+msgstr ""
+
+msgid "Loading Redis routes..."
+msgstr ""
+
+msgid "Loading Swarm routes..."
+msgstr ""
+
+msgid "Loading TLS profiles..."
+msgstr ""
+
+msgid "Loading ZooKeeper routes..."
+msgstr ""
+
+msgid "Loading agents…"
+msgstr ""
+
+msgid "Loading backups..."
+msgstr ""
+
+msgid "Loading certificates..."
+msgstr ""
+
+msgid "Loading channels…"
+msgstr ""
+
+msgid "Loading dashboard..."
+msgstr ""
+
+msgid "Loading docker routes..."
+msgstr ""
+
+msgid "Loading etcd routes..."
+msgstr ""
+
+msgid "Loading file provider routes..."
+msgstr ""
+
+msgid "Loading internal routes..."
+msgstr ""
+
+msgid "Loading plugins..."
+msgstr ""
+
+msgid "Loading release notes…"
+msgstr ""
+
+msgid "Loading services..."
+msgstr ""
+
+msgid "Loading topology..."
+msgstr ""
+
+msgctxt "label"
+msgid "Loading..."
+msgstr ""
+
+msgctxt "option"
+msgid "Loading..."
+msgstr ""
+
+msgid "Local API"
+msgstr ""
+
+msgid "Log Detail"
+msgstr ""
+
+msgctxt "button"
+msgid "Logging"
+msgstr ""
+
+msgid "Logs"
+msgstr ""
+
+msgctxt "label"
+msgid "Logs"
+msgstr ""
+
+msgctxt "setting"
+msgid "Logs"
+msgstr ""
+
+msgid "Machine Credentials"
+msgstr ""
+
+msgid "Machine ID"
+msgstr ""
+
+#, python-format
+msgid "Machine ID %(optional)s"
+msgstr ""
+
+msgid "Machine Password"
+msgstr ""
+
+#, python-format
+msgid "Machine login %(optional)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Machine login enables the Alerts view and unban. Create with "
+"%(cscli_machines_add)s."
+msgstr ""
+
+#, python-format
+msgid "Machine password %(optional)s"
+msgstr ""
+
+msgid "Machine password configured"
+msgstr ""
+
+msgctxt "heading"
+msgid "Maintenance"
+msgstr ""
+
+msgid "Manage on the agent"
+msgstr ""
+
+msgid "Manage tls.options profiles in your dynamic config"
+msgstr ""
+
+msgid "Managing it later"
+msgstr ""
+
+msgid "Mark all read"
+msgstr ""
+
+#, python-format
+msgid "Max Age %(seconds)s"
+msgstr ""
+
+msgid "Max Age (seconds)"
+msgstr ""
+
+msgid "Max In-Flight Requests"
+msgstr ""
+
+#, python-format
+msgid "Max Request Body %(bytes)s"
+msgstr ""
+
+#, python-format
+msgid "Max Response Body %(bytes)s"
+msgstr ""
+
+#, python-format
+msgid "Max Response Body Size %(bytes_optional_traefik)s"
+msgstr ""
+
+msgid "Max TLS Version"
+msgstr ""
+
+msgctxt "setting"
+msgid "Method"
+msgstr ""
+
+msgid "Middleware"
+msgstr ""
+
+msgctxt "button"
+msgid "Middleware"
+msgstr ""
+
+msgctxt "label"
+msgid "Middleware"
+msgstr ""
+
+msgid "Middleware Chain"
+msgstr ""
+
+msgid "Middleware Details"
+msgstr ""
+
+msgid "Middleware Templates"
+msgstr ""
+
+msgid "Middleware templates - reusable YAML you can start a middleware from"
+msgstr ""
+
+msgctxt "button"
+msgid "Middlewares"
+msgstr ""
+
+msgctxt "heading"
+msgid "Middlewares"
+msgstr ""
+
+msgctxt "label"
+msgid "Middlewares"
+msgstr ""
+
+msgctxt "setting"
+msgid "Middlewares"
+msgstr ""
+
+#, python-format
+msgid "Middlewares %(one_per_line)s"
+msgstr ""
+
+#, python-format
+msgid "Min Response Body Bytes %(responses_smaller_than)s"
+msgstr ""
+
+msgid "Min TLS Version"
+msgstr ""
+
+msgid "Minimum severity"
+msgstr ""
+
+msgctxt "option"
+msgid "Mirroring"
+msgstr ""
+
+msgid "Mobile app"
+msgstr ""
+
+msgctxt "setting"
+msgid "Mode"
+msgstr ""
+
+msgctxt "setting"
+msgid "Module"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "More"
+msgstr ""
+
+msgid "Must differ from the Host branch - each server pushes to its own branch"
+msgstr ""
+
+msgid "My Protected Area"
+msgstr ""
+
+msgctxt "setting"
+msgid "Name"
+msgstr ""
+
+msgctxt "button"
+msgid "Navbar"
+msgstr ""
+
+msgctxt "heading"
+msgid "Navbar"
+msgstr ""
+
+msgctxt "label"
+msgid "Navigation"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Navigation"
+msgstr ""
+
+msgid "New API key"
+msgstr ""
+
+msgid "New Middleware"
+msgstr ""
+
+msgid "New Route"
+msgstr ""
+
+msgid "New group name..."
+msgstr ""
+
+msgid "New in v1:"
+msgstr ""
+
+msgid "New password"
+msgstr ""
+
+msgid "New password (min 8 chars)"
+msgstr ""
+
+msgid "New password must be at least 8 characters and at most 72 bytes."
+msgstr ""
+
+msgid "Next server"
+msgstr ""
+
+#, python-format
+msgid "No LAPI configured on %(this_agent)s"
+msgstr ""
+
+msgid "No TLS"
+msgstr ""
+
+msgid "No active keys"
+msgstr ""
+
+msgid "No authentication is active"
+msgstr ""
+
+msgid ""
+"No authentication is active - this interface is publicly accessible. "
+"Enable a password or OIDC in Settings - Authentication."
+msgstr ""
+
+msgid "No commits yet - push your first backup to see history"
+msgstr ""
+
+msgid "No middlewares configured"
+msgstr ""
+
+msgid "No middlewares found"
+msgstr ""
+
+msgid "No notifications yet"
+msgstr ""
+
+msgid "No resolver"
+msgstr ""
+
+msgid "No routes to map"
+msgstr ""
+
+msgid "No routes yet"
+msgstr ""
+
+msgid "No settings match your search"
+msgstr ""
+
+msgid "No static config entries match your search"
+msgstr ""
+
+msgctxt "option"
+msgid "NoClientCert"
+msgstr ""
+
+msgctxt "button"
+msgid "None"
+msgstr ""
+
+msgctxt "option"
+msgid "None"
+msgstr ""
+
+msgid "None (default)"
+msgstr ""
+
+msgid "None (external / custom cert)"
+msgstr ""
+
+msgid "Not downloaded"
+msgstr ""
+
+#, python-format
+msgid "Not installed with %(tm)s? %(it_adopts_an)s."
+msgstr ""
+
+msgid ""
+"Nothing leaves the container. No account, no telemetry, no outbound calls"
+" you did not configure."
+msgstr ""
+
+msgid "Nothing matches"
+msgstr ""
+
+msgctxt "button"
+msgid "Notifications"
+msgstr ""
+
+msgctxt "heading"
+msgid "Notifications"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Notifications"
+msgstr ""
+
+#, python-format
+msgid ""
+"Number of trusted proxies in front of Traefik. It takes the IP that many "
+"positions from the right of %(x_forwarded_for)s. One proxy (e.g. "
+"Cloudflare only) = %(n1)s."
+msgstr ""
+
+msgid "OAuth client ID registered at your provider."
+msgstr ""
+
+msgid "OIDC / SSO login"
+msgstr ""
+
+msgid "OIDC Auth (traefik-oidc-auth)"
+msgstr ""
+
+msgctxt "button"
+msgid "Observability"
+msgstr ""
+
+msgctxt "label"
+msgid "Observability"
+msgstr ""
+
+msgctxt "button"
+msgid "Off"
+msgstr ""
+
+#, python-format
+msgid ""
+"Off by default. When both allowlists above are empty, OIDC logins are "
+"%(denied)s unless you enable this."
+msgstr ""
+
+msgid ""
+"Off leaves the Content-Type header alone when the backend does not set "
+"one. On restores Go's automatic detection."
+msgstr ""
+
+msgid ""
+"Older .bak files are pruned automatically. 0 = keep all. Applies to "
+"dynamic and static config alike."
+msgstr ""
+
+msgid ""
+"One command on the remote host. It asks whether you want Docker, Docker "
+"with Traefik, or a systemd binary, then installs and starts the agent. "
+"Traefik Manager mints the key for you."
+msgstr ""
+
+msgid ""
+"One or more cert resolver names, comma-separated (e.g. letsencrypt, "
+"cloudflare). The first is the default - each route can override it "
+"individually. If you manage certificates externally and don't use ACME, "
+"type none."
+msgstr ""
+
+msgid ""
+"One per line, written as sans. A wildcard needs a DNS challenge resolver "
+"such as Cloudflare or Route 53."
+msgstr ""
+
+#, python-format
+msgid ""
+"One per line. Default: %(h2_http_1)s - leave empty to use Traefik "
+"defaults. Include %(acme_tls_1)s if using ACME cert challenges."
+msgstr ""
+
+msgid "One per line. Leave empty to use Traefik defaults."
+msgstr ""
+
+msgid ""
+"One per line. Leave empty to use Traefik defaults. Only applies to TLS "
+"1.0-1.2."
+msgstr ""
+
+msgid ""
+"Only edit what you understand - a misconfigured static config will "
+"prevent Traefik from starting."
+msgstr ""
+
+msgid ""
+"Only fill in the fields below if this agent should push on its own, to a "
+"different repository. Give it a branch no other server uses, or they "
+"overwrite each other."
+msgstr ""
+
+msgid ""
+"Only if this server's Traefik API sits behind basic auth. Leave both "
+"blank otherwise."
+msgstr ""
+
+msgid ""
+"Only if your Traefik dashboard sits behind basic auth. Leave both blank "
+"when the API is reachable without credentials."
+msgstr ""
+
+msgid "Only install plugins from trusted sources"
+msgstr ""
+
+msgid "Only needed if the Traefik dashboard is protected by basic auth."
+msgstr ""
+
+msgid ""
+"Only turn it on if every account at your provider should have full admin "
+"access."
+msgstr ""
+
+msgid "Open settings"
+msgstr ""
+
+msgid "Opens the interactive API reference."
+msgstr ""
+
+msgid "Optimize for streaming (Jellyfin / Emby / Plex)"
+msgstr ""
+
+msgctxt "label"
+msgid "Optional"
+msgstr ""
+
+#, python-format
+msgid ""
+"Optional - for a LAPI behind mutual TLS. Path to a PEM file mounted into "
+"this container. The certificate authenticates %(decisions)s instead of "
+"the API key and %(alerts)s instead of the machine login - or alongside "
+"them."
+msgstr ""
+
+#, python-format
+msgid ""
+"Optional - required to read %(alerts)s and to unban (delete decisions); "
+"bouncer keys cannot access those endpoints. Create one with "
+"%(cscli_machines_add)s."
+msgstr ""
+
+msgid "Optional credentials for endpoints that require authentication."
+msgstr ""
+
+#, python-format
+msgid "Or enter manually: %(otp_manual_secret)s"
+msgstr ""
+
+msgid "Pass Host Header"
+msgstr ""
+
+msgid "Pass TLS Client Cert"
+msgstr ""
+
+msgid "Pass the whole certificate"
+msgstr ""
+
+msgctxt "button"
+msgid "Passthrough"
+msgstr ""
+
+msgctxt "heading"
+msgid "Password"
+msgstr ""
+
+msgctxt "placeholder"
+msgid "Password"
+msgstr ""
+
+msgctxt "setting"
+msgid "Password"
+msgstr ""
+
+msgid "Password & 2FA"
+msgstr ""
+
+msgid "Password saved"
+msgstr ""
+
+msgctxt "setting"
+msgid "Path"
+msgstr ""
+
+#, python-format
+msgid ""
+"Path to %(traefik_yml)s for the %(plugins)s tab. Leave blank to use the "
+"%(static_config_path)s env var."
+msgstr ""
+
+#, python-format
+msgid ""
+"Path to Traefik's %(acme_json)s for the %(certificates)s tab. Leave blank"
+" to use the %(acme_json_path)s env var."
+msgstr ""
+
+#, python-format
+msgid ""
+"Path to Traefik's access log for the %(logs)s tab. Leave blank to use the"
+" %(access_log_path)s env var."
+msgstr ""
+
+msgctxt "button"
+msgid "Paths"
+msgstr ""
+
+msgid "Paths matching these patterns skip authentication."
+msgstr ""
+
+#, python-format
+msgid "Paths saved to %(manager_yml)s"
+msgstr ""
+
+msgid "Paths to CA certificate files inside the container, one per line."
+msgstr ""
+
+msgid "Payload format for the target service."
+msgstr ""
+
+msgid ""
+"Payload format for the target service. Generic sends a plain JSON body "
+"you can shape yourself downstream."
+msgstr ""
+
+msgid ""
+"Per-device keys used by the mobile app via X-Api-Key header. Up to 10 "
+"keys."
+msgstr ""
+
+msgctxt "setting"
+msgid "Period"
+msgstr ""
+
+msgid "Permanent redirect (301)"
+msgstr ""
+
+#, python-format
+msgid ""
+"Permissions-Policy - who may use each browser feature. %(self)s = only "
+"your own site · %(all)s = any site, including embedded iframes · "
+"%(block)s = no one."
+msgstr ""
+
+msgid "Ping all HTTP routes"
+msgstr ""
+
+msgid ""
+"Pins a client to the same backend using a cookie "
+"(loadBalancer.sticky.cookie)."
+msgstr ""
+
+msgid "Plugin Details"
+msgstr ""
+
+msgid "Plugins"
+msgstr ""
+
+msgctxt "button"
+msgid "Plugins"
+msgstr ""
+
+msgctxt "label"
+msgid "Plugins"
+msgstr ""
+
+msgctxt "setting"
+msgid "Plugins"
+msgstr ""
+
+#, python-format
+msgid "Plugins dir %(optional)s"
+msgstr ""
+
+msgid ""
+"Plugins run inside the Traefik process with full access to your traffic. "
+"Review the plugin source on GitHub before installing. A Traefik restart "
+"is required to activate the plugin after saving."
+msgstr ""
+
+msgid "Poison Pill"
+msgstr ""
+
+#, python-format
+msgid "Policy %(optional)s"
+msgstr ""
+
+msgid "Poll the servers"
+msgstr ""
+
+msgctxt "setting"
+msgid "Port"
+msgstr ""
+
+msgid "Port and rate limit"
+msgstr ""
+
+#, python-format
+msgid ""
+"Prefer to do it by hand? Everything below still generates a compose file "
+"you can deploy yourself. %(tm_cli_docs)s · %(agent_docs)s"
+msgstr ""
+
+msgctxt "setting"
+msgid "Prefix"
+msgstr ""
+
+#, python-format
+msgid "Prefixes %(one_per_line)s"
+msgstr ""
+
+msgctxt "label"
+msgid "Preload"
+msgstr ""
+
+msgid "Preview change"
+msgstr ""
+
+msgid ""
+"Private key matching the client certificate. Path to a PEM file mounted "
+"into this container."
+msgstr ""
+
+#, python-format
+msgid "Private ranges%(n10_0_0)s"
+msgstr ""
+
+msgid "Profile Name"
+msgstr ""
+
+msgctxt "setting"
+msgid "Protocol"
+msgstr ""
+
+msgctxt "heading"
+msgid "Provider"
+msgstr ""
+
+msgid "Provider URL"
+msgstr ""
+
+msgid "Provider tabs"
+msgstr ""
+
+msgid "Provider tabs pulled live from the Traefik API - no file mounts needed."
+msgstr ""
+
+msgctxt "button"
+msgid "Providers"
+msgstr ""
+
+#, python-format
+msgid "Proxy IPs to exclude %(one_per_line)s"
+msgstr ""
+
+msgctxt "heading"
+msgid "Push"
+msgstr ""
+
+msgid "Push Now"
+msgstr ""
+
+msgid "Push after every route, middleware, or static config change"
+msgstr ""
+
+msgid "Push automatically"
+msgstr ""
+
+msgid "Push this server's config to the Host's git repository on its own branch"
+msgstr ""
+
+#, python-format
+msgid "Query %(optional)s"
+msgstr ""
+
+msgid "Quick reference panel for keyboard shortcuts."
+msgstr ""
+
+msgid "Quiet hours"
+msgstr ""
+
+msgid "Rate Limit"
+msgstr ""
+
+msgid "Raw Line"
+msgstr ""
+
+msgid "Raw YAML"
+msgstr ""
+
+msgid "Raw YAML - traefik.yml"
+msgstr ""
+
+msgid "Raw YAML editor"
+msgstr ""
+
+msgid "Read-only tool showing the client IP this instance sees for your request."
+msgstr ""
+
+msgid ""
+"Read-only views of routes Traefik discovers from other providers. Turn on"
+" the ones you actually run - these routes live in Docker labels or a KV "
+"store, so Traefik Manager shows them but cannot edit them."
+msgstr ""
+
+#, python-format
+msgid ""
+"Reads active decisions - the bans in force. Generate one with "
+"%(cscli_bouncers_add)s."
+msgstr ""
+
+msgid ""
+"Reads alerts, which is where scenarios, targeted paths and attacking "
+"networks come from. This complements the bouncer key rather than "
+"replacing it: with only the bouncer key you see bans but not the attacks "
+"behind them."
+msgstr ""
+
+#, python-format
+msgid "Realm %(optional)s"
+msgstr ""
+
+msgid "Realm (e.g. traefik)"
+msgstr ""
+
+#, python-format
+msgid "Reason %(optional)s"
+msgstr ""
+
+msgid "Recommended"
+msgstr ""
+
+msgid "Redirect Regex"
+msgstr ""
+
+msgid "Redirect to HTTPS"
+msgstr ""
+
+msgctxt "setting"
+msgid "Referrer-Policy"
+msgstr ""
+
+msgctxt "button"
+msgid "Refresh"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Refresh"
+msgstr ""
+
+msgctxt "setting"
+msgid "Regex"
+msgstr ""
+
+#, python-format
+msgid "Regexes %(one_per_line)s"
+msgstr ""
+
+msgid ""
+"Reject connections with no or mismatched SNI. Requires non-wildcard "
+"certificates."
+msgstr ""
+
+msgid "Release Notes"
+msgstr ""
+
+msgid "Release notes"
+msgstr ""
+
+msgid "Reload from disk"
+msgstr ""
+
+msgid "Reload now"
+msgstr ""
+
+msgid "Remember me for 7 days"
+msgstr ""
+
+msgctxt "label"
+msgid "Remote"
+msgstr ""
+
+msgid "Remote Agents"
+msgstr ""
+
+msgctxt "button"
+msgid "Remove"
+msgstr ""
+
+msgid "Remove CrowdSec configuration"
+msgstr ""
+
+msgid "Remove configuration"
+msgstr ""
+
+msgid "Repeat your password"
+msgstr ""
+
+msgid "Replace Path"
+msgstr ""
+
+msgid "Replace Path Regex"
+msgstr ""
+
+msgctxt "setting"
+msgid "Replacement"
+msgstr ""
+
+msgctxt "heading"
+msgid "Repository"
+msgstr ""
+
+msgid "Repository URL"
+msgstr ""
+
+msgid "Request wildcard certificate"
+msgstr ""
+
+msgctxt "option"
+msgid "RequestClientCert"
+msgstr ""
+
+msgid "RequireAndVerifyClientCert"
+msgstr ""
+
+msgctxt "option"
+msgid "RequireAnyClientCert"
+msgstr ""
+
+#, python-format
+msgid "Requires %(var_run_docker)s volume."
+msgstr ""
+
+msgid ""
+"Requires API credentials, not a file mount. Configure the LAPI URL and "
+"key in the CrowdSec tab."
+msgstr ""
+
+#, python-format
+msgid ""
+"Requires the %(sevensolutions_traefik_oidc)s plugin installed via the "
+"Plugins tab."
+msgstr ""
+
+msgctxt "button"
+msgid "Reset"
+msgstr ""
+
+msgid "Reset 2FA"
+msgstr ""
+
+msgid "Reset local repository"
+msgstr ""
+
+msgid "Reset password"
+msgstr ""
+
+#, python-format
+msgid "Resolved from inside the agent container. Sets %(crowdsec_lapi_url)s."
+msgstr ""
+
+#, python-format
+msgid ""
+"Resolver names from your %(traefik_yml)s, comma-separated. The first "
+"becomes the per-route default. If you manage certificates outside ACME, "
+"enter %(none)s."
+msgstr ""
+
+msgctxt "button"
+msgid "Restart"
+msgstr ""
+
+msgid "Restart Traefik to activate"
+msgstr ""
+
+msgid "Restart method"
+msgstr ""
+
+msgid "Restart now"
+msgstr ""
+
+msgid "Restarting Traefik..."
+msgstr ""
+
+msgid "Restoring overwrites your current config"
+msgstr ""
+
+msgid "Restoring overwrites your current static config"
+msgstr ""
+
+msgid "Restoring replaces every certificate in acme.json"
+msgstr ""
+
+msgid ""
+"Retention is one setting for both kinds of backup. Change it under "
+"Dynamic Config."
+msgstr ""
+
+msgctxt "option"
+msgid "Retry"
+msgstr ""
+
+#, python-format
+msgid "Retry Expression %(optional)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Reusable YAML you can start a middleware from. Pick one under "
+"%(template)s in the middleware form. Templates are shared across every "
+"server, not just the one selected here."
+msgstr ""
+
+msgid "Rotate Key"
+msgstr ""
+
+msgid "Route / Service Name"
+msgstr ""
+
+msgid "Route Details"
+msgstr ""
+
+msgid "Route Map"
+msgstr ""
+
+msgid "Route Monitoring"
+msgstr ""
+
+msgid "Route checks"
+msgstr ""
+
+msgid "Route to Traefik Manager itself"
+msgstr ""
+
+#, python-format
+msgid "Router priority %(optional)s"
+msgstr ""
+
+msgid ""
+"Router, service and middleware health read from Traefik itself, not from "
+"a cached copy."
+msgstr ""
+
+msgctxt "button"
+msgid "Routes"
+msgstr ""
+
+msgctxt "heading"
+msgid "Routes"
+msgstr ""
+
+msgctxt "label"
+msgid "Routes"
+msgstr ""
+
+msgid "Routes grouped by category with app icons and per-card editing"
+msgstr ""
+
+msgid "Routes, middlewares, services"
+msgstr ""
+
+msgid "Routing defaults"
+msgstr ""
+
+msgctxt "button"
+msgid "Rows"
+msgstr ""
+
+msgid "Rows with domains, or a compact grid of app icons"
+msgstr ""
+
+msgctxt "setting"
+msgid "Rule"
+msgstr ""
+
+msgid "Rule (SNI)"
+msgstr ""
+
+#, python-format
+msgid ""
+"Run these on the agent itself, where you just installed %(tm)s. It "
+"manages the install it created, including updates."
+msgstr ""
+
+#, python-format
+msgid ""
+"Run these on the agent's own machine. %(tm)s adopts an agent it did not "
+"install, so this works however the agent was set up."
+msgstr ""
+
+#, python-format
+msgid ""
+"Run this command and enter a new password when asked: %(docker_exec_it)s "
+"%(podman_exec_it)s %(flask_reset_password)s The password is not printed "
+"back. Log in with it straight away."
+msgstr ""
+
+#, python-format
+msgid ""
+"Run this command to disable 2FA: %(docker_exec_it)s %(podman_exec_it)s "
+"%(flask_reset_password)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Run this on %(agent_cli_host_name)s. It installs the %(tm)s CLI and opens"
+" its agent installer with the key already set."
+msgstr ""
+
+msgid "SNI Strict"
+msgstr ""
+
+msgid "SSL Redirect (force HTTPS)"
+msgstr ""
+
+msgid "Same-origin Referrer Policy"
+msgstr ""
+
+msgctxt "button"
+msgid "Save"
+msgstr ""
+
+msgid "Save Config"
+msgstr ""
+
+msgid "Save Git Settings"
+msgstr ""
+
+msgid "Save Middleware"
+msgstr ""
+
+msgid "Save OIDC Config"
+msgstr ""
+
+msgid "Save Profile"
+msgstr ""
+
+msgid "Save Route"
+msgstr ""
+
+msgid "Save Service"
+msgstr ""
+
+msgid "Save Template"
+msgstr ""
+
+msgid "Save configuration"
+msgstr ""
+
+msgid "Save route"
+msgstr ""
+
+msgid "Save this API key - it will not be shown again."
+msgstr ""
+
+msgid "Save this key - it will not be shown again."
+msgstr ""
+
+msgid ""
+"Save this new key - it will not be shown again. Your agent will stop "
+"working until you update it."
+msgstr ""
+
+msgctxt "label"
+msgid "Saved"
 msgstr ""
 
 msgid ""
@@ -35,6 +3123,1152 @@ msgid ""
 "Manager does not have it. Also set by the flag in the nav bar."
 msgstr ""
 
+#, python-format
+msgid ""
+"Saving here only changes the compose text below. The running agent keeps "
+"its current values until you redeploy it. %(tm)s edits them in place "
+"instead, and it adopts an agent it did not install."
+msgstr ""
+
+msgid ""
+"Scan the QR code with Google Authenticator or any TOTP app, then enter "
+"the 6-digit code to confirm."
+msgstr ""
+
+msgctxt "setting"
+msgid "Scheme"
+msgstr ""
+
+#, python-format
+msgid "Scopes %(one_per_line)s"
+msgstr ""
+
+msgid "Search Consul Catalog routes..."
+msgstr ""
+
+msgid "Search Consul KV routes..."
+msgstr ""
+
+msgid "Search ECS routes..."
+msgstr ""
+
+msgid "Search HTTP provider routes..."
+msgstr ""
+
+msgid "Search Kubernetes routes..."
+msgstr ""
+
+msgid "Search Nomad routes..."
+msgstr ""
+
+msgid "Search Redis routes..."
+msgstr ""
+
+msgid "Search Swarm routes..."
+msgstr ""
+
+msgid "Search TLS profiles..."
+msgstr ""
+
+msgid "Search ZooKeeper routes..."
+msgstr ""
+
+msgid "Search certificates..."
+msgstr ""
+
+msgid "Search docker routes..."
+msgstr ""
+
+msgid "Search entrypoints, resolvers, plugins..."
+msgstr ""
+
+msgid "Search etcd routes..."
+msgstr ""
+
+msgid "Search file provider routes..."
+msgstr ""
+
+msgid "Search internal routes..."
+msgstr ""
+
+msgid "Search middlewares..."
+msgstr ""
+
+msgid "Search plugins..."
+msgstr ""
+
+msgid "Search routes..."
+msgstr ""
+
+msgid "Search services..."
+msgstr ""
+
+msgid "Search settings by name or description..."
+msgstr ""
+
+msgctxt "setting"
+msgid "Secure"
+msgstr ""
+
+msgid "Secure Headers"
+msgstr ""
+
+msgid "Security headers preset"
+msgstr ""
+
+msgid "Select a file..."
+msgstr ""
+
+msgid "Select a template above to use the wizard."
+msgstr ""
+
+msgid "Select unused"
+msgstr ""
+
+msgid "Self route"
+msgstr ""
+
+msgid ""
+"Send a message when a route is saved or deleted, a backup runs, or a "
+"restore completes. This sets up one destination that receives every "
+"event; add more, and choose which events reach each one, in Settings."
+msgstr ""
+
+msgid ""
+"Send a message when a route is saved, a backup runs, a certificate nears "
+"expiry or an agent goes offline. Add one channel per destination: "
+"Discord, Slack, ntfy, Gotify, Pushover, Pushbullet, Telegram, or a "
+"generic JSON payload you shape downstream."
+msgstr ""
+
+msgid "Send each event as it happens, or batch them into one message."
+msgstr ""
+
+msgid "Serial Number"
+msgstr ""
+
+msgctxt "option"
+msgid "Service"
+msgstr ""
+
+msgctxt "setting"
+msgid "Service"
+msgstr ""
+
+msgid "Service Details"
+msgstr ""
+
+msgctxt "button"
+msgid "Services"
+msgstr ""
+
+msgctxt "heading"
+msgid "Services"
+msgstr ""
+
+msgctxt "label"
+msgid "Services"
+msgstr ""
+
+#, python-format
+msgid "Session Max Age %(seconds)s"
+msgstr ""
+
+#, python-format
+msgid "Session Secret %(n32_character_random)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Set %(tma_api_key)s to this value in your agent's environment. The key is"
+" stored encrypted in TM settings."
+msgstr ""
+
+msgid ""
+"Set GEOIP_DB_PATH to use your own MaxMind or DB-IP .mmdb file instead of "
+"the bundled database, which refreshes monthly."
+msgstr ""
+
+msgid "Set Up Traefik Manager"
+msgstr ""
+
+msgid "Set a New Password - Traefik Manager"
+msgstr ""
+
+msgid "Set a new password"
+msgstr ""
+
+msgid "Set it up →"
+msgstr ""
+
+msgid "Set password"
+msgstr ""
+
+msgid "Set your password"
+msgstr ""
+
+msgid "Set your permanent password"
+msgstr ""
+
+msgid ""
+"Sets forwardingTimeouts on the service's serversTransport (unlimited "
+"response-header timeout for long transcodes) and forces passHostHeader. "
+"Composes with Skip TLS Verification on the same transport."
+msgstr ""
+
+msgctxt "button"
+msgid "Settings"
+msgstr ""
+
+msgctxt "heading"
+msgid "Settings"
+msgstr ""
+
+msgctxt "label"
+msgid "Settings"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Settings"
+msgstr ""
+
+#, python-format
+msgid "Settings saved to %(manager_yml)s"
+msgstr ""
+
+msgid "Settings → System Monitoring → CrowdSec"
+msgstr ""
+
+msgctxt "setting"
+msgid "Show"
+msgstr ""
+
+msgid "Show API reference link"
+msgstr ""
+
+msgid "Show Client IP Diagnostic button"
+msgstr ""
+
+msgid "Show Traefik Manager version badge"
+msgstr ""
+
+msgid "Show Traefik version badge"
+msgstr ""
+
+msgid "Show a system notification when an event arrives while a tab is open."
+msgstr ""
+
+msgid "Show app icons"
+msgstr ""
+
+msgid ""
+"Show country flags and a world map in the Logs and CrowdSec tabs. Lookups"
+" run on the server against a local database - no IPs leave your server."
+msgstr ""
+
+msgid "Show documentation link"
+msgstr ""
+
+msgid "Show entry points bar"
+msgstr ""
+
+msgid "Show it as its own tab in the side navigation"
+msgstr ""
+
+msgid "Show it inside this Settings window"
+msgstr ""
+
+msgid "Show keyboard shortcuts button"
+msgstr ""
+
 msgid "Show language selector"
+msgstr ""
+
+msgid "Show on"
+msgstr ""
+
+msgid "Show stat cards"
+msgstr ""
+
+msgid "Shown on the login button: \"Sign in with ...\""
+msgstr ""
+
+msgid "Shown once. It is already inside the command above."
+msgstr ""
+
+msgid "Sign In - Traefik Manager"
+msgstr ""
+
+msgid "Sign in"
+msgstr ""
+
+#, python-format
+msgid "Sign in with %(oidc_display_name)s"
+msgstr ""
+
+msgid "Sign in with your identity provider."
+msgstr ""
+
+msgid "Sign out"
+msgstr ""
+
+msgid "Sign out other sessions"
+msgstr ""
+
+msgid "Sign out others"
+msgstr ""
+
+msgid "Signal file path"
+msgstr ""
+
+msgctxt "button"
+msgid "Simple"
+msgstr ""
+
+msgid "Single IP or CIDR range."
+msgstr ""
+
+msgid "Single codes or ranges. Only these responses are replaced."
+msgstr ""
+
+msgid "Skip TLS Verification"
+msgstr ""
+
+msgid "Skip TLS verification"
+msgstr ""
+
+msgid "Socket Proxy"
+msgstr ""
+
+msgid "Sources to add"
+msgstr ""
+
+msgctxt "label"
+msgid "Start"
+msgstr ""
+
+msgid "Static Config"
+msgstr ""
+
+msgid "Static Config Path"
+msgstr ""
+
+msgid "Static config backups"
+msgstr ""
+
+#, python-format
+msgid "Static config path %(optional)s"
+msgstr ""
+
+#, python-format
+msgid "Status codes %(one_per_line)s"
+msgstr ""
+
+#, python-format
+msgid "Status: %(disabled)s"
+msgstr ""
+
+#, python-format
+msgid "Step 1 - Paste the static config snippet from the %(traefik_plugin_page)s"
+msgstr ""
+
+msgid "Step 2 - Paste the middleware snippet and edit the settings for your needs"
+msgstr ""
+
+msgid "Step 3 - Choose which config file the middleware is written to"
+msgstr ""
+
+msgid "Sticky sessions"
+msgstr ""
+
+msgid "Stored as the decision scenario."
+msgstr ""
+
+msgid "Stored encrypted."
+msgstr ""
+
+msgid "Stored server-side and never shown again."
+msgstr ""
+
+msgid "Stream routers"
+msgstr ""
+
+msgid "Strip Prefix"
+msgstr ""
+
+msgid "Strip Prefix Regex"
+msgstr ""
+
+msgctxt "setting"
+msgid "Subdomain"
+msgstr ""
+
+msgid "Subject Common Name"
+msgstr ""
+
+msgctxt "button"
+msgid "Success"
+msgstr ""
+
+#, python-format
+msgid ""
+"Supported functions: %(networkerrorratio)s, %(responsecoderatio)s, "
+"%(latencyatquantilems)s"
+msgstr ""
+
+msgid "Switch server"
+msgstr ""
+
+msgid ""
+"Switched on for every provider Traefik is reporting right now. Turn any "
+"of them off if you would rather not see it."
+msgstr ""
+
+msgctxt "button"
+msgid "System"
+msgstr ""
+
+msgctxt "heading"
+msgid "System"
+msgstr ""
+
+msgctxt "label"
+msgid "System"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "System"
+msgstr ""
+
+msgid "System Monitoring"
+msgstr ""
+
+msgid "TCP / UDP Routers"
+msgstr ""
+
+msgid "TLS Mode"
+msgstr ""
+
+msgid "TLS Options"
+msgstr ""
+
+msgid "TLS Options Profile"
+msgstr ""
+
+msgid "TLS Profile"
+msgstr ""
+
+msgctxt "button"
+msgid "Tab"
+msgstr ""
+
+msgid "Tab Visibility"
+msgstr ""
+
+msgctxt "button"
+msgid "Tabs"
+msgstr ""
+
+msgctxt "heading"
+msgid "Tabs"
+msgstr ""
+
+msgid ""
+"Taken automatically before Traefik Manager removes a certificate from "
+"acme.json. Retention is one setting for both kinds of backup, change it "
+"under Dynamic Config."
+msgstr ""
+
+msgid "Target IP / Host"
+msgstr ""
+
+msgid "Template"
+msgstr ""
+
+msgctxt "setting"
+msgid "Template"
+msgstr ""
+
+msgctxt "button"
+msgid "Test"
+msgstr ""
+
+msgid "Test connection"
+msgstr ""
+
+msgid "Test repository"
+msgstr ""
+
+#, python-format
+msgid ""
+"The %(hp_custom_name)s middleware has been hand-edited beyond what these "
+"toggles cover, so it's shown as custom and kept as-is. Edit it in the "
+"Middlewares tab, or turn the preset off and on again to replace it with "
+"the toggle defaults. Turn it off to remove it."
+msgstr ""
+
+msgid ""
+"The CrowdSec fields on this server in Settings only build the compose "
+"snippet below - they are never pushed to a running agent."
+msgstr ""
+
+#, python-format
+msgid ""
+"The Host can back this agent up to its own repository instead, on a "
+"separate branch, using the Host's credentials. Nothing is configured on "
+"the agent and no token is stored on it. Select this server in the "
+"switcher, then turn on %(use_host_repository)s under %(backups_git)s."
+msgstr ""
+
+#, python-format
+msgid ""
+"The Traefik entry point to attach the router to, as named in your static "
+"config - commonly %(websecure)s or %(https)s."
+msgstr ""
+
+#, python-format
+msgid ""
+"The agent reads CrowdSec from its %(own_container_environment)s, not from"
+" Traefik Manager. Set %(crowdsec_lapi_url)s on the agent container and "
+"recreate it."
+msgstr ""
+
+msgid ""
+"The agent reads CrowdSec from its own container environment, so changing "
+"anything here has no effect until you copy the compose below and recreate"
+" the agent container. With mTLS, the cert paths must be mounted inside "
+"the agent container too."
+msgstr ""
+
+msgid "The agent reads these from its own environment."
+msgstr ""
+
+msgid ""
+"The bouncer key reads active decisions, the machine login reads alerts. "
+"They are complementary, not tiered. A client certificate covers both."
+msgstr ""
+
+msgid "The branch to commit to, and the account the token belongs to."
+msgstr ""
+
+msgid ""
+"The classic \"behind Cloudflare\" case. Hardcoded and refreshed on "
+"release - no runtime fetch."
+msgstr ""
+
+msgid ""
+"The hostname you want to open Traefik Manager on. Leave blank to skip "
+"this step entirely."
+msgstr ""
+
+#, python-format
+msgid ""
+"The key is passed through the environment, so it stays out of %(ps)s "
+"output."
+msgstr ""
+
+msgid ""
+"The login page silently tries OIDC first (prompt=none) and signs you in "
+"with zero clicks when your provider already has a session. Falls back to "
+"the normal login page otherwise; /login?auto=0 always shows it."
+msgstr ""
+
+msgid ""
+"The main entry of the tls.domains block. Traefik asks your resolver for a"
+" certificate covering this name."
+msgstr ""
+
+#, python-format
+msgid ""
+"The matched prefix is removed before the request is forwarded. Anchor "
+"with %(code)s or it can match mid-path."
+msgstr ""
+
+msgid "The middleware body only, without the name above it."
+msgstr ""
+
+msgid "The public address where TMA is running on the remote server."
+msgstr ""
+
+msgid ""
+"The route list could not be read. Names, icons and launch links all come "
+"from that call, so nothing can be drawn. Check that traefik-manager can "
+"reach the Traefik API and its config files."
+msgstr ""
+
+msgid ""
+"The service that serves the error page. It must already exist in this "
+"config."
+msgstr ""
+
+msgid "These build the compose snippet, they are not sent to the agent."
+msgstr ""
+
+#, python-format
+msgid ""
+"These paths refer to files %(inside_this_container)s. Mount the file into"
+" Traefik Manager in your %(docker_compose_yml)s first, then set the path "
+"here."
+msgstr ""
+
+msgid ""
+"These settings change how this app appears on the dashboard. They do not "
+"touch the route itself."
+msgstr ""
+
+msgid ""
+"These tabs require a file mount in your compose file - each tab shows the"
+" exact volume line to add if not yet mounted."
+msgstr ""
+
+msgid "This Browser"
+msgstr ""
+
+#, python-format
+msgid ""
+"This agent can also push independently using its own %(git_backup)s "
+"environment variables."
+msgstr ""
+
+#, python-format
+msgid ""
+"This agent was installed with %(tm)s, which owns its compose file on the "
+"agent. Editing one here would conflict with it."
+msgstr ""
+
+#, python-format
+msgid ""
+"This edits the %(static)s config - it is global and needs a Traefik "
+"restart to take effect. A backup is created automatically before the "
+"save. Every trusted range can forge client IPs, so only add proxies you "
+"control."
+msgstr ""
+
+msgid ""
+"This interface is publicly accessible. Enable Built-in Authentication or "
+"configure OIDC / SSO. API keys still work but do not protect the web UI."
+msgstr ""
+
+msgid ""
+"This is the last step. The password protects the whole interface and is "
+"stored as a bcrypt hash, never in plain text. You can change it, add two-"
+"factor, or switch to an identity provider later in Settings."
+msgstr ""
+
+msgid "This page will reconnect automatically."
+msgstr ""
+
+msgid "This panel"
+msgstr ""
+
+msgid ""
+"This route will reference the selected service. Backends, sticky sessions"
+" and health checks are managed where the service is defined."
+msgstr ""
+
+msgctxt "setting"
+msgid "Timeout"
+msgstr ""
+
+msgid "Toggle shortcuts"
+msgstr ""
+
+msgid "Toggle theme"
+msgstr ""
+
+msgid "Toggle view"
+msgstr ""
+
+msgid "Token / Password"
+msgstr ""
+
+msgid "Token is set"
+msgstr ""
+
+msgid "Topology connection map (Entry Points - Routes - Middlewares - Services)"
+msgstr ""
+
+#, python-format
+msgid "Traefik API basic auth %(optional)s"
+msgstr ""
+
+msgid ""
+"Traefik API unreachable. Names, icons and links below come from your "
+"config; live router and backend status is not shown."
+msgstr ""
+
+msgid "Traefik Manager Version badge, highlights when an update is available."
+msgstr ""
+
+msgid "Traefik Manager documentation."
+msgstr ""
+
+msgid ""
+"Traefik Manager manages one Traefik instance. To manage more, run a "
+"lightweight agent next to each and register it here, then switch between "
+"them from the server switcher. Adding an agent generates the compose "
+"snippet and mints its API key."
+msgstr ""
+
+msgid ""
+"Traefik Manager reads everything through the Traefik API. This is the one"
+" step it cannot work without."
+msgstr ""
+
+msgid "Traefik Manager update available"
+msgstr ""
+
+msgid ""
+"Traefik Manager's own login is off and it does not verify who you are, so"
+" anything that reaches it directly has full access."
+msgstr ""
+
+msgid ""
+"Traefik discovers routes from providers other than your dynamic config "
+"file - Docker labels, a Kubernetes CRD, a KV store. Turn on a provider to"
+" get a read-only tab listing what it contributes. Traefik Manager can "
+"show those routes but cannot edit them, because they are defined where "
+"the provider lives."
+msgstr ""
+
+msgid "Traefik entry point the route listens on."
+msgstr ""
+
+msgid "Traefik entry points listed below the stat cards"
+msgstr ""
+
+msgid "Traefik plugin page"
+msgstr ""
+
+msgid ""
+"Traefik polls this path and stops sending traffic to backends that fail "
+"(loadBalancer.healthCheck)."
+msgstr ""
+
+msgid ""
+"Traefik polls this path on every server and stops sending traffic to the "
+"ones that fail. Without it Traefik reports every server as up, so a dead "
+"server keeps receiving requests."
+msgstr ""
+
+msgid "Traefik router rule"
+msgstr ""
+
+msgid "Traefik security advisory"
+msgstr ""
+
+#, python-format
+msgid ""
+"Traefik strips these from the right of %(x_forwarded_for)s and uses the "
+"next IP. Use when the proxy's own IPs vary. Cannot be combined with a "
+"fixed depth."
+msgstr ""
+
+msgid "Traefik version badge, highlights when an update is available."
+msgstr ""
+
+msgctxt "label"
+msgid "Traffic"
+msgstr ""
+
+msgid "Trust Forward Header"
+msgstr ""
+
+msgid "Trusted IPs Helper"
+msgstr ""
+
+msgid "Trusted hop depth"
+msgstr ""
+
+msgctxt "heading"
+msgid "Two-factor"
+msgstr ""
+
+msgid "Two-factor authentication"
+msgstr ""
+
+msgctxt "setting"
+msgid "Type"
+msgstr ""
+
+#, python-format
+msgid "Type %(confirm_word)s to confirm"
+msgstr ""
+
+msgid "Type it again so a typo does not lock you out."
+msgstr ""
+
+msgid "UDP routers don't support rules. Traffic is routed by entry point only."
+msgstr ""
+
+msgctxt "button"
+msgid "Undo"
+msgstr ""
+
+msgctxt "button"
+msgid "Unused"
+msgstr ""
+
+msgid "Update password"
+msgstr ""
+
+#, python-format
+msgid "Use %(action)s and %(timestamp)s as placeholders"
+msgstr ""
+
+#, python-format
+msgid "Use %(hostsni)s to match all TLS or leave empty for passthrough"
+msgstr ""
+
+msgid "Use Host Repository"
+msgstr ""
+
+msgid "Use a service"
+msgstr ""
+
+#, python-format
+msgid "Used as the %(tls_options)s key and referenced in router configs."
+msgstr ""
+
+msgid "Used for every push from this agent. Leave blank for the default."
+msgstr ""
+
+msgid "Used for this push only. Leave blank to use the commit message template."
+msgstr ""
+
+msgid ""
+"Useful when the route has a wildcard host, or the app lives on a "
+"different port."
+msgstr ""
+
+msgid "User Key"
+msgstr ""
+
+msgctxt "placeholder"
+msgid "Username"
+msgstr ""
+
+msgctxt "setting"
+msgid "Username"
+msgstr ""
+
+msgid "Username (if dashboard requires auth)"
+msgstr ""
+
+msgctxt "setting"
+msgid "Users"
+msgstr ""
+
+msgid "Verifies the LAPI's own certificate when it comes from a private PKI."
+msgstr ""
+
+msgctxt "button"
+msgid "Verify"
+msgstr ""
+
+msgid "Verify & Enable"
+msgstr ""
+
+msgid "Verify connection"
+msgstr ""
+
+msgid "Verify the API URL and credentials against your Traefik instance."
+msgstr ""
+
+msgctxt "option"
+msgid "VerifyClientCertIfGiven"
+msgstr ""
+
+msgctxt "setting"
+msgid "Version"
+msgstr ""
+
+msgid "View advisory"
+msgstr ""
+
+msgid "View details"
+msgstr ""
+
+msgid "View release notes"
+msgstr ""
+
+msgid ""
+"Views that read a file rather than the Traefik API: certificate expiry "
+"from your ACME store, the plugin list from your static config, and the "
+"access log. Each needs its file mounted into this container, and each "
+"view tells you the exact volume line if it is missing. CrowdSec is here "
+"too, since it reads its own local API."
+msgstr ""
+
+msgctxt "heading"
+msgid "Visualizations"
+msgstr ""
+
+msgctxt "button"
+msgid "Warnings"
+msgstr ""
+
+msgid "Webhook URL"
+msgstr ""
+
+msgctxt "tooltip"
+msgid "Weight"
+msgstr ""
+
+msgctxt "option"
+msgid "Weighted"
+msgstr ""
+
+msgid "Welcome to Traefik Manager"
+msgstr ""
+
+msgid ""
+"What Traefik Manager looks like for anyone who has not chosen for "
+"themselves. Each person can still override it from the toolbar."
+msgstr ""
+
+#, python-format
+msgid ""
+"What this instance sees for your own request right now. Use it to check "
+"whether the real client IP is reaching the app before it feeds logs, "
+"CrowdSec and %(ipallowlist)s."
+msgstr ""
+
+msgid "Where notifications are delivered."
+msgstr ""
+
+#, python-format
+msgid ""
+"Where the CrowdSec local API listens. On the same Docker network that is "
+"usually %(http_crowdsec_8080)s."
+msgstr ""
+
+#, python-format
+msgid ""
+"Where the agent stores local backup zips. Defaults to %(app_backups)s - "
+"set a host path here to persist backups across container restarts."
+msgstr ""
+
+msgid "Where this agent is reachable from Traefik Manager."
+msgstr ""
+
+#, python-format
+msgid ""
+"Where this container reaches the Traefik API. On the same Docker network "
+"that is usually %(http_traefik_8080)s - the service name, not "
+"%(localhost)s. Requires %(api)s in your static config."
+msgstr ""
+
+msgid "Which events raise a desktop notification."
+msgstr ""
+
+msgid ""
+"Which kinds of event reach this channel. Select none to send every "
+"category."
+msgstr ""
+
+msgid "Which tabs show the stat cards and entry points"
+msgstr ""
+
+msgid ""
+"Who gets in, and how. The built-in password, two-factor, API keys for the"
+" mobile app and scripts, and OIDC single sign-on. If a forward-auth "
+"provider already sits in front of Traefik Manager you can leave the "
+"built-in login off and acknowledge the banner."
+msgstr ""
+
+#, python-format
+msgid ""
+"With mTLS, the cert paths are resolved %(inside_the_agent)s, so mount "
+"them there too. A client certificate replaces the API key and machine "
+"login."
+msgstr ""
+
+msgctxt "button"
+msgid "Wizard"
+msgstr ""
+
+msgid "Writes all OIDC settings above without changing the enabled state."
+msgstr ""
+
+msgid "X-Content-Type-Options (nosniff)"
+msgstr ""
+
+msgid "X-Frame-Options (deny)"
+msgstr ""
+
+msgctxt "label"
+msgid "X-XSS-Protection"
+msgstr ""
+
+msgid "You have stated that an external provider protects this instance."
+msgstr ""
+
+msgid "You probably do not need this."
+msgstr ""
+
+msgid "You're using a temporary password. Set a permanent one to continue."
+msgstr ""
+
+#, python-format
+msgid "Your own proxies / LAN %(one_cidr_or)s"
+msgstr ""
+
+msgid "Your password"
+msgstr ""
+
+msgid ""
+"Your password was reset. Choose a new one to get back in - nothing else "
+"about your configuration has changed."
+msgstr ""
+
+msgid ""
+"Your traefik.yml: entry points, certificate resolvers, providers and "
+"plugins. This is the file Traefik reads at boot, so changes here need a "
+"Traefik restart, unlike the dynamic config that Traefik Manager writes "
+"live."
+msgstr ""
+
+msgid "Yours alone"
+msgstr ""
+
+msgid "Zoom in"
+msgstr ""
+
+msgid "Zoom out"
+msgstr ""
+
+msgid "acme.json Path"
+msgstr ""
+
+msgid "alerts"
+msgstr ""
+
+msgid "any 2xx or 3xx"
+msgstr ""
+
+msgid "average"
+msgstr ""
+
+msgid "burst"
+msgstr ""
+
+msgid "client certificate, e.g. /certs/tm-client.crt"
+msgstr ""
+
+msgid "client certificate, e.g. /certs/tma-client.crt"
+msgstr ""
+
+msgid "client key, e.g. /certs/tm-client.key"
+msgstr ""
+
+msgid "client key, e.g. /certs/tma-client.key"
+msgstr ""
+
+msgid "decisions"
+msgstr ""
+
+msgid "denied"
+msgstr ""
+
+msgid "e.g. Mobile App"
+msgstr ""
+
+msgid "e.g. My Phone"
+msgstr ""
+
+msgid "e.g. Ops Discord"
+msgstr ""
+
+msgid "e.g. Secure Headers"
+msgstr ""
+
+msgid "e.g. Server 2"
+msgstr ""
+
+msgid "e.g. my-app"
+msgstr ""
+
+msgid "e.g. plex"
+msgstr ""
+
+msgctxt "status"
+msgid "enabled"
+msgstr ""
+
+msgid "inside the agent container"
+msgstr ""
+
+msgid "inside this container"
+msgstr ""
+
+msgid "leave blank to keep existing"
+msgstr ""
+
+msgid "leave empty for Traefik's default"
+msgstr ""
+
+msgctxt "label"
+msgid "logo"
+msgstr ""
+
+msgid "machine id"
+msgstr ""
+
+msgid "manual ban from Traefik Manager"
+msgstr ""
+
+msgid "ntfy.sh / self-hosted ntfy"
+msgstr ""
+
+msgid "optional"
+msgstr ""
+
+msgctxt "placeholder"
+msgid "optional"
+msgstr ""
+
+msgctxt "setting"
+msgid "optional"
+msgstr ""
+
+msgctxt "label"
+msgid "or"
+msgstr ""
+
+msgid "own container environment"
+msgstr ""
+
+msgid "period"
+msgstr ""
+
+msgctxt "button"
+msgid "retry"
+msgstr ""
+
+msgid "same as interval"
+msgstr ""
+
+msgid "same as server"
+msgstr ""
+
+msgid "selfh.st slug"
+msgstr ""
+
+msgid "static"
+msgstr ""
+
+msgid "this agent"
+msgstr ""
+
+msgctxt "time range"
+msgid "to"
+msgstr ""
+
+msgctxt "label"
+msgid "·"
+msgstr ""
+
+msgid "← Back to sign in"
 msgstr ""
 

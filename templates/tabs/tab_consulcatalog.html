@@ -2,23 +2,23 @@
     <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
         <div class="relative flex-1 min-w-48">
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-            <input type="text" id="consulcatalogSearch" oninput="filterConsulCatalog()" placeholder="Search Consul Catalog routes..." class="input-field pl-9">
+            <input type="text" id="consulcatalogSearch" oninput="filterConsulCatalog()" placeholder="{{ _('Search Consul Catalog routes...') }}" class="input-field pl-9">
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="filterConsulCatalog('all')"  id="cc-all"  class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+            <button onclick="filterConsulCatalog('all')"  id="cc-all"  class="proto-btn active-http text-xs px-3 py-1.5">{{ pgettext('button', 'All') }}</button>
             <button onclick="filterConsulCatalog('http')" id="cc-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
             <button onclick="filterConsulCatalog('tcp')"  id="cc-tcp"  class="proto-btn text-xs px-3 py-1.5">TCP</button>
             <button onclick="filterConsulCatalog('udp')"  id="cc-udp"  class="proto-btn text-xs px-3 py-1.5">UDP</button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="refreshConsulCatalogTab()" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+            <button onclick="refreshConsulCatalogTab()" class="proto-btn text-xs px-3 py-1.5" title="{{ pgettext('tooltip', 'Refresh') }}"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>
     </div>
     <div id="consulcatalogVerdict" class="sig-root mb-4" data-note="These routes are discovered via Consul service catalog and are read-only. Edit them via your Consul service registrations."></div>
     <div id="consulcatalogContent">
         <div class="text-center py-16" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
-            <p>Loading Consul Catalog routes...</p>
+            <p>{{ _('Loading Consul Catalog routes...') }}</p>
         </div>
     </div>
     <div id="consulcatalogMiddlewares"></div>

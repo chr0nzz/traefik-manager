@@ -3,7 +3,7 @@
 
     <div class="sig-verdict" id="sigVerdict" data-health="up">
         <i class="ph-fill ph-check-circle sig-verdict-ic"></i>
-        <span class="sig-verdict-txt">Checking</span>
+        <span class="sig-verdict-txt">{{ pgettext('label', 'Checking') }}</span>
         <span class="sig-verdict-items"><span class="sig-sk" style="width:120px;height:11px"></span></span>
         <span class="sig-verdict-meta"></span>
     </div>
@@ -15,60 +15,60 @@
         <article class="sig-card" data-card="http" style="--tm-accent: var(--blue)">
             <div class="sig-head">
                 <span class="sig-ic"><i class="ph-fill ph-arrows-split"></i></span>
-                <span class="sig-title">HTTP Routers</span>
-                <button type="button" class="sig-explore" onclick="switchTab('services');filterProto('http')">Explore <i class="ph-bold ph-arrow-right"></i></button>
+                <span class="sig-title">{{ _('HTTP Routers') }}</span>
+                <button type="button" class="sig-explore" onclick="switchTab('services');filterProto('http')">{{ pgettext('button', 'Explore') }} <i class="ph-bold ph-arrow-right"></i></button>
             </div>
             <div class="sig-metric">
                 <span class="sig-total"><span class="sig-sk" style="width:44px;height:24px"></span></span>
                 <span class="sig-flags"></span>
             </div>
             <div class="sig-sub"><span class="sig-sk" style="width:68%;height:11px"></span></div>
-            <div class="sig-strip" role="img" aria-label="HTTP routers"><span class="sig-sk" style="width:100%;height:6px"></span></div>
+            <div class="sig-strip" role="img" aria-label="{{ _('HTTP routers') }}"><span class="sig-sk" style="width:100%;height:6px"></span></div>
             <div class="sig-foot"><span class="sig-provs"><span class="sig-sk" style="width:40%;height:10px"></span></span></div>
         </article>
 
         <article class="sig-card" data-card="stream" style="--tm-accent: var(--teal)">
             <div class="sig-head">
                 <span class="sig-ic"><i class="ph-fill ph-arrows-left-right"></i></span>
-                <span class="sig-title">TCP / UDP Routers</span>
-                <button type="button" class="sig-explore" onclick="switchTab('services');filterProto('tcp')">Explore <i class="ph-bold ph-arrow-right"></i></button>
+                <span class="sig-title">{{ _('TCP / UDP Routers') }}</span>
+                <button type="button" class="sig-explore" onclick="switchTab('services');filterProto('tcp')">{{ pgettext('button', 'Explore') }} <i class="ph-bold ph-arrow-right"></i></button>
             </div>
             <div class="sig-metric">
                 <span class="sig-total"><span class="sig-sk" style="width:44px;height:24px"></span></span>
                 <span class="sig-flags"></span>
             </div>
             <div class="sig-sub"><span class="sig-sk" style="width:68%;height:11px"></span></div>
-            <div class="sig-strip" role="img" aria-label="Stream routers"><span class="sig-sk" style="width:100%;height:6px"></span></div>
+            <div class="sig-strip" role="img" aria-label="{{ _('Stream routers') }}"><span class="sig-sk" style="width:100%;height:6px"></span></div>
             <div class="sig-foot"><span class="sig-provs"><span class="sig-sk" style="width:40%;height:10px"></span></span></div>
         </article>
 
         <article class="sig-card" data-card="service" style="--tm-accent: var(--green)">
             <div class="sig-head">
                 <span class="sig-ic"><i class="ph-fill ph-hard-drives"></i></span>
-                <span class="sig-title">Services</span>
-                <button type="button" class="sig-explore" onclick="switchTab('live')">Explore <i class="ph-bold ph-arrow-right"></i></button>
+                <span class="sig-title">{{ pgettext('heading', 'Services') }}</span>
+                <button type="button" class="sig-explore" onclick="switchTab('live')">{{ pgettext('button', 'Explore') }} <i class="ph-bold ph-arrow-right"></i></button>
             </div>
             <div class="sig-metric">
                 <span class="sig-total"><span class="sig-sk" style="width:44px;height:24px"></span></span>
                 <span class="sig-flags"></span>
             </div>
             <div class="sig-sub"><span class="sig-sk" style="width:68%;height:11px"></span></div>
-            <div class="sig-strip" role="img" aria-label="Services"><span class="sig-sk" style="width:100%;height:6px"></span></div>
+            <div class="sig-strip" role="img" aria-label="{{ pgettext('label', 'Services') }}"><span class="sig-sk" style="width:100%;height:6px"></span></div>
             <div class="sig-foot"><span class="sig-provs"><span class="sig-sk" style="width:40%;height:10px"></span></span></div>
         </article>
 
         <article class="sig-card" data-card="middleware" style="--tm-accent: var(--purple)">
             <div class="sig-head">
                 <span class="sig-ic"><i class="ph-fill ph-stack"></i></span>
-                <span class="sig-title">Middlewares</span>
-                <button type="button" class="sig-explore" onclick="switchTab('middlewares')">Explore <i class="ph-bold ph-arrow-right"></i></button>
+                <span class="sig-title">{{ pgettext('heading', 'Middlewares') }}</span>
+                <button type="button" class="sig-explore" onclick="switchTab('middlewares')">{{ pgettext('button', 'Explore') }} <i class="ph-bold ph-arrow-right"></i></button>
             </div>
             <div class="sig-metric">
                 <span class="sig-total"><span class="sig-sk" style="width:44px;height:24px"></span></span>
                 <span class="sig-flags"></span>
             </div>
             <div class="sig-sub"><span class="sig-sk" style="width:68%;height:11px"></span></div>
-            <div class="sig-strip" role="img" aria-label="Middlewares"><span class="sig-sk" style="width:100%;height:6px"></span></div>
+            <div class="sig-strip" role="img" aria-label="{{ pgettext('label', 'Middlewares') }}"><span class="sig-sk" style="width:100%;height:6px"></span></div>
             <div class="sig-foot"><span class="sig-provs"><span class="sig-sk" style="width:40%;height:10px"></span></span></div>
         </article>
 

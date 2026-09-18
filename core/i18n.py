@@ -1,4 +1,5 @@
 import os
+import re
 from functools import lru_cache
 
 from babel import Locale, UnknownLocaleError
@@ -6,7 +7,7 @@ from babel.core import get_global
 from babel.support import Translations
 from flask import has_request_context, request
 from flask_babel import Babel, get_locale, get_translations
-from markupsafe import escape
+from markupsafe import Markup, escape
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOCALE_DIR = os.path.join(ROOT_DIR, 'locale')
@@ -15,6 +16,9 @@ DEFAULT_TAG = 'en'
 URL_LOCALE_KEY = 'tm.url_locale'
 
 _PLURAL_SAMPLES = tuple(range(0, 201)) + (1000, 10000, 100000, 1000000)
+INLINE_TAGS = frozenset({'a', 'b', 'br', 'code', 'em', 'i', 'kbd', 'small', 'span', 'strong', 'u'})
+_ATTR_NAME = re.compile(r'^[a-z][a-z0-9-]*$')
+_SAFE_HREF = re.compile(r'^(?:https?://|/(?!/)|#)')
 
 
 def to_tag(identifier: str) -> str:
@@ -188,6 +192,24 @@ class LocalePrefixMiddleware:
         return self.wsgi_app(environ, start_response)
 
 
+def inline_tag(name, text='', **attrs):
+    if name not in INLINE_TAGS:
+        raise ValueError(f'tag() does not build <{name}>')
+    parts = [name]
+    for key, value in attrs.items():
+        attr = key.rstrip('_').replace('_', '-')
+        if not _ATTR_NAME.match(attr) or attr.startswith('on') or attr in ('style-src', 'srcdoc'):
+            raise ValueError(f'tag() does not set the attribute {attr}')
+        value = '' if value is None else str(value)
+        if attr == 'href' and not _SAFE_HREF.match(value.strip()):
+            raise ValueError('tag() only links to http(s), relative or fragment addresses')
+        parts.append(f'{attr}="{escape(value)}"')
+    opening = Markup('<' + ' '.join(parts) + '>')
+    if name == 'br':
+        return opening
+    return opening + escape(text) + Markup(f'</{name}>')
+
+
 def install_escaped_gettext(jinja_env):
     jinja_env.install_gettext_callables(
         gettext=lambda s: escape(get_translations().ugettext(s)),
@@ -214,6 +236,7 @@ def init_app(app, default_language):
 
     babel = Babel(app, locale_selector=_select)
     install_escaped_gettext(app.jinja_env)
+    app.jinja_env.globals['tag'] = inline_tag
 
     @app.context_processor
     def _inject_locale():

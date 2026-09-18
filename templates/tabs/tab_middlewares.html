@@ -3,20 +3,20 @@
     <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
         <div class="relative flex-1 min-w-48">
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-            <input type="text" id="searchMw" oninput="filterMw()" placeholder="Search middlewares..." class="input-field pl-9">
+            <input type="text" id="searchMw" oninput="filterMw()" placeholder="{{ _('Search middlewares...') }}" class="input-field pl-9">
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="filterMw('all')" id="mwf-all" class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+            <button onclick="filterMw('all')" id="mwf-all" class="proto-btn active-http text-xs px-3 py-1.5">{{ pgettext('button', 'All') }}</button>
             <button onclick="filterMw('http')" id="mwf-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
             <button onclick="filterMw('tcp')" id="mwf-tcp" class="proto-btn text-xs px-3 py-1.5">TCP</button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="openTemplatesPanel()" class="proto-btn text-xs px-3 py-1.5" title="Middleware templates - reusable YAML you can start a middleware from">
+            <button onclick="openTemplatesPanel()" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Middleware templates - reusable YAML you can start a middleware from') }}">
                 <i class="ph-bold ph-cards"></i>
             </button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="toggleMwView()" id="mwViewToggle" class="proto-btn text-xs px-3 py-1.5" title="Toggle view">
+            <button onclick="toggleMwView()" id="mwViewToggle" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Toggle view') }}">
                 <i class="ph-bold ph-list" id="mwViewIcon"></i>
             </button>
         </div>
@@ -34,9 +34,9 @@
                     <h3 class="font-bold text-sm" style="color:var(--text)">{{ mw.name }}</h3>
                 </div>
                 <div class="flex gap-1.5">
-                    <button type="button" data-mw='{{ mw|tojson|safe }}' onclick="openMwDetail(this)" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-sm"></i></button>
-                    <button type="button" onclick='deleteMw({{ mw.name|tojson }},{{ (mw.configFile or "")|tojson }})' class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-sm"></i></button>
-                    <button type="button" data-mw='{{ mw|tojson|safe }}' onclick="handleMwEdit(this)" class="pill-btn pill-btn-blue" title="Edit">
+                    <button type="button" data-mw='{{ mw|tojson|safe }}' onclick="openMwDetail(this)" class="pill-btn pill-btn-blue" title="{{ _('View details') }}"><i class="ph-bold ph-info text-sm"></i></button>
+                    <button type="button" onclick='deleteMw({{ mw.name|tojson }},{{ (mw.configFile or "")|tojson }})' class="pill-btn pill-btn-red" title="{{ pgettext('tooltip', 'Delete') }}"><i class="ph-bold ph-trash text-sm"></i></button>
+                    <button type="button" data-mw='{{ mw|tojson|safe }}' onclick="handleMwEdit(this)" class="pill-btn pill-btn-blue" title="{{ pgettext('tooltip', 'Edit') }}">
                         <i class="ph-bold ph-pencil-simple text-sm"></i>
                     </button>
                 </div>
@@ -50,14 +50,14 @@
 
     <div id="mwEmpty" class="hidden text-center py-20" style="color:var(--muted)">
         <i class="ph-light ph-stack text-6xl block mb-4 opacity-30"></i>
-        <p class="text-base font-medium" id="mwEmptyText">No middlewares found</p>
+        <p class="text-base font-medium" id="mwEmptyText">{{ _('No middlewares found') }}</p>
     </div>
 
     {% if not middlewares %}
     <div id="mwStaticEmpty" class="text-center py-20" style="color:var(--muted)">
         <i class="ph-light ph-stack text-6xl block mb-4 opacity-30"></i>
-        <p class="text-base font-medium">No middlewares configured</p>
-        <p class="text-sm mt-1">Click <strong>Middleware</strong> to add one</p>
+        <p class="text-base font-medium">{{ _('No middlewares configured') }}</p>
+        <p class="text-sm mt-1">{{ _('Click %(middleware)s to add one', middleware=tag('strong', _('Middleware'))) }}</p>
     </div>
     {% endif %}
 </div>
@@ -67,7 +67,7 @@
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card);border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <i class="ph-bold ph-cards" style="color:var(--blue)"></i>
-            <h2 class="font-bold text-sm" id="mwTplPanelTitle" style="color:var(--text)">Middleware Templates</h2>
+            <h2 class="font-bold text-sm" id="mwTplPanelTitle" style="color:var(--text)">{{ _('Middleware Templates') }}</h2>
         </div>
         <button type="button" onclick="closeTemplatesPanel()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
     </div>
@@ -75,28 +75,28 @@
     <div class="px-6 py-5 space-y-4" id="templateListView">
         <div class="rounded-lg px-3 py-2.5 text-xs" style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2);color:var(--muted)">
             <i class="ph-bold ph-info" style="color:var(--blue)"></i>
-            Reusable YAML you can start a middleware from. Pick one under <strong>Template</strong> in the middleware form. Templates are shared across every server, not just the one selected here.
+            {{ _('Reusable YAML you can start a middleware from. Pick one under %(template)s in the middleware form. Templates are shared across every server, not just the one selected here.', template=tag('strong', _('Template'))) }}
         </div>
         <div class="flex justify-end">
-            <button onclick="openTemplateEditor(null)" class="btn-secondary text-xs"><i class="ph-bold ph-plus text-xs"></i> Add Template</button>
+            <button onclick="openTemplateEditor(null)" class="btn-secondary text-xs"><i class="ph-bold ph-plus text-xs"></i> {{ _('Add Template') }}</button>
         </div>
         <div id="templateListItems" class="space-y-2"></div>
     </div>
 
     <div class="px-6 py-5 space-y-4" id="templateEditorView" style="display:none">
         <div>
-            <label>Name</label>
-            <input id="tplName" type="text" class="input-field" placeholder="e.g. Secure Headers">
+            <label>{{ pgettext('setting', 'Name') }}</label>
+            <input id="tplName" type="text" class="input-field" placeholder="{{ _('e.g. Secure Headers') }}">
         </div>
         <div>
             <label>YAML</label>
             <textarea id="tplYaml" class="input-field text-xs font-mono" rows="14" placeholder="headers:&#10;  sslRedirect: true&#10;  forceSTSHeader: true&#10;  stsSeconds: 315360000" style="resize:vertical"></textarea>
-            <p class="text-xs mt-1" style="color:var(--muted)">The middleware body only, without the name above it.</p>
+            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('The middleware body only, without the name above it.') }}</p>
         </div>
     </div>
 
     <div class="detail-panel-foot flex justify-end gap-2 px-6 py-4" id="mwTplFoot" style="display:none">
-        <button type="button" onclick="closeTemplateEditor()" class="btn-secondary">Cancel</button>
-        <button type="button" onclick="saveTemplate()" class="btn-primary">Save Template</button>
+        <button type="button" onclick="closeTemplateEditor()" class="btn-secondary">{{ pgettext('button', 'Cancel') }}</button>
+        <button type="button" onclick="saveTemplate()" class="btn-primary">{{ _('Save Template') }}</button>
     </div>
 </div>

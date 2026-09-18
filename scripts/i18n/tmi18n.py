@@ -1,3 +1,4 @@
+import html
 import io
 import json
 import os
@@ -489,6 +490,7 @@ def check_all(root=ROOT, require_tools=False, extract=True):
     problems = []
     problems.extend(check_layout(root))
     problems.extend(check_code(root))
+    problems.extend(check_untranslated(root))
     problems.extend(check_dockerfile(root))
 
     locale_dir = os.path.join(root, 'locale')
@@ -514,4 +516,169 @@ def check_all(root=ROOT, require_tools=False, extract=True):
         problems.extend(check_catalogue(path, identifier, template))
         problems.extend(check_compiles(path, identifier))
     problems.extend(run_external(paths, require=require_tools))
+    return problems
+
+
+VOID_TAGS = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'}
+UNTRANSLATED_SKIP_TAGS = {'script', 'style', 'code', 'pre', 'kbd', 'textarea', 'svg', 'samp', 'var'}
+TRANSLATABLE_ATTRS = ('title', 'placeholder', 'aria-label', 'alt', 'data-tip')
+LETTER_RE = re.compile(r'[^\W\d_]', re.UNICODE)
+LITERAL_WORDS = {
+    'traefik', 'traefik manager', 'manager', 'crowdsec', 'docker', 'podman', 'kubernetes', 'unraid', "let's encrypt",
+    'cloudflare', 'weblate', 'github', 'tma', 'http', 'https', 'tcp', 'udp', 'tls', 'api', 'oidc', 'sso', 'yaml', 'json',
+    'ip', 'ipv4', 'ipv6', 'dns', 'acme', 'url', 'uri', 'id', 'ms', 's', 'kb', 'mb', 'gb', 'ok', 'discord', 'slack', 'ntfy',
+    'gotify', 'pushover', 'pushbullet', 'telegram', 'swarm', 'nomad', 'ecs', 'consul', 'consul catalog', 'consul kv',
+    'redis', 'etcd', 'zookeeper', 'mtls', 'h2c', 'grpc', 'grpc-web', 'lapi', 'geoip', 'maxmind', 'db-ip', 'totp', '2fa',
+    'cidr', 'sni', 'alpn', 'pwa', 'authelia', 'authentik', 'keycloak', 'pocket id', 'x-forwarded-for', 'cors', 'hsts',
+    'csp', 'ws', 'wss', 'sse',
+}
+CODE_LIKE_RE = re.compile(
+    r'(^[\w.-]+\.(ya?ml|json|toml|conf|mmdb|pem|crt|key|log|sh|py|go)$)|://|^/[\w/.-]*$|^[A-Z][A-Z0-9_]{2,}$'
+    r'|^[a-z]+[A-Z]\w*$|^[\w-]+\.[\w-]+\.[\w.-]+$|^\$|^--?[a-z]|^[a-z_]+=|@[a-z]+$|^[a-z0-9_]+\([^)]*\)$|^v?\d+(\.\d+)+$')
+HINT_WORDS = ('optional', 'required', 'none', 'auto', 'search')
+TEMPLATE_TOKEN_RE = re.compile(r'\{\{|\{%|\{#|<!--|<[A-Za-z/!]')
+ATTR_VALUE_RE = re.compile(r'([A-Za-z_:][\w:.-]*)\s*=\s*("([^"]*)"|\'([^\']*)\')')
+
+
+def is_literal(text):
+    t = ' '.join(text.split()).strip(' .:,;!?()[]-/·•|+#*"\'')
+    if not t or not LETTER_RE.search(t):
+        return True
+    low = t.lower()
+    if low in LITERAL_WORDS:
+        return True
+    parts = [p for p in re.split(r'[\s/,+&|·•()]+', low) if p]
+    if parts and all(p in LITERAL_WORDS or not LETTER_RE.search(p) or re.fullmatch(r'v?\d[\w.]*', p) for p in parts):
+        return True
+    if CODE_LIKE_RE.search(t):
+        return True
+    items = [x.strip() for x in t.split(',')]
+    if len(items) > 1 and all(re.fullmatch(r'[a-z0-9._@*-]+', x) for x in items):
+        return True
+    if re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)+', t) or re.fullmatch(r'[\w-]+\.(?:dev|com|net|org|io|xyz|sh|st|app)', t):
+        return True
+    if '{' in t and '}' in t:
+        return True
+    if re.fullmatch(r'[a-z0-9]+[_./][\w./-]*', t) or re.fullmatch(r'[a-z0-9_]+\.\.\.', t):
+        return True
+    if re.match(r'(?:cscli|docker|podman|tm|git|curl|sudo|flask|openssl|htpasswd)\s', t):
+        return True
+    if re.fullmatch(r'[a-z]+(?:\([a-z-]+\))?: [a-z ]+', t):
+        return True
+    return False
+
+
+def _scan_tag(src, i):
+    j, n, quote = i + 1, len(src), None
+    while j < n:
+        for opener, closer in (('{{', '}}'), ('{%', '%}')):
+            if src.startswith(opener, j):
+                k = src.find(closer, j)
+                j = k + 2 if k != -1 else n
+                break
+        else:
+            c = src[j]
+            if quote:
+                if c == quote:
+                    quote = None
+            elif c in '"\'':
+                quote = c
+            elif c == '>':
+                return j + 1
+            j += 1
+    return n
+
+
+def template_tokens(src):
+    tokens, i, n = [], 0, len(src)
+    while i < n:
+        m = TEMPLATE_TOKEN_RE.search(src, i)
+        if not m:
+            tokens.append(('text', src[i:]))
+            break
+        if m.start() > i:
+            tokens.append(('text', src[i:m.start()]))
+        s, opener = m.start(), m.group(0)
+        closers = {'{{': ('expr', '}}'), '{%': ('stmt', '%}'), '{#': ('comment', '#}'), '<!--': ('comment', '-->')}
+        if opener in closers:
+            kind, closer = closers[opener]
+            e = src.find(closer, s)
+            e = n if e == -1 else e + len(closer)
+            tokens.append((kind, src[s:e]))
+        else:
+            e = _scan_tag(src, s)
+            tag = src[s:e]
+            name = re.match(r'<\s*(/?)\s*([A-Za-z][\w:-]*)', tag)
+            if name and not name.group(1) and name.group(2).lower() in ('script', 'style'):
+                close = re.compile(r'</\s*' + name.group(2) + r'\s*>', re.I).search(src, e)
+                e = close.end() if close else n
+                tokens.append(('raw', src[s:e]))
+            else:
+                tokens.append(('tag', tag))
+        i = e
+    return tokens
+
+
+def _tag_parts(tag):
+    m = re.match(r'<\s*(/?)\s*([A-Za-z][\w:-]*)', tag)
+    if not m:
+        return None, False, False
+    return m.group(2).lower(), bool(m.group(1)), tag.rstrip('>').rstrip().endswith('/')
+
+
+def _attr(tag, name):
+    for m in ATTR_VALUE_RE.finditer(tag):
+        if m.group(1).lower() == name:
+            return m.group(3) if m.group(3) is not None else m.group(4)
+    return None
+
+
+def _exempt(stack):
+    for name, tag in stack:
+        cls = _attr(tag, 'class') or ''
+        if name in UNTRANSLATED_SKIP_TAGS or 'font-mono' in cls or 'notranslate' in cls:
+            return True
+        if (_attr(tag, 'translate') or '').lower() == 'no':
+            return True
+    return False
+
+
+def untranslated_in(src, where):
+    problems = []
+    stack = []
+    line = 1
+    for kind, val in template_tokens(src):
+        if kind == 'tag':
+            name, closing, selfclose = _tag_parts(val)
+            if name and not closing and not _exempt(stack + [(name, val)]):
+                for m in ATTR_VALUE_RE.finditer(val):
+                    attr, value = m.group(1).lower(), m.group(3) if m.group(3) is not None else m.group(4)
+                    if attr not in TRANSLATABLE_ATTRS or '{{' in value or '{%' in value:
+                        continue
+                    if not LETTER_RE.search(value) or is_literal(value):
+                        continue
+                    if attr == 'placeholder' and re.fullmatch(r'[a-z][a-z0-9]*', value.strip()) and value.strip() not in HINT_WORDS:
+                        continue
+                    problems.append(Problem(f'{where}:{line}', f'{attr}="{value[:60]}" is not marked for translation'))
+            if name:
+                if closing:
+                    for k in range(len(stack) - 1, -1, -1):
+                        if stack[k][0] == name:
+                            del stack[k:]
+                            break
+                elif name not in VOID_TAGS and not selfclose:
+                    stack.append((name, val))
+        elif kind == 'text' and not _exempt(stack):
+            text = ' '.join(val.split())
+            if LETTER_RE.search(text) and not is_literal(html.unescape(text)):
+                problems.append(Problem(f'{where}:{line}', f'"{text[:60]}" is not marked for translation'))
+        line += val.count('\n')
+    return problems
+
+
+def check_untranslated(root=ROOT):
+    problems = []
+    for path in _files(root, ('templates',), ('.html',)):
+        with open(path, encoding='utf-8') as fh:
+            problems.extend(untranslated_in(fh.read(), os.path.relpath(path, root)))
     return problems

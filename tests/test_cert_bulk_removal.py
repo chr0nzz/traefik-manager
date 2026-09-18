@@ -36,8 +36,8 @@ def test_the_certs_tab_selects_like_the_routes_tab():
             'both tabs use the same selection icon, and neither labels the button'
     assert '> Select<' not in certs and 'ph-check-square' not in certs, \
         'the routes toolbar button carries an icon only, the certs one invented a text label'
-    assert 'title="Bulk select"' in certs
-    assert 'title="Exit bulk mode"' in certs, 'the routes bar can be dismissed, this one has to be too'
+    assert 'title="{{ _(\'Bulk select\') }}"' in certs
+    assert 'title="{{ _(\'Exit bulk mode\') }}"' in certs, 'the routes bar can be dismissed, this one has to be too'
     for html in (certs, routes):
         bar = html[html.index('BulkBar"' if 'certBulkBar"' in html else 'bulkBar"'):][:200]
         assert 'margin-bottom:16px' in bar, \

@@ -2,23 +2,23 @@
     <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
         <div class="relative flex-1 min-w-48">
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-            <input type="text" id="consulSearch" oninput="filterConsul()" placeholder="Search Consul KV routes..." class="input-field pl-9">
+            <input type="text" id="consulSearch" oninput="filterConsul()" placeholder="{{ _('Search Consul KV routes...') }}" class="input-field pl-9">
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="filterConsul('all')"  id="ck-all"  class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+            <button onclick="filterConsul('all')"  id="ck-all"  class="proto-btn active-http text-xs px-3 py-1.5">{{ pgettext('button', 'All') }}</button>
             <button onclick="filterConsul('http')" id="ck-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
             <button onclick="filterConsul('tcp')"  id="ck-tcp"  class="proto-btn text-xs px-3 py-1.5">TCP</button>
             <button onclick="filterConsul('udp')"  id="ck-udp"  class="proto-btn text-xs px-3 py-1.5">UDP</button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="refreshConsulTab()" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+            <button onclick="refreshConsulTab()" class="proto-btn text-xs px-3 py-1.5" title="{{ pgettext('tooltip', 'Refresh') }}"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>
     </div>
     <div id="consulVerdict" class="sig-root mb-4" data-note="These routes are stored in Consul's key-value store and are read-only here. Edit them directly in Consul KV."></div>
     <div id="consulContent">
         <div class="text-center py-16" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
-            <p>Loading Consul KV routes...</p>
+            <p>{{ _('Loading Consul KV routes...') }}</p>
         </div>
     </div>
     <div id="consulMiddlewares"></div>

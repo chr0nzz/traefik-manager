@@ -4,7 +4,7 @@
     <meta name="tm-base-path" content="{{ base_path }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if reset_mode %}Set a New Password - Traefik Manager{% elif setup_mode %}Set Up Traefik Manager{% elif force_change_mode %}Change Password - Traefik Manager{% else %}Sign In - Traefik Manager{% endif %}</title>
+    <title>{% if reset_mode %}{{ _('Set a New Password - Traefik Manager') }}{% elif setup_mode %}{{ _('Set Up Traefik Manager') }}{% elif force_change_mode %}{{ _('Change Password - Traefik Manager') }}{% else %}{{ _('Sign In - Traefik Manager') }}{% endif %}</title>
     <link rel="icon" type="image/png" sizes="192x192" href="{{ base_path }}/static/icons/icon.png">
     <link rel="preload" href="{{ base_path }}/static/vendor/phosphor/Phosphor-Bold.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="{{ base_path }}/static/vendor/phosphor/Phosphor-Fill.woff2" as="font" type="font/woff2" crossorigin>
@@ -206,11 +206,11 @@
 <div style="width:100%;max-width:380px">
     <div class="card card-login">
         <div class="logo">
-            <img src="{{ base_path }}/static/icons/icon-48x48.png" alt="logo" class="logo-icon" style="width:28px;height:28px">
+            <img src="{{ base_path }}/static/icons/icon-48x48.png" alt="{{ pgettext('label', 'logo') }}" class="logo-icon" style="width:28px;height:28px">
             <span class="logo-text">Traefik <span>Manager</span></span>
         </div>
-        <div class="step-title">Set your permanent password</div>
-        <p class="step-subtitle">You're using a temporary password. Set a permanent one to continue.</p>
+        <div class="step-title">{{ _('Set your permanent password') }}</div>
+        <p class="step-subtitle">{{ _("You're using a temporary password. Set a permanent one to continue.") }}</p>
         {% if error %}
         <div class="banner banner-error">
             <i class="ph-bold ph-warning-circle" style="flex-shrink:0;margin-top:1px"></i>
@@ -220,28 +220,28 @@
         <form method="POST" action="{{ url_for('force_change_password') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <div class="field">
-                <label for="new_password">New password</label>
+                <label for="new_password">{{ _('New password') }}</label>
                 <input type="password" id="new_password" name="new_password"
-                       placeholder="At least 8 characters" autofocus autocomplete="new-password"
+                       placeholder="{{ _('At least 8 characters') }}" autofocus autocomplete="new-password"
                        oninput="checkForcePwMatch()" class="input-field">
             </div>
             <div class="field">
-                <label for="confirm_password">Confirm password</label>
+                <label for="confirm_password">{{ _('Confirm password') }}</label>
                 <input type="password" id="confirm_password" name="confirm_password"
-                       placeholder="Repeat your password" autocomplete="new-password"
+                       placeholder="{{ _('Repeat your password') }}" autocomplete="new-password"
                        oninput="checkForcePwMatch()" class="input-field">
                 <p class="field-hint" id="forcePwHint" style="display:none"></p>
             </div>
             <div class="btn-row">
                 <button type="submit" id="forceSubmitBtn" class="btn-primary" disabled>
-                    <i class="ph-bold ph-check"></i> Set password
+                    <i class="ph-bold ph-check"></i> {{ _('Set password') }}
                 </button>
             </div>
         </form>
     </div>
     <div class="footer">
         <a href="https://github.com/traefik/traefik" target="_blank">Traefik</a>
-        &nbsp;·&nbsp;
+        {{ pgettext('label', '·') }}
         <a href="https://github.com/chr0nzz/traefik-manager" target="_blank">Traefik Manager</a>
     </div>
 </div>
@@ -251,11 +251,11 @@
 <div style="width:100%;max-width:380px">
     <div class="card card-login">
         <div class="logo">
-            <img src="{{ base_path }}/static/icons/icon-48x48.png" alt="logo" class="logo-icon" style="width:28px;height:28px">
+            <img src="{{ base_path }}/static/icons/icon-48x48.png" alt="{{ pgettext('label', 'logo') }}" class="logo-icon" style="width:28px;height:28px">
             <span class="logo-text">Traefik <span>Manager</span></span>
         </div>
-        <div class="step-title">Two-factor authentication</div>
-        <p class="step-subtitle">Enter the 6-digit code from your authenticator app.</p>
+        <div class="step-title">{{ _('Two-factor authentication') }}</div>
+        <p class="step-subtitle">{{ _('Enter the 6-digit code from your authenticator app.') }}</p>
         {% if error %}
         <div class="banner banner-error">
             <i class="ph-bold ph-warning-circle" style="flex-shrink:0;margin-top:1px"></i>
@@ -265,7 +265,7 @@
         <form method="POST" action="{{ url_for('login_otp') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <div class="field">
-                <label for="code">Authenticator code</label>
+                <label for="code">{{ _('Authenticator code') }}</label>
                 <input type="text" id="code" name="code"
                        placeholder="000000" autofocus autocomplete="one-time-code"
                        inputmode="numeric" maxlength="6"
@@ -273,22 +273,19 @@
             </div>
             <div class="btn-row">
                 <button type="submit" class="btn-primary">
-                    <i class="ph-bold ph-check"></i> Verify
+                    <i class="ph-bold ph-check"></i> {{ pgettext('button', 'Verify') }}
                 </button>
             </div>
         </form>
         <details class="reset-hint">
-            <summary><i class="ph-bold ph-lock-key" style="font-size:11px"></i> Reset 2FA</summary>
+            <summary><i class="ph-bold ph-lock-key" style="font-size:11px"></i> {{ _('Reset 2FA') }}</summary>
             <div class="reset-hint-body">
-                Run this command to disable 2FA:
-                <code>docker exec -it traefik-manager flask reset-password --disable-otp</code>
-                <code>podman exec -it traefik-manager flask reset-password --disable-otp</code>
-                <code>flask reset-password --disable-otp</code>
+                {{ _('Run this command to disable 2FA: %(docker_exec_it)s %(podman_exec_it)s %(flask_reset_password)s', docker_exec_it=tag('code', 'docker exec -it traefik-manager flask reset-password --disable-otp'), podman_exec_it=tag('code', 'podman exec -it traefik-manager flask reset-password --disable-otp'), flask_reset_password=tag('code', 'flask reset-password --disable-otp')) }}
             </div>
         </details>
     </div>
     <div class="footer">
-        <a href="{{ url_for('login') }}">← Back to sign in</a>
+        <a href="{{ url_for('login') }}">{{ _('← Back to sign in') }}</a>
     </div>
 </div>
 
@@ -297,10 +294,10 @@
 <div style="width:100%;max-width:380px">
     <div class="card card-login">
         <div class="logo">
-            <img src="{{ base_path }}/static/icons/icon-48x48.png" alt="logo" class="logo-icon" style="width:28px;height:28px">
+            <img src="{{ base_path }}/static/icons/icon-48x48.png" alt="{{ pgettext('label', 'logo') }}" class="logo-icon" style="width:28px;height:28px">
             <span class="logo-text">Traefik <span>Manager</span></span>
         </div>
-        <div class="step-title">Sign in</div>
+        <div class="step-title">{{ _('Sign in') }}</div>
         {% for category, message in get_flashed_messages(with_categories=true) %}
         <div class="banner banner-{{ 'error' if category == 'error' else 'info' }}">
             <i class="ph-bold {{ 'ph-warning-circle' if category == 'error' else 'ph-info' }}" style="flex-shrink:0;margin-top:1px"></i>
@@ -308,11 +305,11 @@
         </div>
         {% endfor %}
         {% set show_local = local_auth_enabled | default(true) %}
-        <p class="step-subtitle">{% if show_local %}Enter your password to access Traefik Manager.{% else %}Sign in with your identity provider.{% endif %}</p>
+        <p class="step-subtitle">{% if show_local %}{{ _('Enter your password to access Traefik Manager.') }}{% else %}{{ _('Sign in with your identity provider.') }}{% endif %}</p>
         {% if temp_password_hint and show_local %}
         <div class="banner banner-info">
             <i class="ph-bold ph-info" style="flex-shrink:0;margin-top:1px"></i>
-            A temporary password was generated at startup - check your container logs.
+            {{ _('A temporary password was generated at startup - check your container logs.') }}
         </div>
         {% endif %}
         {% if error %}
@@ -326,17 +323,17 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="next" value="{{ next }}">
             <div class="field">
-                <label for="password">Password</label>
+                <label for="password">{{ pgettext('setting', 'Password') }}</label>
                 <input type="password" id="password" name="password"
-                       placeholder="Your password" autofocus autocomplete="current-password" class="input-field">
+                       placeholder="{{ _('Your password') }}" autofocus autocomplete="current-password" class="input-field">
             </div>
             <label class="flex items-center gap-2 text-sm mb-3" style="color:var(--muted);cursor:pointer">
                 <input type="checkbox" name="remember" value="on" checked style="accent-color:var(--blue)">
-                Remember me for 7 days
+                {{ _('Remember me for 7 days') }}
             </label>
             <div class="btn-row">
                 <button type="submit" class="btn-primary">
-                    <i class="ph-bold ph-sign-in"></i> Sign in
+                    <i class="ph-bold ph-sign-in"></i> {{ _('Sign in') }}
                 </button>
             </div>
         </form>
@@ -345,30 +342,26 @@
         {% if show_local %}
         <div style="display:flex;align-items:center;gap:8px;margin:16px 0 12px;">
             <div style="flex:1;height:1px;background:var(--border)"></div>
-            <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">or</span>
+            <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">{{ pgettext('label', 'or') }}</span>
             <div style="flex:1;height:1px;background:var(--border)"></div>
         </div>
         {% endif %}
         <a href="{{ url_for('oidc_login') }}" class="btn-secondary" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;border-radius:8px;padding:10px 0;font-size:14px;font-weight:600;{% if not show_local %}margin-top:8px;{% endif %}">
-            <i class="ph-bold ph-key"></i> Sign in with {{ oidc_display_name }}
+            <i class="ph-bold ph-key"></i> {{ _('Sign in with %(oidc_display_name)s', oidc_display_name=oidc_display_name) }}
         </a>
         {% endif %}
         {% if show_local %}
         <details class="reset-hint">
-            <summary><i class="ph-bold ph-lock-key" style="font-size:11px"></i> Reset password</summary>
+            <summary><i class="ph-bold ph-lock-key" style="font-size:11px"></i> {{ _('Reset password') }}</summary>
             <div class="reset-hint-body">
-                Run this command and enter a new password when asked:
-                <code>docker exec -it traefik-manager flask reset-password --prompt</code>
-                <code>podman exec -it traefik-manager flask reset-password --prompt</code>
-                <code>flask reset-password --prompt</code>
-                The password is not printed back. Log in with it straight away.
+                {{ _('Run this command and enter a new password when asked: %(docker_exec_it)s %(podman_exec_it)s %(flask_reset_password)s The password is not printed back. Log in with it straight away.', docker_exec_it=tag('code', 'docker exec -it traefik-manager flask reset-password --prompt'), podman_exec_it=tag('code', 'podman exec -it traefik-manager flask reset-password --prompt'), flask_reset_password=tag('code', 'flask reset-password --prompt')) }}
             </div>
         </details>
         {% endif %}
     </div>
     <div class="footer">
         <a href="https://github.com/traefik/traefik" target="_blank">Traefik</a>
-        &nbsp;·&nbsp;
+        {{ pgettext('label', '·') }}
         <a href="https://github.com/chr0nzz/traefik-manager" target="_blank">Traefik Manager</a>
     </div>
 </div>
@@ -379,12 +372,11 @@
 <div style="width:100%;max-width:380px">
     <div class="card card-login">
         <div class="logo">
-            <img src="{{ base_path }}/static/icons/icon-48x48.png" alt="logo" class="logo-icon" style="width:28px;height:28px">
+            <img src="{{ base_path }}/static/icons/icon-48x48.png" alt="{{ pgettext('label', 'logo') }}" class="logo-icon" style="width:28px;height:28px">
             <span class="logo-text">Traefik <span>Manager</span></span>
         </div>
-        <div class="step-title">Set a new password</div>
-        <p class="step-subtitle">Your password was reset. Choose a new one to get back in - nothing else about your
-        configuration has changed.</p>
+        <div class="step-title">{{ _('Set a new password') }}</div>
+        <p class="step-subtitle">{{ _('Your password was reset. Choose a new one to get back in - nothing else about your configuration has changed.') }}</p>
 
         {% if error %}
         <div class="banner banner-error">
@@ -396,31 +388,31 @@
         <form method="POST" action="{{ url_for('setup') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <div class="field">
-                <label for="password">New password</label>
+                <label for="password">{{ _('New password') }}</label>
                 <input type="password" id="password" name="password" class="input-field"
-                       placeholder="At least 8 characters" autocomplete="new-password" required autofocus>
+                       placeholder="{{ _('At least 8 characters') }}" autocomplete="new-password" required autofocus>
             </div>
             <div class="field">
-                <label for="confirm">Confirm password</label>
+                <label for="confirm">{{ _('Confirm password') }}</label>
                 <input type="password" id="confirm" name="confirm" class="input-field"
-                       placeholder="Repeat your password" autocomplete="new-password" required>
+                       placeholder="{{ _('Repeat your password') }}" autocomplete="new-password" required>
             </div>
             {% if otp_required %}
             <div class="field">
-                <label for="code">Authenticator code</label>
+                <label for="code">{{ _('Authenticator code') }}</label>
                 <input type="text" id="code" name="code" class="input-field"
                        placeholder="000000" autocomplete="one-time-code" inputmode="numeric" maxlength="6" required
                        style="font-family:'JetBrains Mono',monospace;letter-spacing:.2em;font-size:20px;text-align:center">
             </div>
             {% endif %}
             <button type="submit" class="btn-primary" style="width:100%;margin-top:4px">
-                <i class="ph-bold ph-check"></i> Set password
+                <i class="ph-bold ph-check"></i> {{ _('Set password') }}
             </button>
         </form>
     </div>
     <div class="footer">
         <a href="https://github.com/traefik/traefik" target="_blank">Traefik</a>
-        &nbsp;&middot;&nbsp;
+        {{ pgettext('label', '·') }}
         <a href="https://github.com/chr0nzz/traefik-manager" target="_blank">Traefik Manager</a>
     </div>
 </div>
@@ -430,12 +422,12 @@
 
         <div class="wz-head">
             <div class="logo" style="margin:0">
-                <img src="{{ base_path }}/static/icons/icon-48x48.png" alt="logo" class="logo-icon" style="width:26px;height:26px">
+                <img src="{{ base_path }}/static/icons/icon-48x48.png" alt="{{ pgettext('label', 'logo') }}" class="logo-icon" style="width:26px;height:26px">
                 <span class="logo-text">Traefik <span>Manager</span></span>
             </div>
             <div class="flex items-center gap-3">
                 <span class="wz-progress" id="wzProgress"></span>
-                <button class="theme-toggle" onclick="cycleTheme()" title="Toggle theme">
+                <button class="theme-toggle" onclick="cycleTheme()" title="{{ _('Toggle theme') }}">
                     <i class="ph-bold ph-moon tm-theme-icon" data-pref="dark"></i>
                     <i class="ph-bold ph-sun tm-theme-icon" data-pref="light"></i>
                     <i class="ph-bold ph-desktop tm-theme-icon" data-pref="system"></i>
@@ -446,37 +438,37 @@
         <div class="modal-inner">
 
             <div class="modal-sidebar wz-nav">
-                <div class="wz-nav-label">Start</div>
+                <div class="wz-nav-label">{{ pgettext('label', 'Start') }}</div>
                 <button type="button" class="modal-sidebar-btn wz-nav-btn active" id="wzb-0" onclick="goTo(0)">
-                    <span class="wiz-step" id="wzn-0">1</span> Welcome
+                    {{ _('%(n1)s Welcome', n1=tag('span', '1', class_='wiz-step', id_='wzn-0')) }}
                 </button>
 
-                <div class="wz-nav-label">Connect</div>
+                <div class="wz-nav-label">{{ pgettext('label', 'Connect') }}</div>
                 <button type="button" class="modal-sidebar-btn wz-nav-btn" id="wzb-1" onclick="goTo(1)">
                     <span class="wiz-step" id="wzn-1">2</span> Traefik
                 </button>
                 <button type="button" class="modal-sidebar-btn wz-nav-btn" id="wzb-2" onclick="goTo(2)">
-                    <span class="wiz-step" id="wzn-2">3</span> Self route
+                    {{ _('%(n3)s Self route', n3=tag('span', '3', class_='wiz-step', id_='wzn-2')) }}
                 </button>
 
-                <div class="wz-nav-label">Optional</div>
+                <div class="wz-nav-label">{{ pgettext('label', 'Optional') }}</div>
                 <button type="button" class="modal-sidebar-btn wz-nav-btn" id="wzb-3" onclick="goTo(3)">
-                    <span class="wiz-step" id="wzn-3">4</span> Monitoring
+                    {{ _('%(n4)s Monitoring', n4=tag('span', '4', class_='wiz-step', id_='wzn-3')) }}
                 </button>
                 <button type="button" class="modal-sidebar-btn wz-nav-btn" id="wzb-4" onclick="goTo(4)">
                     <span class="wiz-step" id="wzn-4">5</span> CrowdSec
                 </button>
                 <button type="button" class="modal-sidebar-btn wz-nav-btn" id="wzb-5" onclick="goTo(5)">
-                    <span class="wiz-step" id="wzn-5">6</span> Git backup
+                    {{ _('%(n6)s Git backup', n6=tag('span', '6', class_='wiz-step', id_='wzn-5')) }}
                 </button>
                 <button type="button" class="modal-sidebar-btn wz-nav-btn" id="wzb-6" onclick="goTo(6)">
-                    <span class="wiz-step" id="wzn-6">7</span> Notifications
+                    {{ _('%(n7)s Notifications', n7=tag('span', '7', class_='wiz-step', id_='wzn-6')) }}
                 </button>
 
                 {% if not temp_password_mode %}
-                <div class="wz-nav-label">Finish</div>
+                <div class="wz-nav-label">{{ pgettext('label', 'Finish') }}</div>
                 <button type="button" class="modal-sidebar-btn wz-nav-btn" id="wzb-7" onclick="goTo(7)">
-                    <span class="wiz-step" id="wzn-7">8</span> Password
+                    {{ _('%(n8)s Password', n8=tag('span', '8', class_='wiz-step', id_='wzn-7')) }}
                 </button>
                 {% endif %}
             </div>
@@ -490,53 +482,53 @@
 
                 <div class="modal-panel sc-root active" id="panel-0">
                     <div class="wz-lede">
-                        <h1 class="wz-title">Welcome to Traefik Manager</h1>
-                        <p class="wz-sub">A web interface for the routes, middlewares and services Traefik already serves. This setup takes about a minute: point it at your Traefik API, pick the views you want, and set a password. Everything here can be changed later in Settings.</p>
+                        <h1 class="wz-title">{{ _('Welcome to Traefik Manager') }}</h1>
+                        <p class="wz-sub">{{ _('A web interface for the routes, middlewares and services Traefik already serves. This setup takes about a minute: point it at your Traefik API, pick the views you want, and set a password. Everything here can be changed later in Settings.') }}</p>
                     </div>
 
                     <div class="wz-cards">
                         <div class="wz-card">
                             <i class="ph-bold ph-layout"></i>
-                            <div class="wz-card-n">Routes, middlewares, services</div>
-                            <div class="wz-card-d">Create, edit and disable them through a form or raw YAML, written straight to your dynamic config file.</div>
+                            <div class="wz-card-n">{{ _('Routes, middlewares, services') }}</div>
+                            <div class="wz-card-d">{{ _('Create, edit and disable them through a form or raw YAML, written straight to your dynamic config file.') }}</div>
                         </div>
                         <div class="wz-card">
                             <i class="ph-bold ph-activity"></i>
-                            <div class="wz-card-n">Live from the Traefik API</div>
-                            <div class="wz-card-d">Router, service and middleware health read from Traefik itself, not from a cached copy.</div>
+                            <div class="wz-card-n">{{ _('Live from the Traefik API') }}</div>
+                            <div class="wz-card-d">{{ _('Router, service and middleware health read from Traefik itself, not from a cached copy.') }}</div>
                         </div>
                         <div class="wz-card">
                             <i class="ph-bold ph-shield-check"></i>
-                            <div class="wz-card-n">Certificates and access logs</div>
-                            <div class="wz-card-d">Expiry dates from your ACME store, and the access log read as analytics rather than a wall of text.</div>
+                            <div class="wz-card-n">{{ _('Certificates and access logs') }}</div>
+                            <div class="wz-card-d">{{ _('Expiry dates from your ACME store, and the access log read as analytics rather than a wall of text.') }}</div>
                         </div>
                         <div class="wz-card">
                             <i class="ph-bold ph-lock-key"></i>
-                            <div class="wz-card-n">Yours alone</div>
-                            <div class="wz-card-d">Nothing leaves the container. No account, no telemetry, no outbound calls you did not configure.</div>
+                            <div class="wz-card-n">{{ _('Yours alone') }}</div>
+                            <div class="wz-card-d">{{ _('Nothing leaves the container. No account, no telemetry, no outbound calls you did not configure.') }}</div>
                         </div>
                     </div>
 
                     <div class="sc-sec-head">
                         <i class="ph-bold ph-palette sc-sec-icon" style="color:var(--blue)"></i>
-                        <span class="sc-sec-label">Appearance</span>
+                        <span class="sc-sec-label">{{ pgettext('heading', 'Appearance') }}</span>
                         <span class="sc-sec-rule"></span>
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Default theme</div>
-                        <div class="sc-set-d">What Traefik Manager looks like for anyone who has not chosen for themselves. Each person can still override it from the toolbar.</div>
+                        <div class="sc-set-n">{{ _('Default theme') }}</div>
+                        <div class="sc-set-d">{{ _('What Traefik Manager looks like for anyone who has not chosen for themselves. Each person can still override it from the toolbar.') }}</div>
                         <div class="seg">
-                            <button type="button" id="th-dark"   onclick="setSetupTheme('dark')"><i class="ph-bold ph-moon"></i> Dark</button>
-                            <button type="button" id="th-light"  onclick="setSetupTheme('light')"><i class="ph-bold ph-sun"></i> Light</button>
-                            <button type="button" id="th-system" onclick="setSetupTheme('system')"><i class="ph-bold ph-desktop"></i> System</button>
+                            <button type="button" id="th-dark"   onclick="setSetupTheme('dark')"><i class="ph-bold ph-moon"></i> {{ pgettext('button', 'Dark') }}</button>
+                            <button type="button" id="th-light"  onclick="setSetupTheme('light')"><i class="ph-bold ph-sun"></i> {{ pgettext('button', 'Light') }}</button>
+                            <button type="button" id="th-system" onclick="setSetupTheme('system')"><i class="ph-bold ph-desktop"></i> {{ pgettext('button', 'System') }}</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="modal-panel sc-root" id="panel-1">
                     <div class="wz-lede">
-                        <h1 class="wz-title">Connect to Traefik</h1>
-                        <p class="wz-sub">Traefik Manager reads everything through the Traefik API. This is the one step it cannot work without.</p>
+                        <h1 class="wz-title">{{ _('Connect to Traefik') }}</h1>
+                        <p class="wz-sub">{{ _('Traefik Manager reads everything through the Traefik API. This is the one step it cannot work without.') }}</p>
                     </div>
 
                     <div class="sc-sec-head">
@@ -546,20 +538,20 @@
                     </div>
                     <div class="sc-fld">
                         <div class="sc-set-n">API URL</div>
-                        <div class="sc-set-d">Where this container reaches the Traefik API. On the same Docker network that is usually <code class="font-mono">http://traefik:8080</code> - the service name, not <code class="font-mono">localhost</code>. Requires <code class="font-mono">api: {}</code> in your static config.</div>
+                        <div class="sc-set-d">{{ _('Where this container reaches the Traefik API. On the same Docker network that is usually %(http_traefik_8080)s - the service name, not %(localhost)s. Requires %(api)s in your static config.', http_traefik_8080=tag('code', 'http://traefik:8080', class_='font-mono'), localhost=tag('code', 'localhost', class_='font-mono'), api=tag('code', 'api: {}', class_='font-mono')) }}</div>
                         <input type="text" id="s_apiurl" placeholder="http://traefik:8080"
                                value="{{ defaults.traefik_api_url }}" class="input-field">
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">API credentials <span class="wz-opt">optional</span></div>
-                        <div class="sc-set-d">Only if your Traefik dashboard sits behind basic auth. Leave both blank when the API is reachable without credentials.</div>
+                        <div class="sc-set-n">{{ _('API credentials %(optional)s', optional=tag('span', _('optional'), class_='wz-opt')) }}</div>
+                        <div class="sc-set-d">{{ _('Only if your Traefik dashboard sits behind basic auth. Leave both blank when the API is reachable without credentials.') }}</div>
                         <div class="flex gap-2">
-                            <input type="text" id="s_apiuser" placeholder="Username" autocomplete="off" class="input-field" style="flex:1">
-                            <input type="password" id="s_apipassword" placeholder="Password" autocomplete="off" class="input-field" style="flex:1">
+                            <input type="text" id="s_apiuser" placeholder="{{ pgettext('placeholder', 'Username') }}" autocomplete="off" class="input-field" style="flex:1">
+                            <input type="password" id="s_apipassword" placeholder="{{ pgettext('placeholder', 'Password') }}" autocomplete="off" class="input-field" style="flex:1">
                         </div>
                         <div class="api-test-row">
                             <button type="button" class="btn-inline" onclick="testApi()">
-                                <i class="ph-bold ph-plugs-connected"></i> Test connection
+                                <i class="ph-bold ph-plugs-connected"></i> {{ _('Test connection') }}
                             </button>
                             <span id="apiTestResult"></span>
                         </div>
@@ -567,18 +559,18 @@
 
                     <div class="sc-sec-head">
                         <i class="ph-bold ph-globe sc-sec-icon" style="color:var(--blue)"></i>
-                        <span class="sc-sec-label">Routing defaults</span>
+                        <span class="sc-sec-label">{{ _('Routing defaults') }}</span>
                         <span class="sc-sec-rule"></span>
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Domains</div>
-                        <div class="sc-set-d">A convenience list for the route form's host dropdown. It does not change your Traefik config, your TLS, or your routing - domains found in existing routes are picked up automatically, so this is just seeding.</div>
+                        <div class="sc-set-n">{{ pgettext('setting', 'Domains') }}</div>
+                        <div class="sc-set-d">{{ _("A convenience list for the route form's host dropdown. It does not change your Traefik config, your TLS, or your routing - domains found in existing routes are picked up automatically, so this is just seeding.") }}</div>
                         <input type="text" id="s_domains" placeholder="example.com, example.net"
                                value="{{ defaults.domains | join(', ') }}" class="input-field">
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Certificate resolver</div>
-                        <div class="sc-set-d">Resolver names from your <code class="font-mono">traefik.yml</code>, comma-separated. The first becomes the per-route default. If you manage certificates outside ACME, enter <code class="font-mono">none</code>.</div>
+                        <div class="sc-set-n">{{ _('Certificate resolver') }}</div>
+                        <div class="sc-set-d">{{ _('Resolver names from your %(traefik_yml)s, comma-separated. The first becomes the per-route default. If you manage certificates outside ACME, enter %(none)s.', traefik_yml=tag('code', 'traefik.yml', class_='font-mono'), none=tag('code', 'none', class_='font-mono')) }}</div>
                         <input type="text" id="s_resolver" placeholder="letsencrypt, cloudflare"
                                value="{{ defaults.cert_resolver }}" class="input-field">
                     </div>
@@ -586,61 +578,61 @@
 
                 <div class="modal-panel sc-root" id="panel-2">
                     <div class="wz-lede">
-                        <h1 class="wz-title">Route to Traefik Manager itself</h1>
-                        <p class="wz-sub">Give this interface its own hostname through Traefik, so you can reach it over TLS instead of a published port. Writes a <code class="font-mono">traefik-manager-self.yml</code> into your config directory. Skip it if you already route to this container yourself.</p>
+                        <h1 class="wz-title">{{ _('Route to Traefik Manager itself') }}</h1>
+                        <p class="wz-sub">{{ _('Give this interface its own hostname through Traefik, so you can reach it over TLS instead of a published port. Writes a %(traefik_manager_self)s into your config directory. Skip it if you already route to this container yourself.', traefik_manager_self=tag('code', 'traefik-manager-self.yml', class_='font-mono')) }}</p>
                     </div>
 
                     <div class="sc-sec-head">
                         <i class="ph-bold ph-signpost sc-sec-icon" style="color:var(--blue)"></i>
-                        <span class="sc-sec-label">Self route</span>
+                        <span class="sc-sec-label">{{ _('Self route') }}</span>
                         <span class="sc-sec-rule"></span>
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Hostname</div>
-                        <div class="sc-set-d">{% if detected_self_domain %}Detected from your existing configuration. Clear it to skip this step.{% else %}The hostname you want to open Traefik Manager on. Leave blank to skip this step entirely.{% endif %}</div>
+                        <div class="sc-set-n">{{ pgettext('setting', 'Hostname') }}</div>
+                        <div class="sc-set-d">{% if detected_self_domain %}{{ _('Detected from your existing configuration. Clear it to skip this step.') }}{% else %}{{ _('The hostname you want to open Traefik Manager on. Leave blank to skip this step entirely.') }}{% endif %}</div>
                         <input type="text" id="s_self_domain" placeholder="manager.example.com" value="{{ detected_self_domain or '' }}" class="input-field">
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Internal service URL</div>
-                        <div class="sc-set-d">How Traefik reaches this container from inside the network. Normally the compose service name and port.</div>
+                        <div class="sc-set-n">{{ _('Internal service URL') }}</div>
+                        <div class="sc-set-d">{{ _('How Traefik reaches this container from inside the network. Normally the compose service name and port.') }}</div>
                         <input type="text" id="s_self_service" placeholder="http://traefik-manager:5000" value="{{ detected_self_svc or 'http://traefik-manager:5000' }}" class="input-field">
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Entry point</div>
-                        <div class="sc-set-d">The Traefik entry point to attach the router to, as named in your static config - commonly <code class="font-mono">websecure</code> or <code class="font-mono">https</code>.</div>
+                        <div class="sc-set-n">{{ _('Entry point') }}</div>
+                        <div class="sc-set-d">{{ _('The Traefik entry point to attach the router to, as named in your static config - commonly %(websecure)s or %(https)s.', websecure=tag('code', 'websecure', class_='font-mono'), https=tag('code', 'https', class_='font-mono')) }}</div>
                         <input type="text" id="s_self_entrypoint" placeholder="websecure" value="{{ detected_self_entry_point or 'websecure' }}" class="input-field">
                     </div>
                 </div>
 
                 <div class="modal-panel sc-root" id="panel-3">
                     <div class="wz-lede">
-                        <h1 class="wz-title">Choose your views</h1>
-                        <p class="wz-sub">Each of these adds a tab to the navigation. Turn on what you use - an unused tab is just noise. All of them can be toggled later under Settings, so nothing here is a commitment.</p>
+                        <h1 class="wz-title">{{ _('Choose your views') }}</h1>
+                        <p class="wz-sub">{{ _('Each of these adds a tab to the navigation. Turn on what you use - an unused tab is just noise. All of them can be toggled later under Settings, so nothing here is a commitment.') }}</p>
                     </div>
 
                     <div class="sc-sec-head">
                         <i class="ph-bold ph-chart-donut sc-sec-icon" style="color:var(--blue)"></i>
-                        <span class="sc-sec-label">Visualizations</span>
+                        <span class="sc-sec-label">{{ pgettext('heading', 'Visualizations') }}</span>
                         <span class="sc-sec-rule"></span>
                     </div>
                     <div class="tab-grid">
                         <div class="tab-toggle-row" onclick="toggleSetupTab('dashboard')">
-                            <span class="tab-toggle-label"><i class="ph-bold ph-squares-four"></i> Dashboard</span>
+                            <span class="tab-toggle-label"><i class="ph-bold ph-squares-four"></i> {{ pgettext('label', 'Dashboard') }}</span>
                             <div class="toggle-switch" id="sw-dashboard"><div class="toggle-knob"></div></div>
                         </div>
                         <div class="tab-toggle-row" onclick="toggleSetupTab('routemap')">
-                            <span class="tab-toggle-label"><i class="ph-bold ph-graph"></i> Route Map</span>
+                            <span class="tab-toggle-label"><i class="ph-bold ph-graph"></i> {{ _('Route Map') }}</span>
                             <div class="toggle-switch" id="sw-routemap"><div class="toggle-knob"></div></div>
                         </div>
                     </div>
-                    <p class="wz-note">An overview of every router grouped by entry point, and a graph of how requests reach each service.</p>
+                    <p class="wz-note">{{ _('An overview of every router grouped by entry point, and a graph of how requests reach each service.') }}</p>
 
                     <div class="sc-sec-head">
                         <i class="ph-bold ph-path sc-sec-icon" style="color:var(--blue)"></i>
-                        <span class="sc-sec-label">Provider tabs</span>
+                        <span class="sc-sec-label">{{ _('Provider tabs') }}</span>
                         <span class="sc-sec-rule"></span>
                     </div>
-                    <p class="wz-note" id="wzDetectedTabs" style="display:none">Switched on for every provider Traefik is reporting right now. Turn any of them off if you would rather not see it.</p>
+                    <p class="wz-note" id="wzDetectedTabs" style="display:none">{{ _('Switched on for every provider Traefik is reporting right now. Turn any of them off if you would rather not see it.') }}</p>
                     <div class="tab-grid">
                         <div class="tab-toggle-row" onclick="toggleSetupTab('docker')">
                             <span class="tab-toggle-label"><i class="ph-bold ph-cube"></i> Docker</span>
@@ -683,73 +675,73 @@
                             <div class="toggle-switch" id="sw-zookeeper"><div class="toggle-knob"></div></div>
                         </div>
                         <div class="tab-toggle-row" onclick="toggleSetupTab('http_provider')">
-                            <span class="tab-toggle-label"><i class="ph-bold ph-link"></i> HTTP Provider</span>
+                            <span class="tab-toggle-label"><i class="ph-bold ph-link"></i> {{ _('HTTP Provider') }}</span>
                             <div class="toggle-switch" id="sw-http_provider"><div class="toggle-knob"></div></div>
                         </div>
                         <div class="tab-toggle-row" onclick="toggleSetupTab('file_external')">
-                            <span class="tab-toggle-label"><i class="ph-bold ph-file-text"></i> File (external)</span>
+                            <span class="tab-toggle-label"><i class="ph-bold ph-file-text"></i> {{ _('File (external)') }}</span>
                             <div class="toggle-switch" id="sw-file_external"><div class="toggle-knob"></div></div>
                         </div>
                     </div>
-                    <p class="wz-note">Read-only views of routes Traefik discovers from other providers. Turn on the ones you actually run - these routes live in Docker labels or a KV store, so Traefik Manager shows them but cannot edit them.</p>
+                    <p class="wz-note">{{ _('Read-only views of routes Traefik discovers from other providers. Turn on the ones you actually run - these routes live in Docker labels or a KV store, so Traefik Manager shows them but cannot edit them.') }}</p>
 
                     <div class="sc-sec-head">
                         <i class="ph-bold ph-heartbeat sc-sec-icon" style="color:var(--blue)"></i>
-                        <span class="sc-sec-label">System</span>
+                        <span class="sc-sec-label">{{ pgettext('heading', 'System') }}</span>
                         <span class="sc-sec-rule"></span>
                     </div>
                     <div class="tab-grid">
                         <div class="tab-toggle-row" onclick="toggleSetupTab('certs')">
-                            <span class="tab-toggle-label"><i class="ph-bold ph-shield-check"></i> Certificates</span>
+                            <span class="tab-toggle-label"><i class="ph-bold ph-shield-check"></i> {{ pgettext('label', 'Certificates') }}</span>
                             <div class="toggle-switch" id="sw-certs"><div class="toggle-knob"></div></div>
                         </div>
                         <div class="tab-toggle-row" onclick="toggleSetupTab('plugins')">
-                            <span class="tab-toggle-label"><i class="ph-bold ph-puzzle-piece"></i> Plugins</span>
+                            <span class="tab-toggle-label"><i class="ph-bold ph-puzzle-piece"></i> {{ pgettext('label', 'Plugins') }}</span>
                             <div class="toggle-switch" id="sw-plugins"><div class="toggle-knob"></div></div>
                         </div>
                         <div class="tab-toggle-row" onclick="toggleSetupTab('logs')">
-                            <span class="tab-toggle-label"><i class="ph-bold ph-terminal"></i> Logs</span>
+                            <span class="tab-toggle-label"><i class="ph-bold ph-terminal"></i> {{ pgettext('label', 'Logs') }}</span>
                             <div class="toggle-switch" id="sw-logs"><div class="toggle-knob"></div></div>
                         </div>
                         <div class="tab-toggle-row" onclick="toggleSetupGeoip()">
-                            <span class="tab-toggle-label"><i class="ph-bold ph-flag"></i> GeoIP lookup</span>
+                            <span class="tab-toggle-label"><i class="ph-bold ph-flag"></i> {{ _('GeoIP lookup') }}</span>
                             <div class="toggle-switch" id="sw-geoip"><div class="toggle-knob"></div></div>
                         </div>
                     </div>
-                    <p class="wz-note">Certificates, Plugins and Logs each read a file that has to be mounted into this container. If it is not mounted yet, the view tells you the exact volume line to add. GeoIP resolves client addresses to countries in Logs and CrowdSec, downloading a free database on first use.</p>
+                    <p class="wz-note">{{ _('Certificates, Plugins and Logs each read a file that has to be mounted into this container. If it is not mounted yet, the view tells you the exact volume line to add. GeoIP resolves client addresses to countries in Logs and CrowdSec, downloading a free database on first use.') }}</p>
                 </div>
 
                 <div class="modal-panel sc-root" id="panel-4">
                     <div class="wz-lede">
                         <h1 class="wz-title">CrowdSec</h1>
-                        <p class="wz-sub">If you run CrowdSec, Traefik Manager can read its local API and show who is probing this host, from which networks, with which scenarios, and what is already blocked. Leave the URL blank to skip.</p>
+                        <p class="wz-sub">{{ _('If you run CrowdSec, Traefik Manager can read its local API and show who is probing this host, from which networks, with which scenarios, and what is already blocked. Leave the URL blank to skip.') }}</p>
                     </div>
 
                     <div class="sc-sec-head">
                         <i class="ph-bold ph-shield-checkered sc-sec-icon" style="color:var(--blue)"></i>
-                        <span class="sc-sec-label">Local API</span>
+                        <span class="sc-sec-label">{{ _('Local API') }}</span>
                         <span class="sc-sec-rule"></span>
                     </div>
                     <div class="sc-fld">
                         <div class="sc-set-n">LAPI URL</div>
-                        <div class="sc-set-d">Where the CrowdSec local API listens. On the same Docker network that is usually <code class="font-mono">http://crowdsec:8080</code>.</div>
+                        <div class="sc-set-d">{{ _('Where the CrowdSec local API listens. On the same Docker network that is usually %(http_crowdsec_8080)s.', http_crowdsec_8080=tag('code', 'http://crowdsec:8080', class_='font-mono')) }}</div>
                         <input type="url" id="s_cs_url" placeholder="http://crowdsec:8080" class="input-field">
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Bouncer API key</div>
-                        <div class="sc-set-d">Reads active decisions - the bans in force. Generate one with <code class="font-mono">cscli bouncers add traefik-manager</code>.</div>
+                        <div class="sc-set-n">{{ _('Bouncer API key') }}</div>
+                        <div class="sc-set-d">{{ _('Reads active decisions - the bans in force. Generate one with %(cscli_bouncers_add)s.', cscli_bouncers_add=tag('code', 'cscli bouncers add traefik-manager', class_='font-mono')) }}</div>
                         <input type="password" id="s_cs_key" placeholder="cscli bouncers add traefik-manager" class="input-field">
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Machine login <span class="wz-opt">optional</span></div>
-                        <div class="sc-set-d">Reads alerts, which is where scenarios, targeted paths and attacking networks come from. This complements the bouncer key rather than replacing it: with only the bouncer key you see bans but not the attacks behind them.</div>
+                        <div class="sc-set-n">{{ _('Machine login %(optional)s', optional=tag('span', _('optional'), class_='wz-opt')) }}</div>
+                        <div class="sc-set-d">{{ _('Reads alerts, which is where scenarios, targeted paths and attacking networks come from. This complements the bouncer key rather than replacing it: with only the bouncer key you see bans but not the attacks behind them.') }}</div>
                         <div class="flex gap-2">
-                            <input type="text" id="s_cs_machine_id" placeholder="Machine ID" class="input-field" style="flex:1">
-                            <input type="password" id="s_cs_machine_pw" placeholder="Password" class="input-field" style="flex:1">
+                            <input type="text" id="s_cs_machine_id" placeholder="{{ _('Machine ID') }}" class="input-field" style="flex:1">
+                            <input type="password" id="s_cs_machine_pw" placeholder="{{ pgettext('placeholder', 'Password') }}" class="input-field" style="flex:1">
                         </div>
                         <div class="api-test-row">
                             <button type="button" class="btn-inline" onclick="testCrowdSec()">
-                                <i class="ph-bold ph-plugs-connected"></i> Test connection
+                                <i class="ph-bold ph-plugs-connected"></i> {{ _('Test connection') }}
                             </button>
                             <span id="csTestResult"></span>
                         </div>
@@ -758,35 +750,35 @@
 
                 <div class="modal-panel sc-root" id="panel-5">
                     <div class="wz-lede">
-                        <h1 class="wz-title">Git backup</h1>
-                        <p class="wz-sub">Commit every configuration change to a git repository, so you get history, diffs and a one-click restore to any earlier commit. Local file backups happen regardless - this adds an off-box copy. Leave the URL blank to skip.</p>
+                        <h1 class="wz-title">{{ _('Git backup') }}</h1>
+                        <p class="wz-sub">{{ _('Commit every configuration change to a git repository, so you get history, diffs and a one-click restore to any earlier commit. Local file backups happen regardless - this adds an off-box copy. Leave the URL blank to skip.') }}</p>
                     </div>
 
                     <div class="sc-sec-head">
                         <i class="ph-bold ph-git-branch sc-sec-icon" style="color:var(--blue)"></i>
-                        <span class="sc-sec-label">Repository</span>
+                        <span class="sc-sec-label">{{ pgettext('heading', 'Repository') }}</span>
                         <span class="sc-sec-rule"></span>
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Repository URL</div>
-                        <div class="sc-set-d">Any HTTPS git remote: GitHub, GitLab, Gitea, Forgejo, or self-hosted. Use a private repository - your dynamic config is in it.</div>
+                        <div class="sc-set-n">{{ _('Repository URL') }}</div>
+                        <div class="sc-set-d">{{ _('Any HTTPS git remote: GitHub, GitLab, Gitea, Forgejo, or self-hosted. Use a private repository - your dynamic config is in it.') }}</div>
                         <input type="url" id="s_git_repo" placeholder="https://github.com/you/traefik-configs" class="input-field">
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Branch and username</div>
-                        <div class="sc-set-d">The branch to commit to, and the account the token belongs to.</div>
+                        <div class="sc-set-n">{{ _('Branch and username') }}</div>
+                        <div class="sc-set-d">{{ _('The branch to commit to, and the account the token belongs to.') }}</div>
                         <div class="flex gap-2">
                             <input type="text" id="s_git_branch" value="main" placeholder="main" class="input-field" style="flex:1">
-                            <input type="text" id="s_git_user" placeholder="Username" class="input-field" style="flex:1">
+                            <input type="text" id="s_git_user" placeholder="{{ pgettext('placeholder', 'Username') }}" class="input-field" style="flex:1">
                         </div>
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Access token</div>
-                        <div class="sc-set-d">A personal access token with write access to that one repository. Stored encrypted, and never shown again after setup.</div>
+                        <div class="sc-set-n">{{ _('Access token') }}</div>
+                        <div class="sc-set-d">{{ _('A personal access token with write access to that one repository. Stored encrypted, and never shown again after setup.') }}</div>
                         <input type="password" id="s_git_token" placeholder="ghp_..." class="input-field">
                         <div class="api-test-row">
                             <button type="button" class="btn-inline" onclick="testGitRepo()">
-                                <i class="ph-bold ph-git-branch"></i> Test repository
+                                <i class="ph-bold ph-git-branch"></i> {{ _('Test repository') }}
                             </button>
                             <span id="gitTestResult"></span>
                         </div>
@@ -794,8 +786,8 @@
                     <div class="sc-panel">
                         <div class="sc-set">
                             <div class="sc-set-l">
-                                <div class="sc-set-n">Push automatically</div>
-                                <div class="sc-set-d">Commit and push on every configuration change. With this off, you push by hand from the Backups pane.</div>
+                                <div class="sc-set-n">{{ _('Push automatically') }}</div>
+                                <div class="sc-set-d">{{ _('Commit and push on every configuration change. With this off, you push by hand from the Backups pane.') }}</div>
                             </div>
                             <div class="sc-set-v">
                                 <div class="toggle-switch on" id="sw-gitauto" onclick="toggleGitAuto()"><div class="toggle-knob"></div></div>
@@ -806,23 +798,23 @@
 
                 <div class="modal-panel sc-root" id="panel-6">
                     <div class="wz-lede">
-                        <h1 class="wz-title">Notifications</h1>
-                        <p class="wz-sub">Send a message when a route is saved or deleted, a backup runs, or a restore completes. This sets up one destination that receives every event; add more, and choose which events reach each one, in Settings.</p>
+                        <h1 class="wz-title">{{ pgettext('heading', 'Notifications') }}</h1>
+                        <p class="wz-sub">{{ _('Send a message when a route is saved or deleted, a backup runs, or a restore completes. This sets up one destination that receives every event; add more, and choose which events reach each one, in Settings.') }}</p>
                     </div>
 
                     <div class="sc-sec-head">
                         <i class="ph-bold ph-bell sc-sec-icon" style="color:var(--blue)"></i>
-                        <span class="sc-sec-label">Destination</span>
+                        <span class="sc-sec-label">{{ pgettext('heading', 'Destination') }}</span>
                         <span class="sc-sec-rule"></span>
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Type</div>
-                        <div class="sc-set-d">Payload format for the target service. Generic sends a plain JSON body you can shape yourself downstream.</div>
+                        <div class="sc-set-n">{{ pgettext('setting', 'Type') }}</div>
+                        <div class="sc-set-d">{{ _('Payload format for the target service. Generic sends a plain JSON body you can shape yourself downstream.') }}</div>
                         <select id="s_notify_kind" class="input-field" onchange="onSetupNotifyKind()">
                             <option value="discord">Discord</option>
                             <option value="slack">Slack</option>
-                            <option value="ntfy">ntfy.sh / self-hosted ntfy</option>
-                            <option value="generic">Generic JSON</option>
+                            <option value="ntfy">{{ _('ntfy.sh / self-hosted ntfy') }}</option>
+                            <option value="generic">{{ _('Generic JSON') }}</option>
                             <option value="gotify">Gotify</option>
                             <option value="pushover">Pushover</option>
                             <option value="pushbullet">Pushbullet</option>
@@ -830,27 +822,27 @@
                         </select>
                     </div>
                     <div class="sc-fld" id="s_notify_fld_url">
-                        <div class="sc-set-n" id="s_notify_url_label">Webhook URL</div>
-                        <div class="sc-set-d" id="s_notify_url_desc">Where notifications are delivered.</div>
+                        <div class="sc-set-n" id="s_notify_url_label">{{ _('Webhook URL') }}</div>
+                        <div class="sc-set-d" id="s_notify_url_desc">{{ _('Where notifications are delivered.') }}</div>
                         <input type="url" id="s_notify_url" class="input-field">
                     </div>
                     <div class="sc-fld" id="s_notify_fld_token" style="display:none">
-                        <div class="sc-set-n" id="s_notify_token_label">App Token</div>
-                        <div class="sc-set-d" id="s_notify_token_desc">Stored encrypted.</div>
+                        <div class="sc-set-n" id="s_notify_token_label">{{ _('App Token') }}</div>
+                        <div class="sc-set-d" id="s_notify_token_desc">{{ _('Stored encrypted.') }}</div>
                         <input type="password" id="s_notify_token" class="input-field">
                     </div>
                     <div class="sc-fld" id="s_notify_fld_token2" style="display:none">
-                        <div class="sc-set-n" id="s_notify_token2_label">User Key</div>
-                        <div class="sc-set-d" id="s_notify_token2_desc">Stored encrypted.</div>
+                        <div class="sc-set-n" id="s_notify_token2_label">{{ _('User Key') }}</div>
+                        <div class="sc-set-d" id="s_notify_token2_desc">{{ _('Stored encrypted.') }}</div>
                         <input type="password" id="s_notify_token2" class="input-field">
                         <p class="field-hint" id="s_notify_token2_hint" style="display:none"></p>
                     </div>
                     <div class="sc-fld" id="s_notify_fld_auth" style="display:none">
-                        <div class="sc-set-n">Basic auth <span class="wz-opt">optional</span></div>
-                        <div class="sc-set-d">Credentials for endpoints that require authentication.</div>
+                        <div class="sc-set-n">{{ _('Basic auth %(optional)s', optional=tag('span', _('optional'), class_='wz-opt')) }}</div>
+                        <div class="sc-set-d">{{ _('Credentials for endpoints that require authentication.') }}</div>
                         <div class="flex gap-2">
-                            <input type="text" id="s_notify_user" placeholder="Username" class="input-field" style="flex:1">
-                            <input type="password" id="s_notify_pw" placeholder="Password" class="input-field" style="flex:1">
+                            <input type="text" id="s_notify_user" placeholder="{{ pgettext('placeholder', 'Username') }}" class="input-field" style="flex:1">
+                            <input type="password" id="s_notify_pw" placeholder="{{ pgettext('placeholder', 'Password') }}" class="input-field" style="flex:1">
                         </div>
                     </div>
                 </div>
@@ -858,25 +850,25 @@
                 {% if not temp_password_mode %}
                 <div class="modal-panel sc-root" id="panel-7">
                     <div class="wz-lede">
-                        <h1 class="wz-title">Set your password</h1>
-                        <p class="wz-sub">This is the last step. The password protects the whole interface and is stored as a bcrypt hash, never in plain text. You can change it, add two-factor, or switch to an identity provider later in Settings.</p>
+                        <h1 class="wz-title">{{ _('Set your password') }}</h1>
+                        <p class="wz-sub">{{ _('This is the last step. The password protects the whole interface and is stored as a bcrypt hash, never in plain text. You can change it, add two-factor, or switch to an identity provider later in Settings.') }}</p>
                     </div>
 
                     <div class="sc-sec-head">
                         <i class="ph-bold ph-lock-key sc-sec-icon" style="color:var(--blue)"></i>
-                        <span class="sc-sec-label">Password</span>
+                        <span class="sc-sec-label">{{ pgettext('heading', 'Password') }}</span>
                         <span class="sc-sec-rule"></span>
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Password</div>
-                        <div class="sc-set-d">At least 8 characters. A long passphrase beats a short complicated one.</div>
-                        <input type="password" id="s_password" placeholder="At least 8 characters"
+                        <div class="sc-set-n">{{ pgettext('setting', 'Password') }}</div>
+                        <div class="sc-set-d">{{ _('At least 8 characters. A long passphrase beats a short complicated one.') }}</div>
+                        <input type="password" id="s_password" placeholder="{{ _('At least 8 characters') }}"
                                autocomplete="new-password" oninput="checkPwMatch()" class="input-field">
                     </div>
                     <div class="sc-fld">
-                        <div class="sc-set-n">Confirm password</div>
-                        <div class="sc-set-d">Type it again so a typo does not lock you out.</div>
-                        <input type="password" id="s_confirm" placeholder="Repeat your password"
+                        <div class="sc-set-n">{{ _('Confirm password') }}</div>
+                        <div class="sc-set-d">{{ _('Type it again so a typo does not lock you out.') }}</div>
+                        <input type="password" id="s_confirm" placeholder="{{ _('Repeat your password') }}"
                                autocomplete="new-password" oninput="checkPwMatch()" class="input-field">
                         <p class="field-hint" id="pwMatchHint" style="display:none"></p>
                     </div>
@@ -885,12 +877,12 @@
 
                 <div class="wz-foot">
                     <button type="button" class="btn-secondary" id="wzBack" onclick="goTo(currentStep - 1)">
-                        <i class="ph-bold ph-arrow-left"></i> Back
+                        <i class="ph-bold ph-arrow-left"></i> {{ pgettext('button', 'Back') }}
                     </button>
                     <div class="flex items-center gap-2" style="margin-left:auto">
                         <span class="wz-skip-note" id="wzSkipNote"></span>
                         <button type="button" class="btn-primary" id="wzNext" onclick="nextStep()">
-                            Continue <i class="ph-bold ph-arrow-right"></i>
+                            {{ pgettext('button', 'Continue') }} <i class="ph-bold ph-arrow-right"></i>
                         </button>
                     </div>
                 </div>
@@ -932,7 +924,7 @@
 
     <div class="footer">
         <a href="https://github.com/traefik/traefik" target="_blank">Traefik</a>
-        &nbsp;·&nbsp;
+        {{ pgettext('label', '·') }}
         <a href="https://github.com/chr0nzz/traefik-manager" target="_blank">Traefik Manager</a>
     </div>
 </div>

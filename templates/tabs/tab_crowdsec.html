@@ -3,32 +3,32 @@
     <div id="csNotConfigured" class="flex flex-col items-center justify-center py-20 gap-4" style="color:var(--muted);display:none!important">
         <i class="ph-light ph-shield text-5xl opacity-40"></i>
         <div class="text-center" id="csNotCfgHost">
-            <p class="font-medium text-sm mb-1" style="color:var(--text)">CrowdSec not configured</p>
-            <p class="text-xs">Add your LAPI URL plus a bouncer API key, machine credentials, or a mTLS client certificate in <strong>Settings &rarr; System Monitoring &rarr; CrowdSec</strong>.</p>
-            <p class="text-xs mt-1">The bouncer key reads active decisions, the machine login reads alerts. They are complementary, not tiered. A client certificate covers both.</p>
+            <p class="font-medium text-sm mb-1" style="color:var(--text)">{{ _('CrowdSec not configured') }}</p>
+            <p class="text-xs">{{ _('Add your LAPI URL plus a bouncer API key, machine credentials, or a mTLS client certificate in %(settings_system_monitoring)s.', settings_system_monitoring=tag('strong', _('Settings → System Monitoring → CrowdSec'))) }}</p>
+            <p class="text-xs mt-1">{{ _('The bouncer key reads active decisions, the machine login reads alerts. They are complementary, not tiered. A client certificate covers both.') }}</p>
         </div>
         <div class="text-center" id="csNotCfgAgent" style="display:none;max-width:620px">
-            <p class="font-medium text-sm mb-1" style="color:var(--text)">No LAPI configured on <span id="csNotCfgAgentName">this agent</span></p>
-            <p class="text-xs">The agent reads CrowdSec from its <strong>own container environment</strong>, not from Traefik Manager. Set <code class="font-mono">CROWDSEC_LAPI_URL</code> on the agent container and recreate it.</p>
-            <p class="text-xs mt-1">The CrowdSec fields on this server in Settings only build the compose snippet below - they are never pushed to a running agent.</p>
-            <p class="text-xs mt-1">With mTLS, the cert paths are resolved <strong>inside the agent container</strong>, so mount them there too. A client certificate replaces the API key and machine login.</p>
-            <button onclick="openSettingsModal('agent-keys')" class="btn-secondary text-xs mt-3"><i class="ph-bold ph-copy"></i> Get the agent compose</button>
+            <p class="font-medium text-sm mb-1" style="color:var(--text)">{{ _('No LAPI configured on %(this_agent)s', this_agent=tag('span', _('this agent'), id_='csNotCfgAgentName')) }}</p>
+            <p class="text-xs">{{ _('The agent reads CrowdSec from its %(own_container_environment)s, not from Traefik Manager. Set %(crowdsec_lapi_url)s on the agent container and recreate it.', own_container_environment=tag('strong', _('own container environment')), crowdsec_lapi_url=tag('code', 'CROWDSEC_LAPI_URL', class_='font-mono')) }}</p>
+            <p class="text-xs mt-1">{{ _('The CrowdSec fields on this server in Settings only build the compose snippet below - they are never pushed to a running agent.') }}</p>
+            <p class="text-xs mt-1">{{ _('With mTLS, the cert paths are resolved %(inside_the_agent)s, so mount them there too. A client certificate replaces the API key and machine login.', inside_the_agent=tag('strong', _('inside the agent container'))) }}</p>
+            <button onclick="openSettingsModal('agent-keys')" class="btn-secondary text-xs mt-3"><i class="ph-bold ph-copy"></i> {{ _('Get the agent compose') }}</button>
         </div>
     </div>
 
     <div id="csFilterBar" class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
         <div class="relative flex-1 min-w-0">
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-            <input type="text" id="csSearch" oninput="_csSearchInput()" placeholder="Filter by address, scenario, network, path or agent..." class="input-field pl-9">
+            <input type="text" id="csSearch" oninput="_csSearchInput()" placeholder="{{ _('Filter by address, scenario, network, path or agent...') }}" class="input-field pl-9">
         </div>
         <div class="flex gap-1 p-1 rounded-lg fb-secondary" id="csClearWrap" style="display:none;background:var(--input-bg);border:1px solid var(--border)">
-            <button onclick="clearCsFilters()" id="csClearBtn" class="proto-btn text-xs px-3 py-1.5" title="Clear every filter, the country selection and the search box"><i class="ph-bold ph-x-circle"></i></button>
+            <button onclick="clearCsFilters()" id="csClearBtn" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Clear every filter, the country selection and the search box') }}"><i class="ph-bold ph-x-circle"></i></button>
         </div>
         <div id="csAddDecisionBtn" class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg);border:1px solid var(--border)">
-            <button onclick="openCsBanModal()" class="proto-btn text-xs px-3 py-1.5"><i class="ph-bold ph-plus"></i> Add Decision</button>
+            <button onclick="openCsBanModal()" class="proto-btn text-xs px-3 py-1.5"><i class="ph-bold ph-plus"></i> {{ _('Add Decision') }}</button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">
-            <button onclick="refreshCrowdSecTab(true)" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+            <button onclick="refreshCrowdSecTab(true)" class="proto-btn text-xs px-3 py-1.5" title="{{ pgettext('tooltip', 'Refresh') }}"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>
     </div>
 
@@ -41,7 +41,7 @@
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card);border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <i class="ph-bold ph-crosshair-simple" style="color:var(--blue)"></i>
-            <h2 class="font-bold text-sm" style="color:var(--text)">Add Decision</h2>
+            <h2 class="font-bold text-sm" style="color:var(--text)">{{ _('Add Decision') }}</h2>
         </div>
         <button type="button" onclick="closeCsBanModal()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
     </div>
@@ -52,38 +52,38 @@
                 <span id="csBanErrorMsg"></span>
             </div>
             <div>
-                <label>IP / Range</label>
-                <input type="text" id="csBanIp" class="input-field" placeholder="1.2.3.4 or 1.2.3.0/24">
-                <p class="text-xs mt-1" style="color:var(--muted)">Single IP or CIDR range.</p>
+                <label>{{ _('IP / Range') }}</label>
+                <input type="text" id="csBanIp" class="input-field" placeholder="{{ _('1.2.3.4 or 1.2.3.0/24') }}">
+                <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Single IP or CIDR range.') }}</p>
             </div>
             <div>
-                <label>Type</label>
+                <label>{{ pgettext('setting', 'Type') }}</label>
                 <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);width:fit-content">
-                    <button onclick="_setCsBanType('ban',this)" id="csBanType-ban" class="proto-btn active-http text-xs px-3 py-1.5">Ban</button>
-                    <button onclick="_setCsBanType('captcha',this)" id="csBanType-captcha" class="proto-btn text-xs px-3 py-1.5">Captcha</button>
-                    <button onclick="_setCsBanType('bypass',this)" id="csBanType-bypass" class="proto-btn text-xs px-3 py-1.5">Bypass</button>
+                    <button onclick="_setCsBanType('ban',this)" id="csBanType-ban" class="proto-btn active-http text-xs px-3 py-1.5">{{ pgettext('button', 'Ban') }}</button>
+                    <button onclick="_setCsBanType('captcha',this)" id="csBanType-captcha" class="proto-btn text-xs px-3 py-1.5">{{ pgettext('button', 'Captcha') }}</button>
+                    <button onclick="_setCsBanType('bypass',this)" id="csBanType-bypass" class="proto-btn text-xs px-3 py-1.5">{{ pgettext('button', 'Bypass') }}</button>
                 </div>
             </div>
             <div>
-                <label>Duration</label>
+                <label>{{ pgettext('setting', 'Duration') }}</label>
                 <select id="csBanDuration" class="input-field">
-                    <option value="1h">1 hour</option>
-                    <option value="4h">4 hours</option>
-                    <option value="24h" selected>24 hours</option>
-                    <option value="168h">7 days</option>
-                    <option value="720h">30 days</option>
-                    <option value="8760h">1 year</option>
+                    <option value="1h">{{ _('1 hour') }}</option>
+                    <option value="4h">{{ _('4 hours') }}</option>
+                    <option value="24h" selected>{{ _('24 hours') }}</option>
+                    <option value="168h">{{ _('7 days') }}</option>
+                    <option value="720h">{{ _('30 days') }}</option>
+                    <option value="8760h">{{ _('1 year') }}</option>
                 </select>
             </div>
             <div>
-                <label>Reason <span style="color:var(--muted);font-weight:normal">(optional)</span></label>
-                <input type="text" id="csBanReason" class="input-field" placeholder="manual ban from Traefik Manager">
-                <p class="text-xs mt-1" style="color:var(--muted)">Stored as the decision scenario.</p>
+                <label>{{ _('Reason %(optional)s', optional=tag('span', _('(optional)'), style_='color:var(--muted);font-weight:normal')) }}</label>
+                <input type="text" id="csBanReason" class="input-field" placeholder="{{ _('manual ban from Traefik Manager') }}">
+                <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Stored as the decision scenario.') }}</p>
             </div>
 
             <div style="border-top:1px solid var(--border);padding-top:16px">
                 <div class="flex items-center gap-2 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)"><i class="ph-bold ph-user-gear mr-1"></i>Custom Decisions</span>
+                    <span class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)"><i class="ph-bold ph-user-gear mr-1"></i>{{ _('Custom Decisions') }}</span>
                     <span id="csBanRecentCount" class="text-xs tabular-nums" style="color:var(--muted)"></span>
                 </div>
                 <div id="csBanRecent"></div>
@@ -91,7 +91,7 @@
         </div>
 
     <div class="detail-panel-foot flex justify-end gap-2 px-6 py-4">
-        <button type="button" onclick="closeCsBanModal()" class="btn-secondary">Cancel</button>
-        <button type="button" onclick="submitCsBan()" class="btn-primary">Add Decision</button>
+        <button type="button" onclick="closeCsBanModal()" class="btn-secondary">{{ pgettext('button', 'Cancel') }}</button>
+        <button type="button" onclick="submitCsBan()" class="btn-primary">{{ _('Add Decision') }}</button>
     </div>
 </div>
