@@ -84,7 +84,8 @@ async function capture(theme) {
         await js(`(() => { bulkRemoveCerts(); return 1; })()`); await sleep(1600);
         await js(`(() => {
             const i = document.getElementById('customConfirmType');
-            if (i) { i.value = 'DELETE'; i.dispatchEvent(new Event('input', { bubbles: true })); }
+            const w = document.getElementById('customConfirmWord');
+            if (i && w) { i.value = w.textContent; i.dispatchEvent(new Event('input', { bubbles: true })); }
         })()`);
         await shot('certs-remove');
         await js(`document.getElementById('customConfirmCancel')?.click()`); await sleep(600);
