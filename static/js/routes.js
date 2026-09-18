@@ -293,7 +293,10 @@ function setHttpRuleMode(mode) {
     if (advBtn)    { advBtn.classList.toggle('active-http', isAdv); }
     if (simpleFields) simpleFields.style.display = isAdv ? 'none' : '';
     if (advFields)    advFields.style.display    = isAdv ? '' : 'none';
-    if (!isAdv) { const el = document.getElementById('httpRule'); if (el) el.value = ''; }
+    const ruleEl = document.getElementById('httpRule');
+    if (!ruleEl) return;
+    if (!isAdv) ruleEl.value = '';
+    else if (!ruleEl.value.trim()) ruleEl.value = _currentSimpleHttpRule();
 }
 
 function _applyServiceTypeNotice(svcType, owned) {
@@ -1792,27 +1795,51 @@ function _onWildcardToggle(checked) {
     if (base) { mainEl.value = base; sansEl.value = '*.' + base; }
 }
 
+function _simpleHttpRule(subdomain, domains) {
+    const sub = (subdomain || '').trim();
+    if (sub && sub.includes('.')) return 'Host(`' + sub + '`)';
+    return domains.map(d => 'Host(`' + (sub ? sub + '.' + d : d) + '`)').join(' || ');
+}
+
+function _splitHostRule(rule, knownDomains) {
+    const text = (rule || '').trim();
+    if (!/^Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*$/.test(text)) return null;
+    const hosts = [...text.matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
+    const candidates = [];
+    const domains = [];
+    const subs = new Set();
+    for (const host of hosts) {
+        const base = knownDomains
+            .filter(d => host === d || host.endsWith('.' + d))
+            .sort((a, b) => b.length - a.length)[0];
+        if (!base) {
+            if (hosts.length !== 1) return null;
+            candidates.push({ subdomain: host, domains: [] });
+            break;
+        }
+        subs.add(host === base ? '' : host.slice(0, -(base.length + 1)));
+        if (!domains.includes(base)) domains.push(base);
+    }
+    if (!candidates.length) {
+        if (subs.size !== 1) return null;
+        candidates.push({ subdomain: [...subs][0], domains });
+    }
+    const split = candidates[0];
+    return _simpleHttpRule(split.subdomain, split.domains) === text ? split : null;
+}
+
 function _applyHttpRuleToForm(rule) {
-    const isSimpleRule = /^(Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*)$/.test(rule.trim());
-    if (!isSimpleRule && rule) {
+    const text = (rule || '').trim();
+    const split = text ? _splitHostRule(text, _domainsForForm()) : { subdomain: '', domains: [] };
+    if (!split) {
         setHttpRuleMode('advanced');
-        document.getElementById('httpRule').value = rule;
+        document.getElementById('httpRule').value = text;
     } else {
         setHttpRuleMode('simple');
     }
     _updateRouteModalForAgent();
-    const domainsForMatch = _domainsForForm();
-    let subdomain = '';
-    const hostMatches = [...rule.matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
-    const matchedDomains = [];
-    for (let fullHost of hostMatches) {
-        let found = false;
-        for (let d of domainsForMatch) {
-            if (fullHost.endsWith('.' + d)) { if (!subdomain) subdomain = fullHost.slice(0, -(d.length + 1)); matchedDomains.push(d); found = true; break; }
-            else if (fullHost === d) { matchedDomains.push(d); found = true; break; }
-        }
-        if (!found && !subdomain) subdomain = fullHost;
-    }
+    const subdomain = split ? split.subdomain : '';
+    const matchedDomains = split ? split.domains : [];
     document.getElementById('subdomain').value = subdomain;
     if (document.getElementById('domainChips')) {
         _initDomainChips(matchedDomains.length ? matchedDomains : []);
@@ -1820,6 +1847,21 @@ function _applyHttpRuleToForm(rule) {
         const sel = document.getElementById('domainSelect');
         if (sel && matchedDomains.length > 0) sel.value = matchedDomains[0];
     }
+}
+
+function _currentSimpleHttpRule() {
+    const sub = document.getElementById('subdomain')?.value || '';
+    let domains = [];
+    if (document.getElementById('domainChips') && window._domainChipSelected) {
+        domains = [...window._domainChipSelected];
+    } else {
+        const sel = document.getElementById('domainSelect');
+        const single = (document.getElementById('singleDomain')?.textContent || '').trim();
+        if (sel && sel.value) domains = [sel.value];
+        else if (single) domains = [single];
+    }
+    if (!sub.trim() && !domains.length) return '';
+    return _simpleHttpRule(sub, domains);
 }
 
 async function cloneRoute(btn) {
