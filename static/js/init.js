@@ -98,7 +98,7 @@ window.addEventListener('beforeinstallprompt', e => {
 window.addEventListener('appinstalled', () => {
     _pwaInstallPrompt = null;
     document.getElementById('pwaInstallBtn')?.classList.add('hidden');
-        showToast('Traefik Manager installed as app!', 'success');
+        showToast(t('Traefik Manager installed as app!'), 'success');
 });
 
 (async () => {

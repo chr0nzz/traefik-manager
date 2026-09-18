@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import vm from 'node:vm';
+import { i18nPrelude } from './i18n_test_prelude.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -58,6 +59,7 @@ function harness(deleteBody, mode) {
     ctx.window = ctx;
     ctx.globalThis = ctx;
     vm.createContext(ctx);
+    vm.runInContext(i18nPrelude(), ctx);
     vm.runInContext(readFileSync(join(root, 'static', 'js', 'certs.js'), 'utf8'), ctx);
     vm.runInContext(`
         _certManage = { available: true };

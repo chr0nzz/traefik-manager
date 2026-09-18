@@ -3,7 +3,7 @@ let _httpProviderFilter    = 'all';
 
 async function refreshHttpProviderTab() {
     const container = document.getElementById('httpProviderContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading HTTP provider routes...</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading HTTP provider routes...')}</p></div>`;
 
     try {
         const [routerRes, mwRes] = await Promise.all([
@@ -23,11 +23,11 @@ async function refreshHttpProviderTab() {
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         if (all.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-xs mt-1">Configure <code class="font-mono">TRAEFIK_API_URL</code> in Settings</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p><p class="text-xs mt-1">${th('Configure {traefik_api_url} in Settings', { traefik_api_url: tmHtml(`<code class="font-mono">TRAEFIK_API_URL</code>`) })}</p></div>`;
             return;
         }
         if (_allHttpProviderRoutes.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-link text-5xl block mb-3 opacity-30"></i><p class="font-medium">No HTTP provider routes found</p><p class="text-xs mt-1">Routes sourced from an HTTP endpoint will appear here</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-link text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('No HTTP provider routes found')}</p><p class="text-xs mt-1">${th('Routes sourced from an HTTP endpoint will appear here')}</p></div>`;
             return;
         }
 
@@ -37,7 +37,7 @@ async function refreshHttpProviderTab() {
         setTabCount('http_provider', _allHttpProviderRoutes.length);
         renderHttpProviderRoutes();
     } catch(e) {
-        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p></div>`;
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p></div>`;
     }
 }
 
@@ -85,7 +85,7 @@ function renderHttpProviderRoutes() {
 
     if (items.length === 0) {
         document.getElementById('httpProviderContent').innerHTML =
-            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No routes match filter</div>`;
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">${th('No routes match filter')}</div>`;
         return;
     }
 
@@ -104,7 +104,7 @@ async function openHttpProviderRouteDetail(idx) {
 
     document.getElementById('detailEditBtn').style.display = 'none';
 
-    const badge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-link"></i> http provider</span>`;
+    const badge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-link"></i> ${th('http provider')}</span>`;
 
     const appData = {
         id:           (r.name || '').split('@')[0],

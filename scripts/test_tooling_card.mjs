@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { i18nPrelude } from './i18n_test_prelude.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = readFileSync(join(root, 'static', 'js', 'crowdsec.js'), 'utf8');
@@ -8,7 +9,7 @@ const fn = 'function _atkCardAgents' + src.split('function _atkCardAgents')[1].s
 
 const calls = [];
 const stub = name => (...args) => { calls.push({ name, args }); return name; };
-const api = new Function('rec', `
+const api = new Function('rec', i18nPrelude() + `
 const _atkBlindCard = a => { rec.push({ card: 'blind', ...a }); return 'blind'; };
 const _atkCalmCard = (...a) => { rec.push({ card: 'calm', a }); return 'calm'; };
 const _atkFilteredCard = (...a) => { rec.push({ card: 'filtered', a }); return 'filtered'; };

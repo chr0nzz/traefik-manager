@@ -35,7 +35,7 @@ def _run(route, st, svc):
 
 def test_a_healthy_route_gets_a_colour():
     src = _read('static', 'js', 'dashboard-tab.js')
-    at = src.index("'Router loaded, '")
+    at = src.index("t('Router loaded, {up}")
     branch = src[max(0, at - 400):at]
     tail = branch[branch.rindex('} else'):]
     assert 's.dot' in tail, (
@@ -57,7 +57,7 @@ def test_the_other_states_keep_their_colours():
 
 def test_green_is_only_used_when_traefik_knows_the_backend_is_up():
     src = _read('static', 'js', 'dashboard-tab.js')
-    at = src.index("'Router loaded, '")
+    at = src.index("t('Router loaded, {up}")
     branch = src[max(0, at - 400):at]
     guard = branch[branch.rindex('} else'):]
     assert 'svc && svc.total' in guard, (

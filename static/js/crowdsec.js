@@ -242,7 +242,7 @@ function _atkStrip(groups, aria, opts) {
     const cell = (cls, title) => '<i class="sig-cell' + (cls ? ' ' + cls : '') + '" title="' + _esc(title) + '"></i>';
     let html = '';
     if (!total) {
-        html = '<span class="sig-more" style="margin-left:0">' + _esc(o.empty || ('no ' + noun)) + '</span>';
+        html = '<span class="sig-more" style="margin-left:0">' + _esc(o.empty || t('none')) + '</span>';
     } else if (total <= cap) {
         live.forEach(g => { for (let i = 0; i < g.n; i++) html += cell(g.cls, g.at(i)); });
     } else {
@@ -258,9 +258,10 @@ function _atkStrip(groups, aria, opts) {
             drawn += want;
         });
         const each = per >= 10 ? Math.round(per) : Math.round(per * 10) / 10;
-        const legend = per < 1.5 ? (_sdNum(total) + ' in ' + _sdNum(drawn)) : ('1 cell = ' + each);
-        const tip = _sdNum(total) + ' ' + noun + ' drawn as ' + _sdNum(drawn) + ' cells, so '
-            + (per < 1.5 ? 'a few cells stand for two' : 'each cell stands for about ' + each + ' ' + noun);
+        const legend = per < 1.5 ? t('{total} in {drawn}', { total: _sdNum(total), drawn: _sdNum(drawn) }) : t('1 cell = {each}', { each });
+        const tip = per < 1.5
+            ? t('{total} drawn as {drawn} cells, so a few cells stand for two', { total: _lgCount(noun, total), drawn: _sdNum(drawn) })
+            : t('{total} drawn as {drawn} cells, so each cell stands for about {each}', { total: _lgCount(noun, total), drawn: _sdNum(drawn), each: _lgCount(noun, each) });
         html += '<span class="sig-more" title="' + _esc(tip) + '">' + _esc(legend) + '</span>';
     }
     return '<div class="sig-strip' + (o.cls ? ' ' + o.cls : '') + '" role="img" aria-label="' + _esc(aria) + '">' + html + '</div>';
@@ -309,19 +310,18 @@ function _atkRankBody(list, opts) {
             bad: e.open ? _atkFlag({
                 tag: 'span', extra: 'lg-bad', cls: e.open === e.n ? 'd-bad' : 'd-warn',
                 ic: 'ph-bold ph-lock-open', n: e.open, words: false,
-                tip: _sdNum(e.open) + ' of ' + _sdNum(e.n) + ' ' + unit
-                    + ' here came from a source that holds no active decision now'
-                    + (e.open === e.n ? '. Nothing on this row was ever stopped' : '')
-                    + (e.sim ? '. ' + _sdNum(e.sim) + ' of them were simulated, so CrowdSec enforced nothing' : '')
+                tip: t('{open} of {count} here came from a source that holds no active decision now', { open: _sdNum(e.open), count: _lgCount(unit, e.n) })
+                    + (e.open === e.n ? '. ' + t('Nothing on this row was ever stopped') : '')
+                    + (e.sim ? '. ' + tn('{count} of them was simulated, so CrowdSec enforced nothing', '{count} of them were simulated, so CrowdSec enforced nothing', e.sim, { count: _sdNum(e.sim) }) : '')
             }) : '',
-            tip: (o.tipName ? o.tipName(e) : String(e.key)) + ' - ' + _sdNum(e.n) + ' ' + unit + ', ' + pct + '%'
-                + (e.open ? ', ' + _sdNum(e.open) + ' from sources with no active ban' : ', every source banned')
-                + '. Click to filter the evidence below.'
+            tip: t('{name} - {count}, {pct}%', { name: o.tipName ? o.tipName(e) : String(e.key), count: _lgCount(unit, e.n), pct })
+                + ', ' + (e.open ? t('{count} from sources with no active ban', { count: _sdNum(e.open) }) : t('every source banned'))
+                + '. ' + t('Click to filter the evidence below.')
         });
     }).join('') + '</div>';
     const tailFor = k => {
         const rest = list.slice(k);
-        return _sdNum(rest.reduce((a, e) => a + e.n, 0)) + ' ' + unit + ' across ' + _sdNum(rest.length) + ' more ' + noun;
+        return t('{total} across {more}', { total: _lgCount(unit, rest.reduce((a, e) => a + e.n, 0)), more: _lgMore(noun, rest.length) });
     };
     let tail = '';
     if (list.length > shown.length) tail += '<div class="lg-tail">+' + tailFor(ATK_ROW_CAP) + '</div>';
@@ -525,13 +525,13 @@ function _csSetConfigured(on) {
     const agentName  = document.getElementById('csNotCfgAgentName');
     if (hostBlock)  hostBlock.style.display  = onAgent ? 'none' : '';
     if (agentBlock) agentBlock.style.display = onAgent ? '' : 'none';
-    if (agentName && onAgent) agentName.textContent = _activeAgent.name || 'this agent';
+    if (agentName && onAgent) agentName.textContent = _activeAgent.name || t('this agent');
 }
 
 function _csSpinner() {
     const el = document.getElementById('csStats');
     if (!el) return;
-    el.innerHTML = '<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading CrowdSec...</p></div>';
+    el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading CrowdSec...')}</p></div>`;
 }
 
 function _csEmptyDec() {
@@ -556,9 +556,9 @@ async function _csApplySummary(sum) {
     _csDecSum   = dec;
     _csLapiOk   = dec.ok === true;
     _csDecStale = _csLapiOk ? String(dec.stale || '') : '';
-    _csDecErr   = _csLapiOk ? '' : (dec.error || 'CrowdSec LAPI unavailable');
+    _csDecErr   = _csLapiOk ? '' : (dec.error || t('CrowdSec LAPI unavailable'));
     if (!_csLapiOk && /\b403\b/.test(_csDecErr) && !/bouncer/i.test(_csDecErr)) {
-        _csDecErr += '. CrowdSec only accepts a bouncer key on /v1/decisions, the machine token is refused there, so CROWDSEC_API_KEY has to be set as well.';
+        _csDecErr += t('. CrowdSec only accepts a bouncer key on /v1/decisions, the machine token is refused there, so CROWDSEC_API_KEY has to be set as well.');
     }
     _csAlertsOk  = alt.ok === true;
     _csAltStatus = parseInt(alt.status, 10) || 0;
@@ -622,7 +622,7 @@ async function _csRefreshInner(manual) {
     try {
         res = await agentFetch('/api/crowdsec/summary' + (params.length ? '?' + params.join('&') : ''));
     } catch (e) {
-        const why = _netErrText(e, 'Could not reach the CrowdSec LAPI');
+        const why = _netErrText(e, t('Could not reach the CrowdSec LAPI'));
         if (painted) { showToast(why, 'error'); return; }
         _csApplyDown(why);
         _csPaintedKey = key;
@@ -633,7 +633,7 @@ async function _csRefreshInner(manual) {
     let sum = null;
     try { sum = await res.json(); } catch (_) { sum = null; }
     if (!res.ok || !sum || typeof sum !== 'object') {
-        const why = (sum && sum.error) || ('CrowdSec summary failed (HTTP ' + res.status + ')');
+        const why = (sum && sum.error) || (t('CrowdSec summary failed (HTTP {status})', { status: res.status }));
         if (painted) { showToast(why, 'error'); return; }
         _csApplyDown(why);
         _csPaintedKey = key;
@@ -644,7 +644,7 @@ async function _csRefreshInner(manual) {
         _csFetched = Date.now();
         const age = document.getElementById('atkAge');
         if (age) age.textContent = _sdAgo(_csFetched);
-        if (manual) showToast('CrowdSec is up to date, nothing changed since the last read', 'success', false);
+        if (manual) showToast(t('CrowdSec is up to date, nothing changed since the last read'), 'success', false);
         return;
     }
     await _csApplySummary(sum);
@@ -688,7 +688,7 @@ async function _csDecFetch(spec) {
             page.error = (data && data.error) || ('HTTP ' + res.status);
         }
     } catch (e) {
-        page.error = _netErrText(e, 'Could not read decisions');
+        page.error = _netErrText(e, t('Could not read decisions'));
     }
     if (_csDecKey !== spec.key) return;
     _csDecPage = page;
@@ -706,32 +706,31 @@ function _atkBlindCard(o) {
 }
 
 function _atkOwnFlag(own) {
-    return own ? _atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-shield-check', n: own, label: 'raised here',
+    return own ? _atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-shield-check', n: own, label: t('raised here'),
         go: _atkSpec({ view: 'decisions', origin: 'own' }),
-        tip: _sdNum(own) + ' decisions in force did not come from a subscription. Their alerts are outside the retention window, or the decision was added by hand' }) : '';
+        tip: t('{own} decisions in force did not come from a subscription. Their alerts are outside the retention window, or the decision was added by hand', { own: _sdNum(own) }) }) : '';
 }
 
 function _atkCalmCard(key, accent, ic, title, wide, line, note, extra) {
     return _atkCard({
         key: key, cls: wide ? 'lg-wide' : '', accent: accent, ic: ic, title: title,
         total: '0', flags: _atkOk(line) + (extra || ''),
-        sub: _atkSub('nothing to rank in the retained window'),
+        sub: _atkSub(t('nothing to rank in the retained window')),
         body: '<p class="lg-note">' + note + '</p>'
     });
 }
 
 function _atkFilterNote(retained) {
-    return 'The retained window holds ' + _sdNum(retained) + ' alerts, and every filter on the window row is applied together, '
-        + 'so this card has nothing left to rank. That is the filter talking, not the host.';
+    return t('The retained window holds {retained} alerts, and every filter on the window row is applied together, so this card has nothing left to rank. That is the filter talking, not the host.', { retained: _sdNum(retained) });
 }
 
 function _atkFilteredCard(key, accent, ic, title, wide, retained) {
     return _atkCard({
         key: key, cls: 'lg-blind' + (wide ? ' lg-wide' : ''), accent: accent, ic: ic, title: title,
-        total: '-', flags: _atkOk('filtered to nothing', 'ph-bold ph-funnel'),
-        sub: _atkSub('<b>0</b> of ' + _sdNum(retained) + ' retained alerts match'),
+        total: '-', flags: _atkOk(t('filtered to nothing'), 'ph-bold ph-funnel'),
+        sub: _atkSub(`<b>0</b> ${th('of {retained} retained alerts match', { retained: tmHtml(_sdNum(retained)) })}`),
         body: '<p class="lg-note">' + _atkFilterNote(retained) + '</p>',
-        go: 'clear=all', goLabel: 'clear filters', goTip: 'Remove every filter and look at the whole retained window'
+        go: 'clear=all', goLabel: t('clear filters'), goTip: t('Remove every filter and look at the whole retained window')
     });
 }
 
@@ -739,30 +738,29 @@ function _atkOwnNote(own) {
     return own
         ? _sdNum(own) + (own === 1 ? ' ban in force was' : ' bans in force were') + ' raised on this host, but the alerts that earned '
             + (own === 1 ? 'it' : 'them') + ' are outside the retention window or the decision was added by hand.'
-        : 'Every ban still in force was subscribed rather than earned.';
+        : t('Every ban still in force was subscribed rather than earned.');
 }
 
 const ATK_NEEDS_MACHINE = 'cfg=machine';
-const ATK_MACHINE_NOTE = 'Set <code>CROWDSEC_MACHINE_ID</code> and <code>CROWDSEC_MACHINE_PASSWORD</code> alongside the bouncer key. '
-    + 'The two credentials are complementary rather than tiered: CrowdSec refuses the machine token on <code>/v1/decisions</code>, so both must be present for the whole tab.';
+const ATK_MACHINE_NOTE = `${th('Set {crowdsec_machine_id} and {crowdsec_machine_password} alongside the bouncer key. The two credentials are complementary rather than tiered: CrowdSec refuses the machine token on {v1_decisions}, so both must be present for the whole tab.', { crowdsec_machine_id: tmHtml(`<code>CROWDSEC_MACHINE_ID</code>`), crowdsec_machine_password: tmHtml(`<code>CROWDSEC_MACHINE_PASSWORD</code>`), v1_decisions: tmHtml(`<code>/v1/decisions</code>`) })}`;
 
 function _atkCardSources(d) {
     if (!d.alertsOk) {
         return _atkBlindCard({
-            key: 'sources', accent: 'var(--red)', ic: 'ph-fill ph-crosshair', title: 'Attacking sources',
-            state: 'needs a watcher login', sub: 'sources are only listed on <b>/v1/alerts</b>',
-            note: 'A bouncer API key reads <code>/v1/decisions</code> and nothing else. ' + ATK_MACHINE_NOTE,
-            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: 'Open Settings, System Monitoring, CrowdSec'
+            key: 'sources', accent: 'var(--red)', ic: 'ph-fill ph-crosshair', title: t('Attacking sources'),
+            state: t('needs a watcher login'), sub: `${th('sources are only listed on {v1_alerts}', { v1_alerts: tmHtml(`<b>/v1/alerts</b>`) })}`,
+            note: `${th('A bouncer API key reads {v1_decisions} and nothing else. {ATK_MACHINE_NOTE}', { v1_decisions: tmHtml(`<code>/v1/decisions</code>`), ATK_MACHINE_NOTE: tmHtml(ATK_MACHINE_NOTE) })}`,
+            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: t('Open Settings, System Monitoring, CrowdSec')
         });
     }
     if (!d.retained) {
-        return _atkCalmCard('sources', 'var(--red)', 'ph-fill ph-crosshair', 'Attacking sources', false,
-            'nobody tripped a scenario',
-            'The alert read succeeded and came back empty, which is not the same as being unable to read it. ' + _atkOwnNote(d.own),
+        return _atkCalmCard('sources', 'var(--red)', 'ph-fill ph-crosshair', t('Attacking sources'), false,
+            t('nobody tripped a scenario'),
+            t('The alert read succeeded and came back empty, which is not the same as being unable to read it. {atkOwnNote}', { atkOwnNote: _atkOwnNote(d.own) }),
             _atkOwnFlag(d.own));
     }
     if (!d.alerts.length) {
-        return _atkFilteredCard('sources', 'var(--red)', 'ph-fill ph-crosshair', 'Attacking sources', false, d.retained);
+        return _atkFilteredCard('sources', 'var(--red)', 'ph-fill ph-crosshair', t('Attacking sources'), false, d.retained);
     }
     const byIp = new Map();
     d.alerts.forEach(a => {
@@ -780,71 +778,67 @@ function _atkCardSources(d) {
     const once = loose.filter(s => s.n === 1);
     const repeat = srcs.filter(s => s.n > 1);
     const sim = srcs.filter(s => s.sim);
-    const label = s => s.ip + ' - ' + _sdNum(s.ev) + ' events, ' + _sdNum(s.n) + (s.n === 1 ? ' alert' : ' alerts') + ', '
-        + Array.from(s.scen).map(_scenShort).slice(0, 2).join(' + ') + (s.cc ? ', ' + s.cc : '') + ', ' + _sdAgo(s.last)
-        + (!known ? ', ban state unknown' : (s.handled ? ', banned' : (s.sim ? ', simulated, nothing was enforced' : ', no active ban')));
+    const label = s => s.ip + ' - ' + [_lgCount('events', s.ev), _lgCount('alerts', s.n),
+        Array.from(s.scen).map(_scenShort).slice(0, 2).join(' + ')].concat(s.cc ? [s.cc] : [], [_sdAgo(s.last),
+        !known ? t('ban state unknown') : (s.handled ? t('banned') : (s.sim ? t('simulated, nothing was enforced') : t('no active ban')))]).join(', ');
     const top = srcs[0];
     const ccs = new Set(srcs.map(s => s.cc).filter(Boolean));
     return _atkCard({
-        key: 'sources', accent: 'var(--red)', ic: 'ph-fill ph-crosshair', title: 'Attacking sources',
+        key: 'sources', accent: 'var(--red)', ic: 'ph-fill ph-crosshair', title: t('Attacking sources'),
         health: back.length ? 'down' : (loose.length ? 'warn' : ''),
         total: _sdNum(srcs.length),
         flags: !known
-            ? _atkOk('ban state unknown', 'ph-bold ph-info')
+            ? _atkOk(t('ban state unknown'), 'ph-bold ph-info')
             : loose.length
-            ? _atkFlag({ cls: back.length ? 'd-bad' : 'd-warn', ic: 'ph-bold ph-lock-open', n: loose.length, label: 'loose',
+            ? _atkFlag({ cls: back.length ? 'd-bad' : 'd-warn', ic: 'ph-bold ph-lock-open', n: loose.length, label: tc('label', 'loose'),
                 go: _atkSpec({ outcome: 'loose' }),
-                tip: _sdNum(loose.length) + ' sources tripped a scenario and hold no active decision right now. Usually an expired ban rather than a miss'
-                    + (sim.length ? '. ' + _sdNum(sim.length) + ' of them were simulated, so CrowdSec enforced nothing by design' : '') })
-              + _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-prohibit', n: banned.length, label: 'banned',
+                tip: t('{loose_count} sources tripped a scenario and hold no active decision right now. Usually an expired ban rather than a miss', { loose_count: _sdNum(loose.length) })
+                + (sim.length ? '. ' + tn('{count} of them was simulated, so CrowdSec enforced nothing by design', '{count} of them were simulated, so CrowdSec enforced nothing by design', sim.length, { count: _sdNum(sim.length) }) : '') })
+              + _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-prohibit', n: banned.length, label: tc('label', 'banned'),
                 go: _atkSpec({ outcome: 'banned' }),
-                tip: _sdNum(banned.length) + ' sources hold an active ban raised by your own scenarios. Nothing to do about these' })
-            : _atkOk('every source banned'),
-        sub: _atkSub(top ? 'worst <b>' + _esc(top.ip) + '</b> ' + _sdNum(top.ev) + ' events' : 'no sources',
+                tip: t('{banned_count} sources hold an active ban raised by your own scenarios. Nothing to do about these', { banned_count: _sdNum(banned.length) }) })
+            : _atkOk(t('every source banned')),
+        sub: _atkSub(top ? `${th('worst {b} {ev} events', { b: tmHtml(`<b>${_esc(top.ip)}</b>`), ev: tmHtml(_sdNum(top.ev)) })}` : t('no sources'),
             ccs.size ? _sdNum(ccs.size) + (ccs.size === 1 ? ' country' : ' countries') : ''),
         body: _atkStrip([
             { cls: 'sig-cell-err', n: back.length, at: i => label(back[i]) },
             { cls: 'sig-cell-warn', n: once.length, at: i => label(once[i]) },
             { cls: '', n: banned.length, at: i => label(banned[i]) }
-        ], _sdNum(srcs.length) + ' sources, ' + _sdNum(loose.length) + ' with no active ban',
-            { noun: 'sources', empty: 'no sources' }),
-        foot: _atkProv({ ic: 'ph-bold ph-repeat', n: repeat.length, label: 'repeat', go: '',
-                tip: _sdNum(repeat.length) + ' sources tripped a scenario more than once, so they came back after the first ban' })
+        ], t('{srcs_count} sources, {loose_count} with no active ban', { srcs_count: _sdNum(srcs.length), loose_count: _sdNum(loose.length) }),
+            { noun: 'sources', empty: t('no sources') }),
+        foot: _atkProv({ ic: 'ph-bold ph-repeat', n: repeat.length, label: tc('label', 'repeat'), go: '',
+                tip: t('{repeat_count} sources tripped a scenario more than once, so they came back after the first ban', { repeat_count: _sdNum(repeat.length) }) })
             + _atkProv({ ic: 'ph-bold ph-arrow-elbow-down-right', n: srcs.length - repeat.length, label: 'one-shot', go: '',
-                tip: 'Seen exactly once. Mostly opportunistic scanners walking the whole address space' })
-            + (sim.length ? _atkProv({ ic: 'ph-bold ph-eye-slash', n: sim.length, label: 'simulated', cls: 'sig-prov-warn',
+                tip: t('Seen exactly once. Mostly opportunistic scanners walking the whole address space') })
+            + (sim.length ? _atkProv({ ic: 'ph-bold ph-eye-slash', n: sim.length, label: tc('label', 'simulated'), cls: 'sig-prov-warn',
                 go: _atkSpec({ outcome: 'sim' }),
-                tip: 'These alerts ran in simulation mode. CrowdSec saw them and enforced nothing' }) : ''),
+                tip: t('These alerts ran in simulation mode. CrowdSec saw them and enforced nothing') }) : ''),
         go: loose.length ? _atkSpec({ outcome: 'loose' }) : '', goLabel: 'loose',
-        goTip: 'Show only alerts whose source holds no active ban'
+        goTip: t('Show only alerts whose source holds no active ban')
     });
 }
 
 function _atkCardNetworks(d) {
     if (!d.alertsOk) {
         return _atkBlindCard({
-            key: 'networks', accent: 'var(--purple)', ic: 'ph-fill ph-globe-hemisphere-west', title: 'Networks',
-            state: 'needs a watcher login', sub: 'AS names ride on <b>alert.source</b>',
-            note: 'Decisions carry no enrichment at all. Everything on a bouncer key comes from the seven fields <code>/v1/decisions</code> returns: '
-                + '<code>value</code>, <code>type</code>, <code>scope</code>, <code>origin</code>, <code>scenario</code>, <code>duration</code>, <code>id</code>. '
-                + 'No country, no ASN, no events, no time. ' + ATK_MACHINE_NOTE,
-            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: 'Open Settings, System Monitoring, CrowdSec'
+            key: 'networks', accent: 'var(--purple)', ic: 'ph-fill ph-globe-hemisphere-west', title: t('Networks'),
+            state: t('needs a watcher login'), sub: `${th('AS names ride on {alert_source}', { alert_source: tmHtml(`<b>alert.source</b>`) })}`,
+            note: `${th('Decisions carry no enrichment at all. Everything on a bouncer key comes from the seven fields {v1_decisions} returns: {value}, {type}, {scope}, {origin}, {scenario}, {duration}, {id}. No country, no ASN, no events, no time. {ATK_MACHINE_NOTE}', { v1_decisions: tmHtml(`<code>/v1/decisions</code>`), value: tmHtml(`<code>value</code>`), type: tmHtml(`<code>type</code>`), scope: tmHtml(`<code>scope</code>`), origin: tmHtml(`<code>origin</code>`), scenario: tmHtml(`<code>scenario</code>`), duration: tmHtml(`<code>duration</code>`), id: tmHtml(`<code>id</code>`), ATK_MACHINE_NOTE: tmHtml(ATK_MACHINE_NOTE) })}`,
+            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: t('Open Settings, System Monitoring, CrowdSec')
         });
     }
     if (!d.retained) {
         return _atkCalmCard('networks', 'var(--purple)', 'ph-fill ph-globe-hemisphere-west', 'Networks', false,
-            'no network reached a scenario',
-            'Networks are counted from <code>source.as_name</code> on alerts. With no alerts there is nothing to attribute, even though addresses may still be blocked preventively.',
+            t('no network reached a scenario'),
+            `${th('Networks are counted from {source_as_name} on alerts. With no alerts there is nothing to attribute, even though addresses may still be blocked preventively.', { source_as_name: tmHtml(`<code>source.as_name</code>`) })}`,
             _atkOwnFlag(d.own));
     }
     if (!d.asnOn) {
         return _atkBlindCard({
-            key: 'networks', accent: 'var(--purple)', ic: 'ph-fill ph-globe-hemisphere-west', title: 'Networks',
-            state: 'not enriched', sub: 'this agent reports <b>ip</b> only',
-            note: 'CrowdSec resolves the AS and country itself, in the <code>crowdsecurity/geoip-enrich</code> parser on the machine that raised the alert. '
-                + 'The LAPI never computes them, it stores whatever the agent sent. Install that parser on the reporting machine and these alerts start carrying '
-                + '<code>as_name</code>, <code>as_number</code> and <code>cn</code>.',
-            go: 'clear=all', goLabel: 'clear filters', goTip: 'Remove every filter and look at the whole retained window'
+            key: 'networks', accent: 'var(--purple)', ic: 'ph-fill ph-globe-hemisphere-west', title: t('Networks'),
+            state: t('not enriched'), sub: `${th('this agent reports {ip} only', { ip: tmHtml(`<b>ip</b>`) })}`,
+            note: `${th('CrowdSec resolves the AS and country itself, in the {crowdsecurity_geoip_enrich} parser on the machine that raised the alert. The LAPI never computes them, it stores whatever the agent sent. Install that parser on the reporting machine and these alerts start carrying {as_name}, {as_number} and {cn}.', { crowdsecurity_geoip_enrich: tmHtml(`<code>crowdsecurity/geoip-enrich</code>`), as_name: tmHtml(`<code>as_name</code>`), as_number: tmHtml(`<code>as_number</code>`), cn: tmHtml(`<code>cn</code>`) })}`,
+            go: 'clear=all', goLabel: t('clear filters'), goTip: t('Remove every filter and look at the whole retained window')
         });
     }
     if (!d.alerts.length) {
@@ -863,12 +857,12 @@ function _atkCardNetworks(d) {
     const withAs = d.alerts.filter(a => a.asNum).length;
     const ranges = new Set(d.alerts.map(a => a.range).filter(Boolean));
     return _atkCard({
-        key: 'networks', accent: 'var(--purple)', ic: 'ph-fill ph-globe-hemisphere-west', title: 'Networks',
+        key: 'networks', accent: 'var(--purple)', ic: 'ph-fill ph-globe-hemisphere-west', title: t('Networks'),
         total: _sdNum(list.length),
-        flags: _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-tree-structure', n: ranges.size, label: 'ranges', tag: 'span',
-            tip: _sdNum(ranges.size) + ' distinct source ranges, from source.range. A subnet with several sources is usually one operator, not several' }),
-        sub: _atkSub(list.length ? 'worst <b>' + _esc(nameOf(list[0])) + '</b> ' + _sdNum(list[0].n) + ' alerts' : 'no networks',
-            _sdNum(withAs) + ' of ' + _sdNum(d.alerts.length) + ' alerts carry an AS'),
+        flags: _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-tree-structure', n: ranges.size, label: tc('label', 'ranges'), tag: 'span',
+            tip: t('{size} distinct source ranges, from source.range. A subnet with several sources is usually one operator, not several', { size: _sdNum(ranges.size) }) }),
+        sub: _atkSub(list.length ? `${th('worst {b} {n} alerts', { b: tmHtml(`<b>${_esc(nameOf(list[0]))}</b>`), n: tmHtml(_sdNum(list[0].n)) })}` : t('no networks'),
+            t('{withAs} of {alerts_count} alerts carry an AS', { withAs: _sdNum(withAs), alerts_count: _sdNum(d.alerts.length) })),
         body: rb.body, tail: rb.tail
     });
 }
@@ -876,23 +870,18 @@ function _atkCardNetworks(d) {
 function _atkCardScenarios(d) {
     if (!d.alertsOk) {
         return _atkBlindCard({
-            key: 'scenarios', wide: true, accent: 'var(--orange)', ic: 'ph-fill ph-lightning', title: 'Scenarios',
-            state: 'needs a watcher login', sub: 'the decision scenario is not the same question',
-            note: 'Ranking <code>/v1/decisions</code> by scenario puts the community blocklist first on every instance and tells you what the blocklist contains '
-                + 'rather than what attacked this host. Alerts carry the real triggering scenario plus <code>events_count</code>, so this card ranks those instead. '
-                + ATK_MACHINE_NOTE,
-            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: 'Open Settings, System Monitoring, CrowdSec'
+            key: 'scenarios', wide: true, accent: 'var(--orange)', ic: 'ph-fill ph-lightning', title: t('Scenarios'),
+            state: t('needs a watcher login'), sub: t('the decision scenario is not the same question'),
+            note: `${th('Ranking {v1_decisions} by scenario puts the community blocklist first on every instance and tells you what the blocklist contains rather than what attacked this host. Alerts carry the real triggering scenario plus {events_count}, so this card ranks those instead. {ATK_MACHINE_NOTE}', { v1_decisions: tmHtml(`<code>/v1/decisions</code>`), events_count: tmHtml(`<code>events_count</code>`), ATK_MACHINE_NOTE: tmHtml(ATK_MACHINE_NOTE) })}`,
+            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: t('Open Settings, System Monitoring, CrowdSec')
         });
     }
     if (!d.retained) {
         return _atkCard({
-            key: 'scenarios', cls: 'lg-wide', accent: 'var(--orange)', ic: 'ph-fill ph-lightning', title: 'Scenarios',
-            total: '0', flags: _atkOk('nothing tripped') + _atkOwnFlag(d.own),
-            sub: _atkSub('no local scenario has fired in the retained window'),
-            body: '<p class="lg-note">' + (d.own
-                ? _atkOwnNote(d.own) + ' Everything else in force came from a subscribed list rather than from something this host saw.'
-                : 'Every ban in force came from a subscribed list, not from something this host saw. That is the normal resting state of a homelab behind CrowdSec.')
-                + '</p>'
+            key: 'scenarios', cls: 'lg-wide', accent: 'var(--orange)', ic: 'ph-fill ph-lightning', title: t('Scenarios'),
+            total: '0', flags: _atkOk(t('nothing tripped')) + _atkOwnFlag(d.own),
+            sub: _atkSub(t('no local scenario has fired in the retained window')),
+            body: `<p class="lg-note">${d.own ? _atkOwnNote(d.own) + ' Everything else in force came from a subscribed list rather than from something this host saw.' : th('Every ban in force came from a subscribed list, not from something this host saw. That is the normal resting state of a homelab behind CrowdSec.')}</p>`
         });
     }
     if (!d.alerts.length) {
@@ -910,18 +899,20 @@ function _atkCardScenarios(d) {
         },
         glyph: e => e.rows[0].capacity > 0 ? '<i class="ph-bold ph-drop-half-bottom"></i>' : '<i class="ph-bold ph-lightning"></i>',
         go: e => _atkSpec({ scenario: e.key }),
-        tipName: e => e.key + (e.rows[0].capacity > 0
-            ? ' - leaky bucket, capacity ' + e.rows[0].capacity + ', leaks every ' + e.rows[0].leakspeed
-            : ' - trigger bucket, fires on the first matching event, so capacity and leakspeed say nothing here')
+        tipName: e => (e.rows[0].capacity > 0
+            ? t('{scenario} - leaky bucket, capacity {capacity}, leaks every {leakspeed}',
+                { scenario: e.key, capacity: e.rows[0].capacity, leakspeed: e.rows[0].leakspeed })
+            : t('{scenario} - trigger bucket, fires on the first matching event, so capacity and leakspeed say nothing here',
+                { scenario: e.key }))
     });
     return _atkCard({
-        key: 'scenarios', cls: 'lg-wide', accent: 'var(--orange)', ic: 'ph-fill ph-lightning', title: 'Scenarios',
-        total: _sdNum(d.alerts.length) + '<span class="lg-unit">alerts</span>',
-        flags: _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-drop-half-bottom', n: leaky.length, label: 'leaky', tag: 'span',
-                tip: 'Leaky buckets have capacity above 0, so they need sustained pressure to fire. A slow prober trickling under the leak rate never trips one' })
-            + _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-lightning', n: list.length - leaky.length, label: 'trigger', tag: 'span',
-                tip: 'Trigger buckets have capacity 0 and fire on the first matching event. Capacity and leakspeed carry no meaning for these' }),
-        sub: _atkSub('worst <b>' + _esc(_scenShort(list[0].key)) + '</b>', _sdNum(evTotal) + ' events rolled up'),
+        key: 'scenarios', cls: 'lg-wide', accent: 'var(--orange)', ic: 'ph-fill ph-lightning', title: t('Scenarios'),
+        total: `${_sdNum(d.alerts.length)}<span class="lg-unit">${thc('label', 'alerts')}</span>`,
+        flags: _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-drop-half-bottom', n: leaky.length, label: tc('label', 'leaky'), tag: 'span',
+                tip: t('Leaky buckets have capacity above 0, so they need sustained pressure to fire. A slow prober trickling under the leak rate never trips one') })
+            + _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-lightning', n: list.length - leaky.length, label: tc('label', 'trigger'), tag: 'span',
+                tip: t('Trigger buckets have capacity 0 and fire on the first matching event. Capacity and leakspeed carry no meaning for these') }),
+        sub: _atkSub(`${th('worst {b}', { b: tmHtml(`<b>${_esc(_scenShort(list[0].key))}</b>`) })}`, t('{evTotal} events rolled up', { evTotal: _sdNum(evTotal) })),
         body: rb.body, tail: rb.tail
     });
 }
@@ -938,28 +929,26 @@ function _atkCardRoutes(d) {
     const key = 'routes';
     const accent = 'var(--purple)';
     const ic = 'ph-fill ph-arrows-split';
-    const title = 'Targeted routes';
+    const title = t('Targeted routes');
     if (!d.alertsOk) {
         return _atkBlindCard({
             key: key, wide: true, accent: accent, ic: ic, title: title,
-            state: 'needs a watcher login', sub: 'routers live in <b>alert.meta[]</b>',
-            note: 'CrowdSec writes <code>traefik_router_name</code> and <code>target_fqdn</code> into an alert only when they are listed in its context file. '
-                + 'They name the router and the host an attacker went through. ' + ATK_MACHINE_NOTE,
-            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: 'Open Settings, System Monitoring, CrowdSec'
+            state: t('needs a watcher login'), sub: `${th('routers live in {alert_meta}', { alert_meta: tmHtml(`<b>alert.meta[]</b>`) })}`,
+            note: `${th('CrowdSec writes {traefik_router_name} and {target_fqdn} into an alert only when they are listed in its context file. They name the router and the host an attacker went through. {ATK_MACHINE_NOTE}', { traefik_router_name: tmHtml(`<code>traefik_router_name</code>`), target_fqdn: tmHtml(`<code>target_fqdn</code>`), ATK_MACHINE_NOTE: tmHtml(ATK_MACHINE_NOTE) })}`,
+            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: t('Open Settings, System Monitoring, CrowdSec')
         });
     }
     if (!d.retained) {
-        return _atkCalmCard(key, accent, ic, title, true, 'nothing was aimed at',
-            'Routers come from alert-level <code>meta[]</code>. No scenario fired, so nothing wrote one.',
+        return _atkCalmCard(key, accent, ic, title, true, t('nothing was aimed at'),
+            `${th('Routers come from alert-level {meta}. No scenario fired, so nothing wrote one.', { meta: tmHtml(`<code>meta[]</code>`) })}`,
             _atkOwnFlag(d.own));
     }
     if (!d.alerts.length) {
         return _atkFilteredCard(key, accent, ic, title, true, d.retained);
     }
     if (!d.alerts.some(a => a.routers.length || a.hosts.length)) {
-        return _atkCalmCard(key, accent, ic, title, true, 'no router in the evidence',
-            'Add <code>traefik_router_name</code> and <code>target_fqdn</code> to your CrowdSec context file and they appear here, '
-            + 'naming the route each attack came through.', '');
+        return _atkCalmCard(key, accent, ic, title, true, t('no router in the evidence'),
+            `${th('Add {traefik_router_name} and {target_fqdn} to your CrowdSec context file and they appear here, naming the route each attack came through.', { traefik_router_name: tmHtml(`<code>traefik_router_name</code>`), target_fqdn: tmHtml(`<code>target_fqdn</code>`) })}`, '');
     }
     const list = _atkRank(d.alerts, a => a.routers, { weight: a => a.events, kind: a => a.hosts[0] || '' });
     const hosts = _atkRank(d.alerts, a => a.hosts, { weight: a => a.events });
@@ -972,17 +961,17 @@ function _atkCardRoutes(d) {
             ? '<i class="ph-bold ph-arrows-split"></i>'
             : '<i class="ph-bold ph-question"></i>',
         go: e => _atkSpec({ router: e.key }),
-        tipName: e => _atkKnownRoute(e.key) ? e.key : e.key + ', no route of that name here'
+        tipName: e => _atkKnownRoute(e.key) ? e.key : t('{key}, no route of that name here', { key: e.key })
     });
     return _atkCard({
         key: key, cls: 'lg-wide', accent: accent, ic: ic, title: title,
-        total: _sdNum(list.length) + '<span class="lg-unit">routers</span>',
+        total: `${_sdNum(list.length)}<span class="lg-unit">${thc('label', 'routers')}</span>`,
         flags: hosts.slice(0, 3).map(h => _atkFlag({
             cls: 'd-blue', ic: 'ph-bold ph-globe', n: h.n, label: h.key,
-            go: _atkSpec({ host: h.key }), tip: _sdNum(h.n) + ' alerts named ' + h.key + '. Click to filter the evidence below'
+            go: _atkSpec({ host: h.key }), tip: t('{n} alerts named {key}. Click to filter the evidence below', { n: _sdNum(h.n), key: h.key })
         })).join(''),
-        sub: _atkSub(list.length ? 'most wanted <b>' + _esc(String(list[0].key).split('@')[0]) + '</b>' : 'no routers',
-            _sdNum(withR) + ' of ' + _sdNum(d.alerts.length) + ' alerts name a router'),
+        sub: _atkSub(list.length ? `${th('most wanted {b}', { b: tmHtml(`<b>${_esc(String(list[0].key).split('@')[0])}</b>`) })}` : t('no routers'),
+            t('{withR} of {alerts_count} alerts name a router', { withR: _sdNum(withR), alerts_count: _sdNum(d.alerts.length) })),
         body: rb.body, tail: rb.tail
     });
 }
@@ -993,20 +982,19 @@ function _atkCardTargets(d) {
     const ic = 'ph-fill ph-target';
     if (!d.alertsOk) {
         return _atkBlindCard({
-            key: key, wide: true, accent: accent, ic: ic, title: 'Targeted paths',
-            state: 'needs a watcher login', sub: 'paths live in <b>alert.meta[]</b>',
-            note: 'The alert-level <code>meta[]</code> array carries <code>target_uri</code>, <code>method</code>, <code>status</code> and <code>user_agent</code>, '
-                + 'already deduplicated by the scenario. It is the only place this tab can learn what an attacker was going after. ' + ATK_MACHINE_NOTE,
-            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: 'Open Settings, System Monitoring, CrowdSec'
+            key: key, wide: true, accent: accent, ic: ic, title: t('Targeted paths'),
+            state: t('needs a watcher login'), sub: `${th('paths live in {alert_meta}', { alert_meta: tmHtml(`<b>alert.meta[]</b>`) })}`,
+            note: `${th('The alert-level {meta} array carries {target_uri}, {method}, {status} and {user_agent}, already deduplicated by the scenario. It is the only place this tab can learn what an attacker was going after. {ATK_MACHINE_NOTE}', { meta: tmHtml(`<code>meta[]</code>`), target_uri: tmHtml(`<code>target_uri</code>`), method: tmHtml(`<code>method</code>`), status: tmHtml(`<code>status</code>`), user_agent: tmHtml(`<code>user_agent</code>`), ATK_MACHINE_NOTE: tmHtml(ATK_MACHINE_NOTE) })}`,
+            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: t('Open Settings, System Monitoring, CrowdSec')
         });
     }
     if (!d.retained) {
-        return _atkCalmCard(key, accent, ic, 'Targeted paths', true, 'nothing was aimed at',
-            'Paths come from alert-level <code>meta[]</code>. No scenario fired, so nothing wrote one. This is a quiet host, not a host that cannot see.',
+        return _atkCalmCard(key, accent, ic, t('Targeted paths'), true, t('nothing was aimed at'),
+            `${th('Paths come from alert-level {meta}. No scenario fired, so nothing wrote one. This is a quiet host, not a host that cannot see.', { meta: tmHtml(`<code>meta[]</code>`) })}`,
             _atkOwnFlag(d.own));
     }
     if (!d.alerts.length) {
-        return _atkFilteredCard(key, accent, ic, 'Targeted paths', true, d.retained);
+        return _atkFilteredCard(key, accent, ic, t('Targeted paths'), true, d.retained);
     }
     const httpOn = d.alerts.some(a => a.uris.length);
     const sshOn = d.alerts.some(a => a.users.length);
@@ -1023,14 +1011,14 @@ function _atkCardTargets(d) {
             tipName: e => e.key
         });
         return _atkCard({
-            key: key, cls: 'lg-wide', accent: accent, ic: ic, title: 'Targeted paths',
-            total: _sdNum(list.length) + '<span class="lg-unit">paths</span>',
+            key: key, cls: 'lg-wide', accent: accent, ic: ic, title: t('Targeted paths'),
+            total: `${_sdNum(list.length)}<span class="lg-unit">${thc('label', 'paths')}</span>`,
             flags: verbs.slice(0, 3).map(v => _atkFlag({
                 cls: v.key === 'GET' ? 'd-off' : 'd-blue', ic: 'ph-bold ph-arrow-bend-right-up', n: v.n, label: v.key,
-                go: _atkSpec({ verb: v.key }), tip: _sdNum(v.n) + ' alerts used ' + v.key + '. Click to filter the evidence below'
+                go: _atkSpec({ verb: v.key }), tip: t('{n} alerts used {key}. Click to filter the evidence below', { n: _sdNum(v.n), key: v.key })
             })).join(''),
-            sub: _atkSub(list.length ? 'most wanted <b>' + _esc(list[0].key) + '</b>' : 'no paths',
-                _sdNum(withUri) + ' of ' + _sdNum(d.alerts.length) + ' alerts carry a path'),
+            sub: _atkSub(list.length ? `${th('most wanted {b}', { b: tmHtml(`<b>${_esc(list[0].key)}</b>`) })}` : t('no paths'),
+                t('{withUri} of {alerts_count} alerts carry a path', { withUri: _sdNum(withUri), alerts_count: _sdNum(d.alerts.length) })),
             body: rb.body, tail: rb.tail
         });
     }
@@ -1042,39 +1030,38 @@ function _atkCardTargets(d) {
             label: e => e.key, kindLabel: () => 'ssh',
             glyph: () => '<i class="ph-bold ph-user-focus"></i>',
             go: e => _atkSpec({ user: e.key }),
-            tipName: e => 'login attempts against ' + e.key
+            tipName: e => t('login attempts against {key}', { key: e.key })
         });
         return _atkCard({
-            key: key, cls: 'lg-wide', accent: accent, ic: 'ph-fill ph-user-focus', title: 'Targeted accounts',
-            total: _sdNum(list.length) + '<span class="lg-unit">accounts</span>',
-            flags: _atkOk('no HTTP scenario fired', 'ph-bold ph-info'),
-            sub: _atkSub(list.length ? 'most wanted <b>' + _esc(list[0].key) + '</b>' : 'no accounts',
-                _sdNum(withU) + ' of ' + _sdNum(d.alerts.length) + ' alerts name an account'),
+            key: key, cls: 'lg-wide', accent: accent, ic: 'ph-fill ph-user-focus', title: t('Targeted accounts'),
+            total: `${_sdNum(list.length)}<span class="lg-unit">${thc('label', 'accounts')}</span>`,
+            flags: _atkOk(t('no HTTP scenario fired'), 'ph-bold ph-info'),
+            sub: _atkSub(list.length ? `${th('most wanted {b}', { b: tmHtml(`<b>${_esc(list[0].key)}</b>`) })}` : t('no accounts'),
+                t('{withU} of {alerts_count} alerts name an account', { withU: _sdNum(withU), alerts_count: _sdNum(d.alerts.length) })),
             body: rb.body,
-            tail: rb.tail + '<p class="lg-note">SSH buckets carry <code>target_user</code> where HTTP buckets carry <code>target_uri</code>. This card follows whichever the host actually produces.</p>'
+            tail: `${rb.tail}<p class="lg-note">${th('SSH buckets carry {target_user} where HTTP buckets carry {target_uri}. This card follows whichever the host actually produces.', { target_user: tmHtml(`<code>target_user</code>`), target_uri: tmHtml(`<code>target_uri</code>`) })}</p>`
         });
     }
     return _atkBlindCard({
-        key: key, wide: true, accent: accent, ic: ic, title: 'Targeted paths',
-        state: 'no meta reported', sub: 'no alert carries <b>target_uri</b> or <b>target_user</b>',
-        note: 'Alert-level <code>meta[]</code> is written by the scenario on the machine that raised the alert. It is absent on <code>cscli</code> alerts and on '
-            + 'community blocklist pulls, so a host whose only alerts came from those sources has nothing to rank here.',
-        go: 'clear=all', goLabel: 'clear filters', goTip: 'Remove every filter and look at the whole retained window'
+        key: key, wide: true, accent: accent, ic: ic, title: t('Targeted paths'),
+        state: t('no meta reported'), sub: `${th('no alert carries {target_uri} or {target_user}', { target_uri: tmHtml(`<b>target_uri</b>`), target_user: tmHtml(`<b>target_user</b>`) })}`,
+        note: `${th('Alert-level {meta} is written by the scenario on the machine that raised the alert. It is absent on {cscli} alerts and on community blocklist pulls, so a host whose only alerts came from those sources has nothing to rank here.', { meta: tmHtml(`<code>meta[]</code>`), cscli: tmHtml(`<code>cscli</code>`) })}`,
+        go: 'clear=all', goLabel: t('clear filters'), goTip: t('Remove every filter and look at the whole retained window')
     });
 }
 
 function _atkCardAgents(d) {
     if (!d.alertsOk) {
         return _atkBlindCard({
-            key: 'agents', accent: 'var(--teal)', ic: 'ph-fill ph-robot', title: 'Tooling',
-            state: 'needs a watcher login', sub: 'user agents live in <b>alert.meta[]</b>',
-            note: 'Same source as the paths card: alert-level <code>meta[]</code>, reachable only with machine credentials. ' + ATK_MACHINE_NOTE,
-            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: 'Open Settings, System Monitoring, CrowdSec'
+            key: 'agents', accent: 'var(--teal)', ic: 'ph-fill ph-robot', title: t('Tooling'),
+            state: t('needs a watcher login'), sub: `${th('user agents live in {alert_meta}', { alert_meta: tmHtml(`<b>alert.meta[]</b>`) })}`,
+            note: `${th('Same source as the paths card: alert-level {meta}, reachable only with machine credentials. {ATK_MACHINE_NOTE}', { meta: tmHtml(`<code>meta[]</code>`), ATK_MACHINE_NOTE: tmHtml(ATK_MACHINE_NOTE) })}`,
+            go: ATK_NEEDS_MACHINE, goLabel: 'settings', goTip: t('Open Settings, System Monitoring, CrowdSec')
         });
     }
     if (!d.retained) {
-        return _atkCalmCard('agents', 'var(--teal)', 'ph-fill ph-robot', 'Tooling', false, 'no tool announced itself',
-            'User agents come from the same <code>meta[]</code> as the paths. Nothing got far enough to leave one.',
+        return _atkCalmCard('agents', 'var(--teal)', 'ph-fill ph-robot', 'Tooling', false, t('no tool announced itself'),
+            `${th('User agents come from the same {meta} as the paths. Nothing got far enough to leave one.', { meta: tmHtml(`<code>meta[]</code>`) })}`,
             _atkOwnFlag(d.own));
     }
     if (!d.alerts.length) {
@@ -1083,18 +1070,13 @@ function _atkCardAgents(d) {
     if (!d.alerts.some(a => a.uas.length)) {
         const httpFired = d.alerts.some(a => a.uris.length || a.verbs.length || a.codes.length);
         return _atkBlindCard({
-            key: 'agents', accent: 'var(--teal)', ic: 'ph-fill ph-robot', title: 'Tooling',
-            state: httpFired ? 'not logged' : 'HTTP only',
-            sub: httpFired ? 'the access log carries no user agent' : 'no HTTP scenario fired here',
+            key: 'agents', accent: 'var(--teal)', ic: 'ph-fill ph-robot', title: t('Tooling'),
+            state: httpFired ? t('not logged') : t('HTTP only'),
+            sub: httpFired ? t('the access log carries no user agent') : t('no HTTP scenario fired here'),
             note: httpFired
-                ? 'HTTP scenarios did fire and their paths, methods and status codes came through, so only the '
-                  + '<code>user_agent</code> key is missing. Traefik drops request headers from its access log unless '
-                  + 'you keep them, so CrowdSec never sees one. Add <code>User-Agent: keep</code> under '
-                  + '<code>accessLog.fields.headers.names</code> in the static config, then restart Traefik.'
-                : 'The <code>user_agent</code> meta key is written by HTTP scenarios. SSH buckets such as '
-                  + '<code>crowdsecurity/ssh-bf</code> share none of the HTTP keys, so this card stays out of the way '
-                  + 'rather than rendering an empty list.',
-            go: 'clear=all', goLabel: 'clear filters', goTip: 'Remove every filter and look at the whole retained window'
+                ? `${th('HTTP scenarios did fire and their paths, methods and status codes came through, so only the {user_agent} key is missing. Traefik drops request headers from its access log unless you keep them, so CrowdSec never sees one. Add {user_agent_keep} under {accesslog_fields_headers} in the static config, then restart Traefik.', { user_agent: tmHtml(`<code>user_agent</code>`), user_agent_keep: tmHtml(`<code>User-Agent: keep</code>`), accesslog_fields_headers: tmHtml(`<code>accessLog.fields.headers.names</code>`) })}`
+                : `${th('The {user_agent} meta key is written by HTTP scenarios. SSH buckets such as {crowdsecurity_ssh_bf} share none of the HTTP keys, so this card stays out of the way rather than rendering an empty list.', { user_agent: tmHtml(`<code>user_agent</code>`), crowdsecurity_ssh_bf: tmHtml(`<code>crowdsecurity/ssh-bf</code>`) })}`,
+            go: 'clear=all', goLabel: t('clear filters'), goTip: t('Remove every filter and look at the whole retained window')
         });
     }
     const list = _atkRank(d.alerts, a => a.uas.map(_uaShort), { weight: a => a.events });
@@ -1104,18 +1086,18 @@ function _atkCardAgents(d) {
     const rb = _atkRankBody(list, {
         noun: 'agents', unitN: 'hits',
         label: e => e.key,
-        kindLabel: e => isBot(e.key) ? 'tool' : 'browser string',
+        kindLabel: e => isBot(e.key) ? 'tool' : t('browser string'),
         glyph: e => isBot(e.key) ? '<i class="ph-bold ph-terminal-window"></i>' : '<i class="ph-bold ph-browser"></i>',
         go: e => _atkSpec({ agent: e.key }),
         tipName: e => (e.rows[0] && e.rows[0].uas[0]) || e.key
     });
     return _atkCard({
-        key: 'agents', accent: 'var(--teal)', ic: 'ph-fill ph-robot', title: 'Tooling',
+        key: 'agents', accent: 'var(--teal)', ic: 'ph-fill ph-robot', title: t('Tooling'),
         total: _sdNum(list.length),
-        flags: _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-terminal-window', n: bots.length, label: 'tools', tag: 'span',
-            tip: _sdNum(bots.length) + ' agents name a tool outright. The rest are copied browser strings, which tells you the operator bothered to lie' }),
-        sub: _atkSub(list.length ? 'worst <b>' + _esc(list[0].key) + '</b>' : 'no agents',
-            _sdNum(withUa) + ' of ' + _sdNum(d.alerts.length) + ' alerts carry one'),
+        flags: _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-terminal-window', n: bots.length, label: tc('label', 'tools'), tag: 'span',
+            tip: t('{bots_count} agents name a tool outright. The rest are copied browser strings, which tells you the operator bothered to lie', { bots_count: _sdNum(bots.length) }) }),
+        sub: _atkSub(list.length ? `${th('worst {b}', { b: tmHtml(`<b>${_esc(list[0].key)}</b>`) })}` : t('no agents'),
+            t('{withUa} of {alerts_count} alerts carry one', { withUa: _sdNum(withUa), alerts_count: _sdNum(d.alerts.length) })),
         body: rb.body, tail: rb.tail
     });
 }
@@ -1123,10 +1105,10 @@ function _atkCardAgents(d) {
 function _atkCardBans(d) {
     if (!d.lapiOk) {
         return _atkBlindCard({
-            key: 'bans', accent: 'var(--green)', ic: 'ph-fill ph-shield-check', title: 'Bans in force',
-            state: 'LAPI unreachable', sub: 'nothing was read from <b>/v1/decisions</b>',
-            note: 'This card reports the read failure instead of the zero it would otherwise invent. ' + _esc(d.decErr || ''),
-            go: 'cfg=lapi', goLabel: 'settings', goTip: 'Check the LAPI URL and the bouncer key in Settings'
+            key: 'bans', accent: 'var(--green)', ic: 'ph-fill ph-shield-check', title: t('Bans in force'),
+            state: t('LAPI unreachable'), sub: `${th('nothing was read from {v1_decisions}', { v1_decisions: tmHtml(`<b>/v1/decisions</b>`) })}`,
+            note: th('This card reports the read failure instead of the zero it would otherwise invent. {decErr}', { decErr: d.decErr || '' }),
+            go: 'cfg=lapi', goLabel: 'settings', goTip: t('Check the LAPI URL and the bouncer key in Settings')
         });
     }
     const sum = d.decSum;
@@ -1151,150 +1133,125 @@ function _atkCardBans(d) {
     return _atkCard({
         key: 'bans', accent: d.stale ? 'var(--yellow)' : 'var(--green)',
         ic: d.stale ? 'ph-fill ph-clock-countdown' : 'ph-fill ph-shield-check',
-        title: d.stale ? 'Bans in force (stale)' : 'Bans in force',
+        title: d.stale ? t('Bans in force (stale)') : t('Bans in force'),
         note: d.stale ? _esc(d.stale) : undefined,
         total: _sdNum(total),
-        flags: _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-prohibit', n: bans, label: 'ban',
-                go: _atkSpec({ type: 'ban' }), tip: 'Show only ban decisions in the decisions view' })
-            + (captcha ? _atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-puzzle-piece', n: captcha, label: 'captcha',
-                go: _atkSpec({ type: 'captcha' }), tip: 'Show only captcha decisions' }) : ''),
-        sub: _atkSub('<b>' + _sdNum(own) + '</b> from this host', _sdNum(subscribed) + ' subscribed'),
+        flags: _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-prohibit', n: bans, label: tc('label', 'ban'),
+                go: _atkSpec({ type: 'ban' }), tip: t('Show only ban decisions in the decisions view') })
+            + (captcha ? _atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-puzzle-piece', n: captcha, label: tc('label', 'captcha'),
+                go: _atkSpec({ type: 'captcha' }), tip: t('Show only captcha decisions') }) : ''),
+        sub: _atkSub(`<b>${_sdNum(own)}</b> ${th('from this host')}`, _sdNum(subscribed) + ' subscribed'),
         body: _atkStrip([
-            { cls: 'sig-cell-warn', n: hand, at: i => (i < rows.length ? lab(rows[i]) : 'added by hand') },
-            { cls: 'atk-cell-own', n: local, at: () => 'raised by your own scenarios' },
-            { cls: 'sig-cell-idle', n: subscribed, at: () => 'subscribed from a blocklist' }
-        ], _sdNum(total) + ' decisions, ' + _sdNum(own) + ' from this host',
-            { noun: 'decisions', empty: 'nothing blocked' }),
+            { cls: 'sig-cell-warn', n: hand, at: i => (i < rows.length ? lab(rows[i]) : t('added by hand')) },
+            { cls: 'atk-cell-own', n: local, at: () => t('raised by your own scenarios') },
+            { cls: 'sig-cell-idle', n: subscribed, at: () => t('subscribed from a blocklist') }
+        ], t('{total} decisions, {own} from this host', { total: _sdNum(total), own: _sdNum(own) }),
+            { noun: 'decisions', empty: t('nothing blocked') }),
         foot: _atkProv({ ic: 'ph-bold ph-crosshair', n: local, label: 'crowdsec', go: _atkSpec({ origin: 'crowdsec' }),
-                tip: 'Raised by your own scenarios. These are the only decisions that prove something reached this host' })
-            + _atkProv({ ic: 'ph-bold ph-terminal', n: cscli, label: 'by hand', cls: 'sig-prov-warn', go: _atkSpec({ origin: 'byhand' }),
-                tip: 'Added by hand, from this UI or from the CLI. CrowdSec labels these cscli or manual depending on its version' })
+                tip: t('Raised by your own scenarios. These are the only decisions that prove something reached this host') })
+            + _atkProv({ ic: 'ph-bold ph-terminal', n: cscli, label: t('by hand'), cls: 'sig-prov-warn', go: _atkSpec({ origin: 'byhand' }),
+                tip: t('Added by hand, from this UI or from the CLI. CrowdSec labels these cscli or manual depending on its version') })
             + _atkProv({ ic: 'ph-bold ph-users-three', n: capi, label: 'CAPI', go: _atkSpec({ origin: 'capi' }),
-                tip: 'Pulled from the central API community blocklist. Preventive, not evidence of an attack on you' })
-            + _atkProv({ ic: 'ph-bold ph-list-bullets', n: lists, label: 'lists', go: _atkSpec({ origin: 'lists' }),
-                tip: 'Pulled from a subscribed third party blocklist' })
-            + (otherOwn ? _atkProv({ ic: 'ph-bold ph-dots-three-circle', n: otherOwn, label: 'other', go: '',
-                tip: 'Origins outside the four CrowdSec uses today: ' + otherNames.map(k => k || 'blank').join(', ')
-                    + '. Counted as yours, because only CAPI and lists are subscriptions' }) : '')
-            + (wide ? _atkProv({ ic: 'ph-bold ph-selection-all', n: wide, label: 'wide', go: '',
-                tip: _sdNum(wide) + ' decisions are Range or Country scoped, so they cover far more addresses than one row suggests. '
-                    + 'The loose and banned split above matches on the exact address, so a source covered only by one of these reads as loose' }) : ''),
-        go: 'view=decisions', goLabel: 'decisions', goTip: 'Open the decisions view, the secondary table behind the alert stream'
+                tip: t('Pulled from the central API community blocklist. Preventive, not evidence of an attack on you') })
+            + _atkProv({ ic: 'ph-bold ph-list-bullets', n: lists, label: tc('label', 'lists'), go: _atkSpec({ origin: 'lists' }),
+                tip: t('Pulled from a subscribed third party blocklist') })
+            + (otherOwn ? _atkProv({ ic: 'ph-bold ph-dots-three-circle', n: otherOwn, label: tc('label', 'other'), go: '',
+                tip: t('Origins outside the four CrowdSec uses today: {map}. Counted as yours, because only CAPI and lists are subscriptions', { map: otherNames.map(k => k || 'blank').join(', ') }) }) : '')
+            + (wide ? _atkProv({ ic: 'ph-bold ph-selection-all', n: wide, label: tc('label', 'wide'), go: '',
+                tip: t('{wide} decisions are Range or Country scoped, so they cover far more addresses than one row suggests. The loose and banned split above matches on the exact address, so a source covered only by one of these reads as loose', { wide: _sdNum(wide) }) }) : ''),
+        go: 'view=decisions', goLabel: 'decisions', goTip: t('Open the decisions view, the secondary table behind the alert stream')
     });
 }
 
 function _atkDownPanel(d) {
-    return '<section class="sig-ep"><div class="sig-ep-head">'
-        + '<i class="ph-fill ph-plugs sig-ep-headic d-bad"></i>'
-        + '<span class="sc-sec-label">Nothing was read</span>'
-        + '<span class="sc-sec-rule"></span></div>'
-        + '<div class="atk-empty"><i class="ph-fill ph-warning-octagon"></i>'
-        + '<div class="atk-empty-t">The LAPI did not answer</div>'
-        + '<p class="lg-note">Neither <code>/v1/decisions</code> nor <code>/v1/alerts</code> responded, so there are no cards to draw. '
-        + 'A grid of zeroes would be an invention. ' + _esc(d.decErr || '') + '</p>'
-        + '<div class="atk-empty-do">'
-        + _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: 'check the LAPI url and key', go: 'cfg=lapi', tip: 'Open Settings, System Monitoring, CrowdSec' })
-        + _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-arrows-clockwise', n: '', label: 'read again', go: 'reload=1', tip: 'Refetch both endpoints' })
-        + '</div></div></section>';
+    return `<section class="sig-ep"><div class="sig-ep-head"><i class="ph-fill ph-plugs sig-ep-headic d-bad"></i><span class="sc-sec-label">${th('Nothing was read')}</span><span class="sc-sec-rule"></span></div><div class="atk-empty"><i class="ph-fill ph-warning-octagon"></i><div class="atk-empty-t">${th('The LAPI did not answer')}</div><p class="lg-note">${th('Neither {v1_decisions} nor {v1_alerts} responded, so there are no cards to draw. A grid of zeroes would be an invention. {decErr}', { v1_decisions: tmHtml(`<code>/v1/decisions</code>`), v1_alerts: tmHtml(`<code>/v1/alerts</code>`), decErr: d.decErr || '' })}</p><div class="atk-empty-do">${_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: t('check the LAPI url and key'), go: 'cfg=lapi', tip: t('Open Settings, System Monitoring, CrowdSec') })}${_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-arrows-clockwise', n: '', label: t('read again'), go: 'reload=1', tip: t('Refetch both endpoints') })}</div></div></section>`;
 }
 
 function _atkVerdict(d, sel) {
-    let health = 'up', ic = 'ph-fill ph-shield-check', txt = 'Surface held';
+    let health = 'up', ic = 'ph-fill ph-shield-check', txt = t('Surface held');
     const items = [];
     if (!d.lapiOk && !d.alertsOk) {
-        health = 'down'; ic = 'ph-fill ph-warning-octagon'; txt = 'LAPI unreachable';
-        items.push(_atkFlag({ cls: 'd-bad', ic: 'ph-bold ph-plugs', n: '', label: 'nothing was read',
-            tip: d.decErr || 'Both the decisions and the alerts read failed' }));
-        items.push(_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: 'check LAPI url', go: 'cfg=lapi', tip: 'Open Settings, System Monitoring, CrowdSec' }));
+        health = 'down'; ic = 'ph-fill ph-warning-octagon'; txt = t('LAPI unreachable');
+        items.push(_atkFlag({ cls: 'd-bad', ic: 'ph-bold ph-plugs', n: '', label: t('nothing was read'),
+            tip: d.decErr || t('Both the decisions and the alerts read failed') }));
+        items.push(_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: t('check LAPI url'), go: 'cfg=lapi', tip: t('Open Settings, System Monitoring, CrowdSec') }));
     } else if (!d.lapiOk) {
-        health = 'warn'; ic = 'ph-fill ph-warning-circle'; txt = 'Attacks visible, bans are not';
-        items.push(_atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-key', n: '', label: 'no decisions read',
-            tip: (d.decErr || 'The decisions read failed.') + ' A bouncer API key is the only credential CrowdSec accepts on /v1/decisions, and the loose versus banned split needs it' }));
-        items.push(_atkFlag({ cls: 'd-on', ic: 'ph-bold ph-crosshair', n: d.alerts.length, label: 'alerts readable',
-            go: 'clear=all', tip: 'The machine login works, so every attack card above is live' }));
-        items.push(_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: 'add a bouncer key', go: 'cfg=lapi',
-            tip: 'Set CROWDSEC_API_KEY so the tab can read active decisions' }));
+        health = 'warn'; ic = 'ph-fill ph-warning-circle'; txt = t('Attacks visible, bans are not');
+        items.push(_atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-key', n: '', label: t('no decisions read'),
+            tip: t('{decErr} A bouncer API key is the only credential CrowdSec accepts on /v1/decisions, and the loose versus banned split needs it', { decErr: d.decErr || t('The decisions read failed.') }) }));
+        items.push(_atkFlag({ cls: 'd-on', ic: 'ph-bold ph-crosshair', n: d.alerts.length, label: t('alerts readable'),
+            go: 'clear=all', tip: t('The machine login works, so every attack card above is live') }));
+        items.push(_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: t('add a bouncer key'), go: 'cfg=lapi',
+            tip: t('Set CROWDSEC_API_KEY so the tab can read active decisions') }));
     } else if (!d.alertsOk) {
-        health = 'warn'; ic = 'ph-fill ph-warning-circle'; txt = 'Bans visible, attacks are not';
+        health = 'warn'; ic = 'ph-fill ph-warning-circle'; txt = t('Bans visible, attacks are not');
         items.push(_atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-key', n: '',
-            label: d.altStatus ? '/v1/alerts returns ' + d.altStatus : 'alerts not readable',
-            tip: (d.altErr || 'A bouncer API key cannot read alerts.') + ' That is a permission boundary, not an absence of attacks' }));
-        items.push(_atkFlag({ cls: 'd-on', ic: 'ph-bold ph-shield-check', n: d.decTotal, label: 'bans in force',
-            go: 'view=decisions', tip: 'The decisions view works on a bouncer key alone' }));
-        items.push(_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: 'add machine login', go: ATK_NEEDS_MACHINE,
-            tip: 'Set CROWDSEC_MACHINE_ID and CROWDSEC_MACHINE_PASSWORD' }));
+            label: d.altStatus ? t('/v1/alerts returns {altStatus}', { altStatus: d.altStatus }) : t('alerts not readable'),
+            tip: t('{altErr} That is a permission boundary, not an absence of attacks', { altErr: d.altErr || t('A bouncer API key cannot read alerts.') }) }));
+        items.push(_atkFlag({ cls: 'd-on', ic: 'ph-bold ph-shield-check', n: d.decTotal, label: t('bans in force'),
+            go: 'view=decisions', tip: t('The decisions view works on a bouncer key alone') }));
+        items.push(_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: t('add machine login'), go: ATK_NEEDS_MACHINE,
+            tip: t('Set CROWDSEC_MACHINE_ID and CROWDSEC_MACHINE_PASSWORD') }));
     } else if (!d.retained) {
-        ic = 'ph-fill ph-moon-stars'; txt = 'Nothing tripped a scenario';
-        items.push(_atkFlag({ cls: 'd-on', ic: 'ph-bold ph-shield-check', n: d.decTotal, label: 'bans standing',
+        ic = 'ph-fill ph-moon-stars'; txt = t('Nothing tripped a scenario');
+        items.push(_atkFlag({ cls: 'd-on', ic: 'ph-bold ph-shield-check', n: d.decTotal, label: t('bans standing'),
             go: 'view=decisions', tip: d.own
-                ? _sdNum(d.own) + ' of them were raised here rather than subscribed, but no alert in the retained window explains them'
-                : 'All of them subscribed, none earned by an attack on this host' }));
+                ? t('{own} of them were raised here rather than subscribed, but no alert in the retained window explains them', { own: _sdNum(d.own) })
+                : t('All of them subscribed, none earned by an attack on this host') }));
         items.push(d.own
             ? _atkOwnFlag(d.own)
             : '<span class="sig-mono">no local detection in the retained window</span>');
     } else if (!d.alerts.length) {
-        ic = 'ph-fill ph-funnel'; txt = 'Nothing matches';
-        items.push('<span class="sig-mono">0 of ' + _sdNum(d.retained) + ' retained alerts match every filter at once</span>');
-        items.push(_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-x', n: '', label: 'clear filters', go: 'clear=all',
-            tip: 'Remove every filter and the search box' }));
+        ic = 'ph-fill ph-funnel'; txt = t('Nothing matches');
+        items.push('<span class="sig-mono">0 of ' + _sdNum(d.retained) + ` ${th('retained alerts match every filter at once')}</span>`);
+        items.push(_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-x', n: '', label: t('clear filters'), go: 'clear=all',
+            tip: t('Remove every filter and the search box') }));
     } else {
         const loose = sel.sources - sel.banned;
         const ev = d.alerts.reduce((a, x) => a + x.events, 0);
-        if (loose > 0) { health = 'warn'; ic = 'ph-fill ph-warning-circle'; txt = 'Actively probed'; }
-        items.push(_atkFlag({ cls: 'd-off', ic: 'ph-bold ph-crosshair', n: sel.sources, label: 'sources', go: 'clear=all',
-            tip: _sdNum(sel.sources) + ' distinct addresses tripped at least one scenario in the retained window' }));
-        items.push(_atkFlag({ cls: 'd-off', ic: 'ph-bold ph-lightning', n: sel.scenarios, label: 'scenarios', tag: 'span',
-            tip: 'Distinct scenarios that fired' }));
-        items.push(_atkFlag({ cls: 'd-off', ic: 'ph-bold ph-pulse', n: ev, label: 'events', tag: 'span',
-            tip: 'Sum of events_count, the raw log lines that rolled up into these alerts. Always larger than the alert count' }));
+        if (loose > 0) { health = 'warn'; ic = 'ph-fill ph-warning-circle'; txt = t('Actively probed'); }
+        items.push(_atkFlag({ cls: 'd-off', ic: 'ph-bold ph-crosshair', n: sel.sources, label: tc('label', 'sources'), go: 'clear=all',
+            tip: t('{sources} distinct addresses tripped at least one scenario in the retained window', { sources: _sdNum(sel.sources) }) }));
+        items.push(_atkFlag({ cls: 'd-off', ic: 'ph-bold ph-lightning', n: sel.scenarios, label: tc('label', 'scenarios'), tag: 'span',
+            tip: t('Distinct scenarios that fired') }));
+        items.push(_atkFlag({ cls: 'd-off', ic: 'ph-bold ph-pulse', n: ev, label: tc('label', 'events'), tag: 'span',
+            tip: t('Sum of events_count, the raw log lines that rolled up into these alerts. Always larger than the alert count') }));
         if (d.capped) {
-            items.push(_atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-funnel', n: d.limit, label: 'alert cap reached', tag: 'span',
-                tip: 'CrowdSec returned as many alerts as the cap allows, so older ones are not counted here. '
-                   + 'Raise CROWDSEC_ALERT_LIMIT, or the alert limit in Settings, to see further back' }));
+            items.push(_atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-funnel', n: d.limit, label: t('alert cap reached'), tag: 'span',
+                tip: t('CrowdSec returned as many alerts as the cap allows, so older ones are not counted here. Raise CROWDSEC_ALERT_LIMIT, or the alert limit in Settings, to see further back') }));
         }
         if (loose > 0) {
-            items.push(_atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-lock-open', n: loose, label: 'no active ban',
+            items.push(_atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-lock-open', n: loose, label: t('no active ban'),
                 go: _atkSpec({ outcome: 'loose' }),
-                tip: 'These sources tripped a scenario and hold no decision now. Usually an expired ban rather than a miss' }));
+                tip: t('These sources tripped a scenario and hold no decision now. Usually an expired ban rather than a miss') }));
         } else {
-            items.push('<span class="sig-mono">every source that tripped a scenario is banned'
-                + (sel.sim ? '' : ', no scenario is in simulation mode') + '</span>');
+            items.push(`<span class="sig-mono">every source that tripped a scenario is banned${sel.sim ? '' : th(', no scenario is in simulation mode')}</span>`);
         }
         if (sel.sim) {
-            items.push(_atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-eye-slash', n: sel.sim, label: 'simulated',
+            items.push(_atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-eye-slash', n: sel.sim, label: tc('label', 'simulated'),
                 go: _atkSpec({ outcome: 'sim' }),
-                tip: 'Simulation mode: CrowdSec matched the scenario and enforced nothing' }));
+                tip: t('Simulation mode: CrowdSec matched the scenario and enforced nothing') }));
         }
     }
-    return '<div class="sig-verdict" data-health="' + health + '">'
-        + '<i class="' + ic + ' sig-verdict-ic"></i>'
-        + '<span class="sig-verdict-txt">' + _esc(txt) + '</span>'
-        + '<span class="sig-verdict-items">' + items.join('') + '</span>'
-        + '<span class="sig-verdict-meta">' + (d.span ? _esc(_lgSpanTxt(d.span)) + ' of alerts' + SD_SEP : '')
-        + 'read <b id="atkAge">' + _esc(_sdAgo(d.fetched)) + '</b></span></div>';
+    return `<div class="sig-verdict" data-health="${health}"><i class="${ic} sig-verdict-ic"></i><span class="sig-verdict-txt">${_esc(txt)}</span><span class="sig-verdict-items">${items.join('')}</span><span class="sig-verdict-meta">${(d.span ? th('{span} of alerts', { span: _lgSpanTxt(d.span) }) + SD_SEP : '') + th('read {ago}', { ago: tmHtml(`<b id="atkAge">${_esc(_sdAgo(d.fetched))}</b>`) })}</span></div>`;
 }
 
 function _atkKeyRow(d, sel) {
     const facets = _atkActive();
-    let html = '<span class="sig-key-lab">window</span>';
+    let html = `<span class="sig-key-lab">${thc('label', 'window')}</span>`;
     if (d.alertsOk) {
-        html += '<span class="sig-key-item lg-static" title="Alerts the LAPI still retains. CrowdSec prunes on its own schedule, so this is a retention window, not the start of activity">'
-            + '<i class="ph-bold ph-siren"></i>retained<b>' + _sdNum(d.retained) + '</b>alerts</span>';
+        html += `<span class="sig-key-item lg-static" title="${th('Alerts the LAPI still retains. CrowdSec prunes on its own schedule, so this is a retention window, not the start of activity')}"><i class="ph-bold ph-siren"></i>${th('retained{b}alerts', { b: tmHtml(`<b>${_sdNum(d.retained)}</b>`) })}</span>`;
         if (d.span) {
-            html += '<span class="sig-key-item lg-static" title="Oldest retained alert to newest, ' + _esc(_atkStamp(d.oldest)) + ' to ' + _esc(_atkStamp(d.newest)) + '">'
-                + '<i class="ph-bold ph-clock-counter-clockwise"></i>span<b>' + _esc(_lgSpanTxt(d.span)) + '</b></span>';
+            html += `<span class="sig-key-item lg-static" title="${th('Oldest retained alert to newest, {atkStamp} to {atkStamp2}', { atkStamp: _atkStamp(d.oldest), atkStamp2: _atkStamp(d.newest) })}"><i class="ph-bold ph-clock-counter-clockwise"></i>${th('span{b}', { b: tmHtml(`<b>${_esc(_lgSpanTxt(d.span))}</b>`) })}</span>`;
         }
     } else {
-        html += '<span class="sig-key-item sig-key-empty" title="' + _esc((d.altErr || 'The alerts endpoint refused the read.') + ' Zero is not the same as none')
-            + '"><i class="ph-bold ph-siren"></i>retained<b>?</b>alerts</span>';
+        html += `<span class="sig-key-item sig-key-empty" title="${_esc(t('{altErr} Zero is not the same as none', { altErr: d.altErr || t('The alerts endpoint refused the read.') }))}"><i class="ph-bold ph-siren"></i>${th('retained{b}alerts', { b: tmHtml(`<b>?</b>`) })}</span>`;
     }
     html += d.lapiOk
-        ? '<span class="sig-key-item lg-static" title="Active decisions after expired rows are dropped. The cursor walk stops at 200 pages of 1000, so 200,000 is the undocumented ceiling">'
-            + '<i class="ph-bold ph-shield-check"></i><b>' + _sdNum(d.decTotal) + '</b>bans</span>'
-        : '<span class="sig-key-item sig-key-empty" title="The decisions read failed. Zero would be an invention, so this says nothing instead">'
-            + '<i class="ph-bold ph-shield-check"></i><b>?</b>bans</span>';
+        ? `<span class="sig-key-item lg-static" title="${th('Active decisions after expired rows are dropped. The cursor walk stops at 200 pages of 1000, so 200,000 is the undocumented ceiling')}"><i class="ph-bold ph-shield-check"></i><b>${_sdNum(d.decTotal)}</b>${thc('label', 'bans')}</span>`
+        : `<span class="sig-key-item sig-key-empty" title="${th('The decisions read failed. Zero would be an invention, so this says nothing instead')}"><i class="ph-bold ph-shield-check"></i><b>?</b>${thc('label', 'bans')}</span>`;
     if (facets.length || _atkQuery) {
-        html += '<span class="sig-key-lab">filters</span>';
+        html += `<span class="sig-key-lab">${thc('label', 'filters')}</span>`;
         facets.forEach(k => {
             const v = _atkFacet[k];
             const alertOnly = !!ATK_ALERT_ONLY[k];
@@ -1302,45 +1259,33 @@ function _atkKeyRow(d, sel) {
             const ignored = (_atkView === 'decisions' && alertOnly) || (_atkView === 'alerts' && decOnly);
             const hit = sel.facetHits[k] || 0;
             const tip = ignored
-                ? k + ' = ' + v + '. This filter only applies to ' + (alertOnly ? 'alerts' : 'decisions') + ' and is ignored in this view. Click to clear'
-                : k + ' = ' + v + (hit ? ', ' + _sdNum(hit) + ' matches. Click to clear' : ', nothing matches this. Click to clear');
-            html += '<button type="button" class="sig-key-item ' + ((hit && !ignored) ? 'sig-key-on' : 'sig-key-empty')
-                + '" data-atk="' + _esc(_atkSpec({ [k]: v })) + '" title="' + _esc(tip) + '">'
-                + '<i class="ph-bold ph-funnel"></i>' + _esc(k) + '<b>' + _esc(_atkClip(v, 24)) + '</b></button>';
+                ? (alertOnly ? t('{k} = {v}. This filter only applies to alerts and is ignored in this view. Click to clear', { k, v })
+                   : t('{k} = {v}. This filter only applies to decisions and is ignored in this view. Click to clear', { k, v }))
+                : k + ' = ' + v + (hit ? t(', {hit} matches. Click to clear', { hit: _sdNum(hit) }) : t(', nothing matches this. Click to clear'));
+            html += `<button type="button" class="sig-key-item ${hit && !ignored ? 'sig-key-on' : 'sig-key-empty'}" data-atk="${_esc(_atkSpec({ [k]: v }))}" title="${_esc(tip)}"><i class="ph-bold ph-funnel"></i>${_esc(k)}<b>${_esc(_atkClip(v, 24))}</b></button>`;
         });
         if (_atkQuery) {
-            html += '<span class="sig-key-item sig-key-on lg-static" title="Free text search over address, scenario, AS name, message, machine, paths, agents and accounts">'
-                + '<i class="ph-bold ph-magnifying-glass"></i><b>' + _esc(_atkClip(_atkQuery, 24)) + '</b></span>';
+            html += `<span class="sig-key-item sig-key-on lg-static" title="${th('Free text search over address, scenario, AS name, message, machine, paths, agents and accounts')}"><i class="ph-bold ph-magnifying-glass"></i><b>${_esc(_atkClip(_atkQuery, 24))}</b></span>`;
         }
-        html += '<button type="button" class="sig-key-item" data-atk="clear=all" title="Clear every filter and the search box"><i class="ph-bold ph-x"></i>clear</button>';
+        html += `<button type="button" class="sig-key-item" data-atk="clear=all" title="${th('Clear every filter and the search box')}"><i class="ph-bold ph-x"></i>${thc('button', 'clear')}</button>`;
     }
     if (_atkView === 'decisions') {
-        html += '<span class="sig-key-lab">showing</span>'
-            + '<span class="sig-key-item sig-key-on lg-static" title="The feed below is listing active decisions rather than the alerts that caused them">'
-            + '<i class="ph-bold ph-shield-check"></i>bans in force</span>'
-            + '<button type="button" class="sig-key-item" data-atk="view=alerts" title="Go back to the attack evidence, the primary view">'
-            + '<i class="ph-bold ph-crosshair"></i>back to alerts</button>';
+        html += `<span class="sig-key-lab">${thc('label', 'showing')}</span><span class="sig-key-item sig-key-on lg-static" title="${th('The feed below is listing active decisions rather than the alerts that caused them')}"><i class="ph-bold ph-shield-check"></i>${th('bans in force')}</span><button type="button" class="sig-key-item" data-atk="view=alerts" title="${th('Go back to the attack evidence, the primary view')}"><i class="ph-bold ph-crosshair"></i>${th('back to alerts')}</button>`;
     }
     const scoped = facets.length || _atkQuery;
     const scopeTxt = scoped
-        ? _sdNum(sel.alerts.length) + ' of ' + _sdNum(d.retained) + ' retained alerts'
-        : 'local detections only';
+        ? t('{alerts_count} of {retained} retained alerts', { alerts_count: _sdNum(sel.alerts.length), retained: _sdNum(d.retained) })
+        : t('local detections only');
     const scopeTip = d.alertsOk
-        ? 'Every card above summarises the ' + _sdNum(d.retained) + ' alerts the LAPI still retains, not every attack this host has ever seen. '
-            + 'The oldest alert here is the edge of retention, not the start of activity, and CrowdSec does not report how many it pruned. '
-            + 'Subscribed blocklist rows are left out on purpose because they describe the internet rather than your host. '
-            + (scoped
-                ? _sdNum(sel.alerts.length) + ' of them match every filter on this row at once. Click to drop the filters.'
-                : 'Click to see the ' + _sdNum(sel.subscribed) + ' subscribed bans that were excluded.')
-        : 'Only decisions were read. The alert stream is the source of every scenario, path, network and agent on this tab, and a bouncer key cannot see it.';
+        ? t('Every card above summarises the {retained} alerts the LAPI still retains, not every attack this host has ever seen. The oldest alert here is the edge of retention, not the start of activity, and CrowdSec does not report how many it pruned. Subscribed blocklist rows are left out on purpose because they describe the internet rather than your host. {value}', { retained: _sdNum(d.retained), value: scoped ? t('{count} of them match every filter on this row at once. Click to drop the filters.', { count: _sdNum(sel.alerts.length) }) : t('Click to see the {count} subscribed bans that were excluded.', { count: _sdNum(sel.subscribed) }) })
+        : t('Only decisions were read. The alert stream is the source of every scenario, path, network and agent on this tab, and a bouncer key cannot see it.');
     html += (d.alertsOk && d.lapiOk)
         ? '<button type="button" class="sig-key-scope" data-atk="'
             + _esc(scoped ? 'clear=all' : _atkSpec({ view: 'decisions', origin: 'subscribed' }))
             + '" title="' + _esc(scopeTip) + '"><i class="ph-bold ph-funnel-simple"></i>' + _esc(scopeTxt) + '</button>'
-        : '<span class="sig-key-scope lg-static" title="' + _esc(d.alertsOk
-                ? 'Active decisions were not readable, so nothing here can say whether an attacking source is still banned.'
-                : scopeTip)
-            + '"><i class="ph-bold ph-eye-slash"></i>' + (d.alertsOk ? 'alerts only' : 'decisions only') + '</span>';
+        : `<span class="sig-key-scope lg-static" title="${_esc(d.alertsOk
+                ? t('Active decisions were not readable, so nothing here can say whether an attacking source is still banned.')
+                : scopeTip)}"><i class="ph-bold ph-eye-slash"></i>${d.alertsOk ? th('alerts only') : th('decisions only')}</span>`;
     return '<div class="sig-key" id="csKey">' + html + '</div>';
 }
 
@@ -1348,20 +1293,20 @@ function _atkRuntime(d) {
     const f = [];
     const on = (ok, ic, txt, tip) => '<span class="sig-f ' + (ok ? 'sig-f-on' : 'sig-f-off') + '" title="' + _esc(tip) + '">'
         + '<i class="' + ic + '"></i>' + _esc(txt) + '</span>';
-    f.push(on(d.lapiOk, 'ph-bold ph-key', d.lapiOk ? 'bouncer key' : 'no decisions read',
-        'Reads /v1/decisions. CrowdSec rejects the machine token on that endpoint, so this key is not optional even when a watcher login exists'));
-    f.push(on(d.alertsOk, 'ph-bold ph-identification-card', d.alertsOk ? 'machine login' : 'no machine login',
-        'Reads /v1/alerts, the only source of scenarios, paths, networks and agents on this tab. The token lives one hour'));
+    f.push(on(d.lapiOk, 'ph-bold ph-key', d.lapiOk ? t('bouncer key') : t('no decisions read'),
+        t('Reads /v1/decisions. CrowdSec rejects the machine token on that endpoint, so this key is not optional even when a watcher login exists')));
+    f.push(on(d.alertsOk, 'ph-bold ph-identification-card', d.alertsOk ? t('machine login') : t('no machine login'),
+        t('Reads /v1/alerts, the only source of scenarios, paths, networks and agents on this tab. The token lives one hour')));
     f.push(on(d.enrich, 'ph-bold ph-globe-hemisphere-west', d.enrich ? 'geoip-enrich' : 'no geoip-enrich',
-        'The crowdsecurity/geoip-enrich parser on the reporting machine fills source.cn, source.as_name and the coordinates. The LAPI never computes them, it stores what the agent sent'));
-    f.push(on(d.httpOn, 'ph-bold ph-target', d.httpOn ? 'HTTP meta' : 'no HTTP meta',
-        'Alert meta[] carries target_uri, method, status and user_agent only for HTTP buckets'));
-    f.push(on(d.sshOn, 'ph-bold ph-user-focus', d.sshOn ? 'SSH meta' : 'no SSH meta',
-        'SSH buckets carry target_user instead, and share none of the HTTP keys'));
-    f.push(on(d.hostGeo, 'ph-bold ph-map-pin', d.hostGeo ? 'host GeoIP DB' : 'crowdsec coordinates',
+        t('The crowdsecurity/geoip-enrich parser on the reporting machine fills source.cn, source.as_name and the coordinates. The LAPI never computes them, it stores what the agent sent')));
+    f.push(on(d.httpOn, 'ph-bold ph-target', d.httpOn ? t('HTTP meta') : t('no HTTP meta'),
+        t('Alert meta[] carries target_uri, method, status and user_agent only for HTTP buckets')));
+    f.push(on(d.sshOn, 'ph-bold ph-user-focus', d.sshOn ? t('SSH meta') : t('no SSH meta'),
+        t('SSH buckets carry target_user instead, and share none of the HTTP keys')));
+    f.push(on(d.hostGeo, 'ph-bold ph-map-pin', d.hostGeo ? t('host GeoIP DB') : t('crowdsec coordinates'),
         d.hostGeo
-            ? 'These alerts carry no country, so the map below was resolved by the host MaxMind database instead. Only alert sources are looked up, never the blocklist'
-            : 'Countries below come straight from the alert, resolved by CrowdSec. No address is sent to the host GeoIP database'));
+            ? t('These alerts carry no country, so the map below was resolved by the host MaxMind database instead. Only alert sources are looked up, never the blocklist')
+            : t('Countries below come straight from the alert, resolved by CrowdSec. No address is sent to the host GeoIP database')));
     return '<div class="sig-runtime" id="csRuntime">' + f.join('') + '</div>';
 }
 
@@ -1374,45 +1319,20 @@ function _atkGeoPanel(alerts) {
 function _atkAlertRow(a) {
     const open = _atkOpen === a.uuid;
     const drawn = Math.min(a.events, ATK_EV_CAP);
-    const cellLab = i => _scenShort(a.scenario) + ' event ' + (i + 1) + ' of ' + _sdNum(a.events) + ', ' + a.ip;
+    const cellLab = i => t('{scenario} event {n} of {events}, {ip}', { scenario: _scenShort(a.scenario), n: i + 1, events: _sdNum(a.events), ip: a.ip });
     const strip = _atkStrip([{ cls: (a.handled || !a.known) ? '' : (a.simulated ? 'sig-cell-idle' : 'sig-cell-warn'), n: drawn, at: cellLab }],
-        _sdNum(a.events) + ' events', { noun: 'events', cap: ATK_ROW_CELL_CAP, cls: 'sig-strip-xs' });
+        _lgCount('events', a.events), { noun: 'events', cap: ATK_ROW_CELL_CAP, cls: 'sig-strip-xs' });
     const target = a.uris.length
         ? (a.verbs.join('/') + ' ' + a.uris.join(' '))
-        : (a.users.length ? 'accounts ' + a.users.join(' ') : 'no target meta reported');
-    const sub = [target, a.uas.length ? _uaShort(a.uas[0]) : 'no agent',
+        : (a.users.length ? 'accounts ' + a.users.join(' ') : t('no target meta reported'));
+    const sub = [target, a.uas.length ? _uaShort(a.uas[0]) : t('no agent'),
         _atkHhmm(a.start) + ' to ' + _atkHhmm(a.stop),
         a.capacity > 0 ? 'leaky ' + a.capacity + '/' + a.leakspeed : 'trigger'].join(' · ');
-    let row = '<div class="sig-ep-row" role="button" tabindex="0"'
-        + ((a.handled || !a.known) ? '' : (a.simulated ? ' data-health="idle"' : ' data-health="warn"'))
-        + ' data-atk="' + _esc(_atkSpec({ open: a.uuid })) + '" title="' + _esc(a.message || (a.ip + ' ' + a.scenario)) + '">'
-        + '<span class="sig-ep-id"><span class="sig-ep-name">' + _esc(a.ip || 'unknown') + '</span>'
-        + '<span class="sig-idle-txt">' + _esc(_scenShort(a.scenario)) + '</span></span>'
-        + '<span class="sig-ep-addr">'
-        + (a.cc ? _flagEmoji(a.cc) + ' ' + _esc(a.cc) : '<span class="sig-idle-txt">no geo</span>')
-        + (a.asName ? SD_SEP + _esc(_atkClip(a.asName, 16)) : '') + '</span>'
-        + '<span class="sig-ep-strip">' + strip + '</span>'
-        + '<span class="sig-ep-n">' + _sdNum(a.events) + '</span>'
-        + '<span class="sig-ep-flags">'
-        + (!a.known
-            ? _atkFlag({ tag: 'span', cls: 'd-off', ic: 'ph-bold ph-question', n: '', label: 'unknown', words: false,
-                tip: 'The decisions read failed, so whether this source is banned cannot be answered' })
-            : a.handled
-            ? _atkFlag({ tag: 'span', cls: 'd-off', ic: 'ph-bold ph-prohibit', n: '', label: 'banned', words: false,
-                tip: 'This source holds an active ban raised by your own scenarios. Nothing to do about it' })
-            : (a.simulated
-                ? _atkFlag({ tag: 'span', cls: 'd-warn', ic: 'ph-bold ph-eye-slash', n: '', label: 'simulated', words: false,
-                    tip: 'Simulation mode: CrowdSec matched this scenario and enforced nothing' })
-                : _atkFlag({ tag: 'span', cls: 'd-warn', ic: 'ph-bold ph-lock-open', n: '', label: 'loose', words: false,
-                    tip: 'No active decision for this source right now. The ban has probably expired' })))
-        + ((!a.handled && a.ip)
-            ? '<button type="button" class="sig-flag d-off atk-ban" data-atk="' + _esc(_atkSpec({ ban: a.ip }))
-                + '" title="Ban this source. Opens the decision form with the address filled in, the type and duration stay yours to pick">'
-                + '<i class="ph-bold ph-gavel"></i></button>' : '')
-        + '<span class="sig-idle-txt">' + _esc(a.start ? _sdAgo(a.start) : 'no time') + '</span></span>'
-        + '<span class="sig-ep-sub">' + _esc(sub) + '</span>'
-        + '<span class="sig-ep-kind">' + _esc(_scenShort(a.scenario) + ' · ' + (a.uris[0] || a.users[0] || '-')) + '</span>'
-        + '</div>';
+    let row = `<div class="sig-ep-row" role="button" tabindex="0"${a.handled || !a.known ? '' : a.simulated ? ' data-health="idle"' : ' data-health="warn"'} data-atk="${_esc(_atkSpec({ open: a.uuid }))}" title="${_esc(a.message || (a.ip + ' ' + a.scenario))}"><span class="sig-ep-id"><span class="sig-ep-name">${_esc(a.ip || t('unknown'))}</span><span class="sig-idle-txt">${_esc(_scenShort(a.scenario))}</span></span><span class="sig-ep-addr">${a.cc ? _flagEmoji(a.cc) + ' ' + _esc(a.cc) : `<span class="sig-idle-txt">${th('no geo')}</span>`}${a.asName ? SD_SEP + _esc(_atkClip(a.asName, 16)) : ''}</span><span class="sig-ep-strip">${strip}</span><span class="sig-ep-n">${_sdNum(a.events)}</span><span class="sig-ep-flags">${!a.known ? _atkFlag({ tag: 'span', cls: 'd-off', ic: 'ph-bold ph-question', n: '', label: tc('label', 'unknown'), words: false,
+                tip: t('The decisions read failed, so whether this source is banned cannot be answered') }) : a.handled ? _atkFlag({ tag: 'span', cls: 'd-off', ic: 'ph-bold ph-prohibit', n: '', label: tc('label', 'banned'), words: false,
+                tip: t('This source holds an active ban raised by your own scenarios. Nothing to do about it') }) : a.simulated ? _atkFlag({ tag: 'span', cls: 'd-warn', ic: 'ph-bold ph-eye-slash', n: '', label: tc('label', 'simulated'), words: false,
+                    tip: t('Simulation mode: CrowdSec matched this scenario and enforced nothing') }) : _atkFlag({ tag: 'span', cls: 'd-warn', ic: 'ph-bold ph-lock-open', n: '', label: tc('label', 'loose'), words: false,
+                    tip: t('No active decision for this source right now. The ban has probably expired') })}${!a.handled && a.ip ? `<button type="button" class="sig-flag d-off atk-ban" data-atk="${_esc(_atkSpec({ ban: a.ip }))}" title="${th('Ban this source. Opens the decision form with the address filled in, the type and duration stay yours to pick')}"><i class="ph-bold ph-gavel"></i></button>` : ''}<span class="sig-idle-txt">${_esc(a.start ? _sdAgo(a.start) : t('no time'))}</span></span><span class="sig-ep-sub">${_esc(sub)}</span><span class="sig-ep-kind">${_esc(_scenShort(a.scenario) + ' · ' + (a.uris[0] || a.users[0] || '-'))}</span></div>`;
     if (open) row += _atkAlertOpen(a);
     return row;
 }
@@ -1421,54 +1341,49 @@ function _atkAlertOpen(a) {
     const kv = [];
     const push = (k, v) => kv.push('<span class="atk-k">' + _esc(k) + '</span><span class="atk-v">' + v + '</span>');
     const none = t => '<span class="atk-none">' + _esc(t) + '</span>';
-    push('source', _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-crosshair', n: '', label: a.ip || 'unknown',
-            go: _atkSpec({ ip: a.ip }), tip: 'Filter the evidence to this address' })
-        + ' <span class="atk-none">' + _esc(a.scope + ' scope' + (a.range ? ', in ' + a.range : '') + ', ' + classifyIp(a.ip)) + '</span>');
+    push('source', _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-crosshair', n: '', label: a.ip || tc('label', 'unknown'),
+            go: _atkSpec({ ip: a.ip }), tip: t('Filter the evidence to this address') })
+        + ' <span class="atk-none">' + _esc((a.range ? t('{scope} scope, in {range}, {kind}', { scope: a.scope, range: a.range, kind: classifyIp(a.ip) }) : t('{scope} scope, {kind}', { scope: a.scope, kind: classifyIp(a.ip) }))) + '</span>');
     push('network', a.asName
-        ? _atkFlag({ cls: 'd-mw', ic: 'ph-bold ph-tree-structure', n: '', label: a.asName + ' (AS' + a.asNum + ')',
-            go: _atkSpec({ asn: a.asNum }), tip: 'Filter the evidence to this network' })
-        : none('not reported by the agent that raised this alert'));
+        ? _atkFlag({ cls: 'd-mw', ic: 'ph-bold ph-tree-structure', n: '', label: t('{asName} (AS{asNum})', { asName: a.asName, asNum: a.asNum }),
+            go: _atkSpec({ asn: a.asNum }), tip: t('Filter the evidence to this network') })
+        : none(t('not reported by the agent that raised this alert')));
     push('country', a.cc
         ? _flagEmoji(a.cc) + ' ' + _esc(_csCountryName(a.cc))
-            + (a.cn ? '' : ' <span class="atk-none">resolved by the host GeoIP database, the alert itself carries no country</span>')
-            + (a.lat != null ? ' <span class="atk-none">' + _esc(a.lat + ', ' + a.lon
-                + ' - CrowdSec coordinates, often a country centroid rather than a city') + '</span>' : '')
-        : none('geoip-enrich not installed on the reporting machine'));
+            + (a.cn ? '' : ` <span class="atk-none">${th('resolved by the host GeoIP database, the alert itself carries no country')}</span>`)
+            + (a.lat != null ? ' <span class="atk-none">' + _esc(t('{lat}, {lon} - CrowdSec coordinates, often a country centroid rather than a city', { lat: a.lat, lon: a.lon })) + '</span>' : '')
+        : none(t('geoip-enrich not installed on the reporting machine')));
     push('scenario', _atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-lightning', n: '', label: a.scenario,
-            go: _atkSpec({ scenario: a.scenario }), tip: 'Filter the evidence to this scenario' })
+            go: _atkSpec({ scenario: a.scenario }), tip: t('Filter the evidence to this scenario') })
         + (a.version ? ' <span class="atk-none">v' + _esc(a.version) + '</span>' : ''));
     push('bucket', a.capacity > 0
-        ? _esc('leaky, capacity ' + a.capacity + ', leaks every ' + a.leakspeed)
-            + ' <span class="atk-none">sustained pressure was needed to fire this</span>'
-        : 'trigger <span class="atk-none">capacity 0, fires on the first matching event, so capacity and leakspeed say nothing here</span>');
-    push('events', _sdNum(a.events)
-        + ' <span class="atk-none">events_count is the bucket counter and is normally larger than the sampled events array the LAPI returns</span>');
-    push('window', _esc(_atkStamp(a.start) + ' to ' + _atkStamp(a.stop))
+        ? `${_esc(t('leaky, capacity {capacity}, leaks every {leakspeed}', { capacity: a.capacity, leakspeed: a.leakspeed }))} <span class="atk-none">${th('sustained pressure was needed to fire this')}</span>`
+        : `${th('trigger {capacity_0_fires}', { capacity_0_fires: tmHtml(`<span class="atk-none">${th('capacity 0, fires on the first matching event, so capacity and leakspeed say nothing here')}</span>`) })}`);
+    push('events', `${_sdNum(a.events)} <span class="atk-none">${th('events_count is the bucket counter and is normally larger than the sampled events array the LAPI returns')}</span>`);
+    push('window', _esc(t('{atkStamp} to {atkStamp2}', { atkStamp: _atkStamp(a.start), atkStamp2: _atkStamp(a.stop) }))
         + ' <span class="atk-none">' + _esc(_lgSpanTxt(Math.max(0, a.stop - a.start))) + '</span>');
     if (a.routers.length) {
         const known = a.routers.map(rn => _atkKnownRoute(rn)).filter(Boolean);
         push('router', a.routers.map(rn => _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-arrows-split', n: '', label: String(rn).split('@')[0],
-                go: _atkSpec({ router: rn }), tip: 'Filter the evidence to this router' })).join(' ')
-            + known.map(rn => ' <button type="button" class="route-deep-chip" onclick="_openRouteByName(' + _jsArg(rn) + ')" title="Open this route">'
-                + '<i class="ph-bold ph-arrow-square-out"></i>open</button>').join(''));
+                go: _atkSpec({ router: rn }), tip: t('Filter the evidence to this router') })).join(' ')
+            + known.map(rn => ` <button type="button" class="route-deep-chip" onclick="_openRouteByName(${_jsArg(rn)})" title="${th('Open this route')}"><i class="ph-bold ph-arrow-square-out"></i>${thc('button', 'open')}</button>`).join(''));
     }
     if (a.hosts.length) {
         push('host', a.hosts.map(h => _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-globe', n: '', label: h,
-            go: _atkSpec({ host: h }), tip: 'Filter the evidence to this host' })).join(' '));
+            go: _atkSpec({ host: h }), tip: t('Filter the evidence to this host') })).join(' '));
     }
     if (a.uris.length) {
         push('paths', a.uris.map(u => _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-file-dashed', n: '', label: u,
-            go: _atkSpec({ uri: u }), tip: 'Filter the evidence to this path' })).join(' '));
+            go: _atkSpec({ uri: u }), tip: t('Filter the evidence to this path') })).join(' '));
         push('verbs', (a.verbs.length
                 ? a.verbs.map(v => _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-arrow-bend-right-up', n: '', label: v,
-                    go: _atkSpec({ verb: v }), tip: 'Filter the evidence to this verb' })).join(' ')
-                : none('no method in meta[]'))
+                    go: _atkSpec({ verb: v }), tip: t('Filter the evidence to this verb') })).join(' ')
+                : none(t('no method in meta[]')))
             + (a.codes.length ? ' <span class="atk-none">status ' + _esc(a.codes.join(' ')) + '</span>' : ''));
     } else if (a.users.length) {
-        push('accounts', _esc(a.users.join(', '))
-            + ' <span class="atk-none">target_user, the SSH counterpart of target_uri</span>');
+        push('accounts', `${_esc(a.users.join(', '))} <span class="atk-none">${th('target_user, the SSH counterpart of target_uri')}</span>`);
     } else {
-        push('target', none('this alert carries no meta[]. cscli and blocklist alerts never do'));
+        push('target', none(t('this alert carries no meta[]. cscli and blocklist alerts never do')));
     }
     push('agent', a.uas.length
         ? _atkFlag({ cls: 'd-on', ic: 'ph-bold ph-robot', n: '', label: _uaShort(a.uas[0]),
@@ -1476,56 +1391,33 @@ function _atkAlertOpen(a) {
             + ' <span class="atk-none">' + _esc(a.uas[0]) + '</span>'
         : none('no user_agent in meta[]'));
     const banAct = (!a.handled && a.ip)
-        ? ' ' + _atkFlag({ cls: 'd-bad', ic: 'ph-bold ph-gavel', n: '', label: 'ban ' + a.ip,
-            go: _atkSpec({ ban: a.ip }), tip: 'Open the decision form with this address filled in. Type, duration and reason stay yours to pick' })
+        ? ' ' + _atkFlag({ cls: 'd-bad', ic: 'ph-bold ph-gavel', n: '', label: t('ban {ip}', { ip: a.ip }),
+            go: _atkSpec({ ban: a.ip }), tip: t('Open the decision form with this address filled in. Type, duration and reason stay yours to pick') })
         : '';
     push('outcome', !a.known
-        ? none('the decisions read failed, so the ban state of this source is not knowable right now') + banAct
+        ? none(t('the decisions read failed, so the ban state of this source is not knowable right now')) + banAct
         : a.handled
-        ? _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-prohibit', n: '', label: 'active ban on ' + a.ip,
-            go: _atkSpec({ view: 'decisions', ip: a.ip }), tip: 'Jump to the decisions view filtered to this source' })
+        ? _atkFlag({ cls: 'd-off', ic: 'ph-bold ph-prohibit', n: '', label: t('active ban on {ip}', { ip: a.ip }),
+            go: _atkSpec({ view: 'decisions', ip: a.ip }), tip: t('Jump to the decisions view filtered to this source') })
         : (a.simulated
-            ? _atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-eye-slash', n: '', label: 'simulated, nothing enforced',
-                go: _atkSpec({ outcome: 'sim' }), tip: 'Show every simulated alert' })
-            : _atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-lock-open', n: '', label: 'no active decision',
-                go: _atkSpec({ outcome: 'loose' }), tip: 'Show every alert whose source is currently unbanned' })) + banAct);
-    push('reported by', _esc(a.machine || 'unknown') + ' <span class="atk-none">alert ' + _esc(a.uuid) + '</span>');
+            ? _atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-eye-slash', n: '', label: t('simulated, nothing enforced'),
+                go: _atkSpec({ outcome: 'sim' }), tip: t('Show every simulated alert') })
+            : _atkFlag({ cls: 'd-warn', ic: 'ph-bold ph-lock-open', n: '', label: t('no active decision'),
+                go: _atkSpec({ outcome: 'loose' }), tip: t('Show every alert whose source is currently unbanned') })) + banAct);
+    push(t('reported by'), _esc(a.machine || t('unknown')) + ` <span class="atk-none">${thc('label', 'alert')} ` + _esc(a.uuid) + '</span>');
     return '<div class="atk-open">' + kv.join('') + '</div>';
 }
 
 function _atkDecisionRow(x) {
-    return '<div class="sig-ep-row" role="button" tabindex="0"'
-        + (x.own ? (x.origin !== 'crowdsec' ? ' data-health="warn"' : '') : ' data-health="idle"')
-        + ' data-atk="' + _esc(_atkSpec({ ip: x.value })) + '"'
-        + ' title="' + _esc(x.value + ' - ' + x.type + ' from ' + (x.origin || 'unknown')
-            + (x.duration ? ', ' + x.duration + ' remaining. The duration counts down live and is not the value originally requested' : '')) + '">'
-        + '<span class="sig-ep-id"><span class="sig-ep-name">' + _esc(x.value) + '</span>'
-        + '<span class="sig-idle-txt">' + _esc(x.scope) + '</span></span>'
-        + '<span class="sig-ep-addr">' + _esc(_atkClip(_scenShort(x.scenario), 34)) + '</span>'
-        + '<span class="sig-ep-n sig-ep-n0">' + _esc(x.duration || '-') + '</span>'
-        + '<span class="sig-ep-flags">'
-        + _atkFlag({ tag: 'span', cls: x.type === 'ban' ? 'd-bad' : (x.type === 'captcha' ? 'd-warn' : 'd-off'),
+    return `<div class="sig-ep-row" role="button" tabindex="0"${x.own ? x.origin !== 'crowdsec' ? ' data-health="warn"' : '' : ' data-health="idle"'} data-atk="${_esc(_atkSpec({ ip: x.value }))}" title="${_esc((x.duration ? t('{target} - {type} from {origin}, {duration} remaining. The duration counts down live and is not the value originally requested', { target: x.value, type: x.type, origin: x.origin || t('unknown'), duration: x.duration })
+                  : t('{target} - {type} from {origin}', { target: x.value, type: x.type, origin: x.origin || t('unknown') })))}"><span class="sig-ep-id"><span class="sig-ep-name">${_esc(x.value)}</span><span class="sig-idle-txt">${_esc(x.scope)}</span></span><span class="sig-ep-addr">${_esc(_atkClip(_scenShort(x.scenario), 34))}</span><span class="sig-ep-n sig-ep-n0">${_esc(x.duration || '-')}</span><span class="sig-ep-flags">${_atkFlag({ tag: 'span', cls: x.type === 'ban' ? 'd-bad' : (x.type === 'captcha' ? 'd-warn' : 'd-off'),
             ic: x.type === 'ban' ? 'ph-bold ph-prohibit' : (x.type === 'captcha' ? 'ph-bold ph-puzzle-piece' : 'ph-bold ph-check'),
-            n: '', label: x.type, words: false, tip: x.type + ' decision, origin ' + (x.origin || 'unknown') })
-        + (x.id ? '<button type="button" class="sig-flag d-off atk-unban" data-atk="' + _esc(_atkSpec({ unban: x.id }))
-            + '" title="Remove this decision. DELETE /v1/decisions needs the machine token, a bouncer key is refused">'
-            + '<i class="ph-bold ph-trash"></i></button>' : '')
-        + '</span>'
-        + '<span class="sig-ep-sub">' + _esc((x.origin || 'unknown') + ' origin · ' + (x.scenario || 'no scenario')
-            + (x.duration ? ' · ' + x.duration + ' remaining' : '')
-            + (x.scope !== 'Ip' ? ' · ' + x.scope + ' scope, one row covering many addresses' : '')) + '</span>'
-        + '<span class="sig-ep-kind">' + _esc((x.origin || 'unknown') + ' ' + (x.duration || '')) + '</span></div>';
+            n: '', label: x.type, words: false, tip: x.type + ' decision, origin ' + (x.origin || 'unknown') })}${x.id ? `<button type="button" class="sig-flag d-off atk-unban" data-atk="${_esc(_atkSpec({ unban: x.id }))}" title="${th('Remove this decision. DELETE /v1/decisions needs the machine token, a bouncer key is refused')}"><i class="ph-bold ph-trash"></i></button>` : ''}</span><span class="sig-ep-sub">${_esc([t('{origin} origin', { origin: x.origin || t('unknown') }), x.scenario || t('no scenario')]
+                .concat(x.duration ? [t('{duration} remaining', { duration: x.duration })] : [], x.scope !== 'Ip' ? [t('{scope} scope, one row covering many addresses', { scope: x.scope })] : []).join(' · '))}</span><span class="sig-ep-kind">${_esc((x.origin || 'unknown') + ' ' + (x.duration || ''))}</span></div>`;
 }
 
 function _atkPager(page, pages, total, from, to, noun) {
-    return '<div class="atk-page">'
-        + '<button type="button" class="atk-pg" data-atk="' + _esc(_atkSpec({ page: Math.max(1, page - 1) })) + '"'
-        + (page <= 1 ? ' disabled' : '') + '><i class="ph-bold ph-caret-left"></i>newer</button>'
-        + '<span>' + _sdNum(from) + '-' + _sdNum(to) + ' of ' + _sdNum(total) + ' ' + _esc(noun) + '</span>'
-        + '<button type="button" class="atk-pg" data-atk="' + _esc(_atkSpec({ page: Math.min(pages, page + 1) })) + '"'
-        + (page >= pages ? ' disabled' : '') + '>older<i class="ph-bold ph-caret-right"></i></button>'
-        + '<span class="lg-static" title="Rendered a page at a time, so a busy instance never builds tens of thousands of rows at once">page '
-        + page + ' of ' + _sdNum(pages) + '</span></div>';
+    return `<div class="atk-page"><button type="button" class="atk-pg" data-atk="${_esc(_atkSpec({ page: Math.max(1, page - 1) }))}"${page <= 1 ? ' disabled' : ''}><i class="ph-bold ph-caret-left"></i>${thc('button', 'newer')}</button><span>${th('{from}-{to} of {total}', { from: _sdNum(from), to: _sdNum(to), total: _lgCount(noun, total) })}</span><button type="button" class="atk-pg" data-atk="${_esc(_atkSpec({ page: Math.min(pages, page + 1) }))}"${page >= pages ? ' disabled' : ''}>${thc('button', 'older')}<i class="ph-bold ph-caret-right"></i></button><span class="lg-static" title="${th('Rendered a page at a time, so a busy instance never builds tens of thousands of rows at once')}">${th('page {page} of {pages}', { page: tmHtml(page), pages: tmHtml(_sdNum(pages)) })}</span></div>`;
 }
 
 function _atkFeed(d, sel) {
@@ -1536,88 +1428,40 @@ function _atkFeed(d, sel) {
     const decBlind = !d.lapiOk;
     const alertsTxt = altBlind ? '?' : _sdNum(alertsN);
     const decTxt = decBlind ? '?' : (sel.decTotal === null ? '...' : _sdNum(decN));
-    const altTip = (d.altErr || 'A bouncer API key cannot read alerts.') + ' Zero is not the same as none';
-    const decTip = (d.decErr || 'The decisions read failed.') + ' Zero would be an invention, so this says nothing instead';
+    const altTip = t('{altErr} Zero is not the same as none', { altErr: d.altErr || t('A bouncer API key cannot read alerts.') });
+    const decTip = t('{decErr} Zero would be an invention, so this says nothing instead', { decErr: d.decErr || t('The decisions read failed.') });
     const headBlind = isAlerts ? altBlind : decBlind;
-    const head = '<div class="sig-ep-head">'
-        + '<i class="' + (isAlerts ? 'ph-fill ph-crosshair' : 'ph-fill ph-shield-check') + ' sig-ep-headic"></i>'
-        + '<span class="sc-sec-label">' + (isAlerts ? 'Attack evidence' : 'Bans in force') + '</span>'
-        + '<span class="d-n"' + (headBlind ? ' title="' + _esc(isAlerts ? altTip : decTip) + '"' : '') + '>'
-        + (isAlerts ? alertsTxt : decTxt) + '</span>'
-        + '<span class="sc-sec-rule"></span>'
-        + (isAlerts
-            ? '<button type="button" class="atk-switch" data-atk="view=decisions" title="'
-                + _esc(decBlind ? decTip : 'The resulting bans. Secondary view: decisions are what CrowdSec did, alerts are what happened') + '">'
-                + '<i class="ph-bold ph-shield-check"></i>bans in force <b>' + decTxt + '</b><i class="ph-bold ph-arrow-right"></i></button>'
-            : '<button type="button" class="atk-switch" data-atk="view=alerts" title="'
-                + _esc(altBlind ? altTip : 'Back to the alert stream, the primary view') + '">'
-                + '<i class="ph-bold ph-arrow-left"></i><i class="ph-bold ph-crosshair"></i>attack evidence <b>' + alertsTxt + '</b></button>')
-        + '</div>';
+    const head = `<div class="sig-ep-head"><i class="${isAlerts ? 'ph-fill ph-crosshair' : 'ph-fill ph-shield-check'} sig-ep-headic"></i><span class="sc-sec-label">${isAlerts ? th('Attack evidence') : th('Bans in force')}</span><span class="d-n"${headBlind ? ' title="' + _esc(isAlerts ? altTip : decTip) + '"' : ''}>${isAlerts ? alertsTxt : decTxt}</span><span class="sc-sec-rule"></span>${isAlerts ? `<button type="button" class="atk-switch" data-atk="view=decisions" title="${_esc(decBlind ? decTip : t('The resulting bans. Secondary view: decisions are what CrowdSec did, alerts are what happened'))}"><i class="ph-bold ph-shield-check"></i>${th('bans in force {b}', { b: tmHtml(`<b>${decTxt}</b>`) })}<i class="ph-bold ph-arrow-right"></i></button>` : `<button type="button" class="atk-switch" data-atk="view=alerts" title="${_esc(altBlind ? altTip : t('Back to the alert stream, the primary view'))}"><i class="ph-bold ph-arrow-left"></i><i class="ph-bold ph-crosshair"></i>${th('attack evidence {b}', { b: tmHtml(`<b>${alertsTxt}</b>`) })}</button>`}</div>`;
 
     if (isAlerts && !d.alertsOk) {
-        const body = '<div class="atk-empty"><i class="ph-fill ph-key"></i>'
-            + '<div class="atk-empty-t">Not permitted to read alerts</div>'
-            + '<p class="lg-note">The LAPI refused <code>/v1/alerts</code>'
-            + (d.altStatus ? ' with <b>HTTP ' + d.altStatus + '</b>' : '') + '. '
-            + 'A bouncer API key reads decisions only, and CrowdSec refuses the machine token on the decisions endpoint in return, '
-            + 'so a full picture needs both credentials. The scenario, path, network and tooling cards above are not empty, they are not readable.'
-            + (d.altErr ? '<br><br><code>' + _esc(d.altErr) + '</code>' : '') + '</p>'
-            + '<div class="atk-empty-do">'
-            + _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: 'add machine credentials', go: ATK_NEEDS_MACHINE,
-                tip: 'Set CROWDSEC_MACHINE_ID and CROWDSEC_MACHINE_PASSWORD' })
-            + _atkFlag({ cls: 'd-on', ic: 'ph-bold ph-shield-check', n: '', label: 'see the ' + _sdNum(decN) + ' bans that do work',
-                go: 'view=decisions', tip: 'The decisions view runs on the bouncer key alone' })
-            + '</div></div>';
+        const body = `<div class="atk-empty"><i class="ph-fill ph-key"></i><div class="atk-empty-t">${th('Not permitted to read alerts')}</div><p class="lg-note">${th('The LAPI refused {v1_alerts}{value}. A bouncer API key reads decisions only, and CrowdSec refuses the machine token on the decisions endpoint in return, so a full picture needs both credentials. The scenario, path, network and tooling cards above are not empty, they are not readable.{value2}', { v1_alerts: tmHtml(`<code>/v1/alerts</code>`), value: tmHtml(d.altStatus ? ` ${th('with {http}', { http: tmHtml(`<b>HTTP ${_esc(d.altStatus)}</b>`) })}` : ''), value2: tmHtml(d.altErr ? '<br><br><code>' + _esc(d.altErr) + '</code>' : '') })}</p><div class="atk-empty-do">${_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: t('add machine credentials'), go: ATK_NEEDS_MACHINE,
+                tip: t('Set CROWDSEC_MACHINE_ID and CROWDSEC_MACHINE_PASSWORD') })}${_atkFlag({ cls: 'd-on', ic: 'ph-bold ph-shield-check', n: '', label: t('see the {decN} bans that do work', { decN: _sdNum(decN) }),
+                go: 'view=decisions', tip: t('The decisions view runs on the bouncer key alone') })}</div></div>`;
         return '<section class="sig-ep atk-feed">' + head + body + '</section>';
     }
 
     if (!isAlerts && !d.lapiOk) {
-        const body = '<div class="atk-empty"><i class="ph-fill ph-key"></i>'
-            + '<div class="atk-empty-t">Decisions were not read</div>'
-            + '<p class="lg-note">Nothing came back from <code>/v1/decisions</code>, so this list is unknown rather than empty. '
-            + 'CrowdSec accepts only a bouncer API key on that endpoint and refuses the machine token there.'
-            + (d.decErr ? '<br><br><code>' + _esc(d.decErr) + '</code>' : '') + '</p>'
-            + '<div class="atk-empty-do">'
-            + _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: 'check the LAPI url and key', go: 'cfg=lapi',
-                tip: 'Open Settings, System Monitoring, CrowdSec' })
-            + (d.alertsOk ? _atkFlag({ cls: 'd-on', ic: 'ph-bold ph-crosshair', n: '', label: 'back to the alert stream', go: 'view=alerts',
-                tip: 'Alerts are readable with the machine login' }) : '')
-            + '</div></div>';
+        const body = `<div class="atk-empty"><i class="ph-fill ph-key"></i><div class="atk-empty-t">${th('Decisions were not read')}</div><p class="lg-note">${th('Nothing came back from {v1_decisions}, so this list is unknown rather than empty. CrowdSec accepts only a bouncer API key on that endpoint and refuses the machine token there.{value}', { v1_decisions: tmHtml(`<code>/v1/decisions</code>`), value: tmHtml(d.decErr ? '<br><br><code>' + _esc(d.decErr) + '</code>' : '') })}</p><div class="atk-empty-do">${_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-gear', n: '', label: t('check the LAPI url and key'), go: 'cfg=lapi',
+                tip: t('Open Settings, System Monitoring, CrowdSec') })}${d.alertsOk ? _atkFlag({ cls: 'd-on', ic: 'ph-bold ph-crosshair', n: '', label: t('back to the alert stream'), go: 'view=alerts',
+                tip: t('Alerts are readable with the machine login') }) : ''}</div></div>`;
         return '<section class="sig-ep atk-feed">' + head + body + '</section>';
     }
 
     if (!isAlerts && sel.decLoading) {
-        const body = '<div class="atk-empty"><i class="ph-light ph-spinner-gap animate-spin"></i>'
-            + '<div class="atk-empty-t">Reading decisions</div>'
-            + '<p class="lg-note">The decisions view is paged on the server, so only the rows on screen travel to the browser.</p></div>';
+        const body = `<div class="atk-empty"><i class="ph-light ph-spinner-gap animate-spin"></i><div class="atk-empty-t">${th('Reading decisions')}</div><p class="lg-note">${th('The decisions view is paged on the server, so only the rows on screen travel to the browser.')}</p></div>`;
         return '<section class="sig-ep atk-feed">' + head + body + '</section>';
     }
     if (!isAlerts && sel.decError) {
-        const body = '<div class="atk-empty"><i class="ph-fill ph-plugs"></i>'
-            + '<div class="atk-empty-t">Decisions could not be read</div>'
-            + '<p class="lg-note"><code>' + _esc(sel.decError) + '</code></p>'
-            + '<div class="atk-empty-do">'
-            + _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-arrows-clockwise', n: '', label: 'read again', go: 'reload=1', tip: 'Refetch' })
-            + '</div></div>';
+        const body = `<div class="atk-empty"><i class="ph-fill ph-plugs"></i><div class="atk-empty-t">${th('Decisions could not be read')}</div><p class="lg-note"><code>${_esc(sel.decError)}</code></p><div class="atk-empty-do">${_atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-arrows-clockwise', n: '', label: t('read again'), go: 'reload=1', tip: t('Refetch') })}</div></div>`;
         return '<section class="sig-ep atk-feed">' + head + body + '</section>';
     }
     const rows = isAlerts ? sel.alerts : sel.decisions;
     if (!rows.length) {
         const filtered = _atkActive().length || _atkQuery;
-        const body = '<div class="atk-empty"><i class="' + (filtered ? 'ph-fill ph-funnel' : 'ph-fill ph-moon-stars') + '"></i>'
-            + '<div class="atk-empty-t">' + (filtered ? 'Nothing matches' : (isAlerts ? 'No one has tripped a scenario' : 'Nothing is blocked')) + '</div>'
-            + '<p class="lg-note">' + (filtered
-                ? 'Every filter on the window row is applied together. Drop one and the rest stay.'
-                : (isAlerts
-                    ? 'No local scenario fired inside the retained window. Bans still standing all came from subscribed lists, which describe the internet rather than this host.'
-                    : 'No decision is active. Either nothing was ever banned, or every ban has expired.')) + '</p>'
-            + (filtered
-                ? '<div class="atk-empty-do">'
-                    + _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-x', n: '', label: 'clear filters', go: 'clear=all', tip: 'Remove every filter and the search box' })
-                    + (isAlerts ? '' : _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-crosshair', n: '', label: 'back to alerts', go: 'view=alerts', tip: 'The primary view' }))
-                    + '</div>'
-                : '')
-            + '</div>';
+        const body = `<div class="atk-empty"><i class="${filtered ? 'ph-fill ph-funnel' : 'ph-fill ph-moon-stars'}"></i><div class="atk-empty-t">${filtered ? th('Nothing matches') : isAlerts ? th('No one has tripped a scenario') : th('Nothing is blocked')}</div><p class="lg-note">${filtered ? th('Every filter on the window row is applied together. Drop one and the rest stay.') : isAlerts ? th('No local scenario fired inside the retained window. Bans still standing all came from subscribed lists, which describe the internet rather than this host.') : th('No decision is active. Either nothing was ever banned, or every ban has expired.')}</p>${filtered ? '<div class="atk-empty-do">'
+                    + _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-x', n: '', label: t('clear filters'), go: 'clear=all', tip: t('Remove every filter and the search box') })
+                    + (isAlerts ? '' : _atkFlag({ cls: 'd-blue', ic: 'ph-bold ph-crosshair', n: '', label: t('back to alerts'), go: 'view=alerts', tip: t('The primary view') }))
+                    + '</div>' : ''}</div>`;
         return '<section class="sig-ep atk-feed">' + head + body + '</section>';
     }
     const pages = isAlerts ? Math.max(1, Math.ceil(rows.length / ATK_FEED_PAGE)) : sel.decPages;
@@ -1758,28 +1602,19 @@ function _csRenderBanRecent() {
     const countEl = document.getElementById('csBanRecentCount');
     if (!_csLapiOk) {
         if (countEl) countEl.textContent = '';
-        el.innerHTML = '<div class="text-center py-6 text-xs" style="color:var(--muted)">Decisions are not readable right now - '
-            + '<code>/v1/decisions</code> needs a bouncer API key, so this list is unknown rather than empty</div>';
+        el.innerHTML = `<div class="text-center py-6 text-xs" style="color:var(--muted)">${th('Decisions are not readable right now - {v1_decisions} needs a bouncer API key, so this list is unknown rather than empty', { v1_decisions: tmHtml(`<code>/v1/decisions</code>`) })}</div>`;
         return;
     }
     const mine = _csDecSum ? _csDecSum.rows : [];
     const more = _csDecSum ? (Number(_csDecSum.rows_more) || 0) : 0;
     if (countEl) countEl.textContent = mine.length ? _sdNum(mine.length + more) : '';
     if (!mine.length) {
-        el.innerHTML = '<div class="text-center py-6 text-xs" style="color:var(--muted)">No custom decisions yet - decisions you add appear here</div>';
+        el.innerHTML = `<div class="text-center py-6 text-xs" style="color:var(--muted)">${th('No custom decisions yet - decisions you add appear here')}</div>`;
         return;
     }
     const colour = { ban: 'var(--red)', captcha: 'var(--yellow)', bypass: 'var(--green)' };
-    el.innerHTML = mine.map(d => '<div class="flex items-center gap-2 py-1.5" style="border-bottom:1px solid var(--border)">'
-        + '<span class="font-mono text-xs truncate" style="color:var(--text);flex:1;min-width:0" title="' + _esc(d.value || '-') + '">' + _esc(d.value || '-') + '</span>'
-        + '<span class="text-xs font-semibold flex-shrink-0" style="color:' + (colour[d.type] || 'var(--muted)') + '">' + _esc(d.type || '-') + '</span>'
-        + '<span class="text-xs truncate" style="color:var(--muted);max-width:150px" title="' + _esc(d.scenario || '') + '">' + _esc(d.scenario || '') + '</span>'
-        + '<span class="text-xs flex-shrink-0 tabular-nums" style="color:var(--muted)" title="Time left on this decision, counting down live">' + _esc(d.duration || '-') + '</span>'
-        + (d.id
-            ? '<button onclick="csUnban(' + Number(d.id) + ')" class="btn-icon text-xs flex-shrink-0" title="Unban, delete this decision" style="color:var(--red)"><i class="ph-bold ph-trash"></i></button>'
-            : '<span class="text-xs flex-shrink-0" style="color:var(--muted);opacity:.6">syncing...</span>')
-        + '</div>').join('')
-        + (more ? '<div class="text-center py-2 text-xs" style="color:var(--muted)">' + _sdNum(more) + ' more in the decisions view</div>' : '');
+    el.innerHTML = mine.map(d => `<div class="flex items-center gap-2 py-1.5" style="border-bottom:1px solid var(--border)"><span class="font-mono text-xs truncate" style="color:var(--text);flex:1;min-width:0" title="${_esc(d.value || '-')}">${_esc(d.value || '-')}</span><span class="text-xs font-semibold flex-shrink-0" style="color:${colour[d.type] || 'var(--muted)'}">${_esc(d.type || '-')}</span><span class="text-xs truncate" style="color:var(--muted);max-width:150px" title="${_esc(d.scenario || '')}">${_esc(d.scenario || '')}</span><span class="text-xs flex-shrink-0 tabular-nums" style="color:var(--muted)" title="${th('Time left on this decision, counting down live')}">${_esc(d.duration || '-')}</span>${d.id ? `<button onclick="csUnban(${Number(d.id)})" class="btn-icon text-xs flex-shrink-0" title="${th('Unban, delete this decision')}" style="color:var(--red)"><i class="ph-bold ph-trash"></i></button>` : `<span class="text-xs flex-shrink-0" style="color:var(--muted);opacity:.6">${thc('label', 'syncing...')}</span>`}</div>`).join('')
+        + (more ? `<div class="text-center py-2 text-xs" style="color:var(--muted)">${th('{more} more in the decisions view', { more: tmHtml(_sdNum(more)) })}</div>` : '');
 }
 
 function _setCsBanType(type, btn) {
@@ -1796,12 +1631,12 @@ async function submitCsBan() {
     const submitBtn = document.querySelector('#csBanModal button[onclick="submitCsBan()"]');
     if (errEl) errEl.style.display = 'none';
     if (!ip) {
-        if (errEl && errMsg) { errMsg.textContent = 'IP/Range is required'; errEl.style.display = 'flex'; }
+        if (errEl && errMsg) { errMsg.textContent = t('IP/Range is required'); errEl.style.display = 'flex'; }
         return;
     }
     const duration = document.getElementById('csBanDuration')?.value || '24h';
     const reason   = (document.getElementById('csBanReason')?.value || '').trim();
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Adding...'; }
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = tc('button', 'Adding...'); }
     try {
         const res = await agentFetch('/api/crowdsec/decisions', {
             method: 'POST',
@@ -1811,33 +1646,33 @@ async function submitCsBan() {
         let data = {};
         try { data = await res.json() || {}; } catch (_) {}
         if (!res.ok) {
-            const msg = data.error || data.message || ('Failed to add decision (HTTP ' + res.status + ')');
+            const msg = data.error || data.message || (t('Failed to add decision (HTTP {status})', { status: res.status }));
             if (errEl && errMsg) { errMsg.textContent = msg; errEl.style.display = 'flex'; }
             return;
         }
         document.getElementById('csBanIp').value = '';
         closeCsBanModal();
-        showToast(`Decision added: ${_csBanType} ${ip} for ${duration}`, 'success');
+        showToast(t('Decision added: {csBanType} {ip} for {duration}', { csBanType: _csBanType, ip, duration }), 'success');
         setTimeout(refreshCrowdSecTab, 800);
     } catch(e) {
-        const msg = _netErrText(e, 'Failed to add decision');
+        const msg = _netErrText(e, t('Failed to add decision'));
         if (errEl && errMsg) { errMsg.textContent = msg; errEl.style.display = 'flex'; }
     } finally {
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Add Decision'; }
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = t('Add Decision'); }
     }
 }
 
 async function csUnban(id) {
     if (!id) return;
     const ok = (typeof _confirm === 'function')
-        ? await _confirm('Delete decision ' + id + '? The address is unbanned immediately.', 'Remove decision', 'Delete')
+        ? await _confirm(t('Delete decision {id}? The address is unbanned immediately.', { id }), t('Remove decision'), tc('button', 'Delete'))
         : true;
     if (!ok) return;
     try {
         const res = await agentFetch('/api/crowdsec/decisions/' + id, { method: 'DELETE' });
         let data = {};
         try { data = await res.json() || {}; } catch (_) {}
-        if (res.ok && data.ok) { showToast('Decision ' + id + ' deleted', 'success'); refreshCrowdSecTab(); }
-        else showToast(data.error || data.message || ('Failed to delete decision ' + id + ' (HTTP ' + res.status + ')'), 'error');
-    } catch(e) { showToast(_netErrText(e, 'Failed to delete decision ' + id), 'error'); }
+        if (res.ok && data.ok) { showToast(t('Decision {id} deleted', { id }), 'success'); refreshCrowdSecTab(); }
+        else showToast(data.error || data.message || (t('Failed to delete decision {id} (HTTP {status})', { id, status: res.status })), 'error');
+    } catch(e) { showToast(_netErrText(e, t('Failed to delete decision {id}', { id })), 'error'); }
 }

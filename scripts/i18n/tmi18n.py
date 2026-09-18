@@ -48,6 +48,9 @@ PRINTF_RE = re.compile(r'%(?:\((?P<name>[^)]*)\))?[#0\- +]*(?:\*|\d+)?(?:\.(?:\*
 BRACE_RE = re.compile(r'\{([^{}]*)\}')
 IDENT_RE = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 TAG_RE = re.compile(r'<\s*/?\s*[A-Za-z!][^<>]*>?')
+MARKUP_PIECE_RE = re.compile(r'''["']\s*/?>|=\s*["']|<\s*\{''')
+CSS_RE = re.compile(r'(?i)\b(?:font|color|margin|padding|border|background|display|width|height|gap|align|justify|opacity|animation)(?:-[a-z]+)*\s*:\s*[^;\s][^;]*;')
+YAML_LINE_RE = re.compile(r'(?m)^[ \t]*-?[ \t]*[A-Za-z_][\w.-]*:(?:[ \t]|$)')
 URL_RE = re.compile(r'(?i)(?:\b[a-z][a-z0-9+.\-]*://[^\s<>"\']*|\bwww\.[^\s<>"\']+|\b(?:javascript|data|vbscript|file)\s*:)')
 EVENT_ATTR_RE = re.compile(r'(?i)\bon[a-z]+\s*=')
 RISKY_ASCII = ('"', '`', '<', '>', '\\')
@@ -206,8 +209,10 @@ def update_catalogues(root=ROOT, init=()):
     return []
 
 
-def placeholders(text):
+def placeholders(text, brace_style=None):
     named, positional, braces = [], [], []
+    for m in BRACE_RE.finditer(text):
+        braces.append(m.group(1))
     for m in PRINTF_RE.finditer(text):
         if m.group('conv') == '%':
             continue
@@ -215,8 +220,10 @@ def placeholders(text):
             named.append(m.group(0))
         else:
             positional.append(m.group(0))
-    for m in BRACE_RE.finditer(text):
-        braces.append(m.group(1))
+    if brace_style is None:
+        brace_style = bool(braces) and not named
+    if brace_style:
+        positional = []
     return named, positional, braces
 
 
@@ -251,11 +258,12 @@ def check_message(message, num_plurals, where):
         src_named.update(n)
         src_positional = src_positional or p
         src_braces.update(b)
+    brace_style = bool(src_braces) and not src_named
 
     for form in forms:
         if not form:
             continue
-        named, positional, braces = placeholders(form)
+        named, positional, braces = placeholders(form, brace_style)
         for brace in braces:
             if not IDENT_RE.match(brace):
                 problems.append(Problem(label, f'unsafe placeholder {{{brace}}}, only {{name}} is allowed'))
@@ -308,8 +316,12 @@ def check_template(template, where='locale/messages.pot'):
             continue
         for text in _msgid_texts(message):
             label = f'{where} "{text[:60]}"'
-            if TAG_RE.search(text):
+            if TAG_RE.search(text) or MARKUP_PIECE_RE.search(text):
                 problems.append(Problem(label, 'source strings must not contain HTML; keep markup outside the translated text'))
+            if len(YAML_LINE_RE.findall(text)) >= 2:
+                problems.append(Problem(label, 'source strings must not contain configuration; keep YAML and code samples untranslated'))
+            if CSS_RE.search(text):
+                problems.append(Problem(label, 'source strings must not contain CSS; keep styles outside the translated text'))
             for brace in BRACE_RE.findall(text):
                 if not IDENT_RE.match(brace):
                     problems.append(Problem(label, f'placeholder {{{brace}}} must be a plain name'))

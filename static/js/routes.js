@@ -110,10 +110,10 @@ function filterRoutes() {
     const emptyEl = document.getElementById('routeEmpty');
     if (emptyEl && _routeCardEls.length > 0) {
         if (visible === 0) {
-            const t = document.getElementById('routeEmptyText');
+            const emptyText = document.getElementById('routeEmptyText');
             const sub = document.getElementById('routeEmptySub');
             const cta = document.getElementById('routeEmptyCta');
-            if (t) t.textContent = t('No routes match your filters');
+            if (emptyText) emptyText.textContent = t('No routes match your filters');
             if (sub) {
                 if (_routeEpFilter) {
                     sub.textContent = t('No route binds the entry point {routeEpFilter}.', { routeEpFilter: _routeEpFilter });
@@ -721,9 +721,9 @@ function _clearRouteViews(message) {
     try { renderMwGrid([]); } catch (e) {}
     try { loadOverviewStats(); } catch (e) {}
     const where = (typeof _activeAgent !== 'undefined' && _activeAgent)
-        ? _activeAgent.name : 'this server';
+        ? _activeAgent.name : t('this server');
     _renderConfigErrorBanner([
-        `Showing nothing for ${where}: ${message}. Nothing below is from another server.`,
+        t('Showing nothing for {where}: {message}. Nothing below is from another server.', { where, message }),
     ]);
     if (message) showToast(message, 'error');
 }
@@ -938,7 +938,7 @@ function _tmRouteCard(app, i, opts) {
         app.service_name ? `<span class="tm-svcname">${_esc(app.service_name)}</span>` : '',
     ].filter(Boolean).join('<span class="tm-sep"> \u00b7 </span>');
 
-    const rail = `<span class="tm-rail" onclick="event.stopPropagation()">${openUrl ? '<i class="ph-bold ph-arrow-up-right tm-hint"></i>' : ''}<button type="button" class="tm-btn" title="${thc('tooltip', 'More')}" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)"><i class="ph-bold ph-dots-three"></i></button><button type="button" class="tm-btn" title="${thc('tooltip', 'Edit')}" data-app='${appJson}' onclick="event.stopPropagation();handleEdit(this)"><i class="ph-bold ph-pencil-simple"></i></button>${isFile ? `<span role="switch" tabindex="0" aria-checked="${enabled}" class="toggle-switch toggle-sm${enabled ? ' on' : ''}" title="${enabled ? 'Disable route' : 'Enable route'}" onclick="event.stopPropagation();toggleRoute(${_jsArg(app.id)},${enabled})" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();event.stopPropagation();toggleRoute(${_jsArg(app.id)},${enabled});}"><span class="toggle-knob"></span></span>` : ''}</span>`;
+    const rail = `<span class="tm-rail" onclick="event.stopPropagation()">${openUrl ? '<i class="ph-bold ph-arrow-up-right tm-hint"></i>' : ''}<button type="button" class="tm-btn" title="${thc('tooltip', 'More')}" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)"><i class="ph-bold ph-dots-three"></i></button><button type="button" class="tm-btn" title="${thc('tooltip', 'Edit')}" data-app='${appJson}' onclick="event.stopPropagation();handleEdit(this)"><i class="ph-bold ph-pencil-simple"></i></button>${isFile ? `<span role="switch" tabindex="0" aria-checked="${enabled}" class="toggle-switch toggle-sm${enabled ? ' on' : ''}" title="${enabled ? th('Disable route') : th('Enable route')}" onclick="event.stopPropagation();toggleRoute(${_jsArg(app.id)},${enabled})" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();event.stopPropagation();toggleRoute(${_jsArg(app.id)},${enabled});}"><span class="toggle-knob"></span></span>` : ''}</span>`;
 
     const bulkCheckbox = _bulkMode
         ? `<input type="checkbox" class="bulk-check" onclick="event.stopPropagation()" ${bulkSel ? 'checked' : ''} onchange="toggleBulkSelect(${_jsArg(app.id)})" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;margin-top:6px">`
@@ -975,10 +975,10 @@ function renderRouteGrid(apps) {
         grid.innerHTML = '';
         _routeCardEls = [];
         if (emptyEl) {
-            const t = document.getElementById('routeEmptyText');
+            const emptyText = document.getElementById('routeEmptyText');
             const sub = document.getElementById('routeEmptySub');
             const cta = document.getElementById('routeEmptyCta');
-            if (t) t.textContent = _activeAgent ? t('No routes on this server yet') : t('No routes yet');
+            if (emptyText) emptyText.textContent = _activeAgent ? t('No routes on this server yet') : t('No routes yet');
             if (sub) {
                 sub.textContent = t('Create your first route to start managing your Traefik proxy.');
                 sub.style.display = '';
@@ -1019,7 +1019,7 @@ function renderRouteGrid(apps) {
         const appJson = JSON.stringify(app).replace(/'/g, '&#39;');
         const iconHtml = _routeIconHtml(app);
         const toggleIcon = enabled ? 'ph-toggle-right' : 'ph-toggle-left';
-        const toggleTitle = enabled ? 'Disable route' : 'Enable route';
+        const toggleTitle = enabled ? t('Disable route') : t('Enable route');
         const toggleBtn = isFileRoute ? `<button type="button" onclick="toggleRoute(${_jsArg(app.id)},${enabled})" class="pill-btn ${enabled ? 'pill-btn-green' : 'pill-btn-muted'}" title="${toggleTitle}"><i class="ph-bold ${toggleIcon} text-sm"></i></button>` : '';
         const _copyBtn = (val, col) => `<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(val)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--${col})'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button>`;
         const domainDisplay = allDomains.length > 1
@@ -1027,7 +1027,7 @@ function renderRouteGrid(apps) {
             : isComplexRule
                 ? `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono" style="color:var(--blue);word-break:break-all" title="${_esc(app.rule)}">${_esc(app.rule)}</div>${_copyBtn(app.rule,'blue')}</div>`
                 : `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</div>${_copyBtn(domain || app.rule,'blue')}</div>`;
-        const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${ruleLabel}</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Target')}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1?`<span class="badge badge-muted" style="font-size:9px" title="${th('{servers_count} backends', { servers_count: tmHtml((app.servers||[]).length) })}">+${(app.servers||[]).length-1}</span>`:''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`; const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Rule')}</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Target')}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1?`<span class="badge badge-muted" style="font-size:9px" title="${th('{servers_count} backends', { servers_count: tmHtml((app.servers||[]).length) })}">+${(app.servers||[]).length-1}</span>`:''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`;
+        const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${ruleLabel}</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Target')}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1 ? `<span class="badge badge-muted" style="font-size:9px" title="${th('{servers_count} backends', { servers_count: tmHtml((app.servers||[]).length) })}">+${(app.servers||[]).length-1}</span>` : ''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`; const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Rule')}</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Target')}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1 ? `<span class="badge badge-muted" style="font-size:9px" title="${th('{servers_count} backends', { servers_count: tmHtml((app.servers||[]).length) })}">+${(app.servers||[]).length-1}</span>` : ''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`;
         const cfArg = `,${_jsArg(app.configFile || '')}`;
         const cfBadge = (epBadges || mwBadges || epMwBadges || app.configFile) ? `<div class="flex flex-wrap items-center gap-1 mt-2">${epBadges}${mwBadges}${epMwBadges}${app.configFile ? `<span class="badge badge-muted" style="font-size:9px;margin-left:auto">${_esc(app.configFile)}</span>` : ''}</div>` : '';
         const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-rid="${_esc(app.id)}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}" data-target="${_esc(app.target)}" data-configfile="${_esc(app.configFile||'')}" data-eps="${(app.entryPoints||[]).map(e => _esc(e)).join('|')}" data-servers="${(app.servers || []).map(sv => _esc(sv)).join('|')}" data-tls="${app.tls ? '1' : ''}"`;
@@ -1046,7 +1046,7 @@ function renderRouteGrid(apps) {
                 ? `<i class="ph-bold ph-lock-simple d-glyph" style="color:var(--muted)" title="TLS${app.tlsOptionsProfile ? ' ' + _esc(app.tlsOptionsProfile) : ''}"></i>`
                 : `<i class="ph-bold ph-lock-simple-open d-glyph" style="color:var(--yellow)" title="${th('No TLS')}"></i>`))
                 + (app.insecureSkipVerify ? `<i class="ph-bold ph-shield-warning d-glyph" style="color:var(--orange)" title="${th('insecureSkipVerify - backend certificate not verified')}"></i>` : '');
-            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="svc-list-col-status" style="display:flex;align-items:center;gap:6px">${bulkCheckbox}<span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span><span class="d-flat ${enabled ? 'd-on' : 'd-off'} rl-state">${enabled ? 'Active' : 'Paused'}</span></div><div style="display:flex;align-items:center;gap:5px"><span class="d-flat d-proto d-proto-${proto}">${proto.toUpperCase()}</span>${listGlyphs}</div><div class="svc-list-col-name"><div style="display:flex;align-items:center;gap:5px">${iconHtml}<span class="truncate">${_esc(app.name)}</span></div></div><div class="rl-svc"><span class="d-flat d-off truncate" title="${_esc(app.service_name)}">${_esc(app.service_name)}</span></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1?`<span class="d-flat d-off" title="${th('{servers_count} backends', { servers_count: tmHtml((app.servers||[]).length) })}">+${(app.servers||[]).length-1}</span>`:''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${epCompact}</div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${mwCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'More')}"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
+            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="svc-list-col-status" style="display:flex;align-items:center;gap:6px">${bulkCheckbox}<span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span><span class="d-flat ${enabled ? 'd-on' : 'd-off'} rl-state">${enabled ? 'Active' : 'Paused'}</span></div><div style="display:flex;align-items:center;gap:5px"><span class="d-flat d-proto d-proto-${proto}">${proto.toUpperCase()}</span>${listGlyphs}</div><div class="svc-list-col-name"><div style="display:flex;align-items:center;gap:5px">${iconHtml}<span class="truncate">${_esc(app.name)}</span></div></div><div class="rl-svc"><span class="d-flat d-off truncate" title="${_esc(app.service_name)}">${_esc(app.service_name)}</span></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1 ? `<span class="d-flat d-off" title="${th('{servers_count} backends', { servers_count: tmHtml((app.servers||[]).length) })}">+${(app.servers||[]).length-1}</span>` : ''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${epCompact}</div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${mwCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'More')}"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
         }
         return `<div class="card route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5">${bulkCheckbox}<span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}${tlsProfileBadge}<span class="status-dot status-checking" title="Checking..."></span></div><div class="flex items-center gap-1.5 mt-1.5">${iconHtml}<h3 class="font-bold text-sm truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3></div><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'More')}"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div>${cfBadge}</div></div>`;
     }).join('');
@@ -1196,10 +1196,10 @@ function _initDomainChips(selectedDomains) {
     function render() {
         const list = _domainsForForm();
         hiddenContainer.innerHTML = [...selected].map(d => `<input type="hidden" name="domains" value="${_esc(d)}">`).join('');
-        container.innerHTML = list.map(d => {
+        container.innerHTML = `${list.map(d => {
             const on = selected.has(d);
             return `<button type="button" onclick="_toggleDomainChip(this,${_jsArg(d)})" class="dom-chip${on ? ' on' : ''}" title="${_esc(d)}">${_esc(d)}</button>`;
-        }).join('') + `<button type="button" onclick="_customDomainPrompt(this)" class="dom-chip-add" title="${th('Add another domain')}"><i class="ph-bold ph-plus" style="font-size:10px"></i></button>`;
+        }).join('')}<button type="button" onclick="_customDomainPrompt(this)" class="dom-chip-add" title="${th('Add another domain')}"><i class="ph-bold ph-plus" style="font-size:10px"></i></button>`;
     }
     render();
     window._domainChipSelected = selected;
@@ -1271,7 +1271,7 @@ async function _initEntrypointChips(proto, selectedEntrypoints) {
             const borderColor = on ? (isOrphan ? 'var(--yellow,#eab308)' : 'var(--green)') : 'var(--border)';
             const bgColor = on ? (isOrphan ? 'rgba(234,179,8,0.12)' : 'rgba(34,197,94,0.12)') : 'transparent';
             const textColor = on ? (isOrphan ? 'var(--yellow,#eab308)' : 'var(--green)') : 'var(--muted)';
-            const titleAttr = isOrphan ? th('{entrypoint} (not found in Traefik entrypoints - click to remove)', { entrypoint: ep }) : _esc(ep);
+            const titleAttr = isOrphan ? th('{ep} (not found in Traefik entrypoints - click to remove)', { ep }) : _esc(ep);
             return `<button type="button" onclick="_toggleEpChip(this,${_jsArg(ep)},${_jsArg(proto)})" style="padding:3px 10px;border-radius:6px;border:1px solid ${borderColor};background:${bgColor};color:${textColor};font-size:12px;font-family:monospace;cursor:pointer" title="${titleAttr}">${_esc(ep)}</button>`;
         }).join('');
     }
@@ -1535,12 +1535,7 @@ function addBackendRow(proto, data) {
     const kindCell = proto === 'http'
         ? `<select class="input-field bk-kind text-sm" onchange="_bkKindChanged(this)"><option value="manual">${th('IP : Port')}</option><option value="service">${thc('option', 'Service')}</option></select>`
         : '';
-    row.innerHTML = kindCell + schemeCell +
-        `<input type="text" class="input-field bk-host" placeholder="10.0.0.11">` +
-        `<input type="text" class="input-field bk-port" placeholder="8080">` +
-        (proto === 'http' ? `<select class="input-field bk-svc text-sm" style="display:none"></select>` : '') +
-        (proto === 'http' ? `<input type="number" class="input-field bk-weight text-sm" value="1" min="0" title="${thc('tooltip', 'Weight')}" style="display:none">` : '') +
-        `<button type="button" onclick="removeBackendRow(this)" class="btn-secondary" title="${th('Remove backend')}" style="padding:0;width:32px;display:flex;align-items:center;justify-content:center"><i class="ph-bold ph-trash text-xs" style="color:var(--red)"></i></button>`;
+    row.innerHTML = `${kindCell + schemeCell}<input type="text" class="input-field bk-host" placeholder="10.0.0.11"><input type="text" class="input-field bk-port" placeholder="8080">${proto === 'http' ? `<select class="input-field bk-svc text-sm" style="display:none"></select>` : ''}${proto === 'http' ? `<input type="number" class="input-field bk-weight text-sm" value="1" min="0" title="${thc('tooltip', 'Weight')}" style="display:none">` : ''}<button type="button" onclick="removeBackendRow(this)" class="btn-secondary" title="${th('Remove backend')}" style="padding:0;width:32px;display:flex;align-items:center;justify-content:center"><i class="ph-bold ph-trash text-xs" style="color:var(--red)"></i></button>`;
     if (proto === 'http') row.style.gridTemplateColumns = '104px 96px 1fr 1fr 74px 32px';
     wrap.appendChild(row);
     if (proto === 'http' && d.scheme) row.querySelector('.bk-scheme').value = d.scheme;
@@ -2087,7 +2082,7 @@ function _routeNameList(ids, limit = 6) {
     const pool  = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
     const names = ids.map(id => (pool.find(a => String(a.id) === String(id)) || {}).name || id);
     if (names.length <= limit) return names.join(', ');
-    return names.slice(0, limit).join(', ') + ` and ${names.length - limit} more`;
+    return t('{items} and {count} more', { items: names.slice(0, limit).join(', '), count: names.length - limit });
 }
 
 async function bulkDelete() {
@@ -2313,7 +2308,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
         ? serversList.map(s => `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:var(--green);background:var(--input-bg);word-break:break-all">${_esc(s.url || s.address || '-')}</div>`).join('')
         : `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:var(--green);background:var(--input-bg);word-break:break-all">${_esc(app.target)}</div>`;
 
-    const flowHtml = renderDetailBlock('Traffic Flow', 'ph-flow-arrow', `
+    const flowHtml = renderDetailBlock(t('Traffic Flow'), 'ph-flow-arrow', `
         <div class="flex items-stretch gap-2 flow-diagram-row">
             <div class="flex flex-col gap-2 flex-1">${epBoxes}</div>
             <div class="flow-arrow">→</div>
@@ -2341,7 +2336,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
         ['Provider', _dText(provider, 'd-off'), true],
         ['Rule', rule || '-', false],
         ['Name', (liveRouter ? liveRouter.name : app.name) || '-', false],
-        ['Entry Points', _dList(routerEPs), true],
+        [t('Entry Points'), _dList(routerEPs), true],
         ['Service', app.service_name || '-', false],
         ['Priority', String(priority), false],
     ];
@@ -2352,7 +2347,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     if (protocol === 'http' || protocol === 'tcp') {
         const tlsRows = [
             ['TLS', _dBool(!!tlsData, 'Enabled', 'Disabled'), true],
-            ['Certificate Resolver', tlsData ? (tlsData.certResolver || '-') : '-', false],
+            [t('Certificate Resolver'), tlsData ? (tlsData.certResolver || '-') : '-', false],
             ['Options', tlsData ? (tlsData.options || 'default') : '-', false],
             ['Passthrough', _dBool(protocol === 'tcp' && tlsData && !!tlsData.passthrough), true],
         ];
@@ -2395,12 +2390,12 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     });
     const svcHealthTxt = !svcChecked ? ''
         : svcUp === svcTotal ? `<span class="text-xs ml-2" style="color:var(--muted)">${th('{svcUp} of {svcTotal} servers up', { svcUp: tmHtml(svcUp), svcTotal: tmHtml(svcTotal) })}</span>`
-        : `<span class="text-xs ml-2 font-semibold" style="color:${svcUp === 0 ? 'var(--red)' : 'var(--yellow)'}">${th('{value} {svcTotal} servers down', { value: tmHtml(svcUp === 0 ? 'all' : svcTotal - svcUp + ' of'), svcTotal: tmHtml(svcTotal) })}</span>`;
+        : `<span class="text-xs ml-2 font-semibold" style="color:${svcUp === 0 ? 'var(--red)' : 'var(--yellow)'}">${(svcUp === 0 ? th('all {total} servers down', { total: svcTotal }) : th('{down} of {total} servers down', { down: svcTotal - svcUp, total: svcTotal }))}</span>`;
 
     const svcRows = [
         ['Status', svcStatus !== '-' ? _dState(svcStatus === 'enabled' ? 'Enabled' : svcStatus) + svcHealthTxt : '-', svcStatus !== '-'],
-        ['Type', app.serviceType && app.serviceType !== 'loadBalancer' ? app.serviceType : 'Load Balancer', false],
-        ['Pass Host Header', svcPassHostHeader, false],
+        ['Type', app.serviceType && app.serviceType !== 'loadBalancer' ? app.serviceType : t('Load Balancer'), false],
+        [t('Pass Host Header'), svcPassHostHeader, false],
         ...(app.containerAddr ? [['Container', app.containerAddr, false]] : []),
         ...svcServerRows,
     ];
@@ -2418,7 +2413,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
                     <span style="color:var(--text);text-align:right;word-break:break-all">${String(v).replace(/</g,'&lt;')}</span>
                 </div>`
             ).join('');
-            labelsSection = renderDetailBlock('Docker Labels', 'ph-tag', labelRows,
+            labelsSection = renderDetailBlock(t('Docker Labels'), 'ph-tag', labelRows,
                 _dCount(labelEntries.length));
         }
     }
@@ -2427,7 +2422,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     ${apiNote}
     ${errorBanner}
     ${flowHtml}
-    ${renderSection('Router Details', 'ph-info', routerRows)}
+    ${renderSection(t('Router Details'), 'ph-info', routerRows)}
     ${tlsSection}
     ${mwSection}
     ${renderSection('Service', 'ph-lightning', svcRows)}

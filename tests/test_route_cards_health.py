@@ -2,6 +2,8 @@ import json
 import os
 import subprocess
 
+from js_i18n import i18n_prelude
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -32,7 +34,7 @@ const document = { querySelectorAll: () => CARDS, createElement: () => ({ style:
 
 
 def _run(body):
-    stub = HARNESS + _block() + '\n' + body
+    stub = i18n_prelude() + HARNESS + _block() + '\n' + body
     out = subprocess.run(['node', '-e', stub], capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
     return json.loads(out.stdout.strip().splitlines()[-1])
@@ -160,7 +162,7 @@ def _stats_run(body):
     import re as _re
     tally = _re.search(r'(function _sdTally\(.*?\n\})', src, _re.S).group(1)
     aria = _re.search(r'(function _sdAria\(.*?\n\})', src, _re.S).group(1)
-    stub = HARNESS + 'const _sdNum = n => String(n);\n' + _block() + '\n' + tally + '\n' + aria + '\n' + body
+    stub = i18n_prelude() + HARNESS + 'const _sdNum = n => String(n);\n' + _block() + '\n' + tally + '\n' + aria + '\n' + body
     out = subprocess.run(['node', '-e', stub], capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
     return json.loads(out.stdout.strip().splitlines()[-1])
@@ -172,8 +174,8 @@ const objs = [{ name: 'play-app@file', short: 'play-app', status: 'enabled', cel
               { name: 'ok@file', short: 'ok', status: 'enabled', cell: 'ok', reason: '', kind: 'http' }];
 _rhIngest({ enabled: true, routes: { 'play.yml::play-app': { state: 'down', source: 'ping', error: 'The proxy answered 502, the backend is not reachable', at: 990 } } });
 _sdApplyHealth(objs);
-const t = _sdTally(objs);
-console.log(JSON.stringify({ cell: objs[0].cell, reason: objs[0].reason, down: t.down, err: t.err, ok: t.ok, aria: _sdAria('HTTP routers', 2, t) }));
+const tally = _sdTally(objs);
+console.log(JSON.stringify({ cell: objs[0].cell, reason: objs[0].reason, down: tally.down, err: tally.err, ok: tally.ok, aria: _sdAria('HTTP routers', 2, tally) }));
 """)
     assert res['cell'] == 'err' and res['down'] == 1 and res['err'] == 1 and res['ok'] == 1, res
     assert '502' in res['reason'] and '1 unreachable' in res['aria'], res
@@ -229,8 +231,8 @@ const objs = [{ name: 'pool@file', short: 'pool', status: 'enabled', cell: 'ok',
               { name: 'ok@file', short: 'ok', status: 'enabled', cell: 'ok', reason: '', kind: 'http' }];
 _rhIngest({ enabled: true, routes: { pool: { state: 'degraded', source: 'servers', servers: { up: 1, total: 2 }, down_servers: ['http://10.0.0.22:80'], at: 990 } } });
 _sdApplyHealth(objs);
-const t = _sdTally(objs);
-console.log(JSON.stringify({ cell: objs[0].cell, degraded: t.degraded, down: t.down, warn: t.warn, ok: t.ok, aria: _sdAria('HTTP routers', 2, t) }));
+const tally = _sdTally(objs);
+console.log(JSON.stringify({ cell: objs[0].cell, degraded: tally.degraded, down: tally.down, warn: tally.warn, ok: tally.ok, aria: _sdAria('HTTP routers', 2, tally) }));
 """)
     assert res['cell'] == 'warn' and res['degraded'] == 1 and res['down'] == 0, res
     assert res['ok'] == 1 and '1 degraded' in res['aria'], res

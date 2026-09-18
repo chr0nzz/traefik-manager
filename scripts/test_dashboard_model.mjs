@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
+import { i18nPrelude } from './i18n_test_prelude.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -49,6 +50,7 @@ sandbox.window = sandbox;
 sandbox.globalThis = sandbox;
 
 const ctx = vm.createContext(sandbox);
+vm.runInContext(i18nPrelude(), ctx);
 const SRC = fs.readFileSync(path.join(ROOT, 'static', 'js', 'dashboard.js'), 'utf8');
 vm.runInContext(SRC, ctx, { filename: 'dashboard.js' });
 

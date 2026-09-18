@@ -1,12 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { i18nPrelude } from './i18n_test_prelude.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = readFileSync(join(root, 'static', 'js', 'tab-file_external.js'), 'utf8');
 const start = src.indexOf('function _fileExternalEmptyState(');
 const end = src.indexOf('async function refreshFileExternalTab(');
-const { _fileExternalEmptyState } = new Function(src.slice(start, end) + '\nreturn { _fileExternalEmptyState };')();
+const { _fileExternalEmptyState } = new Function(i18nPrelude() + src.slice(start, end) + '\nreturn { _fileExternalEmptyState };')();
 
 let failures = 0;
 function check(label, cond) {

@@ -7,7 +7,7 @@ function rmRenderGroupsList() {
     const gc = document.getElementById('rmGroupsCount');
     if (gc) gc.textContent = groups.length;
     if (!groups.length) {
-        list.innerHTML = `<div class="text-xs py-3 text-center" style="color:var(--muted)">No custom groups yet.</div>`;
+        list.innerHTML = `<div class="text-xs py-3 text-center" style="color:var(--muted)">${th('No custom groups yet.')}</div>`;
         return;
     }
     list.innerHTML = groups.map((g, i) => {
@@ -63,7 +63,7 @@ window.rmRenderHiddenList = function() {
     const ids = rmHiddenIds();
     if (cnt) cnt.textContent = ids.length;
     if (!ids.length) {
-        el.innerHTML = '<div class="lg-note">Nothing is hidden. Use the pencil on a card to hide it.</div>';
+        el.innerHTML = `<div class="lg-note">${th('Nothing is hidden. Use the pencil on a card to hide it.')}</div>`;
         return;
     }
     const all = (typeof _rmAllRoutes !== 'undefined' ? _rmAllRoutes : []);
@@ -72,12 +72,7 @@ window.rmRenderHiddenList = function() {
         const r = all.find(x => x.id === id);
         const ov = (_rmConfig.route_overrides || {})[id] || {};
         const name = ov.display_name || (r && r.name) || plain(id);
-        return '<div class="lg-row">'
-            + '<span class="lg-id"><span class="lg-name">' + _esc(name) + '</span></span>'
-            + '<span class="lg-bad"></span>'
-            + '<button type="button" class="sig-flag d-blue" data-dsk="act=unhide;id=' + _esc(encodeURIComponent(id)) + '"'
-            + ' title="' + _esc('Show ' + name + ' on the dashboard again') + '">'
-            + '<i class="ph-bold ph-eye"></i>show</button></div>';
+        return `<div class="lg-row"><span class="lg-id"><span class="lg-name">${_esc(name)}</span></span><span class="lg-bad"></span><button type="button" class="sig-flag d-blue" data-dsk="act=unhide;id=${_esc(encodeURIComponent(id))}" title="${_esc(t('Show {name} on the dashboard again', { name }))}"><i class="ph-bold ph-eye"></i>${thc('button', 'show')}</button></div>`;
     }).join('');
 };
 
@@ -156,7 +151,7 @@ window.rmOpenEditModal = function(routeId) {
     if (title) {
         const shown = ov.display_name || (route && route.name)
             || (String(routeId).includes('::') ? String(routeId).split('::').slice(1).join('::') : routeId);
-        title.textContent = shown || 'Card settings';
+        title.textContent = shown || t('Card settings');
         title.title = routeId;
     }
 
@@ -170,10 +165,10 @@ window.rmOpenEditModal = function(routeId) {
     rmEditSetIconType(_rmEditIconType);
 
     const sel = document.getElementById('rmEditGroup');
-    sel.innerHTML = '<option value="">Auto-detect</option>';
+    sel.innerHTML = `<option value="">${thc('option', 'Auto-detect')}</option>`;
     const allGroups = [
         ...(_rmConfig.custom_groups || []).map(g => g.name),
-        ...['Media','Monitoring','Infrastructure','Security','Home','Files & Data','Network','Dev','Servers','Other']
+        ...['Media','Monitoring','Infrastructure','Security','Home',t('Files & Data'),'Network','Dev','Servers','Other']
     ];
     allGroups.forEach(name => {
         const opt = document.createElement('option');
@@ -232,7 +227,7 @@ window.rmEditPreviewIcon = function() {
         prev.dataset.slug = autoSlug;
         prev.src = url;
         prev.style.display = 'block';
-        label.textContent  = _rmEditIconType === 'auto' ? 'Auto-detected' : '';
+        label.textContent  = _rmEditIconType === 'auto' ? tc('label', 'Auto-detected') : '';
         prev.onerror = () => {
             const before = prev.dataset.slug;
             if (autoSlug && before) {
@@ -240,7 +235,7 @@ window.rmEditPreviewIcon = function() {
                 if (prev.dataset.slug !== before && prev.style.display !== 'none') return;
             }
             prev.style.display = 'none';
-            label.textContent = 'No icon found';
+            label.textContent = t('No icon found');
         };
     } else {
         prev.style.display = 'none';
@@ -277,7 +272,7 @@ const POD_RULES = [
     { name: 'Infrastructure', icon: 'ph-wrench',              keywords: ['traefik','portainer','proxmox','cockpit','nginx','caddy','haproxy','watchtower','dozzle','komodo','flint','gitea','gitlab','forgejo','drone','jenkins','vault','consul','nomad','ansible','terraform','penpot','n8n','windmill'] },
     { name: 'Security',       icon: 'ph-shield-check',        keywords: ['authentik','authelia','vaultwarden','bitwarden','crowdsec','fail2ban','wireguard','vpn','keycloak','zitadel','casdoor','lldap','kanidm'] },
     { name: 'Home',           icon: 'ph-house',               keywords: ['homeassistant','home-assistant','nodered','node-red','esphome','zigbee2mqtt','z2m','frigate','scrypted','wyze','tuya','matter','openhabing'] },
-    { name: 'Files & Data',   icon: 'ph-folder-open',         keywords: ['nextcloud','seafile','filebrowser','syncthing','paperless','mealie','tandoor','grocy','bookstack','wiki','notion','obsidian','miniflux','freshrss','wallabag','linkding','shlink'] },
+    { name: t('Files & Data'),   icon: 'ph-folder-open',         keywords: ['nextcloud','seafile','filebrowser','syncthing','paperless','mealie','tandoor','grocy','bookstack','wiki','notion','obsidian','miniflux','freshrss','wallabag','linkding','shlink'] },
     { name: 'Network',        icon: 'ph-network',             keywords: ['pihole','adguard','unifi','technitium','bind','nginx-proxy','ddclient','cloudflare','tailscale','zerotier','headscale','netbird'] },
     { name: 'Dev',            icon: 'ph-code',                keywords: ['gitea','gitlab','forgejo','github','gogs','drone','jenkins','argocd','harbor','registry','sonar','nexus','artifactory','semaphore','woodpecker','act','renovate','dependabot','code-server','coder','vscode','jupyter','jupyterlab','mlflow','airflow','prefect','dagster'] },
     { name: 'Servers',        icon: 'ph-desktop-tower',       keywords: ['proxmox','cockpit','idrac','ilo','ipmi','esxi','xcp','xen','hyperv','kvm','pve','unraid','truenas','freenas','opnsense','pfsense','mikrotik','synology','qnap','asustor'] },
@@ -422,16 +417,16 @@ function _dskWebUrl(u) {
 }
 
 function _dashLaunchInfo(r, ov) {
-    if (ov.link_disabled) return { url: null, why: 'link disabled for this route', glyph: 'ph-bold ph-link-simple-break' };
+    if (ov.link_disabled) return { url: null, why: t('link disabled for this route'), glyph: 'ph-bold ph-link-simple-break' };
     if (ov.url) {
         const safe = _dskWebUrl(ov.url);
         return safe
             ? { url: safe, hosts: 1 }
-            : { url: null, why: 'the link override is not an http or https URL. <b>Fix it in edit</b>', glyph: 'ph-bold ph-link-break' };
+            : { url: null, why: `${th('the link override is not an http or https URL. {fix_it_in}', { fix_it_in: tmHtml(`<b>${th('Fix it in edit')}</b>`) })}`, glyph: 'ph-bold ph-link-break' };
     }
-    if ((r.protocol || 'http') !== 'http') return { url: null, why: 'stream route, nothing to open', glyph: 'ph-bold ph-terminal-window' };
+    if ((r.protocol || 'http') !== 'http') return { url: null, why: t('stream route, nothing to open'), glyph: 'ph-bold ph-terminal-window' };
     const rule = r.rule || '';
-    if (!rule) return { url: null, why: 'no rule, nothing to open. <b>Set a link in edit</b>', glyph: 'ph-bold ph-link-break' };
+    if (!rule) return { url: null, why: `${th('no rule, nothing to open. {set_a_link}', { set_a_link: tmHtml(`<b>${th('Set a link in edit')}</b>`) })}`, glyph: 'ph-bold ph-link-break' };
     let picked = null, hosts = 0, wild = false;
     _dskRuleBranches(rule).forEach(b => {
         const hostRe = /(!?)\s*Host\(`([^`]+)`\)/g;
@@ -444,10 +439,10 @@ function _dashLaunchInfo(r, ov) {
     });
     if (!picked) {
         const why = wild
-            ? 'no launch URL, wildcard host. <b>Set one in edit</b>'
+            ? `${th('no launch URL, wildcard host. {set_one_in}', { set_one_in: tmHtml(`<b>${th('Set one in edit')}</b>`) })}`
             : (/HostRegexp|HostSNI/.test(rule)
-                ? 'no launch URL, pattern rule. <b>Set one in edit</b>'
-                : 'no launch URL, the rule has no host. <b>Set one in edit</b>');
+                ? `${th('no launch URL, pattern rule. {set_one_in}', { set_one_in: tmHtml(`<b>${th('Set one in edit')}</b>`) })}`
+                : `${th('no launch URL, the rule has no host. {set_one_in}', { set_one_in: tmHtml(`<b>${th('Set one in edit')}</b>`) })}`);
         return { url: null, why: why, glyph: 'ph-bold ph-link-break' };
     }
     return { url: (r.tls ? 'https' : 'http') + '://' + picked.host + picked.path, hosts: hosts };
@@ -467,85 +462,86 @@ function _dskState(r) {
     if (r.enabled === false) {
         s.health  = 'idle';
         s.dot     = 'sig-cell-idle';
-        s.dotTip  = 'Not served, the route is disabled';
-        s.note    = 'disabled, not served by Traefik';
+        s.dotTip  = t('Not served, the route is disabled');
+        s.note    = t('disabled, not served by Traefik');
         s.noteIc  = 'ph-bold ph-power';
         s.noteCls = 'd-off';
     } else if (st && st.err) {
         s.health  = 'down';
         s.dot     = 'sig-cell-err';
-        s.dotTip  = 'Traefik rejected this router' + (st.msg ? ' - ' + st.msg : '');
-        s.note    = 'router error, <b>' + _esc(_dskTerse(st.msg) || 'see details') + '</b>';
+        s.dotTip  = (st.msg ? t('Traefik rejected this router - {message}', { message: st.msg }) : t('Traefik rejected this router'));
+        s.note    = `${th('router error, {b}', { b: tmHtml(`<b>${_esc(_dskTerse(st.msg) || t('see details'))}</b>`) })}`;
         s.noteIc  = 'ph-fill ph-x-circle';
         s.noteCls = 'd-bad';
     } else if (st && !st.up) {
         s.health  = 'idle';
         s.dot     = 'sig-cell-idle';
-        s.dotTip  = 'Traefik reports this router as not enabled';
-        s.note    = 'router loaded but not enabled';
+        s.dotTip  = t('Traefik reports this router as not enabled');
+        s.note    = t('router loaded but not enabled');
         s.noteIc  = 'ph-bold ph-power';
         s.noteCls = 'd-off';
     } else if (svc && svc.total && svc.up === 0) {
         s.health  = 'down';
         s.dot     = 'sig-cell-err';
-        s.dotTip  = 'Backend unreachable - 0 of ' + svc.total + ' servers up';
-        s.note    = 'backend unreachable <b>0/' + svc.total + ' servers</b>';
+        s.dotTip  = t('Backend unreachable - 0 of {total} servers up', { total: svc.total });
+        s.note    = `${th('backend unreachable {v0_servers}', { v0_servers: tmHtml(`<b>0/${svc.total} servers</b>`) })}`;
         s.noteIc  = 'ph-fill ph-warning-octagon';
         s.noteCls = 'd-bad';
     } else if (svc && svc.total && svc.up < svc.total) {
         s.health  = 'warn';
         s.dot     = 'sig-cell-warn';
-        s.dotTip  = 'Backend degraded - ' + svc.up + ' of ' + svc.total + ' servers up';
-        s.note    = 'backend degraded <b>' + svc.up + '/' + svc.total + ' servers</b>';
+        s.dotTip  = t('Backend degraded - {up} of {total} servers up', { up: svc.up, total: svc.total });
+        s.note    = `${th('backend degraded {servers}', { servers: tmHtml(`<b>${svc.up}/${svc.total} servers</b>`) })}`;
         s.noteIc  = 'ph-fill ph-warning';
         s.noteCls = 'd-warn';
     } else if (_rmStatusBlind) {
         s.dot    = 'sig-cell-idle';
-        s.dotTip = 'Live status unavailable, the Traefik API did not answer';
+        s.dotTip = t('Live status unavailable, the Traefik API did not answer');
     } else if (!st) {
         s.health  = 'unknown';
         s.dot     = 'sig-cell-idle dsk-dot-unk';
-        s.dotTip  = 'Traefik has not reported this router';
-        s.note    = 'declared here, not reported by Traefik';
+        s.dotTip  = t('Traefik has not reported this router');
+        s.note    = t('declared here, not reported by Traefik');
         s.noteIc  = 'ph-bold ph-question';
         s.noteCls = 'd-off';
     } else if (svc && svc.total) {
         s.health = 'up';
         s.dot    = 'sig-cell-ok';
-        s.dotTip = 'Router loaded, ' + svc.up + ' of ' + svc.total + ' backend servers up';
+        s.dotTip = t('Router loaded, {up} of {total} backend servers up', { up: svc.up, total: svc.total });
     } else if (chk && chk.state === 'down') {
         s.health  = 'down';
         s.dot     = 'sig-cell-err';
         s.dotTip  = (chk.source === 'traefik' || chk.source === 'servers')
-            ? 'Backend unreachable - 0 of ' + ((chk.servers || {}).total || 0) + ' servers up'
-            : 'Unreachable' + (chk.error ? ': ' + chk.error : '') + ' \u00b7 ' + _dskAgo(chk.at);
-        s.note    = 'backend unreachable';
+            ? t('Backend unreachable - 0 of {total} servers up', { total: (chk.servers || {}).total || 0 })
+            : (chk.error ? t('Unreachable: {error} · {ago}', { error: chk.error, ago: _dskAgo(chk.at) }) : t('Unreachable · {ago}', { ago: _dskAgo(chk.at) }));
+        s.note    = t('backend unreachable');
         s.noteIc  = 'ph-fill ph-warning-octagon';
         s.noteCls = 'd-bad';
     } else if (chk && chk.state === 'degraded') {
         const sv  = chk.servers || {};
         s.health  = 'warn';
         s.dot     = 'sig-cell-warn';
-        s.dotTip  = 'Backend degraded - ' + sv.up + ' of ' + sv.total + ' servers up'
-            + ((chk.down_servers || []).length ? ' (' + chk.down_servers.join(', ') + ' down)' : '') + ' \u00b7 ' + _dskAgo(chk.at);
-        s.note    = 'backend degraded <b>' + sv.up + '/' + sv.total + ' servers</b>';
+        s.dotTip  = ((chk.down_servers || []).length
+            ? t('Backend degraded - {up} of {total} servers up ({servers} down) · {ago}', { up: sv.up, total: sv.total, servers: chk.down_servers.join(', '), ago: _dskAgo(chk.at) })
+            : t('Backend degraded - {up} of {total} servers up · {ago}', { up: sv.up, total: sv.total, ago: _dskAgo(chk.at) }));
+        s.note    = `${th('backend degraded {servers}', { servers: tmHtml(`<b>${sv.up}/${sv.total} servers</b>`) })}`;
         s.noteIc  = 'ph-fill ph-warning';
         s.noteCls = 'd-warn';
     } else if (chk && chk.state === 'up') {
         s.health = 'up';
         s.dot    = 'sig-cell-ok';
-        s.dotTip = (chk.self ? 'Online (self)'
-            : chk.unverified ? 'Proxy answered ' + chk.status_code + ', backend not verified' + (chk.note ? '. ' + chk.note : '')
-            : chk.via_target ? 'Backend online \u00b7 ' + chk.latency_ms + 'ms'
+        s.dotTip = (chk.self ? t('Online (self)')
+            : chk.unverified ? (chk.note ? t('Proxy answered {status_code}, backend not verified. {note}', { status_code: chk.status_code, note: chk.note }) : t('Proxy answered {status_code}, backend not verified', { status_code: chk.status_code }))
+            : chk.via_target ? t('Backend online · {latency_ms}ms', { latency_ms: chk.latency_ms })
             : 'Online \u00b7 ' + chk.latency_ms + 'ms (' + chk.status_code + ')') + ' \u00b7 ' + _dskAgo(chk.at);
     } else if (chk && chk.state === 'pending') {
-        s.dotTip = 'Router loaded, the last check failed' + (chk.error ? ': ' + chk.error : '') + ', confirming on the next pass';
+        s.dotTip = (chk.error ? t('Router loaded, the last check failed: {error}, confirming on the next pass', { error: chk.error }) : t('Router loaded, the last check failed, confirming on the next pass'));
     } else if (!_dskChecksOn()) {
-        s.dotTip = 'Router loaded, route checks are off in Settings';
+        s.dotTip = t('Router loaded, route checks are off in Settings');
     } else if (!lnk.url) {
-        s.dotTip = 'Router loaded, no backend health from Traefik and the rule has no host to check. Set a link in edit and it will be checked';
+        s.dotTip = t('Router loaded, no backend health from Traefik and the rule has no host to check. Set a link in edit and it will be checked');
     } else {
-        s.dotTip = 'Router loaded and enabled, Traefik reports no backend health for this service and it has not been checked yet';
+        s.dotTip = t('Router loaded and enabled, Traefik reports no backend health for this service and it has not been checked yet');
     }
 
     if (!s.note && !s.url && lnk.why) {
@@ -573,18 +569,18 @@ function _dskHostText(s, r) {
 function _dskRowTitle(r, s, name) {
     const bits = [];
     if (name !== r.name) bits.push(r.name);
-    if (s.url) bits.push(s.url + ' \u2192 ' + (r.target && r.target !== 'N/A' ? r.target : (r.service_name || 'unknown backend')));
+    if (s.url) bits.push(s.url + ' \u2192 ' + (r.target && r.target !== 'N/A' ? r.target : (r.service_name || t('unknown backend'))));
     else if (r.target && r.target !== 'N/A') bits.push('backend ' + r.target);
     bits.push('provider ' + (r.provider || 'file'));
     const eps = r.entryPoints || [];
-    if (eps.length) bits.push('entry point ' + eps.join(', '));
+    if (eps.length) bits.push(t('entry point {eps}', { eps: eps.join(', ') }));
     const nsrv = (r.servers || []).length;
     if (nsrv) bits.push(nsrv + (nsrv === 1 ? ' server' : ' servers'));
     const mws = r.middlewares || [];
     if (mws.length) bits.push(mws.length + ' middleware' + (mws.length === 1 ? '' : 's') + ': ' + mws.map(m => String(m).split('@')[0]).join(', '));
-    if (r.certResolver) bits.push('cert resolver ' + r.certResolver);
-    if (r.healthCheck && Object.keys(r.healthCheck).length) bits.push('active health check');
-    if (s.hosts > 1) bits.push(s.hosts + ' hosts in the rule, the first is used');
+    if (r.certResolver) bits.push(t('cert resolver {certResolver}', { certResolver: r.certResolver }));
+    if (r.healthCheck && Object.keys(r.healthCheck).length) bits.push(t('active health check'));
+    if (s.hosts > 1) bits.push(t('{hosts} hosts in the rule, the first is used', { hosts: s.hosts }));
     if (r.configFile) bits.push(r.configFile);
     if (s.note) bits.push(_dskPlain(s.note));
     return bits.join(' \u00b7 ');
@@ -609,23 +605,7 @@ function dashBuildRouteRow(r, s) {
     if (s.health === 'down' || s.health === 'warn') row.tabIndex = -1;
     row.title = _dskRowTitle(r, s, name);
 
-    row.innerHTML = _dskPlate(r, name, s)
-        + '<span class="dsk-id">'
-        + (proto !== 'HTTP' ? '<span class="d-proto">' + _esc(proto) + '</span>' : '')
-        + (s.url
-            ? '<a class="dsk-name" href="' + _esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + _esc(name) + '</a>'
-            : '<span class="dsk-name">' + _esc(name) + '</span>')
-        + (host ? '<span class="dsk-host">' + _esc(host) + '</span>' : '')
-        + '</span>'
-        + (s.note
-            ? '<span class="dsk-note"><i class="' + s.noteIc + ' ' + s.noteCls + '"></i><span class="dsk-note-t">' + s.note + '</span></span>'
-            : '')
-        + '<span class="dsk-rail">'
-        + '<button type="button" class="dsk-btn" data-dsk="' + _esc(_dskSpec({ act: 'info', id: r.id })) + '"'
-        + ' title="Route details" aria-label="Details for ' + _esc(name) + '"><i class="ph-bold ph-info"></i></button>'
-        + '<button type="button" class="dsk-btn" data-dsk="' + _esc(_dskSpec({ act: 'edit', id: r.id })) + '"'
-        + ' title="Edit route" aria-label="Edit ' + _esc(name) + '"><i class="ph-bold ph-pencil-simple"></i></button>'
-        + '</span>';
+    row.innerHTML = `${_dskPlate(r, name, s)}<span class="dsk-id">${proto !== 'HTTP' ? '<span class="d-proto">' + _esc(proto) + '</span>' : ''}${s.url ? '<a class="dsk-name" href="' + _esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + _esc(name) + '</a>' : '<span class="dsk-name">' + _esc(name) + '</span>'}${host ? '<span class="dsk-host">' + _esc(host) + '</span>' : ''}</span>${s.note ? '<span class="dsk-note"><i class="' + s.noteIc + ' ' + s.noteCls + '"></i><span class="dsk-note-t">' + s.note + '</span></span>' : ''}<span class="dsk-rail"><button type="button" class="dsk-btn" data-dsk="${_esc(_dskSpec({ act: 'info', id: r.id }))}" title="${th('Route details')}" aria-label="${th('Details for {name}', { name })}"><i class="ph-bold ph-info"></i></button><button type="button" class="dsk-btn" data-dsk="${_esc(_dskSpec({ act: 'edit', id: r.id }))}" title="${th('Edit route')}" aria-label="${th('Edit {name}', { name })}"><i class="ph-bold ph-pencil-simple"></i></button></span>`;
     return row;
 }
 
@@ -644,28 +624,20 @@ function dashBuildIconTile(r, s) {
     else if (host) tipBits.push(host);
     const tip = _esc(tipBits.join(' \u00b7 '));
 
-    tile.innerHTML = _dskPlate(r, name, s)
+    tile.innerHTML = `${_dskPlate(r, name, s)
         + (s.url
             ? '<a class="dsk-tile-lk dsk-tile-name" href="' + _esc(s.url) + '" target="_blank" rel="noopener noreferrer" title="' + tip + '">' + _esc(name) + '</a>'
-            : '<span class="dsk-tile-name" title="' + tip + '">' + _esc(name) + '</span>')
-        + '<button type="button" class="dsk-tile-btn dsk-tile-btn-l" data-dsk="' + _esc(_dskSpec({ act: 'info', id: r.id })) + '"'
-        + ' title="Route details" aria-label="Details for ' + _esc(name) + '"><i class="ph-bold ph-info"></i></button>'
-        + '<button type="button" class="dsk-tile-btn" data-dsk="' + _esc(_dskSpec({ act: 'edit', id: r.id })) + '"'
-        + ' title="Edit ' + _esc(name) + '" aria-label="Edit ' + _esc(name) + '"><i class="ph-bold ph-pencil-simple"></i></button>';
+            : '<span class="dsk-tile-name" title="' + tip + '">' + _esc(name) + '</span>')}<button type="button" class="dsk-tile-btn dsk-tile-btn-l" data-dsk="${_esc(_dskSpec({ act: 'info', id: r.id }))}" title="${th('Route details')}" aria-label="${th('Details for {name}', { name })}"><i class="ph-bold ph-info"></i></button><button type="button" class="dsk-tile-btn" data-dsk="${_esc(_dskSpec({ act: 'edit', id: r.id }))}" title="${th('Edit {name}', { name })}" aria-label="${th('Edit {name}', { name })}"><i class="ph-bold ph-pencil-simple"></i></button>`;
     return tile;
 }
 
 function _dskAlarm(meta, down, warn) {
     let html = '';
     if (down) {
-        html += '<button type="button" class="sig-flag dsk-alarm" data-dsk="' + _esc(_dskSpec({ act: 'alarm', pod: meta.name })) + '"'
-            + ' title="' + down + ' route' + (down === 1 ? '' : 's') + ' in ' + _esc(meta.name) + ' need attention">'
-            + '<i class="ph-fill ph-warning-octagon"></i><b>' + down + '</b><span class="sig-fl">down</span></button>';
+        html += `<button type="button" class="sig-flag dsk-alarm" data-dsk="${_esc(_dskSpec({ act: 'alarm', pod: meta.name }))}" title="${down} route${down === 1 ? '' : 's'} in ${_esc(meta.name)} need attention"><i class="ph-fill ph-warning-octagon"></i><b>${down}</b><span class="sig-fl">${thc('button', 'down')}</span></button>`;
     }
     if (warn) {
-        html += '<button type="button" class="sig-flag dsk-alarm dsk-alarm-warn" data-dsk="' + _esc(_dskSpec({ act: 'alarm', pod: meta.name })) + '"'
-            + ' title="' + warn + ' route' + (warn === 1 ? '' : 's') + ' in ' + _esc(meta.name) + ' have a backend server down">'
-            + '<i class="ph-fill ph-warning"></i><b>' + warn + '</b><span class="sig-fl">degraded</span></button>';
+        html += `<button type="button" class="sig-flag dsk-alarm dsk-alarm-warn" data-dsk="${_esc(_dskSpec({ act: 'alarm', pod: meta.name }))}" title="${thn('{n} route in {pod} have a backend server down', '{n} routes in {pod} have a backend server down', warn, { pod: meta.name })}"><i class="ph-fill ph-warning"></i><b>${warn}</b><span class="sig-fl">${thc('button', 'degraded')}</span></button>`;
     }
     return html;
 }
@@ -702,7 +674,7 @@ function dashBuildPod(entry) {
         body.remove();
         const note = document.createElement('p');
         note.className = 'lg-note';
-        note.textContent = 'Custom group with no routes yet. Assign one with the pencil on any route.';
+        note.textContent = t('Custom group with no routes yet. Assign one with the pencil on any route.');
         pod.appendChild(note);
         return pod;
     }
@@ -715,7 +687,6 @@ function dashBuildPod(entry) {
         const hidden = list.slice(limit);
         const hDown  = hidden.filter(x => x.s.health === 'down').length;
         const hWarn  = hidden.filter(x => x.s.health === 'warn').length;
-        const noun   = icons ? 'apps' : 'routes';
         const btn    = document.createElement('button');
         btn.type = 'button';
         btn.className = 'dsk-more' + (open ? '' : (hDown ? ' dsk-more-bad' : (hWarn ? ' dsk-more-warn' : '')));
@@ -723,14 +694,17 @@ function dashBuildPod(entry) {
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
         btn.setAttribute('aria-controls', bodyId);
         btn.setAttribute('aria-label', open
-            ? 'Show fewer ' + noun + ' in ' + meta.name + ', ' + list.length + ' shown'
-            : 'Show ' + hidden.length + ' more ' + noun + ' in ' + meta.name
-              + (hDown ? ', ' + hDown + ' of them down' : '') + (hWarn ? ', ' + hWarn + ' of them degraded' : ''));
+            ? (icons ? t('Show fewer apps in {name}, {count} shown', { name: meta.name, count: list.length })
+                     : t('Show fewer routes in {name}, {count} shown', { name: meta.name, count: list.length }))
+            : (icons ? tn('Show {n} more app in {name}', 'Show {n} more apps in {name}', hidden.length, { name: meta.name })
+                     : tn('Show {n} more route in {name}', 'Show {n} more routes in {name}', hidden.length, { name: meta.name }))
+              + (hDown ? ', ' + t('{count} of them down', { count: hDown }) : '')
+              + (hWarn ? ', ' + t('{count} of them degraded', { count: hWarn }) : ''));
         btn.innerHTML = open
-            ? '<i class="ph-bold ph-caret-up"></i>show less'
-            : '<i class="ph-bold ph-caret-down"></i><b>' + hidden.length + '</b> more'
-              + (hDown ? ' <span class="dsk-more-n">\u00b7 ' + hDown + ' down</span>' : '')
-              + (hWarn ? ' <span class="dsk-more-w">\u00b7 ' + hWarn + ' degraded</span>' : '');
+            ? `<i class="ph-bold ph-caret-up"></i>${th('show less')}`
+            : `<i class="ph-bold ph-caret-down"></i><b>${hidden.length}</b> ${th('more')}`
+              + (hDown ? ' <span class="dsk-more-n">\u00b7 ' + hDown + ` ${thc('label', 'down')}</span>` : '')
+              + (hWarn ? ' <span class="dsk-more-w">\u00b7 ' + hWarn + ` ${thc('label', 'degraded')}</span>` : '');
         pod.appendChild(btn);
     }
     return pod;
@@ -782,9 +756,9 @@ function _dskChecksOn() {
 function _dskAgo(at) {
     if (!at) return '';
     const sec = Math.max(0, Math.floor(Date.now() / 1000) - at);
-    if (sec < 60)   return 'checked just now';
-    if (sec < 3600) return 'checked ' + Math.floor(sec / 60) + 'm ago';
-    return 'checked ' + Math.floor(sec / 3600) + 'h ago';
+    if (sec < 60)   return t('checked just now');
+    if (sec < 3600) return t('checked {floor}m ago', { floor: Math.floor(sec / 60) });
+    return t('checked {floor}h ago', { floor: Math.floor(sec / 3600) });
 }
 
 const DSK_HIT_MS = 2400;
@@ -880,7 +854,7 @@ function dashRenderProviderFilters() {
         const btn = document.createElement('button');
         btn.id = 'dashpf-' + p;
         btn.className = 'proto-btn text-xs px-3 py-1.5' + (p === _dashProvider ? ' active-http' : '');
-        btn.textContent = p === 'all' ? 'All' : p;
+        btn.textContent = p === 'all' ? tc('button', 'All') : p;
         btn.onclick = () => window.dashFilterProvider(p);
         container.appendChild(btn);
     });
@@ -894,24 +868,24 @@ function _dskEmptyPanel(total) {
     if (!ic || !ttl || !note || !acts) return;
 
     const on = [];
-    if (_dashSearch)             on.push('the search <code>' + _esc(_dashSearch) + '</code>');
-    if (_dashProto !== 'all')    on.push('the <b>' + _esc(_dashProto) + '</b> protocol filter');
-    if (_dashProvider !== 'all') on.push('the <b>' + _esc(_dashProvider) + '</b> provider filter');
+    if (_dashSearch)             on.push(`${th('the search {code}', { code: tmHtml(`<code>${_esc(_dashSearch)}</code>`) })}`);
+    if (_dashProto !== 'all')    on.push(`${th('the {b} protocol filter', { b: tmHtml(`<b>${_esc(_dashProto)}</b>`) })}`);
+    if (_dashProvider !== 'all') on.push(`${th('the {b} provider filter', { b: tmHtml(`<b>${_esc(_dashProvider)}</b>`) })}`);
 
     if (total && on.length) {
         ic.className  = 'ph-fill ph-funnel';
-        ttl.textContent = 'Nothing matches';
-        const listed = on.length === 1 ? on[0] : on.slice(0, -1).join(', ') + ' and ' + on[on.length - 1];
-        note.innerHTML = total + ' route' + (total === 1 ? ' is' : 's are') + ' loaded. ' + listed
-            + (on.length === 1 ? ' matches none of them.' : ' together match none of them.');
-        acts.innerHTML = (_dashSearch
-            ? '<button type="button" class="sig-flag d-blue" data-dsk="act=clear;what=search"><i class="ph-bold ph-x"></i>clear search</button>'
-            : '')
-            + '<button type="button" class="sig-flag d-blue" data-dsk="act=clear;what=all"><i class="ph-bold ph-arrow-counter-clockwise"></i>reset all filters</button>';
+        ttl.textContent = t('Nothing matches');
+        const listed = on.length === 1 ? on[0]
+            : th('{items} and {last}', { items: tmHtml(on.slice(0, -1).join(', ')), last: tmHtml(on[on.length - 1]) });
+        note.innerHTML = thn('{n} route is loaded.', '{n} routes are loaded.', total) + ' '
+            + (on.length === 1
+                ? th('{filters} matches none of them.', { filters: tmHtml(listed) })
+                : th('{filters} together match none of them.', { filters: tmHtml(listed) }));
+        acts.innerHTML = `${_dashSearch ? `<button type="button" class="sig-flag d-blue" data-dsk="act=clear;what=search"><i class="ph-bold ph-x"></i>${th('clear search')}</button>` : ''}<button type="button" class="sig-flag d-blue" data-dsk="act=clear;what=all"><i class="ph-bold ph-arrow-counter-clockwise"></i>${th('reset all filters')}</button>`;
     } else {
         ic.className  = 'ph-fill ph-plus-circle';
-        ttl.textContent = 'No routes yet';
-        note.innerHTML = 'No routes are managed here and the Traefik API reported none. Add one from the Routes tab, or point traefik-manager at a config file that already has some.';
+        ttl.textContent = t('No routes yet');
+        note.innerHTML = th('No routes are managed here and the Traefik API reported none. Add one from the Routes tab, or point traefik-manager at a config file that already has some.');
         acts.innerHTML = '';
     }
 }
@@ -1011,7 +985,7 @@ window.refreshDashboardTab = async function() {
         if (pods)  pods.classList.add('hidden');
         if (empty) empty.classList.add('hidden');
         if (deg)   deg.classList.remove('hidden');
-        if (first) showToast('Could not load dashboard data.', 'error');
+        if (first) showToast(t('Could not load dashboard data.'), 'error');
         return;
     }
     if (typeof window._rhLoad === 'function') await window._rhLoad(_rmServerId());

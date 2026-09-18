@@ -395,7 +395,7 @@ function _dText(v, cls) {
 }
 
 function _dBool(on, yes, no) {
-    return `<span class="d-flat ${on ? 'd-on' : 'd-off'}">${on ? (yes || 'Yes') : (no || 'No')}</span>`;
+    return `<span class="d-flat ${on ? 'd-on' : 'd-off'}">${on ? yes || 'Yes' : no || 'No'}</span>`;
 }
 
 function _dList(items, cls) {
@@ -408,7 +408,7 @@ function _dState(state) {
     const s = String(state || '').toLowerCase();
     const dot = s === 'enabled' ? 'status-online' : (s === 'disabled' || s === 'error') ? 'status-offline' : 'status-unknown';
     const cls = s === 'enabled' ? 'd-on' : (s === 'disabled' || s === 'error') ? 'd-bad' : 'd-off';
-    return `<span class="d-state d-flat ${cls}"><span class="status-dot ${dot}"></span>${_esc(state || 'Unknown')}</span>`;
+    return `<span class="d-state d-flat ${cls}"><span class="status-dot ${dot}"></span>${_esc(state || t('Unknown'))}</span>`;
 }
 
 function renderSection(title, icon, rows) {
@@ -444,10 +444,10 @@ function _dCount(n) {
 }
 
 async function _errText(res, fallback) {
-    if (res && res.status === 502) return 'Cannot reach the agent. Check that it is running and reachable.';
-    if (res && res.status === 401) { tabCacheClear(); return 'Session expired. Sign in again.'; }
-    if (res && res.status === 403) return 'Not allowed. Your session may have expired.';
-    if (res && res.status === 404) return fallback + ' (not found)';
+    if (res && res.status === 502) return t('Cannot reach the agent. Check that it is running and reachable.');
+    if (res && res.status === 401) { tabCacheClear(); return t('Session expired. Sign in again.'); }
+    if (res && res.status === 403) return t('Not allowed. Your session may have expired.');
+    if (res && res.status === 404) return t('{fallback} (not found)', { fallback });
     try {
         const data = await res.json();
         const detail = data.error || data.message;
@@ -470,7 +470,7 @@ function _passwordError(pw, label) {
 function _netErrText(err, fallback) {
     const msg = String((err && err.message) || err || '');
     if (/Failed to fetch|NetworkError|Load failed/i.test(msg)) {
-        return 'No response from Traefik Manager. Check that it is still running.';
+        return t('No response from Traefik Manager. Check that it is still running.');
     }
     return msg ? `${fallback}: ${msg.slice(0, 200)}` : fallback;
 }
@@ -863,7 +863,7 @@ function setLanguage(tag) {
     })
         .then(r => r.json().then(d => ({ ok: r.ok, d })))
         .then(({ ok, d }) => {
-            if (!ok || !d.success) throw new Error(d.error || 'save failed');
+            if (!ok || !d.success) throw new Error(d.error || t('save failed'));
             window.TM_LANGUAGE = d.default_language;
             window.location.href = _tmLanguageUrl();
         })
@@ -923,7 +923,7 @@ function installPWA() {
 function _emptyMountState({ icon, title, description, steps, note }) {
     const stepHtml = steps.map((step, i) => `
         <div class="text-left" style="max-width:480px;margin:0 auto">
-            <p class="text-xs mb-2" style="color:var(--muted)">${steps.length > 1 ? `<span class="font-bold" style="color:var(--text)">${th('Step {value}.', { value: tmHtml(i+1) })}</span> ` : ''}${step.label}</p>
+            <p class="text-xs mb-2" style="color:var(--muted)">${steps.length > 1 ? `<span class="font-bold" style="color:var(--text)">${th('Step {n}.', { n: i + 1 })}</span> ` : ''}${step.label}</p>
             <div class="relative rounded-lg overflow-hidden" style="background:var(--input-bg);border:1px solid var(--border)">
                 <pre class="text-xs font-mono px-4 py-3 pr-16 leading-relaxed overflow-x-auto" style="color:var(--blue);white-space:pre">${step.code}</pre>
                 <button onclick="_copyCode(this, ${JSON.stringify(step.code)})"
@@ -1156,7 +1156,7 @@ function _geoPanelHtml(panelId, countryData, activeCC, onClearAttr) {
         ? `<button type="button" class="sig-explore" onclick="${onClearAttr}" title="${th('Clear the country filter')}">${_flagEmoji(activeCC)} ${_esc((countryData[activeCC] || {}).name || activeCC)} <i class="ph-bold ph-x"></i></button>`
         : '';
     const label = entries.length === 1 ? t('country') : t('countries');
-    const more = entries.length > 8 ? `<div class="lg-tail">${th('+{value} more {value2}', { value: tmHtml((entries.length - 8).toLocaleString()), value2: tmHtml(entries.length - 8 === 1 ? 'country' : 'countries') })}</div>` : '';
+    const more = entries.length > 8 ? `<div class="lg-tail">${thn('+{count} more country', '+{count} more countries', entries.length - 8, { count: tmNumber(entries.length - 8) })}</div>` : '';
     return `<div class="sig-root">
         <section class="sig-ep lg-geo">
             <div class="sig-ep-head">
@@ -1256,7 +1256,7 @@ async function loadIpDiagnostic() {
     const hdrRows = Object.entries(d.headers || {}).map(([k, v]) => `
         <div class="flex items-center gap-2 py-1.5" style="border-bottom:1px solid var(--border)">
             <span class="text-xs font-mono" style="color:var(--muted);min-width:120px">${_esc(k)}</span>
-            <span class="text-xs font-mono truncate" style="color:${v ? 'var(--text)' : 'var(--muted)'};flex:1;min-width:0" title="${_esc(v || '')}">${v ? _esc(v) : 'not set'}</span>
+            <span class="text-xs font-mono truncate" style="color:${v ? 'var(--text)' : 'var(--muted)'};flex:1;min-width:0" title="${_esc(v || '')}">${v ? _esc(v) : th('not set')}</span>
         </div>`).join('');
 
     const spoofable = d.effective_class === 'private' || d.effective_class === 'loopback' || d.effective_class === 'cgnat';
@@ -1267,7 +1267,7 @@ async function loadIpDiagnostic() {
             ${row(t('Socket peer'), d.socket_peer, d.socket_peer_class, t('The direct TCP connection - your reverse proxy, or the real client if none.'))}
             <div class="flex items-center gap-2 py-2" style="border-bottom:1px solid var(--border)">
                 <span class="text-xs" style="color:var(--muted);min-width:120px">${th('Proxy trusted')}</span>
-                <span class="text-xs font-mono" style="color:var(--text)">${d.proxy_trusted === undefined ? '-' : (d.proxy_trusted ? 'yes' : 'no')}</span>
+                <span class="text-xs font-mono" style="color:var(--text)">${d.proxy_trusted === undefined ? '-' : d.proxy_trusted ? 'yes' : 'no'}</span>
             </div>
             <div class="flex items-center gap-2 py-2">
                 <span class="text-xs" style="color:var(--muted);min-width:120px">${th('Trusted hops')}</span>
@@ -1332,10 +1332,10 @@ const _NOTIF_ICONS = {
 
 function _notifRelTime(ts) {
     const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
-    if (diff < 60)  return 'just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+    if (diff < 60)  return t('just now');
+    if (diff < 3600) return t('{floor}m ago', { floor: Math.floor(diff / 60) });
+    if (diff < 86400) return t('{floor}h ago', { floor: Math.floor(diff / 3600) });
+    return t('{floor}d ago', { floor: Math.floor(diff / 86400) });
 }
 
 async function fetchNotifications() {
@@ -1448,7 +1448,7 @@ function _renderNotifPanel() {
             <div class="notif-icon ${type}"><i class="ph-bold ${icon}"></i></div>
             <div class="notif-body">
                 <div class="notif-msg">${_esc(n.msg)}</div>
-                <div class="notif-ts">${_notifRelTime(n.ts)}<span class="notif-cat">${_esc(NOTIF_CATEGORY_LABELS[n.category] || n.category || 'Config')}</span></div>
+                <div class="notif-ts">${_notifRelTime(n.ts)}<span class="notif-cat">${_esc(NOTIF_CATEGORY_LABELS[n.category] || n.category || t('Config'))}</span></div>
             </div>
             <button class="notif-delete-btn" onclick="deleteNotification(${_jsArg(n.ts)}, ${Number(n.id) || 0})" title="${thc('tooltip', 'Dismiss')}"><i class="ph-bold ph-x"></i></button>
         </div>`;
@@ -1626,7 +1626,7 @@ function _syncBrowserNotifs() {
     const fresh = _notifData.filter(n => !seen.has(n.ts) && _browserNotifWanted(n.type || 'info'));
     if (!fresh.length) return;
     if (fresh.length > BROWSER_NOTIF_BURST) {
-        _showBrowserNotif('info', fresh.length + ' new notifications', 'burst');
+        _showBrowserNotif('info', t('{fresh_count} new notifications', { fresh_count: fresh.length }), 'burst');
         return;
     }
     fresh.slice().reverse().forEach(n => _showBrowserNotif(n.type || 'info', n.msg || '', n.ts));

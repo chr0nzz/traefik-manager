@@ -864,9 +864,9 @@ function _scEpRow(name, ep) {
     if (insecureFwd) warn = t('forwardedHeaders.insecure is on, any client can set X-Forwarded-For');
     else if (insecurePp) warn = t('proxyProtocol.insecure is on, the PROXY header is trusted from any source');
     const facts = [];
-    if (redir) facts.push('redirects to ' + redir);
-    if (tips) facts.push(tips + ' trusted range' + (tips > 1 ? 's' : ''));
-    if (uhs) facts.push('underscore headers ' + uhs);
+    if (redir) facts.push(t('redirects to {redir}', { redir }));
+    if (tips) facts.push(tn('{n} trusted range', '{n} trusted ranges', tips));
+    if (uhs) facts.push(t('underscore headers {uhs}', { uhs }));
     return _scRow({
         section: 'entrypoints', name: name, tag: proto[0], tagColor: proto[1],
         addr: addr, n: _scCount('eps', name), glyphs: glyphs, warn: warn, sub: facts.join(' · '),
@@ -905,7 +905,7 @@ function _scPluginRow(name, p) {
         glyphs: local
             ? [['ph-folder-open', 'd-off', t('local plugin, loaded from disk')]]
             : [['ph-package', 'd-mw', pl.moduleName || name]],
-        sub: local ? 'local plugin' : (pl.moduleName || ''),
+        sub: local ? t('local plugin') : (pl.moduleName || ''),
     });
 }
 
@@ -916,7 +916,7 @@ function _renderStaticEntrypoints(eps) {
     const el = document.getElementById('staticEpList');
     if (!el) return;
     if (!keys.length) {
-        el.innerHTML = _scEmpty('No entrypoints configured');
+        el.innerHTML = _scEmpty(t('No entrypoints configured'));
         return;
     }
     el.innerHTML = _scRows(keys.map(name => _scEpRow(name, eps[name] || {})));
@@ -929,7 +929,7 @@ function _renderStaticResolvers(resolvers) {
     const el = document.getElementById('staticResolverList');
     if (!el) return;
     if (!keys.length) {
-        el.innerHTML = _scEmpty('No certificate resolvers configured');
+        el.innerHTML = _scEmpty(t('No certificate resolvers configured'));
         return;
     }
     el.innerHTML = _scRows(keys.map(name => _scResolverRow(name, resolvers[name])));
@@ -945,7 +945,7 @@ function _renderStaticPlugins(plugins, localPlugins) {
     const el = document.getElementById('staticPluginList');
     if (!el) return;
     if (!keys.length) {
-        el.innerHTML = _scEmpty('No plugins installed');
+        el.innerHTML = _scEmpty(t('No plugins installed'));
         return;
     }
     el.innerHTML = _scRows(keys.map(name => _scPluginRow(name, all[name])));
@@ -1000,10 +1000,10 @@ function _scFindings(d) {
     Object.keys(eps).forEach(name => {
         const ep = eps[name] || {};
         if (ep.forwardedHeaders && ep.forwardedHeaders.insecure) {
-            out.push(['ph-shield-warning', name + ' trusts forwarded headers from anyone', 'entrypoints']);
+            out.push(['ph-shield-warning', t('{name} trusts forwarded headers from anyone', { name }), 'entrypoints']);
         }
         if (ep.proxyProtocol && ep.proxyProtocol.insecure) {
-            out.push(['ph-shield-warning', name + ' trusts PROXY protocol from anyone', 'entrypoints']);
+            out.push(['ph-shield-warning', t('{name} trusts PROXY protocol from anyone', { name }), 'entrypoints']);
         }
     });
     const api = d.api;
@@ -1015,7 +1015,7 @@ function _scFindings(d) {
     }
     Object.keys(d.certificatesResolvers || {}).forEach(name => {
         const acme = (d.certificatesResolvers[name] || {}).acme || {};
-        if (!acme.email) out.push(['ph-certificate', name + ' has no ACME email', 'resolvers']);
+        if (!acme.email) out.push(['ph-certificate', t('{name} has no ACME email', { name }), 'resolvers']);
     });
     return out;
 }
@@ -1066,7 +1066,7 @@ function _scApplyNoteState() {
 function _renderStaticPluginNotice() {
     const el = document.getElementById('staticPluginNotice');
     if (!el) return;
-    el.innerHTML = _scNotice(t('plugins'), 'Installing plugins',
+    el.innerHTML = _scNotice(t('plugins'), t('Installing plugins'),
         `${th('These rows are what {traefik_yml} declares. The', { traefik_yml: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">traefik.yml</code>`) })} <button type="button" onclick="closeSettingsModal();switchTab('plugins')" style="color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font:inherit;text-decoration:underline">${th('Plugins tab')}</button> ${th('installs and removes them for you, and writes the middleware that uses them.')}`);
 }
 
@@ -1082,9 +1082,9 @@ function _renderStaticFoldStates(d) {
     const apiOn = _scHas(api);
     _scSetState('api', [
         apiOn ? 'enabled' : _scWarnTxt('disabled'),
-        apiOn && (api || {}).dashboard !== false ? 'dashboard on' : 'dashboard off',
-        (api || {}).insecure ? _scWarnTxt('insecure on') : 'insecure off',
-        (api || {}).debug ? 'debug on' : 'debug off',
+        apiOn && (api || {}).dashboard !== false ? t('dashboard on') : t('dashboard off'),
+        (api || {}).insecure ? _scWarnTxt(t('insecure on')) : t('insecure off'),
+        (api || {}).debug ? t('debug on') : t('debug off'),
     ].join(' &middot; '));
 
     const log = d.log || {};
@@ -1092,27 +1092,27 @@ function _renderStaticFoldStates(d) {
         log.level || 'ERROR',
         log.format || 'text',
         log.filePath || 'stdout',
-        _scHas(d.accessLog) ? 'access log on' : _scWarnTxt('access log off'),
+        _scHas(d.accessLog) ? t('access log on') : _scWarnTxt(t('access log off')),
     ].join(' &middot; '));
 
     const prom = (d.metrics || {}).prometheus;
     _scSetState('observability', [
-        _scHas(d.ping) ? 'ping on' : 'ping off',
-        _scHas(prom) ? 'metrics on' : 'metrics off',
-        _scHas(d.tracing) ? 'tracing on' : 'tracing off',
+        _scHas(d.ping) ? t('ping on') : t('ping off'),
+        _scHas(prom) ? t('metrics on') : t('metrics off'),
+        _scHas(d.tracing) ? t('tracing on') : t('tracing off'),
     ].join(' &middot; '));
 
     const g = d['global'] || {};
     const core = d.core || {};
     _scSetState('system', [
-        g.checkNewVersion === false ? 'version check off' : 'version check on',
-        g.sendAnonymousUsage ? 'usage stats on' : 'usage stats off',
+        g.checkNewVersion === false ? t('version check off') : t('version check on'),
+        g.sendAnonymousUsage ? t('usage stats on') : t('usage stats off'),
         'rule syntax ' + (core.defaultRuleSyntax === 'v2' ? 'v2' : 'v3'),
     ].join(' &middot; '));
 
     const plugins = Object.keys((d.experimental || {}).plugins || {})
         .concat(Object.keys((d.experimental || {}).localPlugins || {}));
-    _scSetState('plugins', plugins.length ? _esc(plugins.join(' &middot; ')) : 'none installed');
+    _scSetState('plugins', plugins.length ? _esc(plugins.join(' &middot; ')) : t('none installed'));
 
     const prov = d.providers || {};
     const provBits = [];
@@ -1120,7 +1120,7 @@ function _renderStaticFoldStates(d) {
     if (_scHas(prov.file)) {
         provBits.push('file ' + ((prov.file || {}).directory || (prov.file || {}).filename || 'on'));
     } else {
-        provBits.push('file off');
+        provBits.push(t('file off'));
     }
     const others = Object.keys(prov).filter(k => k !== 'docker' && k !== 'file' && k !== 'providersThrottleDuration');
     if (others.length) provBits.push(others.join(', '));
@@ -1377,10 +1377,10 @@ const PROVIDER_TEMPLATES = {
     http:               `endpoint: "http://your-config-server/api/config"\npollInterval: "5s"\npollTimeout: "5s"`,
     kubernetesCRD:      `endpoint: ""\ntoken: ""\ncertAuthFilePath: ""\nnamespaces: []\nlabelselector: ""`,
     kubernetesIngress:  `endpoint: ""\ntoken: ""\nnamespaces: []\ningressClass: ""\ningressEndpoint:\n  publishedService: ""`,
-    kubernetesGateway:  `endpoint: ""\nexperimentalChannel: false`,
+    kubernetesGateway:  'endpoint: ""\nexperimentalChannel: false',
     nomad:              `endpoint: "http://localhost:4646"\nprefix: "traefik"\nstale: false\nnamespaces: []`,
-    ecs:                `clusters:\n  - default\nautoDiscoverClusters: false\nregion: "us-east-1"\nexposedByDefault: true`,
-    consulCatalog:      `prefix: "traefik"\nrefreshInterval: "15s"\nendpoint:\n  address: "127.0.0.1:8500"\n  scheme: ""\n  datacenter: ""\n  token: ""\nexposedByDefault: true`,
+    ecs:                'clusters:\n  - default\nautoDiscoverClusters: false\nregion: "us-east-1"\nexposedByDefault: true',
+    consulCatalog:      'prefix: "traefik"\nrefreshInterval: "15s"\nendpoint:\n  address: "127.0.0.1:8500"\n  scheme: ""\n  datacenter: ""\n  token: ""\nexposedByDefault: true',
     consul:             `endpoints:\n  - "127.0.0.1:8500"\nrootKey: "traefik"\nnamespace: ""\ntoken: ""`,
     redis:              `endpoints:\n  - "127.0.0.1:6379"\nrootKey: "traefik"\npassword: ""\ndb: 0`,
     etcd:               `endpoints:\n  - "127.0.0.1:2379"\nrootKey: "traefik"\nusername: ""\npassword: ""`,
@@ -1531,9 +1531,9 @@ function _scHeadActions() {
 
 const SC_SECTIONS = [
     ['entrypoints',   'Entrypoints',           'ph-door-open',   'var(--blue)',   'staticEpCount',       'Entrypoint'],
-    ['resolvers',     'Certificate resolvers', 'ph-certificate', 'var(--green)',  'staticResolverCount', 'Resolver'],
+    ['resolvers',     t('Certificate resolvers'), 'ph-certificate', 'var(--green)',  'staticResolverCount', 'Resolver'],
     ['providers',     'Providers',             'ph-cloud',       'var(--teal)',   'staticProviderCount', 'Provider'],
-    ['api',           'API and dashboard',     'ph-gauge',       'var(--orange)', null,                  null],
+    ['api',           t('API and dashboard'),     'ph-gauge',       'var(--orange)', null,                  null],
     ['log',           'Logging',               'ph-scroll',      '#ca8a04',       null,                  null],
     ['observability', 'Observability',         'ph-heartbeat',   'var(--green)',  null,                  null],
     ['system',        'System',                'ph-gear-six',    'var(--muted)',  null,                  null],
@@ -1541,7 +1541,7 @@ const SC_SECTIONS = [
 ];
 
 const SC_GROUPS = [
-    ['Traffic in',   ['entrypoints', 'providers']],
+    [t('Traffic in'),   ['entrypoints', 'providers']],
     ['Certificates', ['resolvers']],
     ['Operations',   ['api', 'log', 'observability', 'system', 'plugins']],
 ];

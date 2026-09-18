@@ -93,6 +93,11 @@ def test_hostile_or_broken_translations_are_rejected(tmp_path, msgid, msgstr, fr
     assert any(fragment in p for p in problems), problems
 
 
+def test_percent_is_plain_text_in_brace_messages(tmp_path):
+    assert _problems(tmp_path, _entry('{pct}% of that path', '{pct} % de ce chemin')) == []
+    assert _problems(tmp_path, _entry('{pct}% done', '{pct} %(secret)s fertig')) != []
+
+
 def test_raw_control_characters_are_rejected(tmp_path):
     problems = _problems(tmp_path, 'msgid "Save"\nmsgstr "Spei\x07chern"\n\n')
     assert any('U+0007' in p for p in problems), problems
@@ -152,12 +157,24 @@ def test_compiled_catalogue_round_trips(tmp_path):
     ('Click <a href="x">here</a>', 'must not contain HTML'),
     ('Remove {name.attr}', 'plain name'),
     ('Copy %s to %s', 'named placeholders'),
+    ('sig-ep-headic">', 'must not contain HTML'),
+    ('<{tag} style="{st}">{inline}', 'must not contain HTML'),
+    ('font-size:11px;color:var(--muted)', 'must not contain CSS'),
+    ('rateLimit:\n  average: {val}\n  burst: {val2}', 'must not contain configuration'),
+    ('accessLog:\n  filePath: "/logs/access.log"', 'must not contain configuration'),
 ])
 def test_source_strings_are_checked(msgid, fragment):
     from babel.messages.catalog import Catalog
     template = Catalog()
     template.add(msgid)
     assert any(fragment in p.message for p in tmi18n.check_template(template))
+
+
+def test_percent_after_a_brace_placeholder_is_allowed_in_sources():
+    from babel.messages.catalog import Catalog
+    template = Catalog()
+    template.add('{status} on {path}, {pct}% of that path')
+    assert tmi18n.check_template(template) == []
 
 
 def _tree(tmp_path, files):

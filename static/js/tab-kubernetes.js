@@ -5,7 +5,7 @@ const _K8S_PROVIDERS = new Set(['kubernetescrd', 'kubernetes', 'kubernetesgatewa
 
 async function refreshKubernetesTab() {
     const container = document.getElementById('kubernetesContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading Kubernetes routes...</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading Kubernetes routes...')}</p></div>`;
 
     try {
         const [routerRes, mwRes] = await Promise.all([
@@ -25,11 +25,11 @@ async function refreshKubernetesTab() {
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         if (all.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-xs mt-1">Configure <code class="font-mono">TRAEFIK_API_URL</code> in Settings</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p><p class="text-xs mt-1">${th('Configure {traefik_api_url} in Settings', { traefik_api_url: tmHtml(`<code class="font-mono">TRAEFIK_API_URL</code>`) })}</p></div>`;
             return;
         }
         if (_allKubernetesRoutes.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-circles-three text-5xl block mb-3 opacity-30"></i><p class="font-medium">No Kubernetes routes found</p><p class="text-xs mt-1">Routes discovered via Kubernetes CRD, Ingress, or Gateway API will appear here</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-circles-three text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('No Kubernetes routes found')}</p><p class="text-xs mt-1">${th('Routes discovered via Kubernetes CRD, Ingress, or Gateway API will appear here')}</p></div>`;
             return;
         }
 
@@ -39,7 +39,7 @@ async function refreshKubernetesTab() {
         setTabCount('kubernetes', _allKubernetesRoutes.length);
         renderKubernetesRoutes();
     } catch(e) {
-        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p></div>`;
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p></div>`;
     }
 }
 
@@ -97,7 +97,7 @@ function renderKubernetesRoutes() {
 
     if (items.length === 0) {
         document.getElementById('kubernetesContent').innerHTML =
-            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No routes match filter</div>`;
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">${th('No routes match filter')}</div>`;
         return;
     }
 
@@ -107,7 +107,7 @@ function renderKubernetesRoutes() {
             onDetailClick: `openKubernetesRouteDetail(${globalIdx})`,
             extraBadges:   providerBadge(r),
             tag:           providerKind(r),
-            rows:          r.namespace ? [{ label: 'Namespace', value: r.namespace, icon: 'ph-folder-simple' }] : [],
+            rows:          r.namespace ? [{ label: tc('label', 'Namespace'), value: r.namespace, icon: 'ph-folder-simple' }] : [],
         });
     }).join('');
 
@@ -124,7 +124,7 @@ async function openKubernetesRouteDetail(idx) {
     const provider = r.provider || (r.name || '').split('@')[1] || 'kubernetes';
     const labels = { kubernetescrd: 'CRD', kubernetes: 'Ingress', kubernetesgateway: 'Gateway' };
     const providerLabel = labels[provider] || provider;
-    const k8sBadge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-circles-three"></i> k8s/${providerLabel}</span>`;
+    const k8sBadge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-circles-three"></i> ${th('k8s/{providerLabel}', { providerLabel: tmHtml(providerLabel) })}</span>`;
 
     const svcRaw  = r.service || '';
     const appData = {

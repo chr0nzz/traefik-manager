@@ -527,7 +527,7 @@ function switchSettingsPanel(id, btn) {
     if (id === 'about') _loadAboutAgentInfo();
     if (id === 'notifications') { loadChannelsList(); renderBrowserNotifs(); }
     if (window.innerWidth < 640) {
-        const titles = {connection:'Connection',routes:'Route Monitoring',system:'System Monitoring',auth:'Authentication',backups:'Backups',ui:'Interface',notifications:'Notifications',about:'About','agent-keys':'API Keys',static:'Static Config'};
+        const titles = {connection:'Connection',routes:t('Route Monitoring'),system:t('System Monitoring'),auth:'Authentication',backups:'Backups',ui:'Interface',notifications:'Notifications',about:'About','agent-keys':t('API Keys'),static:t('Static Config')};
         document.getElementById('settingsModalTitle').textContent = titles[id] || tc('label', 'Settings');
         document.getElementById('settingsGearIcon').style.display = 'none';
         document.getElementById('settingsMobileRoot').style.display = 'none';
@@ -687,7 +687,7 @@ async function changePassword() {
     };
 
     if (!current || !newPw || !confirm) return show(t('Please fill in all fields.'), false);
-    const pwErr = _passwordError(newPw, 'New password');
+    const pwErr = _passwordError(newPw, t('New password'));
     if (pwErr)                         return show(pwErr, false);
     if (newPw !== confirm)             return show(t('Passwords do not match.'), false);
 
@@ -743,7 +743,9 @@ function _paintSettingsVerdict(noAuth) {
     if (!items.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
     el.style.display = '';
     el.dataset.health = 'down';
-    el.innerHTML = `<i class="ph-fill ph-warning-octagon sig-verdict-ic"></i><span class="sig-verdict-txt">${th('{items_count}{value} to look at', { items_count: tmHtml(items.length), value: tmHtml(items.length === 1 ? ' thing' : ' things') })}</span><span class="sig-verdict-items">${items.join('')}</span>`;
+    el.innerHTML = '<i class="ph-fill ph-warning-octagon sig-verdict-ic"></i>'
+        + '<span class="sig-verdict-txt">' + items.length + (items.length === 1 ? ' thing' : ' things') + ` ${th('to look at')}</span>`
+        + '<span class="sig-verdict-items">' + items.join('') + '</span>';
 }
 
 async function setAuthExternalAck(on) {
@@ -796,14 +798,14 @@ async function toggleAuth() {
         if (!res.ok) { showToast(await _errText(res, t('Failed to update auth')), 'error'); return; }
         const data = await res.json();
         if (data.success) {
-            if (data.reauth_required) return _redirectToLoginAfterAuthEnable('Authentication enabled');
+            if (data.reauth_required) return _redirectToLoginAfterAuthEnable(t('Authentication enabled'));
             stateLabel.textContent = newState ? tc('label', 'enabled') : tc('label', 'disabled');
             stateLabel.dataset.state = newState ? 'on' : 'off';
             stateLabel.style.color = newState ? 'var(--green)' : 'var(--muted)';
             toggleLabel.textContent = newState ? tc('label', 'Disable') : tc('label', 'Enable');
             if (changePwForm) changePwForm.style.display = newState ? '' : 'none';
             _paintAuthState(false, false);
-            showToast(t('Authentication {value}.', { value: newState ? t('enabled') : t('disabled') }), 'success');
+            showToast(newState ? t('Authentication enabled.') : t('Authentication disabled.'), 'success');
         } else {
             showToast(data.error || data.message || t('Failed to update auth.'), 'error');
         }
@@ -1005,7 +1007,7 @@ function startAddChannel() {
     document.getElementById('chQuietEnd').value   = '';
     document.getElementById('chEnabled').classList.add('on');
     document.getElementById('chBreakThrough').classList.remove('on');
-    _openChannelEditor('Add Channel');
+    _openChannelEditor(t('Add Channel'));
     setTimeout(() => document.getElementById('chName').focus(), 50);
 }
 
@@ -1029,7 +1031,7 @@ function editChannel(id) {
     document.getElementById('chQuietEnd').value   = bounds[1].trim();
     document.getElementById('chEnabled').classList.toggle('on', !!ch.enabled);
     document.getElementById('chBreakThrough').classList.toggle('on', !!ch.break_through);
-    _openChannelEditor('Edit Channel');
+    _openChannelEditor(t('Edit Channel'));
 }
 
 function cancelChannelEdit() {
@@ -1113,7 +1115,7 @@ async function _sendChannelTest(id) {
     });
     if (!res.ok) return { ok: false, error: await _errText(res, t('Test message could not be sent')) };
     const data = await res.json();
-    return { ok: !data.error, error: data.error || 'Test message could not be sent.' };
+    return { ok: !data.error, error: data.error || t('Test message could not be sent.') };
 }
 
 async function testChannel() {
@@ -1247,7 +1249,7 @@ async function loadGeoipSettings() {
         if (tog) tog.classList.toggle('on', _geoipEnabledState);
         if (typeof applyGeoipRelevance === 'function') applyGeoipRelevance();
         const st = document.getElementById('geoipDbStatus');
-        if (st) st.textContent = r.available ? t('Ready{value}', { value: r.db_date ? ' - ' + r.db_date : '' }) : t('Not downloaded');
+        if (st) st.textContent = r.available ? (r.db_date ? t('Ready - {date}', { date: r.db_date }) : t('Ready')) : t('Not downloaded');
         const btn = document.getElementById('geoipUpdateBtn');
         if (btn) btn.innerHTML = r.available ? `<i class="ph-bold ph-arrows-clockwise text-xs"></i> ${thc('label', 'Update')}` : `<i class="ph-bold ph-download-simple text-xs"></i> ${thc('label', 'Download')}`;
     } catch(_) {}
@@ -1427,7 +1429,7 @@ async function testTraefikApi() {
             result.textContent = t('✓ Connected - Traefik v{version}', { version: d.version });
             result.style.color = 'var(--green)';
         } else {
-            const err = String(d.error || 'No response from API');
+            const err = String(d.error || t('No response from API'));
             result.textContent = `✗ ${err.length > 120 ? err.slice(0, 120) + '…' : err}`;
             result.title = err;
             result.style.color = 'var(--red)';
@@ -1452,11 +1454,9 @@ function _renderBackupList(containerId, backups) {
                 <div class="sc-set-d">${_esc(b.modified)} · ${_esc(formatBytes(Number(b.size) || 0))}</div>
             </div>
             <div class="sc-set-v">
-                ${b.restoreBlocked
-                    ? `<button class="btn-secondary text-xs py-1 px-2.5" disabled style="opacity:.5;cursor:not-allowed" title="${th('This agent is running an older version that restores static backups to the wrong path. Update the agent, then restore.')}">
+                ${b.restoreBlocked ? `<button class="btn-secondary text-xs py-1 px-2.5" disabled style="opacity:.5;cursor:not-allowed" title="${th('This agent is running an older version that restores static backups to the wrong path. Update the agent, then restore.')}">
                         <i class="ph-bold ph-arrow-counter-clockwise text-xs"></i> ${thc('button', 'Restore')}
-                    </button>`
-                    : `<button onclick="restoreBackup(${_jsArg(b.name)})" class="btn-secondary text-xs py-1 px-2.5">
+                    </button>` : `<button onclick="restoreBackup(${_jsArg(b.name)})" class="btn-secondary text-xs py-1 px-2.5">
                     <i class="ph-bold ph-arrow-counter-clockwise text-xs"></i> ${thc('button', 'Restore')}
                 </button>`}
                 <button onclick="deleteBackup(${_jsArg(b.name)})" class="btn-icon" title="${thc('tooltip', 'Delete')}" style="color:var(--red)">
@@ -1746,7 +1746,7 @@ function renderReleaseNotes(md) {
                     const st  = idx === 0
                         ? 'padding:3px 8px;border-bottom:1px solid var(--border);color:var(--text);font-weight:600;text-align:left;white-space:nowrap'
                         : 'padding:3px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
-                    html += '<tr>' + parseCells(row).map(c => `${th('<{tag} style="{st}">{inline}', { tag: tmHtml(tag), st: tmHtml(st), inline: tmHtml(inline(c)) })}</${tag}>`).join('') + '</tr>';
+                    html += '<tr>' + parseCells(row).map(c => `<${tag} style="${st}">${inline(c)}</${tag}>`).join('') + '</tr>';
                 });
                 html += '</table>';
             }
@@ -1777,7 +1777,7 @@ function renderReleaseNotes(md) {
                 : '';
             html += `<div style="margin:8px 0;padding:7px 10px;border-left:3px solid ${col};`
                 + `background:color-mix(in srgb, ${col} 8%, transparent);border-radius:0 4px 4px 0;`
-                + `${th('font-size:11px;color:var(--muted)">{head}{body}', { head: tmHtml(head), body: tmHtml(body) })}</div>`;
+                + `font-size:11px;color:var(--muted)">${head}${body}</div>`;
             continue;
         }
 
@@ -2078,7 +2078,7 @@ async function oidcToggleEnabled() {
         if (!res.ok) { showToast(await _errText(res, t('Failed to update OIDC')), 'error'); return; }
         const data = await res.json();
         if (data.ok) {
-            if (data.reauth_required) return _redirectToLoginAfterAuthEnable('OIDC enabled');
+            if (data.reauth_required) return _redirectToLoginAfterAuthEnable(t('OIDC enabled'));
             loadOidcStatus();
         } else {
             showToast(data.error || data.message || t('Failed to update OIDC'), 'error');
@@ -2112,7 +2112,7 @@ async function saveOidcConfig() {
         if (!res.ok) { showToast(await _errText(res, t('Failed to save OIDC config')), 'error'); return; }
         const data = await res.json();
         if (data.ok) {
-            if (data.reauth_required) return _redirectToLoginAfterAuthEnable('OIDC saved');
+            if (data.reauth_required) return _redirectToLoginAfterAuthEnable(t('OIDC saved'));
             const msg = document.getElementById('oidcSavedMsg');
             if (msg) { msg.classList.remove('hidden'); setTimeout(() => msg.classList.add('hidden'), 2500); }
             loadOidcStatus();
@@ -2206,7 +2206,7 @@ let _keysAgentId = null;
 
 function openAgentKeys(agentId, agentName) {
     _keysAgentId = agentId;
-    document.getElementById('agentKeysTitle').textContent = _esc(agentName) + ' - API Keys';
+    document.getElementById('agentKeysTitle').textContent = th('{agentName} - API Keys', { agentName });
     document.getElementById('agentListView').style.display   = 'none';
     document.getElementById('agentWizardView').style.display = 'none';
     document.getElementById('agentKeysView').style.display   = 'flex';
@@ -2239,7 +2239,7 @@ async function loadAgentKeys() {
             <div class="sc-set">
                 <div class="sc-set-l">
                     <div class="sc-set-n">${_esc(k.name)}</div>
-                    <div class="sc-set-d">${th('Created {toLocaleDateString}{value}', { toLocaleDateString: tmHtml(new Date(k.created_at).toLocaleDateString()), value: tmHtml(k.last_used_at ? ' &middot; Last used ' + new Date(k.last_used_at).toLocaleDateString() : '') })}</div>
+                    <div class="sc-set-d">${th('Created {date}', { date: tmDate(k.created_at) }) + (k.last_used_at ? ' &middot; ' + th('Last used {date}', { date: tmDate(k.last_used_at) }) : '')}</div>
                 </div>
                 <div class="sc-set-v"><button onclick="deleteAgentKey(${_jsArg(_keysAgentId)},${_jsArg(k.id)},${_jsArg(k.name)})" class="btn-icon flex-shrink-0" title="${thc('tooltip', 'Revoke')}" style="color:var(--red)"><i class="ph-bold ph-trash text-xs"></i></button></div>
             </div>`).join('');
@@ -2330,7 +2330,7 @@ async function loadActiveAgentKeys() {
             <div class="sc-set">
                 <div class="sc-set-l">
                     <div class="sc-set-n">${_esc(k.name)}</div>
-                    <div class="sc-set-d">${th('Created {toLocaleDateString}{value}', { toLocaleDateString: tmHtml(new Date(k.created_at).toLocaleDateString()), value: tmHtml(k.last_used_at ? ' &middot; Last used ' + new Date(k.last_used_at).toLocaleDateString() : '') })}</div>
+                    <div class="sc-set-d">${th('Created {date}', { date: tmDate(k.created_at) }) + (k.last_used_at ? ' &middot; ' + th('Last used {date}', { date: tmDate(k.last_used_at) }) : '')}</div>
                 </div>
                 <div class="sc-set-v"><button onclick="deleteActiveAgentKey(${_jsArg(k.id)},${_jsArg(k.name)})" class="btn-icon flex-shrink-0" title="${thc('tooltip', 'Revoke')}" style="color:var(--red)"><i class="ph-bold ph-trash text-xs"></i></button></div>
             </div>`).join('');
@@ -2461,7 +2461,7 @@ function _renderAgentCliStep() {
 }
 
 function copyAgentCliCmd() {
-    _agentCopy(document.getElementById('agentCliCmd').textContent, 'Command copied');
+    _agentCopy(document.getElementById('agentCliCmd').textContent, t('Command copied'));
 }
 
 function _agentVerifyEl() {
@@ -2778,7 +2778,7 @@ function _agentCopy(text, okMsg) {
 }
 
 function copyAgentKey() {
-    _agentCopy(_agentWizKey || '', 'Key copied');
+    _agentCopy(_agentWizKey || '', t('Key copied'));
 }
 
 function copyAgentCompose() {
@@ -2790,7 +2790,7 @@ function copyAgentRun() {
 }
 
 function copyRotatedKey() {
-    _agentCopy(document.getElementById('agentRotatedKeyText').textContent, 'Key copied');
+    _agentCopy(document.getElementById('agentRotatedKeyText').textContent, t('Key copied'));
 }
 
 async function rotateAgentKey() {
@@ -2805,7 +2805,7 @@ async function rotateAgentKey() {
         try { data = await res.json(); } catch(je) { data = {}; }
         if (!res.ok) throw new Error(data.error || data.message || await _errText(res, t('Rotation failed')));
         const rotated = (data.agent && data.agent.api_key_raw) || data.api_key_raw;
-        if (!rotated) throw new Error(data.error || data.message || 'The server did not return a new key.');
+        if (!rotated) throw new Error(data.error || data.message || t('The server did not return a new key.'));
         _agentWizKey = rotated;
         document.getElementById('agentRotatedKeyText').textContent = _agentWizKey;
         document.getElementById('agentRotatedKeyDisplay').style.display = '';
@@ -3266,12 +3266,10 @@ function filterSettings() {
     if (!empty) return;
     if (!q || activeHits) { empty.style.display = 'none'; return; }
     empty.style.display = '';
-    empty.innerHTML = elsewhere.length
-        ? 'No matches here. Found in '
+    empty.innerHTML = elsewhere.length ? 'No matches here. Found in '
           + elsewhere.map(e =>
               `<button type="button" class="settings-jump" onclick="switchSettingsPanel(${_jsArg(e.id)})">`
-              + `${_esc(e.label)} <span>${_esc(e.hits)}</span></button>`).join(' ')
-        : 'No settings match your search';
+              + `${_esc(e.label)} <span>${_esc(e.hits)}</span></button>`).join(' ') : th('No settings match your search');
 }
 
 function clearSettingsSearch() {

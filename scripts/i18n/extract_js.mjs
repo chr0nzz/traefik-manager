@@ -13,6 +13,28 @@ const KEYWORDS = {
     thc: { context: 0, msgid: 1 },
 };
 const TEXT_ONLY = new Set(['t', 'tn', 'tc']);
+const PARAMS_AT = { t: 1, th: 1, tc: 2, thc: 2, tn: 3, thn: 3 };
+
+function paramProblem(node, entry) {
+    const wanted = new Set();
+    for (const text of [entry.msgid, entry.plural || '']) {
+        for (const m of text.matchAll(/\{(\w+)\}/g)) wanted.add(m[1]);
+    }
+    const given = new Set(PARAMS_AT[node.callee.name] === 3 ? ['n'] : []);
+    const arg = node.arguments[PARAMS_AT[node.callee.name]];
+    if (arg) {
+        if (arg.type !== 'ObjectExpression') return null;
+        for (const prop of arg.properties) {
+            if (prop.type !== 'Property' || prop.computed) return null;
+            given.add(prop.key.type === 'Identifier' ? prop.key.name : String(prop.key.value));
+        }
+    }
+    const missing = [...wanted].filter(k => !given.has(k));
+    const unused = [...given].filter(k => k !== 'n' && !wanted.has(k));
+    if (missing.length) return `has no value for ${missing.map(k => '{' + k + '}').join(', ')}`;
+    if (unused.length) return `passes ${unused.join(', ')} but the message has no such placeholder`;
+    return null;
+}
 const ESCAPERS = new Set(['_esc', 'tmEscapeHtml', 'escapeHtml']);
 const HTML_PROPS = new Set(['innerHTML', 'outerHTML']);
 
@@ -76,8 +98,10 @@ function htmlString(node) {
     return false;
 }
 
-function htmlSink(parents) {
-    let child = null;
+const HTML_ARGS = { _lgSub: [0, 1], _sdSubParts: [0, 1], _sdSubPlain: [0], _sdSubOffender: [1] };
+
+function htmlSink(parents, node) {
+    let child = node;
     for (let i = parents.length - 1; i >= 0; i--) {
         const p = parents[i];
         if (p.type === 'CallExpression') {
@@ -85,6 +109,7 @@ function htmlSink(parents) {
                 : p.callee.type === 'MemberExpression' && !p.callee.computed ? p.callee.property.name : '';
             if (ESCAPERS.has(name)) return false;
             if (name === 'insertAdjacentHTML' || name === 'write' || name === 'writeln') return true;
+            if (HTML_ARGS[name] && child && HTML_ARGS[name].includes(p.arguments.indexOf(child))) return true;
             if (child && p.callee === child) { child = p; continue; }
             return false;
         }
@@ -108,6 +133,64 @@ function htmlSink(parents) {
     return false;
 }
 
+const CODE_PROPS = new Set(['className', 'id', 'name', 'type', 'href', 'src', 'value']);
+const CODE_CALLS = new Set(['add', 'remove', 'toggle', 'replace', 'setProperty', 'getElementById', 'querySelector', 'querySelectorAll']);
+
+function codeSink(node, parents) {
+    let child = node;
+    for (let i = parents.length - 1; i >= 0; i--) {
+        const p = parents[i];
+        if (p.type === 'ConditionalExpression' || p.type === 'LogicalExpression' || p.type === 'ParenthesizedExpression') {
+            if (p.type === 'ConditionalExpression' && p.test === child) return false;
+            child = p;
+            continue;
+        }
+        if (p.type === 'AssignmentExpression' && p.right === child) {
+            const left = p.left;
+            if (left.type !== 'MemberExpression' || left.computed) return false;
+            if (CODE_PROPS.has(left.property.name)) return true;
+            const owner = left.object;
+            return owner.type === 'MemberExpression' && !owner.computed && ['style', 'dataset'].includes(owner.property.name);
+        }
+        if (p.type === 'CallExpression' && p.arguments.includes(child)) {
+            return p.callee.type === 'MemberExpression' && !p.callee.computed && CODE_CALLS.has(p.callee.property.name);
+        }
+        return false;
+    }
+    return false;
+}
+
+function bindings(pattern, out) {
+    if (!pattern) return out;
+    if (pattern.type === 'Identifier') out.add(pattern.name);
+    else if (pattern.type === 'ObjectPattern') pattern.properties.forEach(q => bindings(q.value || q.argument, out));
+    else if (pattern.type === 'ArrayPattern') pattern.elements.forEach(e => bindings(e, out));
+    else if (pattern.type === 'AssignmentPattern') bindings(pattern.left, out);
+    else if (pattern.type === 'RestElement') bindings(pattern.argument, out);
+    return out;
+}
+
+function declares(scope, name) {
+    const names = new Set();
+    let body = [];
+    if (/Function/.test(scope.type)) {
+        scope.params.forEach(p => bindings(p, names));
+        if (scope.body.type === 'BlockStatement') body = scope.body.body;
+    } else if (scope.type === 'BlockStatement' || scope.type === 'StaticBlock') {
+        body = scope.body;
+    } else if (scope.type === 'CatchClause') {
+        bindings(scope.param, names);
+    } else if (/^For/.test(scope.type)) {
+        const init = scope.init || scope.left;
+        if (init && init.type === 'VariableDeclaration') init.declarations.forEach(d => bindings(d.id, names));
+    }
+    for (const stmt of body) {
+        if (stmt.type === 'VariableDeclaration') stmt.declarations.forEach(d => bindings(d.id, names));
+        if ((stmt.type === 'FunctionDeclaration' || stmt.type === 'ClassDeclaration') && stmt.id) names.add(stmt.id.name);
+    }
+    return names.has(name);
+}
+
 function extract(code, file, lineOffset, messages, errors) {
     let ast;
     try {
@@ -122,7 +205,15 @@ function extract(code, file, lineOffset, messages, errors) {
         if (!spec) return;
         const line = node.loc.start.line + lineOffset;
         const where = `${file}:${line}`;
-        if (TEXT_ONLY.has(node.callee.name) && htmlSink(parents)) {
+        if (parents.some(p => declares(p, node.callee.name))) {
+            errors.push(`${where}: ${node.callee.name}() is hidden by a local variable of the same name; rename the variable`);
+            return;
+        }
+        if (codeSink(node, parents)) {
+            errors.push(`${where}: ${node.callee.name}() is used as a style, class, id or selector, which must stay untranslated`);
+            return;
+        }
+        if (TEXT_ONLY.has(node.callee.name) && htmlSink(parents, node)) {
             errors.push(`${where}: ${node.callee.name}() is placed into HTML unescaped; use th()${node.callee.name === 't' ? '' : node.callee.name === 'tn' ? ' as thn()' : ' as thc()'} or wrap it in _esc()`);
             return;
         }
@@ -142,6 +233,11 @@ function extract(code, file, lineOffset, messages, errors) {
         }
         if (!entry.msgid) {
             errors.push(`${where}: ${node.callee.name}() has an empty message`);
+            return;
+        }
+        const mismatch = paramProblem(node, entry);
+        if (mismatch) {
+            errors.push(`${where}: ${node.callee.name}() ${mismatch}`);
             return;
         }
         messages.push(entry);

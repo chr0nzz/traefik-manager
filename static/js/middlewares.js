@@ -510,7 +510,7 @@ async function _sendMwDelete(name, configFile, force) {
         if (res.status === 409 && json && (json.inUseBy || []).length) {
             const routes = json.inUseBy;
             const shown = routes.slice(0, 5).join(', ') + (routes.length > 5 ? ' and ' + (routes.length - 5) + ' more' : '');
-            const label = routes.length === 1 ? t('1 route') : routes.length + ' routes';
+            const label = routes.length === 1 ? t('1 route') : t('{routes_count} routes', { routes_count: routes.length });
             if (await _confirm(t('"{name}" is still used by {shown}. Remove it from {label} and delete it?', { name, shown, label }),
                                t('Middleware In Use'), t('Remove and delete'), _confirmWordFor(name))) {
                 await _sendMwDelete(name, configFile, true);
@@ -560,8 +560,8 @@ function _tmMwCard(mw, showCf) {
     const typeLower = (mw.type || 'http').toLowerCase();
     const used = _tmMwUsage(mw);
     const chained = used ? false : _tmMwChained(mw);
-    const usage = used ? `used by ${used} route${used > 1 ? 's' : ''}`
-                       : chained ? 'used in a chain' : 'unused';
+    const usage = used ? tn('used by {n} route', 'used by {n} routes', used)
+                       : chained ? t('used in a chain') : 'unused';
     const yaml = String(mw.yaml || '').split('\n').slice(0, 4).join('\n');
     const rail = `<span class="tm-rail tm-rail-sm" onclick="event.stopPropagation()">${_faNeedsLimit(mw.yaml) ? `<button type="button" class="tm-btn" title="${th('No response size limit set - Traefik 3.7 warns about this. Click to add one')}" data-mw='${mwJson}' onclick="event.stopPropagation();addFaLimit(this)"><i class="ph-bold ph-warning" style="color:var(--yellow)"></i></button>` : ''}<button type="button" class="tm-btn" title="${thc('tooltip', 'Edit')}" data-mw='${mwJson}' onclick="event.stopPropagation();handleMwEdit(this)"><i class="ph-bold ph-pencil-simple"></i></button><button type="button" class="tm-btn" title="${thc('tooltip', 'Delete')}" onclick="event.stopPropagation();deleteMw(${_jsArg(mw.name)}${cfArg})"><i class="ph-bold ph-trash"></i></button></span>`;
     return `<div class="tm-card mw-card" data-mwname="${_esc(mw.name.toLowerCase())}" data-mwtype="${typeLower}" style="--tm-accent:var(--purple)" data-mw='${mwJson}' onclick="openMwDetail(this)">
@@ -814,7 +814,7 @@ function renderMwDetailPanel(mw) {
     if (mw.provider && mw.provider !== 'file') rows.push(['Provider', _dText(mw.provider, 'd-off'), true]);
     if (mw.status && mw.status !== 'enabled') rows.push(['Status', `<span class="d-flat" style="color:var(--red)">${_esc(mw.status)}</span>`, true]);
     if (mw.error) rows.push(['Error', `<span class="d-flat" style="color:var(--red)">${_esc(Array.isArray(mw.error) ? mw.error.join(', ') : mw.error)}</span>`, true]);
-    if (mw.configFile) rows.push(['Config File', _dText(mw.configFile, 'd-off'), true]);
+    if (mw.configFile) rows.push([t('Config File'), _dText(mw.configFile, 'd-off'), true]);
 
     const routes = _mwRoutesUsing(mw);
     const chains = _mwChainsUsing(mw);
@@ -824,13 +824,12 @@ function renderMwDetailPanel(mw) {
     } else {
         usedHtml += '<div class="flex flex-wrap gap-1.5">'
             + routes.map(({ a, viaEp }) =>
-                `<button type="button" class="route-deep-chip" onclick="_mwOpenRoute(${_jsArg(String(a.id))})" title="${viaEp ? 'Attached via entry point' : 'Open route'}">`
-                + `<i class="ph-bold ${viaEp ? 'ph-arrows-in' : 'ph-arrows-split'}"></i>${_esc(a.name)}</button>`).join('')
+                `<button type="button" class="route-deep-chip" onclick="_mwOpenRoute(${_jsArg(String(a.id))})" title="${viaEp ? th('Attached via entry point') : th('Open route')}"><i class="ph-bold ${viaEp ? 'ph-arrows-in' : 'ph-arrows-split'}"></i>${_esc(a.name)}</button>`).join('')
             + chains.map(c =>
                 `<button type="button" class="route-deep-chip" onclick="_mwOpenSibling(${_jsArg(c.name)})" title="${th('Referenced by this middleware')}"><i class="ph-bold ph-stack"></i>${_esc(c.name.split('@')[0])}</button>`).join('')
             + '</div>';
     }
-    usedHtml = renderDetailBlock('Used by', 'ph-stack', usedHtml);
+    usedHtml = renderDetailBlock(t('Used by'), 'ph-stack', usedHtml);
 
     let yamlHtml = '';
     if (mw.yaml) {
@@ -893,7 +892,7 @@ async function refreshPluginsTab() {
             container.innerHTML = `
             <div class="text-center py-10 rounded-xl" style="border:1px solid var(--border);color:var(--muted)">
                 <i class="ph-light ph-puzzle-piece text-5xl block mb-3 opacity-30"></i>
-                <p class="font-semibold mb-1" style="color:var(--text)">${th('Static config not configured{value}', { value: tmHtml(_activeAgent ? ' on this agent' : '') })}</p>
+                <p class="font-semibold mb-1" style="color:var(--text)">${(_activeAgent ? th('Static config not configured on this agent') : th('Static config not configured'))}</p>
                 <p class="text-xs max-w-xs mx-auto mb-5">${th('To list plugins here, mount the Traefik static config into the {code} service and set {static_config_path}.', { code: tmHtml(`<code class="font-mono" style="color:var(--blue)">${svcName}</code>`), static_config_path: tmHtml(`<code class="font-mono" style="color:var(--blue)">STATIC_CONFIG_PATH</code>`) })}</p>
                 <div class="flex flex-col gap-2 items-center text-xs">
                     <a href="https://get-traefik.xyzlab.dev" target="_blank" class="btn-secondary" style="text-decoration:none"><i class="ph-bold ph-terminal"></i> ${th('Install script')}</a>
@@ -1200,7 +1199,7 @@ function renderPluginsVerdict() {
         health: updates ? 'warn' : 'up',
         ic: updates ? 'ph-fill ph-arrow-circle-up' : 'ph-fill ph-check-circle',
         txt: updates ? _sdNum(updates) + (updates === 1 ? ' update available' : ' updates available')
-           : known ? 'All plugins current'
+           : known ? t('All plugins current')
            : _sdNum(_allPlugins.length) + (_allPlugins.length === 1 ? ' plugin' : ' plugins'),
         flags,
         meta: known ? `${th('catalog checked {daily}', { daily: tmHtml(`<b>${th('daily')}</b>`) })}` : '',
@@ -1228,19 +1227,17 @@ function renderPluginCards() {
             <button onclick="openPluginForm(${idx})" class="btn-icon" title="${thc('tooltip', 'Edit')}" style="padding:4px 6px"><i class="ph-bold ph-pencil text-sm"></i></button>
             <button onclick="deletePlugin(${_jsArg(name)})" class="btn-icon" title="${thc('tooltip', 'Remove')}" style="padding:4px 6px;color:var(--red)"><i class="ph-bold ph-trash text-sm"></i></button>` : '';
         const pluginUse = _tmPluginUsage(name);
-        const rail = `<span class="tm-rail" onclick="event.stopPropagation()">${repoUrl ? `<a href="${_esc(repoUrl)}" target="_blank" rel="noopener" class="tm-btn" title="${th('View on GitHub')}" onclick="event.stopPropagation()"><i class="ph-bold ph-github-logo"></i></a>` : ''}<button type="button" class="tm-btn" title="${thc('tooltip', 'Details')}" onclick="event.stopPropagation();openPluginDetail(${idx})"><i class="ph-bold ph-info"></i></button>${_pluginCanManage
-                ? `<button type="button" class="tm-btn" title="${thc('tooltip', 'Edit')}" onclick="event.stopPropagation();openPluginForm(${idx})"><i class="ph-bold ph-pencil-simple"></i></button><button type="button" class="tm-btn" title="${thc('tooltip', 'Remove')}" onclick="event.stopPropagation();deletePlugin(${_jsArg(name)})"><i class="ph-bold ph-trash"></i></button>`
-                : ''}</span>`;
+        const rail = `<span class="tm-rail" onclick="event.stopPropagation()">${repoUrl ? `<a href="${_esc(repoUrl)}" target="_blank" rel="noopener" class="tm-btn" title="${th('View on GitHub')}" onclick="event.stopPropagation()"><i class="ph-bold ph-github-logo"></i></a>` : ''}<button type="button" class="tm-btn" title="${thc('tooltip', 'Details')}" onclick="event.stopPropagation();openPluginDetail(${idx})"><i class="ph-bold ph-info"></i></button>${_pluginCanManage ? `<button type="button" class="tm-btn" title="${thc('tooltip', 'Edit')}" onclick="event.stopPropagation();openPluginForm(${idx})"><i class="ph-bold ph-pencil-simple"></i></button><button type="button" class="tm-btn" title="${thc('tooltip', 'Remove')}" onclick="event.stopPropagation();deletePlugin(${_jsArg(name)})"><i class="ph-bold ph-trash"></i></button>` : ''}</span>`;
         return `<div class="tm-card" style="--tm-accent:var(--blue)" onclick="openPluginDetail(${idx})">
             <div class="tm-head">
                 <span class="tm-ic tm-ic-tile"><i class="ph-bold ph-puzzle-piece"></i></span>
                 <div class="tm-head-txt">
                     <div class="tm-title"><span class="tm-name">${_esc(name)}</span></div>
-                    <div class="tm-sub">${_esc(version.startsWith('v') ? version : 'v' + version)}${latest ? ` <span class="sig-flag d-warn lg-static" style="margin-left:4px" title="${th('Update available: change the version in traefik.yml and restart Traefik')}"><i class="ph-fill ph-arrow-circle-up"></i><b>${_esc(latest)}</b></span>` : ''}</div>
+                    <div class="tm-sub">${_esc(version.startsWith('v') ? version : t('v{version}', { version }))}${latest ? ` <span class="sig-flag d-warn lg-static" style="margin-left:4px" title="${th('Update available: change the version in traefik.yml and restart Traefik')}"><i class="ph-fill ph-arrow-circle-up"></i><b>${_esc(latest)}</b></span>` : ''}</div>
                 </div>${rail}
             </div>
             ${moduleName ? `<div class="tm-vals"><div class="tm-val"><i class="ph-bold ph-package"></i><span class="tm-v" title="${_esc(moduleName)}">${_esc(moduleName)}</span>${_tmCopy(moduleName)}</div></div>` : ''}
-            <div class="tm-foot"><span class="tm-meta ${pluginUse ? '' : 'tm-warn'}">${pluginUse ? `used by ${pluginUse} middleware${pluginUse > 1 ? 's' : ''}` : 'not referenced'}</span></div>
+            <div class="tm-foot"><span class="tm-meta ${pluginUse ? '' : 'tm-warn'}">${pluginUse ? thn('used by {n} middleware', 'used by {n} middlewares', pluginUse) : th('not referenced')}</span></div>
         </div>`;
     }).join('');
     document.getElementById('pluginsContent').innerHTML =
@@ -1277,18 +1274,18 @@ function openPluginDetail(idx) {
         [_esc(k), `<span class="font-mono" style="color:var(--text)">${v}</span>`, true]);
 
     const settingsSection = p.settings ? `
-        ${renderDetailBlock('Configuration Schema', 'ph-sliders',
+        ${renderDetailBlock(t('Configuration Schema'), 'ph-sliders',
             `<pre class="text-xs font-mono leading-relaxed overflow-x-auto" style="color:var(--muted);max-height:300px;margin:0">${JSON.stringify(p.settings, null, 2).replace(/</g,'&lt;')}</pre>`)}` : '';
 
     const mws = _pluginMwsUsing(name);
     const usedSection = `
-        ${renderDetailBlock('Used by', 'ph-stack', mws.length
+        ${renderDetailBlock(t('Used by'), 'ph-stack', mws.length
             ? '<div class="flex flex-wrap gap-1.5">' + mws.map(m =>
                 `<button type="button" class="route-deep-chip" onclick="_pluginOpenMw(${_jsArg(m.name)})" title="${th('Open middleware')}"><i class="ph-bold ph-stack"></i>${_esc(m.name.split('@')[0])}</button>`).join('') + '</div>'
             : `<span class="text-xs" style="color:var(--yellow)">${th('No middleware references this plugin')}</span>`)}`;
 
     document.getElementById('pluginDetailBody').innerHTML = `
-        ${renderSection('Plugin Info', 'ph-info', infoRows)}
+        ${renderSection(t('Plugin Info'), 'ph-info', infoRows)}
         ${usedSection}
         ${settingsSection}`;
 
