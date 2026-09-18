@@ -120,8 +120,23 @@ The suite runs against a temporary config directory and never touches a real Tra
 | `test_restore_static_target.py` | A static backup restores to `traefik.yml`, never over the dynamic config |
 | `test_static_provider_keys.py` | Saving a provider section preserves keys the form does not manage |
 | `test_no_dashes.py` | No em dashes anywhere |
+| `test_i18n.py` | Language prefixes, the language setting and picker, the browser catalogue and plural mapping |
+| `test_i18n_security.py` | A hostile catalogue renders as text in every template form and cannot break out of the inline catalogue |
+| `test_i18n_checks.py` | The translation checks reject hostile or broken catalogues, the JS extractor reads every call, and the repository passes |
 
 The table is not exhaustive - `tests/` holds more than this. Run `pytest --collect-only -q` for the full list.
+
+### Translations
+
+Strings are marked with `_()`, `ngettext()` and `pgettext()` in Python and templates, and with `t()`, `tn()` and `tc()` in JavaScript. Pass plain string literals with named placeholders (`%(name)s` in Python, `{name}` in JavaScript) and keep HTML outside the translated text.
+
+```bash
+make i18n-tools     # once: installs the pinned JS parser under scripts/i18n
+make i18n-extract   # rebuild locale/messages.pot and update every catalogue
+make i18n-check     # every translation check CI runs
+```
+
+CI fails when `messages.pot` is stale, so run `make i18n-extract` and commit the result with the change that added or reworded a string. `make i18n-check` also rejects translations that add markup, quotes, links, placeholders or invisible control characters, and a pull request from Weblate may only change `locale/<lang>/LC_MESSAGES/messages.po`. Every translation is escaped when a template renders it, so none can inject HTML. The translator side lives in [tm-locale](https://github.com/chr0nzz/tm-locale).
 
 ### Screenshots
 

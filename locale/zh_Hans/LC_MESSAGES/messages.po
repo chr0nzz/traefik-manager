@@ -1,13 +1,12 @@
-# Chinese (Simplified) translations for PROJECT.
-# Copyright (C) 2026 ORGANIZATION
-# This file is distributed under the same license as the PROJECT project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+# Traefik Manager interface strings, Chinese (Simplified).
+# This file is distributed under the same license as Traefik Manager,
+# GPL-3.0.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PROJECT VERSION\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-18 10:38-0400\n"
+"Project-Id-Version: Traefik Manager 1.14\n"
+"Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
+"POT-Creation-Date: 2026-09-18 11:05-0400\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans\n"
@@ -18,6 +17,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "Could not save the language"
+msgstr ""
+
+msgid "Flag that switches the interface language."
+msgstr ""
+
+msgid "Follow system"
+msgstr ""
+
 msgid "Language"
 msgstr ""
 
@@ -27,12 +35,6 @@ msgid ""
 "Manager does not have it. Also set by the flag in the nav bar."
 msgstr ""
 
-msgid "Follow system"
-msgstr ""
-
 msgid "Show language selector"
-msgstr ""
-
-msgid "Flag that switches the interface language."
 msgstr ""
 
