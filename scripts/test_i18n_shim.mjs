@@ -67,6 +67,44 @@ const unknownLocale = load(JSON.stringify({ locale: 'not a locale!', messages: {
 check('invalid locale still translates', unknownLocale.t('Save'), 'X');
 check('invalid locale plural', unknownLocale.tn('{n} route', '{n} routes', 2), '2 routes');
 
+const hostile = load(JSON.stringify({
+    locale: 'de',
+    plural: { one: 0, other: 1 },
+    messages: {
+        'Remove {name}': '<img src=x onerror=alert(1)> {name} entfernen',
+        'status\u0004Down': '"><svg onload=alert(1)>',
+        '{n} route': ['<b>{n}</b> Route', '{n} Routen'],
+    },
+}));
+check('th escapes the translation', hostile.th('Remove {name}', { name: 'api' }), '&lt;img src=x onerror=alert(1)&gt; api entfernen');
+check('th escapes values', en.th('Remove {name}', { name: '<script>' }), 'Remove &lt;script&gt;');
+check('th escapes quotes in values', en.th('Remove {name}', { name: `a"b'c` }), 'Remove a&quot;b&#39;c');
+check('th passes marked markup', en.th('Remove {name}', { name: en.tmHtml('<code>api</code>') }), 'Remove <code>api</code>');
+check('thc escapes', hostile.thc('status', 'Down'), '&quot;&gt;&lt;svg onload=alert(1)&gt;');
+check('thn escapes the form', hostile.thn('{n} route', '{n} routes', 1), '&lt;b&gt;1&lt;/b&gt; Route');
+check('thn plural', hostile.thn('{n} route', '{n} routes', 3), '3 Routen');
+check('th untranslated', en.th('Save <now>'), 'Save &lt;now&gt;');
+
+check('english ago seconds', en.tmAgo(12), '12s ago');
+check('english ago minutes', en.tmAgo(125), '2m ago');
+check('english ago hours', en.tmAgo(7300), '2h ago');
+check('english ago days', en.tmAgo(200000), '2d ago');
+check('english ago floor', en.tmAgo(30, 'minute'), '0m ago');
+check('english ago zero', en.tmAgo(0), '0s ago');
+check('german ago uses Intl', ru.tmAgo(7300) !== '2h ago', true);
+check('number english', en.tmNumber(1234567), (1234567).toLocaleString());
+check('number german locale', load(JSON.stringify({ locale: 'de', messages: {} })).tmNumber(1234567), '1.234.567');
+check('date invalid', en.tmDate('not a date'), '');
+
+const confirmSrc = readFileSync(join(root, 'static', 'js', 'static-config.js'), 'utf8');
+const cStart = confirmSrc.indexOf('function _confirmWordFor(');
+const cEnd = confirmSrc.indexOf('function _confirm(');
+const { _confirmWordFor } = new Function(confirmSrc.slice(cStart, cEnd) + '\nreturn { _confirmWordFor };')();
+check('one route asks for its name', _confirmWordFor('immich'), 'immich');
+check('one item in a list asks for its name', _confirmWordFor(['  immich  ']), 'immich');
+check('several ask for the count', _confirmWordFor(['a', 'b', 'c']), '3');
+check('empty names are ignored', _confirmWordFor(['a', '', null]), 'a');
+
 if (failures) {
     console.error(`${failures} i18n shim check(s) failed`);
     process.exit(1);

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-18 12:09-0400\n"
+"POT-Creation-Date: 2026-09-18 14:42-0400\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans\n"
@@ -1221,6 +1221,7 @@ msgid ""
 "the Traefik plugin page"
 msgstr ""
 
+#. Used in the browser
 msgid "Could not save the language"
 msgstr ""
 
@@ -3949,7 +3950,7 @@ msgid "Status codes %(one_per_line)s"
 msgstr ""
 
 #, python-format
-msgid "Status: %(disabled)s"
+msgid "Status: %(status)s"
 msgstr ""
 
 #, python-format

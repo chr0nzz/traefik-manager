@@ -8,7 +8,13 @@ const KEYWORDS = {
     t: { msgid: 0 },
     tn: { msgid: 0, plural: 1 },
     tc: { context: 0, msgid: 1 },
+    th: { msgid: 0 },
+    thn: { msgid: 0, plural: 1 },
+    thc: { context: 0, msgid: 1 },
 };
+const TEXT_ONLY = new Set(['t', 'tn', 'tc']);
+const ESCAPERS = new Set(['_esc', 'tmEscapeHtml', 'escapeHtml']);
+const HTML_PROPS = new Set(['innerHTML', 'outerHTML']);
 
 function walkFiles(dir, suffix) {
     const out = [];
@@ -50,15 +56,56 @@ function literal(node) {
     return null;
 }
 
-function visit(node, fn) {
+function visit(node, fn, parents = []) {
     if (!node || typeof node.type !== 'string') return;
-    fn(node);
+    fn(node, parents);
+    const next = parents.concat([node]);
     for (const key of Object.keys(node)) {
         if (key === 'loc' || key === 'start' || key === 'end') continue;
         const value = node[key];
-        if (Array.isArray(value)) value.forEach(v => visit(v, fn));
-        else if (value && typeof value.type === 'string') visit(value, fn);
+        if (Array.isArray(value)) value.forEach(v => visit(v, fn, next));
+        else if (value && typeof value.type === 'string') visit(value, fn, next);
     }
+}
+
+function htmlString(node) {
+    if (!node) return false;
+    if (node.type === 'Literal' && typeof node.value === 'string') return /<[a-zA-Z\/!]/.test(node.value);
+    if (node.type === 'TemplateLiteral') return node.quasis.some(q => /<[a-zA-Z\/!]/.test(q.value.cooked || ''));
+    if (node.type === 'BinaryExpression' && node.operator === '+') return htmlString(node.left) || htmlString(node.right);
+    return false;
+}
+
+function htmlSink(parents) {
+    let child = null;
+    for (let i = parents.length - 1; i >= 0; i--) {
+        const p = parents[i];
+        if (p.type === 'CallExpression') {
+            const name = p.callee.type === 'Identifier' ? p.callee.name
+                : p.callee.type === 'MemberExpression' && !p.callee.computed ? p.callee.property.name : '';
+            if (ESCAPERS.has(name)) return false;
+            if (name === 'insertAdjacentHTML' || name === 'write' || name === 'writeln') return true;
+            if (child && p.callee === child) { child = p; continue; }
+            return false;
+        }
+        if (p.type === 'TemplateLiteral') return htmlString(p);
+        if (p.type === 'BinaryExpression' && p.operator === '+') {
+            if (htmlString(p)) return true;
+            child = p;
+            continue;
+        }
+        if (p.type === 'AssignmentExpression') {
+            const left = p.left;
+            return left.type === 'MemberExpression' && !left.computed && HTML_PROPS.has(left.property.name);
+        }
+        if (p.type === 'ConditionalExpression' || p.type === 'LogicalExpression' || p.type === 'ParenthesizedExpression') {
+            child = p;
+            continue;
+        }
+        if (/Function|Statement|Declaration|Property|ArrayExpression|ObjectExpression/.test(p.type)) return false;
+        child = p;
+    }
+    return false;
 }
 
 function extract(code, file, lineOffset, messages, errors) {
@@ -69,12 +116,16 @@ function extract(code, file, lineOffset, messages, errors) {
         errors.push(`${file}:${(e.loc ? e.loc.line : 1) + lineOffset}: cannot parse: ${e.message}`);
         return;
     }
-    visit(ast, node => {
+    visit(ast, (node, parents) => {
         if (node.type !== 'CallExpression' || node.callee.type !== 'Identifier') return;
         const spec = KEYWORDS[node.callee.name];
         if (!spec) return;
         const line = node.loc.start.line + lineOffset;
         const where = `${file}:${line}`;
+        if (TEXT_ONLY.has(node.callee.name) && htmlSink(parents)) {
+            errors.push(`${where}: ${node.callee.name}() is placed into HTML unescaped; use th()${node.callee.name === 't' ? '' : node.callee.name === 'tn' ? ' as thn()' : ' as thc()'} or wrap it in _esc()`);
+            return;
+        }
         const needed = Math.max(...Object.values(spec)) + 1;
         if (node.arguments.length < needed) {
             errors.push(`${where}: ${node.callee.name}() needs ${needed} string arguments`);

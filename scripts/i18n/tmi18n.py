@@ -22,6 +22,7 @@ POT_PATH = os.path.join(LOCALE_DIR, 'messages.pot')
 JS_EXTRACTOR = os.path.join(ROOT, 'scripts', 'i18n', 'extract_js.mjs')
 
 PROJECT = 'Traefik Manager'
+BROWSER_MARK = 'Used in the browser'
 BUGS_ADDRESS = 'https://github.com/chr0nzz/tm-locale/issues'
 STARTER_LOCALES = ('de', 'fr', 'es', 'zh_Hans', 'ru')
 
@@ -76,9 +77,10 @@ def header_comment(language=None):
 
 def message_key(message):
     msgid = message.id
+    browser = BROWSER_MARK in (message.auto_comments or [])
     if isinstance(msgid, (list, tuple)):
-        return (message.context, msgid[0], msgid[1])
-    return (message.context, msgid, None)
+        return (message.context, msgid[0], msgid[1], browser)
+    return (message.context, msgid, None, browser)
 
 
 def message_set(catalog):
@@ -120,11 +122,11 @@ def build_template(root=ROOT):
     problems.extend(Problem(e.split(': ', 1)[0], e.split(': ', 1)[-1]) for e in js['errors'])
     for entry in js['messages']:
         msgid = (entry['msgid'], entry['plural']) if entry['plural'] is not None else entry['msgid']
-        _add(catalog, msgid, entry['context'], problems, entry['location'])
+        _add(catalog, msgid, entry['context'], problems, entry['location'], browser=True)
     return catalog, problems
 
 
-def _add(catalog, msgid, context, problems, where):
+def _add(catalog, msgid, context, problems, where, browser=False):
     key_id = msgid[0] if isinstance(msgid, tuple) else msgid
     existing = catalog.get(key_id, context=context)
     if existing is not None:
@@ -132,8 +134,10 @@ def _add(catalog, msgid, context, problems, where):
         new_plural = msgid[1] if isinstance(msgid, tuple) else None
         if old_plural != new_plural:
             problems.append(Problem(where, f'"{key_id}" is used both with and without the plural "{new_plural or old_plural}"'))
+        if browser and BROWSER_MARK not in existing.auto_comments:
+            existing.auto_comments.append(BROWSER_MARK)
         return
-    catalog.add(msgid, context=context)
+    catalog.add(msgid, context=context, auto_comments=[BROWSER_MARK] if browser else [])
 
 
 def _write(path, catalog):
@@ -341,7 +345,7 @@ def check_catalogue(path, identifier, template=None):
 
     if template is not None:
         have, want = message_set(catalog), message_set(template)
-        for context, msgid, _plural in sorted(have - want, key=str):
+        for context, msgid, _plural, _browser in sorted(have - want, key=str):
             problems.append(Problem(rel, f'"{msgid[:60]}" is not in messages.pot'))
         missing = want - have
         if missing:

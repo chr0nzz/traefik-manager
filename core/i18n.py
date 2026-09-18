@@ -4,6 +4,7 @@ from functools import lru_cache
 
 from babel import Locale, UnknownLocaleError
 from babel.core import get_global
+from babel.messages.pofile import read_po
 from babel.support import Translations
 from flask import has_request_context, request
 from flask_babel import Babel, get_locale, get_translations
@@ -14,6 +15,7 @@ LOCALE_DIR = os.path.join(ROOT_DIR, 'locale')
 DOMAIN = 'messages'
 DEFAULT_TAG = 'en'
 URL_LOCALE_KEY = 'tm.url_locale'
+BROWSER_MARK = 'Used in the browser'
 
 _PLURAL_SAMPLES = tuple(range(0, 201)) + (1000, 10000, 100000, 1000000)
 INLINE_TAGS = frozenset({'a', 'b', 'br', 'code', 'em', 'i', 'kbd', 'small', 'span', 'strong', 'u'})
@@ -157,11 +159,32 @@ def _plural_map(identifier: str, translations) -> dict:
 
 
 @lru_cache(maxsize=None)
+def browser_keys(locale_dir: str = None):
+    path = os.path.join(locale_dir or LOCALE_DIR, DOMAIN + '.pot')
+    try:
+        with open(path, 'rb') as fh:
+            template = read_po(fh)
+    except (OSError, ValueError):
+        return None
+    keys = set()
+    for message in template:
+        if not message.id or BROWSER_MARK not in (message.auto_comments or []):
+            continue
+        msgid = message.id[0] if isinstance(message.id, (list, tuple)) else message.id
+        keys.add(message.context + '\x04' + msgid if message.context else msgid)
+    return frozenset(keys)
+
+
+@lru_cache(maxsize=None)
 def client_catalog(tag: str, locale_dir: str = None) -> dict:
     identifier = to_identifier(tag)
     translations = Translations.load(locale_dir or LOCALE_DIR, [identifier], DOMAIN)
+    wanted = browser_keys(locale_dir)
     messages = {}
     for key, value in getattr(translations, '_catalog', {}).items():
+        msgid = key[0] if isinstance(key, tuple) else key
+        if wanted is not None and msgid not in wanted:
+            continue
         if isinstance(key, tuple):
             msgid, index = key
             forms = messages.setdefault(msgid, [])
