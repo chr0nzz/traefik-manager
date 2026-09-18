@@ -689,6 +689,9 @@ def _hash_api_key(key: str) -> str:
 def _safe_next(next_url: str) -> str:
     nu = (next_url or '').strip()
     if nu.startswith('/') and not nu.startswith('//') and not nu.startswith('/\\'):
+        root = request.script_root
+        if root and nu != root and not nu.startswith(root + '/'):
+            return root + nu
         return nu
     return url_for('index')
 
