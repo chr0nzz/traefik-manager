@@ -191,7 +191,7 @@ Behavior worth knowing:
 
 ## Deleting a route
 
-Open **More - Delete** on the route card and type `DELETE` to confirm. The route's service entry is removed with it, unless another router still references it. The `<service>-transport` `serversTransport` that traefik-manager generated for that service goes too, unless another service or a disabled route still points at it.
+Open **More - Delete** on the route card and type the route's name to confirm. Deleting several routes at once asks for how many instead. The route's service entry is removed with it, unless another router still references it. The `<service>-transport` `serversTransport` that traefik-manager generated for that service goes too, unless another service or a disabled route still points at it.
 
 ## Entrypoint middlewares
 
