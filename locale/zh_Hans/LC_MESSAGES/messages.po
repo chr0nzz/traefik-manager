@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-18 14:42-0400\n"
+"POT-Creation-Date: 2026-09-18 15:32-0400\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans\n"
@@ -16,6 +16,16 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
+
+#. Used in the browser
+#, python-brace-format
+msgid "\"{name}\" is still used by {shown}. Delete those middlewares first."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "\"{name}\" is still used by {shown}. Remove it from {label} and delete it?"
+msgstr ""
 
 #, python-format
 msgid "%(auth_verify)s is appended automatically"
@@ -105,6 +115,10 @@ msgstr ""
 msgid "%(status)s is replaced with the response code."
 msgstr ""
 
+#. Used in the browser
+msgid "(0 to 1, optional)"
+msgstr ""
+
 msgid "(32+ character random string)"
 msgstr ""
 
@@ -115,6 +129,18 @@ msgid "(bytes)"
 msgstr ""
 
 msgid "(bytes, optional - Traefik 3.7+)"
+msgstr ""
+
+#. Used in the browser
+msgid "(empty = stdout)"
+msgstr ""
+
+#. Used in the browser
+msgid "(exposes API without auth)"
+msgstr ""
+
+#. Used in the browser
+msgid "(leave empty for stdout)"
 msgstr ""
 
 msgctxt "option"
@@ -138,7 +164,28 @@ msgstr ""
 msgid "(one per line, format: %(user_realm_md5hash)s)"
 msgstr ""
 
+#. Used in the browser
 msgid "(optional)"
+msgstr ""
+
+#. Used in the browser
+msgid "(optional, default localhost:4318)"
+msgstr ""
+
+#. Used in the browser
+msgid "(optional, e.g. 2s)"
+msgstr ""
+
+#. Used in the browser
+msgid "(optional, e.g. 30s)"
+msgstr ""
+
+#. Used in the browser
+msgid "(optional, e.g. 60s, 1m30s, 0 = unlimited)"
+msgstr ""
+
+#. Used in the browser
+msgid "(optional, one path per line)"
 msgstr ""
 
 msgid "(regex, one per line - optional)"
@@ -150,17 +197,97 @@ msgstr ""
 msgid "(seconds)"
 msgstr ""
 
+#. Used in the browser
+msgctxt "setting"
+msgid "(security)"
+msgstr ""
+
 msgid "(set - leave blank to keep)"
 msgstr ""
 
+#. Used in the browser
 msgid "+ New file..."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "+{more} more"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "+{value} more {value2}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+", although other file-provider routes are live. If you saved it seconds "
+"ago, close and reopen. Otherwise check the Traefik logs for a config "
+"error{configFile}. Showing your saved configuration."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ", and that {span} is inside the watched path"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+", so this route is not being served. Traefik is most likely not watching "
+"the file Traefik Manager writes to - check that both containers mount the"
+" same config path and that {providers_file} points at it with "
+"{watch_true}. Showing your saved configuration."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "- adds {http3} to this entrypoint"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "- adds {http_tls} so routers here get TLS by default"
 msgstr ""
 
 #, python-format
 msgid "- controlled by %(auth_enabled)s env var"
 msgstr ""
 
+#. Used in the browser
+msgid "- insecure"
+msgstr ""
+
+#. Used in the browser
+msgid "- insecure, lets any client forge its IP"
+msgstr ""
+
+#. Used in the browser
+msgid "- insecure, testing only"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "- loaded from the {plugins_local} directory, no version needed"
+msgstr ""
+
 msgid "- restore it under Dashboard settings"
+msgstr ""
+
+#. Used in the browser
+msgid "- showing your saved configuration."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"- showing your saved configuration. Check the API URL under Settings > "
+"Connection, and that Traefik has {api} enabled."
+msgstr ""
+
+#. Used in the browser
+msgid "- used by routers that list no entrypoints"
 msgstr ""
 
 msgid "/ (server root)"
@@ -170,6 +297,14 @@ msgctxt "placeholder"
 msgid "/health"
 msgstr ""
 
+#. Used in the browser
+msgid "/metrics"
+msgstr ""
+
+#. Used in the browser
+msgid "/ping health check"
+msgstr ""
+
 msgid "0 selected"
 msgstr ""
 
@@ -177,6 +312,10 @@ msgid "1 hour"
 msgstr ""
 
 msgid "1 minute"
+msgstr ""
+
+#. Used in the browser
+msgid "1 route"
 msgstr ""
 
 msgid "1 year"
@@ -189,6 +328,14 @@ msgid "15 minutes"
 msgstr ""
 
 msgid "24 hours"
+msgstr ""
+
+#. Used in the browser
+msgid "2FA disabled"
+msgstr ""
+
+#. Used in the browser
+msgid "2FA enabled successfully!"
 msgstr ""
 
 msgid "30 days"
@@ -204,6 +351,11 @@ msgid "5 minutes"
 msgstr ""
 
 msgid "7 days"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "<{tag} style=\"{st}\">{inline}"
 msgstr ""
 
 #, python-format
@@ -258,9 +410,14 @@ msgstr ""
 msgid "API & Dashboard"
 msgstr ""
 
+#. Used in the browser
+msgid "API Enabled"
+msgstr ""
+
 msgid "API Key"
 msgstr ""
 
+#. Used in the browser
 msgid "API Keys"
 msgstr ""
 
@@ -269,6 +426,10 @@ msgstr ""
 
 #, python-format
 msgid "API credentials %(optional)s"
+msgstr ""
+
+#. Used in the browser
+msgid "API is exposed without authentication"
 msgstr ""
 
 msgid "API key"
@@ -287,6 +448,14 @@ msgid ""
 "old key and reconfigure your agent."
 msgstr ""
 
+#. Used in the browser
+msgid "API key rotated - update your agent"
+msgstr ""
+
+#. Used in the browser
+msgid "AWS ECS"
+msgstr ""
+
 msgctxt "button"
 msgid "About"
 msgstr ""
@@ -295,10 +464,27 @@ msgctxt "tooltip"
 msgid "About"
 msgstr ""
 
+#. Used in the browser
+msgid "Accept PROXY protocol from everyone"
+msgstr ""
+
 msgid "Access Control"
 msgstr ""
 
+#. Used in the browser
+msgid "Access Log"
+msgstr ""
+
 msgid "Access Log Path"
+msgstr ""
+
+#. Used in the browser
+msgid "Access Token"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Access log file {empty_stdout}"
 msgstr ""
 
 msgid ""
@@ -320,9 +506,14 @@ msgstr ""
 msgid "Access token"
 msgstr ""
 
+#. Used in the browser
+msgid "Access token from your Pushbullet account. Stored encrypted."
+msgstr ""
+
 msgid "Acknowledge and hide"
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Actions"
 msgstr ""
@@ -335,6 +526,7 @@ msgctxt "button"
 msgid "Add"
 msgstr ""
 
+#. Used in the browser
 msgid "Add Agent"
 msgstr ""
 
@@ -344,18 +536,33 @@ msgstr ""
 msgid "Add Decision"
 msgstr ""
 
+#. Used in the browser
+msgid "Add Entrypoint"
+msgstr ""
+
 msgid "Add Key"
 msgstr ""
 
+#. Used in the browser
 msgid "Add Middleware"
 msgstr ""
 
+#. Used in the browser
 msgid "Add Plugin"
 msgstr ""
 
 msgid "Add Prefix"
 msgstr ""
 
+#. Used in the browser
+msgid "Add Provider"
+msgstr ""
+
+#. Used in the browser
+msgid "Add Resolver"
+msgstr ""
+
+#. Used in the browser
 msgid "Add Route"
 msgstr ""
 
@@ -365,16 +572,35 @@ msgstr ""
 msgid "Add TLS Profile"
 msgstr ""
 
+#. Used in the browser
 msgid "Add Template"
 msgstr ""
 
 msgid "Add Vary Header"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"Add a channel to get a message when routes change, backups run or "
+"certificates expire."
+msgstr ""
+
+#. Used in the browser
+msgid "Add a remote agent to manage multiple Traefik instances from one TM."
+msgstr ""
+
 msgid "Add agent"
 msgstr ""
 
+#. Used in the browser
+msgid "Add another domain"
+msgstr ""
+
 msgid "Add at least one backend"
+msgstr ""
+
+#. Used in the browser
+msgid "Add at least one user before saving"
 msgstr ""
 
 msgid "Add backend"
@@ -392,7 +618,19 @@ msgstr ""
 msgid "Add more backends to load-balance across several servers."
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Add plugins under {experimental_plugins} in your {traefik_yml}."
+msgstr ""
+
 msgid "Add service"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Add this volume to the {traefik_manager} service in your "
+"{docker_compose_yml}:"
 msgstr ""
 
 msgid "Add trusted proxy IPs to an entrypoint"
@@ -402,6 +640,27 @@ msgstr ""
 msgid ""
 "Add your LAPI URL plus a bouncer API key, machine credentials, or a mTLS "
 "client certificate in %(settings_system_monitoring)s."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Add {addLabel}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Add {sfFormLabel}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Adding {n} range:"
+msgid_plural "Adding {n} ranges:"
+msgstr[0] ""
+
+#. Used in the browser
+msgctxt "setting"
+msgid "Address"
 msgstr ""
 
 msgid "Address Traefik uses to reach this container on the internal network."
@@ -436,7 +695,29 @@ msgstr ""
 msgid "Advanced rule"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"After adding an entrypoint and restarting Traefik, ensure the port is "
+"accessible: {sudo_ufw_allow} For ports below 1024, Traefik needs "
+"{net_bind_service} capability or must run as root."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"After adding an entrypoint here, open your {docker_compose_yml} and add "
+"the port under {ports}, then run: {docker_compose_up} Without this the "
+"port will not be reachable outside the container even after restarting "
+"Traefik."
+msgstr ""
+
 msgid "After it finishes"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Agent"
 msgstr ""
 
 msgctxt "setting"
@@ -446,7 +727,15 @@ msgstr ""
 msgid "Agent URL"
 msgstr ""
 
+#. Used in the browser
+msgid "Agent config saved"
+msgstr ""
+
 msgid "Agent docs"
+msgstr ""
+
+#. Used in the browser
+msgid "Agent is up, but it cannot reach Traefik yet."
 msgstr ""
 
 msgid "Agent name"
@@ -458,11 +747,19 @@ msgstr ""
 msgid "Agent rejected the static config write"
 msgstr ""
 
+#. Used in the browser
+msgid "Agent removed"
+msgstr ""
+
 #, python-format
 msgid "Agent static config is not valid YAML: %(error)s"
 msgstr ""
 
 msgid "Agent timed out"
+msgstr ""
+
+#. Used in the browser
+msgid "Agents"
 msgstr ""
 
 msgctxt "button"
@@ -480,6 +777,10 @@ msgid "Alert limit must be a whole number"
 msgstr ""
 
 msgid "Alert limit must be between 0 and 100000"
+msgstr ""
+
+#. Used in the browser
+msgid "Alias Headers"
 msgstr ""
 
 msgctxt "button"
@@ -506,7 +807,15 @@ msgid ""
 " genuinely needs it in the request path. Requires Traefik 3.7+."
 msgstr ""
 
+#. Used in the browser
+msgid "All categories"
+msgstr ""
+
 msgid "All domains"
+msgstr ""
+
+#. Used in the browser
+msgid "All events"
 msgstr ""
 
 msgid "Allow any authenticated account"
@@ -569,6 +878,23 @@ msgstr ""
 msgid "Also pass selected certificate fields"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Also remove its certificate for {name}, and restart Traefik so the change"
+" sticks"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Also remove their {n} certificate, and restart Traefik so the change "
+"sticks"
+msgid_plural ""
+"Also remove their {n} certificates, and restart Traefik so the change "
+"sticks"
+msgstr[0] ""
+
 msgid "Also set by the theme toggle in the nav bar"
 msgstr ""
 
@@ -594,7 +920,12 @@ msgstr ""
 msgid "Anything below this level is dropped for this channel."
 msgstr ""
 
+#. Used in the browser
 msgid "App Token"
+msgstr ""
+
+#. Used in the browser
+msgid "App sees (client)"
 msgstr ""
 
 msgctxt "heading"
@@ -603,6 +934,18 @@ msgstr ""
 
 #, python-format
 msgid "Appends %(policy_name)s to the verify URL"
+msgstr ""
+
+#. Used in the browser
+msgid "Application token from Gotify. Stored encrypted."
+msgstr ""
+
+#. Used in the browser
+msgid "Application token from your Pushover app. Stored encrypted."
+msgstr ""
+
+#. Used in the browser
+msgid "Applied via entrypoint"
 msgstr ""
 
 msgid "Apply & Save"
@@ -654,9 +997,18 @@ msgstr ""
 msgid "Authentication is delegated"
 msgstr ""
 
+#. Used in the browser
+msgid "Authentication is handled elsewhere"
+msgstr ""
+
 msgid ""
 "Authentication settings are not available - no password has been "
 "configured."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Authentication {value}."
 msgstr ""
 
 msgid "Authenticator code"
@@ -699,10 +1051,38 @@ msgctxt "setting"
 msgid "Backends"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Backup created ({n} file)"
+msgid_plural "Backup created ({n} files)"
+msgstr[0] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Backup created on {name}"
+msgstr ""
+
+#. Used in the browser
+msgid "Backup deleted"
+msgstr ""
+
 msgid "Backup dir"
 msgstr ""
 
+#. Used in the browser
+msgid "Backup failed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Backup failed: {error}"
+msgstr ""
+
 msgid "Backup not found"
+msgstr ""
+
+#. Used in the browser
+msgid "Backup restored successfully!"
 msgstr ""
 
 #, python-format
@@ -713,6 +1093,10 @@ msgstr ""
 msgid ""
 "Backup retention on this agent is set via the %(backup_keep_count)s "
 "environment variable."
+msgstr ""
+
+#. Used in the browser
+msgid "Backups"
 msgstr ""
 
 msgctxt "button"
@@ -731,6 +1115,10 @@ msgid "Ban"
 msgstr ""
 
 msgid "Base URL of the Traefik API used for live stats."
+msgstr ""
+
+#. Used in the browser
+msgid "Base URL of your Gotify server."
 msgstr ""
 
 #, python-format
@@ -755,6 +1143,10 @@ msgid "Behind proxies - exclude proxy IPs"
 msgstr ""
 
 msgid "Behind proxies - trusted hop depth"
+msgstr ""
+
+#. Used in the browser
+msgid "Bot Token"
 msgstr ""
 
 msgid "Bouncer API key"
@@ -800,6 +1192,11 @@ msgstr ""
 msgid "Buffering must be a whole number of lines, got %(buffer)s"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Buffering {lines_optional}"
+msgstr ""
+
 msgid "Build backends"
 msgstr ""
 
@@ -809,6 +1206,10 @@ msgstr ""
 msgid ""
 "Built-in authentication or OIDC is active, so there is nothing to "
 "acknowledge"
+msgstr ""
+
+#. Used in the browser
+msgid "Bulk Delete"
 msgstr ""
 
 msgid "Bulk select"
@@ -835,10 +1236,25 @@ msgstr ""
 msgid "CA certificate, e.g. /certs/ca.crt"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "CA server {optional}"
+msgstr ""
+
+#. Used in the browser
+msgid "CLF (default)"
+msgstr ""
+
 msgid "CORS Headers"
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
+msgid "Cancel"
+msgstr ""
+
+#. Used in the browser
+msgctxt "tooltip"
 msgid "Cancel"
 msgstr ""
 
@@ -850,6 +1266,10 @@ msgstr ""
 
 #, python-format
 msgid "Cannot reach agent: %(error)s"
+msgstr ""
+
+#. Used in the browser
+msgid "Cannot read the agent static config"
 msgstr ""
 
 #, python-format
@@ -884,6 +1304,11 @@ msgstr ""
 msgid "Cert Resolvers"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Cert Resolvers {staticResolverCount}"
+msgstr ""
+
 msgid ""
 "Cert resolver names for this server's Traefik, comma-separated. Resolvers"
 " already used by this server's routes are detected automatically from its"
@@ -903,6 +1328,7 @@ msgstr ""
 msgid "Certificate store backups"
 msgstr ""
 
+#. Used in the browser
 msgid "Certificates"
 msgstr ""
 
@@ -927,8 +1353,17 @@ msgid ""
 " Logs and CrowdSec, downloading a free database on first use."
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Certs"
+msgstr ""
+
 msgctxt "setting"
 msgid "Certs"
+msgstr ""
+
+#. Used in the browser
+msgid "Challenge type"
 msgstr ""
 
 msgid "Change Password - Traefik Manager"
@@ -947,8 +1382,24 @@ msgstr ""
 msgid "Channel not found"
 msgstr ""
 
+#. Used in the browser
+msgid "Channel removed"
+msgstr ""
+
+#. Used in the browser
+msgid "Channel saved"
+msgstr ""
+
 msgctxt "heading"
 msgid "Channels"
+msgstr ""
+
+#. Used in the browser
+msgid "Chat ID"
+msgstr ""
+
+#. Used in the browser
+msgid "Check for new Traefik versions"
 msgstr ""
 
 msgid "Check route reachability"
@@ -966,6 +1417,16 @@ msgstr ""
 
 msgctxt "label"
 msgid "Checking"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Checking..."
+msgstr ""
+
+#. Used in the browser
+msgctxt "tooltip"
+msgid "Checking..."
 msgstr ""
 
 msgid "Choose a notification destination."
@@ -999,7 +1460,15 @@ msgstr ""
 msgid "Clear every filter, the country selection and the search box"
 msgstr ""
 
+#. Used in the browser
+msgid "Clear filter"
+msgstr ""
+
 msgid "Clear filters"
+msgstr ""
+
+#. Used in the browser
+msgid "Clear the country filter"
 msgstr ""
 
 msgid "Clear the search"
@@ -1052,6 +1521,15 @@ msgstr ""
 msgid "Client certificate mTLS %(optional)s"
 msgstr ""
 
+#. Used in the browser
+msgctxt "button"
+msgid "Clone"
+msgstr ""
+
+#. Used in the browser
+msgid "Clone Route"
+msgstr ""
+
 msgctxt "button"
 msgid "Close"
 msgstr ""
@@ -1063,6 +1541,13 @@ msgid "Close panel"
 msgstr ""
 
 msgid "Cloudflare edge ranges"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Cloudflare edge ranges ({cloudflare_ranges_count}, captured "
+"{cloudflare_captured})"
 msgstr ""
 
 msgctxt "button"
@@ -1112,10 +1597,24 @@ msgstr ""
 msgid "Compose and run commands"
 msgstr ""
 
+#. Used in the browser
+msgid "Compress rotated files"
+msgstr ""
+
+#. Used in the browser
+msgid "Config"
+msgstr ""
+
+#. Used in the browser
 msgid "Config File"
 msgstr ""
 
 msgid "Config file"
+msgstr ""
+
+#. Used in the browser
+msgctxt "setting"
+msgid "Configuration"
 msgstr ""
 
 msgid "Configuration (YAML)"
@@ -1137,6 +1636,11 @@ msgctxt "button"
 msgid "Confirm"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Confirm"
+msgstr ""
+
 msgid "Confirm new password"
 msgstr ""
 
@@ -1148,6 +1652,10 @@ msgid "Connect"
 msgstr ""
 
 msgid "Connect to Traefik"
+msgstr ""
+
+#. Used in the browser
+msgid "Connected. The agent is answering and can see Traefik."
 msgstr ""
 
 msgctxt "button"
@@ -1166,7 +1674,24 @@ msgstr ""
 msgid "Connection error - check the URL and network. (%(error)s)"
 msgstr ""
 
+#. Used in the browser
+msgid "Connection failed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Connection failed: {error}"
+msgstr ""
+
 msgid "Connection refused"
+msgstr ""
+
+#. Used in the browser
+msgid "Connection successful"
+msgstr ""
+
+#. Used in the browser
+msgid "Connection test failed"
 msgstr ""
 
 msgid "Connection timed out - the API URL may be unreachable from the container"
@@ -1182,6 +1707,11 @@ msgid "Content-Type nosniff"
 msgstr ""
 
 msgctxt "button"
+msgid "Continue"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
 msgid "Continue"
 msgstr ""
 
@@ -1201,10 +1731,22 @@ msgstr ""
 msgid "Cookie name"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Copied"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Copied!"
+msgstr ""
+
+#. Used in the browser
 msgctxt "button"
 msgid "Copy"
 msgstr ""
 
+#. Used in the browser
 msgctxt "tooltip"
 msgid "Copy"
 msgstr ""
@@ -1216,29 +1758,80 @@ msgstr ""
 msgid "Copy this key now"
 msgstr ""
 
+#. Used in the browser
+msgid "Copying needs HTTPS or localhost - select the text and copy it manually"
+msgstr ""
+
+#. Used in the browser
+msgid "Could not check the agent"
+msgstr ""
+
+#. Used in the browser
+msgid "Could not copy - select the text and copy it manually"
+msgstr ""
+
+#. Used in the browser
+msgid "Could not disable 2FA"
+msgstr ""
+
+#. Used in the browser
+msgid "Could not enable 2FA"
+msgstr ""
+
 msgid ""
 "Could not find plugins block - paste the experimental.plugins YAML from "
 "the Traefik plugin page"
 msgstr ""
 
 #. Used in the browser
+msgid "Could not load backups"
+msgstr ""
+
+#. Used in the browser
+msgid "Could not load plugin data"
+msgstr ""
+
+#. Used in the browser
+msgid "Could not load routes"
+msgstr ""
+
+#. Used in the browser
+msgid "Could not load templates"
+msgstr ""
+
+#. Used in the browser
+msgid "Could not reach repository"
+msgstr ""
+
+#. Used in the browser
 msgid "Could not save the language"
+msgstr ""
+
+#. Used in the browser
+msgid "Could not sign out other sessions"
+msgstr ""
+
+#. Used in the browser
+msgid "Could not update the static config"
 msgstr ""
 
 #, python-format
 msgid "Could not write acme.json: %(error)s"
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
 msgid "Create"
 msgstr ""
 
+#. Used in the browser
 msgid "Create Backup"
 msgstr ""
 
 msgid "Create a Traefik route for this Traefik Manager instance."
 msgstr ""
 
+#. Used in the browser
 msgid "Create your first route to start managing your Traefik proxy."
 msgstr ""
 
@@ -1247,12 +1840,27 @@ msgid ""
 "straight to your dynamic config file."
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Created {toLocaleDateString}{value}"
+msgstr ""
+
 #, python-format
 msgid ""
 "Creates a tool-managed %(middleware_name)s middleware: a Permissions-"
 "Policy plus common security headers (HSTS, nosniff, frame-deny, "
 "referrer). It stays a normal, editable file middleware in the Middlewares"
 " tab."
+msgstr ""
+
+#. Used in the browser
+msgctxt "button"
+msgid "Creating..."
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Creating…"
 msgstr ""
 
 msgctxt "heading"
@@ -1284,6 +1892,11 @@ msgstr ""
 msgid "Current password is incorrect."
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Current {trustedips} ({cur_count}):"
+msgstr ""
+
 msgid "Curve Preferences"
 msgstr ""
 
@@ -1303,6 +1916,23 @@ msgctxt "option"
 msgid "Custom…"
 msgstr ""
 
+#. Used in the browser
+msgid "DNS Challenge"
+msgstr ""
+
+#. Used in the browser
+msgid "DNS Provider"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "DNS check resolvers {optional}"
+msgstr ""
+
+#. Used in the browser
+msgid "Daily"
+msgstr ""
+
 msgctxt "button"
 msgid "Dark"
 msgstr ""
@@ -1319,6 +1949,7 @@ msgctxt "heading"
 msgid "Dashboard"
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Dashboard"
 msgstr ""
@@ -1343,8 +1974,34 @@ msgctxt "setting"
 msgid "Database"
 msgstr ""
 
+#. Used in the browser
+msgid "Debug Mode"
+msgstr ""
+
 msgctxt "option"
 msgid "Default"
+msgstr ""
+
+#. Used in the browser
+msgid "Default (RSA4096)"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Default TLS options {optional}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Default cert resolver {optional}"
+msgstr ""
+
+#. Used in the browser
+msgid "Default entrypoint"
+msgstr ""
+
+#. Used in the browser
+msgid "Default rule syntax"
 msgstr ""
 
 msgid "Default theme"
@@ -1353,13 +2010,91 @@ msgstr ""
 msgid "Defaults: port 8090, 300 requests per minute per IP."
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
 msgid "Delete"
 msgstr ""
 
+#. Used in the browser
 msgctxt "tooltip"
 msgid "Delete"
 msgstr ""
+
+#. Used in the browser
+msgid "Delete - strip aliased headers"
+msgstr ""
+
+#. Used in the browser
+msgid "Delete - strip underscore headers"
+msgstr ""
+
+#. Used in the browser
+msgid "Delete Backup"
+msgstr ""
+
+#. Used in the browser
+msgid "Delete Middleware"
+msgstr ""
+
+#. Used in the browser
+msgid "Delete Route"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Delete backup \"{name}\"?"
+msgstr ""
+
+#. Used in the browser
+msgid "Delete failed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Delete failed: {error}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Delete middleware \"{name}\"?"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Delete route \"{shown}\"{where}? This removes it from the config file and"
+" stops serving it."
+msgstr ""
+
+#. Used in the browser
+msgid "Delete template"
+msgstr ""
+
+#. Used in the browser
+msgid "Delete this template?"
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"Delete this template? Middlewares already created from it are not "
+"affected."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Delete {n} route: {names}? This removes them from the config files and "
+"stops serving them."
+msgid_plural ""
+"Delete {n} routes: {names}? This removes them from the config files and "
+"stops serving them."
+msgstr[0] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Deleted {n} route."
+msgid_plural "Deleted {n} routes."
+msgstr[0] ""
 
 msgid ""
 "Deletes the local clone only. Remote repository and commits are "
@@ -1370,6 +2105,11 @@ msgid "Deliver errors right away even inside the quiet window."
 msgstr ""
 
 msgid "Deliver events to this channel."
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Delivered."
 msgstr ""
 
 msgctxt "heading"
@@ -1385,17 +2125,43 @@ msgstr ""
 msgid "Desktop notifications"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"Desktop notifications are blocked by this browser, so they have been "
+"turned off"
+msgstr ""
+
 msgid ""
 "Desktop notifications are raised by the open tab itself, with no push "
 "service in between. The setting is stored in this browser only, so every "
 "browser you sign in from is set up separately."
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"Desktop notifications need a secure origin. Browsers only expose the "
+"Notification API over HTTPS or on localhost, so open Traefik Manager over"
+" HTTPS to use them."
+msgstr ""
+
+#. Used in the browser
+msgid "Desktop notifications on for this browser"
+msgstr ""
+
 msgctxt "heading"
 msgid "Destination"
 msgstr ""
 
+#. Used in the browser
+msgctxt "tooltip"
+msgid "Details"
+msgstr ""
+
 msgid "Detected from your existing configuration. Clear it to skip this step."
+msgstr ""
+
+#. Used in the browser
+msgid "Device endpoint"
 msgstr ""
 
 msgid "Device name"
@@ -1403,6 +2169,16 @@ msgstr ""
 
 msgctxt "label"
 msgid "Diff"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Diff - {slice}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Diff error: {error}"
 msgstr ""
 
 msgctxt "setting"
@@ -1418,8 +2194,39 @@ msgstr ""
 msgid "Direct connection - Traefik is exposed directly"
 msgstr ""
 
+#. Used in the browser
+msgctxt "setting"
+msgid "Directory"
+msgstr ""
+
+#. Used in the browser
 msgctxt "button"
 msgid "Disable"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Disable"
+msgstr ""
+
+#. Used in the browser
+msgid "Disable 2FA"
+msgstr ""
+
+#. Used in the browser
+msgid "Disable Authentication"
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"Disable built-in authentication? Anyone who can reach this URL will have "
+"full access."
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"Disable built-in authentication? Sign-in continues through your OIDC "
+"provider."
 msgstr ""
 
 msgid ""
@@ -1427,6 +2234,24 @@ msgid ""
 "Cloudflare Origin cert)"
 msgstr ""
 
+#. Used in the browser
+msgid "Disable propagation checks"
+msgstr ""
+
+#. Used in the browser
+msgid "Disable two-factor authentication?"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Disabled"
+msgstr ""
+
+#. Used in the browser
+msgctxt "tooltip"
 msgid "Disabled"
 msgstr ""
 
@@ -1436,7 +2261,17 @@ msgid ""
 "serversTransport."
 msgstr ""
 
+#. Used in the browser
+msgctxt "button"
+msgid "Discard"
+msgstr ""
+
 msgctxt "label"
+msgid "Dismiss"
+msgstr ""
+
+#. Used in the browser
+msgctxt "tooltip"
 msgid "Dismiss"
 msgstr ""
 
@@ -1474,11 +2309,25 @@ msgctxt "tooltip"
 msgid "Documentation"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Domain"
+msgstr ""
+
 msgctxt "setting"
 msgid "Domain"
 msgstr ""
 
+#. Used in the browser
+msgid "Domain / Rule"
+msgstr ""
+
 msgid "Domain this Traefik Manager instance should be reachable on."
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Domains"
 msgstr ""
 
 msgctxt "setting"
@@ -1494,6 +2343,7 @@ msgid ""
 "instead of typing the full hostname."
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
 msgid "Done"
 msgstr ""
@@ -1502,8 +2352,30 @@ msgctxt "button"
 msgid "Download"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Download"
+msgstr ""
+
+#. Used in the browser
+msgid "Download failed"
+msgstr ""
+
 #, python-format
 msgid "Download failed: %(info)s"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Downloading..."
+msgstr ""
+
+#. Used in the browser
+msgid "Drag to resize - double-click to reset"
+msgstr ""
+
+#. Used in the browser
+msgid "Drop (default)"
 msgstr ""
 
 msgctxt "setting"
@@ -1519,6 +2391,16 @@ msgstr ""
 msgid "Dynamic config path"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "EAB HMAC {optional}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "EAB key ID {optional}"
+msgstr ""
+
 msgid "EAB needs both the key ID and the HMAC"
 msgstr ""
 
@@ -1532,8 +2414,21 @@ msgctxt "button"
 msgid "Edit"
 msgstr ""
 
+#. Used in the browser
 msgctxt "tooltip"
 msgid "Edit"
+msgstr ""
+
+#. Used in the browser
+msgid "Edit Plugin"
+msgstr ""
+
+#. Used in the browser
+msgid "Edit Settings"
+msgstr ""
+
+#. Used in the browser
+msgid "Edit Template"
 msgstr ""
 
 msgid ""
@@ -1547,14 +2442,35 @@ msgid ""
 "any %(code)s template blocks with real values or Traefik will crash"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Edit {name}"
+msgstr ""
+
+#. Used in the browser
+msgctxt "setting"
+msgid "Email"
+msgstr ""
+
+#. Used in the browser
 msgctxt "button"
 msgid "Enable"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Enable"
+msgstr ""
+
+#. Used in the browser
 msgid "Enable 2FA"
 msgstr ""
 
 msgid "Enable Git Backup"
+msgstr ""
+
+#. Used in the browser
+msgid "Enable HTTP/3 (QUIC)"
 msgstr ""
 
 msgid "Enable git backup"
@@ -1563,11 +2479,30 @@ msgstr ""
 msgid "Enable or disable built-in auth"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Enabled"
+msgstr ""
+
 msgctxt "setting"
 msgid "Enabled"
 msgstr ""
 
+#. Used in the browser
+msgctxt "tooltip"
+msgid "Enabled"
+msgstr ""
+
+#. Used in the browser
+msgid "Enables PROXY protocol from these load balancers, one per line."
+msgstr ""
+
 msgid "Encoded Characters (Traefik 3.7+)"
+msgstr ""
+
+#. Used in the browser
+msgctxt "setting"
+msgid "Endpoint"
 msgstr ""
 
 msgid ""
@@ -1578,6 +2513,18 @@ msgstr ""
 msgid "Enter 6-digit code to confirm"
 msgstr ""
 
+#. Used in the browser
+msgid "Enter a name for this key"
+msgstr ""
+
+#. Used in the browser
+msgid "Enter a username and password"
+msgstr ""
+
+#. Used in the browser
+msgid "Enter a username, realm and password"
+msgstr ""
+
 msgid "Enter an http:// or https:// URL"
 msgstr ""
 
@@ -1585,6 +2532,10 @@ msgid "Enter at least one domain."
 msgstr ""
 
 msgid "Enter the 6-digit code from your authenticator app."
+msgstr ""
+
+#. Used in the browser
+msgid "Enter the 6-digit code."
 msgstr ""
 
 msgid "Enter the Traefik API URL."
@@ -1598,9 +2549,11 @@ msgstr ""
 msgid "Enter your password to access Traefik Manager."
 msgstr ""
 
+#. Used in the browser
 msgid "Entry Point"
 msgstr ""
 
+#. Used in the browser
 msgid "Entry Points"
 msgstr ""
 
@@ -1615,20 +2568,56 @@ msgstr ""
 msgid "Entrypoint \"%(entrypoint)s\" not found in static config"
 msgstr ""
 
+#. Used in the browser
+msgid "Entrypoint labels"
+msgstr ""
+
 msgctxt "button"
 msgid "Entrypoints"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Entrypoints {staticEpCount}"
+msgstr ""
+
+#. Used in the browser
+msgid "Error"
 msgstr ""
 
 msgid "Error deleting"
 msgstr ""
 
+#. Used in the browser
 msgid "Error deleting middleware"
+msgstr ""
+
+#. Used in the browser
+msgid "Error deleting route"
+msgstr ""
+
+#. Used in the browser
+msgid "Error generating hash"
 msgstr ""
 
 msgid "Error saving configuration"
 msgstr ""
 
+#. Used in the browser
 msgid "Error saving middleware"
+msgstr ""
+
+#. Used in the browser
+msgid "Error saving route"
+msgstr ""
+
+#. Used in the browser
+msgid "Error toggling route"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Error: {error}"
 msgstr ""
 
 msgctxt "button"
@@ -1650,6 +2639,10 @@ msgstr ""
 msgid ""
 "Every enabled channel gets its own copy of an event, filtered by the "
 "categories, severity, digest and quiet hours set on it."
+msgstr ""
+
+#. Used in the browser
+msgid "Every other session was signed out"
 msgstr ""
 
 msgid ""
@@ -1684,6 +2677,10 @@ msgctxt "button"
 msgid "Explore"
 msgstr ""
 
+#. Used in the browser
+msgid "Expose by default"
+msgstr ""
+
 msgctxt "setting"
 msgid "Expression"
 msgstr ""
@@ -1694,13 +2691,142 @@ msgstr ""
 msgid "Failed to add decision - check LAPI permissions"
 msgstr ""
 
+#. Used in the browser
+msgid "Failed to create agent"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to create key"
+msgstr ""
+
 msgid "Failed to delete decision"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to install plugin"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to load agents"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to load backups"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to load channels"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to load commits"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to load diagnostic."
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to load diff"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to load keys"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to load route YAML"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to load static config"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to load templates"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to read static config"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to remove channel"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to save"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to save OIDC config"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to save channel"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to save retention"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to save settings"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to save the static config"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to start 2FA setup"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to toggle route"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to toggle route."
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to update"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to update OIDC"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to update auth"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to update auth."
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to update channel"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to update password"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to update password."
+msgstr ""
+
+#. Used in the browser
+msgid "Failed to update."
 msgstr ""
 
 msgctxt "option"
 msgid "Failover"
 msgstr ""
 
+#. Used in the browser
 msgid ""
 "Failover takes two backends: the one that serves and the one that takes "
 "over"
@@ -1711,6 +2837,16 @@ msgid ""
 " a backend stops answering"
 msgstr ""
 
+#. Used in the browser
+msgid "Fetching live data…"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "File"
+msgstr ""
+
+#. Used in the browser
 msgid "File (external)"
 msgstr ""
 
@@ -1721,6 +2857,11 @@ msgid ""
 "Fill in every setting here and copy out a compose file or docker run "
 "command. Use this when the host is already set up, or when you want to "
 "review the config before it runs."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Fill in {missing} first."
 msgstr ""
 
 msgid "Filter by address, scenario, network, path or agent..."
@@ -1778,6 +2919,11 @@ msgid ""
 "off."
 msgstr ""
 
+#. Used in the browser
+msgctxt "setting"
+msgid "Format"
+msgstr ""
+
 #, python-format
 msgid "Format: %(header_name_claim)s"
 msgstr ""
@@ -1801,9 +2947,30 @@ msgstr ""
 msgid "Forward Claims as Headers %(name_claim_one)s"
 msgstr ""
 
+#. Used in the browser
+msgid "Forward auth address is required"
+msgstr ""
+
 msgid ""
 "Forward the original Host header to the backend. Disable if the backend "
 "needs to see its own hostname."
+msgstr ""
+
+#. Used in the browser
+msgid "Forwarding Headers"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Forwarding headers arrived from {strong}, which is not in "
+"{trusted_proxies}, so they were ignored. If that address is your reverse "
+"proxy, add it to {trusted_proxies2}."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Forwarding timeouts {optional_e_g}"
 msgstr ""
 
 msgid "Frame deny (anti-clickjacking)"
@@ -1813,11 +2980,19 @@ msgstr ""
 msgid "Full reference: %(tm_cli_docs)s"
 msgstr ""
 
+#. Used in the browser
+msgid "Full topic URL on ntfy.sh or your own server."
+msgstr ""
+
 #, python-format
 msgid "GPL-3.0 licence · %(xyzlab_dev)s"
 msgstr ""
 
 msgid "Gatekeeper URL"
+msgstr ""
+
+#. Used in the browser
+msgid "Gatekeeper URL is required"
 msgstr ""
 
 msgctxt "button"
@@ -1837,14 +3012,29 @@ msgstr ""
 msgid "Generate entry"
 msgstr ""
 
+#. Used in the browser
 msgid "Generic JSON"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "GeoIP database updated (DB-IP {db_month})"
 msgstr ""
 
 msgid "GeoIP lookup"
 msgstr ""
 
+#. Used in the browser
+msgctxt "heading"
+msgid "Geography"
+msgstr ""
+
 msgctxt "heading"
 msgid "Geolocation"
+msgstr ""
+
+#. Used in the browser
+msgid "Geolocation on - downloading database..."
 msgstr ""
 
 msgid "Get the agent compose"
@@ -1857,10 +3047,18 @@ msgstr ""
 msgid "Git Backup"
 msgstr ""
 
+#. Used in the browser
+msgid "Git Restore"
+msgstr ""
+
 msgid "Git backup"
 msgstr ""
 
 msgid "Git repo not initialized"
+msgstr ""
+
+#. Used in the browser
+msgid "Git settings saved"
 msgstr ""
 
 #, python-format
@@ -1869,6 +3067,11 @@ msgid ""
 " over TLS instead of a published port. Writes a %(traefik_manager_self)s "
 "into your config directory. Skip it if you already route to this "
 "container yourself."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Go to {sec}"
 msgstr ""
 
 msgid "Google Play"
@@ -1902,6 +3105,15 @@ msgstr ""
 msgid "HTTP %(status_code)s%(hint)s"
 msgstr ""
 
+#. Used in the browser
+msgid "HTTP Challenge"
+msgstr ""
+
+#. Used in the browser
+msgid "HTTP Entrypoint"
+msgstr ""
+
+#. Used in the browser
 msgid "HTTP Provider"
 msgstr ""
 
@@ -1914,6 +3126,20 @@ msgstr ""
 msgid "HTTP routers"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "HTTP → HTTPS redirect {optional}"
+msgstr ""
+
+#. Used in the browser
+msgid "HTTP/3 enabled"
+msgstr ""
+
+#. Used in the browser
+msgid "HashiCorp Nomad"
+msgstr ""
+
+#. Used in the browser
 msgctxt "setting"
 msgid "Headers"
 msgstr ""
@@ -1958,8 +3184,17 @@ msgstr ""
 msgid "HostSNI(`tcp.example.com`) or HostSNI(`*`)"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Hostname"
+msgstr ""
+
 msgctxt "setting"
 msgid "Hostname"
+msgstr ""
+
+#. Used in the browser
+msgid "Hourly"
 msgstr ""
 
 msgid ""
@@ -1992,12 +3227,17 @@ msgctxt "setting"
 msgid "HttpOnly"
 msgstr ""
 
+#. Used in the browser
+msgid "I understand"
+msgstr ""
+
 msgid "I've saved the key"
 msgstr ""
 
 msgid "IP / Range"
 msgstr ""
 
+#. Used in the browser
 msgid "IP : Port"
 msgstr ""
 
@@ -2014,6 +3254,11 @@ msgid "IP geolocation"
 msgstr ""
 
 msgid "IP/Range is required"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "IPs/CIDRs allowed to set {x_forwarded}, one per line. The"
 msgstr ""
 
 msgctxt "setting"
@@ -2038,6 +3283,10 @@ msgid ""
 " is already blocked. Leave the URL blank to skip."
 msgstr ""
 
+#. Used in the browser
+msgid "Immediate"
+msgstr ""
+
 msgid "In-Flight Limit"
 msgstr ""
 
@@ -2048,9 +3297,18 @@ msgstr ""
 msgid "Include Subdomains"
 msgstr ""
 
+#. Used in the browser
+msgid "Incoming webhook created in your Slack workspace."
+msgstr ""
+
 msgid "Incorrect password."
 msgstr ""
 
+#. Used in the browser
+msgid "Info"
+msgstr ""
+
+#. Used in the browser
 msgctxt "label"
 msgid "Infrastructure"
 msgstr ""
@@ -2058,10 +3316,22 @@ msgstr ""
 msgid "Initial Interval"
 msgstr ""
 
+#. Used in the browser
+msgid "Insecure Mode"
+msgstr ""
+
 msgid "Install as App"
 msgstr ""
 
 msgid "Install command"
+msgstr ""
+
+#. Used in the browser
+msgid "Install script"
+msgstr ""
+
+#. Used in the browser
+msgid "Install with the tm CLI"
 msgstr ""
 
 #, python-format
@@ -2077,6 +3347,11 @@ msgstr ""
 
 msgctxt "heading"
 msgid "Interface"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Internal"
 msgstr ""
 
 msgctxt "setting"
@@ -2123,6 +3398,10 @@ msgid "Invalid code - please try again."
 msgstr ""
 
 msgid "Invalid code. Please try again."
+msgstr ""
+
+#. Used in the browser
+msgid "Invalid code. Try again."
 msgstr ""
 
 #, python-format
@@ -2190,6 +3469,15 @@ msgstr ""
 msgid "It will not be shown again."
 msgstr ""
 
+#. Used in the browser
+msgctxt "option"
+msgid "Keep"
+msgstr ""
+
+#. Used in the browser
+msgid "Keep (default)"
+msgstr ""
+
 msgid "Keep last N backups per file"
 msgstr ""
 
@@ -2197,6 +3485,19 @@ msgstr ""
 msgid ""
 "Keep only the last N %(bak)s files per config file "
 "(%(backup_keep_count)s). 0 = keep all."
+msgstr ""
+
+#. Used in the browser
+msgid "Key copied"
+msgstr ""
+
+#. Used in the browser
+msgid "Key revoked"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Key type {optional}"
 msgstr ""
 
 msgid "Keyboard Shortcuts"
@@ -2211,6 +3512,18 @@ msgid ""
 " hash, so a lost key is replaced rather than recovered."
 msgstr ""
 
+#. Used in the browser
+msgid "Kubernetes (CRD)"
+msgstr ""
+
+#. Used in the browser
+msgid "Kubernetes Gateway"
+msgstr ""
+
+#. Used in the browser
+msgid "Kubernetes Ingress"
+msgstr ""
+
 msgid "LAPI Connection"
 msgstr ""
 
@@ -2220,8 +3533,17 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Last push: {span} · {last_push}"
+msgstr ""
+
 msgctxt "setting"
 msgid "Layout"
+msgstr ""
+
+#. Used in the browser
+msgid "Learn more"
 msgstr ""
 
 msgid "Leave blank to keep existing"
@@ -2258,6 +3580,10 @@ msgid "Light"
 msgstr ""
 
 msgid "Link URL"
+msgstr ""
+
+#. Used in the browser
+msgid "Live data from Traefik API"
 msgstr ""
 
 msgid "Live from the Traefik API"
@@ -2326,24 +3652,33 @@ msgstr ""
 msgid "Loading internal routes..."
 msgstr ""
 
+#. Used in the browser
 msgid "Loading plugins..."
 msgstr ""
 
 msgid "Loading release notes…"
 msgstr ""
 
+#. Used in the browser
 msgid "Loading services..."
 msgstr ""
 
 msgid "Loading topology..."
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Loading..."
 msgstr ""
 
+#. Used in the browser
 msgctxt "option"
 msgid "Loading..."
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Loading…"
 msgstr ""
 
 msgid "Local API"
@@ -2352,9 +3687,22 @@ msgstr ""
 msgid "Local password login is disabled. Sign in with your identity provider."
 msgstr ""
 
+#. Used in the browser
+msgid "Local plugin"
+msgstr ""
+
 msgid "Log Detail"
 msgstr ""
 
+#. Used in the browser
+msgid "Log Format"
+msgstr ""
+
+#. Used in the browser
+msgid "Log Level"
+msgstr ""
+
+#. Used in the browser
 msgctxt "button"
 msgid "Logging"
 msgstr ""
@@ -2362,6 +3710,7 @@ msgstr ""
 msgid "Logs"
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Logs"
 msgstr ""
@@ -2410,7 +3759,16 @@ msgstr ""
 msgid "Manage tls.options profiles in your dynamic config"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Managed by {provider} - read only"
+msgstr ""
+
 msgid "Managing it later"
+msgstr ""
+
+#. Used in the browser
+msgid "Manual entry: use the secret below."
 msgstr ""
 
 msgid "Mark all read"
@@ -2445,6 +3803,11 @@ msgstr ""
 msgid "Max idle conns must be a whole number, got %(max_idle)s"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Max idle conns per host {optional}"
+msgstr ""
+
 msgid "Maximum of 10 API keys reached"
 msgstr ""
 
@@ -2469,9 +3832,20 @@ msgstr ""
 msgid "Middleware Details"
 msgstr ""
 
+#. Used in the browser
+msgid "Middleware In Use"
+msgstr ""
+
+#. Used in the browser
 msgid "Middleware Templates"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Middleware chain {optional}"
+msgstr ""
+
+#. Used in the browser
 msgid "Middleware content cannot be empty"
 msgstr ""
 
@@ -2492,6 +3866,7 @@ msgctxt "heading"
 msgid "Middlewares"
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Middlewares"
 msgstr ""
@@ -2511,6 +3886,11 @@ msgstr ""
 msgid "Min TLS Version"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Min duration filter {optional}"
+msgstr ""
+
 msgid "Minimum severity"
 msgstr ""
 
@@ -2527,6 +3907,7 @@ msgstr ""
 msgid "Missing required fields"
 msgstr ""
 
+#. Used in the browser
 msgid "Mobile app"
 msgstr ""
 
@@ -2534,12 +3915,32 @@ msgctxt "setting"
 msgid "Mode"
 msgstr ""
 
+#. Used in the browser
 msgctxt "setting"
 msgid "Module"
 msgstr ""
 
+#. Used in the browser
 msgctxt "tooltip"
 msgid "More"
+msgstr ""
+
+#. Used in the browser
+msgid "More filters"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Mount it read-write, without {ro} - this tab writes to the file. A backup"
+" is taken before every save."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Mount your Traefik {traefik_yml} read-write to edit entrypoints, "
+"certificate resolvers, plugins and providers from here."
 msgstr ""
 
 msgid "Must differ from the Host branch - each server pushes to its own branch"
@@ -2548,11 +3949,37 @@ msgstr ""
 msgid "My Protected Area"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Name"
+msgstr ""
+
+#. Used in the browser
 msgctxt "setting"
 msgid "Name"
 msgstr ""
 
+#. Used in the browser
+msgid "Name and URL are required."
+msgstr ""
+
+#. Used in the browser
+msgid "Name is required"
+msgstr ""
+
 msgid "Name must not be empty."
+msgstr ""
+
+#. Used in the browser
+msgid "Name of the HTTPS entrypoint to redirect to, e.g. websecure"
+msgstr ""
+
+#. Used in the browser
+msgid "Name, module, and version are required"
+msgstr ""
+
+#. Used in the browser
+msgid "Native Linux:"
 msgstr ""
 
 msgctxt "button"
@@ -2571,13 +3998,42 @@ msgctxt "tooltip"
 msgid "Navigation"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Needs {missing}"
+msgstr ""
+
 msgid "New API key"
+msgstr ""
+
+#. Used in the browser
+msgid "New Entrypoint"
 msgstr ""
 
 msgid "New Middleware"
 msgstr ""
 
+#. Used in the browser
+msgid "New Plugin"
+msgstr ""
+
+#. Used in the browser
+msgid "New Resolver"
+msgstr ""
+
 msgid "New Route"
+msgstr ""
+
+#. Used in the browser
+msgid "New entrypoints also need a port mapping in your compose file"
+msgstr ""
+
+#. Used in the browser
+msgid "New entrypoints need the port open on your system"
+msgstr ""
+
+#. Used in the browser
+msgid "New entrypoints require additional steps after saving"
 msgstr ""
 
 msgid "New group name..."
@@ -2598,14 +4054,36 @@ msgstr ""
 msgid "Next server"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"No API keys yet. Add one to allow external clients like the mobile app to"
+" connect to this agent."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"No API keys yet.{line_break}Add one to let external clients like the "
+"mobile app connect directly to this agent."
+msgstr ""
+
+#. Used in the browser
+msgid "No HTTP services defined yet"
+msgstr ""
+
 #, python-format
 msgid "No LAPI configured on %(this_agent)s"
 msgstr ""
 
+#. Used in the browser
 msgid "No TLS"
 msgstr ""
 
 msgid "No active keys"
+msgstr ""
+
+#. Used in the browser
+msgid "No agents configured"
 msgstr ""
 
 msgid "No authentication is active"
@@ -2616,10 +4094,26 @@ msgid ""
 "Enable a password or OIDC in Settings - Authentication."
 msgstr ""
 
+#. Used in the browser
+msgid "No backups yet"
+msgstr ""
+
 msgid ""
 "No bouncer API key or client certificate. CrowdSec only accepts a bouncer"
 " key or a TLS client certificate on /v1/decisions, the machine token is "
 "refused there"
+msgstr ""
+
+#. Used in the browser
+msgid "No changes in this commit"
+msgstr ""
+
+#. Used in the browser
+msgid "No channels configured"
+msgstr ""
+
+#. Used in the browser
+msgid "No commits yet"
 msgstr ""
 
 msgid "No commits yet - push your first backup to see history"
@@ -2638,16 +4132,59 @@ msgstr ""
 msgid "No content provided"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "No custom templates yet. Click {add_template} to create one."
+msgstr ""
+
+#. Used in the browser
+msgid "No entrypoints found"
+msgstr ""
+
 msgid "No matching certificate was found"
 msgstr ""
 
+#. Used in the browser
+msgid "No middleware references this plugin"
+msgstr ""
+
+#. Used in the browser
 msgid "No middlewares configured"
 msgstr ""
 
+#. Used in the browser
 msgid "No middlewares found"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "No middlewares match \"{search}\""
+msgstr ""
+
+#. Used in the browser
 msgid "No notifications yet"
+msgstr ""
+
+#. Used in the browser
+msgid "No other services to reference yet"
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"No password and no OIDC - anything that reaches this instance has full "
+"access"
+msgstr ""
+
+#. Used in the browser
+msgid "No pingable HTTP routes found"
+msgstr ""
+
+#. Used in the browser
+msgid "No plugins configured"
+msgstr ""
+
+#. Used in the browser
+msgid "No plugins match your search"
 msgstr ""
 
 msgid "No provider URL"
@@ -2662,9 +4199,34 @@ msgstr ""
 msgid "No resolver"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"No response size limit set - Traefik 3.7 warns about this. Click to add "
+"one"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "No route binds the entry point {routeEpFilter}."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "No route currently reports status {apiStatusFilter}."
+msgstr ""
+
+#. Used in the browser
+msgid "No routes match your filters"
+msgstr ""
+
+#. Used in the browser
+msgid "No routes on this server yet"
+msgstr ""
+
 msgid "No routes to map"
 msgstr ""
 
+#. Used in the browser
 msgid "No routes yet"
 msgstr ""
 
@@ -2672,6 +4234,11 @@ msgid "No settings match your search"
 msgstr ""
 
 msgid "No static config entries match your search"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "No {trustedips} on this entrypoint yet."
 msgstr ""
 
 msgctxt "option"
@@ -2686,20 +4253,40 @@ msgctxt "option"
 msgid "None"
 msgstr ""
 
+#. Used in the browser
 msgid "None (default)"
 msgstr ""
 
+#. Used in the browser
 msgid "None (external / custom cert)"
 msgstr ""
 
 msgid "Not authenticated"
 msgstr ""
 
+#. Used in the browser
 msgid "Not downloaded"
 msgstr ""
 
 #, python-format
 msgid "Not installed with %(tm)s? %(it_adopts_an)s."
+msgstr ""
+
+#. Used in the browser
+msgid "Not reachable yet - check the URL, the port and any firewall."
+msgstr ""
+
+#. Used in the browser
+msgid "Not referenced by any route"
+msgstr ""
+
+#. Used in the browser
+msgid "Not served by Traefik while disabled - showing your saved configuration"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Nothing in {label}"
 msgstr ""
 
 msgid ""
@@ -2708,6 +4295,15 @@ msgid ""
 msgstr ""
 
 msgid "Nothing matches"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Nothing new to add - every selected range is already trusted on {span}."
+msgstr ""
+
+#. Used in the browser
+msgid "Nothing to flag"
 msgstr ""
 
 msgid "Nothing was selected"
@@ -2774,10 +4370,17 @@ msgstr ""
 msgid "OIDC provider unavailable. Try again later."
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "OTLP HTTP endpoint {optional_default_localhost}"
+msgstr ""
+
+#. Used in the browser
 msgctxt "button"
 msgid "Observability"
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Observability"
 msgstr ""
@@ -2834,6 +4437,18 @@ msgid ""
 "1.0-1.2."
 msgstr ""
 
+#. Used in the browser
+msgid "Only change this while migrating rules written for Traefik v2."
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"Only do this if something in front of Traefik Manager already requires a "
+"login, such as Authelia, Authentik or a forward-auth middleware. Traefik "
+"Manager will stop warning you, but it still does not check who you are, "
+"so anything that reaches it directly gets full access."
+msgstr ""
+
 msgid ""
 "Only edit what you understand - a misconfigured static config will "
 "prevent Traefik from starting."
@@ -2858,6 +4473,18 @@ msgstr ""
 msgid "Only install plugins from trusted sources"
 msgstr ""
 
+#. Used in the browser
+msgid "Only log requests slower than this."
+msgstr ""
+
+#. Used in the browser
+msgid "Only log retry attempts"
+msgstr ""
+
+#. Used in the browser
+msgid "Only log these responses, comma separated codes or ranges."
+msgstr ""
+
 msgid "Only needed if the Traefik dashboard is protected by basic auth."
 msgstr ""
 
@@ -2871,7 +4498,20 @@ msgid ""
 "be managed here"
 msgstr ""
 
+#. Used in the browser
+msgctxt "button"
+msgid "Open"
+msgstr ""
+
+#. Used in the browser
+msgid "Open middleware"
+msgstr ""
+
 msgid "Open settings"
+msgstr ""
+
+#. Used in the browser
+msgid "Open site"
 msgstr ""
 
 msgid "Opens the interactive API reference."
@@ -2919,6 +4559,10 @@ msgctxt "button"
 msgid "Passthrough"
 msgstr ""
 
+#. Used in the browser
+msgid "Password"
+msgstr ""
+
 msgctxt "heading"
 msgid "Password"
 msgstr ""
@@ -2937,9 +4581,15 @@ msgstr ""
 msgid "Password saved"
 msgstr ""
 
+#. Used in the browser
+msgid "Password updated. Every other session was signed out."
+msgstr ""
+
+#. Used in the browser
 msgid "Passwords do not match."
 msgstr ""
 
+#. Used in the browser
 msgid "Paste the static config snippet"
 msgstr ""
 
@@ -2992,11 +4642,22 @@ msgid ""
 "keys."
 msgstr ""
 
+#. Used in the browser
+msgctxt "tooltip"
+msgid "Percent"
+msgstr ""
+
 msgctxt "setting"
 msgid "Period"
 msgstr ""
 
 msgid "Permanent redirect (301)"
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"Permission was not granted, so desktop notifications stayed off. Turn the"
+" toggle on again to ask."
 msgstr ""
 
 #, python-format
@@ -3006,7 +4667,42 @@ msgid ""
 "%(block)s = no one."
 msgstr ""
 
+#. Used in the browser
+msgid "Pick an entrypoint"
+msgstr ""
+
 msgid "Ping all HTTP routes"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Ping all: all {n} route online"
+msgid_plural "Ping all: all {n} routes online"
+msgstr[0] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Ping all: {online}/{total} fully online - {bits}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Ping endpoint {ping_health_check}"
+msgstr ""
+
+#. Used in the browser
+msgid "Ping failed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Pinging {n} HTTP route…"
+msgid_plural "Pinging {n} HTTP routes…"
+msgstr[0] ""
+
+#. Used in the browser
+msgctxt "tooltip"
+msgid "Pinging…"
 msgstr ""
 
 msgid ""
@@ -3014,7 +4710,35 @@ msgid ""
 "(loadBalancer.sticky.cookie)."
 msgstr ""
 
+#. Used in the browser
+msgid "Please fill in all fields."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Plugin \"{names}\" saved to traefik.yml and middleware saved to {file}."
+msgid_plural "Plugins \"{names}\" saved to traefik.yml and middleware saved to {file}."
+msgstr[0] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Plugin \"{names}\" saved to traefik.yml."
+msgid_plural "Plugins \"{names}\" saved to traefik.yml."
+msgstr[0] ""
+
 msgid "Plugin Details"
+msgstr ""
+
+#. Used in the browser
+msgid "Plugin In Use"
+msgstr ""
+
+#. Used in the browser
+msgid "Plugin removed - restart Traefik to apply"
+msgstr ""
+
+#. Used in the browser
+msgid "Plugin saved - restart Traefik to apply"
 msgstr ""
 
 msgid "Plugins"
@@ -3024,6 +4748,7 @@ msgctxt "button"
 msgid "Plugins"
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Plugins"
 msgstr ""
@@ -3040,6 +4765,15 @@ msgid ""
 "Plugins run inside the Traefik process with full access to your traffic. "
 "Review the plugin source on GitHub before installing. A Traefik restart "
 "is required to activate the plugin after saving."
+msgstr ""
+
+#. Used in the browser
+msgid "Plugins tab"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Plugins {staticPluginCount}"
 msgstr ""
 
 msgid "Poison Pill"
@@ -3077,7 +4811,17 @@ msgctxt "label"
 msgid "Preload"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"Prepended to every router on this entrypoint, comma separated, provider "
+"suffix included."
+msgstr ""
+
 msgid "Preview change"
+msgstr ""
+
+#. Used in the browser
+msgid "Preview failed"
 msgstr ""
 
 msgid ""
@@ -3098,6 +4842,21 @@ msgstr ""
 msgid "Profile not found"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Prometheus metrics {metrics}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Propagation delay {optional}"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Protocol"
+msgstr ""
+
 msgctxt "setting"
 msgid "Protocol"
 msgstr ""
@@ -3106,7 +4865,18 @@ msgctxt "heading"
 msgid "Provider"
 msgstr ""
 
+#. Used in the browser
+msgid "Provider Type"
+msgstr ""
+
 msgid "Provider URL"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Provider reachable - issuer: {issuer}. Credentials are not checked until "
+"you sign in."
 msgstr ""
 
 msgid "Provider tabs"
@@ -3115,18 +4885,34 @@ msgstr ""
 msgid "Provider tabs pulled live from the Traefik API - no file mounts needed."
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
 msgid "Providers"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Providers"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Providers throttle {optional_e_g}"
 msgstr ""
 
 #, python-format
 msgid "Proxy IPs to exclude %(one_per_line)s"
 msgstr ""
 
+#. Used in the browser
+msgid "Proxy trusted"
+msgstr ""
+
 msgctxt "heading"
 msgid "Push"
 msgstr ""
 
+#. Used in the browser
 msgid "Push Now"
 msgstr ""
 
@@ -3136,7 +4922,25 @@ msgstr ""
 msgid "Push automatically"
 msgstr ""
 
+#. Used in the browser
+msgid "Push failed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Push failed: {error}"
+msgstr ""
+
 msgid "Push this server's config to the Host's git repository on its own branch"
+msgstr ""
+
+#. Used in the browser
+msgid "Pushed successfully"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Pushing…"
 msgstr ""
 
 #, python-format
@@ -3149,22 +4953,44 @@ msgstr ""
 msgid "Quiet hours"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Quiet {hours}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Quiet {hours}, errors break through"
+msgstr ""
+
 msgid "Rate Limit"
 msgstr ""
 
 msgid "Raw Line"
 msgstr ""
 
+#. Used in the browser
 msgid "Raw YAML"
 msgstr ""
 
 msgid "Raw YAML - traefik.yml"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Raw YAML - {name}"
+msgstr ""
+
 msgid "Raw YAML editor"
 msgstr ""
 
 msgid "Re-enter the Traefik API password when changing the API URL"
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"Reachable, but it is refusing this key. Re-run the command, or rotate the"
+" key."
 msgstr ""
 
 msgid "Reached the LAPI, but the key was refused"
@@ -3192,6 +5018,11 @@ msgid ""
 "behind them."
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Ready{value}"
+msgstr ""
+
 #, python-format
 msgid "Realm %(optional)s"
 msgstr ""
@@ -3203,13 +5034,30 @@ msgstr ""
 msgid "Reason %(optional)s"
 msgstr ""
 
+#. Used in the browser
+msgid "Receives a JSON body you can shape downstream."
+msgstr ""
+
 msgid "Recommended"
+msgstr ""
+
+#. Used in the browser
+msgctxt "option"
+msgid "Redact"
 msgstr ""
 
 msgid "Redirect Regex"
 msgstr ""
 
 msgid "Redirect to HTTPS"
+msgstr ""
+
+#. Used in the browser
+msgid "Redis KV"
+msgstr ""
+
+#. Used in the browser
+msgid "Referenced by this middleware"
 msgstr ""
 
 msgctxt "setting"
@@ -3230,6 +5078,20 @@ msgstr ""
 
 #, python-format
 msgid "Regexes %(one_per_line)s"
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"Registered by the Traefik Manager app on your phone. Editing it stops "
+"push to that device."
+msgstr ""
+
+#. Used in the browser
+msgid "Reject - 400 on aliased headers"
+msgstr ""
+
+#. Used in the browser
+msgid "Reject - 400 on underscore headers"
 msgstr ""
 
 msgid ""
@@ -3259,14 +5121,86 @@ msgstr ""
 msgid "Remote Agents"
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
 msgid "Remove"
+msgstr ""
+
+#. Used in the browser
+msgctxt "tooltip"
+msgid "Remove"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Remove \"{name}\"?"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Remove \"{name}\"? Push notifications to that phone stop until the app "
+"registers again."
+msgstr ""
+
+#. Used in the browser
+msgid "Remove Agent"
+msgstr ""
+
+#. Used in the browser
+msgid "Remove Channel"
 msgstr ""
 
 msgid "Remove CrowdSec configuration"
 msgstr ""
 
+#. Used in the browser
+msgid "Remove Item"
+msgstr ""
+
+#. Used in the browser
+msgid "Remove Plugin"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Remove agent \"{name}\"? This only removes it from TM settings - the "
+"agent service on the remote server is unaffected."
+msgstr ""
+
+#. Used in the browser
+msgid "Remove and delete"
+msgstr ""
+
+#. Used in the browser
+msgid "Remove backend"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Remove channel \"{name}\"? Events will stop being delivered to it."
+msgstr ""
+
 msgid "Remove configuration"
+msgstr ""
+
+#. Used in the browser
+msgid "Remove failed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Remove failed: {error}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Remove plugin \"{name}\"?"
+msgstr ""
+
+#. Used in the browser
+msgid "Remove the saved CrowdSec LAPI URL and API key?"
 msgstr ""
 
 msgid "Repeat your password"
@@ -3287,6 +5221,14 @@ msgid "Repository"
 msgstr ""
 
 msgid "Repository URL"
+msgstr ""
+
+#. Used in the browser
+msgid "Repository reset - push again to re-initialize"
+msgstr ""
+
+#. Used in the browser
+msgid "Request failed"
 msgstr ""
 
 msgid "Request wildcard certificate"
@@ -3318,11 +5260,25 @@ msgid ""
 "Plugins tab."
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
 msgid "Reset"
 msgstr ""
 
 msgid "Reset 2FA"
+msgstr ""
+
+#. Used in the browser
+msgid "Reset Git Repository"
+msgstr ""
+
+#. Used in the browser
+msgid "Reset failed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Reset failed: {error}"
 msgstr ""
 
 msgid "Reset local repository"
@@ -3342,11 +5298,25 @@ msgid ""
 "enter %(none)s."
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Responding timeouts {optional_e_g}"
+msgstr ""
+
 msgctxt "button"
 msgid "Restart"
 msgstr ""
 
+#. Used in the browser
+msgid "Restart Traefik"
+msgstr ""
+
 msgid "Restart Traefik to activate"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Restart failed (HTTP {status})"
 msgstr ""
 
 msgid "Restart method"
@@ -3358,6 +5328,42 @@ msgstr ""
 msgid "Restarting Traefik..."
 msgstr ""
 
+#. Used in the browser
+msgctxt "button"
+msgid "Restore"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Restore \"{name}\"? This replaces the config file it came from. Your "
+"current config is backed up first."
+msgstr ""
+
+#. Used in the browser
+msgid "Restore Backup"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Restore every config file from commit {shaShort}? Local backups are "
+"created first."
+msgstr ""
+
+#. Used in the browser
+msgid "Restore failed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Restore failed: {error}"
+msgstr ""
+
+#. Used in the browser
+msgid "Restored successfully"
+msgstr ""
+
 msgid "Restoring overwrites your current config"
 msgstr ""
 
@@ -3367,9 +5373,19 @@ msgstr ""
 msgid "Restoring replaces every certificate in acme.json"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Result: {count} trusted range on {entrypoint} (was {before})."
+msgid_plural "Result: {count} trusted ranges on {entrypoint} (was {before})."
+msgstr[0] ""
+
 msgid ""
 "Retention is one setting for both kinds of backup. Change it under "
 "Dynamic Config."
+msgstr ""
+
+#. Used in the browser
+msgid "Retention saved"
 msgstr ""
 
 msgctxt "option"
@@ -3387,11 +5403,65 @@ msgid ""
 "server, not just the one selected here."
 msgstr ""
 
+#. Used in the browser
+msgid "Review the limit and save"
+msgstr ""
+
+#. Used in the browser
+msgctxt "button"
+msgid "Revoke"
+msgstr ""
+
+#. Used in the browser
+msgctxt "tooltip"
+msgid "Revoke"
+msgstr ""
+
+#. Used in the browser
+msgid "Revoke Key"
+msgstr ""
+
+#. Used in the browser
+msgid "Revoke failed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Revoke failed: {error}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Revoke key \"{keyName}\"? Any client using it will lose access "
+"immediately."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Root CAs {optional_one_path}"
+msgstr ""
+
+#. Used in the browser
 msgid "Rotate Key"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Rotated"
 msgstr ""
 
 #, python-format
 msgid "Rotation %(yaml_key)s must be a whole number, got %(value)s"
+msgstr ""
+
+#. Used in the browser
+msgid "Rotation failed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Rotation {optional}"
 msgstr ""
 
 #, python-format
@@ -3404,19 +5474,53 @@ msgstr ""
 msgid "Route Details"
 msgstr ""
 
+#. Used in the browser
 msgid "Route Map"
 msgstr ""
 
 msgid "Route Monitoring"
 msgstr ""
 
+#. Used in the browser
+msgid "Route check interval saved"
+msgstr ""
+
 msgid "Route checks"
+msgstr ""
+
+#. Used in the browser
+msgid "Route checks off"
+msgstr ""
+
+#. Used in the browser
+msgid "Route checks on"
+msgstr ""
+
+#. Used in the browser
+msgid "Route could not be deleted"
+msgstr ""
+
+#. Used in the browser
+msgid "Route disabled."
+msgstr ""
+
+#. Used in the browser
+msgid "Route enabled."
 msgstr ""
 
 msgid "Route not found"
 msgstr ""
 
 msgid "Route to Traefik Manager itself"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Router"
+msgstr ""
+
+#. Used in the browser
+msgid "Router labels"
 msgstr ""
 
 #, python-format
@@ -3436,6 +5540,7 @@ msgctxt "heading"
 msgid "Routes"
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Routes"
 msgstr ""
@@ -3454,6 +5559,11 @@ msgid "Rows"
 msgstr ""
 
 msgid "Rows with domains, or a compact grid of app icons"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Rule"
 msgstr ""
 
 msgctxt "setting"
@@ -3510,13 +5620,29 @@ msgstr ""
 msgid "Sample rate must be a number between 0 and 1, got %(route)s"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Sample rate {v0_to_1}"
+msgstr ""
+
+#. Used in the browser
 msgctxt "button"
 msgid "Save"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Save"
+msgstr ""
+
+#. Used in the browser
+msgid "Save Changes"
 msgstr ""
 
 msgid "Save Config"
 msgstr ""
 
+#. Used in the browser
 msgid "Save Git Settings"
 msgstr ""
 
@@ -3541,7 +5667,13 @@ msgstr ""
 msgid "Save configuration"
 msgstr ""
 
+#. Used in the browser
 msgid "Save failed"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Save failed: {error}"
 msgstr ""
 
 msgid "Save route"
@@ -3558,6 +5690,7 @@ msgid ""
 "working until you update it."
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Saved"
 msgstr ""
@@ -3568,11 +5701,20 @@ msgid ""
 "Manager does not have it. Also set by the flag in the nav bar."
 msgstr ""
 
+#. Used in the browser
+msgid "Saved. Traefik is still running the previous config."
+msgstr ""
+
 #, python-format
 msgid ""
 "Saving here only changes the compose text below. The running agent keeps "
 "its current values until you redeploy it. %(tm)s edits them in place "
 "instead, and it adopts an agent it did not install."
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Saving…"
 msgstr ""
 
 msgid ""
@@ -3586,6 +5728,19 @@ msgstr ""
 
 #, python-format
 msgid "Scopes %(one_per_line)s"
+msgstr ""
+
+#. Used in the browser
+msgid "Scroll left"
+msgstr ""
+
+#. Used in the browser
+msgid "Scroll right"
+msgstr ""
+
+#. Used in the browser
+msgctxt "tooltip"
+msgid "Search"
 msgstr ""
 
 msgid "Search Consul Catalog routes..."
@@ -3658,13 +5813,38 @@ msgstr ""
 msgid "Secure Headers"
 msgstr ""
 
+#. Used in the browser
+msgid "Security"
+msgstr ""
+
 msgid "Security headers preset"
 msgstr ""
 
+#. Used in the browser
+msgid "Select a config file for this middleware"
+msgstr ""
+
+#. Used in the browser
+msgid "Select a config file for this route"
+msgstr ""
+
+#. Used in the browser
 msgid "Select a file..."
 msgstr ""
 
+#. Used in the browser
+msgid "Select a provider type"
+msgstr ""
+
 msgid "Select a template above to use the wizard."
+msgstr ""
+
+#. Used in the browser
+msgid "Select at least one source"
+msgstr ""
+
+#. Used in the browser
+msgid "Select provider..."
 msgstr ""
 
 msgid "Select unused"
@@ -3686,12 +5866,39 @@ msgid ""
 "generic JSON payload you shape downstream."
 msgstr ""
 
+#. Used in the browser
+msgid "Send anonymous usage statistics"
+msgstr ""
+
 msgid "Send each event as it happens, or batch them into one message."
+msgstr ""
+
+#. Used in the browser
+msgid "Send test"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Sending..."
 msgstr ""
 
 msgid "Serial Number"
 msgstr ""
 
+#. Used in the browser
+msgid "Server URL"
+msgstr ""
+
+#. Used in the browser
+msgid "Servers transport defaults"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Service"
+msgstr ""
+
+#. Used in the browser
 msgctxt "option"
 msgid "Service"
 msgstr ""
@@ -3703,7 +5910,16 @@ msgstr ""
 msgid "Service Details"
 msgstr ""
 
+#. Used in the browser
+msgid "Service labels"
+msgstr ""
+
 msgid "Service name is required"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Service name {optional}"
 msgstr ""
 
 msgid "Service not found"
@@ -3717,6 +5933,7 @@ msgctxt "heading"
 msgid "Services"
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Services"
 msgstr ""
@@ -3752,6 +5969,10 @@ msgstr ""
 msgid "Set a new password"
 msgstr ""
 
+#. Used in the browser
+msgid "Set both a start and an end time for quiet hours, or clear them both."
+msgstr ""
+
 msgid "Set it up →"
 msgstr ""
 
@@ -3778,6 +5999,7 @@ msgctxt "heading"
 msgid "Settings"
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Settings"
 msgstr ""
@@ -3793,7 +6015,21 @@ msgstr ""
 msgid "Settings → System Monitoring → CrowdSec"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"Settings, backups and scheduled checks will not survive a restart. Check "
+"the volume or bind mount for:"
+msgstr ""
+
+#. Used in the browser
+msgid "Setup Commands"
+msgstr ""
+
 msgid "Setup already complete"
+msgstr ""
+
+#. Used in the browser
+msgid "Setup docs"
 msgstr ""
 
 msgctxt "setting"
@@ -3856,6 +6092,10 @@ msgstr ""
 msgid "Sign In - Traefik Manager"
 msgstr ""
 
+#. Used in the browser
+msgid "Sign Out Other Sessions"
+msgstr ""
+
 msgid "Sign in"
 msgstr ""
 
@@ -3866,7 +6106,14 @@ msgstr ""
 msgid "Sign in with your identity provider."
 msgstr ""
 
+#. Used in the browser
 msgid "Sign out"
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"Sign out every other browser session? This one stays signed in, and API "
+"keys keep working."
 msgstr ""
 
 msgid "Sign out other sessions"
@@ -3894,7 +6141,22 @@ msgstr ""
 msgid "Skip TLS verification"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Skip backend TLS verification {insecure}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Skipped {n} invalid entry:"
+msgid_plural "Skipped {n} invalid entries:"
+msgstr[0] ""
+
 msgid "Socket Proxy"
+msgstr ""
+
+#. Used in the browser
+msgid "Socket peer"
 msgstr ""
 
 msgid "Sources to add"
@@ -3904,10 +6166,15 @@ msgctxt "label"
 msgid "Start"
 msgstr ""
 
+#. Used in the browser
 msgid "Static Config"
 msgstr ""
 
 msgid "Static Config Path"
+msgstr ""
+
+#. Used in the browser
+msgid "Static config backup created"
 msgstr ""
 
 msgid "Static config backups"
@@ -3920,6 +6187,11 @@ msgid "Static config is not a mapping"
 msgstr ""
 
 msgid "Static config not available on this agent"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Static config not configured{value}"
 msgstr ""
 
 msgid "Static config not found"
@@ -3945,6 +6217,20 @@ msgstr ""
 msgid "Static config path refused: %(refused)s"
 msgstr ""
 
+#. Used in the browser
+msgid "Static config saved"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Status"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Status code filter {optional}"
+msgstr ""
+
 #, python-format
 msgid "Status codes %(one_per_line)s"
 msgstr ""
@@ -3963,7 +6249,35 @@ msgstr ""
 msgid "Step 3 - Choose which config file the middleware is written to"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Step {value}."
+msgstr ""
+
 msgid "Sticky sessions"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Stops aliased header names (e.g. {x_auth_user}, {x_auth_user2}) from "
+"bypassing forwardAuth. {delete} recommended. {learn_more}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Stops underscore header aliases (e.g. {x_auth_user}) from bypassing "
+"forwardAuth. Traefik 3.7.12 widens this to every aliased name. {delete} "
+"recommended. {learn_more}"
+msgstr ""
+
+#. Used in the browser
+msgid "Storage is not writable"
+msgstr ""
+
+#. Used in the browser
+msgid "Storage path"
 msgstr ""
 
 msgid "Stored as the decision scenario."
@@ -3984,11 +6298,20 @@ msgstr ""
 msgid "Strip Prefix Regex"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Subdomain"
+msgstr ""
+
 msgctxt "setting"
 msgid "Subdomain"
 msgstr ""
 
 msgid "Subject Common Name"
+msgstr ""
+
+#. Used in the browser
+msgid "Success"
 msgstr ""
 
 msgctxt "button"
@@ -4009,6 +6332,7 @@ msgid ""
 "of them off if you would rather not see it."
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
 msgid "System"
 msgstr ""
@@ -4031,9 +6355,14 @@ msgstr ""
 msgid "TCP / UDP Routers"
 msgstr ""
 
+#. Used in the browser
+msgid "TLS Challenge"
+msgstr ""
+
 msgid "TLS Mode"
 msgstr ""
 
+#. Used in the browser
 msgid "TLS Options"
 msgstr ""
 
@@ -4041,6 +6370,14 @@ msgid "TLS Options Profile"
 msgstr ""
 
 msgid "TLS Profile"
+msgstr ""
+
+#. Used in the browser
+msgid "TLS on every router"
+msgstr ""
+
+#. Used in the browser
+msgid "TLS skip"
 msgstr ""
 
 #, python-format
@@ -4071,10 +6408,19 @@ msgid ""
 "under Dynamic Config."
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Target"
+msgstr ""
+
 msgid "Target IP / Host"
 msgstr ""
 
 msgid "Target address not allowed"
+msgstr ""
+
+#. Used in the browser
+msgid "Target chat, group or channel to post into."
 msgstr ""
 
 msgid "Template"
@@ -4084,17 +6430,60 @@ msgctxt "setting"
 msgid "Template"
 msgstr ""
 
+#. Used in the browser
+msgid "Template created"
+msgstr ""
+
+#. Used in the browser
+msgid "Template deleted"
+msgstr ""
+
 msgid "Template not found"
+msgstr ""
+
+#. Used in the browser
+msgid "Template updated"
 msgstr ""
 
 msgctxt "button"
 msgid "Test"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Test"
+msgstr ""
+
 msgid "Test connection"
 msgstr ""
 
+#. Used in the browser
+msgid "Test failed"
+msgstr ""
+
+#. Used in the browser
+msgid "Test message could not be sent"
+msgstr ""
+
+#. Used in the browser
+msgid "Test message delivered"
+msgstr ""
+
 msgid "Test repository"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Testing..."
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Testing…"
+msgstr ""
+
+#. Used in the browser
+msgid "Text (default)"
 msgstr ""
 
 #, python-format
@@ -4163,6 +6552,29 @@ msgid ""
 "release - no runtime fetch."
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"The client IP the app trusts is {strong}. If clients should reach you "
+"from the public internet, a proxy in front is rewriting it - check that "
+"your trusted hops and the upstream {trustedips} are set correctly, or "
+"real client IPs will be lost to logs, CrowdSec and ipAllowList."
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"The direct TCP connection - your reverse proxy, or the real client if "
+"none."
+msgstr ""
+
+#. Used in the browser
+msgid "The first backend serves; the rest receive a copy by percentage."
+msgstr ""
+
+#. Used in the browser
+msgid "The first backend serves; the second takes over if it fails."
+msgstr ""
+
 msgid ""
 "The hostname you want to open Traefik Manager on. Leave blank to skip "
 "this step entirely."
@@ -4225,6 +6637,11 @@ msgid ""
 "here."
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "These rows are what {traefik_yml} declares. The"
+msgstr ""
+
 msgid ""
 "These settings change how this app appears on the dashboard. They do not "
 "touch the route itself."
@@ -4244,10 +6661,26 @@ msgid ""
 "environment variables."
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"This agent is running an older version that restores static backups to "
+"the wrong path. Update the agent, then restore."
+msgstr ""
+
 #, python-format
 msgid ""
 "This agent was installed with %(tm)s, which owns its compose file on the "
 "agent. Editing one here would conflict with it."
+msgstr ""
+
+#. Used in the browser
+msgid "This browser does not support desktop notifications."
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"This browser is blocking notifications for this site. Allow them in the "
+"site permissions, then turn this back on."
 msgstr ""
 
 #, python-format
@@ -4275,13 +6708,35 @@ msgstr ""
 msgid "This panel"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"This route points at a {svcType} service, which can't be edited here. The"
+" target field is ignored on save - edit the service on the Services tab."
+msgstr ""
+
 msgid ""
 "This route will reference the selected service. Backends, sticky sessions"
 " and health checks are managed where the service is defined."
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"This will delete the local git repository clone. TM will re-initialize it"
+" on the next push.\n"
+"\n"
+"This does NOT affect your remote repository or any commits."
+msgstr ""
+
 msgctxt "setting"
 msgid "Timeout"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"To list plugins here, mount the Traefik static config into the {code} "
+"service and set {static_config_path}."
 msgstr ""
 
 msgid "Toggle shortcuts"
@@ -4299,10 +6754,19 @@ msgstr ""
 msgid "Token is set"
 msgstr ""
 
+#. Used in the browser
+msgid "Token issued by BotFather. Stored encrypted."
+msgstr ""
+
 msgid "Too many wrong codes. Enter your password again."
 msgstr ""
 
 msgid "Topology connection map (Entry Points - Routes - Middlewares - Services)"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Tracing {otlp}"
 msgstr ""
 
 msgid "Traefik API URL must start with http:// or https://"
@@ -4312,6 +6776,7 @@ msgstr ""
 msgid "Traefik API basic auth %(optional)s"
 msgstr ""
 
+#. Used in the browser
 msgid "Traefik API unreachable"
 msgstr ""
 
@@ -4338,12 +6803,27 @@ msgid ""
 " step it cannot work without."
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"Traefik Manager reads your routes, services and middlewares from the "
+"Traefik API. With it disabled those tabs will be empty until you turn it "
+"back on and restart Traefik."
+msgstr ""
+
 msgid "Traefik Manager update available"
 msgstr ""
 
 msgid ""
 "Traefik Manager's own login is off and it does not verify who you are, so"
 " anything that reaches it directly has full access."
+msgstr ""
+
+#. Used in the browser
+msgid "Traefik Manager: error"
+msgstr ""
+
+#. Used in the browser
+msgid "Traefik Manager: warning"
 msgstr ""
 
 msgid ""
@@ -4354,10 +6834,27 @@ msgid ""
 "the provider lives."
 msgstr ""
 
+#. Used in the browser
+msgid "Traefik does not report this route"
+msgstr ""
+
 msgid "Traefik entry point the route listens on."
 msgstr ""
 
 msgid "Traefik entry points listed below the stat cards"
+msgstr ""
+
+#. Used in the browser
+msgid "Traefik has not loaded this route"
+msgstr ""
+
+#. Used in the browser
+msgid "Traefik is running but has loaded nothing from the file provider"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Traefik log file {leave_empty_for}"
 msgstr ""
 
 msgid "Traefik plugin page"
@@ -4390,17 +6887,40 @@ msgstr ""
 msgid "Traefik version badge, highlights when an update is available."
 msgstr ""
 
+#. Used in the browser
 msgctxt "label"
 msgid "Traffic"
 msgstr ""
 
+#. Used in the browser
+msgid "Traffic is split by weight."
+msgstr ""
+
 msgid "Trust Forward Header"
+msgstr ""
+
+#. Used in the browser
+msgid "Trust forwarded headers from everyone"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Trusted IPs - PROXY protocol {optional}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Trusted IPs - forwarded headers {optional}"
 msgstr ""
 
 msgid "Trusted IPs Helper"
 msgstr ""
 
 msgid "Trusted hop depth"
+msgstr ""
+
+#. Used in the browser
+msgid "Trusted hops"
 msgstr ""
 
 msgctxt "heading"
@@ -4424,6 +6944,10 @@ msgstr ""
 msgid "UDP routers don't support rules. Traffic is routed by entry point only."
 msgstr ""
 
+#. Used in the browser
+msgid "Underscore Headers"
+msgstr ""
+
 msgctxt "button"
 msgid "Undo"
 msgstr ""
@@ -4442,6 +6966,15 @@ msgstr ""
 msgid "Unknown server"
 msgstr ""
 
+#. Used in the browser
+msgid "Unsaved Changes"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Unsaved changes - nothing is written to {traefik_yml} until you save"
+msgstr ""
+
 msgid "Unsupported URL - use https://, http://, ssh:// or git://"
 msgstr ""
 
@@ -4449,7 +6982,20 @@ msgctxt "button"
 msgid "Unused"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "Update"
+msgstr ""
+
+#. Used in the browser
+msgid "Update available: change the version in traefik.yml and restart Traefik"
+msgstr ""
+
 msgid "Update password"
+msgstr ""
+
+#. Used in the browser
+msgid "Updates"
 msgstr ""
 
 #, python-format
@@ -4476,11 +7022,18 @@ msgstr ""
 msgid "Used for this push only. Leave blank to use the commit message template."
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"Used to verify the DNS record before requesting the certificate, one per "
+"line."
+msgstr ""
+
 msgid ""
 "Useful when the route has a wildcard host, or the app lives on a "
 "different port."
 msgstr ""
 
+#. Used in the browser
 msgid "User Key"
 msgstr ""
 
@@ -4519,14 +7072,28 @@ msgctxt "option"
 msgid "VerifyClientCertIfGiven"
 msgstr ""
 
+#. Used in the browser
 msgctxt "setting"
 msgid "Version"
+msgstr ""
+
+#. Used in the browser
+msgid "View Details"
 msgstr ""
 
 msgid "View advisory"
 msgstr ""
 
+#. Used in the browser
 msgid "View details"
+msgstr ""
+
+#. Used in the browser
+msgid "View diff"
+msgstr ""
+
+#. Used in the browser
+msgid "View on GitHub"
 msgstr ""
 
 msgid "View release notes"
@@ -4544,13 +7111,36 @@ msgctxt "heading"
 msgid "Visualizations"
 msgstr ""
 
+#. Used in the browser
+msgid "Warning"
+msgstr ""
+
+#. Used in the browser
+msgid "Warning hidden. Traefik Manager still does not authenticate anyone."
+msgstr ""
+
+#. Used in the browser
+msgid "Warning restored."
+msgstr ""
+
 msgctxt "button"
 msgid "Warnings"
 msgstr ""
 
+#. Used in the browser
+msgid "Warnings and errors"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "Watch"
+msgstr ""
+
+#. Used in the browser
 msgid "Webhook URL"
 msgstr ""
 
+#. Used in the browser
 msgctxt "tooltip"
 msgid "Weight"
 msgstr ""
@@ -4574,6 +7164,7 @@ msgid ""
 "CrowdSec and %(ipallowlist)s."
 msgstr ""
 
+#. Used in the browser
 msgid "Where notifications are delivered."
 msgstr ""
 
@@ -4644,10 +7235,18 @@ msgstr ""
 msgid "You have stated that an external provider protects this instance."
 msgstr ""
 
+#. Used in the browser
+msgid "You have unsaved changes. Discard and reload?"
+msgstr ""
+
 msgid "You probably do not need this."
 msgstr ""
 
 msgid "You're using a temporary password. Set a permanent one to continue."
+msgstr ""
+
+#. Used in the browser
+msgid "Your Pushover user or group key. Stored encrypted."
 msgstr ""
 
 msgid "Your account is not authorized to access this application."
@@ -4681,6 +7280,10 @@ msgstr ""
 msgid "Yours alone"
 msgstr ""
 
+#. Used in the browser
+msgid "ZooKeeper KV"
+msgstr ""
+
 msgid "Zoom in"
 msgstr ""
 
@@ -4690,16 +7293,51 @@ msgstr ""
 msgid "acme.json Path"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"add the port under {ports} in your compose file and run "
+"{docker_compose_up}"
+msgstr ""
+
 msgid "alerts"
+msgstr ""
+
+#. Used in the browser
+msgctxt "option"
+msgid "all"
+msgstr ""
+
+#. Used in the browser
+msgid "all current"
 msgstr ""
 
 msgid "any 2xx or 3xx"
 msgstr ""
 
+#. Used in the browser
+msgctxt "placeholder"
+msgid "app"
+msgstr ""
+
 msgid "average"
 msgstr ""
 
+#. Used in the browser
+msgid "base64-encoded HMAC key"
+msgstr ""
+
+#. Used in the browser
+msgctxt "option"
+msgid "block"
+msgstr ""
+
 msgid "burst"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "catalog checked {daily}"
 msgstr ""
 
 msgid "categories must be a list"
@@ -4717,17 +7355,68 @@ msgstr ""
 msgid "client key, e.g. /certs/tma-client.key"
 msgstr ""
 
+#. Used in the browser
+msgid "configured in traefik.yml"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "copied"
+msgstr ""
+
+#. Used in the browser
+msgid "countries"
+msgstr ""
+
+#. Used in the browser
+msgid "country"
+msgstr ""
+
+#. Used in the browser
+msgid "daily"
+msgstr ""
+
 msgid "decisions"
 msgstr ""
 
+#. Used in the browser
+msgid "default 200"
+msgstr ""
+
+#. Used in the browser
 msgid "denied"
 msgstr ""
 
 msgid "device_name is required"
 msgstr ""
 
+#. Used in the browser
+msgid "dial (30s)"
+msgstr ""
+
 #, python-format
 msgid "digest must be one of: %(channel_digests)s"
+msgstr ""
+
+#. Used in the browser
+msgid "disabled"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "disabled"
+msgstr ""
+
+#. Used in the browser
+msgid "e.g. 100"
+msgstr ""
+
+#. Used in the browser
+msgid "e.g. 200ms"
+msgstr ""
+
+#. Used in the browser
+msgid "e.g. 30s"
 msgstr ""
 
 msgid "e.g. Mobile App"
@@ -4751,8 +7440,83 @@ msgstr ""
 msgid "e.g. plex"
 msgstr ""
 
+#. Used in the browser
+msgid "enabled"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "enabled"
+msgstr ""
+
 msgctxt "status"
 msgid "enabled"
+msgstr ""
+
+#. Used in the browser
+msgid "entry point"
+msgstr ""
+
+#. Used in the browser
+msgid "entrypoints"
+msgstr ""
+
+#. Used in the browser
+msgctxt "status"
+msgid "ep"
+msgstr ""
+
+#. Used in the browser
+msgid "etcd KV"
+msgstr ""
+
+#. Used in the browser
+msgid "every section reads as configured"
+msgstr ""
+
+#. Used in the browser
+msgid "exposedByDefault is on, every container is routable unless it opts out"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "font-size:11px;color:var(--muted)\">{head}{body}"
+msgstr ""
+
+#. Used in the browser
+msgid "for CAs requiring external account binding"
+msgstr ""
+
+#. Used in the browser
+msgid "forwardedHeaders.insecure is on, any client can set X-Forwarded-For"
+msgstr ""
+
+#. Used in the browser
+msgid "helper above can bulk-add Cloudflare ranges."
+msgstr ""
+
+#. Used in the browser
+msgid "idle (180s)"
+msgstr ""
+
+#. Used in the browser
+msgid "idle conn (90s)"
+msgstr ""
+
+#. Used in the browser
+msgid "in use"
+msgstr ""
+
+#. Used in the browser
+msgid "insecure"
+msgstr ""
+
+#. Used in the browser
+msgid "insecureSkipVerify - backend certificate not verified"
+msgstr ""
+
+#. Used in the browser
+msgid "insecureSkipVerify enabled"
 msgstr ""
 
 msgid "inside the agent container"
@@ -4761,14 +7525,29 @@ msgstr ""
 msgid "inside this container"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"installs and removes them for you, and writes the middleware that uses "
+"them."
+msgstr ""
+
 #, python-format
 msgid "kind must be one of: %(channel_kinds)s"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "latest"
 msgstr ""
 
 msgid "leave blank to keep existing"
 msgstr ""
 
 msgid "leave empty for Traefik's default"
+msgstr ""
+
+#. Used in the browser
+msgid "local plugin, loaded from disk"
 msgstr ""
 
 msgctxt "label"
@@ -4781,11 +7560,27 @@ msgstr ""
 msgid "manual ban from Traefik Manager"
 msgstr ""
 
+#. Used in the browser
+msgid "max age (days)"
+msgstr ""
+
+#. Used in the browser
+msgid "max backups"
+msgstr ""
+
+#. Used in the browser
+msgid "max size (MB)"
+msgstr ""
+
 msgid "message required"
 msgstr ""
 
 #, python-format
 msgid "min_severity must be one of: %(channel_severities)s"
+msgstr ""
+
+#. Used in the browser
+msgid "minimum time between config reloads (default 2s)"
 msgstr ""
 
 msgid "name and url are required"
@@ -4794,7 +7589,40 @@ msgstr ""
 msgid "name is required"
 msgstr ""
 
+#. Used in the browser
+msgid "neither directory nor filename is set"
+msgstr ""
+
+#. Used in the browser
+msgid "no access log, the Logs tab has nothing to read"
+msgstr ""
+
+#. Used in the browser
+msgid "no authentication"
+msgstr ""
+
+#. Used in the browser
+msgid "no email set, Let's Encrypt requires one to issue certificates"
+msgstr ""
+
+#. Used in the browser
+msgid "no matches"
+msgstr ""
+
+#. Used in the browser
+msgid "no path set"
+msgstr ""
+
+#. Used in the browser
+msgid "not configured"
+msgstr ""
+
 msgid "ntfy.sh / self-hosted ntfy"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "open the port in your firewall, e.g. {sudo_ufw_allow}"
 msgstr ""
 
 msgid "optional"
@@ -4821,10 +7649,41 @@ msgstr ""
 msgid "period"
 msgstr ""
 
+#. Used in the browser
+msgctxt "label"
+msgid "plugin"
+msgstr ""
+
+#. Used in the browser
+msgid "plugins"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "plugins"
+msgstr ""
+
 msgid "preview is required"
 msgstr ""
 
+#. Used in the browser
+msgid "proxyProtocol.insecure is on, the PROXY header is trusted from any source"
+msgstr ""
+
 msgid "quiet_hours must be HH:MM-HH:MM, for example 23:00-07:00"
+msgstr ""
+
+#. Used in the browser
+msgid "read (60s)"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "redirects to {redir}"
+msgstr ""
+
+#. Used in the browser
+msgid "resp header (0)"
 msgstr ""
 
 msgctxt "button"
@@ -4837,10 +7696,23 @@ msgstr ""
 msgid "same as server"
 msgstr ""
 
+#. Used in the browser
+msgctxt "option"
+msgid "self"
+msgstr ""
+
 msgid "selfh.st slug"
 msgstr ""
 
 msgid "static"
+msgstr ""
+
+#. Used in the browser
+msgid "the remote host"
+msgstr ""
+
+#. Used in the browser
+msgid "the server did not say why"
 msgstr ""
 
 msgid "this agent"
@@ -4850,11 +7722,32 @@ msgctxt "time range"
 msgid "to"
 msgstr ""
 
+#. Used in the browser
+msgid "traefik.yml not mounted"
+msgstr ""
+
 msgid "ui_prefs must be an object"
 msgstr ""
 
 #, python-format
 msgid "unknown categories: %(unknown)s"
+msgstr ""
+
+#. Used in the browser
+msgid "unsupported"
+msgstr ""
+
+#. Used in the browser
+msgctxt "label"
+msgid "unused"
+msgstr ""
+
+#. Used in the browser
+msgid "update available"
+msgstr ""
+
+#. Used in the browser
+msgid "updates available"
 msgstr ""
 
 msgid "username and password required"
@@ -4863,10 +7756,149 @@ msgstr ""
 msgid "username, realm and password required"
 msgstr ""
 
+#. Used in the browser
+msgid "v2 (compatibility)"
+msgstr ""
+
+#. Used in the browser
+msgid "v3 (default)"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "v{cur}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "v{latest} available"
+msgstr ""
+
+#. Used in the browser
+msgid "watch on"
+msgstr ""
+
+#. Used in the browser
+msgctxt "placeholder"
+msgid "web"
+msgstr ""
+
+#. Used in the browser
+msgctxt "placeholder"
+msgid "websecure"
+msgstr ""
+
+#. Used in the browser
+msgid "write (0)"
+msgstr ""
+
+#. Used in the browser
+msgctxt "placeholder"
+msgid "you@example.com"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{digest} digest"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{entrypoint} (not found in Traefik entrypoints - click to remove)"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{failed} of {n} route could not be deleted."
+msgid_plural "{failed} of {n} routes could not be deleted."
+msgstr[0] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{found_count} to look at"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{hiddenCount} hidden"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{items_count}{value} to look at"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{label} must be 72 bytes or fewer, which is the bcrypt limit. Accented "
+"and non-Latin characters take more than one byte each."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{label} must be at least 8 characters."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{latest} available"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{m} ep"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{nBackends} backends, load balanced"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{name} - {count} requests, {pct}%"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{servers_count} backends"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{severity} and above"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{size} selected"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{svcUp} of {svcTotal} servers up"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{value} {svcTotal} servers down"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{what} - authentication is now required, redirecting to sign in"
+msgstr ""
+
 msgctxt "label"
 msgid "·"
 msgstr ""
 
 msgid "← Back to sign in"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "✓ Connected - Traefik v{version}"
 msgstr ""
 

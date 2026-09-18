@@ -13,7 +13,13 @@ const tabDefs = 'const TAB_DEFS = ' + src.split('const TAB_DEFS = ')[1].split('\
 const tabIcon = 'const _tabIcon = ' + src.split('const _tabIcon = ')[1].split(';')[0] + ';';
 const icons = tabDefs + '\n' + tabIcon + '\nconst NOTIF_CATEGORY_ICONS = '
             + src.split('const NOTIF_CATEGORY_ICONS = ')[1].split('};')[0] + '};';
+const i18n = readFileSync(join(root, 'static', 'js', 'i18n.js'), 'utf8');
 const harness = `
+const window = {};
+(function (window, document) {
+${i18n}
+})(window, { getElementById: () => null, documentElement: { lang: 'en' } });
+const { t, tn, tc, th, thn, thc, tmHtml } = window;
 ${labels}
 ${icons}
 let _notifData = [];
@@ -64,8 +70,13 @@ check('All leads the row and is active when nothing is filtered',
 check('All clears the filter when clicked',
       /onclick="setNotifCategory\(("|&quot;){2}, event\)"/.test(row.innerHTML),
       row.innerHTML.match(/onclick="setNotifCategory[^"]*/)?.[0]);
-const TABS = new Function(tabDefs + '; return TAB_DEFS;')();
-const ICONS = new Function(icons + '; return NOTIF_CATEGORY_ICONS;')();
+const i18nPrelude = `const window = {};
+(function (window, document) {
+${i18n}
+})(window, { getElementById: () => null, documentElement: { lang: 'en' } });
+const { t, tn, tc, th, thn, thc, tmHtml } = window;`;
+const TABS = new Function(i18nPrelude + tabDefs + '; return TAB_DEFS;')();
+const ICONS = new Function(i18nPrelude + icons + '; return NOTIF_CATEGORY_ICONS;')();
 const tabIconOf = id => (TABS.find(t => t.id === id) || {}).icon;
 check('certs uses the Certs tab icon', ICONS.certs === tabIconOf('certs'),
       `${ICONS.certs} vs tab ${tabIconOf('certs')}`);
@@ -73,8 +84,8 @@ check('crowdsec uses the CrowdSec tab icon', ICONS.crowdsec === tabIconOf('crowd
       `${ICONS.crowdsec} vs tab ${tabIconOf('crowdsec')}`);
 check('certs and crowdsec are not the same icon', ICONS.certs !== ICONS.crowdsec);
 
-const labelKeys = Object.keys(new Function(labels + '; return NOTIF_CATEGORY_LABELS;')());
-const iconKeys  = Object.keys(new Function(icons  + '; return NOTIF_CATEGORY_ICONS;')());
+const labelKeys = Object.keys(new Function(i18nPrelude + labels + '; return NOTIF_CATEGORY_LABELS;')());
+const iconKeys  = Object.keys(new Function(i18nPrelude + icons  + '; return NOTIF_CATEGORY_ICONS;')());
 const missing   = labelKeys.filter(k => !iconKeys.includes(k));
 check('every category in the label map has an icon', missing.length === 0, missing.join(','));
 

@@ -118,7 +118,10 @@ def test_the_real_template_marks_browser_strings(fresh_caches):
     assert keys is not None and 'Could not save the language' in keys
     template = tmi18n.read_catalog(tmi18n.POT_PATH)
     total = sum(1 for m in template if m.id)
-    assert len(keys) < total / 10, 'most strings are server rendered and must not be sent to the browser'
+    assert len(keys) < total, 'strings only the server renders stay out of the browser catalogue'
+    assert 'Unknown language' not in keys, 'a message only app.py uses must not be sent to the browser'
+    assert not any(k.startswith('setting\x04') for k in keys if k.endswith('Show language selector')), \
+        'a template-only label must not be sent to the browser'
 
 
 def _js_source():
