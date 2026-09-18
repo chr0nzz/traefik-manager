@@ -36,6 +36,9 @@ const sandbox = {
         querySelectorAll: () => [],
         addEventListener: () => {},
     },
+    tmNumber(n) {
+        return Number(n || 0).toLocaleString('en-US');
+    },
     _esc(s) {
         return String(s == null ? '' : s)
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')

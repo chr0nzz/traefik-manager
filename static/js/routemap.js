@@ -302,10 +302,6 @@ function _rmBuildDagre(routes) {
     return { g, mwUsage, svcMap, epNames, mwNames, collapsed };
 }
 
-function _esc(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
 const _rmPfx = name => name.split(/[-_\s]/)[0].replace(/\d+$/, '');
 
 const _rmDomain = r => {
@@ -373,7 +369,7 @@ window.rmPickProvider = function(p, label) {
     _rmProvider = p;
     document.getElementById('rm-provider-label').textContent = label;
     document.getElementById('rm-dd-provider-btn').classList.toggle('active', p !== 'all');
-    document.querySelectorAll('#rm-dd-provider-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === label));
+    document.querySelectorAll('#rm-dd-provider-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.dataset.value === p));
     toggleLiveDd('rm-dd-provider');
     rmRender();
 };
@@ -382,7 +378,7 @@ window.rmPickEp = function(ep, label) {
     _rmEpFilter = ep;
     document.getElementById('rm-ep-label').textContent = label;
     document.getElementById('rm-dd-ep-btn').classList.toggle('active', ep !== 'all');
-    document.querySelectorAll('#rm-dd-ep-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === label));
+    document.querySelectorAll('#rm-dd-ep-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.dataset.value === ep));
     toggleLiveDd('rm-dd-ep');
     rmRender();
 };
@@ -391,11 +387,12 @@ function rmRenderEpFilters() {
     const epNames = Object.keys(_rmAllEps).sort();
     const menu = document.getElementById('rm-dd-ep-menu');
     if (!menu) return;
-    menu.innerHTML = `<button class="live-dd-item${_rmEpFilter === 'all' ? ' active' : ''}" onclick="rmPickEp('all','All Entry Points')">All Entry Points</button>`;
+    menu.innerHTML = `<button class="live-dd-item${_rmEpFilter === 'all' ? ' active' : ''}" data-value="all" onclick="rmPickEp('all','All Entry Points')">All Entry Points</button>`;
     epNames.forEach(ep => {
         const btn = document.createElement('button');
         btn.className = 'live-dd-item' + (ep === _rmEpFilter ? ' active' : '');
         btn.textContent = ep;
+        btn.dataset.value = ep;
         btn.onclick = () => window.rmPickEp(ep, ep);
         menu.appendChild(btn);
     });
@@ -405,12 +402,13 @@ function rmRenderProviderFilters() {
     const providers = [...new Set(_rmAllRoutes.map(r => r.provider || 'file'))].sort();
     const menu = document.getElementById('rm-dd-provider-menu');
     if (!menu) return;
-    menu.innerHTML = `<button class="live-dd-item${_rmProvider === 'all' ? ' active' : ''}" onclick="rmPickProvider('all','All Providers')">All Providers</button>`;
+    menu.innerHTML = `<button class="live-dd-item${_rmProvider === 'all' ? ' active' : ''}" data-value="all" onclick="rmPickProvider('all','All Providers')">All Providers</button>`;
     if (providers.length > 1) {
         providers.forEach(p => {
             const btn = document.createElement('button');
             btn.className = 'live-dd-item' + (p === _rmProvider ? ' active' : '');
             btn.textContent = p;
+            btn.dataset.value = p;
             btn.onclick = () => window.rmPickProvider(p, p);
             menu.appendChild(btn);
         });
@@ -429,8 +427,8 @@ window.rmClearFilters = function() {
     document.getElementById('rm-provider-label').textContent = 'All Providers';
     document.getElementById('rm-ep-label').textContent = 'All Entry Points';
     ['rm-dd-provider-btn','rm-dd-ep-btn'].forEach(id => document.getElementById(id)?.classList.remove('active'));
-    document.querySelectorAll('#rm-dd-provider-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === 'All Providers'));
-    document.querySelectorAll('#rm-dd-ep-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === 'All Entry Points'));
+    document.querySelectorAll('#rm-dd-provider-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.dataset.value === 'all'));
+    document.querySelectorAll('#rm-dd-ep-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.dataset.value === 'all'));
     rmRender();
 };
 

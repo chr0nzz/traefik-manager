@@ -42,7 +42,7 @@ let _sdStamp = 0;
 let _sdAgeTimer = null;
 let _sdBound = false;
 
-function _sdNum(n) { return Number(n || 0).toLocaleString('en-US'); }
+function _sdNum(n) { return tmNumber(n); }
 
 function _sdShort(name) { return String(name || '').split('@')[0]; }
 

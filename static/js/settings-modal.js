@@ -637,6 +637,7 @@ async function openSettingsModal(panel) {
             document.getElementById('authHiddenMsg') && (document.getElementById('authHiddenMsg').classList.add('hidden'));
             const isOn = data.auth_enabled;
             stateLabel.textContent  = isOn ? 'enabled' : 'disabled';
+            stateLabel.dataset.state = isOn ? 'on' : 'off';
             stateLabel.style.color  = isOn ? 'var(--green)' : 'var(--muted)';
             if (!data.auth_env_forced && toggleBtn) {
                 toggleBtn.classList.remove('hidden');
@@ -774,7 +775,7 @@ async function toggleAuth() {
     const stateLabel  = document.getElementById('authStateLabel');
     const toggleLabel = document.getElementById('authToggleLabel');
     const changePwForm = document.getElementById('changePwForm');
-    const currentlyOn = stateLabel.textContent === 'enabled';
+    const currentlyOn = stateLabel.dataset.state === 'on';
     const newState    = !currentlyOn;
 
     if (currentlyOn) {
@@ -802,6 +803,7 @@ async function toggleAuth() {
         if (data.success) {
             if (data.reauth_required) return _redirectToLoginAfterAuthEnable('Authentication enabled');
             stateLabel.textContent = newState ? 'enabled' : 'disabled';
+            stateLabel.dataset.state = newState ? 'on' : 'off';
             stateLabel.style.color = newState ? 'var(--green)' : 'var(--muted)';
             toggleLabel.textContent = newState ? 'Disable' : 'Enable';
             if (changePwForm) changePwForm.style.display = newState ? '' : 'none';
@@ -2038,7 +2040,7 @@ async function loadOidcStatus() {
         const label = document.getElementById('oidcStatusLabel');
         const btn   = document.getElementById('oidcToggleBtn');
         const isOn  = !!data.oidc_enabled;
-        if (label) { label.textContent = isOn ? 'Enabled' : 'Disabled'; label.style.color = isOn ? 'var(--green)' : 'var(--muted)'; }
+        if (label) { label.textContent = isOn ? 'Enabled' : 'Disabled'; label.dataset.state = isOn ? 'on' : 'off'; label.style.color = isOn ? 'var(--green)' : 'var(--muted)'; }
         if (btn)   btn.textContent = isOn ? 'Disable' : 'Enable';
         const set = e => { const el = document.getElementById(e[0]); if (el) el.value = e[1] || ''; };
         set(['oidcProviderUrl', data.oidc_provider_url]);
@@ -2058,7 +2060,7 @@ async function loadOidcStatus() {
 async function oidcToggleEnabled() {
     const btn   = document.getElementById('oidcToggleBtn');
     const label = document.getElementById('oidcStatusLabel');
-    const isOn  = label && label.textContent.trim() === 'Enabled';
+    const isOn  = !!label && label.dataset.state === 'on';
     const url   = document.getElementById('oidcProviderUrl')?.value.trim() || '';
     const id    = document.getElementById('oidcClientId')?.value.trim() || '';
     const sec   = document.getElementById('oidcClientSecret')?.value.trim() || '';
@@ -2101,7 +2103,7 @@ async function saveOidcConfig() {
     const any  = document.getElementById('oidcAllowAny')?.checked || false;
     const auto = document.getElementById('oidcAutoLogin')?.checked || false;
     const label = document.getElementById('oidcStatusLabel');
-    const isOn  = label && label.textContent.trim() === 'Enabled';
+    const isOn  = !!label && label.dataset.state === 'on';
     try {
         const res = await fetch('/api/auth/oidc', {
             method: 'POST',
