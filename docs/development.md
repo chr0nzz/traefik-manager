@@ -135,6 +135,7 @@ Strings are marked with `_()`, `ngettext()` and `pgettext()` in Python and templ
 make i18n-tools     # once: installs the pinned JS parser under scripts/i18n
 make i18n-extract   # rebuild locale/messages.pot and update every catalogue
 make i18n-check     # every translation check CI runs
+make i18n-pseudo    # pseudo-translated catalogue in /tmp/tm-pseudo-locale (OUT=dir to change)
 ```
 
 In templates, a sentence stays one message even when it holds markup. Inline code, emphasis and links go in as named placeholders built with `tag()`, which only produces a short list of inline tags and refuses `on*` attributes and non-http links:
@@ -145,9 +146,11 @@ In templates, a sentence stays one message even when it holds markup. Inline cod
 
 Markup `tag()` cannot build, such as a button with an `onclick`, is captured with `{% set name %}...{% endset %}` and passed the same way. Single words get a context with `pgettext('button', 'Save')`, so translators know where they appear. Text that must stay English sits in `<code>`, a `font-mono` element or an element with `translate="no"`.
 
-In JavaScript, `t()`, `tn()` and `tc()` return plain text for `textContent`, `showToast` and attributes set through the DOM. Text that goes into HTML uses `th()`, `thn()` and `thc()`, which escape the translation and every value; a value that is markup on purpose is wrapped in `tmHtml()`. CI rejects a plain `t()` placed into HTML. Numbers, dates and relative times go through `tmNumber()`, `tmDate()` and `tmAgo()`, and code never compares displayed text: state lives in a data attribute. Only strings JavaScript uses are sent to the browser; the extractor marks them `Used in the browser` in `messages.pot`.
+In JavaScript, `t()`, `tn()` and `tc()` return plain text for `textContent`, `showToast` and attributes set through the DOM. Text that goes into HTML uses `th()`, `thn()` and `thc()`, which escape the translation and every value; a value that is markup on purpose is wrapped in `tmHtml()`. CI rejects a plain `t()` placed into HTML, a translation used as a class, id, style or input value, a helper hidden by a local variable named `t`, and a call whose values do not match its placeholders. Numbers, dates and relative times go through `tmNumber()`, `tmDate()` and `tmAgo()`, and code never compares displayed text: state lives in a data attribute. Only strings JavaScript uses are sent to the browser; the extractor marks them `Used in the browser` in `messages.pot`.
 
 CI fails when a template shows English text that is not marked for translation, and when `messages.pot` is stale, so run `make i18n-extract` and commit the result with the change that added or reworded a string. `make i18n-check` also rejects translations that add markup, quotes, links, placeholders or invisible control characters, and a pull request from Weblate may only change `locale/<lang>/LC_MESSAGES/messages.po`. Every translation is escaped when a template renders it, so none can inject HTML. The translator side lives in [tm-locale](https://github.com/chr0nzz/tm-locale).
+
+To find English that never reaches a catalogue, build the pseudo catalogue, copy its `eo` folder into `locale/` of a test install, add `eo` to `locale/LINGUAS` there, and pick Esperanto in Settings. Every translated string shows as accented text between `⟦` and `⟧`, so plain English on screen is a string that is not marked. Do not commit the `eo` catalogue.
 
 ### Screenshots
 
