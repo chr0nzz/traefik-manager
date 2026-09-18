@@ -729,6 +729,18 @@ Anything else is dropped rather than stored. Returns `400` if `ui_prefs` is not 
 
 ---
 
+### `POST /api/settings/language`
+
+Set the default language. Takes a tag from `available_languages` in `GET /api/settings`, or an empty string to follow each browser's language.
+
+```json
+{ "default_language": "de" }
+```
+
+`400` for a language that is not available.
+
+---
+
 ### `POST /api/settings/theme`
 
 Set the default theme for new browsers. One of `dark`, `light`, `system`.

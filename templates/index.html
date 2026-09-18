@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="{{ html_lang }}" dir="{{ html_dir }}" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -14,6 +14,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Traefik Manager">
+    <script type="application/json" id="i18n-catalog">{{ i18n_catalog | tojson }}</script>
+    <script src="{{ base_path }}/static/js/i18n.js?v={{ asset_version }}"></script>
     <script>
         window.TM_DEFAULT_THEME = '{{ default_theme }}' || 'dark';
         window.TM_UI_PREFS = {{ ui_prefs | tojson }};

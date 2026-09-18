@@ -1,0 +1,201 @@
+import os
+from functools import lru_cache
+
+from babel import Locale, UnknownLocaleError
+from babel.support import Translations
+from flask import has_request_context, request
+from flask_babel import Babel, get_locale
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOCALE_DIR = os.path.join(ROOT_DIR, 'locale')
+DOMAIN = 'messages'
+DEFAULT_TAG = 'en'
+COOKIE_NAME = 'tm_lang'
+URL_LOCALE_KEY = 'tm.url_locale'
+
+_PLURAL_SAMPLES = tuple(range(0, 201)) + (1000, 10000, 100000, 1000000)
+
+
+def to_tag(identifier: str) -> str:
+    return identifier.replace('_', '-')
+
+
+def to_identifier(tag: str) -> str:
+    return tag.replace('-', '_')
+
+
+def enabled_identifiers(locale_dir: str) -> list:
+    try:
+        with open(os.path.join(locale_dir, 'LINGUAS'), encoding='utf-8') as fh:
+            lines = fh.read().splitlines()
+    except OSError:
+        return []
+    names = []
+    for line in lines:
+        for name in line.split('#', 1)[0].split():
+            if name not in names:
+                names.append(name)
+    return names
+
+
+def _catalog_tags(locale_dir: str) -> tuple:
+    tags = []
+    for name in enabled_identifiers(locale_dir):
+        mo = os.path.join(locale_dir, name, 'LC_MESSAGES', DOMAIN + '.mo')
+        if not os.path.isfile(mo):
+            continue
+        try:
+            Locale.parse(name)
+        except (ValueError, UnknownLocaleError):
+            continue
+        tags.append(to_tag(name))
+    return tuple(tags)
+
+
+@lru_cache(maxsize=None)
+def available_tags(locale_dir: str = None) -> tuple:
+    tags = [DEFAULT_TAG]
+    for tag in _catalog_tags(locale_dir or LOCALE_DIR):
+        if tag not in tags:
+            tags.append(tag)
+    return tuple(tags)
+
+
+def normalize(value, tags=None):
+    if not value:
+        return None
+    wanted = str(value).strip().replace('_', '-').lower()
+    for tag in tags if tags is not None else available_tags():
+        if tag.lower() == wanted:
+            return tag
+    return None
+
+
+def _accept_language(tags):
+    for value, _quality in request.accept_languages:
+        exact = normalize(value, tags)
+        if exact:
+            return exact
+        primary = value.replace('_', '-').split('-')[0].lower()
+        matches = [t for t in tags if t.split('-')[0].lower() == primary]
+        if len(matches) == 1:
+            return matches[0]
+    return None
+
+
+def resolve_tag(default_language: str = '') -> str:
+    tags = available_tags()
+    if not has_request_context():
+        return normalize(default_language, tags) or DEFAULT_TAG
+    for candidate in (request.environ.get(URL_LOCALE_KEY),
+                      request.args.get('lang'),
+                      request.cookies.get(COOKIE_NAME),
+                      default_language):
+        tag = normalize(candidate, tags)
+        if tag:
+            return tag
+    return _accept_language(tags) or DEFAULT_TAG
+
+
+def language_options() -> list:
+    options = []
+    for tag in available_tags():
+        identifier = to_identifier(tag)
+        try:
+            name = Locale.parse(identifier).get_display_name(identifier) or tag
+        except (ValueError, UnknownLocaleError):
+            name = tag
+        options.append({'tag': tag, 'name': name[:1].upper() + name[1:]})
+    return options
+
+
+def current_tag() -> str:
+    locale = get_locale()
+    return to_tag(str(locale)) if locale else DEFAULT_TAG
+
+
+def text_direction(tag: str) -> str:
+    try:
+        order = Locale.parse(to_identifier(tag)).character_order
+    except (ValueError, UnknownLocaleError):
+        return 'ltr'
+    return 'rtl' if order == 'right-to-left' else 'ltr'
+
+
+def _plural_map(identifier: str, translations) -> dict:
+    try:
+        rule = Locale.parse(identifier).plural_form
+    except (ValueError, UnknownLocaleError):
+        rule = Locale.parse(DEFAULT_TAG).plural_form
+    plural = getattr(translations, 'plural', None)
+    if plural is None:
+        return {'one': 0, 'other': 1}
+    mapping = {}
+    for n in _PLURAL_SAMPLES:
+        mapping.setdefault(rule(n), plural(n))
+    return mapping
+
+
+@lru_cache(maxsize=None)
+def client_catalog(tag: str, locale_dir: str = None) -> dict:
+    identifier = to_identifier(tag)
+    translations = Translations.load(locale_dir or LOCALE_DIR, [identifier], DOMAIN)
+    messages = {}
+    for key, value in getattr(translations, '_catalog', {}).items():
+        if isinstance(key, tuple):
+            msgid, index = key
+            forms = messages.setdefault(msgid, [])
+            if not isinstance(forms, list):
+                continue
+            forms.extend([''] * (index + 1 - len(forms)))
+            forms[index] = value
+        elif key and value:
+            messages[key] = value
+    return {
+        'locale': tag,
+        'plural': _plural_map(identifier, translations),
+        'messages': messages,
+    }
+
+
+class LocalePrefixMiddleware:
+    def __init__(self, wsgi_app, tags=None):
+        self.wsgi_app = wsgi_app
+        self.tags = tags
+
+    def __call__(self, environ, start_response):
+        path = environ.get('PATH_INFO', '')
+        if path.startswith('/'):
+            segment, slash, rest = path[1:].partition('/')
+            tags = self.tags() if self.tags else available_tags()
+            if segment and segment in tags:
+                environ['PATH_INFO'] = '/' + rest if slash else '/'
+                environ['SCRIPT_NAME'] = environ.get('SCRIPT_NAME', '') + '/' + segment
+                environ[URL_LOCALE_KEY] = segment
+        return self.wsgi_app(environ, start_response)
+
+
+def init_app(app, default_language):
+    app.config['BABEL_DEFAULT_LOCALE'] = DEFAULT_TAG
+    app.config['BABEL_TRANSLATION_DIRECTORIES'] = LOCALE_DIR
+    app.config['BABEL_DOMAIN'] = DOMAIN
+
+    def _select():
+        try:
+            fallback = default_language()
+        except Exception:
+            fallback = ''
+        return to_identifier(resolve_tag(fallback))
+
+    babel = Babel(app, locale_selector=_select)
+
+    @app.context_processor
+    def _inject_locale():
+        tag = current_tag()
+        return {
+            'html_lang': tag,
+            'html_dir': text_direction(tag),
+            'i18n_catalog': client_catalog(tag),
+        }
+
+    return babel

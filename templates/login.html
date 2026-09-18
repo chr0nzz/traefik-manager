@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ html_lang }}" dir="{{ html_dir }}">
 <head>
     <meta name="tm-base-path" content="{{ base_path }}">
     <meta charset="UTF-8">
@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="{{ base_path }}/static/vendor/phosphor.css">
     <link rel="stylesheet" href="{{ base_path }}/static/css/tailwind.css?v={{ asset_version }}">
     <link rel="stylesheet" href="{{ base_path }}/static/css/app.css?v={{ asset_version }}">
+    <script type="application/json" id="i18n-catalog">{{ i18n_catalog | tojson }}</script>
+    <script src="{{ base_path }}/static/js/i18n.js?v={{ asset_version }}"></script>
     <script>
         (function() {
             var t = '{{ default_theme }}' || localStorage.getItem('tm-theme') || 'dark';

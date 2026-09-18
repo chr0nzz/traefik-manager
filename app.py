@@ -78,6 +78,7 @@ from core import agents_http as _agen
 from core import git as _git
 from core import auth as _auth
 from core import routes_build as _rb
+from core import i18n as _i18n
 from core import crowdsec as _crowd
 from core import certs as _certs
 _parse_cert_expiry           = _certs._parse_cert_expiry
@@ -249,6 +250,7 @@ class _TrustedProxyFix:
 
 
 app = Flask(__name__)
+app.wsgi_app = _i18n.LocalePrefixMiddleware(app.wsgi_app)
 app.wsgi_app = _TrustedProxyFix(app.wsgi_app, PROXY_FIX_HOPS)
 if env.BASE_PATH:
     app.wsgi_app = _BasePathMiddleware(app.wsgi_app, env.BASE_PATH)
@@ -629,6 +631,9 @@ logger.info("===========================================")
 
 _ensure_password()
 _sync_admin_password_fingerprint()
+
+
+_i18n.init_app(app, lambda: load_settings().get('default_language', ''))
 
 
 @app.context_processor
@@ -4865,6 +4870,7 @@ def api_get_settings():
     s['git_backup_token_set']   = bool(s.get('git_backup_token', ''))
     s.pop('git_backup_token', None)
     s['notification_channels'] = _redact_channels(s.get('notification_channels'))
+    s['available_languages']    = _i18n.language_options()
     return jsonify(s)
 
 @app.route('/api/settings', methods=['POST'])
@@ -5089,6 +5095,23 @@ def api_ui_prefs():
     merged.update(_settings.sanitize_ui_prefs(incoming))
     update_settings(ui_prefs=merged)
     return jsonify({'ok': True, 'ui_prefs': merged})
+
+
+@app.route('/api/settings/language', methods=['POST'])
+@csrf_protect
+@login_required
+def api_save_language():
+    try:
+        data  = request.get_json(silent=True) or {}
+        raw   = str(data.get('default_language', '')).strip()
+        tag   = _i18n.normalize(raw)
+        if raw and not tag:
+            return jsonify({'success': False, 'error': 'Unknown language'}), 400
+        update_settings(default_language=tag or '')
+        return jsonify({'success': True, 'default_language': tag or ''})
+    except Exception:
+        logger.exception("Language save error")
+        return jsonify({'success': False, 'error': 'Save failed'}), 500
 
 
 @app.route('/api/settings/theme', methods=['POST'])

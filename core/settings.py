@@ -2,7 +2,7 @@ import functools
 import os
 import threading
 
-from core import agents_store, config, crypto, env, locks
+from core import agents_store, config, crypto, env, i18n, locks
 from core.env import logger
 
 
@@ -274,6 +274,7 @@ def _load_settings(blob) -> dict:
         'oidc_allow_any_authenticated': _env_bool('OIDC_ALLOW_ANY_AUTHENTICATED', False),
         'oidc_auto_login':      _env_bool('OIDC_AUTO_LOGIN', False),
         'default_theme':        'dark',
+        'default_language':     '',
         'ui_prefs':             {},
         'geoip_enabled':        False,
         'geoip_db_path':        '',
@@ -429,6 +430,8 @@ def _load_settings(blob) -> dict:
         if 'default_theme' in data:
             _dt = str(data['default_theme']).strip().lower()
             merged['default_theme'] = _dt if _dt in ('dark', 'light', 'system') else 'dark'
+        if 'default_language' in data:
+            merged['default_language'] = i18n.normalize(data['default_language']) or ''
         if isinstance(data.get('ui_prefs'), dict):
             merged['ui_prefs'] = sanitize_ui_prefs(data['ui_prefs'])
         if 'geoip_enabled' in data:
@@ -545,7 +548,7 @@ def _write_settings(domains, cert_resolver, traefik_api_url,
                   git_backup_token=None, git_backup_commit_message=None,
                   git_backup_auto_push=None,
                   agent_api_rate_limit=None, backup_keep_count=None,
-                  default_theme=None, ui_prefs=None,
+                  default_theme=None, default_language=None, ui_prefs=None,
                   geoip_enabled=None, geoip_db_path=None,
                   route_check_enabled=None, route_check_interval=None,
                   provider_tabs_seen=None):
@@ -586,6 +589,9 @@ def _write_settings(domains, cert_resolver, traefik_api_url,
     default_theme = str(default_theme).strip().lower()
     if default_theme not in ('dark', 'light', 'system'):
         default_theme = 'dark'
+    if default_language is None:
+        default_language = _cur.get('default_language', '')
+    default_language = i18n.normalize(default_language) or ''
     if geoip_enabled is None:
         geoip_enabled = _cur.get('geoip_enabled', False)
     if geoip_db_path is None:
@@ -713,6 +719,7 @@ def _write_settings(domains, cert_resolver, traefik_api_url,
         'oidc_allow_any_authenticated': bool(oidc_allow_any_authenticated),
         'oidc_auto_login':      bool(oidc_auto_login),
         'default_theme':        default_theme,
+        'default_language':     default_language,
         'ui_prefs':             ui_prefs,
         'geoip_enabled':        bool(geoip_enabled),
         'geoip_db_path':        str(geoip_db_path or '').strip(),
