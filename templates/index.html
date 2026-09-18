@@ -493,7 +493,7 @@ function _renderServerSwitcherList(runHealthChecks) {
             </div>
         </div>`;
     const hostDot = 'var(--green)';
-    list.innerHTML = desktopItem(null, 'Host', hostDot, localActive, null) +
+    list.innerHTML = desktopItem(null, thc('button', 'Host'), hostDot, localActive, null) +
         agents.map(a => desktopItem(a.id, _esc(a.name), _agentHealthCache[a.id] || 'var(--muted)', _activeAgent && _activeAgent.id === a.id, 'ss-dot-' + a.id)).join('');
     if (runHealthChecks) {
         agents.forEach(a => fetch('/api/agents/' + a.id + '/health').then(r => r.json()).then(d => {
@@ -512,7 +512,7 @@ const _agentHealthInfo = {};
 function _agentSubLine(a) {
     const d = _agentHealthInfo[a.id];
     if (!d) return '';
-    if (!d.ok) return 'offline';
+    if (!d.ok) return tc('label', 'offline');
     const v  = d.version ? 'v' + d.version : '';
     const ms = (typeof d.latency_ms === 'number' && d.latency_ms >= 0) ? d.latency_ms + 'ms' : '';
     return [v, ms].filter(Boolean).join(' · ');
@@ -527,8 +527,8 @@ function _renderDrawerServerList() {
     const name = document.getElementById('drawerServerName');
     const sub  = document.getElementById('drawerServerSub');
     const dot  = document.getElementById('drawerServerDot');
-    if (name) name.textContent = _activeAgent ? _activeAgent.name : 'Host';
-    if (sub)  sub.textContent  = _activeAgent ? (_agentSubLine(_activeAgent) || 'Agent') : 'Traefik Manager';
+    if (name) name.textContent = _activeAgent ? _activeAgent.name : tc('button', 'Host');
+    if (sub)  sub.textContent  = _activeAgent ? (_agentSubLine(_activeAgent) || tc('label', 'Agent')) : 'Traefik Manager';
     if (dot)  dot.style.background = _activeAgent ? (_agentHealthCache[_activeAgent.id] || 'var(--muted)') : 'var(--green)';
     const mark  = document.getElementById('drawerServerMark');
     const badge = document.getElementById('drawerServerBadge');
@@ -555,8 +555,8 @@ function _renderDrawerServerList() {
             ${active ? '<i class="ph-bold ph-check drawer-srv-check"></i>' : `<span class="drawer-srv-dot" style="background:${dotColor}"></span>`}
         </button>`;
     list.innerHTML =
-        '<div class="drawer-srv-title">Switch server</div>' +
-        item(null, null, 'Host', 'Traefik Manager', !_activeAgent, 'var(--green)') +
+        `<div class="drawer-srv-title">${th('Switch server')}</div>` +
+        item(null, null, thc('button', 'Host'), 'Traefik Manager', !_activeAgent, 'var(--green)') +
         _agentList.map(a => item(a.id, 'ph-hard-drives', _esc(a.name), _esc(_agentSubLine(a)), _activeAgent && _activeAgent.id === a.id, _agentHealthCache[a.id] || 'var(--muted)')).join('');
 }
 
@@ -597,10 +597,11 @@ function _updateServerSwitcherList(agents) {
 function _warnIfAgentUnreachable(agent) {
     const d = _agentHealthInfo[agent.id];
     if (!d || d.ok) return;
-    const why = d.error || 'it is not responding';
     if (typeof showToast === 'function') {
-        showToast(`${agent.name} is offline - ${why}. Its tabs will stay empty until it responds.`,
-                  'error', false);
+        showToast(d.error
+            ? t('{name} is offline - {error}. Its tabs will stay empty until it responds.', { name: agent.name, error: d.error })
+            : t('{name} is offline - it is not responding. Its tabs will stay empty until it responds.', { name: agent.name }),
+            'error', false);
     }
 }
 
@@ -644,7 +645,7 @@ function switchServer(agentId) {
         applyTabVisibility(_localTabsCache);
     }
     const label = document.getElementById('serverSwitcherLabel');
-    if (label) label.textContent = agent ? agent.name : 'Host';
+    if (label) label.textContent = agent ? agent.name : tc('button', 'Host');
     document.getElementById('serverSwitcherMenu')?.classList.remove('open');
     const chip = document.getElementById('agentServerLabel');
     if (chip) { chip.textContent = agent ? agent.name : ''; chip.style.display = agent ? '' : 'none'; }

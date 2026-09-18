@@ -949,11 +949,10 @@ function cycleTheme() {
 applyTheme('{{ default_theme }}' || localStorage.getItem(THEME_KEY) || 'dark');
 
 function _passwordError(pw, label) {
-    label = label || 'Password';
-    if (pw.length < 8) return label + ' must be at least 8 characters.';
+    label = label || t('Password');
+    if (pw.length < 8) return t('{label} must be at least 8 characters.', { label });
     if (new TextEncoder().encode(pw).length > 72) {
-        return label + ' must be 72 bytes or fewer, which is the bcrypt limit. '
-             + 'Accented and non-Latin characters take more than one byte each.';
+        return t('{label} must be 72 bytes or fewer, which is the bcrypt limit. Accented and non-Latin characters take more than one byte each.', { label });
     }
     return null;
 }
@@ -976,15 +975,15 @@ function _paintSetupTabs() {
 }
 const MAX_STEP   = TEMP_PW_MODE ? 6 : 7;
 
-const STEPS = [
-    { label: 'Welcome',       note: '' },
-    { label: 'Traefik',       note: '' },
-    { label: 'Self route',    note: 'Leave the hostname blank to skip' },
-    { label: 'Monitoring',    note: 'Every tab can be changed later' },
-    { label: 'CrowdSec',      note: 'Leave the URL blank to skip' },
-    { label: 'Git backup',    note: 'Leave the URL blank to skip' },
-    { label: 'Notifications', note: 'Leave the fields blank to skip' },
-    { label: 'Password',      note: '' },
+const STEP_NOTES = [
+    '',
+    '',
+    t('Leave the hostname blank to skip'),
+    t('Every tab can be changed later'),
+    t('Leave the URL blank to skip'),
+    t('Leave the URL blank to skip'),
+    t('Leave the fields blank to skip'),
+    '',
 ];
 
 function goTo(step) {
@@ -1010,20 +1009,20 @@ function goTo(step) {
     }
 
     document.getElementById('wzProgress').textContent =
-        'Step ' + (step + 1) + ' of ' + (MAX_STEP + 1);
+        t('Step {n} of {total}', { n: step + 1, total: MAX_STEP + 1 });
 
     const back = document.getElementById('wzBack');
     const next = document.getElementById('wzNext');
     const note = document.getElementById('wzSkipNote');
     back.style.visibility = step === 0 ? 'hidden' : 'visible';
-    note.textContent = (STEPS[step] && STEPS[step].note) || '';
+    note.textContent = STEP_NOTES[step] || '';
 
     if (step === MAX_STEP) {
         next.id = 'wzNext';
-        next.innerHTML = '<i class="ph-bold ph-check"></i> Finish setup';
+        next.innerHTML = `<i class="ph-bold ph-check"></i> ${thc('button', 'Finish setup')}`;
         next.disabled = !TEMP_PW_MODE && !_pwOk();
     } else {
-        next.innerHTML = (step === 0 ? 'Get started' : 'Continue')
+        next.innerHTML = (step === 0 ? thc('button', 'Get started') : thc('button', 'Continue'))
             + ' <i class="ph-bold ph-arrow-right"></i>';
         next.disabled = false;
     }
@@ -1061,10 +1060,10 @@ function validateStep1() {
     hideError();
     const domains = document.getElementById('s_domains').value.trim();
     const apiUrl  = document.getElementById('s_apiurl').value.trim();
-    if (!domains) { showError('Enter at least one domain.'); return; }
-    if (!apiUrl)  { showError('Enter the Traefik API URL.'); return; }
+    if (!domains) { showError(t('Enter at least one domain.')); return; }
+    if (!apiUrl)  { showError(t('Enter the Traefik API URL.')); return; }
     if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-        showError('Traefik API URL must start with http:// or https://');
+        showError(t('Traefik API URL must start with http:// or https://'));
         return;
     }
     goTo(2);
@@ -1075,8 +1074,8 @@ async function testApi() {
     const user   = document.getElementById('s_apiuser').value.trim();
     const pw     = document.getElementById('s_apipassword').value;
     const result = document.getElementById('apiTestResult');
-    if (!url) { result.textContent = 'Enter a URL first.'; result.style.color = 'var(--muted)'; return; }
-    result.textContent = 'Testing…';
+    if (!url) { result.textContent = t('Enter a URL first.'); result.style.color = 'var(--muted)'; return; }
+    result.textContent = tc('label', 'Testing…');
     result.style.color = 'var(--muted)';
     try {
         const res = await fetch('{{ url_for("api_setup_test_connection") }}', {
@@ -1086,14 +1085,14 @@ async function testApi() {
         });
         const d = await res.json();
         if (d.ok) {
-            result.textContent = '✓ Connected - Traefik v' + d.version;
+            result.textContent = t('✓ Connected - Traefik v{version}', { version: d.version });
             result.style.color = 'var(--green)';
         } else {
-            result.textContent = '✗ ' + (d.error || 'Connection failed');
+            result.textContent = '✗ ' + (d.error || t('Connection failed'));
             result.style.color = 'var(--red)';
         }
     } catch(e) {
-        result.textContent = '✗ Connection failed';
+        result.textContent = '✗ ' + t('Connection failed');
         result.style.color = 'var(--red)';
     }
 }
@@ -1138,12 +1137,12 @@ function checkPwMatch() {
         btn.disabled = true; return;
     }
     if (confirm && pw !== confirm) {
-        hint.textContent = 'Passwords do not match.';
+        hint.textContent = t('Passwords do not match.');
         hint.style.color = 'var(--red)'; hint.style.display = 'block';
         btn.disabled = true; return;
     }
     if (!pwErr && pw === confirm) {
-        hint.textContent = '✓ Passwords match';
+        hint.textContent = t('✓ Passwords match');
         hint.style.color = 'var(--green)'; hint.style.display = 'block';
         btn.disabled = false; return;
     }
@@ -1154,8 +1153,8 @@ async function testCrowdSec() {
     const out = document.getElementById('csTestResult');
     const url = (document.getElementById('s_cs_url').value || '').trim();
     const key = (document.getElementById('s_cs_key').value || '').trim();
-    if (!url) { out.textContent = 'Enter a LAPI URL first'; out.style.color = 'var(--muted)'; return; }
-    out.textContent = 'Testing...'; out.style.color = 'var(--muted)';
+    if (!url) { out.textContent = t('Enter a LAPI URL first'); out.style.color = 'var(--muted)'; return; }
+    out.textContent = tc('label', 'Testing...'); out.style.color = 'var(--muted)';
     try {
         const res = await fetch('{{ url_for("setup_test_crowdsec") }}', {
             method: 'POST',
@@ -1163,16 +1162,16 @@ async function testCrowdSec() {
             body: JSON.stringify({ url, key }),
         });
         const data = await res.json();
-        out.textContent = data.ok ? 'Reachable' : (data.error || 'Failed');
+        out.textContent = data.ok ? t('Reachable') : (data.error || t('Failed'));
         out.style.color = data.ok ? 'var(--green)' : 'var(--red)';
-    } catch (e) { out.textContent = 'Request failed'; out.style.color = 'var(--red)'; }
+    } catch (e) { out.textContent = t('Request failed'); out.style.color = 'var(--red)'; }
 }
 
 async function testGitRepo() {
     const out = document.getElementById('gitTestResult');
     const repo = (document.getElementById('s_git_repo').value || '').trim();
-    if (!repo) { out.textContent = 'Enter a repository URL first'; out.style.color = 'var(--muted)'; return; }
-    out.textContent = 'Testing...'; out.style.color = 'var(--muted)';
+    if (!repo) { out.textContent = t('Enter a repository URL first'); out.style.color = 'var(--muted)'; return; }
+    out.textContent = tc('label', 'Testing...'); out.style.color = 'var(--muted)';
     try {
         const res = await fetch('{{ url_for("setup_test_git") }}', {
             method: 'POST',
@@ -1184,28 +1183,28 @@ async function testGitRepo() {
             }),
         });
         const data = await res.json();
-        out.textContent = data.ok ? 'Reachable' : (data.error || 'Failed');
+        out.textContent = data.ok ? t('Reachable') : (data.error || t('Failed'));
         out.style.color = data.ok ? 'var(--green)' : 'var(--red)';
-    } catch (e) { out.textContent = 'Request failed'; out.style.color = 'var(--red)'; }
+    } catch (e) { out.textContent = t('Request failed'); out.style.color = 'var(--red)'; }
 }
 
 const NOTIFY_STEP = 6;
 
 const SETUP_NOTIFY_KINDS = {
-    discord:    { fields: { url:    { label: 'Webhook URL',  desc: 'Where notifications are delivered.', ph: 'https://discord.com/api/webhooks/...' } } },
-    slack:      { fields: { url:    { label: 'Webhook URL',  desc: 'Incoming webhook created in your Slack workspace.', ph: 'https://hooks.slack.com/services/...' } } },
+    discord:    { fields: { url:    { label: t('Webhook URL'),  desc: t('Where notifications are delivered.'), ph: 'https://discord.com/api/webhooks/...' } } },
+    slack:      { fields: { url:    { label: t('Webhook URL'),  desc: t('Incoming webhook created in your Slack workspace.'), ph: 'https://hooks.slack.com/services/...' } } },
     ntfy:       { auth: true,
-                  fields: { url:    { label: 'URL',          desc: 'Full topic URL on ntfy.sh or your own server.', ph: 'https://ntfy.sh/my-topic' } } },
+                  fields: { url:    { label: 'URL',          desc: t('Full topic URL on ntfy.sh or your own server.'), ph: 'https://ntfy.sh/my-topic' } } },
     generic:    { auth: true,
-                  fields: { url:    { label: 'URL',          desc: 'Receives a JSON body you can shape downstream.', ph: 'https://example.com/hooks/traefik' } } },
-    gotify:     { fields: { url:    { label: 'Server URL',   desc: 'Base URL of your Gotify server.', ph: 'https://gotify.example.com' },
-                            token:  { label: 'App Token',    desc: 'Application token from Gotify. Stored encrypted.', secret: true } } },
-    pushover:   { fields: { token:  { label: 'App Token',    desc: 'Application token from your Pushover app. Stored encrypted.', secret: true },
-                            token2: { label: 'User Key',     desc: 'Your Pushover user or group key. Stored encrypted.', secret: true } } },
-    pushbullet: { fields: { token:  { label: 'Access Token', desc: 'Access token from your Pushbullet account. Stored encrypted.', secret: true } } },
-    telegram:   { fields: { token:  { label: 'Bot Token',    desc: 'Token issued by BotFather. Stored encrypted.', secret: true },
-                            token2: { label: 'Chat ID',      desc: 'Target chat, group or channel to post into.', ph: '-1001234567890',
-                                      hint: 'Send your bot a message, open https://api.telegram.org/bot<token>/getUpdates and copy chat.id.' } } },
+                  fields: { url:    { label: 'URL',          desc: t('Receives a JSON body you can shape downstream.'), ph: 'https://example.com/hooks/traefik' } } },
+    gotify:     { fields: { url:    { label: t('Server URL'),   desc: t('Base URL of your Gotify server.'), ph: 'https://gotify.example.com' },
+                            token:  { label: t('App Token'),    desc: t('Application token from Gotify. Stored encrypted.'), secret: true } } },
+    pushover:   { fields: { token:  { label: t('App Token'),    desc: t('Application token from your Pushover app. Stored encrypted.'), secret: true },
+                            token2: { label: t('User Key'),     desc: t('Your Pushover user or group key. Stored encrypted.'), secret: true } } },
+    pushbullet: { fields: { token:  { label: t('Access Token'), desc: t('Access token from your Pushbullet account. Stored encrypted.'), secret: true } } },
+    telegram:   { fields: { token:  { label: t('Bot Token'),    desc: t('Token issued by BotFather. Stored encrypted.'), secret: true },
+                            token2: { label: t('Chat ID'),      desc: t('Target chat, group or channel to post into.'), ph: '-1001234567890',
+                                      hint: t('Send your bot a message, open {url} and copy chat.id.', { url: 'https://api.telegram.org/bot<token>/getUpdates' }) } } },
 };
 
 function onSetupNotifyKind() {
@@ -1247,11 +1246,11 @@ function _notifyValues() {
 function _notifyProblem() {
     const v = _notifyValues();
     if (!['url', 'token', 'token2', 'username', 'password'].some(k => v[k])) return '';
-    if (!v.spec.fields) return 'Choose a notification destination.';
+    if (!v.spec.fields) return t('Choose a notification destination.');
     const missing = Object.keys(v.spec.fields).filter(k => !v[k]).map(k => v.spec.fields[k].label);
-    return missing.length
-        ? 'Notifications need ' + missing.join(' and ') + ', or clear the step to skip it.'
-        : '';
+    if (missing.length === 1) return t('Notifications need {field}, or clear the step to skip it.', { field: missing[0] });
+    if (missing.length === 2) return t('Notifications need {first} and {second}, or clear the step to skip it.', { first: missing[0], second: missing[1] });
+    return '';
 }
 
 function submitSetup() {
@@ -1295,12 +1294,12 @@ function submitSetup() {
         const confirm = document.getElementById('s_confirm').value;
         const pwErr = _passwordError(pw);
         if (pwErr)          { showError(pwErr); return; }
-        if (pw !== confirm) { showError('Passwords do not match.'); return; }
+        if (pw !== confirm) { showError(t('Passwords do not match.')); return; }
         document.getElementById('f_password').value = pw;
         document.getElementById('f_confirm').value  = confirm;
         const btn = document.getElementById('wzNext');
         btn.disabled  = true;
-        btn.innerHTML = '<i class="ph-bold ph-circle-notch" style="animation:spin 0.8s linear infinite"></i> Saving…';
+        btn.innerHTML = `<i class="ph-bold ph-circle-notch" style="animation:spin 0.8s linear infinite"></i> ${thc('label', 'Saving…')}`;
     }
 
     document.getElementById('setupForm').submit();
@@ -1324,12 +1323,12 @@ function checkForcePwMatch() {
         btn.disabled = true; return;
     }
     if (confirm && pw !== confirm) {
-        hint.textContent = 'Passwords do not match.';
+        hint.textContent = t('Passwords do not match.');
         hint.style.color = 'var(--red)'; hint.style.display = 'block';
         btn.disabled = true; return;
     }
     if (!pwErr && pw === confirm) {
-        hint.textContent = '✓ Passwords match';
+        hint.textContent = t('✓ Passwords match');
         hint.style.color = 'var(--green)'; hint.style.display = 'block';
         btn.disabled = false; return;
     }

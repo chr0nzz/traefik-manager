@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-18 17:39-0400\n"
+"POT-Creation-Date: 2026-09-18 19:07-0400\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -1883,6 +1883,7 @@ msgctxt "tooltip"
 msgid "Checking..."
 msgstr ""
 
+#. Used in the browser
 msgid "Choose a notification destination."
 msgstr ""
 
@@ -2249,6 +2250,7 @@ msgstr ""
 msgid "Content-Type nosniff"
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
 msgid "Continue"
 msgstr ""
@@ -3353,6 +3355,14 @@ msgid "Enter 6-digit code to confirm"
 msgstr ""
 
 #. Used in the browser
+msgid "Enter a LAPI URL first"
+msgstr ""
+
+#. Used in the browser
+msgid "Enter a URL first."
+msgstr ""
+
+#. Used in the browser
 msgid "Enter a device name first."
 msgstr ""
 
@@ -3362,6 +3372,10 @@ msgstr ""
 
 #. Used in the browser
 msgid "Enter a name for this key"
+msgstr ""
+
+#. Used in the browser
+msgid "Enter a repository URL first"
 msgstr ""
 
 #. Used in the browser
@@ -3375,6 +3389,7 @@ msgstr ""
 msgid "Enter an http:// or https:// URL"
 msgstr ""
 
+#. Used in the browser
 msgid "Enter at least one domain."
 msgstr ""
 
@@ -3385,6 +3400,7 @@ msgstr ""
 msgid "Enter the 6-digit code."
 msgstr ""
 
+#. Used in the browser
 msgid "Enter the Traefik API URL."
 msgstr ""
 
@@ -3575,6 +3591,10 @@ msgid ""
 msgstr ""
 
 #. Used in the browser
+msgid "Every tab can be changed later"
+msgstr ""
+
+#. Used in the browser
 msgid ""
 "Everything else in force came from a subscribed list rather than from "
 "something this host saw."
@@ -3621,6 +3641,10 @@ msgid "Expression"
 msgstr ""
 
 msgid "Extra domains"
+msgstr ""
+
+#. Used in the browser
+msgid "Failed"
 msgstr ""
 
 #. Used in the browser
@@ -3937,6 +3961,11 @@ msgctxt "label"
 msgid "Finish"
 msgstr ""
 
+#. Used in the browser
+msgctxt "button"
+msgid "Finish setup"
+msgstr ""
+
 msgid "Fit to screen"
 msgstr ""
 
@@ -4122,6 +4151,11 @@ msgstr ""
 
 #. Used in the browser
 msgid "Geolocation on - downloading database..."
+msgstr ""
+
+#. Used in the browser
+msgctxt "button"
+msgid "Get started"
 msgstr ""
 
 msgid "Get the agent compose"
@@ -4330,6 +4364,7 @@ msgctxt "group"
 msgid "Home"
 msgstr ""
 
+#. Used in the browser
 msgctxt "button"
 msgid "Host"
 msgstr ""
@@ -4784,6 +4819,18 @@ msgid "Leave blank to use the route's URL"
 msgstr ""
 
 msgid "Leave empty if not required"
+msgstr ""
+
+#. Used in the browser
+msgid "Leave the URL blank to skip"
+msgstr ""
+
+#. Used in the browser
+msgid "Leave the fields blank to skip"
+msgstr ""
+
+#. Used in the browser
+msgid "Leave the hostname blank to skip"
 msgstr ""
 
 #. Used in the browser
@@ -6007,6 +6054,16 @@ msgctxt "tooltip"
 msgid "Notifications"
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid "Notifications need {field}, or clear the step to skip it."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Notifications need {first} and {second}, or clear the step to skip it."
+msgstr ""
+
 #, python-format
 msgid ""
 "Number of trusted proxies in front of Traefik. It takes the IP that many "
@@ -6971,6 +7028,10 @@ msgid "Raw YAML editor"
 msgstr ""
 
 msgid "Re-enter the Traefik API password when changing the API URL"
+msgstr ""
+
+#. Used in the browser
+msgid "Reachable"
 msgstr ""
 
 #. Used in the browser
@@ -8229,6 +8290,11 @@ msgid "Send test"
 msgstr ""
 
 #. Used in the browser
+#, python-brace-format
+msgid "Send your bot a message, open {url} and copy chat.id."
+msgstr ""
+
+#. Used in the browser
 msgctxt "label"
 msgid "Sending..."
 msgstr ""
@@ -8811,6 +8877,11 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "Step {n} of {total}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "Step {n}."
 msgstr ""
 
@@ -8916,6 +8987,7 @@ msgstr ""
 msgid "Surface held"
 msgstr ""
 
+#. Used in the browser
 msgid "Switch server"
 msgstr ""
 
@@ -9766,6 +9838,7 @@ msgstr ""
 msgid "Tracing {otlp}"
 msgstr ""
 
+#. Used in the browser
 msgid "Traefik API URL must start with http:// or https://"
 msgstr ""
 
@@ -12017,6 +12090,11 @@ msgid "of {retained} retained alerts match"
 msgstr ""
 
 #. Used in the browser
+msgctxt "label"
+msgid "offline"
+msgstr ""
+
+#. Used in the browser
 #, python-brace-format
 msgid "ok{SD_SEP}{b} redirects"
 msgstr ""
@@ -13808,6 +13886,18 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid ""
+"{name} is offline - it is not responding. Its tabs will stay empty until "
+"it responds."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{name} is offline - {error}. Its tabs will stay empty until it responds."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{name} mirror ({percent}%)"
 msgstr ""
 
@@ -14333,5 +14423,9 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "✓ Connected - Traefik v{version}"
+msgstr ""
+
+#. Used in the browser
+msgid "✓ Passwords match"
 msgstr ""
 
