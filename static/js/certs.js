@@ -420,7 +420,7 @@ function renderCertCards() {
                 ${_certDeleteRail(cert, main, resolver, sans)}
             </div>
             ${vals ? `<div class="tm-vals">${vals}</div>` : ''}
-            <div class="tm-foot"><span class="tm-meta${_certFlagClass(cert)}">${daysLeft !== null && daysLeft < 0 ? th('expired {date}', { date: expiryStr }) : th('expires {date}', { date: expiryStr })}${extra.length ? ` · ${extra.length + 1} domains` : ''}${_certFlagText(cert)}</span>${daysLeft !== null ? `<span class="tm-cf" style="color:${expiryColor}">${_certLeft(daysLeft)}</span>` : ''}</div>
+            <div class="tm-foot"><span class="tm-meta${_certFlagClass(cert)}">${daysLeft !== null && daysLeft < 0 ? th('expired {date}', { date: expiryStr }) : th('expires {date}', { date: expiryStr })}${extra.length ? ' · ' + th('{count} domains', { count: extra.length + 1 }) : ''}${_certFlagText(cert)}</span>${daysLeft !== null ? `<span class="tm-cf" style="color:${expiryColor}">${_certLeft(daysLeft)}</span>` : ''}</div>
         </div>`;
     }).join('');
     document.getElementById('certsContent').innerHTML =

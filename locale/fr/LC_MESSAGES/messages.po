@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-18 17:21-0400\n"
+"POT-Creation-Date: 2026-09-18 17:39-0400\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -151,6 +151,10 @@ msgstr ""
 
 #. Used in the browser
 msgid "(leave empty for stdout)"
+msgstr ""
+
+#. Used in the browser
+msgid "(lines, optional)"
 msgstr ""
 
 msgctxt "option"
@@ -376,6 +380,11 @@ msgid "0 of the last {fetched} lines are {bits}"
 msgstr ""
 
 msgid "0 selected"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "0/{total} servers"
 msgstr ""
 
 #. Used in the browser
@@ -1603,17 +1612,16 @@ msgstr ""
 msgid "Browse Plugins"
 msgstr ""
 
+#. Used in the browser
+msgid "Buffering"
+msgstr ""
+
 msgctxt "option"
 msgid "Buffering"
 msgstr ""
 
 #, python-format
 msgid "Buffering must be a whole number of lines, got %(buffer)s"
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid "Buffering {lines_optional}"
 msgstr ""
 
 msgid "Build backends"
@@ -10800,7 +10808,7 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
-msgid "backend unreachable {v0_servers}"
+msgid "backend unreachable {servers}"
 msgstr ""
 
 #. Used in the browser
@@ -11306,6 +11314,14 @@ msgstr ""
 
 #. Used in the browser
 msgid "generic clf access log"
+msgstr ""
+
+#. Used in the browser
+msgid "geoip off"
+msgstr ""
+
+#. Used in the browser
+msgid "geoip on"
 msgstr ""
 
 #. Used in the browser
@@ -12040,6 +12056,9 @@ msgctxt "setting"
 msgid "optional"
 msgstr ""
 
+msgid "optional, comma-separated"
+msgstr ""
+
 msgctxt "label"
 msgid "or"
 msgstr ""
@@ -12611,8 +12630,15 @@ msgstr ""
 msgid "tls fields"
 msgstr ""
 
+msgid "tm CLI docs"
+msgstr ""
+
 msgctxt "time range"
 msgid "to"
+msgstr ""
+
+#. Used in the browser
+msgid "tool"
 msgstr ""
 
 #. Used in the browser
@@ -12963,6 +12989,11 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{active}/{total} active"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{agentName} - API Keys"
 msgstr ""
 
@@ -13118,6 +13149,11 @@ msgid "{count} domain served at least one failing request"
 msgid_plural "{count} domains served at least one failing request"
 msgstr[0] ""
 msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} domains"
+msgstr ""
 
 #. Used in the browser
 #, python-brace-format
@@ -14219,6 +14255,11 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "{up} of {total} backends up"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{up}/{total} servers"
 msgstr ""
 
 #. Used in the browser

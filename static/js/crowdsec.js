@@ -1087,7 +1087,7 @@ function _atkCardAgents(d) {
     const rb = _atkRankBody(list, {
         noun: 'agents', unitN: 'hits',
         label: e => e.key,
-        kindLabel: e => isBot(e.key) ? 'tool' : t('browser string'),
+        kindLabel: e => isBot(e.key) ? t('tool') : t('browser string'),
         glyph: e => isBot(e.key) ? '<i class="ph-bold ph-terminal-window"></i>' : '<i class="ph-bold ph-browser"></i>',
         go: e => _atkSpec({ agent: e.key }),
         tipName: e => (e.rows[0] && e.rows[0].uas[0]) || e.key

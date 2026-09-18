@@ -1537,7 +1537,7 @@ tm update        update the agent to the current release
 tm reconfigure   change any answer from the installer
 tm doctor        diagnose a broken install
 tm add crowdsec  add CrowdSec to this agent</pre>
-                                        <div class="sc-set-d" style="margin-top:6px">{{ _('Full reference: %(tm_cli_docs)s', tm_cli_docs=tag('a', 'tm CLI docs', href='https://traefik-manager.xyzlab.dev/tm-cli.html#managing-the-install', target='_blank', style_='color:var(--blue)')) }}</div>
+                                        <div class="sc-set-d" style="margin-top:6px">{{ _('Full reference: %(tm_cli_docs)s', tm_cli_docs=tag('a', _('tm CLI docs'), href='https://traefik-manager.xyzlab.dev/tm-cli.html#managing-the-install', target='_blank', style_='color:var(--blue)')) }}</div>
                                     </div>
                                 </div>
                                 <div class="flex justify-between mt-4">
@@ -1650,12 +1650,12 @@ tm add crowdsec  add CrowdSec to this agent</pre>
                                             <pre class="font-mono mt-2" style="white-space:pre-wrap;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px">curl -fsSL https://get-traefik.xyzlab.dev | bash    install tm on the agent
 tm reconfigure                                     change any of these values
 tm add crowdsec                                    add CrowdSec to this agent</pre>
-                                            <span class="block mt-2">{{ _('Prefer to do it by hand? Everything below still generates a compose file you can deploy yourself. %(tm_cli_docs)s · %(agent_docs)s', tm_cli_docs=tag('a', 'tm CLI docs', href='https://traefik-manager.xyzlab.dev/tm-cli.html#managing-the-install', target='_blank', style_='color:var(--blue)'), agent_docs=tag('a', _('Agent docs'), href='https://traefik-manager.xyzlab.dev/agent.html', target='_blank', style_='color:var(--blue)')) }}</span>
+                                            <span class="block mt-2">{{ _('Prefer to do it by hand? Everything below still generates a compose file you can deploy yourself. %(tm_cli_docs)s · %(agent_docs)s', tm_cli_docs=tag('a', _('tm CLI docs'), href='https://traefik-manager.xyzlab.dev/tm-cli.html#managing-the-install', target='_blank', style_='color:var(--blue)'), agent_docs=tag('a', _('Agent docs'), href='https://traefik-manager.xyzlab.dev/agent.html', target='_blank', style_='color:var(--blue)')) }}</span>
                                         </div>
                                     </div>
                                 <div class="sc-panel mb-3">
                                     <div class="sc-fld">
-                                        <div class="sc-set-n">{{ _('Domains %(optional_comma_separated)s', optional_comma_separated=tag('span', 'optional, comma-separated', style_='color:var(--muted);font-weight:400')) }}</div>
+                                        <div class="sc-set-n">{{ _('Domains %(optional_comma_separated)s', optional_comma_separated=tag('span', _('optional, comma-separated'), style_='color:var(--muted);font-weight:400')) }}</div>
                                         <div class="sc-set-d">{{ _('Domains for route creation on this agent - lets you pick a domain chip instead of typing the full hostname.') }}</div>
                                         <input id="agCfgDomains" type="text" class="input-field text-xs" placeholder="example.com, other.net" oninput="agentCfgChanged()">
                                     </div>

@@ -180,7 +180,7 @@ function renderServicesTable() {
         const serverStatus  = s.serverStatus || {};
         const serverEntries = Object.entries(serverStatus);
         const activeCount   = serverEntries.filter(([,v]) => (v||'').toLowerCase() === 'up').length;
-        const serverSummary = serverEntries.length > 0 ? `${activeCount}/${serverEntries.length} active` : null;
+        const serverSummary = serverEntries.length > 0 ? th('{active}/{total} active', { active: activeCount, total: serverEntries.length }) : null;
         const srvColor      = serverEntries.length > 0 && activeCount === serverEntries.length ? 'var(--green)' : 'var(--orange)';
 
         const usedBy = s.usedBy || [];

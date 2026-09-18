@@ -1953,7 +1953,7 @@ function _buildStaticClassicHTML() {
                         <p class="text-xs mt-1" style="color:var(--muted)">${th('Only log requests slower than this.')}</p>
                     </div>
                     <div>
-                        <label class="text-xs block mb-1" style="color:var(--muted)">${th('Buffering {lines_optional}', { lines_optional: tmHtml(`<span style="font-weight:400">(lines, optional)</span>`) })}</label>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${th('Buffering')} <span style="font-weight:400">${th('(lines, optional)')}</span></label>
                         <input id="sfALBuffering" type="text" class="input-field text-sm" placeholder="${th('e.g. 100')}">
                     </div>
                     <div>

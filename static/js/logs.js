@@ -651,7 +651,7 @@ function _lgRankBody(list, opts) {
             health: o.e5 ? 'down' : (o.err && o.err === o.n ? 'warn' : ''),
             glyph: opts.glyph ? opts.glyph(o) : '',
             name: opts.label ? opts.label(o) : o.key,
-            kind: o.kind,
+            kind: opts.kindLabel ? opts.kindLabel(o) : o.kind,
             bad: bad,
             n: o.n,
             pct: pct,
@@ -1120,6 +1120,7 @@ function _lgClientsCard(rows, total) {
     const built = _lgRankBody(list, {
         total: total, noun: 'clients',
         facet: o => ({ ip: o.key }),
+        kindLabel: o => (LG_IP_GLYPH[o.kind] || LG_IP_GLYPH.unknown)[1],
         tipName: o => o.key + ', ' + t('{v1} address', { v1: (LG_IP_GLYPH[o.kind] || LG_IP_GLYPH.unknown)[1] }),
         glyph: o => {
             const g = LG_IP_GLYPH[o.kind] || LG_IP_GLYPH.unknown;
@@ -1259,7 +1260,7 @@ function _lgRuntime(meta, rows) {
     const tls = rows.some(e => e.tls);
     facts.push(`<span class="sig-f ${tls ? 'sig-f-on' : 'sig-f-off'}" title="${_esc(tls ? t('TLSVersion is present on these lines.')
             : t('No TLSVersion field on these lines. Add it with accessLog.fields.names in the static config.'))}"><i class="ph-bold ph-shield-check"></i>${tls ? th('tls fields') : th('no tls fields')}</span>`);
-    facts.push(`<span class="sig-f ${meta.geoOn ? 'sig-f-on' : 'sig-f-off'}" title="${meta.geoOn ? th('Country lookup is on, so the Geography panel below is live.') : th('Country lookup is off.')}"><i class="ph-bold ph-globe-hemisphere-west"></i>geoip ${meta.geoOn ? 'on' : 'off'}</span>`);
+    facts.push(`<span class="sig-f ${meta.geoOn ? 'sig-f-on' : 'sig-f-off'}" title="${meta.geoOn ? th('Country lookup is on, so the Geography panel below is live.') : th('Country lookup is off.')}"><i class="ph-bold ph-globe-hemisphere-west"></i>${meta.geoOn ? th('geoip on') : th('geoip off')}</span>`);
     const auto = _lgAutoOn();
     facts.push(`<span class="sig-f ${auto ? 'sig-f-on' : 'sig-f-off'}" title="${_esc(auto
         ? t('This panel refetches every {seconds} seconds while the Logs tab is open and the browser tab is visible. It pauses while you are typing in the filter box.', { seconds: _lgAutoInterval() / 1000 })

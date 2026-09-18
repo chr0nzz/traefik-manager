@@ -500,14 +500,14 @@ function _dskState(r) {
         s.health  = 'down';
         s.dot     = 'sig-cell-err';
         s.dotTip  = t('Backend unreachable - 0 of {total} servers up', { total: svc.total });
-        s.note    = `${th('backend unreachable {v0_servers}', { v0_servers: tmHtml(`<b>0/${svc.total} servers</b>`) })}`;
+        s.note    = `${th('backend unreachable {servers}', { servers: tmHtml(`<b>${th('0/{total} servers', { total: svc.total })}</b>`) })}`;
         s.noteIc  = 'ph-fill ph-warning-octagon';
         s.noteCls = 'd-bad';
     } else if (svc && svc.total && svc.up < svc.total) {
         s.health  = 'warn';
         s.dot     = 'sig-cell-warn';
         s.dotTip  = t('Backend degraded - {up} of {total} servers up', { up: svc.up, total: svc.total });
-        s.note    = `${th('backend degraded {servers}', { servers: tmHtml(`<b>${svc.up}/${svc.total} servers</b>`) })}`;
+        s.note    = `${th('backend degraded {servers}', { servers: tmHtml(`<b>${th('{up}/{total} servers', { up: svc.up, total: svc.total })}</b>`) })}`;
         s.noteIc  = 'ph-fill ph-warning';
         s.noteCls = 'd-warn';
     } else if (_rmStatusBlind) {
@@ -540,7 +540,7 @@ function _dskState(r) {
         s.dotTip  = ((chk.down_servers || []).length
             ? t('Backend degraded - {up} of {total} servers up ({servers} down) · {ago}', { up: sv.up, total: sv.total, servers: chk.down_servers.join(', '), ago: _dskAgo(chk.at) })
             : t('Backend degraded - {up} of {total} servers up · {ago}', { up: sv.up, total: sv.total, ago: _dskAgo(chk.at) }));
-        s.note    = `${th('backend degraded {servers}', { servers: tmHtml(`<b>${sv.up}/${sv.total} servers</b>`) })}`;
+        s.note    = `${th('backend degraded {servers}', { servers: tmHtml(`<b>${th('{up}/{total} servers', { up: sv.up, total: sv.total })}</b>`) })}`;
         s.noteIc  = 'ph-fill ph-warning';
         s.noteCls = 'd-warn';
     } else if (chk && chk.state === 'up') {
