@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-18 11:28-0400\n"
+"POT-Creation-Date: 2026-09-18 12:09-0400\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -22,9 +22,27 @@ msgid "%(auth_verify)s is appended automatically"
 msgstr ""
 
 #, python-format
+msgid "%(bare)s is %(bits)s"
+msgstr ""
+
+#, python-format
+msgid "%(child)s is still used by %(users)s"
+msgstr ""
+
+#, python-format
+msgid "%(claimed)s already belongs to %(claimed2)s. Pick a different name"
+msgstr ""
+
+#, python-format
 msgid ""
 "%(line_break)s⚠ A %(buffering)s/%(compress)s middleware is attached - "
 "remove it for smooth streaming and seeking."
+msgstr ""
+
+#, python-format
+msgid ""
+"%(loop)s already routes back to %(name)s, which would make a cycle "
+"Traefik cannot load"
 msgstr ""
 
 #, python-format
@@ -52,9 +70,35 @@ msgid "%(n8)s Password"
 msgstr ""
 
 #, python-format
+msgid "%(name)s cannot use itself as a backend"
+msgstr ""
+
+#, python-format
+msgid "%(name)s is still used by %(tls_users)s%(tls_users2)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(name)s is still used by %(users)s%(users2)s. Delete those middlewares "
+"first"
+msgstr ""
+
+#, python-format
 msgid ""
 "%(new_in_v1)s Static Config Editor lets you manage your Traefik static "
 "config from the UI. %(set_it_up)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(original)s matches more than one certificate store, so this backup "
+"cannot be restored safely"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(original)s matches more than one config file, so this backup cannot be "
+"restored safely"
 msgstr ""
 
 #, python-format
@@ -190,6 +234,10 @@ msgid ""
 "encrypted, and never shown again after setup."
 msgstr ""
 
+#, python-format
+msgid "A service named '%(name)s' already exists"
+msgstr ""
+
 msgid "A temporary password was generated at startup - check your container logs."
 msgstr ""
 
@@ -253,8 +301,17 @@ msgstr ""
 msgid "Access Log Path"
 msgstr ""
 
+msgid ""
+"Access log not found. Set ACCESS_LOG_PATH env var or configure the path "
+"in Settings."
+msgstr ""
+
 #, python-format
 msgid "Access log path %(optional)s"
+msgstr ""
+
+#, python-format
+msgid "Access log path refused: %(refused)s"
 msgstr ""
 
 msgid "Access logs not loaded"
@@ -315,6 +372,9 @@ msgid "Add Vary Header"
 msgstr ""
 
 msgid "Add agent"
+msgstr ""
+
+msgid "Add at least one backend"
 msgstr ""
 
 msgid "Add backend"
@@ -392,6 +452,19 @@ msgstr ""
 msgid "Agent name"
 msgstr ""
 
+msgid "Agent not found"
+msgstr ""
+
+msgid "Agent rejected the static config write"
+msgstr ""
+
+#, python-format
+msgid "Agent static config is not valid YAML: %(error)s"
+msgstr ""
+
+msgid "Agent timed out"
+msgstr ""
+
 msgctxt "button"
 msgid "Agents"
 msgstr ""
@@ -401,6 +474,12 @@ msgid "Agents"
 msgstr ""
 
 msgid "Alert limit"
+msgstr ""
+
+msgid "Alert limit must be a whole number"
+msgstr ""
+
+msgid "Alert limit must be between 0 and 100000"
 msgstr ""
 
 msgctxt "button"
@@ -546,6 +625,9 @@ msgstr ""
 msgid "At least 8 characters. A long passphrase beats a short complicated one."
 msgstr ""
 
+msgid "At least one domain is required"
+msgstr ""
+
 msgctxt "setting"
 msgid "Attempts"
 msgstr ""
@@ -620,6 +702,9 @@ msgstr ""
 msgid "Backup dir"
 msgstr ""
 
+msgid "Backup not found"
+msgstr ""
+
 #, python-format
 msgid "Backup retention %(optional)s"
 msgstr ""
@@ -688,6 +773,16 @@ msgctxt "setting"
 msgid "Branch"
 msgstr ""
 
+#, python-format
+msgid "Branch \"%(branch)s\" is already used by agent \"%(name)s\""
+msgstr ""
+
+#, python-format
+msgid ""
+"Branch \"%(branch)s\" is used by the Host - each server needs its own "
+"branch"
+msgstr ""
+
 msgid "Branch and username"
 msgstr ""
 
@@ -701,10 +796,19 @@ msgctxt "option"
 msgid "Buffering"
 msgstr ""
 
+#, python-format
+msgid "Buffering must be a whole number of lines, got %(buffer)s"
+msgstr ""
+
 msgid "Build backends"
 msgstr ""
 
 msgid "Built-in authentication"
+msgstr ""
+
+msgid ""
+"Built-in authentication or OIDC is active, so there is nothing to "
+"acknowledge"
 msgstr ""
 
 msgid "Bulk select"
@@ -736,6 +840,20 @@ msgstr ""
 
 msgctxt "button"
 msgid "Cancel"
+msgstr ""
+
+msgid "Cannot reach agent"
+msgstr ""
+
+msgid "Cannot reach agent - check URL and network"
+msgstr ""
+
+#, python-format
+msgid "Cannot reach agent: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Cannot write to '%(config_file)s'"
 msgstr ""
 
 msgid ""
@@ -822,6 +940,13 @@ msgstr ""
 msgid "Changes here can break Traefik"
 msgstr ""
 
+#, python-format
+msgid "Channel is missing %(missing)s"
+msgstr ""
+
+msgid "Channel not found"
+msgstr ""
+
 msgctxt "heading"
 msgid "Channels"
 msgstr ""
@@ -841,6 +966,12 @@ msgstr ""
 
 msgctxt "label"
 msgid "Checking"
+msgstr ""
+
+msgid "Choose a notification destination."
+msgstr ""
+
+msgid "Choose load balancer, weighted, mirroring or failover"
 msgstr ""
 
 msgid "Choose your views"
@@ -969,7 +1100,13 @@ msgstr ""
 msgid "Commit message template"
 msgstr ""
 
+msgid "Commit not found"
+msgstr ""
+
 msgid "Compact stat cards"
+msgstr ""
+
+msgid "Complete every notification field, or clear them to skip notifications."
 msgstr ""
 
 msgid "Compose and run commands"
@@ -1025,6 +1162,16 @@ msgctxt "setting"
 msgid "Connection"
 msgstr ""
 
+#, python-format
+msgid "Connection error - check the URL and network. (%(error)s)"
+msgstr ""
+
+msgid "Connection refused"
+msgstr ""
+
+msgid "Connection timed out - the API URL may be unreachable from the container"
+msgstr ""
+
 msgid "Container name"
 msgstr ""
 
@@ -1069,7 +1216,16 @@ msgstr ""
 msgid "Copy this key now"
 msgstr ""
 
+msgid ""
+"Could not find plugins block - paste the experimental.plugins YAML from "
+"the Traefik plugin page"
+msgstr ""
+
 msgid "Could not save the language"
+msgstr ""
+
+#, python-format
+msgid "Could not write acme.json: %(error)s"
 msgstr ""
 
 msgctxt "button"
@@ -1122,6 +1278,9 @@ msgid "CrowdSec not configured"
 msgstr ""
 
 msgid "Current password"
+msgstr ""
+
+msgid "Current password is incorrect."
 msgstr ""
 
 msgid "Curve Preferences"
@@ -1342,6 +1501,10 @@ msgctxt "button"
 msgid "Download"
 msgstr ""
 
+#, python-format
+msgid "Download failed: %(info)s"
+msgstr ""
+
 msgctxt "setting"
 msgid "Duration"
 msgstr ""
@@ -1353,6 +1516,9 @@ msgid "Dynamic config backups"
 msgstr ""
 
 msgid "Dynamic config path"
+msgstr ""
+
+msgid "EAB needs both the key ID and the HMAC"
 msgstr ""
 
 msgid ""
@@ -1411,7 +1577,16 @@ msgstr ""
 msgid "Enter 6-digit code to confirm"
 msgstr ""
 
+msgid "Enter an http:// or https:// URL"
+msgstr ""
+
+msgid "Enter at least one domain."
+msgstr ""
+
 msgid "Enter the 6-digit code from your authenticator app."
+msgstr ""
+
+msgid "Enter the Traefik API URL."
 msgstr ""
 
 msgid ""
@@ -1435,8 +1610,24 @@ msgctxt "setting"
 msgid "Entrypoint"
 msgstr ""
 
+#, python-format
+msgid "Entrypoint \"%(entrypoint)s\" not found in static config"
+msgstr ""
+
 msgctxt "button"
 msgid "Entrypoints"
+msgstr ""
+
+msgid "Error deleting"
+msgstr ""
+
+msgid "Error deleting middleware"
+msgstr ""
+
+msgid "Error saving configuration"
+msgstr ""
+
+msgid "Error saving middleware"
 msgstr ""
 
 msgctxt "button"
@@ -1499,8 +1690,19 @@ msgstr ""
 msgid "Extra domains"
 msgstr ""
 
+msgid "Failed to add decision - check LAPI permissions"
+msgstr ""
+
+msgid "Failed to delete decision"
+msgstr ""
+
 msgctxt "option"
 msgid "Failover"
+msgstr ""
+
+msgid ""
+"Failover takes two backends: the one that serves and the one that takes "
+"over"
 msgstr ""
 
 msgid ""
@@ -1657,6 +1859,9 @@ msgstr ""
 msgid "Git backup"
 msgstr ""
 
+msgid "Git repo not initialized"
+msgstr ""
+
 #, python-format
 msgid ""
 "Give this interface its own hostname through Traefik, so you can reach it"
@@ -1682,6 +1887,18 @@ msgid "HSTS (Strict Transport Security)"
 msgstr ""
 
 msgid "HSTS (force HTTPS)"
+msgstr ""
+
+#, python-format
+msgid "HTTP %(status_code)s - check the API username and password"
+msgstr ""
+
+#, python-format
+msgid "HTTP %(status_code)s from %(url)s/api/version"
+msgstr ""
+
+#, python-format
+msgid "HTTP %(status_code)s%(hint)s"
 msgstr ""
 
 msgid "HTTP Provider"
@@ -1795,6 +2012,9 @@ msgstr ""
 msgid "IP geolocation"
 msgstr ""
 
+msgid "IP/Range is required"
+msgstr ""
+
 msgctxt "setting"
 msgid "Icon"
 msgstr ""
@@ -1825,6 +2045,9 @@ msgid "Inactive"
 msgstr ""
 
 msgid "Include Subdomains"
+msgstr ""
+
+msgid "Incorrect password."
 msgstr ""
 
 msgctxt "label"
@@ -1872,10 +2095,86 @@ msgctxt "setting"
 msgid "Interval"
 msgstr ""
 
+msgid "Interval must be a number of seconds"
+msgstr ""
+
 msgid "Interval when down"
 msgstr ""
 
 msgid "Intrusion Detection"
+msgstr ""
+
+#, python-format
+msgid "Invalid IP/CIDR: %(bad)s"
+msgstr ""
+
+msgid "Invalid OIDC state. Please try again."
+msgstr ""
+
+msgid "Invalid URL"
+msgstr ""
+
+#, python-format
+msgid "Invalid YAML: %(error)s"
+msgstr ""
+
+msgid "Invalid code - please try again."
+msgstr ""
+
+msgid "Invalid code. Please try again."
+msgstr ""
+
+#, python-format
+msgid "Invalid duration for %(yaml_key)s: %(value)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Invalid duration for %(yaml_key)s: %(value)s - use forms like 30, 30s, "
+"1m30s"
+msgstr ""
+
+msgid ""
+"Invalid git repository URL - must start with https://, http://, ssh:// or"
+" git://"
+msgstr ""
+
+msgid "Invalid keep count"
+msgstr ""
+
+msgid "Invalid lines parameter"
+msgstr ""
+
+#, python-format
+msgid "Invalid min duration: %(min_dur)s - use forms like 200ms, 1s"
+msgstr ""
+
+#, python-format
+msgid "Invalid propagation delay: %(delay)s - use forms like 30, 30s, 2m"
+msgstr ""
+
+msgid "Invalid protocol"
+msgstr ""
+
+#, python-format
+msgid "Invalid providers throttle: %(throttle)s - use forms like 2s, 500ms"
+msgstr ""
+
+#, python-format
+msgid "Invalid static config YAML: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Invalid status code filter: %(bad_codes)s"
+msgstr ""
+
+msgid "Invalid theme"
+msgstr ""
+
+msgid "Invalid traefik_api_url - must start with http:// or https://"
+msgstr ""
+
+msgid "Invalid type"
 msgstr ""
 
 msgid "Issued by a resolver that is gone from the static config"
@@ -2049,6 +2348,9 @@ msgstr ""
 msgid "Local API"
 msgstr ""
 
+msgid "Local password login is disabled. Sign in with your identity provider."
+msgstr ""
+
 msgid "Log Detail"
 msgstr ""
 
@@ -2138,6 +2440,13 @@ msgstr ""
 msgid "Max TLS Version"
 msgstr ""
 
+#, python-format
+msgid "Max idle conns must be a whole number, got %(max_idle)s"
+msgstr ""
+
+msgid "Maximum of 10 API keys reached"
+msgstr ""
+
 msgctxt "setting"
 msgid "Method"
 msgstr ""
@@ -2160,6 +2469,15 @@ msgid "Middleware Details"
 msgstr ""
 
 msgid "Middleware Templates"
+msgstr ""
+
+msgid "Middleware content cannot be empty"
+msgstr ""
+
+msgid "Middleware content is empty or invalid"
+msgstr ""
+
+msgid "Middleware name is required"
 msgstr ""
 
 msgid "Middleware templates - reusable YAML you can start a middleware from"
@@ -2199,6 +2517,15 @@ msgctxt "option"
 msgid "Mirroring"
 msgstr ""
 
+msgid "Missing id or all"
+msgstr ""
+
+msgid "Missing id or ts"
+msgstr ""
+
+msgid "Missing required fields"
+msgstr ""
+
 msgid "Mobile app"
 msgstr ""
 
@@ -2222,6 +2549,9 @@ msgstr ""
 
 msgctxt "setting"
 msgid "Name"
+msgstr ""
+
+msgid "Name must not be empty."
 msgstr ""
 
 msgctxt "button"
@@ -2285,7 +2615,29 @@ msgid ""
 "Enable a password or OIDC in Settings - Authentication."
 msgstr ""
 
+msgid ""
+"No bouncer API key or client certificate. CrowdSec only accepts a bouncer"
+" key or a TLS client certificate on /v1/decisions, the machine token is "
+"refused there"
+msgstr ""
+
 msgid "No commits yet - push your first backup to see history"
+msgstr ""
+
+#, python-format
+msgid "No config file matches %(filename)s"
+msgstr ""
+
+msgid "No config files found to backup"
+msgstr ""
+
+msgid "No content"
+msgstr ""
+
+msgid "No content provided"
+msgstr ""
+
+msgid "No matching certificate was found"
 msgstr ""
 
 msgid "No middlewares configured"
@@ -2295,6 +2647,15 @@ msgid "No middlewares found"
 msgstr ""
 
 msgid "No notifications yet"
+msgstr ""
+
+msgid "No provider URL"
+msgstr ""
+
+msgid "No repository URL"
+msgstr ""
+
+msgid "No repository URL configured"
 msgstr ""
 
 msgid "No resolver"
@@ -2330,6 +2691,9 @@ msgstr ""
 msgid "None (external / custom cert)"
 msgstr ""
 
+msgid "Not authenticated"
+msgstr ""
+
 msgid "Not downloaded"
 msgstr ""
 
@@ -2343,6 +2707,12 @@ msgid ""
 msgstr ""
 
 msgid "Nothing matches"
+msgstr ""
+
+msgid "Nothing was selected"
+msgstr ""
+
+msgid "Notification not found"
 msgstr ""
 
 msgctxt "button"
@@ -2371,6 +2741,36 @@ msgid "OIDC / SSO login"
 msgstr ""
 
 msgid "OIDC Auth (traefik-oidc-auth)"
+msgstr ""
+
+msgid ""
+"OIDC is enabled but no allowed emails or groups are configured. Ask an "
+"admin to set an allowlist."
+msgstr ""
+
+msgid "OIDC login failed - no code returned."
+msgstr ""
+
+msgid "OIDC login failed - nonce mismatch."
+msgstr ""
+
+msgid "OIDC login failed - the provider rejected the token request."
+msgstr ""
+
+#, python-format
+msgid "OIDC login failed - the provider rejected the token request: %(detail)s"
+msgstr ""
+
+msgid "OIDC login failed - the provider returned no account details."
+msgstr ""
+
+msgid "OIDC login failed - token exchange error."
+msgstr ""
+
+msgid "OIDC provider unavailable."
+msgstr ""
+
+msgid "OIDC provider unavailable. Try again later."
 msgstr ""
 
 msgctxt "button"
@@ -2465,6 +2865,11 @@ msgid ""
 "access."
 msgstr ""
 
+msgid ""
+"Only weighted, mirroring, failover and highestRandomWeight services can "
+"be managed here"
+msgstr ""
+
 msgid "Open settings"
 msgstr ""
 
@@ -2529,6 +2934,12 @@ msgid "Password & 2FA"
 msgstr ""
 
 msgid "Password saved"
+msgstr ""
+
+msgid "Passwords do not match."
+msgstr ""
+
+msgid "Paste the static config snippet"
 msgstr ""
 
 msgctxt "setting"
@@ -2680,6 +3091,12 @@ msgstr ""
 msgid "Profile Name"
 msgstr ""
 
+msgid "Profile name is required"
+msgstr ""
+
+msgid "Profile not found"
+msgstr ""
+
 msgctxt "setting"
 msgid "Protocol"
 msgstr ""
@@ -2744,6 +3161,12 @@ msgid "Raw YAML - traefik.yml"
 msgstr ""
 
 msgid "Raw YAML editor"
+msgstr ""
+
+msgid "Re-enter the Traefik API password when changing the API URL"
+msgstr ""
+
+msgid "Reached the LAPI, but the key was refused"
 msgstr ""
 
 msgid "Read-only tool showing the client IP this instance sees for your request."
@@ -2966,6 +3389,14 @@ msgstr ""
 msgid "Rotate Key"
 msgstr ""
 
+#, python-format
+msgid "Rotation %(yaml_key)s must be a whole number, got %(value)s"
+msgstr ""
+
+#, python-format
+msgid "Route \"%(plain_id)s\" not found"
+msgstr ""
+
 msgid "Route / Service Name"
 msgstr ""
 
@@ -2979,6 +3410,9 @@ msgid "Route Monitoring"
 msgstr ""
 
 msgid "Route checks"
+msgstr ""
+
+msgid "Route not found"
 msgstr ""
 
 msgid "Route to Traefik Manager itself"
@@ -3065,7 +3499,14 @@ msgstr ""
 msgid "SSL Redirect (force HTTPS)"
 msgstr ""
 
+msgid "STATIC_CONFIG_PATH not configured"
+msgstr ""
+
 msgid "Same-origin Referrer Policy"
+msgstr ""
+
+#, python-format
+msgid "Sample rate must be a number between 0 and 1, got %(route)s"
 msgstr ""
 
 msgctxt "button"
@@ -3097,6 +3538,9 @@ msgid "Save Template"
 msgstr ""
 
 msgid "Save configuration"
+msgstr ""
+
+msgid "Save failed"
 msgstr ""
 
 msgid "Save route"
@@ -3258,6 +3702,12 @@ msgstr ""
 msgid "Service Details"
 msgstr ""
 
+msgid "Service name is required"
+msgstr ""
+
+msgid "Service not found"
+msgstr ""
+
 msgctxt "button"
 msgid "Services"
 msgstr ""
@@ -3276,6 +3726,9 @@ msgstr ""
 
 #, python-format
 msgid "Session Secret %(n32_character_random)s"
+msgstr ""
+
+msgid "Session expired - please refresh the page."
 msgstr ""
 
 #, python-format
@@ -3337,6 +3790,9 @@ msgid "Settings saved to %(manager_yml)s"
 msgstr ""
 
 msgid "Settings → System Monitoring → CrowdSec"
+msgstr ""
+
+msgid "Setup already complete"
 msgstr ""
 
 msgctxt "setting"
@@ -3456,8 +3912,36 @@ msgstr ""
 msgid "Static config backups"
 msgstr ""
 
+msgid "Static config file not found"
+msgstr ""
+
+msgid "Static config is not a mapping"
+msgstr ""
+
+msgid "Static config not available on this agent"
+msgstr ""
+
+msgid "Static config not found"
+msgstr ""
+
+#, python-format
+msgid ""
+"Static config not found at %(static_path)s. Set STATIC_CONFIG_PATH env "
+"var or configure the path in Settings."
+msgstr ""
+
+msgid "Static config not found or STATIC_CONFIG_PATH not set"
+msgstr ""
+
 #, python-format
 msgid "Static config path %(optional)s"
+msgstr ""
+
+msgid "Static config path is outside allowed directories"
+msgstr ""
+
+#, python-format
+msgid "Static config path refused: %(refused)s"
 msgstr ""
 
 #, python-format
@@ -3558,6 +4042,13 @@ msgstr ""
 msgid "TLS Profile"
 msgstr ""
 
+#, python-format
+msgid ""
+"TLS verification failed - the API certificate is not trusted. Mount your "
+"CA into /etc/ssl/certs/ca-certificates.crt or set "
+"TRAEFIK_INSECURE_SKIP_VERIFY=true. (%(error)s)"
+msgstr ""
+
 msgctxt "button"
 msgid "Tab"
 msgstr ""
@@ -3582,11 +4073,17 @@ msgstr ""
 msgid "Target IP / Host"
 msgstr ""
 
+msgid "Target address not allowed"
+msgstr ""
+
 msgid "Template"
 msgstr ""
 
 msgctxt "setting"
 msgid "Template"
+msgstr ""
+
+msgid "Template not found"
 msgstr ""
 
 msgctxt "button"
@@ -3597,6 +4094,15 @@ msgid "Test connection"
 msgstr ""
 
 msgid "Test repository"
+msgstr ""
+
+#, python-format
+msgid ""
+"That name belongs to a %(clash)s service, and only HTTP services can be "
+"edited here"
+msgstr ""
+
+msgid "That service is not managed here"
 msgstr ""
 
 #, python-format
@@ -3685,6 +4191,13 @@ msgid ""
 msgstr ""
 
 msgid "The middleware body only, without the name above it."
+msgstr ""
+
+#, python-format
+msgid ""
+"The middleware snippet contains template placeholders (%(example)s) that "
+"must be replaced with real values before saving. Edit the middleware in "
+"the editor and replace all %(marker)s placeholders."
 msgstr ""
 
 msgid "The public address where TMA is running on the remote server."
@@ -3785,11 +4298,20 @@ msgstr ""
 msgid "Token is set"
 msgstr ""
 
+msgid "Too many wrong codes. Enter your password again."
+msgstr ""
+
 msgid "Topology connection map (Entry Points - Routes - Middlewares - Services)"
+msgstr ""
+
+msgid "Traefik API URL must start with http:// or https://"
 msgstr ""
 
 #, python-format
 msgid "Traefik API basic auth %(optional)s"
+msgstr ""
+
+msgid "Traefik API unreachable"
 msgstr ""
 
 msgid ""
@@ -3903,6 +4425,23 @@ msgstr ""
 
 msgctxt "button"
 msgid "Undo"
+msgstr ""
+
+#, python-format
+msgid "Unknown RESTART_METHOD: %(method)s"
+msgstr ""
+
+msgid "Unknown language"
+msgstr ""
+
+#, python-format
+msgid "Unknown section: %(section)s"
+msgstr ""
+
+msgid "Unknown server"
+msgstr ""
+
+msgid "Unsupported URL - use https://, http://, ssh:// or git://"
 msgstr ""
 
 msgctxt "button"
@@ -4110,6 +4649,9 @@ msgstr ""
 msgid "You're using a temporary password. Set a permanent one to continue."
 msgstr ""
 
+msgid "Your account is not authorized to access this application."
+msgstr ""
+
 #, python-format
 msgid "Your own proxies / LAN %(one_cidr_or)s"
 msgstr ""
@@ -4117,9 +4659,15 @@ msgstr ""
 msgid "Your password"
 msgstr ""
 
+msgid "Your password was changed while you were signing in. Sign in again."
+msgstr ""
+
 msgid ""
 "Your password was reset. Choose a new one to get back in - nothing else "
 "about your configuration has changed."
+msgstr ""
+
+msgid "Your sign-in expired. Enter your password again."
 msgstr ""
 
 msgid ""
@@ -4153,6 +4701,9 @@ msgstr ""
 msgid "burst"
 msgstr ""
 
+msgid "categories must be a list"
+msgstr ""
+
 msgid "client certificate, e.g. /certs/tm-client.crt"
 msgstr ""
 
@@ -4169,6 +4720,13 @@ msgid "decisions"
 msgstr ""
 
 msgid "denied"
+msgstr ""
+
+msgid "device_name is required"
+msgstr ""
+
+#, python-format
+msgid "digest must be one of: %(channel_digests)s"
 msgstr ""
 
 msgid "e.g. Mobile App"
@@ -4202,6 +4760,10 @@ msgstr ""
 msgid "inside this container"
 msgstr ""
 
+#, python-format
+msgid "kind must be one of: %(channel_kinds)s"
+msgstr ""
+
 msgid "leave blank to keep existing"
 msgstr ""
 
@@ -4216,6 +4778,19 @@ msgid "machine id"
 msgstr ""
 
 msgid "manual ban from Traefik Manager"
+msgstr ""
+
+msgid "message required"
+msgstr ""
+
+#, python-format
+msgid "min_severity must be one of: %(channel_severities)s"
+msgstr ""
+
+msgid "name and url are required"
+msgstr ""
+
+msgid "name is required"
 msgstr ""
 
 msgid "ntfy.sh / self-hosted ntfy"
@@ -4239,7 +4814,16 @@ msgstr ""
 msgid "own container environment"
 msgstr ""
 
+msgid "password change required"
+msgstr ""
+
 msgid "period"
+msgstr ""
+
+msgid "preview is required"
+msgstr ""
+
+msgid "quiet_hours must be HH:MM-HH:MM, for example 23:00-07:00"
 msgstr ""
 
 msgctxt "button"
@@ -4263,6 +4847,19 @@ msgstr ""
 
 msgctxt "time range"
 msgid "to"
+msgstr ""
+
+msgid "ui_prefs must be an object"
+msgstr ""
+
+#, python-format
+msgid "unknown categories: %(unknown)s"
+msgstr ""
+
+msgid "username and password required"
+msgstr ""
+
+msgid "username, realm and password required"
 msgstr ""
 
 msgctxt "label"

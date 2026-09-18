@@ -34,6 +34,16 @@ Page routes (everything outside `/api/`) still redirect to `/login` as a browser
 Before v1.10.1, `/api/` paths also redirected to `/login`, which returned the login page's HTML with status `200`. Clients could not distinguish "logged out" from "no data". If you parsed those responses, switch to checking for `401`.
 :::
 
+### Language of error messages
+
+`error` and `message` texts are for people, so a browser session gets them in the interface language: the saved language setting, else the browser's `Accept-Language`, else English.
+
+Requests authenticated with an API key always get English, whatever the settings or headers say, so scripts and the mobile app see the same text on every instance. Add `?lang=de` (any language the instance ships) to ask for one explicitly.
+
+::: tip New in v1.15.0
+Before v1.15.0 every message was English. Nothing changes for API key clients; branch on the status code and fields such as `ok`, not on the wording.
+:::
+
 ---
 
 ## Response format

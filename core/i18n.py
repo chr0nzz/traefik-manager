@@ -92,12 +92,15 @@ def resolve_tag(default_language: str = '') -> str:
     tags = available_tags()
     if not has_request_context():
         return normalize(default_language, tags) or DEFAULT_TAG
-    for candidate in (request.environ.get(URL_LOCALE_KEY),
-                      request.args.get('lang'),
-                      default_language):
+    for candidate in (request.environ.get(URL_LOCALE_KEY), request.args.get('lang')):
         tag = normalize(candidate, tags)
         if tag:
             return tag
+    if request.headers.get('X-Api-Key'):
+        return DEFAULT_TAG
+    tag = normalize(default_language, tags)
+    if tag:
+        return tag
     return _accept_language(tags) or DEFAULT_TAG
 
 
