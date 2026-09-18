@@ -206,11 +206,16 @@ def test_code_rules_leave_normal_code_alone(tmp_path):
     assert tmi18n.check_code(root) == []
 
 
-def test_dockerfile_must_compile_without_fuzzy(tmp_path):
-    assert tmi18n.check_dockerfile(_tree(tmp_path, {'Dockerfile': 'FROM x\n'}))
-    root = _tree(tmp_path, {'Dockerfile': 'RUN pybabel compile -d locale -D messages --use-fuzzy\n'})
+def test_builds_must_compile_without_fuzzy(tmp_path):
+    good = 'RUN pybabel compile -d locale -D messages\n'
+    assets = '"$PYBABEL" compile -d "$REPO_ROOT/locale" -D messages\n'
+    root = _tree(tmp_path, {'Dockerfile': 'FROM x\n', 'scripts/setup-assets.sh': assets})
+    assert any(p.where == 'Dockerfile' for p in tmi18n.check_dockerfile(root))
+    root = _tree(tmp_path, {'Dockerfile': good, 'scripts/setup-assets.sh': 'echo done\n'})
+    assert any('setup-assets' in p.where for p in tmi18n.check_dockerfile(root))
+    root = _tree(tmp_path, {'Dockerfile': good.replace('messages', 'messages --use-fuzzy'), 'scripts/setup-assets.sh': assets})
     assert any('fuzzy' in p.message for p in tmi18n.check_dockerfile(root))
-    root = _tree(tmp_path, {'Dockerfile': 'RUN pybabel compile -d locale -D messages -f\n'})
+    root = _tree(tmp_path, {'Dockerfile': good, 'scripts/setup-assets.sh': assets.replace('messages', 'messages -f')})
     assert any('fuzzy' in p.message for p in tmi18n.check_dockerfile(root))
     assert tmi18n.check_dockerfile(ROOT) == []
 

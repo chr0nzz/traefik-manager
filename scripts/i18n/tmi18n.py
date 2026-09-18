@@ -442,16 +442,16 @@ def check_code(root=ROOT):
 
 
 def check_dockerfile(root=ROOT):
-    path = os.path.join(root, 'Dockerfile')
-    with open(path, encoding='utf-8') as fh:
-        lines = [ln.strip() for ln in fh]
-    compile_lines = [ln for ln in lines if 'pybabel compile' in ln]
     problems = []
-    if not compile_lines:
-        problems.append(Problem('Dockerfile', 'must compile the catalogues with pybabel compile'))
-    for line in compile_lines:
-        if '--use-fuzzy' in line or re.search(r'\s-f\b', line):
-            problems.append(Problem('Dockerfile', 'must not compile fuzzy translations, they are unreviewed'))
+    for rel in ('Dockerfile', os.path.join('scripts', 'setup-assets.sh')):
+        with open(os.path.join(root, rel), encoding='utf-8') as fh:
+            lines = [ln.strip() for ln in fh]
+        compile_lines = [ln for ln in lines if re.search(r'(?i)pybabel\S*\s+compile\b', ln)]
+        if not compile_lines:
+            problems.append(Problem(rel, 'must compile the catalogues with pybabel compile'))
+        for line in compile_lines:
+            if '--use-fuzzy' in line or re.search(r'\s-f\b', line):
+                problems.append(Problem(rel, 'must not compile fuzzy translations, they are unreviewed'))
     return problems
 
 
