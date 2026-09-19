@@ -1116,7 +1116,7 @@
                             </div>
                         </div>
                         <div style="margin-bottom:12px;" id="languageSection">
-                            <div class="sc-sec-head"><i class="ph-bold ph-translate sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">{{ _('Language') }}</span><span class="tm-info-btn" data-tip="{{ _('Saved in manager.yml, so the choice follows you to every browser. Follow system uses the language your browser asks for, and English when Traefik Manager does not have it. Also set by the flag in the nav bar.') }}"><i class="ph-bold ph-info"></i></span><span class="sc-sec-rule"></span></div>
+                            <div class="sc-sec-head"><i class="ph-bold ph-translate sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">{{ _('Language') }}</span><span class="tm-info-btn" data-tip="{{ _('Saved in manager.yml, so the choice follows you to every browser. Follow system uses the language your browser asks for, and English when Traefik Manager does not have it. Also set by the language button in the nav bar.') }}"><i class="ph-bold ph-info"></i></span><span class="sc-sec-rule"></span></div>
                             <div class="sc-panel">
                                 <div class="sc-set lang-row{% if not language_setting %} active{% endif %}" onclick="setLanguage('')" style="cursor:pointer">
                                     <div class="sc-set-l">
@@ -1127,7 +1127,7 @@
                                 {% for lang in language_options %}
                                 <div class="sc-set lang-row{% if language_setting == lang.tag %} active{% endif %}" data-lang="{{ lang.tag }}" onclick="setLanguage(this.dataset.lang)" style="cursor:pointer">
                                     <div class="sc-set-l">
-                                        <div class="sc-set-n" lang="{{ lang.tag }}"><i class="tm-flag" style="width:20px;display:inline-block">{{ lang.flag }}</i>{{ lang.name }}</div>
+                                        <div class="sc-set-n" lang="{{ lang.tag }}"><span class="tm-lang-code" translate="no" style="width:28px;display:inline-block">{{ lang.code }}</span>{{ lang.name }}</div>
                                     </div>
                                     <div class="sc-set-v">{% if language_setting == lang.tag %}<i class="ph-bold ph-check" style="color:var(--blue)"></i>{% endif %}</div>
                                 </div>
@@ -1224,7 +1224,7 @@
                                                             <div class="sc-set">
                                     <div class="sc-set-l">
                                         <div class="sc-set-n">{{ _('Show language selector') }}</div>
-                                        <div class="sc-set-d">{{ _('Flag that switches the interface language.') }}</div>
+                                        <div class="sc-set-d">{{ _('Button that switches the interface language.') }}</div>
                                     </div>
                                     <div class="sc-set-v"><div class="toggle-switch" id="toggle-lang-picker" onclick="toggleLangPickerBtn()"><div class="toggle-knob"></div></div></div>
                                 </div>

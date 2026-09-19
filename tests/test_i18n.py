@@ -182,9 +182,9 @@ def test_plural_map_follows_the_catalogue(locale_dir):
 
 def test_language_options_use_native_names(with_languages):
     assert i18n.language_options() == [
-        {'tag': 'en', 'name': 'English', 'flag': '\U0001F1FA\U0001F1F8'},
-        {'tag': 'de', 'name': 'Deutsch', 'flag': '\U0001F1E9\U0001F1EA'},
-        {'tag': 'zh-Hans', 'name': '中文 (简体)', 'flag': '\U0001F1E8\U0001F1F3'},
+        {'tag': 'en', 'name': 'English', 'code': 'EN'},
+        {'tag': 'de', 'name': 'Deutsch', 'code': 'DE'},
+        {'tag': 'zh-Hans', 'name': '中文 (简体)', 'code': 'ZH'},
     ]
 
 
@@ -227,11 +227,18 @@ def test_saved_language_applies_without_other_hints(client, with_languages):
 
 
 
-def test_flags_come_from_the_likely_territory():
-    assert i18n.flag_for('fr') == '\U0001F1EB\U0001F1F7'
-    assert i18n.flag_for('ru') == '\U0001F1F7\U0001F1FA'
-    assert i18n.flag_for('es') == '\U0001F1EA\U0001F1F8'
-    assert i18n.flag_for('not a locale') == ''
+def test_language_code_is_the_primary_subtag():
+    tags = ('en', 'de', 'zh-Hans')
+    assert i18n.code_for('en', tags) == 'EN'
+    assert i18n.code_for('de', tags) == 'DE'
+    assert i18n.code_for('zh-Hans', tags) == 'ZH'
+
+
+def test_language_code_keeps_the_full_tag_when_two_share_a_language():
+    tags = ('en', 'pt', 'pt-BR')
+    assert i18n.code_for('pt', tags) == 'PT'
+    assert i18n.code_for('pt-BR', tags) == 'PT-BR'
+    assert i18n.code_for('en', tags) == 'EN'
 
 
 def _between(html, start, end):
@@ -244,7 +251,8 @@ def test_navbar_picker_is_the_first_icon(client, with_languages):
     nav = _between(html, 'id="navActions"', 'id="navMoreWrap"')
     assert nav.index('id="langPickerWrap"') < nav.index('nav-docs-link')
     picker = _between(nav, 'id="langPickerWrap"', 'nav-docs-link')
-    assert 'class="tm-flag"' in picker
+    assert '<span class="tm-lang-code" translate="no">EN</span>' in picker
+    assert 'tm-flag' not in picker
     assert "setLanguage('')" in picker
     assert picker.count('onclick="setLanguage(this.dataset.lang)"') == 3
     assert 'data-lang="zh-Hans"' in picker

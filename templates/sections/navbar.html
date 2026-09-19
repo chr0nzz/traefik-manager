@@ -26,7 +26,7 @@
                 </button>
                 <div id="langPickerWrap" class="nav-lang-picker" data-navprio="12" style="position:relative;">
                     <button type="button" id="langPickerBtn" onclick="toggleLangMenu()" class="nav-btn" title="{{ _('Language') }}" aria-haspopup="true">
-                        <i class="tm-flag" style="font-size:15px;line-height:1">{{ html_flag }}</i>
+                        <span class="tm-lang-code" translate="no">{{ html_lang_code }}</span>
                     </button>
                     <div id="langPickerMenu" class="notif-panel">
                         <div class="notif-item lang-opt{% if not language_setting %} active{% endif %}" onclick="setLanguage('')">
@@ -39,7 +39,7 @@
                         {% for lang in language_options %}
                         <div class="notif-item lang-opt{% if language_setting == lang.tag %} active{% endif %}" data-lang="{{ lang.tag }}" onclick="setLanguage(this.dataset.lang)" lang="{{ lang.tag }}">
                             <div class="flex items-center gap-2 py-1">
-                                <i class="tm-flag" style="width:18px;text-align:center">{{ lang.flag }}</i>
+                                <span class="tm-lang-code" translate="no" style="width:18px;text-align:center">{{ lang.code }}</span>
                                 <div class="text-xs font-medium truncate" style="color:var(--text);flex:1;min-width:0">{{ lang.name }}</div>
                                 {% if language_setting == lang.tag %}<i class="ph-bold ph-check text-xs ml-auto flex-shrink-0" style="color:var(--blue)"></i>{% endif %}
                             </div>

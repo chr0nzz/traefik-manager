@@ -3,7 +3,6 @@ import re
 from functools import lru_cache
 
 from babel import Locale, UnknownLocaleError
-from babel.core import get_global
 from babel.messages.pofile import read_po
 from babel.support import Translations
 from flask import has_request_context, request
@@ -106,28 +105,24 @@ def resolve_tag(default_language: str = '') -> str:
     return _accept_language(tags) or DEFAULT_TAG
 
 
-def flag_for(tag: str) -> str:
-    identifier = to_identifier(tag)
-    likely = get_global('likely_subtags')
-    full = likely.get(identifier) or likely.get(identifier.split('_')[0]) or identifier
-    try:
-        territory = Locale.parse(full).territory or ''
-    except (ValueError, UnknownLocaleError):
-        territory = ''
-    if len(territory) != 2 or not territory.isalpha():
-        return ''
-    return ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in territory.upper())
+def code_for(tag: str, tags=None) -> str:
+    tags = available_tags() if tags is None else tags
+    primary = tag.split('-')[0]
+    if sum(1 for t in tags if t.split('-')[0] == primary) > 1:
+        return tag.upper()
+    return primary.upper()
 
 
 def language_options() -> list:
     options = []
-    for tag in available_tags():
+    tags = available_tags()
+    for tag in tags:
         identifier = to_identifier(tag)
         try:
             name = Locale.parse(identifier).get_display_name(identifier) or tag
         except (ValueError, UnknownLocaleError):
             name = tag
-        options.append({'tag': tag, 'name': name[:1].upper() + name[1:], 'flag': flag_for(tag)})
+        options.append({'tag': tag, 'name': name[:1].upper() + name[1:], 'code': code_for(tag, tags)})
     return options
 
 
@@ -270,7 +265,7 @@ def init_app(app, default_language):
         return {
             'html_lang': tag,
             'html_dir': text_direction(tag),
-            'html_flag': flag_for(tag),
+            'html_lang_code': code_for(tag),
             'i18n_catalog': client_catalog(tag),
             'language_options': language_options(),
             'language_setting': _saved(),

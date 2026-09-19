@@ -515,7 +515,7 @@ default_theme: light
 
 **Type:** string - **Default:** `''`
 
-The interface language, for the UI and the login page. Empty follows each browser's language, falling back to English when Traefik Manager does not have it. Otherwise a language tag such as `de`, `fr` or `zh-Hans`, from the languages this release ships. Set by the flag in the nav bar or in **Settings - Interface - General - Language**. A tag that is not available is ignored and the browser's language is used.
+The interface language, for the UI and the login page. Empty follows each browser's language, falling back to English when Traefik Manager does not have it. Otherwise a language tag such as `de`, `fr` or `zh-Hans`, from the languages this release ships. Set by the language button in the nav bar or in **Settings - Interface - General - Language**. A tag that is not available is ignored and the browser's language is used.
 
 ```yaml
 default_language: de

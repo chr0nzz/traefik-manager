@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-18 19:07-0400\n"
+"POT-Creation-Date: 2026-09-18 20:22-0400\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans\n"
@@ -1640,6 +1640,9 @@ msgstr ""
 
 msgctxt "setting"
 msgid "Burst"
+msgstr ""
+
+msgid "Button that switches the interface language."
 msgstr ""
 
 msgctxt "button"
@@ -3973,9 +3976,6 @@ msgstr ""
 
 msgctxt "button"
 msgid "Fixed"
-msgstr ""
-
-msgid "Flag that switches the interface language."
 msgstr ""
 
 msgctxt "button"
@@ -8045,7 +8045,7 @@ msgstr ""
 msgid ""
 "Saved in manager.yml, so the choice follows you to every browser. Follow "
 "system uses the language your browser asks for, and English when Traefik "
-"Manager does not have it. Also set by the flag in the nav bar."
+"Manager does not have it. Also set by the language button in the nav bar."
 msgstr ""
 
 #. Used in the browser
