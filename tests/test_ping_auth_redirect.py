@@ -113,3 +113,12 @@ def test_the_monitor_keeps_the_note_for_the_tooltip(monkeypatch, tmp_path):
     entry = rh.snapshot('host', settings={'route_check_enabled': True})['routes']['x']
     assert entry['state'] == 'up' and entry['unverified'] is True and entry['note'] == 'redirected to auth'
     monitor._state.clear()
+
+
+def test_a_down_backend_names_the_real_cause_not_always_refused():
+    why = lambda msg: reachability._down_why(OSError(msg))
+    assert why('[Errno 111] Connection refused') == 'refused the connection'
+    assert why('[Errno 113] No route to host') == 'is unreachable (no route to host)', \
+        'a powered off host has no route, it did not refuse anything'
+    assert why('[Errno 101] Network is unreachable') == 'is unreachable (network unreachable)'
+    assert why('something else went wrong') == 'is unreachable'

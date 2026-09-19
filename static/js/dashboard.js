@@ -190,6 +190,7 @@ function _sdObj(raw, kind, ctx) {
     }
     if (kind === 'http' || kind === 'stream') {
         o.using = _sdUsing(raw);
+        o.service = _sdShort(raw && raw.service);
         if (!o.using.length) { o.cell = 'idle'; o.reason = t('enabled, bound to no entry point'); o.unbound = true; }
         return o;
     }
@@ -895,9 +896,13 @@ function _sdRender(model) {
 
     if (verdEl) {
         const items = [];
+        const svcDown = new Set(m.service.groups.down.map(o => o.short));
+        const svcDeg  = new Set(m.service.groups.degraded.map(o => o.short));
+        const rtDown  = m.http.groups.down.filter(o => !svcDown.has(o.service));
+        const rtDeg   = m.http.groups.degraded.filter(o => !svcDeg.has(o.service));
         if (m.http.t.disabled)       items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.http.t.disabled,       tn('router disabled', 'routers disabled', m.http.t.disabled),     'tab=services;proto=http;apistatus=disabled', m.http.groups.disabled));
-        if (m.http.t.down)           items.push(_sdExc('d-bad',  'ph-fill ph-warning-octagon',     m.http.t.down,           tn('route unreachable', 'routes unreachable', m.http.t.down), 'tab=services;proto=http;apistatus=unreachable', m.http.groups.down));
-        if (m.http.t.degraded)       items.push(_sdExc('d-warn', 'ph-fill ph-warning-diamond',     m.http.t.degraded,       tn('route degraded', 'routes degraded', m.http.t.degraded),    'tab=services;proto=http;apistatus=degraded', m.http.groups.degraded));
+        if (rtDown.length)           items.push(_sdExc('d-bad',  'ph-fill ph-warning-octagon',     rtDown.length,           tn('route unreachable', 'routes unreachable', rtDown.length), 'tab=services;proto=http;apistatus=unreachable', rtDown));
+        if (rtDeg.length)            items.push(_sdExc('d-warn', 'ph-fill ph-warning-diamond',     rtDeg.length,            tn('route degraded', 'routes degraded', rtDeg.length),    'tab=services;proto=http;apistatus=degraded', rtDeg));
         if (m.http.t.warning)        items.push(_sdExc('d-warn', 'ph-fill ph-warning',             m.http.t.warning,        tn('router warning', 'router warnings', m.http.t.warning),      'tab=services;proto=http;apistatus=warning',  m.http.groups.warning));
         if (m.stream.t.disabled)     items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.stream.t.disabled,     t('stream disabled'),      sGo + ';apistatus=disabled',                  m.stream.groups.disabled));
         if (m.service.t.disabled)    items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.service.t.disabled,    tn('service disabled', 'services disabled', m.service.t.disabled),    'tab=live;svcstatus=error',                   m.service.groups.disabled));
