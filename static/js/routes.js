@@ -286,6 +286,28 @@ function setProtocol(proto) {
 let _httpRuleFitsSimple = true;
 let _httpRuleAdvTouched = false;
 
+function _fitHttpRule(el) {
+    if (!el || !el.offsetParent) return;
+    el.style.height = 'auto';
+    el.style.height = (el.scrollHeight + el.offsetHeight - el.clientHeight) + 'px';
+}
+
+function _onHttpRuleInput(el) {
+    _httpRuleAdvTouched = true;
+    if (/[\r\n]/.test(el.value)) {
+        const pos = el.selectionStart;
+        el.value = el.value.replace(/\s*[\r\n]+\s*/g, ' ');
+        el.setSelectionRange(Math.min(pos, el.value.length), Math.min(pos, el.value.length));
+    }
+    _fitHttpRule(el);
+}
+
+function _onHttpRuleKey(event) {
+    if (event.key !== 'Enter' || event.isComposing) return;
+    event.preventDefault();
+    event.target.form?.requestSubmit();
+}
+
 function setHttpRuleMode(mode) {
     const isAdv = mode === 'advanced';
     const simpleBtn = document.getElementById('httpModeSimpleBtn');
@@ -302,6 +324,7 @@ function setHttpRuleMode(mode) {
     if (!ruleEl) return;
     ruleEl.disabled = !isAdv;
     if (isAdv && _httpRuleFitsSimple && !_httpRuleAdvTouched) ruleEl.value = _currentSimpleHttpRule() || ruleEl.value;
+    if (isAdv) requestAnimationFrame(() => _fitHttpRule(ruleEl));
 }
 
 function _applyServiceTypeNotice(svcType, owned) {

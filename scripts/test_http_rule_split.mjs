@@ -96,6 +96,7 @@ const els = Object.fromEntries(ids.map(id => [id, fakeElement()]));
 const form = new Function('document', 'window', '_domainsForForm', '_updateRouteModalForAgent', '_initDomainChips',
     src.slice(start, end)
     + between('let _httpRuleFitsSimple', 'function _applyServiceTypeNotice(')
+    + '\nfunction requestAnimationFrame(fn) { fn(); }\n'
     + between('function _applyHttpRuleToForm(', 'async function cloneRoute(')
     + '\nreturn { setHttpRuleMode, _applyHttpRuleToForm, typeInAdvanced() { _httpRuleAdvTouched = true; } };'
 )({ getElementById: id => els[id] || null }, {}, () => DOMAINS, () => {}, () => {});
