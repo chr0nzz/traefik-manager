@@ -205,7 +205,7 @@ console.log(JSON.stringify({ reason: objs[0].reason, down: _sdTally(objs).down }
 def test_the_unreachable_flag_reaches_the_card_and_the_routes_filter():
     dash = _read('static', 'js', 'dashboard.js')
     assert "'unreachable', hGo + ';apistatus=unreachable'" in dash
-    assert "'backends unreachable'" in dash
+    assert "['route unreachable', 'routes unreachable']" in dash, 'the verdict line counts routes, so it must say routes'
     assert "_sdApplyHealth(model.objs.http);" in dash[dash.index('function _sdRender(model) {'):]
     assert "if (_sdModel) _sdRender(_sdModel);" in dash, 'the minute poll must redraw the cards, not only the dots'
     routes = _read('static', 'js', 'routes.js')
@@ -253,7 +253,7 @@ console.log(JSON.stringify({ before, after: _sdTally(objs).degraded, cell: objs[
 def test_the_degraded_count_reaches_the_card_the_verdict_and_the_entry_points():
     dash = _read('static', 'js', 'dashboard.js')
     assert "'degraded', hGo + ';apistatus=degraded'" in dash, 'the HTTP routers card needs a degraded flag'
-    assert "'backends degraded'" in dash, 'the verdict line needs a degraded item'
+    assert "['route degraded', 'routes degraded']" in dash, 'the verdict line needs a degraded item that counts routes'
     assert 'if (o.degraded) i.degraded++' in dash, 'entry point rows must count degraded routes'
     assert "degradedN, 'degraded', base + ';apistatus=degraded'" in dash, \
         'an entry point degraded flag must filter to degraded, not to warning'

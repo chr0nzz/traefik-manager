@@ -489,14 +489,14 @@ function _dskState(r) {
         s.health  = 'down';
         s.dot     = 'sig-cell-err';
         s.dotTip  = 'Backend unreachable - 0 of ' + svc.total + ' servers up';
-        s.note    = 'backend unreachable <b>0/' + svc.total + ' servers</b>';
+        s.note    = 'backend unreachable <b>0/' + svc.total + ' servers up</b>';
         s.noteIc  = 'ph-fill ph-warning-octagon';
         s.noteCls = 'd-bad';
     } else if (svc && svc.total && svc.up < svc.total) {
         s.health  = 'warn';
         s.dot     = 'sig-cell-warn';
         s.dotTip  = 'Backend degraded - ' + svc.up + ' of ' + svc.total + ' servers up';
-        s.note    = 'backend degraded <b>' + svc.up + '/' + svc.total + ' servers</b>';
+        s.note    = 'backend degraded <b>' + svc.up + '/' + svc.total + ' servers up</b>';
         s.noteIc  = 'ph-fill ph-warning';
         s.noteCls = 'd-warn';
     } else if (_rmStatusBlind) {
@@ -528,7 +528,7 @@ function _dskState(r) {
         s.dot     = 'sig-cell-warn';
         s.dotTip  = 'Backend degraded - ' + sv.up + ' of ' + sv.total + ' servers up'
             + ((chk.down_servers || []).length ? ' (' + chk.down_servers.join(', ') + ' down)' : '') + ' \u00b7 ' + _dskAgo(chk.at);
-        s.note    = 'backend degraded <b>' + sv.up + '/' + sv.total + ' servers</b>';
+        s.note    = 'backend degraded <b>' + sv.up + '/' + sv.total + ' servers up</b>';
         s.noteIc  = 'ph-fill ph-warning';
         s.noteCls = 'd-warn';
     } else if (chk && chk.state === 'up') {
@@ -787,7 +787,6 @@ function _dskAgo(at) {
     return 'checked ' + Math.floor(sec / 3600) + 'h ago';
 }
 
-const DSK_HIT_MS = 2400;
 
 function _dskTogglePod(name, force) {
     const entry = _dskPods.get(name);
@@ -805,7 +804,7 @@ function _dskTogglePod(name, force) {
         if (bad) {
             const hits = fresh.querySelectorAll('.dsk-row[data-health="down"], .dsk-row[data-health="warn"], .dsk-tile[data-health="down"], .dsk-tile[data-health="warn"]');
             hits.forEach(el => el.classList.add('dsk-hit'));
-            setTimeout(() => hits.forEach(el => el.classList.remove('dsk-hit')), DSK_HIT_MS);
+            document.addEventListener('pointerdown', () => hits.forEach(el => el.classList.remove('dsk-hit')), { once: true });
             bad.scrollIntoView({ block: 'nearest' });
             bad.focus({ preventScroll: true });
             return;

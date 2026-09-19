@@ -324,6 +324,7 @@ function _sdExc(cls, ic, n, label, baseGo, objs) {
         if (tab && tab !== 'services' && tab !== 'live') go = 'tab=' + tab;
     }
     const foreign = split.some(x => x[0] !== 'file');
+    if (Array.isArray(label)) label = n === 1 ? label[0] : label[1];
     const bits = [_sdNum(n) + ' ' + label];
     if (foreign && split.length) bits.push(split.map(x => _sdNum(x[1]) + ' ' + x[0]).join(', '));
     if (go !== baseGo) bits.push('opens the ' + split[0][0] + ' tab, where this provider is read-only');
@@ -899,16 +900,16 @@ function _sdRender(model) {
 
     if (verdEl) {
         const items = [];
-        if (m.http.t.disabled)       items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.http.t.disabled,       'routers disabled',     'tab=services;proto=http;apistatus=disabled', m.http.groups.disabled));
-        if (m.http.t.down)           items.push(_sdExc('d-bad',  'ph-fill ph-warning-octagon',     m.http.t.down,           'backends unreachable', 'tab=services;proto=http;apistatus=unreachable', m.http.groups.down));
-        if (m.http.t.degraded)       items.push(_sdExc('d-warn', 'ph-fill ph-warning-diamond',     m.http.t.degraded,       'backends degraded',    'tab=services;proto=http;apistatus=degraded', m.http.groups.degraded));
-        if (m.http.t.warning)        items.push(_sdExc('d-warn', 'ph-fill ph-warning',             m.http.t.warning,        'router warnings',      'tab=services;proto=http;apistatus=warning',  m.http.groups.warning));
+        if (m.http.t.disabled)       items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.http.t.disabled,       ['router disabled', 'routers disabled'],     'tab=services;proto=http;apistatus=disabled', m.http.groups.disabled));
+        if (m.http.t.down)           items.push(_sdExc('d-bad',  'ph-fill ph-warning-octagon',     m.http.t.down,           ['route unreachable', 'routes unreachable'], 'tab=services;proto=http;apistatus=unreachable', m.http.groups.down));
+        if (m.http.t.degraded)       items.push(_sdExc('d-warn', 'ph-fill ph-warning-diamond',     m.http.t.degraded,       ['route degraded', 'routes degraded'],    'tab=services;proto=http;apistatus=degraded', m.http.groups.degraded));
+        if (m.http.t.warning)        items.push(_sdExc('d-warn', 'ph-fill ph-warning',             m.http.t.warning,        ['router warning', 'router warnings'],      'tab=services;proto=http;apistatus=warning',  m.http.groups.warning));
         if (m.stream.t.disabled)     items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.stream.t.disabled,     'stream disabled',      sGo + ';apistatus=disabled',                  m.stream.groups.disabled));
-        if (m.service.t.disabled)    items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.service.t.disabled,    'services disabled',    'tab=live;svcstatus=error',                   m.service.groups.disabled));
-        if (m.service.t.down)        items.push(_sdExc('d-bad',  'ph-fill ph-arrow-fat-line-down', m.service.t.down,        'services down',        'tab=live;svcstatus=error',                   m.service.groups.down));
-        if (m.service.t.degraded)    items.push(_sdExc('d-warn', 'ph-fill ph-warning-diamond',     m.service.t.degraded,    'services degraded',    'tab=live;svcstatus=warning',                 m.service.groups.degraded));
-        if (m.service.t.warning)     items.push(_sdExc('d-warn', 'ph-fill ph-warning',             m.service.t.warning,     'service warnings',     'tab=live;svcstatus=warning',                 m.service.groups.warning));
-        if (m.middleware.t.disabled) items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.middleware.t.disabled, 'middlewares disabled', 'tab=middlewares',                            m.middleware.groups.disabled));
+        if (m.service.t.disabled)    items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.service.t.disabled,    ['service disabled', 'services disabled'],    'tab=live;svcstatus=error',                   m.service.groups.disabled));
+        if (m.service.t.down)        items.push(_sdExc('d-bad',  'ph-fill ph-arrow-fat-line-down', m.service.t.down,        ['service down', 'services down'],        'tab=live;svcstatus=error',                   m.service.groups.down));
+        if (m.service.t.degraded)    items.push(_sdExc('d-warn', 'ph-fill ph-warning-diamond',     m.service.t.degraded,    ['service degraded', 'services degraded'],    'tab=live;svcstatus=warning',                 m.service.groups.degraded));
+        if (m.service.t.warning)     items.push(_sdExc('d-warn', 'ph-fill ph-warning',             m.service.t.warning,     ['service warning', 'service warnings'],     'tab=live;svcstatus=warning',                 m.service.groups.warning));
+        if (m.middleware.t.disabled) items.push(_sdExc('d-bad',  'ph-fill ph-x-circle',            m.middleware.t.disabled, ['middleware disabled', 'middlewares disabled'], 'tab=middlewares',                            m.middleware.groups.disabled));
 
         const issues = items.reduce((a, x) => a + x.n, 0);
         const offenders = new Set();
