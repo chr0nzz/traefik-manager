@@ -264,20 +264,6 @@ window.rmSaveRouteEdit = async function() {
     if (window.rmInvalidateGroups) window.rmInvalidateGroups();
 };
 
-(function() {
-
-const POD_RULES = [
-    { name: 'Media',          icon: 'ph-film-strip',          keywords: ['plex','jellyfin','emby','navidrome','kavita','komga','audiobookshelf','sonarr','radarr','lidarr','readarr','whisparr','prowlarr','qbittorrent','transmission','deluge','sabnzbd','nzbget','bazarr','tautulli','overseerr','requestrr','immich','photoprism','pigallery','damselfly'] },
-    { name: 'Monitoring',     icon: 'ph-chart-line-up',       keywords: ['grafana','prometheus','alertmanager','loki','uptime','kuma','glances','netdata','zabbix','influx','telegraf','speedtest','myspeed','healthchecks','statping','gatus','scrutiny'] },
-    { name: 'Infrastructure', icon: 'ph-wrench',              keywords: ['traefik','portainer','proxmox','cockpit','nginx','caddy','haproxy','watchtower','dozzle','komodo','flint','gitea','gitlab','forgejo','drone','jenkins','vault','consul','nomad','ansible','terraform','penpot','n8n','windmill'] },
-    { name: 'Security',       icon: 'ph-shield-check',        keywords: ['authentik','authelia','vaultwarden','bitwarden','crowdsec','fail2ban','wireguard','vpn','keycloak','zitadel','casdoor','lldap','kanidm'] },
-    { name: 'Home',           icon: 'ph-house',               keywords: ['homeassistant','home-assistant','nodered','node-red','esphome','zigbee2mqtt','z2m','frigate','scrypted','wyze','tuya','matter','openhabing'] },
-    { name: 'Files & Data',   icon: 'ph-folder-open',         keywords: ['nextcloud','seafile','filebrowser','syncthing','paperless','mealie','tandoor','grocy','bookstack','wiki','notion','obsidian','miniflux','freshrss','wallabag','linkding','shlink'] },
-    { name: 'Network',        icon: 'ph-network',             keywords: ['pihole','adguard','unifi','technitium','bind','nginx-proxy','ddclient','cloudflare','tailscale','zerotier','headscale','netbird'] },
-    { name: 'Dev',            icon: 'ph-code',                keywords: ['gitea','gitlab','forgejo','github','gogs','drone','jenkins','argocd','harbor','registry','sonar','nexus','artifactory','semaphore','woodpecker','act','renovate','dependabot','code-server','coder','vscode','jupyter','jupyterlab','mlflow','airflow','prefect','dagster'] },
-    { name: 'Servers',        icon: 'ph-desktop-tower',       keywords: ['proxmox','cockpit','idrac','ilo','ipmi','esxi','xcp','xen','hyperv','kvm','pve','unraid','truenas','freenas','opnsense','pfsense','mikrotik','synology','qnap','asustor'] },
-];
-
 function _dskGroupLabel(name) {
     const labels = {
         'Media': tc('group', 'Media'),
@@ -293,6 +279,20 @@ function _dskGroupLabel(name) {
     };
     return Object.prototype.hasOwnProperty.call(labels, name) ? labels[name] : name;
 }
+
+(function() {
+
+const POD_RULES = [
+    { name: 'Media',          icon: 'ph-film-strip',          keywords: ['plex','jellyfin','emby','navidrome','kavita','komga','audiobookshelf','sonarr','radarr','lidarr','readarr','whisparr','prowlarr','qbittorrent','transmission','deluge','sabnzbd','nzbget','bazarr','tautulli','overseerr','requestrr','immich','photoprism','pigallery','damselfly'] },
+    { name: 'Monitoring',     icon: 'ph-chart-line-up',       keywords: ['grafana','prometheus','alertmanager','loki','uptime','kuma','glances','netdata','zabbix','influx','telegraf','speedtest','myspeed','healthchecks','statping','gatus','scrutiny'] },
+    { name: 'Infrastructure', icon: 'ph-wrench',              keywords: ['traefik','portainer','proxmox','cockpit','nginx','caddy','haproxy','watchtower','dozzle','komodo','flint','gitea','gitlab','forgejo','drone','jenkins','vault','consul','nomad','ansible','terraform','penpot','n8n','windmill'] },
+    { name: 'Security',       icon: 'ph-shield-check',        keywords: ['authentik','authelia','vaultwarden','bitwarden','crowdsec','fail2ban','wireguard','vpn','keycloak','zitadel','casdoor','lldap','kanidm'] },
+    { name: 'Home',           icon: 'ph-house',               keywords: ['homeassistant','home-assistant','nodered','node-red','esphome','zigbee2mqtt','z2m','frigate','scrypted','wyze','tuya','matter','openhabing'] },
+    { name: 'Files & Data',   icon: 'ph-folder-open',         keywords: ['nextcloud','seafile','filebrowser','syncthing','paperless','mealie','tandoor','grocy','bookstack','wiki','notion','obsidian','miniflux','freshrss','wallabag','linkding','shlink'] },
+    { name: 'Network',        icon: 'ph-network',             keywords: ['pihole','adguard','unifi','technitium','bind','nginx-proxy','ddclient','cloudflare','tailscale','zerotier','headscale','netbird'] },
+    { name: 'Dev',            icon: 'ph-code',                keywords: ['gitea','gitlab','forgejo','github','gogs','drone','jenkins','argocd','harbor','registry','sonar','nexus','artifactory','semaphore','woodpecker','act','renovate','dependabot','code-server','coder','vscode','jupyter','jupyterlab','mlflow','airflow','prefect','dagster'] },
+    { name: 'Servers',        icon: 'ph-desktop-tower',       keywords: ['proxmox','cockpit','idrac','ilo','ipmi','esxi','xcp','xen','hyperv','kvm','pve','unraid','truenas','freenas','opnsense','pfsense','mikrotik','synology','qnap','asustor'] },
+];
 
 const DASH_POD_LIMIT  = 6;
 const DASH_ICON_LIMIT = 24;
