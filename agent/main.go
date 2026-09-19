@@ -303,7 +303,7 @@ func (a *App) router(w http.ResponseWriter, r *http.Request) {
 		a.routeRawSaveHandler(w, r, id)
 
 	default:
-		jsonError(w, "not found", http.StatusNotFound)
+		jsonErrorCode(w, "not_found", nil, "not found", http.StatusNotFound)
 	}
 }
 

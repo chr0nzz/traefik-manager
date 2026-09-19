@@ -75,6 +75,7 @@ from core import route_health as _rh
 from core import updates as _updates
 from core import traefik as _trae
 from core import agents_http as _agen
+from core import agent_errors as _agent_err
 from core import git as _git
 from core import auth as _auth
 from core import routes_build as _rb
@@ -2660,7 +2661,7 @@ def api_static_config_get():
             return jsonify({'error': gettext('Cannot reach agent: %(error)s', error=e)}), 502
         if resp.status_code != 200:
             try:
-                msg = (resp.json() or {}).get('error', '')
+                msg = _agent_err.localize(resp.json() or {}).get('error', '')
             except Exception:
                 msg = ''
             return jsonify({'error': msg or 'Static config not available on this agent'}), resp.status_code
@@ -3890,7 +3891,7 @@ def api_certs_manage():
         if resp.status_code != 200:
             return jsonify({'available': False, 'writable': False, 'restart_method': '',
                             'reason': 'this agent is too old to manage certificates', 'paths': []})
-        state = resp.json() or {}
+        state = _agent_err.localize(resp.json() or {})
     except Exception as e:
         return jsonify({'available': False, 'writable': False, 'restart_method': '',
                         'reason': str(e), 'paths': []})
@@ -3915,7 +3916,7 @@ def api_certs_delete():
         try:
             resp = _agent_request(agent, 'POST', '/api/traefik/certs/delete',
                                   json={'certs': [{'resolver': r, 'main': m} for r, m in wanted]})
-            return jsonify(resp.json() or {}), resp.status_code
+            return jsonify(_agent_err.localize(resp.json() or {})), resp.status_code
         except Exception as e:
             return jsonify({'error': str(e)}), 502
 
@@ -7338,7 +7339,7 @@ def _agent_routes_payload(agent, agent_id):
                                   'error': all_routers.get('tcp_error') or all_routers.get('udp_error') or 'router list incomplete'})
         if not r_resp.ok:
             try:
-                err = r_resp.json().get('error') or r_resp.text
+                err = _agent_err.localize(r_resp.json()).get('error') or r_resp.text
             except Exception:
                 err = r_resp.text
             config_errors.append({'file': "Agent Traefik API", 'error': err or f'HTTP {r_resp.status_code}'})
@@ -7776,7 +7777,7 @@ def api_agents_proxy(agent_id, path):
         for key, value in resp.headers.items():
             if key.lower().startswith('x-') and key.lower() not in _PROXY_HEADER_DENY:
                 out_headers[key] = value
-        return resp.content, resp.status_code, out_headers
+        return _agent_err.localize_bytes(resp.content, content_type), resp.status_code, out_headers
     except requests.exceptions.SSLError as e:
         return jsonify({'error': 'TLS verification failed - the agent certificate is not trusted '
                                  'by Traefik Manager (%s)' % str(e)[:100]}), 502

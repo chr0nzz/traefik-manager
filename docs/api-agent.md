@@ -111,7 +111,17 @@ Response (no auth required):
 | 500 | Internal error |
 | 502 | Cannot reach Traefik or the CrowdSec LAPI |
 
-All errors return `{"error": "message", "ok": false}`.
+All errors return `{"error": "message", "ok": false}`. Most also carry a stable `code` and, when the message has variable parts, a `params` object:
+
+```json
+{"error": "invalid YAML: line 3", "code": "invalid_yaml", "params": {"detail": "line 3"}, "ok": false}
+```
+
+The `error` text from the agent is always English. When a browser session in another language calls the agent through TM, TM swaps `error` for the translated message for that `code` and leaves `code` and `params` as they are. An error without a `code` (from an older agent, or one that only relays git or CrowdSec output) keeps its English text. The certificate status endpoint does the same with `reason` and `reason_code`.
+
+::: tip New in v1.15.0
+`code`, `params` and `reason_code` were added in v1.15.0. The `error` text did not change, so match on `code` rather than the wording.
+:::
 
 ## Backup format
 

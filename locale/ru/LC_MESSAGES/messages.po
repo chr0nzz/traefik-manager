@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-18 20:22-0400\n"
+"POT-Creation-Date: 2026-09-18 20:36-0400\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -47,6 +47,14 @@ msgstr ""
 
 #, python-format
 msgid "%(claimed)s already belongs to %(claimed2)s. Pick a different name"
+msgstr ""
+
+#, python-format
+msgid "%(file)s is mounted read only on this agent, nothing was changed"
+msgstr ""
+
+#, python-format
+msgid "%(file)s is mounted read only on this agent, nothing was restored"
 msgstr ""
 
 #, python-format
@@ -522,12 +530,18 @@ msgid ""
 "changed later in Settings."
 msgstr ""
 
+msgid "ACCESS_LOG_PATH not configured"
+msgstr ""
+
 #, python-format
 msgid "ACME / certs path %(optional)s"
 msgstr ""
 
 #. Used in the browser
 msgid "ACME bypass allowed"
+msgstr ""
+
+msgid "ACME_JSON_PATH is not set on this agent"
 msgstr ""
 
 #. Used in the browser
@@ -633,6 +647,10 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Access log file {empty_stdout}"
+msgstr ""
+
+#, python-format
+msgid "Access log not found at %(path)s"
 msgstr ""
 
 msgid ""
@@ -1470,6 +1488,18 @@ msgstr ""
 msgid "Backup failed"
 msgstr ""
 
+#, python-format
+msgid "Backup failed, nothing was restored: %(detail)s"
+msgstr ""
+
+#, python-format
+msgid "Backup failed, nothing was written: %(detail)s"
+msgstr ""
+
+#, python-format
+msgid "Backup failed: %(detail)s"
+msgstr ""
+
 #. Used in the browser
 #, python-brace-format
 msgid "Backup failed: {error}"
@@ -1684,6 +1714,9 @@ msgstr ""
 msgid "CORS Headers"
 msgstr ""
 
+msgid "CROWDSEC_LAPI_URL not configured"
+msgstr ""
+
 #. Used in the browser
 msgctxt "button"
 msgid "Cancel"
@@ -1708,8 +1741,22 @@ msgstr ""
 msgid "Cannot reach the agent. Check that it is running and reachable."
 msgstr ""
 
+#, python-format
+msgid "Cannot read backup: %(detail)s"
+msgstr ""
+
+#, python-format
+msgid "Cannot read static config: %(detail)s"
+msgstr ""
+
 #. Used in the browser
 msgid "Cannot read the agent static config"
+msgstr ""
+
+msgid "Cannot read the config directory"
+msgstr ""
+
+msgid "Cannot read the config file"
 msgstr ""
 
 #, python-format
@@ -2146,6 +2193,9 @@ msgstr ""
 msgid "Config file"
 msgstr ""
 
+msgid "Config path not found"
+msgstr ""
+
 #. Used in the browser
 msgctxt "label"
 msgid "Configuration"
@@ -2389,6 +2439,10 @@ msgstr ""
 msgid "Could not reach the CrowdSec LAPI"
 msgstr ""
 
+#, python-format
+msgid "Could not read %(file)s: %(detail)s"
+msgstr ""
+
 #. Used in the browser
 msgid "Could not read decisions"
 msgstr ""
@@ -2541,6 +2595,10 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "CrowdSec summary failed (HTTP {status})"
+msgstr ""
+
+#, python-format
+msgid "CrowdSec unavailable: %(detail)s"
 msgstr ""
 
 #. Used in the browser
@@ -2781,6 +2839,10 @@ msgstr ""
 msgid "Delete failed"
 msgstr ""
 
+#, python-format
+msgid "Delete failed: %(detail)s"
+msgstr ""
+
 #. Used in the browser
 #, python-brace-format
 msgid "Delete failed: {error}"
@@ -2954,6 +3016,9 @@ msgstr ""
 msgid "Diff error: {error}"
 msgstr ""
 
+msgid "Diff failed"
+msgstr ""
+
 msgctxt "setting"
 msgid "Digest"
 msgstr ""
@@ -3098,6 +3163,10 @@ msgid "Docker Run"
 msgstr ""
 
 msgid "Docker host"
+msgstr ""
+
+#, python-format
+msgid "Docker restart failed: %(detail)s"
 msgstr ""
 
 msgctxt "button"
@@ -3670,12 +3739,23 @@ msgstr ""
 msgid "Failed to add decision - check LAPI permissions"
 msgstr ""
 
+#, python-format
+msgid "Failed to add decision: %(detail)s"
+msgstr ""
+
+msgid "Failed to build the YAML"
+msgstr ""
+
 #. Used in the browser
 msgid "Failed to create agent"
 msgstr ""
 
 #. Used in the browser
 msgid "Failed to create key"
+msgstr ""
+
+#, python-format
+msgid "Failed to create key: %(detail)s"
 msgstr ""
 
 msgid "Failed to delete decision"
@@ -3829,6 +3909,10 @@ msgstr ""
 
 #. Used in the browser
 msgid "Failed to update."
+msgstr ""
+
+#, python-format
+msgid "Failed to write the signal file: %(detail)s"
 msgstr ""
 
 msgctxt "option"
@@ -4593,6 +4677,9 @@ msgid ""
 "dashboard URL)"
 msgstr ""
 
+msgid "Internal error"
+msgstr ""
+
 msgid "Internal service URL"
 msgstr ""
 
@@ -4633,6 +4720,12 @@ msgstr ""
 msgid "Invalid code. Try again."
 msgstr ""
 
+msgid "Invalid commit SHA"
+msgstr ""
+
+msgid "Invalid config file"
+msgstr ""
+
 #, python-format
 msgid "Invalid duration for %(yaml_key)s: %(value)s"
 msgstr ""
@@ -4641,6 +4734,9 @@ msgstr ""
 msgid ""
 "Invalid duration for %(yaml_key)s: %(value)s - use forms like 30, 30s, "
 "1m30s"
+msgstr ""
+
+msgid "Invalid file name"
 msgstr ""
 
 msgid ""
@@ -4667,6 +4763,12 @@ msgstr ""
 
 #, python-format
 msgid "Invalid providers throttle: %(throttle)s - use forms like 2s, 500ms"
+msgstr ""
+
+msgid "Invalid repository URL scheme"
+msgstr ""
+
+msgid "Invalid request body"
 msgstr ""
 
 #, python-format
@@ -4726,6 +4828,9 @@ msgstr ""
 
 #. Used in the browser
 msgid "Key copied."
+msgstr ""
+
+msgid "Key not found"
 msgstr ""
 
 #. Used in the browser
@@ -5569,6 +5674,11 @@ msgstr ""
 msgid "No Nomad routes found"
 msgstr ""
 
+msgid ""
+"No RESTART_METHOD is configured on this agent, and Traefik only reads "
+"acme.json at startup"
+msgstr ""
+
 #. Used in the browser
 msgid "No Redis routes found"
 msgstr ""
@@ -5948,6 +6058,9 @@ msgstr ""
 
 #. Used in the browser
 msgid "Not downloaded"
+msgstr ""
+
+msgid "Not found"
 msgstr ""
 
 #, python-format
@@ -6928,6 +7041,10 @@ msgstr ""
 msgid "Proxy answered {status_code}, backend not verified. {note}"
 msgstr ""
 
+#, python-format
+msgid "Proxy error: %(detail)s"
+msgstr ""
+
 #. Used in the browser
 msgid "Proxy trusted"
 msgstr ""
@@ -7000,6 +7117,9 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Quiet {hours}, errors break through"
+msgstr ""
+
+msgid "RESTART_METHOD not configured or unsupported"
 msgstr ""
 
 #. Used in the browser
@@ -7352,6 +7472,13 @@ msgstr ""
 msgid "Remove {shown} from acme.json{where}?"
 msgstr ""
 
+#, python-format
+msgid "Removed %(num)d certificate, then stopped at %(file)s: %(detail)s"
+msgid_plural "Removed %(num)d certificates, then stopped at %(file)s: %(detail)s"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
 #. Used in the browser
 #, python-brace-format
 msgid "Removed {n} certificate"
@@ -7470,6 +7597,10 @@ msgstr ""
 msgid "Reset failed"
 msgstr ""
 
+#, python-format
+msgid "Reset failed: %(detail)s"
+msgstr ""
+
 #. Used in the browser
 #, python-brace-format
 msgid "Reset failed: {error}"
@@ -7558,9 +7689,19 @@ msgstr ""
 msgid "Restore failed"
 msgstr ""
 
+#, python-format
+msgid "Restore failed: %(detail)s"
+msgstr ""
+
 #. Used in the browser
 #, python-brace-format
 msgid "Restore failed: {error}"
+msgstr ""
+
+#, python-format
+msgid ""
+"Restore stopped at %(file)s: %(detail)s. A backup was taken before the "
+"restore"
 msgstr ""
 
 #. Used in the browser
@@ -7809,6 +7950,9 @@ msgstr ""
 msgid "Router loaded, {up} of {total} backend servers up"
 msgstr ""
 
+msgid "Router name is required"
+msgstr ""
+
 #, python-format
 msgid "Router priority %(optional)s"
 msgstr ""
@@ -7949,6 +8093,9 @@ msgstr ""
 msgid ""
 "Run this on %(agent_cli_host_name)s. It installs the %(tm)s CLI and opens"
 " its agent installer with the key already set."
+msgstr ""
+
+msgid "SIGNAL_FILE_PATH not configured"
 msgstr ""
 
 #. Used in the browser
@@ -9321,6 +9468,9 @@ msgstr ""
 msgid "The agent reads these from its own environment."
 msgstr ""
 
+msgid "The agent refused the API key"
+msgstr ""
+
 #. Used in the browser
 #, python-brace-format
 msgid ""
@@ -9360,6 +9510,9 @@ msgid ""
 "from the public internet, a proxy in front is rewriting it - check that "
 "your trusted hops and the upstream {trustedips} are set correctly, or "
 "real client IPs will be lost to logs, CrowdSec and ipAllowList."
+msgstr ""
+
+msgid "The commit holds no config files for this agent"
 msgstr ""
 
 #. Used in the browser
@@ -9698,6 +9851,9 @@ msgid ""
 "agent. Editing one here would conflict with it."
 msgstr ""
 
+msgid "This backup is not valid JSON, nothing was restored"
+msgstr ""
+
 #. Used in the browser
 msgid "This browser does not support desktop notifications."
 msgstr ""
@@ -9829,6 +9985,9 @@ msgstr ""
 
 #. Used in the browser
 msgid "Too Many Requests"
+msgstr ""
+
+msgid "Too many requests to the agent, try again in a moment"
 msgstr ""
 
 msgid "Too many wrong codes. Enter your password again."
@@ -10071,6 +10230,14 @@ msgid ""
 "Traefik strips these from the right of %(x_forwarded_for)s and uses the "
 "next IP. Use when the proxy's own IPs vary. Cannot be combined with a "
 "fixed depth."
+msgstr ""
+
+#, python-format
+msgid "Traefik unavailable at %(url)s: %(detail)s"
+msgstr ""
+
+#, python-format
+msgid "Traefik unavailable: %(detail)s"
 msgstr ""
 
 msgid "Traefik version"
@@ -10588,6 +10755,10 @@ msgctxt "button"
 msgid "Worst"
 msgstr ""
 
+#, python-format
+msgid "Write failed: %(detail)s"
+msgstr ""
+
 msgid "Writes all OIDC settings above without changing the enabled state."
 msgstr ""
 
@@ -10695,6 +10866,9 @@ msgid "accounts {names}"
 msgstr ""
 
 msgid "acme.json Path"
+msgstr ""
+
+msgid "acme.json is mounted read only on this agent"
 msgstr ""
 
 #. Used in the browser
@@ -12583,6 +12757,9 @@ msgstr ""
 
 #. Used in the browser
 msgid "simulated, nothing was enforced"
+msgstr ""
+
+msgid "since must be a non-negative integer"
 msgstr ""
 
 #. Used in the browser

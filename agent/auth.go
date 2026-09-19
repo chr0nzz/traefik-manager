@@ -18,7 +18,7 @@ func (a *App) authMiddleware(next http.Handler) http.Handler {
 		}
 		envKeyMatch := subtle.ConstantTimeCompare([]byte(key), []byte(a.cfg.APIKey)) == 1
 		if !envKeyMatch && !a.keys.validate(key) {
-			jsonError(w, "unauthorized", http.StatusUnauthorized)
+			jsonErrorCode(w, "unauthorized", nil, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -36,7 +36,7 @@ func (a *App) rateLimitMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 		if !store.allow(ip) {
-			jsonError(w, "rate limit exceeded", http.StatusTooManyRequests)
+			jsonErrorCode(w, "rate_limited", nil, "rate limit exceeded", http.StatusTooManyRequests)
 			return
 		}
 		next.ServeHTTP(w, r)
