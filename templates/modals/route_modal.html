@@ -78,7 +78,7 @@
 
                     <div id="httpAdvancedFields" style="display:none">
                         <label>{{ pgettext('setting', 'Rule') }}</label>
-                        <input type="text" name="httpRule" id="httpRule" oninput="_httpRuleAdvTouched = true" class="input-field font-mono text-sm" placeholder="Host(`app.example.com`) || PathPrefix(`/api`)">
+                        <textarea name="httpRule" id="httpRule" rows="1" oninput="_onHttpRuleInput(this)" onkeydown="_onHttpRuleKey(event)" onfocus="_fitHttpRule(this)" class="input-field font-mono text-sm" style="resize:vertical;overflow-y:hidden;box-sizing:border-box" placeholder="Host(`app.example.com`) || PathPrefix(`/api`)"></textarea>
                         <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Any valid %(traefik_router_rule)s expression.', traefik_router_rule=tag('a', _('Traefik router rule'), href='https://doc.traefik.io/traefik/routing/routers/#rule', target='_blank', style_='color:var(--blue)')) }}</p>
                     </div>
                     <div>
