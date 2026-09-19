@@ -283,6 +283,9 @@ function setProtocol(proto) {
     }
 }
 
+let _httpRuleFitsSimple = true;
+let _httpRuleAdvTouched = false;
+
 function setHttpRuleMode(mode) {
     const isAdv = mode === 'advanced';
     const simpleBtn = document.getElementById('httpModeSimpleBtn');
@@ -293,10 +296,12 @@ function setHttpRuleMode(mode) {
     if (advBtn)    { advBtn.classList.toggle('active-http', isAdv); }
     if (simpleFields) simpleFields.style.display = isAdv ? 'none' : '';
     if (advFields)    advFields.style.display    = isAdv ? '' : 'none';
+    const note = document.getElementById('httpSimpleLossNote');
+    if (note) note.style.display = !isAdv && !_httpRuleFitsSimple ? '' : 'none';
     const ruleEl = document.getElementById('httpRule');
     if (!ruleEl) return;
-    if (!isAdv) ruleEl.value = '';
-    else if (!ruleEl.value.trim()) ruleEl.value = _currentSimpleHttpRule();
+    ruleEl.disabled = !isAdv;
+    if (isAdv && _httpRuleFitsSimple && !_httpRuleAdvTouched) ruleEl.value = _currentSimpleHttpRule() || ruleEl.value;
 }
 
 function _applyServiceTypeNotice(svcType, owned) {
@@ -487,6 +492,8 @@ function _resetRouteForm() {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    _httpRuleFitsSimple = true;
+    _httpRuleAdvTouched = false;
     setHttpRuleMode('simple');
     setTcpTlsMode('none', document.getElementById('tcpTlsNone'));
     const crHttp = document.getElementById('certResolver');
@@ -1820,12 +1827,10 @@ function _splitHostRule(rule, knownDomains) {
 function _applyHttpRuleToForm(rule) {
     const text = (rule || '').trim();
     const split = text ? _splitHostRule(text, _domainsForForm()) : { subdomain: '', domains: [] };
-    if (!split) {
-        setHttpRuleMode('advanced');
-        document.getElementById('httpRule').value = text;
-    } else {
-        setHttpRuleMode('simple');
-    }
+    _httpRuleFitsSimple = !!split;
+    _httpRuleAdvTouched = false;
+    document.getElementById('httpRule').value = text;
+    setHttpRuleMode(split ? 'simple' : 'advanced');
     _updateRouteModalForAgent();
     const subdomain = split ? split.subdomain : '';
     const matchedDomains = split ? split.domains : [];

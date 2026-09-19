@@ -73,11 +73,12 @@
                             </div>
                         </div>
                     </div>
+                    <p id="httpSimpleLossNote" class="text-xs mt-2" style="display:none;color:var(--yellow)"><i class="ph-bold ph-warning"></i> {{ _("This route's rule does not fit the simple form. Saving in Simple mode replaces it with a rule built from these fields. Switch back to Advanced rule to keep it as it is.") }}</p>
                     </div>
 
                     <div id="httpAdvancedFields" style="display:none">
                         <label>{{ pgettext('setting', 'Rule') }}</label>
-                        <input type="text" name="httpRule" id="httpRule" class="input-field font-mono text-sm" placeholder="Host(`app.example.com`) || PathPrefix(`/api`)">
+                        <input type="text" name="httpRule" id="httpRule" oninput="_httpRuleAdvTouched = true" class="input-field font-mono text-sm" placeholder="Host(`app.example.com`) || PathPrefix(`/api`)">
                         <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Any valid %(traefik_router_rule)s expression.', traefik_router_rule=tag('a', _('Traefik router rule'), href='https://doc.traefik.io/traefik/routing/routers/#rule', target='_blank', style_='color:var(--blue)')) }}</p>
                     </div>
                     <div>

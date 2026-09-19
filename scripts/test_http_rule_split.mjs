@@ -72,6 +72,58 @@ check('rebuild with dotted subdomain', _simpleHttpRule('app.other.org', ['exampl
 check('rebuild apex', _simpleHttpRule('', ['example.com', 'example.fr']), 'Host(`example.com`) || Host(`example.fr`)');
 check('rebuild subdomain', _simpleHttpRule('www', ['example.com']), 'Host(`www.example.com`)');
 
+function between(from, to) {
+    const a = src.indexOf(from);
+    const b = src.indexOf(to, a);
+    if (a < 0 || b < 0) {
+        console.error(`could not find ${from} in routes.js`);
+        process.exit(1);
+    }
+    return src.slice(a, b);
+}
+
+function fakeElement() {
+    const classes = new Set();
+    return {
+        value: '', disabled: false, textContent: '', style: {},
+        classList: { toggle: (c, on) => (on ? classes.add(c) : classes.delete(c)), contains: c => classes.has(c) },
+    };
+}
+
+const ids = ['httpModeSimpleBtn', 'httpModeAdvancedBtn', 'httpSimpleFields', 'httpAdvancedFields',
+    'httpSimpleLossNote', 'httpRule', 'subdomain', 'domainSelect'];
+const els = Object.fromEntries(ids.map(id => [id, fakeElement()]));
+const form = new Function('document', 'window', '_domainsForForm', '_updateRouteModalForAgent', '_initDomainChips',
+    src.slice(start, end)
+    + between('let _httpRuleFitsSimple', 'function _applyServiceTypeNotice(')
+    + between('function _applyHttpRuleToForm(', 'async function cloneRoute(')
+    + '\nreturn { setHttpRuleMode, _applyHttpRuleToForm, typeInAdvanced() { _httpRuleAdvTouched = true; } };'
+)({ getElementById: id => els[id] || null }, {}, () => DOMAINS, () => {}, () => {});
+
+const mode = () => (els.httpModeAdvancedBtn.classList.contains('active-http') ? 'advanced' : 'simple');
+const sent = () => (els.httpRule.disabled ? null : els.httpRule.value);
+const warned = () => els.httpSimpleLossNote.style.display !== 'none';
+
+form._applyHttpRuleToForm(issue179);
+check('issue 179 opens advanced and sends the rule as is', [mode(), sent()], ['advanced', issue179]);
+form.setHttpRuleMode('simple');
+check('switching to simple keeps the rule, sends nothing and warns', [els.httpRule.value, sent(), warned()], [issue179, null, true]);
+form.setHttpRuleMode('advanced');
+form.setHttpRuleMode('simple');
+form.setHttpRuleMode('advanced');
+check('advanced to simple and back leaves the rule untouched', [sent(), warned()], [issue179, false]);
+
+form._applyHttpRuleToForm('Host(`app.example.com`)');
+check('a simple rule opens simple and sends only the simple fields', [mode(), sent(), warned()], ['simple', null, false]);
+els.subdomain.value = 'web';
+form.setHttpRuleMode('advanced');
+check('advanced follows the simple fields until typed in', sent(), 'Host(`web.example.com`)');
+els.httpRule.value = 'Host(`web.example.com`) && PathPrefix(`/api`)';
+form.typeInAdvanced();
+form.setHttpRuleMode('simple');
+form.setHttpRuleMode('advanced');
+check('a typed advanced rule survives a trip through simple', sent(), 'Host(`web.example.com`) && PathPrefix(`/api`)');
+
 if (failures) {
     console.error(`${failures} host rule check(s) failed`);
     process.exit(1);
