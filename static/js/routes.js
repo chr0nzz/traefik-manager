@@ -2408,18 +2408,33 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     const svcUp = svcServerStatus ? Object.values(svcServerStatus).filter(v => String(v).toUpperCase() === 'UP').length : 0;
     const svcTotal = svcServerStatus ? Object.keys(svcServerStatus).length : 0;
 
+    const tmCheck = svcChecked || typeof window._rhGet !== 'function' ? null
+        : (window._rhGet(app.id) || window._rhByName(app.name));
+    const tmChecked = !!(tmCheck && ['up', 'down', 'degraded'].includes(tmCheck.state) && !tmCheck.self);
+    const tmServerUp = url => {
+        if (!tmChecked) return undefined;
+        if (tmCheck.source === 'servers') return !(tmCheck.down_servers || []).includes(url);
+        if (svcServers.length === 1) return tmCheck.state === 'up';
+        return undefined;
+    };
     const svcServerRows = svcServers.map((s, i) => {
         const url = s.url || s.address || '-';
-        const st = svcServerStatus ? svcServerStatus[url] : undefined;
-        if (st === undefined) return [tc('label', 'Server {n}', { n: i + 1 }), url, false];
-        const up = String(st).toUpperCase() === 'UP';
+        const up = svcChecked
+            ? (svcServerStatus[url] === undefined ? undefined : String(svcServerStatus[url]).toUpperCase() === 'UP')
+            : tmServerUp(url);
+        if (up === undefined) return [tc('label', 'Server {n}', { n: i + 1 }), url, false];
         return [tc('label', 'Server {n}', { n: i + 1 }),
             `<span class="d-state d-flat ${up ? 'd-on' : 'd-bad'}"><span class="status-dot ${up ? 'status-online' : 'status-offline'}"></span>${up ? thc('status', 'UP') : thc('status', 'DOWN')}</span> <span class="font-mono">${_esc(url)}</span>`,
             true];
     });
-    const svcHealthTxt = !svcChecked ? ''
-        : svcUp === svcTotal ? `<span class="text-xs ml-2" style="color:var(--muted)">${th('{svcUp} of {svcTotal} servers up', { svcUp: tmHtml(svcUp), svcTotal: tmHtml(svcTotal) })}</span>`
-        : `<span class="text-xs ml-2 font-semibold" style="color:${svcUp === 0 ? 'var(--red)' : 'var(--yellow)'}">${(svcUp === 0 ? th('all {total} servers down', { total: svcTotal }) : th('{down} of {total} servers down', { down: svcTotal - svcUp, total: svcTotal }))}</span>`;
+    const tmSv = (tmCheck && tmCheck.servers) || {};
+    const svcHealthTxt = svcChecked
+        ? (svcUp === svcTotal ? `<span class="text-xs ml-2" style="color:var(--muted)">${th('{svcUp} of {svcTotal} servers up', { svcUp: tmHtml(svcUp), svcTotal: tmHtml(svcTotal) })}</span>`
+            : `<span class="text-xs ml-2 font-semibold" style="color:${svcUp === 0 ? 'var(--red)' : 'var(--yellow)'}">${(svcUp === 0 ? th('all {total} servers down', { total: svcTotal }) : th('{down} of {total} servers down', { down: svcTotal - svcUp, total: svcTotal }))}</span>`)
+        : !tmChecked ? ''
+        : tmCheck.state === 'up' ? `<span class="text-xs ml-2" style="color:var(--muted)">${th('backend reachable')}</span>`
+        : tmCheck.state === 'degraded' ? `<span class="text-xs ml-2 font-semibold" style="color:var(--yellow)">${th('{down} of {total} servers down', { down: tmSv.total - tmSv.up, total: tmSv.total })}</span>`
+        : `<span class="text-xs ml-2 font-semibold" style="color:var(--red)">${tmCheck.error ? th('backend unreachable, {error}', { error: tmCheck.error }) : th('backend unreachable')}</span>`;
 
     const svcRows = [
         [tc('label', 'Status'), svcStatus !== '-' ? _dState(svcStatus) + svcHealthTxt : '-', svcStatus !== '-'],

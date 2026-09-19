@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-18 22:41-0400\n"
+"POT-Creation-Date: 2026-09-19 12:45-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -390,7 +390,7 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
-msgid "0/{total} servers"
+msgid "0/{total} servers up"
 msgstr ""
 
 #. Used in the browser
@@ -685,11 +685,6 @@ msgid "Actions"
 msgstr ""
 
 msgctxt "button"
-msgid "Active"
-msgstr ""
-
-#. Used in the browser
-msgctxt "label"
 msgid "Active"
 msgstr ""
 
@@ -5813,6 +5808,10 @@ msgid "No etcd routes found"
 msgstr ""
 
 #. Used in the browser
+msgid "No health check on this service, so Traefik reports every server as UP"
+msgstr ""
+
+#. Used in the browser
 msgid "No icon found"
 msgstr ""
 
@@ -10331,6 +10330,11 @@ msgid "UP"
 msgstr ""
 
 #. Used in the browser
+msgctxt "status"
+msgid "UP, not checked"
+msgstr ""
+
+#. Used in the browser
 msgid "URI Too Long"
 msgstr ""
 
@@ -11053,6 +11057,10 @@ msgid "backend of {owner}"
 msgstr ""
 
 #. Used in the browser
+msgid "backend reachable"
+msgstr ""
+
+#. Used in the browser
 msgid "backend unreachable"
 msgstr ""
 
@@ -11069,14 +11077,6 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "backend {target}"
-msgstr ""
-
-#. Used in the browser
-msgid "backends degraded"
-msgstr ""
-
-#. Used in the browser
-msgid "backends unreachable"
 msgstr ""
 
 #. Used in the browser
@@ -11818,16 +11818,18 @@ msgid "middleware"
 msgstr ""
 
 #. Used in the browser
+msgid "middleware disabled"
+msgid_plural "middlewares disabled"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
 msgid "middlewares"
 msgstr ""
 
 #. Used in the browser
 msgctxt "label"
 msgid "middlewares"
-msgstr ""
-
-#. Used in the browser
-msgid "middlewares disabled"
 msgstr ""
 
 #, python-format
@@ -12578,6 +12580,18 @@ msgid "retry"
 msgstr ""
 
 #. Used in the browser
+msgid "route degraded"
+msgid_plural "routes degraded"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+msgid "route unreachable"
+msgid_plural "routes unreachable"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
 msgid "router"
 msgstr ""
 
@@ -12585,6 +12599,12 @@ msgstr ""
 #, python-brace-format
 msgid "router bindings for {name} could not be read from the Traefik API"
 msgstr ""
+
+#. Used in the browser
+msgid "router disabled"
+msgid_plural "routers disabled"
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
@@ -12608,16 +12628,14 @@ msgid "router names"
 msgstr ""
 
 #. Used in the browser
-msgid "router warnings"
-msgstr ""
+msgid "router warning"
+msgid_plural "router warnings"
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 msgctxt "label"
 msgid "routers"
-msgstr ""
-
-#. Used in the browser
-msgid "routers disabled"
 msgstr ""
 
 #. Used in the browser
@@ -12685,8 +12703,28 @@ msgid "service"
 msgstr ""
 
 #. Used in the browser
-msgid "service warnings"
-msgstr ""
+msgid "service degraded"
+msgid_plural "services degraded"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+msgid "service disabled"
+msgid_plural "services disabled"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+msgid "service down"
+msgid_plural "services down"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+msgid "service warning"
+msgid_plural "service warnings"
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 msgid "services"
@@ -12695,18 +12733,6 @@ msgstr ""
 #. Used in the browser
 msgctxt "label"
 msgid "services"
-msgstr ""
-
-#. Used in the browser
-msgid "services degraded"
-msgstr ""
-
-#. Used in the browser
-msgid "services disabled"
-msgstr ""
-
-#. Used in the browser
-msgid "services down"
 msgstr ""
 
 #. Used in the browser
@@ -14529,7 +14555,7 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
-msgid "{up}/{total} servers"
+msgid "{up}/{total} servers up"
 msgstr ""
 
 #. Used in the browser

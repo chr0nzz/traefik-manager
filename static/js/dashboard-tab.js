@@ -500,14 +500,14 @@ function _dskState(r) {
         s.health  = 'down';
         s.dot     = 'sig-cell-err';
         s.dotTip  = t('Backend unreachable - 0 of {total} servers up', { total: svc.total });
-        s.note    = `${th('backend unreachable {servers}', { servers: tmHtml(`<b>${th('0/{total} servers', { total: svc.total })}</b>`) })}`;
+        s.note    = `${th('backend unreachable {servers}', { servers: tmHtml(`<b>${th('0/{total} servers up', { total: svc.total })}</b>`) })}`;
         s.noteIc  = 'ph-fill ph-warning-octagon';
         s.noteCls = 'd-bad';
     } else if (svc && svc.total && svc.up < svc.total) {
         s.health  = 'warn';
         s.dot     = 'sig-cell-warn';
         s.dotTip  = t('Backend degraded - {up} of {total} servers up', { up: svc.up, total: svc.total });
-        s.note    = `${th('backend degraded {servers}', { servers: tmHtml(`<b>${th('{up}/{total} servers', { up: svc.up, total: svc.total })}</b>`) })}`;
+        s.note    = `${th('backend degraded {servers}', { servers: tmHtml(`<b>${th('{up}/{total} servers up', { up: svc.up, total: svc.total })}</b>`) })}`;
         s.noteIc  = 'ph-fill ph-warning';
         s.noteCls = 'd-warn';
     } else if (_rmStatusBlind) {
@@ -540,7 +540,7 @@ function _dskState(r) {
         s.dotTip  = ((chk.down_servers || []).length
             ? t('Backend degraded - {up} of {total} servers up ({servers} down) · {ago}', { up: sv.up, total: sv.total, servers: chk.down_servers.join(', '), ago: _dskAgo(chk.at) })
             : t('Backend degraded - {up} of {total} servers up · {ago}', { up: sv.up, total: sv.total, ago: _dskAgo(chk.at) }));
-        s.note    = `${th('backend degraded {servers}', { servers: tmHtml(`<b>${th('{up}/{total} servers', { up: sv.up, total: sv.total })}</b>`) })}`;
+        s.note    = `${th('backend degraded {servers}', { servers: tmHtml(`<b>${th('{up}/{total} servers up', { up: sv.up, total: sv.total })}</b>`) })}`;
         s.noteIc  = 'ph-fill ph-warning';
         s.noteCls = 'd-warn';
     } else if (chk && chk.state === 'up') {
@@ -777,7 +777,6 @@ function _dskAgo(at) {
     return t('checked {floor}h ago', { floor: Math.floor(sec / 3600) });
 }
 
-const DSK_HIT_MS = 2400;
 
 function _dskTogglePod(name, force) {
     const entry = _dskPods.get(name);
@@ -795,7 +794,7 @@ function _dskTogglePod(name, force) {
         if (bad) {
             const hits = fresh.querySelectorAll('.dsk-row[data-health="down"], .dsk-row[data-health="warn"], .dsk-tile[data-health="down"], .dsk-tile[data-health="warn"]');
             hits.forEach(el => el.classList.add('dsk-hit'));
-            setTimeout(() => hits.forEach(el => el.classList.remove('dsk-hit')), DSK_HIT_MS);
+            document.addEventListener('pointerdown', () => hits.forEach(el => el.classList.remove('dsk-hit')), { once: true });
             bad.scrollIntoView({ block: 'nearest' });
             bad.focus({ preventScroll: true });
             return;
