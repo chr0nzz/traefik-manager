@@ -13,6 +13,11 @@ TIMEOUT     = 5
 
 _DOWN_MARKERS    = ('connection refused', 'no route to host', 'network is unreachable',
                     'connection reset', 'remote end closed')
+_DOWN_WHY        = (('connection refused', 'refused the connection'),
+                    ('no route to host', 'is unreachable (no route to host)'),
+                    ('network is unreachable', 'is unreachable (network unreachable)'),
+                    ('connection reset', 'reset the connection'),
+                    ('remote end closed', 'closed the connection without answering'))
 _UNKNOWN_MARKERS = ('name or service not known', 'nodename nor servname', 'temporary failure in name resolution',
                     'nameresolutionerror', 'getaddrinfo failed', 'timed out', 'timeout')
 
@@ -74,6 +79,11 @@ def _classify_failure(exc) -> str:
     return 'down' if isinstance(exc, requests.exceptions.ConnectionError) else 'unknown'
 
 
+def _down_why(exc) -> str:
+    text = str(exc).lower()
+    return next((why for marker, why in _DOWN_WHY if marker in text), 'is unreachable')
+
+
 def _backend(fallback, ssrf, head):
     if not (fallback and _is_http(fallback) and ssrf(fallback)):
         return 'unknown', None, 'has no address to check'
@@ -81,7 +91,7 @@ def _backend(fallback, ssrf, head):
         ms, code, _loc = _head(fallback, head)
     except Exception as exc:
         verdict = _classify_failure(exc)
-        why = 'refused the connection' if verdict == 'down' else 'could not be reached from Traefik Manager (' + _error_text(exc) + ')'
+        why = _down_why(exc) if verdict == 'down' else 'could not be reached from Traefik Manager (' + _error_text(exc) + ')'
         return verdict, None, why
     if code in UNREACHABLE:
         return 'down', None, f'answered {code}'

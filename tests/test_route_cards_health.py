@@ -254,9 +254,19 @@ def test_the_degraded_count_reaches_the_card_the_verdict_and_the_entry_points():
     dash = _read('static', 'js', 'dashboard.js')
     assert "'degraded', hGo + ';apistatus=degraded'" in dash, 'the HTTP routers card needs a degraded flag'
     assert "['route degraded', 'routes degraded']" in dash, 'the verdict line needs a degraded item that counts routes'
+    assert 'const rtDeg   = m.http.groups.degraded.filter(o => !svcDeg.has(o.service))' in dash, \
+        'a route whose service is already counted as degraded must not be counted twice in the verdict line'
+    assert 'const rtDown  = m.http.groups.down.filter(o => !svcDown.has(o.service))' in dash, \
+        'a route whose service is already counted as down must not be counted twice in the verdict line'
     assert 'if (o.degraded) i.degraded++' in dash, 'entry point rows must count degraded routes'
     assert "degradedN, 'degraded', base + ';apistatus=degraded'" in dash, \
         'an entry point degraded flag must filter to degraded, not to warning'
+
+
+def test_a_group_pill_highlights_only_its_own_severity():
+    tab = _read('static', 'js', 'dashboard-tab.js')
+    assert "act: 'alarm', pod: meta.name, sev: 'down'" in tab and "act: 'alarm', pod: meta.name, sev: 'warn'" in tab
+    assert '_dskTogglePod(p.pod, true, p.sev)' in tab, 'clicking "1 degraded" must not also highlight and focus the down routes'
 
 
 def test_all_servers_up_without_a_health_check_proves_nothing():
