@@ -441,24 +441,27 @@ function _dashLaunchInfo(r, ov) {
             : { url: null, why: `${th('the link override is not an http or https URL. {fix_it_in}', { fix_it_in: tmHtml(`<b>${th('Fix it in edit')}</b>`) })}`, glyph: 'ph-bold ph-link-break' };
     }
     if ((r.protocol || 'http') !== 'http') return { url: null, why: t('stream route, nothing to open'), glyph: 'ph-bold ph-terminal-window' };
-    const rule = r.rule || '';
+    const rule = r.liveRule || r.rule || '';
     if (!rule) return { url: null, why: `${th('no rule, nothing to open. {set_a_link}', { set_a_link: tmHtml(`<b>${th('Set a link in edit')}</b>`) })}`, glyph: 'ph-bold ph-link-break' };
-    let picked = null, hosts = 0, wild = false;
+    let picked = null, hosts = 0, wild = false, tpl = false;
     _dskRuleBranches(rule).forEach(b => {
         const hostRe = /(!?)\s*Host\(`([^`]+)`\)/g;
         let m, host = null;
         while ((m = hostRe.exec(b))) { if (m[1] !== '!') { host = m[2]; break; } }
         if (!host) return;
         if (host.indexOf('*') >= 0) { wild = true; return; }
+        if (host.indexOf('{') >= 0) { tpl = true; return; }
         hosts++;
         if (!picked) picked = { host: host, path: (b.match(/PathPrefix\(`([^`]+)`\)/) || [])[1] || '' };
     });
     if (!picked) {
-        const why = wild
-            ? `${th('no launch URL, wildcard host. {set_one_in}', { set_one_in: tmHtml(`<b>${th('Set one in edit')}</b>`) })}`
-            : (/HostRegexp|HostSNI/.test(rule)
-                ? `${th('no launch URL, pattern rule. {set_one_in}', { set_one_in: tmHtml(`<b>${th('Set one in edit')}</b>`) })}`
-                : `${th('no launch URL, the rule has no host. {set_one_in}', { set_one_in: tmHtml(`<b>${th('Set one in edit')}</b>`) })}`);
+        const why = tpl || /\{\{/.test(rule)
+            ? `${th('no launch URL, the rule builds its host with a template Traefik has not resolved. {set_one_in}', { set_one_in: tmHtml(`<b>${th('Set one in edit')}</b>`) })}`
+            : (wild
+                ? `${th('no launch URL, wildcard host. {set_one_in}', { set_one_in: tmHtml(`<b>${th('Set one in edit')}</b>`) })}`
+                : (/HostRegexp|HostSNI/.test(rule)
+                    ? `${th('no launch URL, pattern rule. {set_one_in}', { set_one_in: tmHtml(`<b>${th('Set one in edit')}</b>`) })}`
+                    : `${th('no launch URL, the rule has no host. {set_one_in}', { set_one_in: tmHtml(`<b>${th('Set one in edit')}</b>`) })}`));
         return { url: null, why: why, glyph: 'ph-bold ph-link-break' };
     }
     return { url: (r.tls ? 'https' : 'http') + '://' + picked.host + picked.path, hosts: hosts };
@@ -809,7 +812,7 @@ function _dashHostsOf(r) {
     const out = [];
     const re = /Host(?:SNI|Regexp)?\(`([^`]+)`\)/g;
     let m;
-    while ((m = re.exec(r.rule || '')) !== null) out.push(m[1]);
+    while ((m = re.exec(r.liveRule || r.rule || '')) !== null) out.push(m[1]);
     return out;
 }
 
