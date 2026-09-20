@@ -54,3 +54,21 @@ def test_the_browser_prefers_the_resolved_rule_for_the_launch_link():
     assert "while ((m = re.exec(r.liveRule || r.rule || '')) !== null)" in tab, \
         'search must match the host a templated route actually serves'
     assert "host.indexOf('{') >= 0" in tab, 'an unresolved template must not become a launch URL'
+
+
+AGENT_ROUTERS = {'http': [{'name': 'plex-rtr@file', 'rule': LIVE_RULE}], 'tcp': [], 'udp': [],
+                 'complete': False, 'tcp_error': 'router list incomplete'}
+
+
+def test_an_agent_router_payload_carries_flags_beside_the_lists():
+    apps = [_app()]
+    rb.apply_live_rules(apps, AGENT_ROUTERS)
+    assert apps[0]['liveRule'] == LIVE_RULE, \
+        'an agent sends complete and error flags in the same dict as the router lists'
+    assert rb._traefik_router_ep_map(AGENT_ROUTERS) == {}, 'the flags must not be walked as routers either'
+
+
+def test_a_junk_router_entry_does_not_stop_the_rest():
+    apps = [_app()]
+    rb.apply_live_rules(apps, {'http': ['not-a-router', None, {'name': 'plex-rtr@file', 'rule': LIVE_RULE}]})
+    assert apps[0]['liveRule'] == LIVE_RULE
