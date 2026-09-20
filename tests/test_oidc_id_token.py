@@ -43,7 +43,16 @@ def _token(key=_KEY, alg='RS256', kid='k1', **over):
 def _serve_jwks(monkeypatch):
     oidc_tokens.reset_cache()
 
-    monkeypatch.setattr('jwt.jwks_client.PyJWKClient.fetch_data', lambda self: _jwks())
+    class _JwksResp:
+        status_code = 200
+
+        def json(self):
+            return _jwks()
+
+        def raise_for_status(self):
+            return None
+
+    monkeypatch.setattr('core.oidc_tokens.requests.get', lambda *a, **k: _JwksResp())
     yield
     oidc_tokens.reset_cache()
 
@@ -148,13 +157,18 @@ def _enable_oidc():
 
 def _start(client, monkeypatch):
     _enable_oidc()
-    monkeypatch.setattr('app.requests.get', lambda *a, **k: _Resp({
+    discovery = {
         'issuer': ISSUER,
         'authorization_endpoint': f'{ISSUER}/authorize',
         'token_endpoint': f'{ISSUER}/token',
         'jwks_uri': JWKS_URI,
         'id_token_signing_alg_values_supported': ['RS256'],
-    }))
+    }
+
+    def _get(url, *a, **k):
+        return _Resp(_jwks() if url == JWKS_URI else discovery)
+
+    monkeypatch.setattr('app.requests.get', _get)
     r = client.get('/auth/oidc/login')
     q = parse_qs(urlparse(r.headers['Location']).query)
     return q['state'][0], q['nonce'][0]
@@ -181,3 +195,53 @@ def test_the_callback_accepts_a_real_id_token(anon_client, monkeypatch):
     assert r.status_code == 302, r.data[:200]
     assert '/login' not in r.headers['Location'], 'a valid token should land in the app, not back at the login page'
     assert client.get('/').status_code == 200, 'a verified id_token opens a session'
+
+
+def test_the_key_fetch_looks_like_traefik_manager_not_a_bot(monkeypatch):
+    seen = {}
+
+    class _Resp:
+        status_code = 200
+
+        def json(self):
+            return _jwks()
+
+        def raise_for_status(self):
+            return None
+
+    def _get(url, timeout=None, headers=None, **k):
+        seen.update({'url': url, 'headers': headers or {}, 'timeout': timeout})
+        return _Resp()
+
+    monkeypatch.setattr('core.oidc_tokens.requests.get', _get)
+    oidc_tokens.reset_cache()
+    oidc_tokens.verify(_token(), _cfg(), CLIENT_ID, CLIENT_SECRET)
+    assert seen['url'] == JWKS_URI and seen['timeout'], 'the key fetch needs a timeout'
+    assert 'traefik-manager' in seen['headers'].get('User-Agent', ''), \
+        'urllib default agents are blocked by WAFs in front of some providers'
+
+
+def test_the_keys_are_cached_and_refetched_when_the_key_id_is_new(monkeypatch):
+    calls = []
+
+    class _Resp:
+        status_code = 200
+
+        def __init__(self, payload):
+            self._payload = payload
+
+        def json(self):
+            return self._payload
+
+        def raise_for_status(self):
+            return None
+
+    def _get(url, **k):
+        calls.append(url)
+        return _Resp(_jwks(kid='rotated') if len(calls) > 1 else _jwks(kid='old'))
+
+    monkeypatch.setattr('core.oidc_tokens.requests.get', _get)
+    oidc_tokens.reset_cache()
+    with pytest.raises(oidc_tokens.IdTokenError):
+        oidc_tokens.verify(_token(kid='missing'), _cfg(), CLIENT_ID, CLIENT_SECRET)
+    assert len(calls) == 2, 'a key id the cache does not know must trigger one refetch, for key rotation'
