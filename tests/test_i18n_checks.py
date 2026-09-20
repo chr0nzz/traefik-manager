@@ -353,3 +353,40 @@ def test_ci_runs_the_translation_checks():
     assert 'weblate' in scope['if']
     scope_run = ' '.join(str(s.get('run', '')) for s in scope['steps'])
     assert 'LC_MESSAGES/messages' in scope_run
+
+
+LONG_MSGID = ('%(line_break)s⚠ A %(buffering)s/%(compress)s middleware is attached - '
+              'remove it for smooth streaming and seeking.')
+
+
+@pytest.mark.skipif(not shutil.which('msgmerge'), reason='gettext msgmerge is not installed')
+def test_catalogues_are_wrapped_the_way_weblate_writes_them(tmp_path):
+    pot = textwrap.dedent('''\
+        msgid ""
+        msgstr ""
+        "MIME-Version: 1.0\\n"
+        "Content-Type: text/plain; charset=utf-8\\n"
+        "Content-Transfer-Encoding: 8bit\\n"
+
+        msgid "%s"
+        msgstr ""
+        ''') % LONG_MSGID
+    root = _tree(tmp_path, {
+        'locale/messages.pot': pot,
+        'locale/de/LC_MESSAGES/messages.po': DE_HEADER,
+    })
+    path = os.path.join(root, 'locale', 'de', 'LC_MESSAGES', 'messages.po')
+    assert tmi18n.normalize_catalogue(path, os.path.join(root, 'locale', 'messages.pot'))
+    lines = open(path, encoding='utf-8').read().splitlines()
+    assert max(len(line) for line in lines) <= tmi18n.WRAP_WIDTH, \
+        'Weblate rewraps at %d columns, so a wider catalogue comes back as a diff on every sync' % tmi18n.WRAP_WIDTH
+    assert any(line.endswith('- remove "') for line in lines), \
+        'the break must fall where gettext puts it, not where Babel does'
+    assert not any('#:' in line for line in lines), 'locations stay out of the catalogues'
+
+
+def test_normalising_a_catalogue_is_skipped_without_the_template(tmp_path):
+    root = _tree(tmp_path, {'locale/de/LC_MESSAGES/messages.po': DE_HEADER})
+    path = os.path.join(root, 'locale', 'de', 'LC_MESSAGES', 'messages.po')
+    assert tmi18n.normalize_catalogue(path, os.path.join(root, 'locale', 'missing.pot')) is False
+    assert open(path, encoding='utf-8').read() == DE_HEADER

@@ -25,6 +25,7 @@ PROJECT = 'Traefik Manager'
 BROWSER_MARK = 'Used in the browser'
 BUGS_ADDRESS = 'https://github.com/chr0nzz/tm-locale/issues'
 STARTER_LOCALES = ('de', 'fr', 'es', 'zh_Hans', 'ru')
+WRAP_WIDTH = 79
 
 PY_KEYWORDS = {
     '_': None,
@@ -151,6 +152,16 @@ def _write(path, catalog):
         fh.write(buf.getvalue())
 
 
+def normalize_catalogue(path, pot_path=POT_PATH):
+    msgmerge = shutil.which('msgmerge')
+    if not msgmerge or not os.path.isfile(pot_path):
+        return False
+    proc = subprocess.run([msgmerge, '--quiet', '--no-location', f'--width={WRAP_WIDTH}',
+                           '--backup=none', '--update', path, pot_path],
+                          capture_output=True, text=True)
+    return proc.returncode == 0
+
+
 def read_catalog(path, locale=None):
     with open(path, 'rb') as fh:
         return read_po(fh, locale=locale, abort_invalid=True)
@@ -191,6 +202,7 @@ def update_catalogues(root=ROOT, init=()):
         catalog.update(template, no_fuzzy_matching=True)
         catalog.header_comment = header_comment(Locale.parse(identifier).english_name)
         _write(path, catalog)
+        normalize_catalogue(path, pot_path)
         paths[identifier] = path
 
     for identifier, path in paths.items():
@@ -206,6 +218,7 @@ def update_catalogues(root=ROOT, init=()):
         catalog.copyright_holder = f'{PROJECT} contributors'
         catalog.header_comment = header_comment(Locale.parse(identifier).english_name)
         _write(path, catalog)
+        normalize_catalogue(path, pot_path)
     return []
 
 
