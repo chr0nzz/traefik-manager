@@ -1127,7 +1127,7 @@
                                 {% for lang in language_options %}
                                 <div class="sc-set lang-row{% if language_setting == lang.tag %} active{% endif %}" data-lang="{{ lang.tag }}" onclick="setLanguage(this.dataset.lang)" style="cursor:pointer">
                                     <div class="sc-set-l">
-                                        <div class="sc-set-n" lang="{{ lang.tag }}"><span class="tm-lang-code" translate="no" style="width:28px;display:inline-block">{{ lang.code }}</span>{{ lang.name }}</div>
+                                        <div class="sc-set-n" lang="{{ lang.tag }}">{% if lang.region %}<span class="tm-flag tm-lang-flag" translate="no" aria-hidden="true" style="width:28px;display:inline-block">{{ lang.region | flag }}</span>{% else %}<i class="ph-bold ph-globe" style="width:28px;display:inline-block;color:var(--muted)"></i>{% endif %}{{ lang.name }}</div>
                                     </div>
                                     <div class="sc-set-v">{% if language_setting == lang.tag %}<i class="ph-bold ph-check" style="color:var(--blue)"></i>{% endif %}</div>
                                 </div>

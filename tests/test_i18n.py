@@ -272,6 +272,10 @@ def test_settings_lists_every_language_and_follow_system(client, with_languages)
     assert section.count('class="sc-set lang-row') == 4
     assert 'lang-row active" data-lang="de"' in section
     assert 'Follow system' in section
+    assert section.count('tm-lang-flag') == 2, \
+        'Settings shows the same flags as the navbar picker, not language codes'
+    assert 'ph-globe' in section, 'English takes the globe in Settings too'
+    assert 'tm-lang-code' not in section, 'the code was replaced by the flag'
     assert 'window.TM_LANGUAGE = "de"' in html
 
 
