@@ -72,6 +72,7 @@ from core import cert_usage as _cert_usage
 from core import locks as _locks
 from core import acme_store as _acme
 from core import route_health as _rh
+from core import oidc_tokens as _oidc_tokens
 from core import updates as _updates
 from core import traefik as _trae
 from core import agents_http as _agen
@@ -7103,20 +7104,16 @@ def oidc_callback():
     id_claims = {}
     if id_token:
         try:
-            import json as _json
-            payload_b64 = id_token.split('.')[1]
-            payload_b64 += '=' * (-len(payload_b64) % 4)
-            id_claims = _json.loads(base64.urlsafe_b64decode(payload_b64))
-        except Exception:
-            logger.warning("OIDC could not decode the id_token payload")
+            id_claims = _oidc_tokens.verify(id_token, cfg, client_id, client_secret)
+        except _oidc_tokens.IdTokenError as exc:
+            logger.error("OIDC login refused from %s - %s", request.remote_addr, exc)
+            flash("OIDC login failed - the provider's id_token could not be verified.", "error")
+            return redirect(url_for('login'))
     if id_token and expected_nonce:
-        try:
-            if not secrets.compare_digest(str(id_claims.get('nonce', '')), expected_nonce):
-                logger.warning(f"OIDC nonce mismatch from {request.remote_addr}")
-                flash("OIDC login failed - nonce mismatch.", "error")
-                return redirect(url_for('login'))
-        except Exception:
-            logger.warning("OIDC id_token nonce verification skipped - could not decode token")
+        if not secrets.compare_digest(str(id_claims.get('nonce', '')), expected_nonce):
+            logger.warning(f"OIDC nonce mismatch from {request.remote_addr}")
+            flash("OIDC login failed - nonce mismatch.", "error")
+            return redirect(url_for('login'))
     access_token = tokens.get('access_token', '')
     groups_claim = str(s.get('oidc_groups_claim', '') or 'groups').strip()
     need_email  = not str(id_claims.get('email', '')).strip()
