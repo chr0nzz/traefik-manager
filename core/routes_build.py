@@ -397,8 +397,12 @@ def _build_middlewares(config, config_file=''):
 
 def _traefik_router_ep_map(all_routers: dict) -> dict:
     ep_map = {}
-    for proto, routers in all_routers.items():
+    for routers in (all_routers or {}).values():
+        if not isinstance(routers, list):
+            continue
         for r in routers:
+            if not isinstance(r, dict):
+                continue
             name = r.get('name', '')
             key  = name.split('@')[0] if '@' in name else name
             eps  = r.get('entryPoints', [])
@@ -408,8 +412,12 @@ def _traefik_router_ep_map(all_routers: dict) -> dict:
 
 def _traefik_router_rule_map(all_routers: dict) -> dict:
     rule_map = {}
-    for proto, routers in all_routers.items():
+    for routers in (all_routers or {}).values():
+        if not isinstance(routers, list):
+            continue
         for r in routers:
+            if not isinstance(r, dict):
+                continue
             name = r.get('name', '')
             key  = name.split('@')[0] if '@' in name else name
             rule = r.get('rule', '')
