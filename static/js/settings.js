@@ -361,12 +361,12 @@ function dismissTmUpdatePopup() {
 
 const TRANSLATE_INVITE_KEY = 'tmTranslateInvite';
 const TRANSLATE_INVITE_SNOOZE_DAYS = 14;
-const TRANSLATE_LANGUAGES = {
-    de: 'German', fr: 'French', es: 'Spanish', ru: 'Russian', zh: 'Chinese',
-    pt: 'Portuguese', it: 'Italian', nl: 'Dutch', pl: 'Polish', tr: 'Turkish',
-    sv: 'Swedish', da: 'Danish', nb: 'Norwegian', fi: 'Finnish', cs: 'Czech',
-    uk: 'Ukrainian', ja: 'Japanese', ko: 'Korean', ar: 'Arabic', hu: 'Hungarian',
-};
+const TRANSLATE_LANGUAGES = () => ({
+    de: t('German'), fr: t('French'), es: t('Spanish'), ru: t('Russian'), zh: t('Chinese'),
+    pt: t('Portuguese'), it: t('Italian'), nl: t('Dutch'), pl: t('Polish'), tr: t('Turkish'),
+    sv: t('Swedish'), da: t('Danish'), nb: t('Norwegian'), fi: t('Finnish'), cs: t('Czech'),
+    uk: t('Ukrainian'), ja: t('Japanese'), ko: t('Korean'), ar: t('Arabic'), hu: t('Hungarian'),
+});
 
 function _translateInviteState() {
     try {
@@ -395,10 +395,10 @@ function showTranslateInvite() {
         ? (24 + stacked.reduce((a, el) => a + el.offsetHeight + 12, 0)) + 'px'
         : '24px';
     const lang = String(navigator.language || '').toLowerCase().split('-')[0];
-    const name = TRANSLATE_LANGUAGES[lang];
+    const name = TRANSLATE_LANGUAGES()[lang];
     const txt = document.getElementById('translateInviteText');
     if (txt && name && lang !== 'en') {
-        txt.textContent = `The next release speaks more than English. ${name} is open on Weblate, and nobody has started it yet.`;
+        txt.textContent = th('The next release speaks more than English. {language} is open on Weblate, and nobody has started it yet.', { language: name });
     }
     popup.classList.remove('hidden');
 }

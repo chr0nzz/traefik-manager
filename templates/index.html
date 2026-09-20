@@ -198,20 +198,20 @@
     <div class="flex items-start gap-3">
         <i class="ph-bold ph-translate" style="color:var(--blue);font-size:20px;flex-shrink:0;margin-top:1px"></i>
         <div style="flex:1;min-width:0;">
-            <div class="text-sm font-medium" style="color:var(--text)">Traefik Manager is being translated</div>
-            <div class="text-xs mt-0.5" style="color:var(--muted)"><span id="translateInviteText">The next release speaks more than English, and the whole interface is waiting for translators.</span></div>
+            <div class="text-sm font-medium" style="color:var(--text)">{{ _('Traefik Manager is being translated') }}</div>
+            <div class="text-xs mt-0.5" style="color:var(--muted)"><span id="translateInviteText">{{ _('The next release speaks more than English, and the whole interface is waiting for translators.') }}</span></div>
             <div class="flex items-center gap-3 mt-2.5">
                 <a href="https://hosted.weblate.org/engage/traefik-manager/" target="_blank" rel="noopener"
-                   style="font-size:12px;font-weight:600;padding:5px 10px;border-radius:6px;background:var(--blue);color:#fff;text-decoration:none">Help translate</a>
-                <button type="button" onclick="snoozeTranslateInvite()" class="text-xs" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0">Show me later</button>
+                   style="font-size:12px;font-weight:600;padding:5px 10px;border-radius:6px;background:var(--blue);color:#fff;text-decoration:none">{{ _('Help translate') }}</a>
+                <button type="button" onclick="snoozeTranslateInvite()" class="text-xs" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0">{{ _('Show me later') }}</button>
             </div>
             <div class="text-xs mt-2" style="color:var(--muted)">
-                <a href="https://github.com/chr0nzz/tm-locale" target="_blank" rel="noopener" style="color:var(--blue)">How it works</a>
+                <a href="https://github.com/chr0nzz/tm-locale" target="_blank" rel="noopener" style="color:var(--blue)">{{ _('How it works') }}</a>
                 &middot;
-                <a href="https://github.com/chr0nzz/tm-locale/issues/new?template=language-request.yml" target="_blank" rel="noopener" style="color:var(--blue)">Request a language</a>
+                <a href="https://github.com/chr0nzz/tm-locale/issues/new?template=language-request.yml" target="_blank" rel="noopener" style="color:var(--blue)">{{ _('Request a language') }}</a>
             </div>
         </div>
-        <button onclick="dismissTranslateInvite()" title="Do not show this again" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0;line-height:1;flex-shrink:0">
+        <button onclick="dismissTranslateInvite()" title="{{ _('Do not show this again') }}" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0;line-height:1;flex-shrink:0">
             <i class="ph-bold ph-x text-sm"></i>
         </button>
     </div>
