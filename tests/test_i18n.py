@@ -182,9 +182,9 @@ def test_plural_map_follows_the_catalogue(locale_dir):
 
 def test_language_options_use_native_names(with_languages):
     assert i18n.language_options() == [
-        {'tag': 'en', 'name': 'English', 'code': 'EN'},
-        {'tag': 'de', 'name': 'Deutsch', 'code': 'DE'},
-        {'tag': 'zh-Hans', 'name': '中文 (简体)', 'code': 'ZH'},
+        {'tag': 'en', 'name': 'English', 'code': 'EN', 'region': ''},
+        {'tag': 'de', 'name': 'Deutsch', 'code': 'DE', 'region': 'DE'},
+        {'tag': 'zh-Hans', 'name': '中文 (简体)', 'code': 'ZH', 'region': 'CN'},
     ]
 
 
@@ -251,8 +251,12 @@ def test_navbar_picker_is_the_first_icon(client, with_languages):
     nav = _between(html, 'id="navActions"', 'id="navMoreWrap"')
     assert nav.index('id="langPickerWrap"') < nav.index('nav-docs-link')
     picker = _between(nav, 'id="langPickerWrap"', 'nav-docs-link')
-    assert '<span class="tm-lang-code" translate="no">EN</span>' in picker
-    assert 'tm-flag' not in picker
+    assert 'ph-globe' in picker, 'English takes the globe, no country owns the language'
+    assert '<span class="sr-only" translate="no">EN</span>' in picker, 'the code stays for screen readers'
+    assert picker.count('tm-lang-flag') == 2, \
+        'German and Chinese take flags, English takes the globe'
+    assert '\U0001F1E9\U0001F1EA' in picker and '\U0001F1E8\U0001F1F3' in picker, \
+        'the flag comes from the region, with the script subtag deciding for zh-Hans'
     assert "setLanguage('')" in picker
     assert picker.count('onclick="setLanguage(this.dataset.lang)"') == 3
     assert 'data-lang="zh-Hans"' in picker

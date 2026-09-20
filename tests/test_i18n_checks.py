@@ -390,3 +390,31 @@ def test_normalising_a_catalogue_is_skipped_without_the_template(tmp_path):
     path = os.path.join(root, 'locale', 'de', 'LC_MESSAGES', 'messages.po')
     assert tmi18n.normalize_catalogue(path, os.path.join(root, 'locale', 'missing.pot')) is False
     assert open(path, encoding='utf-8').read() == DE_HEADER
+
+
+def test_the_language_picker_pairs_a_language_with_a_flag_region():
+    from core import i18n as i18n_mod
+    assert i18n_mod.region_for('de') == 'DE' and i18n_mod.region_for('fr') == 'FR'
+    assert i18n_mod.region_for('zh-Hans') == 'CN' and i18n_mod.region_for('zh-Hant') == 'TW', \
+        'a script subtag decides the flag when the tag names no region'
+    assert i18n_mod.region_for('pt-BR') == 'BR', 'an explicit region wins over the language default'
+    assert i18n_mod.region_for('en') == '', 'English is spoken in many countries, so it takes the globe'
+    assert i18n_mod.region_for('ar') == '', 'a language spanning many countries takes the globe too'
+    assert i18n_mod.region_for('xx') == '', 'an unknown language must not invent a flag'
+
+
+def test_the_flag_filter_only_builds_flags_from_real_region_codes():
+    from core import i18n as i18n_mod
+    assert i18n_mod.flag_emoji('DE') == '\U0001F1E9\U0001F1EA'
+    assert i18n_mod.flag_emoji('de') == '\U0001F1E9\U0001F1EA', 'case must not matter'
+    for junk in ('', 'D', 'DEU', '12', None, 'D1'):
+        assert i18n_mod.flag_emoji(junk) == '', 'junk must render nothing, not a broken glyph: %r' % (junk,)
+
+
+def test_the_picker_shows_a_flag_or_a_globe_and_keeps_the_code_for_screen_readers():
+    with open(os.path.join(ROOT, 'templates', 'sections', 'navbar.html'), encoding='utf-8') as fh:
+        navbar = fh.read()
+    assert "{{ html_lang_region | flag }}" in navbar and "ph-globe" in navbar
+    assert "{{ lang.region | flag }}" in navbar, 'every row in the menu needs its flag'
+    assert 'class="sr-only" translate="no">{{ html_lang_code }}' in navbar, \
+        'the flag alone is not a label, the code stays for screen readers'

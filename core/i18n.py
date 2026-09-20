@@ -113,6 +113,38 @@ def code_for(tag: str, tags=None) -> str:
     return primary.upper()
 
 
+REGION_FOR_SCRIPT = {'Hans': 'CN', 'Hant': 'TW', 'Latn': '', 'Cyrl': ''}
+REGION_FOR_LANGUAGE = {
+    'ar': '', 'bn': 'BD', 'cs': 'CZ', 'da': 'DK', 'de': 'DE', 'el': 'GR', 'es': 'ES',
+    'fa': 'IR', 'fi': 'FI', 'fr': 'FR', 'he': 'IL', 'hi': 'IN', 'hu': 'HU', 'id': 'ID',
+    'it': 'IT', 'ja': 'JP', 'ko': 'KR', 'nb': 'NO', 'nl': 'NL', 'nn': 'NO', 'no': 'NO',
+    'pl': 'PL', 'pt': 'PT', 'ro': 'RO', 'ru': 'RU', 'sk': 'SK', 'sl': 'SI', 'sr': 'RS',
+    'sv': 'SE', 'th': 'TH', 'tr': 'TR', 'uk': 'UA', 'vi': 'VN', 'zh': 'CN',
+}
+
+
+def region_for(tag: str) -> str:
+    parts = tag.replace('_', '-').split('-')
+    language = parts[0].lower()
+    if language == DEFAULT_TAG:
+        return ''
+    for part in parts[1:]:
+        if len(part) == 2 and part.isalpha():
+            return part.upper()
+        if len(part) == 4 and part.isalpha():
+            region = REGION_FOR_SCRIPT.get(part.title())
+            if region:
+                return region
+    return REGION_FOR_LANGUAGE.get(language, '')
+
+
+def flag_emoji(region: str) -> str:
+    code = str(region or '').strip().upper()
+    if len(code) != 2 or not code.isalpha():
+        return ''
+    return ''.join(chr(0x1F1E6 + ord(letter) - 65) for letter in code)
+
+
 def language_options() -> list:
     options = []
     tags = available_tags()
@@ -122,7 +154,8 @@ def language_options() -> list:
             name = Locale.parse(identifier).get_display_name(identifier) or tag
         except (ValueError, UnknownLocaleError):
             name = tag
-        options.append({'tag': tag, 'name': name[:1].upper() + name[1:], 'code': code_for(tag, tags)})
+        options.append({'tag': tag, 'name': name[:1].upper() + name[1:],
+                        'code': code_for(tag, tags), 'region': region_for(tag)})
     return options
 
 
@@ -258,6 +291,7 @@ def init_app(app, default_language):
     babel = Babel(app, locale_selector=_select)
     install_escaped_gettext(app.jinja_env)
     app.jinja_env.globals['tag'] = inline_tag
+    app.jinja_env.filters['flag'] = flag_emoji
 
     @app.context_processor
     def _inject_locale():
@@ -266,6 +300,7 @@ def init_app(app, default_language):
             'html_lang': tag,
             'html_dir': text_direction(tag),
             'html_lang_code': code_for(tag),
+            'html_lang_region': region_for(tag),
             'i18n_catalog': client_catalog(tag),
             'language_options': language_options(),
             'language_setting': _saved(),
