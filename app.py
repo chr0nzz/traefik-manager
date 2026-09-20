@@ -7353,6 +7353,7 @@ def _agent_routes_payload(agent, agent_id):
         middlewares.extend(_build_middlewares(config, config_file=fname))
 
     apps.extend(_build_external_routes(all_routers, svc_urls))
+    _rb.apply_live_rules(apps, all_routers)
 
     prefix = f"agent_{agent_id}::"
     for store_key, rdata in load_settings().get('disabled_routes', {}).items():

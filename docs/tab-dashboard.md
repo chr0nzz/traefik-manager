@@ -28,6 +28,8 @@ Each route row shows:
 
 Everything else the tab knows - backend target, provider, entry points, server count, middleware names, cert resolver, config file - is in the row's tooltip; full detail stays in the route panel.
 
+A rule that builds its host with a Go template, such as ``Host(`plex.{{ env `DOMAINNAME0` }}`)``, launches and is checked like any other route: Traefik expands the template when it loads the file, and Traefik Manager takes the finished host from the Traefik API. The config file keeps the template, so editing the route never writes the expanded host back. When Traefik does not report the router - the API is unreachable, or the file declares a router Traefik never loaded - the row says the host comes from a template that Traefik has not resolved, and you can set a launch URL by hand in edit.
+
 ### The status dot
 
 The dot on the icon plate has these states:
