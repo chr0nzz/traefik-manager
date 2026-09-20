@@ -1,6 +1,17 @@
 let _allFileExternalRoutes = [];
 let _fileExternalFilter    = 'all';
 
+function _fileExternalEmptyState(managedFileRoutes) {
+    const title = managedFileRoutes
+        ? 'Every file provider route is managed here'
+        : 'Traefik reports no file provider routes';
+    const why = managedFileRoutes
+        ? `Traefik reports ${managedFileRoutes} file provider route${managedFileRoutes === 1 ? '' : 's'}, all from a file Traefik Manager manages, so they are on the Routes tab.`
+        : 'Traefik is not loading any routes through its file provider.';
+    const what = 'This tab lists routes from other files your file provider loads, such as the rest of a conf.d directory. They are shown read-only.';
+    return `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-file-text text-5xl block mb-3 opacity-30"></i><p class="font-medium">${title}</p><p class="text-xs mt-1">${why}</p><p class="text-xs mt-1">${what}</p>${managedFileRoutes ? `<button type="button" onclick="switchTab('services')" class="btn-secondary text-xs mt-3">Open Routes</button>` : ''}</div>`;
+}
+
 async function refreshFileExternalTab() {
     const container = document.getElementById('fileExternalContent');
     container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading file provider routes...</p></div>`;
@@ -22,8 +33,9 @@ async function refreshFileExternalTab() {
         const getProvider = r => r.provider || (r.name || '').split('@')[1] || '';
         const shortName   = r => (r.name || '').split('@')[0];
 
-        _allFileExternalRoutes = all
-            .filter(r => getProvider(r) === 'file' && !managedSet.has(shortName(r)))
+        const fileRoutes = all.filter(r => getProvider(r) === 'file');
+        _allFileExternalRoutes = fileRoutes
+            .filter(r => !managedSet.has(shortName(r)))
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         if (all.length === 0) {
@@ -31,7 +43,8 @@ async function refreshFileExternalTab() {
             return;
         }
         if (_allFileExternalRoutes.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-file-text text-5xl block mb-3 opacity-30"></i><p class="font-medium">No external file routes found</p><p class="text-xs mt-1">Routes from external file provider configurations will appear here</p></div>`;
+            setTabCount('file_external', 0);
+            container.innerHTML = _fileExternalEmptyState(fileRoutes.length);
             return;
         }
 

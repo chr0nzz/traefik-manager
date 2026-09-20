@@ -489,14 +489,14 @@ function _dskState(r) {
         s.health  = 'down';
         s.dot     = 'sig-cell-err';
         s.dotTip  = 'Backend unreachable - 0 of ' + svc.total + ' servers up';
-        s.note    = 'backend unreachable <b>0/' + svc.total + ' servers</b>';
+        s.note    = 'backend unreachable <b>0/' + svc.total + ' servers up</b>';
         s.noteIc  = 'ph-fill ph-warning-octagon';
         s.noteCls = 'd-bad';
     } else if (svc && svc.total && svc.up < svc.total) {
         s.health  = 'warn';
         s.dot     = 'sig-cell-warn';
         s.dotTip  = 'Backend degraded - ' + svc.up + ' of ' + svc.total + ' servers up';
-        s.note    = 'backend degraded <b>' + svc.up + '/' + svc.total + ' servers</b>';
+        s.note    = 'backend degraded <b>' + svc.up + '/' + svc.total + ' servers up</b>';
         s.noteIc  = 'ph-fill ph-warning';
         s.noteCls = 'd-warn';
     } else if (_rmStatusBlind) {
@@ -528,7 +528,7 @@ function _dskState(r) {
         s.dot     = 'sig-cell-warn';
         s.dotTip  = 'Backend degraded - ' + sv.up + ' of ' + sv.total + ' servers up'
             + ((chk.down_servers || []).length ? ' (' + chk.down_servers.join(', ') + ' down)' : '') + ' \u00b7 ' + _dskAgo(chk.at);
-        s.note    = 'backend degraded <b>' + sv.up + '/' + sv.total + ' servers</b>';
+        s.note    = 'backend degraded <b>' + sv.up + '/' + sv.total + ' servers up</b>';
         s.noteIc  = 'ph-fill ph-warning';
         s.noteCls = 'd-warn';
     } else if (chk && chk.state === 'up') {
@@ -658,12 +658,12 @@ function dashBuildIconTile(r, s) {
 function _dskAlarm(meta, down, warn) {
     let html = '';
     if (down) {
-        html += '<button type="button" class="sig-flag dsk-alarm" data-dsk="' + _esc(_dskSpec({ act: 'alarm', pod: meta.name })) + '"'
+        html += '<button type="button" class="sig-flag dsk-alarm" data-dsk="' + _esc(_dskSpec({ act: 'alarm', pod: meta.name, sev: 'down' })) + '"'
             + ' title="' + down + ' route' + (down === 1 ? '' : 's') + ' in ' + _esc(meta.name) + ' need attention">'
             + '<i class="ph-fill ph-warning-octagon"></i><b>' + down + '</b><span class="sig-fl">down</span></button>';
     }
     if (warn) {
-        html += '<button type="button" class="sig-flag dsk-alarm dsk-alarm-warn" data-dsk="' + _esc(_dskSpec({ act: 'alarm', pod: meta.name })) + '"'
+        html += '<button type="button" class="sig-flag dsk-alarm dsk-alarm-warn" data-dsk="' + _esc(_dskSpec({ act: 'alarm', pod: meta.name, sev: 'warn' })) + '"'
             + ' title="' + warn + ' route' + (warn === 1 ? '' : 's') + ' in ' + _esc(meta.name) + ' have a backend server down">'
             + '<i class="ph-fill ph-warning"></i><b>' + warn + '</b><span class="sig-fl">degraded</span></button>';
     }
@@ -787,9 +787,8 @@ function _dskAgo(at) {
     return 'checked ' + Math.floor(sec / 3600) + 'h ago';
 }
 
-const DSK_HIT_MS = 2400;
 
-function _dskTogglePod(name, force) {
+function _dskTogglePod(name, force, sev) {
     const entry = _dskPods.get(name);
     const grid  = document.getElementById('dashPodsGrid');
     if (!entry || !grid) return;
@@ -801,11 +800,12 @@ function _dskTogglePod(name, force) {
     if (old) grid.replaceChild(fresh, old); else grid.appendChild(fresh);
 
     if (force === true) {
-        const bad = fresh.querySelector('[data-health="down"]') || fresh.querySelector('[data-health="warn"]');
+        const sevs = sev === 'down' || sev === 'warn' ? [sev] : ['down', 'warn'];
+        const bad = sevs.map(h => fresh.querySelector('[data-health="' + h + '"]')).find(Boolean);
         if (bad) {
-            const hits = fresh.querySelectorAll('.dsk-row[data-health="down"], .dsk-row[data-health="warn"], .dsk-tile[data-health="down"], .dsk-tile[data-health="warn"]');
+            const hits = fresh.querySelectorAll(sevs.map(h => '.dsk-row[data-health="' + h + '"], .dsk-tile[data-health="' + h + '"]').join(', '));
             hits.forEach(el => el.classList.add('dsk-hit'));
-            setTimeout(() => hits.forEach(el => el.classList.remove('dsk-hit')), DSK_HIT_MS);
+            document.addEventListener('pointerdown', () => hits.forEach(el => el.classList.remove('dsk-hit')), { once: true });
             bad.scrollIntoView({ block: 'nearest' });
             bad.focus({ preventScroll: true });
             return;
@@ -941,7 +941,7 @@ function _dskGo(p) {
     if (p.act === 'edit')  { window.rmOpenEditModal(p.id); return; }
     if (p.act === 'unhide') { window.rmUnhideRoute(p.id); return; }
     if (p.act === 'more')  { _dskTogglePod(p.pod, null);   return; }
-    if (p.act === 'alarm') { _dskTogglePod(p.pod, true);   return; }
+    if (p.act === 'alarm') { _dskTogglePod(p.pod, true, p.sev); return; }
     if (p.act === 'retry') { _dashDrawn = false; window.refreshDashboardTab(); return; }
     if (p.act === 'clear') {
         if (p.what === 'search' || p.what === 'all') {

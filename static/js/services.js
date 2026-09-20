@@ -429,6 +429,16 @@ function _openServiceByName(name) {
     else showToast('Service ' + bare + ' is not in this list', 'error');
 }
 
+function _svcServerState(s, url) {
+    const st = (s.serverStatus || {})[url];
+    if (st === undefined) return '<span class="text-xs" style="color:var(--muted)">-</span>';
+    const up = String(st).toUpperCase() === 'UP';
+    if (up && !(s.loadBalancer && s.loadBalancer.healthCheck)) {
+        return '<span class="flex items-center gap-1.5" title="No health check on this service, so Traefik reports every server as UP"><span class="status-dot status-online"></span><span class="text-xs" style="color:var(--muted)">UP, not checked</span></span>';
+    }
+    return `<span class="flex items-center gap-1.5"><span class="status-dot ${up ? 'status-online' : 'status-offline'}"></span><span class="text-xs" style="color:${up ? 'var(--green)' : 'var(--red)'}">${up ? 'UP' : 'DOWN'}</span></span>`;
+}
+
 function openSvcDetail(idx) {
     closeOtherPanels('svcDetailPanel');
     const s = _allServices[idx];
@@ -470,7 +480,7 @@ function openSvcDetail(idx) {
                 ${servers.map(sv => `
                 <tr style="border-top:1px solid var(--border)">
                     <td class="px-3 py-2.5">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-400 text-xs">Active</span></span>
+                        ${_svcServerState(s, sv.url || sv.address)}
                     </td>
                     <td class="px-3 py-2.5 font-mono text-xs break-all" style="color:var(--text)">${_esc(sv.url || sv.address || '-')}</td>
                 </tr>`).join('')}

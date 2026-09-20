@@ -283,6 +283,31 @@ function setProtocol(proto) {
     }
 }
 
+let _httpRuleFitsSimple = true;
+let _httpRuleAdvTouched = false;
+
+function _fitHttpRule(el) {
+    if (!el || !el.offsetParent) return;
+    el.style.height = 'auto';
+    el.style.height = (el.scrollHeight + el.offsetHeight - el.clientHeight) + 'px';
+}
+
+function _onHttpRuleInput(el) {
+    _httpRuleAdvTouched = true;
+    if (/[\r\n]/.test(el.value)) {
+        const pos = el.selectionStart;
+        el.value = el.value.replace(/\s*[\r\n]+\s*/g, ' ');
+        el.setSelectionRange(Math.min(pos, el.value.length), Math.min(pos, el.value.length));
+    }
+    _fitHttpRule(el);
+}
+
+function _onHttpRuleKey(event) {
+    if (event.key !== 'Enter' || event.isComposing) return;
+    event.preventDefault();
+    event.target.form?.requestSubmit();
+}
+
 function setHttpRuleMode(mode) {
     const isAdv = mode === 'advanced';
     const simpleBtn = document.getElementById('httpModeSimpleBtn');
@@ -293,7 +318,13 @@ function setHttpRuleMode(mode) {
     if (advBtn)    { advBtn.classList.toggle('active-http', isAdv); }
     if (simpleFields) simpleFields.style.display = isAdv ? 'none' : '';
     if (advFields)    advFields.style.display    = isAdv ? '' : 'none';
-    if (!isAdv) { const el = document.getElementById('httpRule'); if (el) el.value = ''; }
+    const note = document.getElementById('httpSimpleLossNote');
+    if (note) note.style.display = !isAdv && !_httpRuleFitsSimple ? '' : 'none';
+    const ruleEl = document.getElementById('httpRule');
+    if (!ruleEl) return;
+    ruleEl.disabled = !isAdv;
+    if (isAdv && _httpRuleFitsSimple && !_httpRuleAdvTouched) ruleEl.value = _currentSimpleHttpRule() || ruleEl.value;
+    if (isAdv) requestAnimationFrame(() => _fitHttpRule(ruleEl));
 }
 
 function _applyServiceTypeNotice(svcType, owned) {
@@ -486,6 +517,8 @@ function _resetRouteForm() {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    _httpRuleFitsSimple = true;
+    _httpRuleAdvTouched = false;
     setHttpRuleMode('simple');
     setTcpTlsMode('none', document.getElementById('tcpTlsNone'));
     const crHttp = document.getElementById('certResolver');
@@ -1792,27 +1825,49 @@ function _onWildcardToggle(checked) {
     if (base) { mainEl.value = base; sansEl.value = '*.' + base; }
 }
 
-function _applyHttpRuleToForm(rule) {
-    const isSimpleRule = /^(Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*)$/.test(rule.trim());
-    if (!isSimpleRule && rule) {
-        setHttpRuleMode('advanced');
-        document.getElementById('httpRule').value = rule;
-    } else {
-        setHttpRuleMode('simple');
-    }
-    _updateRouteModalForAgent();
-    const domainsForMatch = _domainsForForm();
-    let subdomain = '';
-    const hostMatches = [...rule.matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
-    const matchedDomains = [];
-    for (let fullHost of hostMatches) {
-        let found = false;
-        for (let d of domainsForMatch) {
-            if (fullHost.endsWith('.' + d)) { if (!subdomain) subdomain = fullHost.slice(0, -(d.length + 1)); matchedDomains.push(d); found = true; break; }
-            else if (fullHost === d) { matchedDomains.push(d); found = true; break; }
+function _simpleHttpRule(subdomain, domains) {
+    const sub = (subdomain || '').trim();
+    if (sub && sub.includes('.')) return 'Host(`' + sub + '`)';
+    return domains.map(d => 'Host(`' + (sub ? sub + '.' + d : d) + '`)').join(' || ');
+}
+
+function _splitHostRule(rule, knownDomains) {
+    const text = (rule || '').trim();
+    if (!/^Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*$/.test(text)) return null;
+    const hosts = [...text.matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
+    const candidates = [];
+    const domains = [];
+    const subs = new Set();
+    for (const host of hosts) {
+        const base = knownDomains
+            .filter(d => host === d || host.endsWith('.' + d))
+            .sort((a, b) => b.length - a.length)[0];
+        if (!base) {
+            if (hosts.length !== 1) return null;
+            candidates.push({ subdomain: host, domains: [] });
+            break;
         }
-        if (!found && !subdomain) subdomain = fullHost;
+        subs.add(host === base ? '' : host.slice(0, -(base.length + 1)));
+        if (!domains.includes(base)) domains.push(base);
     }
+    if (!candidates.length) {
+        if (subs.size !== 1) return null;
+        candidates.push({ subdomain: [...subs][0], domains });
+    }
+    const split = candidates[0];
+    return _simpleHttpRule(split.subdomain, split.domains) === text ? split : null;
+}
+
+function _applyHttpRuleToForm(rule) {
+    const text = (rule || '').trim();
+    const split = text ? _splitHostRule(text, _domainsForForm()) : { subdomain: '', domains: [] };
+    _httpRuleFitsSimple = !!split;
+    _httpRuleAdvTouched = false;
+    document.getElementById('httpRule').value = text;
+    setHttpRuleMode(split ? 'simple' : 'advanced');
+    _updateRouteModalForAgent();
+    const subdomain = split ? split.subdomain : '';
+    const matchedDomains = split ? split.domains : [];
     document.getElementById('subdomain').value = subdomain;
     if (document.getElementById('domainChips')) {
         _initDomainChips(matchedDomains.length ? matchedDomains : []);
@@ -1820,6 +1875,21 @@ function _applyHttpRuleToForm(rule) {
         const sel = document.getElementById('domainSelect');
         if (sel && matchedDomains.length > 0) sel.value = matchedDomains[0];
     }
+}
+
+function _currentSimpleHttpRule() {
+    const sub = document.getElementById('subdomain')?.value || '';
+    let domains = [];
+    if (document.getElementById('domainChips') && window._domainChipSelected) {
+        domains = [...window._domainChipSelected];
+    } else {
+        const sel = document.getElementById('domainSelect');
+        const single = (document.getElementById('singleDomain')?.textContent || '').trim();
+        if (sel && sel.value) domains = [sel.value];
+        else if (single) domains = [single];
+    }
+    if (!sub.trim() && !domains.length) return '';
+    return _simpleHttpRule(sub, domains);
 }
 
 async function cloneRoute(btn) {
@@ -2347,18 +2417,33 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     const svcUp = svcServerStatus ? Object.values(svcServerStatus).filter(v => String(v).toUpperCase() === 'UP').length : 0;
     const svcTotal = svcServerStatus ? Object.keys(svcServerStatus).length : 0;
 
+    const tmCheck = svcChecked || typeof window._rhGet !== 'function' ? null
+        : (window._rhGet(app.id) || window._rhByName(app.name));
+    const tmChecked = !!(tmCheck && ['up', 'down', 'degraded'].includes(tmCheck.state) && !tmCheck.self);
+    const tmServerUp = url => {
+        if (!tmChecked) return undefined;
+        if (tmCheck.source === 'servers') return !(tmCheck.down_servers || []).includes(url);
+        if (svcServers.length === 1) return tmCheck.state === 'up';
+        return undefined;
+    };
     const svcServerRows = svcServers.map((s, i) => {
         const url = s.url || s.address || '-';
-        const st = svcServerStatus ? svcServerStatus[url] : undefined;
-        if (st === undefined) return [`Server ${i + 1}`, url, false];
-        const up = String(st).toUpperCase() === 'UP';
+        const up = svcChecked
+            ? (svcServerStatus[url] === undefined ? undefined : String(svcServerStatus[url]).toUpperCase() === 'UP')
+            : tmServerUp(url);
+        if (up === undefined) return [`Server ${i + 1}`, url, false];
         return [`Server ${i + 1}`,
             `<span class="d-state d-flat ${up ? 'd-on' : 'd-bad'}"><span class="status-dot ${up ? 'status-online' : 'status-offline'}"></span>${up ? 'UP' : 'DOWN'}</span> <span class="font-mono">${_esc(url)}</span>`,
             true];
     });
-    const svcHealthTxt = !svcChecked ? ''
-        : svcUp === svcTotal ? `<span class="text-xs ml-2" style="color:var(--muted)">${svcUp} of ${svcTotal} servers up</span>`
-        : `<span class="text-xs ml-2 font-semibold" style="color:${svcUp === 0 ? 'var(--red)' : 'var(--yellow)'}">${svcUp === 0 ? 'all' : svcTotal - svcUp + ' of'} ${svcTotal} servers down</span>`;
+    const tmSv = (tmCheck && tmCheck.servers) || {};
+    const svcHealthTxt = svcChecked
+        ? (svcUp === svcTotal ? `<span class="text-xs ml-2" style="color:var(--muted)">${svcUp} of ${svcTotal} servers up</span>`
+            : `<span class="text-xs ml-2 font-semibold" style="color:${svcUp === 0 ? 'var(--red)' : 'var(--yellow)'}">${svcUp === 0 ? 'all' : svcTotal - svcUp + ' of'} ${svcTotal} servers down</span>`)
+        : !tmChecked ? ''
+        : tmCheck.state === 'up' ? `<span class="text-xs ml-2" style="color:var(--muted)">backend reachable</span>`
+        : tmCheck.state === 'degraded' ? `<span class="text-xs ml-2 font-semibold" style="color:var(--yellow)">${tmSv.total - tmSv.up} of ${tmSv.total} servers down</span>`
+        : `<span class="text-xs ml-2 font-semibold" style="color:var(--red)">backend unreachable${tmCheck.error ? ', ' + _esc(tmCheck.error) : ''}</span>`;
 
     const svcRows = [
         ['Status', svcStatus !== '-' ? _dState(svcStatus === 'enabled' ? 'Enabled' : svcStatus) + svcHealthTxt : '-', svcStatus !== '-'],

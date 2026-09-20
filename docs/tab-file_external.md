@@ -13,9 +13,20 @@ Click a card for its detail panel.
 
 Routes are **read-only** - edit them in the file provider configuration they come from.
 
+## When it is empty
+
+With a single dynamic file that Traefik Manager manages, this tab has nothing to show, and says so: every file provider route is on the Routes tab. The empty state names which case you are in, and the count reads `0` once the tab has loaded:
+
+| Message | Means |
+|---|---|
+| Every file provider route is managed here | Traefik loads file provider routes, and all of them come from a file Traefik Manager manages |
+| Traefik reports no file provider routes | Traefik is not loading any routes through its file provider |
+
+Turn the tab off in **Settings - Route Monitoring** if you have no other file provider files.
+
 ## Enabling the tab
 
-This tab switches itself on the first time Traefik reports routers from this provider, and the setup wizard pre-selects it when the provider is already running. Turn it off and it stays off.
+The tab is off until you switch it on. Traefik Manager's own routes also come from the file provider, so a file provider being present says nothing about whether there is anything external to show, and the tab is never switched on for you.
 
 | Where | Path |
 |---|---|
