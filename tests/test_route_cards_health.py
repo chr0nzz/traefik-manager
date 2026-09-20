@@ -277,3 +277,21 @@ def test_all_servers_up_without_a_health_check_proves_nothing():
     assert 'up === keys.length && !(s.loadBalancer && s.loadBalancer.healthCheck)' in body, \
         'Traefik marks every server UP without a health check, so an all-up report is not evidence'
     assert 'return { total: keys.length' in body, 'a report containing a DOWN is real health data either way'
+
+
+def test_every_provider_tab_gets_its_count_before_it_is_opened():
+    dash = _read('static', 'js', 'dashboard.js')
+    assert 'const SD_PROVIDER_TABS' in dash, 'provider tabs need a count from the dashboard payload'
+    assert 'Object.entries(SD_PROVIDER_TABS).forEach' in dash, \
+        'a tab that sets its own count only fills in after you open it'
+    for tab in ('docker', 'internal', 'kubernetes', 'nomad', 'ecs', 'consul', 'consulcatalog',
+                'redis', 'etcd', 'zookeeper', 'swarm', 'http_provider'):
+        assert f'    {tab}:' in dash.split('const SD_PROVIDER_TABS')[1][:800], \
+            f'{tab} has a provider tab, so it needs a count like the rest'
+
+
+def test_the_provider_tab_counts_use_normalised_provider_names():
+    dash = _read('static', 'js', 'dashboard.js')
+    block = dash.split('const SD_PROVIDER_TABS')[1][:800]
+    assert "kubernetes:     new Set(['kubernetes'])" in block, \
+        'the dashboard folds kubernetescrd and friends into kubernetes before counting'
