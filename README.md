@@ -183,6 +183,28 @@ All JS and CSS is bundled at build time - nothing is fetched from a CDN at runti
 
 ---
 
+## Translations
+
+v1.15.0 is the first release that is not English-only. The whole interface is ready for translation - every page, dialog, tooltip, toast and server message - and the work happens on Weblate.
+
+<a href="https://hosted.weblate.org/engage/traefik-manager/">
+<img src="https://hosted.weblate.org/widget/traefik-manager/web-app/multi-auto.svg" alt="Translation status per language" />
+</a>
+
+German, French, Spanish, Russian and Chinese (Simplified) are open now, and any other language is added on request.
+
+| You want to | Where |
+| --- | --- |
+| Translate | [Weblate](https://hosted.weblate.org/projects/traefik-manager/web-app/) - an account is needed to write, not to read. Nothing goes live on its own: Weblate opens a pull request here |
+| Review a language | [LANGUAGE-REVIEWERS.md](https://github.com/chr0nzz/tm-locale/blob/main/LANGUAGE-REVIEWERS.md) - one named reviewer per language, and a language only ships once it has one |
+| Ask for a language | [Open a language request](https://github.com/chr0nzz/tm-locale/issues/new?template=language-request.yml) |
+| Read first | [Handbook](https://github.com/chr0nzz/tm-locale/blob/main/HANDBOOK.md) · [Glossary](https://github.com/chr0nzz/tm-locale/blob/main/GLOSSARY.md) · [Do not translate](https://github.com/chr0nzz/tm-locale/blob/main/DO-NOT-TRANSLATE.md) |
+| Report a wrong translation | [Open a translation issue](https://github.com/chr0nzz/tm-locale/issues/new?template=translation-issue.yml) |
+
+Traefik Manager deletes routers and rewrites live proxy configuration, so a mistranslated confirmation button is a destructive bug rather than a cosmetic one. Every translation is escaped when the page renders it, and CI rejects a translation that adds markup, links or control characters, or that changes a placeholder such as `{name}` or `%(name)s`.
+
+---
+
 ## Contributing
 
 Pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for reporting bugs, suggesting features, and running the project locally.
