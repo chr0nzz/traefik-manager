@@ -194,6 +194,29 @@
     </div>
 </div>
 
+<div id="translateInvitePopup" class="hidden" style="position:fixed;bottom:24px;right:24px;z-index:9998;background:var(--card);border:1px solid var(--blue);border-radius:10px;padding:14px 16px;min-width:300px;max-width:360px;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
+    <div class="flex items-start gap-3">
+        <i class="ph-bold ph-translate" style="color:var(--blue);font-size:20px;flex-shrink:0;margin-top:1px"></i>
+        <div style="flex:1;min-width:0;">
+            <div class="text-sm font-medium" style="color:var(--text)">Traefik Manager is being translated</div>
+            <div class="text-xs mt-0.5" style="color:var(--muted)"><span id="translateInviteText">The next release speaks more than English, and the whole interface is waiting for translators.</span></div>
+            <div class="flex items-center gap-3 mt-2.5">
+                <a href="https://hosted.weblate.org/engage/traefik-manager/" target="_blank" rel="noopener"
+                   style="font-size:12px;font-weight:600;padding:5px 10px;border-radius:6px;background:var(--blue);color:#fff;text-decoration:none">Help translate</a>
+                <button type="button" onclick="snoozeTranslateInvite()" class="text-xs" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0">Show me later</button>
+            </div>
+            <div class="text-xs mt-2" style="color:var(--muted)">
+                <a href="https://github.com/chr0nzz/tm-locale" target="_blank" rel="noopener" style="color:var(--blue)">How it works</a>
+                &middot;
+                <a href="https://github.com/chr0nzz/tm-locale/issues/new?template=language-request.yml" target="_blank" rel="noopener" style="color:var(--blue)">Request a language</a>
+            </div>
+        </div>
+        <button onclick="dismissTranslateInvite()" title="Do not show this again" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0;line-height:1;flex-shrink:0">
+            <i class="ph-bold ph-x text-sm"></i>
+        </button>
+    </div>
+</div>
+
 <div id="securityAdvisoryPopup" class="hidden" style="position:fixed;bottom:24px;right:24px;z-index:10000;background:var(--card);border:1px solid var(--red);border-radius:10px;padding:14px 16px;min-width:260px;max-width:340px;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
     <div class="flex items-start gap-3">
         <i class="ph-bold ph-shield-warning" style="color:var(--red);font-size:20px;flex-shrink:0;margin-top:1px"></i>

@@ -1057,6 +1057,7 @@ function _sdRender(model) {
 }
 
 let _sdApiStatusMap = null;
+let _translateInviteShown = false;
 let _sdSkeletonHtml = null;
 let _rhMap  = {};
 const _rhMeta = { enabled: true, interval: 300, checked_at: null, loaded: false };
@@ -1306,6 +1307,10 @@ async function loadOverviewStats() {
         if (apiUp) {
             checkForUpdate(payloads.version.Version);
             checkTraefikAdvisories(payloads.version.Version);
+        }
+        if (typeof showTranslateInvite === 'function' && !_translateInviteShown) {
+            _translateInviteShown = true;
+            setTimeout(showTranslateInvite, 2000);
         }
 
         tabCachePut('stats', payloads);
