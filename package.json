@@ -12,5 +12,8 @@
     "medium-zoom": "^1.1.0",
     "vitepress": "^1.6.3",
     "vitepress-plugin-tabs": "^0.9.1"
+  },
+  "overrides": {
+    "vite": "^6.4.3"
   }
 }
