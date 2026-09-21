@@ -17,12 +17,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag }}
+          # This job runs with contents: write. Without this, checkout leaves the token in
+          # .git/config, where anything the build runs afterwards can read it.
+          persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version-file: agent/go.mod
           cache-dependency-path: agent/go.sum
@@ -38,7 +41,7 @@ jobs:
           cat dist/SHA256SUMS
 
       - name: Attach binaries to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: ${{ github.event.release.tag_name || inputs.tag }}
           files: |
