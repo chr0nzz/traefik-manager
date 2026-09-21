@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-20 17:00-0400\n"
+"POT-Creation-Date: 2026-09-21 04:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -6276,6 +6276,9 @@ msgstr ""
 msgid "OIDC login failed - the provider returned no account details."
 msgstr ""
 
+msgid "OIDC login failed - the provider returned no id_token."
+msgstr ""
+
 msgid "OIDC login failed - the provider's id_token could not be verified."
 msgstr ""
 
@@ -10127,6 +10130,13 @@ msgid ""
 msgstr ""
 
 msgid "Traefik Manager Version badge, highlights when an update is available."
+msgstr ""
+
+msgid ""
+"Traefik Manager cannot read its configuration file, so it cannot tell "
+"whether this is a new install. Setup is disabled until the file is fixed "
+"or restored from a backup. See the container log for the path and the "
+"reason."
 msgstr ""
 
 msgid "Traefik Manager documentation."

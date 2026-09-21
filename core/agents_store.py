@@ -122,7 +122,7 @@ def save_agents_file(agents: list):
     os.makedirs(os.path.dirname(env.AGENTS_PATH), exist_ok=True)
     tmp = f"{env.AGENTS_PATH}.tmp.{os.getpid()}.{threading.get_ident()}"
     try:
-        with open(tmp, 'w') as f:
+        with config.open_private(tmp, env.AGENTS_PATH) as f:
             config.yaml.dump({'agents': encrypt_agents(agents)}, f)
         os.replace(tmp, env.AGENTS_PATH)
     finally:

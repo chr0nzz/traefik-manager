@@ -423,10 +423,30 @@ docker compose pull && docker compose up -d
 
 **Binary:**
 ```bash
-curl -fsSL https://github.com/chr0nzz/traefik-manager/releases/latest/download/tma-linux-amd64 \
-  -o /usr/local/bin/tma && chmod +x /usr/local/bin/tma
+cd "$(mktemp -d)"
+curl -fsSLO https://github.com/chr0nzz/traefik-manager/releases/latest/download/tma-linux-amd64
+curl -fsSLO https://github.com/chr0nzz/traefik-manager/releases/latest/download/SHA256SUMS
+
+# Check the download before running it. sha256sum exits non-zero on a mismatch, so the
+# install stops instead of replacing a working agent with whatever arrived.
+grep tma-linux-amd64 SHA256SUMS | sha256sum -c -
+
+sudo install -m 755 tma-linux-amd64 /usr/local/bin/tma
 sudo systemctl restart tma
 ```
+
+`SHA256SUMS` ships in the same release as the binaries, so by itself it only shows the file
+matches a checksum published next to it. Since v1.14.2 each binary also carries a build
+attestation, signed during the release workflow and recorded in a public transparency log.
+With the [GitHub CLI](https://cli.github.com) that is the stronger check, because it is rooted
+outside the release:
+
+```bash
+gh attestation verify tma-linux-amd64 --repo chr0nzz/traefik-manager
+```
+
+The install script and `tm update` check the checksum for you. This matters when you fetch a
+binary by hand.
 
 ## Agent git backup
 

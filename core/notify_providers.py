@@ -1,4 +1,4 @@
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import requests
 
@@ -252,7 +252,44 @@ def missing_fields(channel: dict) -> list[str]:
     return [f for f in required_fields(channel.get('kind')) if not _field(channel, f)]
 
 
+SECRET_FIELDS = ('token', 'token2', 'password')
+
+# Kinds whose URL is itself the credential: the webhook path is the bearer token.
+SECRET_URL_KINDS = ('discord', 'slack', 'ntfy', 'generic')
+
+
+def scrub(channel: dict, text: str) -> str:
+    """Replace a channel's own secrets in text with ***.
+
+    A provider's error often quotes the request it failed to make, so the token or the webhook
+    URL ends up inside the message. That message is logged on every failed delivery and shown
+    in the interface, which puts a third-party credential somewhere it does not belong.
+    """
+    if not text or not isinstance(channel, dict):
+        return text
+    secrets_seen = [str(channel.get(f, '') or '') for f in SECRET_FIELDS]
+    url = str(channel.get('url', '') or '')
+    if url and str(channel.get('kind', '')).strip().lower() in SECRET_URL_KINDS:
+        secrets_seen.append(url)
+        try:
+            path = urlparse(url).path.strip('/')
+        except Exception:
+            path = ''
+        # The host alone is not a secret, but the path that authenticates the webhook is, and
+        # a provider may echo only that part back.
+        secrets_seen.extend(seg for seg in path.split('/') if len(seg) >= 8)
+    # Longest first, so a secret that contains another is not half-replaced.
+    for secret in sorted({s for s in secrets_seen if len(s) >= 8}, key=len, reverse=True):
+        text = text.replace(secret, '***')
+    return text
+
+
 def send(channel: dict, type_: str, title: str, msg: str, ts: str) -> tuple[bool, str]:
+    ok, err = _send(channel, type_, title, msg, ts)
+    return ok, scrub(channel, err)
+
+
+def _send(channel: dict, type_: str, title: str, msg: str, ts: str) -> tuple[bool, str]:
     if not isinstance(channel, dict):
         return False, 'invalid channel'
     kind = str(channel.get('kind') or '').strip().lower()

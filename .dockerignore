@@ -27,6 +27,9 @@ htmlcov/
 ruff.toml
 Makefile
 scripts/
+# ...except the asset fetcher and its checksums, which the image build runs.
+!scripts/fetch-asset.sh
+!scripts/vendor-assets.sha256
 
 # Docker
 docker-compose.yml

@@ -3,12 +3,13 @@ set -e
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VENDOR="$REPO_ROOT/static/vendor"
+FETCH="$REPO_ROOT/scripts/fetch-asset.sh"   # verifies every download against vendor-assets.sha256
 cd "$REPO_ROOT"
 
 mkdir -p "$VENDOR/monaco" "$VENDOR/fonts/inter" "$VENDOR/fonts/jetbrains-mono" "$VENDOR/phosphor" "$VENDOR/monaco-themes"
 
 echo "Downloading Phosphor icons..."
-curl -sL "https://registry.npmjs.org/@phosphor-icons/web/-/web-2.1.1.tgz" | tar -xz -C /tmp
+"$FETCH" --tar-xz "https://registry.npmjs.org/@phosphor-icons/web/-/web-2.1.1.tgz" /tmp
 for w in regular bold fill thin light duotone; do
   cat /tmp/package/src/$w/style.css
 done | sed 's|url("./|url("./phosphor/|g' > "$VENDOR/phosphor.css"
@@ -17,23 +18,23 @@ cp /tmp/package/src/*/Phosphor*.woff "$VENDOR/phosphor/"
 rm -rf /tmp/package
 
 echo "Downloading QRCode..."
-curl -sLo "$VENDOR/qrcode.min.js" "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+"$FETCH" "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" "$VENDOR/qrcode.min.js"
 
 echo "Downloading Dagre..."
-curl -sLo "$VENDOR/dagre.min.js" "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@3.1.1/dist/dagre.min.js"
+"$FETCH" "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@3.1.1/dist/dagre.min.js" "$VENDOR/dagre.min.js"
 
 echo "Downloading Monaco Editor..."
-curl -sL "https://registry.npmjs.org/monaco-editor/-/monaco-editor-0.52.0.tgz" | tar -xz -C /tmp
+"$FETCH" --tar-xz "https://registry.npmjs.org/monaco-editor/-/monaco-editor-0.52.0.tgz" /tmp
 rm -rf "$VENDOR/monaco/vs"
 mv /tmp/package/min/vs "$VENDOR/monaco/vs"
 rm -rf /tmp/package
 
 echo "Downloading Monaco themes..."
-curl -sLo "$VENDOR/monaco-themes/GitHub Light.json" "https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Light.json"
-curl -sLo "$VENDOR/monaco-themes/GitHub Dark.json" "https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Dark.json"
+"$FETCH" "https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Light.json" "$VENDOR/monaco-themes/GitHub Light.json"
+"$FETCH" "https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Dark.json" "$VENDOR/monaco-themes/GitHub Dark.json"
 
 echo "Downloading Inter font..."
-curl -sL "https://registry.npmjs.org/@fontsource/inter/-/inter-5.1.1.tgz" | tar -xz -C /tmp
+"$FETCH" --tar-xz "https://registry.npmjs.org/@fontsource/inter/-/inter-5.1.1.tgz" /tmp
 cp /tmp/package/index.css "$VENDOR/fonts/inter.css"
 sed -i \
   -e "s|url('./files/|url('./inter/|g" \
@@ -44,7 +45,7 @@ cp /tmp/package/files/* "$VENDOR/fonts/inter/"
 rm -rf /tmp/package
 
 echo "Downloading JetBrains Mono font..."
-curl -sL "https://registry.npmjs.org/@fontsource/jetbrains-mono/-/jetbrains-mono-5.1.0.tgz" | tar -xz -C /tmp
+"$FETCH" --tar-xz "https://registry.npmjs.org/@fontsource/jetbrains-mono/-/jetbrains-mono-5.1.0.tgz" /tmp
 cp /tmp/package/index.css "$VENDOR/fonts/jetbrains-mono.css"
 sed -i \
   -e "s|url('./files/|url('./jetbrains-mono/|g" \
@@ -55,7 +56,7 @@ cp /tmp/package/files/* "$VENDOR/fonts/jetbrains-mono/"
 rm -rf /tmp/package
 
 echo "Downloading country flag font..."
-curl -sL "https://registry.npmjs.org/country-flag-emoji-polyfill/-/country-flag-emoji-polyfill-0.1.10.tgz" | tar -xz -C /tmp
+"$FETCH" --tar-xz "https://registry.npmjs.org/country-flag-emoji-polyfill/-/country-flag-emoji-polyfill-0.1.10.tgz" /tmp
 cp /tmp/package/dist/TwemojiCountryFlags.woff2 "$VENDOR/fonts/"
 cp /tmp/package/LICENSE.md "$VENDOR/fonts/TwemojiCountryFlags-LICENSE.md"
 rm -rf /tmp/package
@@ -76,8 +77,8 @@ if [ -z "$TW_BIN" ]; then
   else
     TW_BIN="$(mktemp -d)/tailwindcss"
   fi
-  curl -sLo "$TW_BIN" \
-    "https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-$TW_ARCH"
+  "$FETCH" "https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-$TW_ARCH" \
+    "$TW_BIN"
   chmod +x "$TW_BIN"
 fi
 
