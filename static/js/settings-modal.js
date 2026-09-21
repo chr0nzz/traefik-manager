@@ -1696,15 +1696,11 @@ function _applyApiLinkVisibility() {
 }
 
 function renderReleaseNotes(md) {
-    // The same five characters as _esc in core.js. Leaving the double quote alone let a link
-    // target in the release body close the href attribute and add attributes of its own.
     function esc(s) {
         return String(s == null ? '' : s)
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
-    // The release body comes from GitHub, not from this admin, so a link target is untrusted
-    // input. Keep it to http(s) and drop anything that could end the attribute.
     function safeUrl(u) {
         try {
             const parsed = new URL(u, window.location.origin);

@@ -1,13 +1,9 @@
-"""The open redirect in next, the forced-password-change gate, and reporting two-factor that
-is switched on but cannot be used."""
 
 import pytest
 
 import app as tm
 import core.settings as settings_mod
 
-
-# --- open redirect -------------------------------------------------------------------------
 
 @pytest.mark.parametrize('probe', [
     '/\t/evil.example/pwned',
@@ -29,8 +25,6 @@ def test_an_ordinary_next_still_works():
         assert tm._safe_next('/settings') == '/settings'
 
 
-# --- the forced password change is not skipped by a made-up API key ------------------------
-
 def test_a_bogus_api_key_does_not_skip_the_forced_password_change(client):
     s = settings_mod.load_settings(fresh=True)
     settings_mod.save_settings(domains=s['domains'], cert_resolver=s['cert_resolver'],
@@ -41,8 +35,6 @@ def test_a_bogus_api_key_does_not_skip_the_forced_password_change(client):
     assert r.status_code == 403, \
         'presence of the header used to be enough to skip the gate, whatever the value was'
 
-
-# --- two-factor that cannot be read says so ------------------------------------------------
 
 def test_otp_status_admits_when_the_secret_cannot_be_read(client, monkeypatch):
     s = settings_mod.load_settings(fresh=True)

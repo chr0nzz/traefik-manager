@@ -1,13 +1,17 @@
-"""The setup wizard hands an admin password to whoever reaches it first, so it may only run
-when the install is provably new. A manager.yml that exists but cannot be read or parsed must
-never be mistaken for a first run."""
 
 import os
+from pathlib import Path
 
 import pytest
 
+import core.env as env
 import core.settings as settings_mod
+
 from conftest import SETTINGS_PATH
+
+def _path() -> Path:
+    return Path(env.SETTINGS_PATH)
+
 
 GOOD = SETTINGS_PATH.read_text()
 
@@ -22,16 +26,16 @@ CORRUPTIONS = {
 @pytest.fixture(autouse=True)
 def _restore_settings_file():
     yield
-    SETTINGS_PATH.write_text(GOOD)
-    os.chmod(SETTINGS_PATH, 0o600)
+    _path().write_text(GOOD)
+    os.chmod(_path(), 0o600)
     settings_mod.load_settings(fresh=True)
 
 
 def _reload(text=None, mode=None):
     if text is not None:
-        SETTINGS_PATH.write_text(text)
+        _path().write_text(text)
     if mode is not None:
-        os.chmod(SETTINGS_PATH, mode)
+        os.chmod(_path(), mode)
     settings_mod.load_settings(fresh=True)
 
 
@@ -72,11 +76,27 @@ def test_a_healthy_settings_file_still_works(anon_client):
 
 
 def test_a_missing_settings_file_is_still_a_fresh_install(anon_client):
-    SETTINGS_PATH.unlink()
+    _path().unlink()
     try:
         settings_mod.load_settings(fresh=True)
         assert settings_mod.settings_unreadable() == '', \
             'a genuinely absent file is a first run, not a failure'
     finally:
-        SETTINGS_PATH.write_text(GOOD)
+        _path().write_text(GOOD)
         settings_mod.load_settings(fresh=True)
+
+
+def test_fixing_the_file_unlocks_setup_even_from_the_parse_cache(anon_client):
+    good = _path().read_text()
+    settings_mod.load_settings(fresh=True)
+    assert settings_mod.settings_unreadable() == ''
+
+    _path().write_text(CORRUPTIONS['yaml syntax error'])
+    settings_mod.load_settings()
+    assert settings_mod.settings_unreadable(), 'the corrupt file should lock setup'
+
+    _path().write_text(good)
+    settings_mod.load_settings()
+    assert settings_mod.settings_unreadable() == '', \
+        'restoring the file must unlock setup, including when its parse is already cached'
+    assert anon_client.get('/setup').status_code != 503

@@ -15,9 +15,6 @@ def get_otp_fernet() -> Fernet:
         else:
             key = Fernet.generate_key().decode()
             os.makedirs(os.path.dirname(env.OTP_KEY_PATH), exist_ok=True)
-            # This key decrypts every stored secret, so it must not be readable by other users
-            # on the host or by another container sharing the config volume. Create it with the
-            # mode already set rather than writing it world-readable and fixing it afterwards.
             fd = os.open(env.OTP_KEY_PATH, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
             with os.fdopen(fd, 'w') as f:
                 f.write(key)

@@ -1,15 +1,10 @@
-"""manager.yml, agents.yml and the encryption key hold secrets, so other users on the host
-and anything else sharing the config volume must not be able to read them."""
 
 import os
 import stat
 
-import pytest
 
-import app as tm
 import core.agents_store as agents_store
 import core.config as config_mod
-import core.notify_providers as providers
 import core.settings as settings_mod
 from conftest import SETTINGS_PATH
 
@@ -17,8 +12,6 @@ from conftest import SETTINGS_PATH
 def _mode(path):
     return stat.S_IMODE(os.stat(path).st_mode)
 
-
-# --- secret files are not world-readable -------------------------------------------------
 
 def test_saving_settings_does_not_leave_the_file_world_readable():
     os.chmod(SETTINGS_PATH, 0o644)
