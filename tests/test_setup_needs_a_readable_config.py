@@ -26,8 +26,8 @@ CORRUPTIONS = {
 @pytest.fixture(autouse=True)
 def _restore_settings_file():
     yield
-    _path().write_text(GOOD)
     os.chmod(_path(), 0o600)
+    _path().write_text(GOOD)
     settings_mod.load_settings(fresh=True)
 
 

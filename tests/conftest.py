@@ -30,6 +30,8 @@ DYNAMIC_PATH.write_text("http:\n  routers: {}\n  services: {}\n")
 STATIC_PATH = _CONFIG_DIR / "traefik.yml"
 STATIC_PATH.write_text("providers:\n  docker: {}\n")
 
+CONFIG_DIR_PATHS = [str(DYNAMIC_PATH)]
+
 os.environ["SETTINGS_PATH"] = str(SETTINGS_PATH)
 os.environ["CONFIG_PATHS"] = str(DYNAMIC_PATH)
 os.environ["BACKUP_DIR"] = str(BACKUP_DIR)
@@ -102,6 +104,21 @@ def client():
 @pytest.fixture
 def anon_client():
     return tm.app.test_client()
+
+
+@pytest.fixture
+def restore_core_env():
+    yield
+    import importlib
+    import core.env as env_mod
+    import core.config as config_mod
+    os.environ["SETTINGS_PATH"] = str(SETTINGS_PATH)
+    os.environ["CONFIG_PATHS"] = str(DYNAMIC_PATH)
+    os.environ["BACKUP_DIR"] = str(BACKUP_DIR)
+    os.environ["STATIC_CONFIG_PATH"] = str(STATIC_PATH)
+    os.environ.pop("CONFIG_PATH", None)
+    importlib.reload(env_mod)
+    importlib.reload(config_mod)
 
 
 @pytest.fixture

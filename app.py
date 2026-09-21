@@ -5846,6 +5846,49 @@ def api_toggle_route(route_id):
         return jsonify({'ok': False, 'message': str(e)}), 500
 
 
+def _route_transport_name(svc):
+    lb = svc.get('loadBalancer') if isinstance(svc, dict) else None
+    return str(lb.get('serversTransport') or '') if isinstance(lb, dict) else ''
+
+
+def _local_middleware_names(router):
+    names = []
+    for raw in _to_list(router.get('middlewares')):
+        name = str(raw or '')
+        provider = name.split('@', 1)[1] if '@' in name else ''
+        if provider and provider != 'file':
+            continue
+        short = name.split('@', 1)[0]
+        if short and short not in names:
+            names.append(short)
+    return names
+
+
+def _add_route_dependencies(out, config, proto, router, svc):
+    section = config.get(proto, {})
+    transport = _route_transport_name(svc)
+    if transport:
+        defined = (section.get('serversTransports') or {}).get(transport)
+        if defined is not None:
+            out[proto]['serversTransports'] = {transport: dict(defined)}
+
+    middlewares = {}
+    for name in _local_middleware_names(router):
+        defined = (section.get('middlewares') or {}).get(name)
+        if defined is not None:
+            middlewares[name] = dict(defined)
+    if middlewares:
+        out[proto]['middlewares'] = middlewares
+
+    tls = router.get('tls')
+    option = str((tls or {}).get('options') or '') if isinstance(tls, dict) else ''
+    option = option.split('@', 1)[0]
+    if option:
+        defined = ((config.get('tls') or {}).get('options') or {}).get(option)
+        if defined is not None:
+            out['tls'] = {'options': {option: dict(defined)}}
+
+
 @app.route('/api/routes/<path:route_id>/raw', methods=['GET'])
 @login_required
 def api_route_raw_get(route_id):
@@ -5867,6 +5910,7 @@ def api_route_raw_get(route_id):
                 out      = {proto: {'routers': {rname: dict(router)}}}
                 if svc is not None:
                     out[proto]['services'] = {svc_name: dict(svc)}
+                _add_route_dependencies(out, config, proto, router, svc)
                 stream = StringIO()
                 yaml.dump(out, stream)
                 raw = stream.getvalue()
@@ -5941,6 +5985,14 @@ def api_route_raw_save(route_id):
             section.setdefault('routers', {}).update(new_routers)
         if new_services:
             section.setdefault('services', {}).update(new_services)
+        for name in ('serversTransports', 'middlewares'):
+            edited = new_proto.get(name) or {}
+            if edited:
+                section.setdefault(name, {}).update(edited)
+
+    new_tls_options = (new_data.get('tls') or {}).get('options') or {}
+    if new_tls_options:
+        config.setdefault('tls', {}).setdefault('options', {}).update(new_tls_options)
 
     try:
         create_backup(target_path)
