@@ -372,6 +372,27 @@ _otp_failure_limit = limiter.shared_limit(
     error_message='Too many failed two-factor codes. Try again later.')
 
 
+def _setup_checks_a_code() -> bool:
+    """True when this /setup POST is a password reset that has to check a two-factor code."""
+    if request.method != 'POST':
+        return False
+    try:
+        s = load_settings()
+    except Exception:
+        return False
+    return bool(s.get('setup_password_reset') and s.get('otp_enabled') and s.get('otp_secret'))
+
+
+# /setup checks a code too, during a password reset, and had only its own per-address 5/minute
+# limit. That let someone guess from many addresses without ever touching the account-wide count
+# that /login/otp keeps. Same scope, so the two entry points share one budget.
+_setup_otp_failure_limit = limiter.shared_limit(
+    lambda: env.OTP_FAILURE_LIMIT or env.DEFAULT_OTP_FAILURE_LIMIT, scope='otp-failures',
+    key_func=lambda: 'account', methods=['POST'], deduct_when=_failed_sign_in,
+    exempt_when=lambda: not env.OTP_FAILURE_LIMIT or not _setup_checks_a_code(),
+    error_message='Too many failed two-factor codes. Try again later.')
+
+
 BACKUP_DIR         = env.BACKUP_DIR
 SETTINGS_PATH      = env.SETTINGS_PATH
 _CONFIG_DIR        = env.CONFIG_DIR
@@ -804,6 +825,15 @@ for _label, _path, _err in env.unwritable_storage():
 
 _cfg.tighten_secret_files(env.SETTINGS_PATH, env.AGENTS_PATH, env.OTP_KEY_PATH)
 
+if not os.environ.get('TRUSTED_PROXIES', '').strip():
+    logger.info(
+        "TRUSTED_PROXIES is not set, so forwarding headers are accepted from %s. Any host in "
+        "those ranges - another container on the same docker network, or any machine on the "
+        "LAN - can choose the client IP used for rate limits and the audit log, and the host "
+        "used to build the OIDC redirect_uri. Set TRUSTED_PROXIES to your proxy's address, "
+        "and OIDC_REDIRECT_URI to the URL registered with your provider.",
+        ', '.join(env.trusted_proxies_list()))
+
 _monitor.start()
 
 _SILENT_PREFIXES = (
@@ -936,6 +966,30 @@ def login():
         if ok:
             remember = request.form.get('remember') == 'on'
 
+            # Two-factor is on but the stored secret will not decrypt, so there is no code to
+            # check. Letting the password through on its own would quietly drop the second
+            # factor for an account that is configured to require it. Refuse instead, and say
+            # how to get back in: ADMIN_PASSWORD skips two-factor by design, and restoring the
+            # encryption key makes the enrolment readable again.
+            if settings.get('otp_enabled') and not settings.get('otp_secret') and not admin_pw:
+                logger.error("Login refused for the admin from %s - two-factor is enabled but "
+                             "its secret could not be decrypted. Restore %s or "
+                             "OTP_ENCRYPTION_KEY, or set ADMIN_PASSWORD to get back in.",
+                             request.remote_addr, env.OTP_KEY_PATH)
+                session.clear()
+                return render_template(
+                    'login.html',
+                    error=gettext(
+                        'Two-factor authentication is switched on for this account, but its '
+                        'secret cannot be read, so the code cannot be checked. Signing in with '
+                        'only a password is refused. Restore the secret encryption key, or set '
+                        'ADMIN_PASSWORD to recover access. See the server log for details.'),
+                    next=request.form.get('next', ''),
+                    csrf_token=_get_csrf_token(), temp_password_hint=False,
+                    local_auth_enabled=local_auth,
+                    oidc_enabled=settings.get('oidc_enabled', False),
+                    oidc_display_name=settings.get('oidc_display_name', 'OIDC'))
+
             if settings.get('otp_enabled') and settings.get('otp_secret') and not admin_pw:
                 session.clear()
                 session['otp_pending']  = True
@@ -979,6 +1033,7 @@ def login():
 
 @app.route('/setup', methods=['GET', 'POST'])
 @limiter.limit("5 per minute", methods=["POST"])
+@_setup_otp_failure_limit
 def setup():
     if not _auth_required():
         return redirect(url_for('index'))
@@ -7003,6 +7058,18 @@ def delete_middleware(mw_name):
     return redirect(url_for('index'))
 
 
+def _oidc_redirect_uri() -> str:
+    """The redirect_uri sent to the provider and used again at the token exchange.
+
+    url_for(_external=True) builds this from the request host, which follows
+    X-Forwarded-Host whenever the request arrived from a trusted proxy. The default trusted
+    range covers the whole private network, so on a shared docker bridge or a flat LAN another
+    host can set that header and make this point at itself. Set OIDC_REDIRECT_URI to the exact
+    URL registered with the provider and the header stops mattering.
+    """
+    return env.OIDC_REDIRECT_URI or url_for('oidc_callback', _external=True)
+
+
 @app.route('/auth/oidc/login')
 @limiter.limit("10 per minute")
 def oidc_login():
@@ -7027,7 +7094,7 @@ def oidc_login():
     nonce = secrets.token_urlsafe(32)
     session['oidc_state'] = state
     session['oidc_nonce'] = nonce
-    redirect_uri = url_for('oidc_callback', _external=True)
+    redirect_uri = _oidc_redirect_uri()
     from urllib.parse import urlencode
     scopes = ['openid', 'email', 'profile']
     groups_claim = s.get('oidc_groups_claim', '').strip()
@@ -7099,7 +7166,7 @@ def oidc_callback():
         payload = {
             'grant_type':   'authorization_code',
             'code':         code,
-            'redirect_uri': url_for('oidc_callback', _external=True),
+            'redirect_uri': _oidc_redirect_uri(),
             'code_verifier': session.pop('oidc_verifier', ''),
         }
         supported = cfg.get('token_endpoint_auth_methods_supported') or []

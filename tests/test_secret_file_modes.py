@@ -4,12 +4,9 @@ and anything else sharing the config volume must not be able to read them."""
 import os
 import stat
 
-import pytest
 
-import app as tm
 import core.agents_store as agents_store
 import core.config as config_mod
-import core.notify_providers as providers
 import core.settings as settings_mod
 from conftest import SETTINGS_PATH
 

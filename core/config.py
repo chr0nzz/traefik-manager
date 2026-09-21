@@ -249,7 +249,11 @@ def resolve_config_path(s: str) -> str:
         if not s.endswith(('.yml', '.yaml')):
             s = s + '.yml'
         candidate = os.path.join(env.ACTIVE_CONFIG_DIR, s)
-        if is_safe_path(candidate):
+        # scan_config_dir, the git push loop and settings-path validation all skip Traefik
+        # Manager's own files. This did not, so a bare "manager" selector resolved to
+        # manager.yml and let the app treat its own settings as a Traefik config to read,
+        # back up and rewrite.
+        if is_safe_path(candidate) and not env.is_own_state(candidate):
             return candidate
     logger.warning(f"Config file not in CONFIG_PATHS: {s!r}")
     return ''

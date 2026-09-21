@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-21 04:20+0000\n"
+"POT-Creation-Date: 2026-09-21 04:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -10422,6 +10422,13 @@ msgid "Two-factor"
 msgstr ""
 
 msgid "Two-factor authentication"
+msgstr ""
+
+msgid ""
+"Two-factor authentication is switched on for this account, but its secret"
+" cannot be read, so the code cannot be checked. Signing in with only a "
+"password is refused. Restore the secret encryption key, or set "
+"ADMIN_PASSWORD to recover access. See the server log for details."
 msgstr ""
 
 #. Used in the browser

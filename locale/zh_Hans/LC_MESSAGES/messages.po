@@ -6,15 +6,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-21 04:20+0000\n"
+"POT-Creation-Date: 2026-09-21 04:30+0000\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: zh_Hans\n"
 "Language-Team: zh_Hans <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_Hans\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.18.0\n"
 
 #. Used in the browser
@@ -29,7 +29,8 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
-msgid "\"{name}\" is still used by {shown}. Remove it from {label} and delete it?"
+msgid ""
+"\"{name}\" is still used by {shown}. Remove it from {label} and delete it?"
 msgstr ""
 
 #, python-format
@@ -58,14 +59,14 @@ msgstr ""
 
 #, python-format
 msgid ""
-"%(line_break)s⚠ A %(buffering)s/%(compress)s middleware is attached - "
-"remove it for smooth streaming and seeking."
+"%(line_break)s⚠ A %(buffering)s/%(compress)s middleware is attached - remove "
+"it for smooth streaming and seeking."
 msgstr ""
 
 #, python-format
 msgid ""
-"%(loop)s already routes back to %(name)s, which would make a cycle "
-"Traefik cannot load"
+"%(loop)s already routes back to %(name)s, which would make a cycle Traefik "
+"cannot load"
 msgstr ""
 
 #, python-format
@@ -102,8 +103,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"%(name)s is still used by %(users)s%(users2)s. Delete those middlewares "
-"first"
+"%(name)s is still used by %(users)s%(users2)s. Delete those middlewares first"
 msgstr ""
 
 #, python-format
@@ -114,8 +114,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"%(original)s matches more than one certificate store, so this backup "
-"cannot be restored safely"
+"%(original)s matches more than one certificate store, so this backup cannot "
+"be restored safely"
 msgstr ""
 
 #, python-format
@@ -278,8 +278,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-", although other file-provider routes are live. If you saved it seconds "
-"ago, close and reopen. Otherwise check the Traefik logs for a config "
+", although other file-provider routes are live. If you saved it seconds ago, "
+"close and reopen. Otherwise check the Traefik logs for a config "
 "error{configFile}. Showing your saved configuration."
 msgstr ""
 
@@ -295,10 +295,10 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-", so this route is not being served. Traefik is most likely not watching "
-"the file Traefik Manager writes to - check that both containers mount the"
-" same config path and that {providers_file} points at it with "
-"{watch_true}. Showing your saved configuration."
+", so this route is not being served. Traefik is most likely not watching the "
+"file Traefik Manager writes to - check that both containers mount the same "
+"config path and that {providers_file} points at it with {watch_true}. "
+"Showing your saved configuration."
 msgstr ""
 
 #. Used in the browser
@@ -357,8 +357,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-". CrowdSec only accepts a bouncer key on /v1/decisions, the machine token"
-" is refused there, so CROWDSEC_API_KEY has to be set as well."
+". CrowdSec only accepts a bouncer key on /v1/decisions, the machine token is "
+"refused there, so CROWDSEC_API_KEY has to be set as well."
 msgstr ""
 
 msgid "/ (server root)"
@@ -460,8 +460,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-": {disabled} disabled, {down} unreachable, {degraded} degraded, "
-"{warnings} warnings"
+": {disabled} disabled, {down} unreachable, {degraded} degraded, {warnings} "
+"warnings"
 msgstr ""
 
 #, python-format
@@ -474,8 +474,8 @@ msgid "A backup is created automatically before restoring."
 msgstr ""
 
 msgid ""
-"A backup is taken first and Traefik is restarted afterwards, because it "
-"only reads acme.json at startup."
+"A backup is taken first and Traefik is restarted afterwards, because it only "
+"reads acme.json at startup."
 msgstr ""
 
 #. Used in the browser
@@ -485,20 +485,19 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"A bouncer API key reads {v1_decisions} and nothing else. "
-"{ATK_MACHINE_NOTE}"
+"A bouncer API key reads {v1_decisions} and nothing else. {ATK_MACHINE_NOTE}"
 msgstr ""
 
 msgid ""
-"A convenience list for the route form's host dropdown. It does not change"
-" your Traefik config, your TLS, or your routing - domains found in "
-"existing routes are picked up automatically, so this is just seeding."
+"A convenience list for the route form's host dropdown. It does not change "
+"your Traefik config, your TLS, or your routing - domains found in existing "
+"routes are picked up automatically, so this is just seeding."
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"A copy of acme.json is saved to your backups first, and can be restored "
-"from Settings, Backups, Certificates."
+"A copy of acme.json is saved to your backups first, and can be restored from "
+"Settings, Backups, Certificates."
 msgstr ""
 
 #. Used in the browser
@@ -517,14 +516,15 @@ msgstr ""
 msgid "A service named '%(name)s' already exists"
 msgstr ""
 
-msgid "A temporary password was generated at startup - check your container logs."
+msgid ""
+"A temporary password was generated at startup - check your container logs."
 msgstr ""
 
 msgid ""
 "A web interface for the routes, middlewares and services Traefik already "
-"serves. This setup takes about a minute: point it at your Traefik API, "
-"pick the views you want, and set a password. Everything here can be "
-"changed later in Settings."
+"serves. This setup takes about a minute: point it at your Traefik API, pick "
+"the views you want, and set a password. Everything here can be changed later "
+"in Settings."
 msgstr ""
 
 msgid "ACCESS_LOG_PATH not configured"
@@ -589,9 +589,9 @@ msgid "API key generated. Copy it now."
 msgstr ""
 
 msgid ""
-"API key is hidden after first creation. Use the key already in your "
-"running agent compose - do not rotate unless you want to invalidate the "
-"old key and reconfigure your agent."
+"API key is hidden after first creation. Use the key already in your running "
+"agent compose - do not rotate unless you want to invalidate the old key and "
+"reconfigure your agent."
 msgstr ""
 
 #. Used in the browser
@@ -651,8 +651,8 @@ msgid "Access log not found at %(path)s"
 msgstr ""
 
 msgid ""
-"Access log not found. Set ACCESS_LOG_PATH env var or configure the path "
-"in Settings."
+"Access log not found. Set ACCESS_LOG_PATH env var or configure the path in "
+"Settings."
 msgstr ""
 
 #. Used in the browser
@@ -696,8 +696,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Active decisions after expired rows are dropped. The cursor walk stops at"
-" 200 pages of 1000, so 200,000 is the undocumented ceiling"
+"Active decisions after expired rows are dropped. The cursor walk stops at "
+"200 pages of 1000, so 200,000 is the undocumented ceiling"
 msgstr ""
 
 #. Used in the browser
@@ -867,14 +867,14 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Add {traefik_router_name} and {target_fqdn} to your CrowdSec context file"
-" and they appear here, naming the route each attack came through."
+"Add {traefik_router_name} and {target_fqdn} to your CrowdSec context file "
+"and they appear here, naming the route each attack came through."
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"Added by hand, from this UI or from the CLI. CrowdSec labels these cscli "
-"or manual depending on its version"
+"Added by hand, from this UI or from the CLI. CrowdSec labels these cscli or "
+"manual depending on its version"
 msgstr ""
 
 #. Used in the browser
@@ -905,26 +905,26 @@ msgstr ""
 msgid ""
 "Adds %(trusted_ips)s to an entrypoint so Traefik believes "
 "%(x_forwarded_for)s from your proxies. This trust feeds logs, CrowdSec, "
-"%(ip_allow_list)s and the login limiter - check what reaches the app "
-"first with the %(ip_diagnostic)s."
+"%(ip_allow_list)s and the login limiter - check what reaches the app first "
+"with the %(ip_diagnostic)s."
 msgstr ""
 
 #, python-format
 msgid ""
-"Adds %(x_forwarded_tls)s carrying the PEM. Only forward this to a backend"
-" you trust."
+"Adds %(x_forwarded_tls)s carrying the PEM. Only forward this to a backend "
+"you trust."
 msgstr ""
 
 #, python-format
 msgid ""
-"Adds %(x_forwarded_tls)s. Traefik supports more fields than these, use "
-"the YAML editor for the rest."
+"Adds %(x_forwarded_tls)s. Traefik supports more fields than these, use the "
+"YAML editor for the rest."
 msgstr ""
 
 msgid ""
-"Adds a tls.domains block with main: domain.com and sans: *.domain.com. "
-"Use with DNS challenge resolvers (Cloudflare, Route 53, etc.) to issue "
-"wildcard certs."
+"Adds a tls.domains block with main: domain.com and sans: *.domain.com. Use "
+"with DNS challenge resolvers (Cloudflare, Route 53, etc.) to issue wildcard "
+"certs."
 msgstr ""
 
 msgid "Advanced rule"
@@ -941,10 +941,9 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"After adding an entrypoint here, open your {docker_compose_yml} and add "
-"the port under {ports}, then run: {docker_compose_up} Without this the "
-"port will not be reachable outside the container even after restarting "
-"Traefik."
+"After adding an entrypoint here, open your {docker_compose_yml} and add the "
+"port under {ports}, then run: {docker_compose_up} Without this the port will "
+"not be reachable outside the container even after restarting Traefik."
 msgstr ""
 
 msgid "After it finishes"
@@ -1016,17 +1015,16 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Alert meta[] carries target_uri, method, status and user_agent only for "
-"HTTP buckets"
+"Alert meta[] carries target_uri, method, status and user_agent only for HTTP "
+"buckets"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Alert-level {meta} is written by the scenario on the machine that raised "
-"the alert. It is absent on {cscli} alerts and on community blocklist "
-"pulls, so a host whose only alerts came from those sources has nothing to"
-" rank here."
+"Alert-level {meta} is written by the scenario on the machine that raised the "
+"alert. It is absent on {cscli} alerts and on community blocklist pulls, so a "
+"host whose only alerts came from those sources has nothing to rank here."
 msgstr ""
 
 #. Used in the browser
@@ -1035,8 +1033,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Alerts the LAPI still retains. CrowdSec prunes on its own schedule, so "
-"this is a retention window, not the start of activity"
+"Alerts the LAPI still retains. CrowdSec prunes on its own schedule, so this "
+"is a retention window, not the start of activity"
 msgstr ""
 
 #. Used in the browser
@@ -1073,8 +1071,8 @@ msgid "All Status"
 msgstr ""
 
 msgid ""
-"All are rejected by default (secure). Check a character only if a backend"
-" genuinely needs it in the request path. Requires Traefik 3.7+."
+"All are rejected by default (secure). Check a character only if a backend "
+"genuinely needs it in the request path. Requires Traefik 3.7+."
 msgstr ""
 
 #. Used in the browser
@@ -1157,13 +1155,13 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Allows %(average)s req/s sustained, with a %(burst)s of extra requests "
-"over the %(period)s."
+"Allows %(average)s req/s sustained, with a %(burst)s of extra requests over "
+"the %(period)s."
 msgstr ""
 
 msgid ""
-"Already protected by an external provider such as Authelia, Authentik or "
-"a forward-auth middleware?"
+"Already protected by an external provider such as Authelia, Authentik or a "
+"forward-auth middleware?"
 msgstr ""
 
 msgid "Also pass selected certificate fields"
@@ -1172,26 +1170,24 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Also remove its certificate for {name}, and restart Traefik so the change"
-" sticks"
+"Also remove its certificate for {name}, and restart Traefik so the change "
+"sticks"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Also remove their {n} certificate, and restart Traefik so the change "
-"sticks"
+"Also remove their {n} certificate, and restart Traefik so the change sticks"
 msgid_plural ""
-"Also remove their {n} certificates, and restart Traefik so the change "
-"sticks"
+"Also remove their {n} certificates, and restart Traefik so the change sticks"
 msgstr[0] ""
 
 msgid "Also set by the theme toggle in the nav bar"
 msgstr ""
 
 msgid ""
-"An agent runs beside Traefik on a remote host so this instance can manage"
-" it. Pick how you want to install it."
+"An agent runs beside Traefik on a remote host so this instance can manage "
+"it. Pick how you want to install it."
 msgstr ""
 
 msgid ""
@@ -1200,8 +1196,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Any HTTPS git remote: GitHub, GitLab, Gitea, Forgejo, or self-hosted. Use"
-" a private repository - your dynamic config is in it."
+"Any HTTPS git remote: GitHub, GitLab, Gitea, Forgejo, or self-hosted. Use a "
+"private repository - your dynamic config is in it."
 msgstr ""
 
 #, python-format
@@ -1247,14 +1243,14 @@ msgid "Arabic"
 msgstr ""
 
 msgid ""
-"Assign a route to a group with the pencil on its card. A group disappears"
-" when nothing uses it."
+"Assign a route to a group with the pencil on its card. A group disappears "
+"when nothing uses it."
 msgstr ""
 
 msgid ""
-"Assigns a tls.options profile to this router (e.g. min version, ciphers)."
-" Enable and manage profiles via the TLS Options tab in Settings - "
-"Interface - TABS."
+"Assigns a tls.options profile to this router (e.g. min version, ciphers). "
+"Enable and manage profiles via the TLS Options tab in Settings - Interface - "
+"TABS."
 msgstr ""
 
 msgid "At least 8 characters"
@@ -1325,8 +1321,7 @@ msgid "Authentication is handled elsewhere"
 msgstr ""
 
 msgid ""
-"Authentication settings are not available - no password has been "
-"configured."
+"Authentication settings are not available - no password has been configured."
 msgstr ""
 
 msgid "Authenticator code"
@@ -1379,8 +1374,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Average request rate across the whole fetched window, not across the "
-"current selection."
+"Average request rate across the whole fetched window, not across the current "
+"selection."
 msgstr ""
 
 msgctxt "button"
@@ -1607,8 +1602,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Bouncer API key, used to read %(decisions)s. Stored encrypted. Leave "
-"blank to use the %(crowdsec_api_key)s env var."
+"Bouncer API key, used to read %(decisions)s. Stored encrypted. Leave blank "
+"to use the %(crowdsec_api_key)s env var."
 msgstr ""
 
 msgid "Bouncer key, reads decisions."
@@ -1624,8 +1619,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Branch \"%(branch)s\" is used by the Host - each server needs its own "
-"branch"
+"Branch \"%(branch)s\" is used by the Host - each server needs its own branch"
 msgstr ""
 
 msgid "Branch and username"
@@ -1656,8 +1650,7 @@ msgid "Built-in authentication"
 msgstr ""
 
 msgid ""
-"Built-in authentication or OIDC is active, so there is nothing to "
-"acknowledge"
+"Built-in authentication or OIDC is active, so there is nothing to acknowledge"
 msgstr ""
 
 #. Used in the browser
@@ -1764,8 +1757,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Capture groups are %(n1)s, %(n2)s and so on. In a compose file %(code)s "
-"must be written %(code2)s."
+"Capture groups are %(n1)s, %(n2)s and so on. In a compose file %(code)s must "
+"be written %(code2)s."
 msgstr ""
 
 #. Used in the browser
@@ -1788,9 +1781,9 @@ msgid "Cert Resolvers {staticResolverCount}"
 msgstr ""
 
 msgid ""
-"Cert resolver names for this server's Traefik, comma-separated. Resolvers"
-" already used by this server's routes are detected automatically from its"
-" Traefik API, so this is only needed for a resolver no route uses yet."
+"Cert resolver names for this server's Traefik, comma-separated. Resolvers "
+"already used by this server's routes are detected automatically from its "
+"Traefik API, so this is only needed for a resolver no route uses yet."
 msgstr ""
 
 #. Used in the browser
@@ -1842,10 +1835,10 @@ msgid "Certificates no router serves"
 msgstr ""
 
 msgid ""
-"Certificates, Plugins and Logs each read a file that has to be mounted "
-"into this container. If it is not mounted yet, the view tells you the "
-"exact volume line to add. GeoIP resolves client addresses to countries in"
-" Logs and CrowdSec, downloading a free database on first use."
+"Certificates, Plugins and Logs each read a file that has to be mounted into "
+"this container. If it is not mounted yet, the view tells you the exact "
+"volume line to add. GeoIP resolves client addresses to countries in Logs and "
+"CrowdSec, downloading a free database on first use."
 msgstr ""
 
 #. Used in the browser
@@ -1901,13 +1894,12 @@ msgid "Check route reachability"
 msgstr ""
 
 msgid ""
-"Check that Traefik Manager can reach it. The agent does not report its "
-"own address back, so the URL you entered is a guess until this passes."
+"Check that Traefik Manager can reach it. The agent does not report its own "
+"address back, so the URL you entered is a guess until this passes."
 msgstr ""
 
 msgid ""
-"Check that Traefik Manager can reach this agent and that its key is "
-"accepted."
+"Check that Traefik Manager can reach this agent and that its key is accepted."
 msgstr ""
 
 #. Used in the browser
@@ -2140,15 +2132,14 @@ msgid "Command copied"
 msgstr ""
 
 msgid ""
-"Commit and push on every configuration change. With this off, you push by"
-" hand from the Backups pane."
+"Commit and push on every configuration change. With this off, you push by "
+"hand from the Backups pane."
 msgstr ""
 
 msgid ""
-"Commit every configuration change to a git repository, so you get "
-"history, diffs and a one-click restore to any earlier commit. Local file "
-"backups happen regardless - this adds an off-box copy. Leave the URL "
-"blank to skip."
+"Commit every configuration change to a git repository, so you get history, "
+"diffs and a one-click restore to any earlier commit. Local file backups "
+"happen regardless - this adds an off-box copy. Leave the URL blank to skip."
 msgstr ""
 
 #, python-format
@@ -2284,7 +2275,8 @@ msgstr ""
 msgid "Connection test failed"
 msgstr ""
 
-msgid "Connection timed out - the API URL may be unreachable from the container"
+msgid ""
+"Connection timed out - the API URL may be unreachable from the container"
 msgstr ""
 
 #. Used in the browser
@@ -2312,16 +2304,16 @@ msgid "Continue"
 msgstr ""
 
 msgid ""
-"Convenience list used to build Host() rules in the route form - it does "
-"not affect your Traefik configuration, TLS, or routing. Domains found in "
-"existing routes are added to the route form automatically, so this list "
-"is optional seeding."
+"Convenience list used to build Host() rules in the route form - it does not "
+"affect your Traefik configuration, TLS, or routing. Domains found in "
+"existing routes are added to the route form automatically, so this list is "
+"optional seeding."
 msgstr ""
 
 #, python-format
 msgid ""
-"Converts gRPC-Web requests to gRPC before forwarding. %(code)s allows any"
-" origin."
+"Converts gRPC-Web requests to gRPC before forwarding. %(code)s allows any "
+"origin."
 msgstr ""
 
 msgid "Cookie name"
@@ -2387,8 +2379,8 @@ msgid "Could not enable 2FA"
 msgstr ""
 
 msgid ""
-"Could not find plugins block - paste the experimental.plugins YAML from "
-"the Traefik plugin page"
+"Could not find plugins block - paste the experimental.plugins YAML from the "
+"Traefik plugin page"
 msgstr ""
 
 #. Used in the browser
@@ -2441,8 +2433,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Could not read routers, services or middlewares. Check TRAEFIK_API_URL "
-"and that api.insecure or an api@internal route is enabled."
+"Could not read routers, services or middlewares. Check TRAEFIK_API_URL and "
+"that api.insecure or an api@internal route is enabled."
 msgstr ""
 
 #. Used in the browser
@@ -2509,8 +2501,8 @@ msgid "Create your first route to start managing your Traefik proxy."
 msgstr ""
 
 msgid ""
-"Create, edit and disable them through a form or raw YAML, written "
-"straight to your dynamic config file."
+"Create, edit and disable them through a form or raw YAML, written straight "
+"to your dynamic config file."
 msgstr ""
 
 #. Used in the browser
@@ -2520,10 +2512,9 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Creates a tool-managed %(middleware_name)s middleware: a Permissions-"
-"Policy plus common security headers (HSTS, nosniff, frame-deny, "
-"referrer). It stays a normal, editable file middleware in the Middlewares"
-" tab."
+"Creates a tool-managed %(middleware_name)s middleware: a Permissions-Policy "
+"plus common security headers (HSTS, nosniff, frame-deny, referrer). It stays "
+"a normal, editable file middleware in the Middlewares tab."
 msgstr ""
 
 #. Used in the browser
@@ -2553,8 +2544,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"CrowdSec Local API URL. Leave blank to use the %(crowdsec_lapi_url)s env "
-"var."
+"CrowdSec Local API URL. Leave blank to use the %(crowdsec_lapi_url)s env var."
 msgstr ""
 
 msgid "CrowdSec credentials saved"
@@ -2571,17 +2561,17 @@ msgstr ""
 #, python-brace-format
 msgid ""
 "CrowdSec resolves the AS and country itself, in the "
-"{crowdsecurity_geoip_enrich} parser on the machine that raised the alert."
-" The LAPI never computes them, it stores whatever the agent sent. Install"
-" that parser on the reporting machine and these alerts start carrying "
+"{crowdsecurity_geoip_enrich} parser on the machine that raised the alert. "
+"The LAPI never computes them, it stores whatever the agent sent. Install "
+"that parser on the reporting machine and these alerts start carrying "
 "{as_name}, {as_number} and {cn}."
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"CrowdSec returned as many alerts as the cap allows, so older ones are not"
-" counted here. Raise CROWDSEC_ALERT_LIMIT, or the alert limit in "
-"Settings, to see further back"
+"CrowdSec returned as many alerts as the cap allows, so older ones are not "
+"counted here. Raise CROWDSEC_ALERT_LIMIT, or the alert limit in Settings, to "
+"see further back"
 msgstr ""
 
 #. Used in the browser
@@ -2596,9 +2586,9 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"CrowdSec writes {traefik_router_name} and {target_fqdn} into an alert "
-"only when they are listed in its context file. They name the router and "
-"the host an attacker went through. {ATK_MACHINE_NOTE}"
+"CrowdSec writes {traefik_router_name} and {target_fqdn} into an alert only "
+"when they are listed in its context file. They name the router and the host "
+"an attacker went through. {ATK_MACHINE_NOTE}"
 msgstr ""
 
 msgid "Current password"
@@ -2626,7 +2616,8 @@ msgid "Custom URL"
 msgstr ""
 
 #. Used in the browser
-msgid "Custom group with no routes yet. Assign one with the pencil on any route."
+msgid ""
+"Custom group with no routes yet. Assign one with the pencil on any route."
 msgstr ""
 
 msgid "Custom groups"
@@ -2729,17 +2720,17 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Decisions are not readable right now - {v1_decisions} needs a bouncer API"
-" key, so this list is unknown rather than empty"
+"Decisions are not readable right now - {v1_decisions} needs a bouncer API "
+"key, so this list is unknown rather than empty"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Decisions carry no enrichment at all. Everything on a bouncer key comes "
-"from the seven fields {v1_decisions} returns: {value}, {type}, {scope}, "
-"{origin}, {scenario}, {duration}, {id}. No country, no ASN, no events, no"
-" time. {ATK_MACHINE_NOTE}"
+"Decisions carry no enrichment at all. Everything on a bouncer key comes from "
+"the seven fields {v1_decisions} returns: {value}, {type}, {scope}, {origin}, "
+"{scenario}, {duration}, {id}. No country, no ASN, no events, no time. "
+"{ATK_MACHINE_NOTE}"
 msgstr ""
 
 #. Used in the browser
@@ -2856,8 +2847,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Delete route \"{shown}\" from {file}? This removes it from the config "
-"file and stops serving it."
+"Delete route \"{shown}\" from {file}? This removes it from the config file "
+"and stops serving it."
 msgstr ""
 
 #. Used in the browser
@@ -2887,15 +2878,14 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Delete this template? Middlewares already created from it are not "
-"affected."
+"Delete this template? Middlewares already created from it are not affected."
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Delete {n} route: {names}? This removes them from the config files and "
-"stops serving them."
+"Delete {n} route: {names}? This removes them from the config files and stops "
+"serving them."
 msgid_plural ""
 "Delete {n} routes: {names}? This removes them from the config files and "
 "stops serving them."
@@ -2913,8 +2903,8 @@ msgid_plural "Deleted {n} routes."
 msgstr[0] ""
 
 msgid ""
-"Deletes the local clone only. Remote repository and commits are "
-"untouched; re-initialized on next push."
+"Deletes the local clone only. Remote repository and commits are untouched; "
+"re-initialized on next push."
 msgstr ""
 
 msgid "Deliver errors right away even inside the quiet window."
@@ -2943,8 +2933,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Desktop notifications are blocked by this browser, so they have been "
-"turned off"
+"Desktop notifications are blocked by this browser, so they have been turned "
+"off"
 msgstr ""
 
 msgid ""
@@ -2956,8 +2946,8 @@ msgstr ""
 #. Used in the browser
 msgid ""
 "Desktop notifications need a secure origin. Browsers only expose the "
-"Notification API over HTTPS or on localhost, so open Traefik Manager over"
-" HTTPS to use them."
+"Notification API over HTTPS or on localhost, so open Traefik Manager over "
+"HTTPS to use them."
 msgstr ""
 
 #. Used in the browser
@@ -3099,9 +3089,8 @@ msgid "Disabled"
 msgstr ""
 
 msgid ""
-"Disables certificate validation for the backend. Use for self-signed "
-"certs (e.g. Proxmox, Kasm). Adds insecureSkipVerify via a named "
-"serversTransport."
+"Disables certificate validation for the backend. Use for self-signed certs "
+"(e.g. Proxmox, Kasm). Adds insecureSkipVerify via a named serversTransport."
 msgstr ""
 
 #. Used in the browser
@@ -3130,8 +3119,8 @@ msgid "Display name"
 msgstr ""
 
 msgid ""
-"Display the app icon next to each route name, like the dashboard. Applies"
-" to host and agent routes."
+"Display the app icon next to each route name, like the dashboard. Applies to "
+"host and agent routes."
 msgstr ""
 
 #. Used in the browser
@@ -3260,8 +3249,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Durations are read from the nanosecond Duration field, not re-parsed from"
-" a rounded display string."
+"Durations are read from the nanosecond Duration field, not re-parsed from a "
+"rounded display string."
 msgstr ""
 
 #. Used in the browser
@@ -3291,9 +3280,9 @@ msgid "EAB needs both the key ID and the HMAC"
 msgstr ""
 
 msgid ""
-"Each of these adds a tab to the navigation. Turn on what you use - an "
-"unused tab is just noise. All of them can be toggled later under "
-"Settings, so nothing here is a commitment."
+"Each of these adds a tab to the navigation. Turn on what you use - an unused "
+"tab is just noise. All of them can be toggled later under Settings, so "
+"nothing here is a commitment."
 msgstr ""
 
 #. Used in the browser
@@ -3334,8 +3323,7 @@ msgid "Edit Template"
 msgstr ""
 
 msgid ""
-"Edit entrypoints, certificate resolvers, plugins and providers in "
-"traefik.yml"
+"Edit entrypoints, certificate resolvers, plugins and providers in traefik.yml"
 msgstr ""
 
 #. Used in the browser
@@ -3344,8 +3332,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Edit the middleware before saving - replace all placeholder values and "
-"any %(code)s template blocks with real values or Traefik will crash"
+"Edit the middleware before saving - replace all placeholder values and any "
+"%(code)s template blocks with real values or Traefik will crash"
 msgstr ""
 
 #. Used in the browser
@@ -3509,8 +3497,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Entry point middlewares {mws} are prepended into every router on this "
-"entry point"
+"Entry point middlewares {mws} are prepended into every router on this entry "
+"point"
 msgstr ""
 
 #. Used in the browser
@@ -3608,8 +3596,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Every ban in force came from a subscribed list, not from something this "
-"host saw. That is the normal resting state of a homelab behind CrowdSec."
+"Every ban in force came from a subscribed list, not from something this host "
+"saw. That is the normal resting state of a homelab behind CrowdSec."
 msgstr ""
 
 #. Used in the browser
@@ -3619,11 +3607,11 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Every card above summarises the {retained} alerts the LAPI still retains,"
-" not every attack this host has ever seen. The oldest alert here is the "
-"edge of retention, not the start of activity, and CrowdSec does not "
-"report how many it pruned. Subscribed blocklist rows are left out on "
-"purpose because they describe the internet rather than your host. {value}"
+"Every card above summarises the {retained} alerts the LAPI still retains, "
+"not every attack this host has ever seen. The oldest alert here is the edge "
+"of retention, not the start of activity, and CrowdSec does not report how "
+"many it pruned. Subscribed blocklist rows are left out on purpose because "
+"they describe the internet rather than your host. {value}"
 msgstr ""
 
 #. Used in the browser
@@ -3635,16 +3623,15 @@ msgstr ""
 #, python-brace-format
 msgid ""
 "Every duration in this window belongs to a connection Traefik held open "
-"rather than to a response it completed, so there is nothing to average. "
-"{tip}"
+"rather than to a response it completed, so there is nothing to average. {tip}"
 msgstr ""
 
 msgid ""
-"Every enabled HTTP route on the Host and on each agent is requested from "
-"the server on this schedule. Where the service has a Traefik health check"
-" that result is used instead. A route counts as down after two failed "
-"checks in a row, and an alert goes to the channels below under the "
-"Traefik category, once when it goes down and once when it is back."
+"Every enabled HTTP route on the Host and on each agent is requested from the "
+"server on this schedule. Where the service has a Traefik health check that "
+"result is used instead. A route counts as down after two failed checks in a "
+"row, and an alert goes to the channels below under the Traefik category, "
+"once when it goes down and once when it is back."
 msgstr ""
 
 msgid ""
@@ -3658,8 +3645,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Every filter on the window row is applied together. Drop one and the rest"
-" stay."
+"Every filter on the window row is applied together. Drop one and the rest "
+"stay."
 msgstr ""
 
 #. Used in the browser
@@ -3667,10 +3654,9 @@ msgid "Every other session was signed out"
 msgstr ""
 
 msgid ""
-"Every save writes a timestamped copy of the config first, kept locally. "
-"Git backup adds an off-box copy with history, diffs and restore from any "
-"commit. Restoring overwrites your live config, so it takes a typed "
-"confirmation."
+"Every save writes a timestamped copy of the config first, kept locally. Git "
+"backup adds an off-box copy with history, diffs and restore from any commit. "
+"Restoring overwrites your live config, so it takes a typed confirmation."
 msgstr ""
 
 #. Used in the browser
@@ -3928,8 +3914,7 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Failover takes two backends: the one that serves and the one that takes "
-"over"
+"Failover takes two backends: the one that serves and the one that takes over"
 msgstr ""
 
 #. Used in the browser
@@ -3938,8 +3923,8 @@ msgid "Fallback"
 msgstr ""
 
 msgid ""
-"Feeds the status dot on the Routes tab and the Dashboard, and alerts when"
-" a backend stops answering"
+"Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
+"backend stops answering"
 msgstr ""
 
 #. Used in the browser
@@ -4104,16 +4089,15 @@ msgid "Follow system"
 msgstr ""
 
 msgid ""
-"For a LAPI behind mutual TLS: cert, key and CA paths as mounted inside "
-"the agent container. Replaces the API key and machine login."
+"For a LAPI behind mutual TLS: cert, key and CA paths as mounted inside the "
+"agent container. Replaces the API key and machine login."
 msgstr ""
 
 #, python-format
 msgid ""
 "Forces %(pass_host_header)s and sets long %(forwarding_timeouts)s on "
-"%(transport)s. Entry-point %(responding_timeouts)s are global and static "
-"- adjust them in the Static Config editor if long transcodes still cut "
-"off."
+"%(transport)s. Entry-point %(responding_timeouts)s are global and static - "
+"adjust them in the Static Config editor if long transcodes still cut off."
 msgstr ""
 
 #. Used in the browser
@@ -4168,9 +4152,9 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Forwarding headers arrived from {strong}, which is not in "
-"{trusted_proxies}, so they were ignored. If that address is your reverse "
-"proxy, add it to {trusted_proxies2}."
+"Forwarding headers arrived from {strong}, which is not in {trusted_proxies}, "
+"so they were ignored. If that address is your reverse proxy, add it to "
+"{trusted_proxies2}."
 msgstr ""
 
 #. Used in the browser
@@ -4183,8 +4167,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Free text search over address, scenario, AS name, message, machine, "
-"paths, agents and accounts"
+"Free text search over address, scenario, AS name, message, machine, paths, "
+"agents and accounts"
 msgstr ""
 
 #. Used in the browser
@@ -4295,10 +4279,10 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Give this interface its own hostname through Traefik, so you can reach it"
-" over TLS instead of a published port. Writes a %(traefik_manager_self)s "
-"into your config directory. Skip it if you already route to this "
-"container yourself."
+"Give this interface its own hostname through Traefik, so you can reach it "
+"over TLS instead of a published port. Writes a %(traefik_manager_self)s into "
+"your config directory. Skip it if you already route to this container "
+"yourself."
 msgstr ""
 
 #. Used in the browser
@@ -4382,8 +4366,8 @@ msgid ""
 "HTTP scenarios did fire and their paths, methods and status codes came "
 "through, so only the {user_agent} key is missing. Traefik drops request "
 "headers from its access log unless you keep them, so CrowdSec never sees "
-"one. Add {user_agent_keep} under {accesslog_fields_headers} in the static"
-" config, then restart Traefik."
+"one. Add {user_agent_keep} under {accesslog_fields_headers} in the static "
+"config, then restart Traefik."
 msgstr ""
 
 #. Used in the browser
@@ -4430,8 +4414,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Header name sanitization (aliasHeadersStrategy, forwarded header "
-"stripping) bypassed via request trailers"
+"Header name sanitization (aliasHeadersStrategy, forwarded header stripping) "
+"bypassed via request trailers"
 msgstr ""
 
 #. Used in the browser
@@ -4449,8 +4433,8 @@ msgid "Hidden apps"
 msgstr ""
 
 msgid ""
-"Hidden apps stay off the dashboard only. They keep running and still "
-"appear on the Routes tab."
+"Hidden apps stay off the dashboard only. They keep running and still appear "
+"on the Routes tab."
 msgstr ""
 
 msgctxt "button"
@@ -4465,8 +4449,8 @@ msgid "History"
 msgstr ""
 
 msgid ""
-"Hold messages inside this window and send them once it ends. Leave empty "
-"for none."
+"Hold messages inside this window and send them once it ends. Leave empty for "
+"none."
 msgstr ""
 
 #. Used in the browser
@@ -4504,15 +4488,15 @@ msgstr ""
 msgid ""
 "How Traefik Manager looks and which tabs it shows. Theme, language and "
 "layout, what appears on the dashboard and in the navigation bar, and IP "
-"geolocation for the Logs and CrowdSec tabs. All of it is per-browser "
-"except the default theme, the language and the tab list."
+"geolocation for the Logs and CrowdSec tabs. All of it is per-browser except "
+"the default theme, the language and the tab list."
 msgstr ""
 
 msgid ""
 "How Traefik Manager reaches your Traefik instance, and the defaults it "
-"offers when you build a route. The API URL is the only value here it "
-"cannot work without. Domains and certificate resolvers only seed the "
-"route form; they do not change your Traefik configuration."
+"offers when you build a route. The API URL is the only value here it cannot "
+"work without. Domains and certificate resolvers only seed the route form; "
+"they do not change your Traefik configuration."
 msgstr ""
 
 msgid ""
@@ -4526,8 +4510,8 @@ msgstr ""
 #, python-format
 msgid ""
 "How many of the most recent alerts to read, 0 to 100000. Blank uses "
-"%(crowdsec_alert_limit)s, or 500. %(n0)s reads every alert, which is slow"
-" on a large LAPI. Applies to this server and to agents."
+"%(crowdsec_alert_limit)s, or 500. %(n0)s reads every alert, which is slow on "
+"a large LAPI. Applies to this server and to agents."
 msgstr ""
 
 msgctxt "setting"
@@ -4587,16 +4571,16 @@ msgstr ""
 
 #, python-format
 msgid ""
-"If a reverse proxy (Cloudflare, another Traefik, nginx) sits in front, "
-"the list must read the real client IP from %(x_forwarded_for)s instead of"
-" the proxy's connection IP - otherwise every request looks like it comes "
-"from the proxy."
+"If a reverse proxy (Cloudflare, another Traefik, nginx) sits in front, the "
+"list must read the real client IP from %(x_forwarded_for)s instead of the "
+"proxy's connection IP - otherwise every request looks like it comes from the "
+"proxy."
 msgstr ""
 
 msgid ""
-"If you run CrowdSec, Traefik Manager can read its local API and show who "
-"is probing this host, from which networks, with which scenarios, and what"
-" is already blocked. Leave the URL blank to skip."
+"If you run CrowdSec, Traefik Manager can read its local API and show who is "
+"probing this host, from which networks, with which scenarios, and what is "
+"already blocked. Leave the URL blank to skip."
 msgstr ""
 
 #. Used in the browser
@@ -4757,16 +4741,15 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Invalid duration for %(yaml_key)s: %(value)s - use forms like 30, 30s, "
-"1m30s"
+"Invalid duration for %(yaml_key)s: %(value)s - use forms like 30, 30s, 1m30s"
 msgstr ""
 
 msgid "Invalid file name"
 msgstr ""
 
 msgid ""
-"Invalid git repository URL - must start with https://, http://, ssh:// or"
-" git://"
+"Invalid git repository URL - must start with https://, http://, ssh:// or "
+"git://"
 msgstr ""
 
 msgid "Invalid keep count"
@@ -4851,8 +4834,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Keep only the last N %(bak)s files per config file "
-"(%(backup_keep_count)s). 0 = keep all."
+"Keep only the last N %(bak)s files per config file (%(backup_keep_count)s). "
+"0 = keep all."
 msgstr ""
 
 #. Used in the browser
@@ -4883,8 +4866,8 @@ msgstr ""
 
 msgid ""
 "Keys that let external clients talk to this agent - the mobile app, a "
-"script, another tool. Each key is shown once when created and stored as a"
-" hash, so a lost key is replaced rather than recovered."
+"script, another tool. Each key is shown once when created and stored as a "
+"hash, so a lost key is replaced rather than recovered."
 msgstr ""
 
 #. Used in the browser
@@ -4961,8 +4944,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Leave blank to use the CROWDSEC_MACHINE_ID / CROWDSEC_MACHINE_PASSWORD "
-"env vars."
+"Leave blank to use the CROWDSEC_MACHINE_ID / CROWDSEC_MACHINE_PASSWORD env "
+"vars."
 msgstr ""
 
 msgid "Leave blank to use the route's URL"
@@ -5000,8 +4983,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Lines that no access log format matched. They are listed below but "
-"excluded from every number here."
+"Lines that no access log format matched. They are listed below but excluded "
+"from every number here."
 msgstr ""
 
 msgid "Link URL"
@@ -5470,15 +5453,15 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"More than one server and no health check - Traefik reports them all as up"
-" and keeps sending traffic to a dead one. Click to add one"
+"More than one server and no health check - Traefik reports them all as up "
+"and keeps sending traffic to a dead one. Click to add one"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Mount it read-write, without {ro} - this tab writes to the file. A backup"
-" is taken before every save."
+"Mount it read-write, without {ro} - this tab writes to the file. A backup is "
+"taken before every save."
 msgstr ""
 
 #. Used in the browser
@@ -5491,8 +5474,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Mount your Traefik {traefik_yml} read-write to edit entrypoints, "
-"certificate resolvers, plugins and providers from here."
+"Mount your Traefik {traefik_yml} read-write to edit entrypoints, certificate "
+"resolvers, plugins and providers from here."
 msgstr ""
 
 #. Used in the browser
@@ -5567,8 +5550,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Neither {v1_decisions} nor {v1_alerts} responded, so there are no cards "
-"to draw. A grid of zeroes would be an invention. {decErr}"
+"Neither {v1_decisions} nor {v1_alerts} responded, so there are no cards to "
+"draw. A grid of zeroes would be an invention. {decErr}"
 msgstr ""
 
 #. Used in the browser
@@ -5592,9 +5575,9 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Networks are counted from {source_as_name} on alerts. With no alerts "
-"there is nothing to attribute, even though addresses may still be blocked"
-" preventively."
+"Networks are counted from {source_as_name} on alerts. With no alerts there "
+"is nothing to attribute, even though addresses may still be blocked "
+"preventively."
 msgstr ""
 
 msgid "New API key"
@@ -5656,15 +5639,15 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"No API keys yet. Add one to allow external clients like the mobile app to"
-" connect to this agent."
+"No API keys yet. Add one to allow external clients like the mobile app to "
+"connect to this agent."
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"No API keys yet.{line_break}Add one to let external clients like the "
-"mobile app connect directly to this agent."
+"No API keys yet.{line_break}Add one to let external clients like the mobile "
+"app connect directly to this agent."
 msgstr ""
 
 #. Used in the browser
@@ -5730,8 +5713,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"No TLSVersion field on these lines. Add it with accessLog.fields.names in"
-" the static config."
+"No TLSVersion field on these lines. Add it with accessLog.fields.names in "
+"the static config."
 msgstr ""
 
 #. Used in the browser
@@ -5751,7 +5734,8 @@ msgid "No access log format matched this line"
 msgstr ""
 
 #. Used in the browser
-msgid "No active decision for this source right now. The ban has probably expired"
+msgid ""
+"No active decision for this source right now. The ban has probably expired"
 msgstr ""
 
 #. Used in the browser
@@ -5766,8 +5750,8 @@ msgid "No authentication is active"
 msgstr ""
 
 msgid ""
-"No authentication is active - this interface is publicly accessible. "
-"Enable a password or OIDC in Settings - Authentication."
+"No authentication is active - this interface is publicly accessible. Enable "
+"a password or OIDC in Settings - Authentication."
 msgstr ""
 
 #. Used in the browser
@@ -5775,8 +5759,8 @@ msgid "No backups yet"
 msgstr ""
 
 msgid ""
-"No bouncer API key or client certificate. CrowdSec only accepts a bouncer"
-" key or a TLS client certificate on /v1/decisions, the machine token is "
+"No bouncer API key or client certificate. CrowdSec only accepts a bouncer "
+"key or a TLS client certificate on /v1/decisions, the machine token is "
 "refused there"
 msgstr ""
 
@@ -5873,9 +5857,9 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"No local scenario fired inside the retained window. Bans still standing "
-"all came from subscribed lists, which describe the internet rather than "
-"this host."
+"No local scenario fired inside the retained window. Bans still standing all "
+"came from subscribed lists, which describe the internet rather than this "
+"host."
 msgstr ""
 
 #. Used in the browser
@@ -5927,8 +5911,7 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"No password and no OIDC - anything that reaches this instance has full "
-"access"
+"No password and no OIDC - anything that reaches this instance has full access"
 msgstr ""
 
 #. Used in the browser
@@ -5981,8 +5964,7 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"No response size limit set - Traefik 3.7 warns about this. Click to add "
-"one"
+"No response size limit set - Traefik 3.7 warns about this. Click to add one"
 msgstr ""
 
 #. Used in the browser
@@ -5997,9 +5979,9 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"No routes are managed here and the Traefik API reported none. Add one "
-"from the Routes tab, or point traefik-manager at a config file that "
-"already has some."
+"No routes are managed here and the Traefik API reported none. Add one from "
+"the Routes tab, or point traefik-manager at a config file that already has "
+"some."
 msgstr ""
 
 #. Used in the browser
@@ -6135,9 +6117,9 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Nothing came back from {v1_decisions}, so this list is unknown rather "
-"than empty. CrowdSec accepts only a bouncer API key on that endpoint and "
-"refuses the machine token there.{value}"
+"Nothing came back from {v1_decisions}, so this list is unknown rather than "
+"empty. CrowdSec accepts only a bouncer API key on that endpoint and refuses "
+"the machine token there.{value}"
 msgstr ""
 
 #. Used in the browser
@@ -6163,8 +6145,8 @@ msgid "Nothing is hidden. Use the pencil on a card to hide it."
 msgstr ""
 
 msgid ""
-"Nothing leaves the container. No account, no telemetry, no outbound calls"
-" you did not configure."
+"Nothing leaves the container. No account, no telemetry, no outbound calls "
+"you did not configure."
 msgstr ""
 
 #. Used in the browser
@@ -6173,8 +6155,7 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Nothing matches the active filters. Use the clear button in the panel "
-"above."
+"Nothing matches the active filters. Use the clear button in the panel above."
 msgstr ""
 
 #. Used in the browser
@@ -6233,8 +6214,8 @@ msgstr ""
 #, python-format
 msgid ""
 "Number of trusted proxies in front of Traefik. It takes the IP that many "
-"positions from the right of %(x_forwarded_for)s. One proxy (e.g. "
-"Cloudflare only) = %(n1)s."
+"positions from the right of %(x_forwarded_for)s. One proxy (e.g. Cloudflare "
+"only) = %(n1)s."
 msgstr ""
 
 msgid "OAuth client ID registered at your provider."
@@ -6251,8 +6232,8 @@ msgid "OIDC enabled"
 msgstr ""
 
 msgid ""
-"OIDC is enabled but no allowed emails or groups are configured. Ask an "
-"admin to set an allowlist."
+"OIDC is enabled but no allowed emails or groups are configured. Ask an admin "
+"to set an allowlist."
 msgstr ""
 
 msgid "OIDC login failed - no code returned."
@@ -6326,19 +6307,19 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Off leaves the Content-Type header alone when the backend does not set "
-"one. On restores Go's automatic detection."
+"Off leaves the Content-Type header alone when the backend does not set one. "
+"On restores Go's automatic detection."
 msgstr ""
 
 msgid ""
-"Older .bak files are pruned automatically. 0 = keep all. Applies to "
-"dynamic and static config alike."
+"Older .bak files are pruned automatically. 0 = keep all. Applies to dynamic "
+"and static config alike."
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"Oldest line to newest line in the fetched window. Filters do not change "
-"it, and earlier requests are not in the fetched tail."
+"Oldest line to newest line in the fetched window. Filters do not change it, "
+"and earlier requests are not in the fetched tail."
 msgstr ""
 
 #. Used in the browser
@@ -6348,28 +6329,27 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Oldest to newest line among the requests you have selected. The window "
-"span above is unaffected."
+"Oldest to newest line among the requests you have selected. The window span "
+"above is unaffected."
 msgstr ""
 
 msgid ""
-"One command on the remote host. It asks whether you want Docker, Docker "
-"with Traefik, or a systemd binary, then installs and starts the agent. "
-"Traefik Manager mints the key for you."
+"One command on the remote host. It asks whether you want Docker, Docker with "
+"Traefik, or a systemd binary, then installs and starts the agent. Traefik "
+"Manager mints the key for you."
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"One of these still serves a route, so Traefik requests a new certificate "
-"for it on startup. Let's Encrypt allows five identical certificates per "
-"week."
+"One of these still serves a route, so Traefik requests a new certificate for "
+"it on startup. Let's Encrypt allows five identical certificates per week."
 msgstr ""
 
 msgid ""
 "One or more cert resolver names, comma-separated (e.g. letsencrypt, "
 "cloudflare). The first is the default - each route can override it "
-"individually. If you manage certificates externally and don't use ACME, "
-"type none."
+"individually. If you manage certificates externally and don't use ACME, type "
+"none."
 msgstr ""
 
 msgid ""
@@ -6379,8 +6359,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"One per line. Default: %(h2_http_1)s - leave empty to use Traefik "
-"defaults. Include %(acme_tls_1)s if using ACME cert challenges."
+"One per line. Default: %(h2_http_1)s - leave empty to use Traefik defaults. "
+"Include %(acme_tls_1)s if using ACME cert challenges."
 msgstr ""
 
 msgid "One per line. Leave empty to use Traefik defaults."
@@ -6406,22 +6386,21 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Only decisions were read. The alert stream is the source of every "
-"scenario, path, network and agent on this tab, and a bouncer key cannot "
-"see it."
+"Only decisions were read. The alert stream is the source of every scenario, "
+"path, network and agent on this tab, and a bouncer key cannot see it."
 msgstr ""
 
 #. Used in the browser
 msgid ""
 "Only do this if something in front of Traefik Manager already requires a "
 "login, such as Authelia, Authentik or a forward-auth middleware. Traefik "
-"Manager will stop warning you, but it still does not check who you are, "
-"so anything that reaches it directly gets full access."
+"Manager will stop warning you, but it still does not check who you are, so "
+"anything that reaches it directly gets full access."
 msgstr ""
 
 msgid ""
-"Only edit what you understand - a misconfigured static config will "
-"prevent Traefik from starting."
+"Only edit what you understand - a misconfigured static config will prevent "
+"Traefik from starting."
 msgstr ""
 
 msgid ""
@@ -6431,13 +6410,13 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Only if this server's Traefik API sits behind basic auth. Leave both "
-"blank otherwise."
+"Only if this server's Traefik API sits behind basic auth. Leave both blank "
+"otherwise."
 msgstr ""
 
 msgid ""
-"Only if your Traefik dashboard sits behind basic auth. Leave both blank "
-"when the API is reachable without credentials."
+"Only if your Traefik dashboard sits behind basic auth. Leave both blank when "
+"the API is reachable without credentials."
 msgstr ""
 
 msgid "Only install plugins from trusted sources"
@@ -6464,8 +6443,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Only weighted, mirroring, failover and highestRandomWeight services can "
-"be managed here"
+"Only weighted, mirroring, failover and highestRandomWeight services can be "
+"managed here"
 msgstr ""
 
 #. Used in the browser
@@ -6544,9 +6523,8 @@ msgstr ""
 #, python-format
 msgid ""
 "Optional - for a LAPI behind mutual TLS. Path to a PEM file mounted into "
-"this container. The certificate authenticates %(decisions)s instead of "
-"the API key and %(alerts)s instead of the machine login - or alongside "
-"them."
+"this container. The certificate authenticates %(decisions)s instead of the "
+"API key and %(alerts)s instead of the machine login - or alongside them."
 msgstr ""
 
 #, python-format
@@ -6601,8 +6579,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Parsed as a Traefik JSON access log, so host, scheme, router, retries and"
-" nanosecond timing are all available."
+"Parsed as a Traefik JSON access log, so host, scheme, router, retries and "
+"nanosecond timing are all available."
 msgstr ""
 
 #. Used in the browser
@@ -6687,14 +6665,14 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Path to Traefik's %(acme_json)s for the %(certificates)s tab. Leave blank"
-" to use the %(acme_json_path)s env var."
+"Path to Traefik's %(acme_json)s for the %(certificates)s tab. Leave blank to "
+"use the %(acme_json_path)s env var."
 msgstr ""
 
 #, python-format
 msgid ""
-"Path to Traefik's access log for the %(logs)s tab. Leave blank to use the"
-" %(access_log_path)s env var."
+"Path to Traefik's access log for the %(logs)s tab. Leave blank to use the "
+"%(access_log_path)s env var."
 msgstr ""
 
 #. Used in the browser
@@ -6708,8 +6686,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Paths come from alert-level {meta}. No scenario fired, so nothing wrote "
-"one. This is a quiet host, not a host that cannot see."
+"Paths come from alert-level {meta}. No scenario fired, so nothing wrote one. "
+"This is a quiet host, not a host that cannot see."
 msgstr ""
 
 msgid "Paths matching these patterns skip authentication."
@@ -6735,8 +6713,8 @@ msgid "Payload format for the target service."
 msgstr ""
 
 msgid ""
-"Payload format for the target service. Generic sends a plain JSON body "
-"you can shape yourself downstream."
+"Payload format for the target service. Generic sends a plain JSON body you "
+"can shape yourself downstream."
 msgstr ""
 
 #. Used in the browser
@@ -6744,8 +6722,7 @@ msgid "Payment Required"
 msgstr ""
 
 msgid ""
-"Per-device keys used by the mobile app via X-Api-Key header. Up to 10 "
-"keys."
+"Per-device keys used by the mobile app via X-Api-Key header. Up to 10 keys."
 msgstr ""
 
 #. Used in the browser
@@ -6776,15 +6753,15 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Permission was not granted, so desktop notifications stayed off. Turn the"
-" toggle on again to ask."
+"Permission was not granted, so desktop notifications stayed off. Turn the "
+"toggle on again to ask."
 msgstr ""
 
 #, python-format
 msgid ""
-"Permissions-Policy - who may use each browser feature. %(self)s = only "
-"your own site · %(all)s = any site, including embedded iframes · "
-"%(block)s = no one."
+"Permissions-Policy - who may use each browser feature. %(self)s = only your "
+"own site · %(all)s = any site, including embedded iframes · %(block)s = no "
+"one."
 msgstr ""
 
 #. Used in the browser
@@ -6837,7 +6814,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Plugin \"{names}\" saved to traefik.yml and middleware saved to {file}."
-msgid_plural "Plugins \"{names}\" saved to traefik.yml and middleware saved to {file}."
+msgid_plural ""
+"Plugins \"{names}\" saved to traefik.yml and middleware saved to {file}."
 msgstr[0] ""
 
 #. Used in the browser
@@ -6866,9 +6844,9 @@ msgid "Plugin saved - restart Traefik to apply"
 msgstr ""
 
 msgid ""
-"Plugin versions come from your static config. The latest version is "
-"checked against the Traefik plugin catalog once a day; updating means "
-"changing the version in traefik.yml and restarting Traefik."
+"Plugin versions come from your static config. The latest version is checked "
+"against the Traefik plugin catalog once a day; updating means changing the "
+"version in traefik.yml and restarting Traefik."
 msgstr ""
 
 msgid "Plugins"
@@ -6898,8 +6876,8 @@ msgstr ""
 
 msgid ""
 "Plugins run inside the Traefik process with full access to your traffic. "
-"Review the plugin source on GitHub before installing. A Traefik restart "
-"is required to activate the plugin after saving."
+"Review the plugin source on GitHub before installing. A Traefik restart is "
+"required to activate the plugin after saving."
 msgstr ""
 
 #. Used in the browser
@@ -6938,8 +6916,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Prefer to do it by hand? Everything below still generates a compose file "
-"you can deploy yourself. %(tm_cli_docs)s · %(agent_docs)s"
+"Prefer to do it by hand? Everything below still generates a compose file you "
+"can deploy yourself. %(tm_cli_docs)s · %(agent_docs)s"
 msgstr ""
 
 msgctxt "setting"
@@ -6983,8 +6961,8 @@ msgid "Private"
 msgstr ""
 
 msgid ""
-"Private key matching the client certificate. Path to a PEM file mounted "
-"into this container."
+"Private key matching the client certificate. Path to a PEM file mounted into "
+"this container."
 msgstr ""
 
 #, python-format
@@ -7044,8 +7022,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Provider reachable - issuer: {issuer}. Credentials are not checked until "
-"you sign in."
+"Provider reachable - issuer: {issuer}. Credentials are not checked until you "
+"sign in."
 msgstr ""
 
 msgid "Provider tabs"
@@ -7111,8 +7089,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Pulled from the central API community blocklist. Preventive, not evidence"
-" of an attack on you"
+"Pulled from the central API community blocklist. Preventive, not evidence of "
+"an attack on you"
 msgstr ""
 
 msgctxt "heading"
@@ -7138,7 +7116,8 @@ msgstr ""
 msgid "Push failed: {error}"
 msgstr ""
 
-msgid "Push this server's config to the Host's git repository on its own branch"
+msgid ""
+"Push this server's config to the Host's git repository on its own branch"
 msgstr ""
 
 #. Used in the browser
@@ -7183,8 +7162,8 @@ msgstr ""
 #, python-brace-format
 msgid ""
 "Ranking {v1_decisions} by scenario puts the community blocklist first on "
-"every instance and tells you what the blocklist contains rather than what"
-" attacked this host. Alerts carry the real triggering scenario plus "
+"every instance and tells you what the blocklist contains rather than what "
+"attacked this host. Alerts carry the real triggering scenario plus "
 "{events_count}, so this card ranks those instead. {ATK_MACHINE_NOTE}"
 msgstr ""
 
@@ -7219,19 +7198,20 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Reachable, but it is refusing this key. Re-run the command, or rotate the"
-" key."
+"Reachable, but it is refusing this key. Re-run the command, or rotate the "
+"key."
 msgstr ""
 
 msgid "Reached the LAPI, but the key was refused"
 msgstr ""
 
-msgid "Read-only tool showing the client IP this instance sees for your request."
+msgid ""
+"Read-only tool showing the client IP this instance sees for your request."
 msgstr ""
 
 msgid ""
-"Read-only views of routes Traefik discovers from other providers. Turn on"
-" the ones you actually run - these routes live in Docker labels or a KV "
+"Read-only views of routes Traefik discovers from other providers. Turn on "
+"the ones you actually run - these routes live in Docker labels or a KV "
 "store, so Traefik Manager shows them but cannot edit them."
 msgstr ""
 
@@ -7241,14 +7221,14 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Reads /v1/alerts, the only source of scenarios, paths, networks and "
-"agents on this tab. The token lives one hour"
+"Reads /v1/alerts, the only source of scenarios, paths, networks and agents "
+"on this tab. The token lives one hour"
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"Reads /v1/decisions. CrowdSec rejects the machine token on that endpoint,"
-" so this key is not optional even when a watcher login exists"
+"Reads /v1/decisions. CrowdSec rejects the machine token on that endpoint, so "
+"this key is not optional even when a watcher login exists"
 msgstr ""
 
 #, python-format
@@ -7259,9 +7239,8 @@ msgstr ""
 
 msgid ""
 "Reads alerts, which is where scenarios, targeted paths and attacking "
-"networks come from. This complements the bouncer key rather than "
-"replacing it: with only the bouncer key you see bans but not the attacks "
-"behind them."
+"networks come from. This complements the bouncer key rather than replacing "
+"it: with only the bouncer key you see bans but not the attacks behind them."
 msgstr ""
 
 #. Used in the browser
@@ -7344,8 +7323,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Registered by the Traefik Manager app on your phone. Editing it stops "
-"push to that device."
+"Registered by the Traefik Manager app on your phone. Editing it stops push "
+"to that device."
 msgstr ""
 
 #. Used in the browser
@@ -7449,8 +7428,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Remove agent \"{name}\"? This only removes it from TM settings - the "
-"agent service on the remote server is unaffected."
+"Remove agent \"{name}\"? This only removes it from TM settings - the agent "
+"service on the remote server is unaffected."
 msgstr ""
 
 #. Used in the browser
@@ -7525,7 +7504,8 @@ msgstr ""
 
 #, python-format
 msgid "Removed %(num)d certificate, then stopped at %(file)s: %(detail)s"
-msgid_plural "Removed %(num)d certificates, then stopped at %(file)s: %(detail)s"
+msgid_plural ""
+"Removed %(num)d certificates, then stopped at %(file)s: %(detail)s"
 msgstr[0] ""
 
 #. Used in the browser
@@ -7537,8 +7517,8 @@ msgstr[0] ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Removed {removed}, but Traefik did not restart. The change is undone "
-"until it does."
+"Removed {removed}, but Traefik did not restart. The change is undone until "
+"it does."
 msgstr ""
 
 #. Used in the browser
@@ -7550,8 +7530,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Rendered a page at a time, so a busy instance never builds tens of "
-"thousands of rows at once"
+"Rendered a page at a time, so a busy instance never builds tens of thousands "
+"of rows at once"
 msgstr ""
 
 msgid "Repeat your password"
@@ -7621,8 +7601,8 @@ msgid "Requires %(var_run_docker)s volume."
 msgstr ""
 
 msgid ""
-"Requires API credentials, not a file mount. Configure the LAPI URL and "
-"key in the CrowdSec tab."
+"Requires API credentials, not a file mount. Configure the LAPI URL and key "
+"in the CrowdSec tab."
 msgstr ""
 
 #, python-format
@@ -7673,9 +7653,9 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Resolver names from your %(traefik_yml)s, comma-separated. The first "
-"becomes the per-route default. If you manage certificates outside ACME, "
-"enter %(none)s."
+"Resolver names from your %(traefik_yml)s, comma-separated. The first becomes "
+"the per-route default. If you manage certificates outside ACME, enter "
+"%(none)s."
 msgstr ""
 
 #. Used in the browser
@@ -7720,8 +7700,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Restore \"{name}\"? This replaces the config file it came from. Your "
-"current config is backed up first."
+"Restore \"{name}\"? This replaces the config file it came from. Your current "
+"config is backed up first."
 msgstr ""
 
 #. Used in the browser
@@ -7731,8 +7711,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Restore every config file from commit {shaShort}? Local backups are "
-"created first."
+"Restore every config file from commit {shaShort}? Local backups are created "
+"first."
 msgstr ""
 
 #. Used in the browser
@@ -7774,8 +7754,8 @@ msgid_plural "Result: {count} trusted ranges on {entrypoint} (was {before})."
 msgstr[0] ""
 
 msgid ""
-"Retention is one setting for both kinds of backup. Change it under "
-"Dynamic Config."
+"Retention is one setting for both kinds of backup. Change it under Dynamic "
+"Config."
 msgstr ""
 
 #. Used in the browser
@@ -7801,9 +7781,9 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Reusable YAML you can start a middleware from. Pick one under "
-"%(template)s in the middleware form. Templates are shared across every "
-"server, not just the one selected here."
+"Reusable YAML you can start a middleware from. Pick one under %(template)s "
+"in the middleware form. Templates are shared across every server, not just "
+"the one selected here."
 msgstr ""
 
 #. Used in the browser
@@ -7840,8 +7820,7 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Revoke key \"{keyName}\"? Any client using it will lose access "
-"immediately."
+"Revoke key \"{keyName}\"? Any client using it will lose access immediately."
 msgstr ""
 
 #. Used in the browser
@@ -7966,8 +7945,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Router loaded, no backend health from Traefik and the rule has no host to"
-" check. Set a link in edit and it will be checked"
+"Router loaded, no backend health from Traefik and the rule has no host to "
+"check. Set a link in edit and it will be checked"
 msgstr ""
 
 #. Used in the browser
@@ -7984,13 +7963,14 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
-msgid "Router loaded, the last check failed: {error}, confirming on the next pass"
+msgid ""
+"Router loaded, the last check failed: {error}, confirming on the next pass"
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"Router loaded, the rule has no host to check. Set a link on the Dashboard"
-" and it will be checked"
+"Router loaded, the rule has no host to check. Set a link on the Dashboard "
+"and it will be checked"
 msgstr ""
 
 #. Used in the browser
@@ -8006,8 +7986,8 @@ msgid "Router priority %(optional)s"
 msgstr ""
 
 msgid ""
-"Router, service and middleware health read from Traefik itself, not from "
-"a cached copy."
+"Router, service and middleware health read from Traefik itself, not from a "
+"cached copy."
 msgstr ""
 
 #. Used in the browser
@@ -8021,8 +8001,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Routers come from alert-level {meta}. No scenario fired, so nothing wrote"
-" one."
+"Routers come from alert-level {meta}. No scenario fired, so nothing wrote "
+"one."
 msgstr ""
 
 msgctxt "button"
@@ -8060,8 +8040,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Routes discovered via Kubernetes CRD, Ingress, or Gateway API will appear"
-" here"
+"Routes discovered via Kubernetes CRD, Ingress, or Gateway API will appear "
+"here"
 msgstr ""
 
 msgid "Routes grouped by category with app icons and per-card editing"
@@ -8114,8 +8094,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Run these on the agent itself, where you just installed %(tm)s. It "
-"manages the install it created, including updates."
+"Run these on the agent itself, where you just installed %(tm)s. It manages "
+"the install it created, including updates."
 msgstr ""
 
 #, python-format
@@ -8139,8 +8119,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Run this on %(agent_cli_host_name)s. It installs the %(tm)s CLI and opens"
-" its agent installer with the key already set."
+"Run this on %(agent_cli_host_name)s. It installs the %(tm)s CLI and opens "
+"its agent installer with the key already set."
 msgstr ""
 
 #. Used in the browser
@@ -8165,8 +8145,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"SSH buckets carry {target_user} where HTTP buckets carry {target_uri}. "
-"This card follows whichever the host actually produces."
+"SSH buckets carry {target_user} where HTTP buckets carry {target_uri}. This "
+"card follows whichever the host actually produces."
 msgstr ""
 
 #. Used in the browser
@@ -8259,8 +8239,8 @@ msgid "Save this key - it will not be shown again."
 msgstr ""
 
 msgid ""
-"Save this new key - it will not be shown again. Your agent will stop "
-"working until you update it."
+"Save this new key - it will not be shown again. Your agent will stop working "
+"until you update it."
 msgstr ""
 
 #. Used in the browser
@@ -8280,9 +8260,9 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Saving here only changes the compose text below. The running agent keeps "
-"its current values until you redeploy it. %(tm)s edits them in place "
-"instead, and it adopts an agent it did not install."
+"Saving here only changes the compose text below. The running agent keeps its "
+"current values until you redeploy it. %(tm)s edits them in place instead, "
+"and it adopts an agent it did not install."
 msgstr ""
 
 #. Used in the browser
@@ -8291,8 +8271,8 @@ msgid "Saving…"
 msgstr ""
 
 msgid ""
-"Scan the QR code with Google Authenticator or any TOTP app, then enter "
-"the 6-digit code to confirm."
+"Scan the QR code with Google Authenticator or any TOTP app, then enter the 6-"
+"digit code to confirm."
 msgstr ""
 
 #. Used in the browser
@@ -8423,8 +8403,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Seen exactly once. Mostly opportunistic scanners walking the whole "
-"address space"
+"Seen exactly once. Mostly opportunistic scanners walking the whole address "
+"space"
 msgstr ""
 
 #. Used in the browser
@@ -8479,16 +8459,16 @@ msgid "Self-route entrypoint {b} does not exist in Traefik.{line_break}"
 msgstr ""
 
 msgid ""
-"Send a message when a route is saved or deleted, a backup runs, or a "
-"restore completes. This sets up one destination that receives every "
-"event; add more, and choose which events reach each one, in Settings."
+"Send a message when a route is saved or deleted, a backup runs, or a restore "
+"completes. This sets up one destination that receives every event; add more, "
+"and choose which events reach each one, in Settings."
 msgstr ""
 
 msgid ""
 "Send a message when a route is saved, a backup runs, a certificate nears "
-"expiry or an agent goes offline. Add one channel per destination: "
-"Discord, Slack, ntfy, Gotify, Pushover, Pushbullet, Telegram, or a "
-"generic JSON payload you shape downstream."
+"expiry or an agent goes offline. Add one channel per destination: Discord, "
+"Slack, ntfy, Gotify, Pushover, Pushbullet, Telegram, or a generic JSON "
+"payload you shape downstream."
 msgstr ""
 
 #. Used in the browser
@@ -8648,8 +8628,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Set %(tma_api_key)s to this value in your agent's environment. The key is"
-" stored encrypted in TM settings."
+"Set %(tma_api_key)s to this value in your agent's environment. The key is "
+"stored encrypted in TM settings."
 msgstr ""
 
 #. Used in the browser
@@ -8661,8 +8641,8 @@ msgid "Set CROWDSEC_MACHINE_ID and CROWDSEC_MACHINE_PASSWORD"
 msgstr ""
 
 msgid ""
-"Set GEOIP_DB_PATH to use your own MaxMind or DB-IP .mmdb file instead of "
-"the bundled database, which refreshes monthly."
+"Set GEOIP_DB_PATH to use your own MaxMind or DB-IP .mmdb file instead of the "
+"bundled database, which refreshes monthly."
 msgstr ""
 
 msgid "Set Up Traefik Manager"
@@ -8744,8 +8724,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Settings, backups and scheduled checks will not survive a restart. Check "
-"the volume or bind mount for:"
+"Settings, backups and scheduled checks will not survive a restart. Check the "
+"volume or bind mount for:"
 msgstr ""
 
 #. Used in the browser
@@ -8787,8 +8767,8 @@ msgid "Show app icons"
 msgstr ""
 
 msgid ""
-"Show country flags and a world map in the Logs and CrowdSec tabs. Lookups"
-" run on the server against a local database - no IPs leave your server."
+"Show country flags and a world map in the Logs and CrowdSec tabs. Lookups "
+"run on the server against a local database - no IPs leave your server."
 msgstr ""
 
 msgid "Show documentation link"
@@ -8868,8 +8848,7 @@ msgstr[0] ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Showing nothing for {where}: {message}. Nothing below is from another "
-"server."
+"Showing nothing for {where}: {message}. Nothing below is from another server."
 msgstr ""
 
 #. Used in the browser
@@ -8906,8 +8885,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Sign out every other browser session? This one stays signed in, and API "
-"keys keep working."
+"Sign out every other browser session? This one stays signed in, and API keys "
+"keep working."
 msgstr ""
 
 msgid "Sign out other sessions"
@@ -9018,8 +8997,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Static config not found at %(static_path)s. Set STATIC_CONFIG_PATH env "
-"var or configure the path in Settings."
+"Static config not found at %(static_path)s. Set STATIC_CONFIG_PATH env var "
+"or configure the path in Settings."
 msgstr ""
 
 msgid "Static config not found or STATIC_CONFIG_PATH not set"
@@ -9082,10 +9061,12 @@ msgid "Status: {entry}"
 msgstr ""
 
 #, python-format
-msgid "Step 1 - Paste the static config snippet from the %(traefik_plugin_page)s"
+msgid ""
+"Step 1 - Paste the static config snippet from the %(traefik_plugin_page)s"
 msgstr ""
 
-msgid "Step 2 - Paste the middleware snippet and edit the settings for your needs"
+msgid ""
+"Step 2 - Paste the middleware snippet and edit the settings for your needs"
 msgstr ""
 
 msgid "Step 3 - Choose which config file the middleware is written to"
@@ -9107,8 +9088,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Still filtering on {k} {v}, but nothing in the current search matches it."
-" Widen the search to bring it back, or click to clear this filter."
+"Still filtering on {k} {v}, but nothing in the current search matches it. "
+"Widen the search to bring it back, or click to clear this filter."
 msgstr ""
 
 #. Used in the browser
@@ -9149,8 +9130,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Stream live Traefik access logs by enabling access logging in Traefik and"
-" mounting the log file into this container."
+"Stream live Traefik access logs by enabling access logging in Traefik and "
+"mounting the log file into this container."
 msgstr ""
 
 msgid "Stream routers"
@@ -9212,8 +9193,8 @@ msgid "Switch server"
 msgstr ""
 
 msgid ""
-"Switched on for every provider Traefik is reporting right now. Turn any "
-"of them off if you would rather not see it."
+"Switched on for every provider Traefik is reporting right now. Turn any of "
+"them off if you would rather not see it."
 msgstr ""
 
 #. Used in the browser
@@ -9273,8 +9254,8 @@ msgid "TLS Profile"
 msgstr ""
 
 msgid ""
-"TLS certificates are managed automatically by Traefik's ACME resolver. "
-"Renew or revoke them via your Traefik config."
+"TLS certificates are managed automatically by Traefik's ACME resolver. Renew "
+"or revoke them via your Traefik config."
 msgstr ""
 
 #. Used in the browser
@@ -9314,8 +9295,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"TLS verification failed - the API certificate is not trusted. Mount your "
-"CA into /etc/ssl/certs/ca-certificates.crt or set "
+"TLS verification failed - the API certificate is not trusted. Mount your CA "
+"into /etc/ssl/certs/ca-certificates.crt or set "
 "TRAEFIK_INSECURE_SKIP_VERIFY=true. (%(error)s)"
 msgstr ""
 
@@ -9469,8 +9450,8 @@ msgstr ""
 msgid ""
 "The %(hp_custom_name)s middleware has been hand-edited beyond what these "
 "toggles cover, so it's shown as custom and kept as-is. Edit it in the "
-"Middlewares tab, or turn the preset off and on again to replace it with "
-"the toggle defaults. Turn it off to remove it."
+"Middlewares tab, or turn the preset off and on again to replace it with the "
+"toggle defaults. Turn it off to remove it."
 msgstr ""
 
 msgid ""
@@ -9480,10 +9461,10 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The Host can back this agent up to its own repository instead, on a "
-"separate branch, using the Host's credentials. Nothing is configured on "
-"the agent and no token is stored on it. Select this server in the "
-"switcher, then turn on %(use_host_repository)s under %(backups_git)s."
+"The Host can back this agent up to its own repository instead, on a separate "
+"branch, using the Host's credentials. Nothing is configured on the agent and "
+"no token is stored on it. Select this server in the switcher, then turn on "
+"%(use_host_repository)s under %(backups_git)s."
 msgstr ""
 
 #. Used in the browser
@@ -9493,11 +9474,10 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"The LAPI refused {v1_alerts}{value}. A bouncer API key reads decisions "
-"only, and CrowdSec refuses the machine token on the decisions endpoint in"
-" return, so a full picture needs both credentials. The scenario, path, "
-"network and tooling cards above are not empty, they are not "
-"readable.{value2}"
+"The LAPI refused {v1_alerts}{value}. A bouncer API key reads decisions only, "
+"and CrowdSec refuses the machine token on the decisions endpoint in return, "
+"so a full picture needs both credentials. The scenario, path, network and "
+"tooling cards above are not empty, they are not readable.{value2}"
 msgstr ""
 
 #, python-format
@@ -9508,16 +9488,16 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The agent reads CrowdSec from its %(own_container_environment)s, not from"
-" Traefik Manager. Set %(crowdsec_lapi_url)s on the agent container and "
+"The agent reads CrowdSec from its %(own_container_environment)s, not from "
+"Traefik Manager. Set %(crowdsec_lapi_url)s on the agent container and "
 "recreate it."
 msgstr ""
 
 msgid ""
 "The agent reads CrowdSec from its own container environment, so changing "
-"anything here has no effect until you copy the compose below and recreate"
-" the agent container. With mTLS, the cert paths must be mounted inside "
-"the agent container too."
+"anything here has no effect until you copy the compose below and recreate "
+"the agent container. With mTLS, the cert paths must be mounted inside the "
+"agent container too."
 msgstr ""
 
 msgid "The agent reads these from its own environment."
@@ -9529,16 +9509,16 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"The alert read succeeded and came back empty, which is not the same as "
-"being unable to read it. {atkOwnNote}"
+"The alert read succeeded and came back empty, which is not the same as being "
+"unable to read it. {atkOwnNote}"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"The alert-level {meta} array carries {target_uri}, {method}, {status} and"
-" {user_agent}, already deduplicated by the scenario. It is the only place"
-" this tab can learn what an attacker was going after. {ATK_MACHINE_NOTE}"
+"The alert-level {meta} array carries {target_uri}, {method}, {status} and "
+"{user_agent}, already deduplicated by the scenario. It is the only place "
+"this tab can learn what an attacker was going after. {ATK_MACHINE_NOTE}"
 msgstr ""
 
 #. Used in the browser
@@ -9546,25 +9526,25 @@ msgid "The alerts endpoint refused the read."
 msgstr ""
 
 msgid ""
-"The bouncer key reads active decisions, the machine login reads alerts. "
-"They are complementary, not tiered. A client certificate covers both."
+"The bouncer key reads active decisions, the machine login reads alerts. They "
+"are complementary, not tiered. A client certificate covers both."
 msgstr ""
 
 msgid "The branch to commit to, and the account the token belongs to."
 msgstr ""
 
 msgid ""
-"The classic \"behind Cloudflare\" case. Hardcoded and refreshed on "
-"release - no runtime fetch."
+"The classic \"behind Cloudflare\" case. Hardcoded and refreshed on release - "
+"no runtime fetch."
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"The client IP the app trusts is {strong}. If clients should reach you "
-"from the public internet, a proxy in front is rewriting it - check that "
-"your trusted hops and the upstream {trustedips} are set correctly, or "
-"real client IPs will be lost to logs, CrowdSec and ipAllowList."
+"The client IP the app trusts is {strong}. If clients should reach you from "
+"the public internet, a proxy in front is rewriting it - check that your "
+"trusted hops and the upstream {trustedips} are set correctly, or real client "
+"IPs will be lost to logs, CrowdSec and ipAllowList."
 msgstr ""
 
 msgid "The commit holds no config files for this agent"
@@ -9572,15 +9552,15 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"The common log writes whole milliseconds, so sub-millisecond timing is "
-"not knowable."
+"The common log writes whole milliseconds, so sub-millisecond timing is not "
+"knowable."
 msgstr ""
 
 #. Used in the browser
 msgid ""
 "The crowdsecurity/geoip-enrich parser on the reporting machine fills "
-"source.cn, source.as_name and the coordinates. The LAPI never computes "
-"them, it stores what the agent sent"
+"source.cn, source.as_name and the coordinates. The LAPI never computes them, "
+"it stores what the agent sent"
 msgstr ""
 
 #. Used in the browser
@@ -9595,14 +9575,14 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"The decisions read failed. Zero would be an invention, so this says "
-"nothing instead"
+"The decisions read failed. Zero would be an invention, so this says nothing "
+"instead"
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"The decisions view is paged on the server, so only the rows on screen "
-"travel to the browser."
+"The decisions view is paged on the server, so only the rows on screen travel "
+"to the browser."
 msgstr ""
 
 #. Used in the browser
@@ -9615,8 +9595,7 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"The direct TCP connection - your reverse proxy, or the real client if "
-"none."
+"The direct TCP connection - your reverse proxy, or the real client if none."
 msgstr ""
 
 #. Used in the browser
@@ -9643,25 +9622,24 @@ msgstr ""
 #, python-brace-format
 msgid ""
 "The generic {common} writer stops after the user agent, so neither the "
-"router nor the service reaches the log. Set {accesslog_format_json} in "
-"the static config."
+"router nor the service reaches the log. Set {accesslog_format_json} in the "
+"static config."
 msgstr ""
 
 msgid ""
-"The hostname you want to open Traefik Manager on. Leave blank to skip "
-"this step entirely."
+"The hostname you want to open Traefik Manager on. Leave blank to skip this "
+"step entirely."
 msgstr ""
 
 #, python-format
 msgid ""
-"The key is passed through the environment, so it stays out of %(ps)s "
-"output."
+"The key is passed through the environment, so it stays out of %(ps)s output."
 msgstr ""
 
 msgid ""
-"The login page silently tries OIDC first (prompt=none) and signs you in "
-"with zero clicks when your provider already has a session. Falls back to "
-"the normal login page otherwise; /login?auto=0 always shows it."
+"The login page silently tries OIDC first (prompt=none) and signs you in with "
+"zero clicks when your provider already has a session. Falls back to the "
+"normal login page otherwise; /login?auto=0 always shows it."
 msgstr ""
 
 #. Used in the browser
@@ -9669,14 +9647,14 @@ msgid "The machine login works, so every attack card above is live"
 msgstr ""
 
 msgid ""
-"The main entry of the tls.domains block. Traefik asks your resolver for a"
-" certificate covering this name."
+"The main entry of the tls.domains block. Traefik asks your resolver for a "
+"certificate covering this name."
 msgstr ""
 
 #, python-format
 msgid ""
-"The matched prefix is removed before the request is forwarded. Anchor "
-"with %(code)s or it can match mid-path."
+"The matched prefix is removed before the request is forwarded. Anchor with "
+"%(code)s or it can match mid-path."
 msgstr ""
 
 msgid "The middleware body only, without the name above it."
@@ -9685,8 +9663,8 @@ msgstr ""
 #, python-format
 msgid ""
 "The middleware snippet contains template placeholders (%(example)s) that "
-"must be replaced with real values before saving. Edit the middleware in "
-"the editor and replace all %(marker)s placeholders."
+"must be replaced with real values before saving. Edit the middleware in the "
+"editor and replace all %(marker)s placeholders."
 msgstr ""
 
 msgid ""
@@ -9697,8 +9675,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"The next release speaks more than English. {language} is open on Weblate,"
-" and nobody has started it yet."
+"The next release speaks more than English. {language} is open on Weblate, "
+"and nobody has started it yet."
 msgstr ""
 
 #. Used in the browser
@@ -9711,29 +9689,29 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"The requests selected right now carry no {requesthost}. Clear the filters"
-" to rank the whole window."
+"The requests selected right now carry no {requesthost}. Clear the filters to "
+"rank the whole window."
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"The requests selected right now carry no {what} name. Clear the filters "
-"to rank the whole window."
+"The requests selected right now carry no {what} name. Clear the filters to "
+"rank the whole window."
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"The resulting bans. Secondary view: decisions are what CrowdSec did, "
-"alerts are what happened"
+"The resulting bans. Secondary view: decisions are what CrowdSec did, alerts "
+"are what happened"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"The retained window holds {retained} alerts, and every filter on the "
-"window row is applied together, so this card has nothing left to rank. "
-"That is the filter talking, not the host."
+"The retained window holds {retained} alerts, and every filter on the window "
+"row is applied together, so this card has nothing left to rank. That is the "
+"filter talking, not the host."
 msgstr ""
 
 msgid ""
@@ -9751,16 +9729,15 @@ msgid "The server did not return a new key."
 msgstr ""
 
 msgid ""
-"The service that serves the error page. It must already exist in this "
-"config."
+"The service that serves the error page. It must already exist in this config."
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"The {user_agent} meta key is written by HTTP scenarios. SSH buckets such "
-"as {crowdsecurity_ssh_bf} share none of the HTTP keys, so this card stays"
-" out of the way rather than rendering an empty list."
+"The {user_agent} meta key is written by HTTP scenarios. SSH buckets such as "
+"{crowdsecurity_ssh_bf} share none of the HTTP keys, so this card stays out "
+"of the way rather than rendering an empty list."
 msgstr ""
 
 #. Used in the browser
@@ -9772,8 +9749,7 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"These alerts ran in simulation mode. CrowdSec saw them and enforced "
-"nothing"
+"These alerts ran in simulation mode. CrowdSec saw them and enforced nothing"
 msgstr ""
 
 msgid "These build the compose snippet, they are not sent to the agent."
@@ -9786,78 +9762,76 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"These lines carry no {requesthost}. Add it with {accesslog_fields_names} "
-"in the static config."
+"These lines carry no {requesthost}. Add it with {accesslog_fields_names} in "
+"the static config."
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
 "These lines carry no {servicename}. Traefik omits it when it answers a "
-"request itself, and {accesslog_fields_names} in the static config "
-"controls whether it is written at all."
+"request itself, and {accesslog_fields_names} in the static config controls "
+"whether it is written at all."
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"These numbers summarise the last {fetched} lines of the access log, not "
-"all traffic. The oldest line here is the edge of the fetched window, not "
-"the start of activity. Traefik does not report the file total, so the "
-"share of overall traffic is unknown. {parsed} of {fetched} lines "
-"parsed.{value}"
+"These numbers summarise the last {fetched} lines of the access log, not all "
+"traffic. The oldest line here is the edge of the fetched window, not the "
+"start of activity. Traefik does not report the file total, so the share of "
+"overall traffic is unknown. {parsed} of {fetched} lines parsed.{value}"
 msgstr ""
 
 #, python-format
 msgid ""
-"These paths refer to files %(inside_this_container)s. Mount the file into"
-" Traefik Manager in your %(docker_compose_yml)s first, then set the path "
-"here."
+"These paths refer to files %(inside_this_container)s. Mount the file into "
+"Traefik Manager in your %(docker_compose_yml)s first, then set the path here."
 msgstr ""
 
 msgid ""
-"These routes are discovered via Amazon ECS and are read-only. Edit them "
-"via your ECS task definitions."
+"These routes are discovered via Amazon ECS and are read-only. Edit them via "
+"your ECS task definitions."
 msgstr ""
 
 msgid ""
-"These routes are discovered via Consul service catalog and are read-only."
-" Edit them via your Consul service registrations."
+"These routes are discovered via Consul service catalog and are read-only. "
+"Edit them via your Consul service registrations."
 msgstr ""
 
 msgid ""
-"These routes are discovered via Docker Swarm labels and are read-only. "
-"Edit them via your Swarm service definitions."
+"These routes are discovered via Docker Swarm labels and are read-only. Edit "
+"them via your Swarm service definitions."
 msgstr ""
 
 msgid ""
-"These routes are discovered via HashiCorp Nomad and are read-only. Edit "
-"them via your Nomad job definitions."
+"These routes are discovered via HashiCorp Nomad and are read-only. Edit them "
+"via your Nomad job definitions."
 msgstr ""
 
 msgid ""
-"These routes are managed by Docker labels and are read-only. Edit them "
-"via your container's labels."
+"These routes are managed by Docker labels and are read-only. Edit them via "
+"your container's labels."
 msgstr ""
 
 msgid ""
-"These routes are managed by Kubernetes (CRD, Ingress, or Gateway API) and"
-" are read-only. Edit them via your Kubernetes resources."
+"These routes are managed by Kubernetes (CRD, Ingress, or Gateway API) and "
+"are read-only. Edit them via your Kubernetes resources."
 msgstr ""
 
 msgid ""
-"These routes are sourced from an HTTP endpoint configured in Traefik and "
-"are read-only here."
+"These routes are sourced from an HTTP endpoint configured in Traefik and are "
+"read-only here."
 msgstr ""
 
 msgid ""
-"These routes are stored in Consul's key-value store and are read-only "
-"here. Edit them directly in Consul KV."
+"These routes are stored in Consul's key-value store and are read-only here. "
+"Edit them directly in Consul KV."
 msgstr ""
 
 msgid ""
-"These routes are stored in Redis and are read-only here. Edit them "
-"directly in your Redis KV store."
+"These routes are stored in Redis and are read-only here. Edit them directly "
+"in your Redis KV store."
 msgstr ""
 
 msgid ""
@@ -9866,14 +9840,14 @@ msgid ""
 msgstr ""
 
 msgid ""
-"These routes are stored in etcd and are read-only here. Edit them "
-"directly in your etcd KV store."
+"These routes are stored in etcd and are read-only here. Edit them directly "
+"in your etcd KV store."
 msgstr ""
 
 msgid ""
-"These routes come from external file provider configurations and are "
-"read-only here. Routes managed by traefik-manager are shown in the Routes"
-" tab instead."
+"These routes come from external file provider configurations and are read-"
+"only here. Routes managed by traefik-manager are shown in the Routes tab "
+"instead."
 msgstr ""
 
 #. Used in the browser
@@ -9893,8 +9867,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"These tabs require a file mount in your compose file - each tab shows the"
-" exact volume line to add if not yet mounted."
+"These tabs require a file mount in your compose file - each tab shows the "
+"exact volume line to add if not yet mounted."
 msgstr ""
 
 msgid "This Browser"
@@ -9908,8 +9882,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"This agent is running an older version that restores static backups to "
-"the wrong path. Update the agent, then restore."
+"This agent is running an older version that restores static backups to the "
+"wrong path. Update the agent, then restore."
 msgstr ""
 
 #, python-format
@@ -9927,23 +9901,22 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"This browser is blocking notifications for this site. Allow them in the "
-"site permissions, then turn this back on."
+"This browser is blocking notifications for this site. Allow them in the site "
+"permissions, then turn this back on."
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"This card reports the read failure instead of the zero it would otherwise"
-" invent. {decErr}"
+"This card reports the read failure instead of the zero it would otherwise "
+"invent. {decErr}"
 msgstr ""
 
 #, python-format
 msgid ""
-"This edits the %(static)s config - it is global and needs a Traefik "
-"restart to take effect. A backup is created automatically before the "
-"save. Every trusted range can forge client IPs, so only add proxies you "
-"control."
+"This edits the %(static)s config - it is global and needs a Traefik restart "
+"to take effect. A backup is created automatically before the save. Every "
+"trusted range can forge client IPs, so only add proxies you control."
 msgstr ""
 
 msgid ""
@@ -9973,51 +9946,50 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"This panel refetches every {seconds} seconds while the Logs tab is open "
-"and the browser tab is visible. It pauses while you are typing in the "
-"filter box."
+"This panel refetches every {seconds} seconds while the Logs tab is open and "
+"the browser tab is visible. It pauses while you are typing in the filter box."
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"This route points at a {svcType} service, which can't be edited here. The"
-" target field is ignored on save - edit the service on the Services tab."
+"This route points at a {svcType} service, which can't be edited here. The "
+"target field is ignored on save - edit the service on the Services tab."
 msgstr ""
 
 msgid ""
-"This route will reference the selected service. Backends, sticky sessions"
-" and health checks are managed where the service is defined."
+"This route will reference the selected service. Backends, sticky sessions "
+"and health checks are managed where the service is defined."
 msgstr ""
 
 msgid ""
-"This route's original rule does not fit the simple form. Saving in Simple"
-" mode replaces it with a rule built from these fields. Switch back to "
+"This route's original rule does not fit the simple form. Saving in Simple "
+"mode replaces it with a rule built from these fields. Switch back to "
 "Advanced rule to keep it as it is."
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"This service is not managed by Traefik Manager, so routes using it are "
-"read only."
+"This service is not managed by Traefik Manager, so routes using it are read "
+"only."
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"This source holds an active ban raised by your own scenarios. Nothing to "
-"do about it"
+"This source holds an active ban raised by your own scenarios. Nothing to do "
+"about it"
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"This tab lists routes from other files your file provider loads, such as "
-"the rest of a conf.d directory. They are shown read-only."
+"This tab lists routes from other files your file provider loads, such as the "
+"rest of a conf.d directory. They are shown read-only."
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"This will delete the local git repository clone. TM will re-initialize it"
-" on the next push.\n"
+"This will delete the local git repository clone. TM will re-initialize it on "
+"the next push.\n"
 "\n"
 "This does NOT affect your remote repository or any commits."
 msgstr ""
@@ -10080,7 +10052,8 @@ msgctxt "button"
 msgid "Top"
 msgstr ""
 
-msgid "Topology connection map (Entry Points - Routes - Middlewares - Services)"
+msgid ""
+"Topology connection map (Entry Points - Routes - Middlewares - Services)"
 msgstr ""
 
 #. Used in the browser
@@ -10109,8 +10082,8 @@ msgid "Traefik API unreachable"
 msgstr ""
 
 msgid ""
-"Traefik API unreachable. Names, icons and links below come from your "
-"config; live router and backend status is not shown."
+"Traefik API unreachable. Names, icons and links below come from your config; "
+"live router and backend status is not shown."
 msgstr ""
 
 msgid "Traefik Manager Version badge, highlights when an update is available."
@@ -10118,9 +10091,8 @@ msgstr ""
 
 msgid ""
 "Traefik Manager cannot read its configuration file, so it cannot tell "
-"whether this is a new install. Setup is disabled until the file is fixed "
-"or restored from a backup. See the container log for the path and the "
-"reason."
+"whether this is a new install. Setup is disabled until the file is fixed or "
+"restored from a backup. See the container log for the path and the reason."
 msgstr ""
 
 msgid "Traefik Manager documentation."
@@ -10136,8 +10108,8 @@ msgstr ""
 msgid ""
 "Traefik Manager manages one Traefik instance. To manage more, run a "
 "lightweight agent next to each and register it here, then switch between "
-"them from the server switcher. Adding an agent generates the compose "
-"snippet and mints its API key."
+"them from the server switcher. Adding an agent generates the compose snippet "
+"and mints its API key."
 msgstr ""
 
 #. Used in the browser
@@ -10152,15 +10124,15 @@ msgid "Traefik Manager now manages {name}"
 msgstr ""
 
 msgid ""
-"Traefik Manager reads everything through the Traefik API. This is the one"
-" step it cannot work without."
+"Traefik Manager reads everything through the Traefik API. This is the one "
+"step it cannot work without."
 msgstr ""
 
 #. Used in the browser
 msgid ""
-"Traefik Manager reads your routes, services and middlewares from the "
-"Traefik API. With it disabled those tabs will be empty until you turn it "
-"back on and restart Traefik."
+"Traefik Manager reads your routes, services and middlewares from the Traefik "
+"API. With it disabled those tabs will be empty until you turn it back on and "
+"restart Traefik."
 msgstr ""
 
 msgid "Traefik Manager update available"
@@ -10180,8 +10152,8 @@ msgid "Traefik Manager v{v}"
 msgstr ""
 
 msgid ""
-"Traefik Manager's own login is off and it does not verify who you are, so"
-" anything that reaches it directly has full access."
+"Traefik Manager's own login is off and it does not verify who you are, so "
+"anything that reaches it directly has full access."
 msgstr ""
 
 #. Used in the browser
@@ -10193,8 +10165,8 @@ msgid "Traefik Manager: warning"
 msgstr ""
 
 msgid ""
-"Traefik creates these itself. They are read-only here and are turned on "
-"or off in your static config."
+"Traefik creates these itself. They are read-only here and are turned on or "
+"off in your static config."
 msgstr ""
 
 #. Used in the browser
@@ -10202,11 +10174,11 @@ msgid "Traefik dashboard and API"
 msgstr ""
 
 msgid ""
-"Traefik discovers routes from providers other than your dynamic config "
-"file - Docker labels, a Kubernetes CRD, a KV store. Turn on a provider to"
-" get a read-only tab listing what it contributes. Traefik Manager can "
-"show those routes but cannot edit them, because they are defined where "
-"the provider lives."
+"Traefik discovers routes from providers other than your dynamic config file "
+"- Docker labels, a Kubernetes CRD, a KV store. Turn on a provider to get a "
+"read-only tab listing what it contributes. Traefik Manager can show those "
+"routes but cannot edit them, because they are defined where the provider "
+"lives."
 msgstr ""
 
 #. Used in the browser
@@ -10292,8 +10264,8 @@ msgid ""
 "Traefik reports {n} file provider route, all from a file Traefik Manager "
 "manages, so they are on the Routes tab."
 msgid_plural ""
-"Traefik reports {n} file provider routes, all from a file Traefik Manager"
-" manages, so they are on the Routes tab."
+"Traefik reports {n} file provider routes, all from a file Traefik Manager "
+"manages, so they are on the Routes tab."
 msgstr[0] ""
 
 msgid "Traefik router rule"
@@ -10308,9 +10280,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Traefik strips these from the right of %(x_forwarded_for)s and uses the "
-"next IP. Use when the proxy's own IPs vary. Cannot be combined with a "
-"fixed depth."
+"Traefik strips these from the right of %(x_forwarded_for)s and uses the next "
+"IP. Use when the proxy's own IPs vary. Cannot be combined with a fixed depth."
 msgstr ""
 
 #, python-format
@@ -10330,9 +10301,9 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Traefik's generic {common} writer stops after the user agent, so no "
-"request duration reaches the log. Set {accesslog_format_json} in the "
-"static config for timings."
+"Traefik's generic {common} writer stops after the user agent, so no request "
+"duration reaches the log. Set {accesslog_format_json} in the static config "
+"for timings."
 msgstr ""
 
 #. Used in the browser
@@ -10405,6 +10376,13 @@ msgid "Two-factor"
 msgstr ""
 
 msgid "Two-factor authentication"
+msgstr ""
+
+msgid ""
+"Two-factor authentication is switched on for this account, but its secret "
+"cannot be read, so the code cannot be checked. Signing in with only a "
+"password is refused. Restore the secret encryption key, or set "
+"ADMIN_PASSWORD to recover access. See the server log for details."
 msgstr ""
 
 #. Used in the browser
@@ -10480,8 +10458,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"Unparsed lines are still listed below but are excluded from every number "
-"on this panel."
+"Unparsed lines are still listed below but are excluded from every number on "
+"this panel."
 msgstr ""
 
 #. Used in the browser
@@ -10599,7 +10577,8 @@ msgstr ""
 msgid "Used for every push from this agent. Leave blank for the default."
 msgstr ""
 
-msgid "Used for this push only. Leave blank to use the commit message template."
+msgid ""
+"Used for this push only. Leave blank to use the commit message template."
 msgstr ""
 
 #. Used in the browser
@@ -10609,8 +10588,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Useful when the route has a wildcard host, or the app lives on a "
-"different port."
+"Useful when the route has a wildcard host, or the app lives on a different "
+"port."
 msgstr ""
 
 #. Used in the browser
@@ -10620,8 +10599,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"User agents come from the same {meta} as the paths. Nothing got far "
-"enough to leave one."
+"User agents come from the same {meta} as the paths. Nothing got far enough "
+"to leave one."
 msgstr ""
 
 msgctxt "placeholder"
@@ -10697,11 +10676,11 @@ msgid "View release notes"
 msgstr ""
 
 msgid ""
-"Views that read a file rather than the Traefik API: certificate expiry "
-"from your ACME store, the plugin list from your static config, and the "
-"access log. Each needs its file mounted into this container, and each "
-"view tells you the exact volume line if it is missing. CrowdSec is here "
-"too, since it reads its own local API."
+"Views that read a file rather than the Traefik API: certificate expiry from "
+"your ACME store, the plugin list from your static config, and the access "
+"log. Each needs its file mounted into this container, and each view tells "
+"you the exact volume line if it is missing. CrowdSec is here too, since it "
+"reads its own local API."
 msgstr ""
 
 msgctxt "heading"
@@ -10801,8 +10780,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Where the agent stores local backup zips. Defaults to %(app_backups)s - "
-"set a host path here to persist backups across container restarts."
+"Where the agent stores local backup zips. Defaults to %(app_backups)s - set "
+"a host path here to persist backups across container restarts."
 msgstr ""
 
 msgid "Where this agent is reachable from Traefik Manager."
@@ -10811,33 +10790,31 @@ msgstr ""
 #, python-format
 msgid ""
 "Where this container reaches the Traefik API. On the same Docker network "
-"that is usually %(http_traefik_8080)s - the service name, not "
-"%(localhost)s. Requires %(api)s in your static config."
+"that is usually %(http_traefik_8080)s - the service name, not %(localhost)s. "
+"Requires %(api)s in your static config."
 msgstr ""
 
 msgid "Which events raise a desktop notification."
 msgstr ""
 
 msgid ""
-"Which kinds of event reach this channel. Select none to send every "
-"category."
+"Which kinds of event reach this channel. Select none to send every category."
 msgstr ""
 
 msgid "Which tabs show the stat cards and entry points"
 msgstr ""
 
 msgid ""
-"Who gets in, and how. The built-in password, two-factor, API keys for the"
-" mobile app and scripts, and OIDC single sign-on. If a forward-auth "
-"provider already sits in front of Traefik Manager you can leave the "
-"built-in login off and acknowledge the banner."
+"Who gets in, and how. The built-in password, two-factor, API keys for the "
+"mobile app and scripts, and OIDC single sign-on. If a forward-auth provider "
+"already sits in front of Traefik Manager you can leave the built-in login "
+"off and acknowledge the banner."
 msgstr ""
 
 #, python-format
 msgid ""
-"With mTLS, the cert paths are resolved %(inside_the_agent)s, so mount "
-"them there too. A client certificate replaces the API key and machine "
-"login."
+"With mTLS, the cert paths are resolved %(inside_the_agent)s, so mount them "
+"there too. A client certificate replaces the API key and machine login."
 msgstr ""
 
 msgctxt "button"
@@ -10896,8 +10873,7 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"Your Traefik {v} is affected by {b} ({severity}) - "
-"{summary}.{value}{fixedIn}"
+"Your Traefik {v} is affected by {b} ({severity}) - {summary}.{value}{fixedIn}"
 msgstr ""
 
 msgid "Your account is not authorized to access this application."
@@ -10924,8 +10900,7 @@ msgstr ""
 msgid ""
 "Your traefik.yml: entry points, certificate resolvers, providers and "
 "plugins. This is the file Traefik reads at boot, so changes here need a "
-"Traefik restart, unlike the dynamic config that Traefik Manager writes "
-"live."
+"Traefik restart, unlike the dynamic config that Traefik Manager writes live."
 msgstr ""
 
 msgid "Yours alone"
@@ -11002,8 +10977,7 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"add the port under {ports} in your compose file and run "
-"{docker_compose_up}"
+"add the port under {ports} in your compose file and run {docker_compose_up}"
 msgstr ""
 
 #. Used in the browser
@@ -11252,8 +11226,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"capacity 0, fires on the first matching event, so capacity and leakspeed "
-"say nothing here"
+"capacity 0, fires on the first matching event, so capacity and leakspeed say "
+"nothing here"
 msgstr ""
 
 #. Used in the browser
@@ -11566,8 +11540,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"events_count is the bucket counter and is normally larger than the "
-"sampled events array the LAPI returns"
+"events_count is the bucket counter and is normally larger than the sampled "
+"events array the LAPI returns"
 msgstr ""
 
 #. Used in the browser
@@ -11584,8 +11558,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"every source that tripped a scenario is banned, no scenario is in "
-"simulation mode"
+"every source that tripped a scenario is banned, no scenario is in simulation "
+"mode"
 msgstr ""
 
 #. Used in the browser
@@ -11686,8 +11660,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"h2c upgrade headers forwarded to the backend let a client tunnel past the"
-" whole middleware chain"
+"h2c upgrade headers forwarded to the backend let a client tunnel past the "
+"whole middleware chain"
 msgstr ""
 
 #. Used in the browser
@@ -11765,8 +11739,7 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"installs and removes them for you, and writes the middleware that uses "
-"them."
+"installs and removes them for you, and writes the middleware that uses them."
 msgstr ""
 
 #. Used in the browser
@@ -12294,8 +12267,7 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"none of the {fetched} fetched lines could be parsed as a Traefik access "
-"log"
+"none of the {fetched} fetched lines could be parsed as a Traefik access log"
 msgstr ""
 
 #. Used in the browser
@@ -12558,7 +12530,8 @@ msgid "providers"
 msgstr ""
 
 #. Used in the browser
-msgid "proxyProtocol.insecure is on, the PROXY header is trusted from any source"
+msgid ""
+"proxyProtocol.insecure is on, the PROXY header is trusted from any source"
 msgstr ""
 
 #. Used in the browser
@@ -12659,7 +12632,8 @@ msgid "reset all filters"
 msgstr ""
 
 #. Used in the browser
-msgid "resolved by the host GeoIP database, the alert itself carries no country"
+msgid ""
+"resolved by the host GeoIP database, the alert itself carries no country"
 msgstr ""
 
 #. Used in the browser
@@ -12944,8 +12918,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"the access log is empty, Traefik has not served a request since it was "
-"last rotated"
+"the access log is empty, Traefik has not served a request since it was last "
+"rotated"
 msgstr ""
 
 #. Used in the browser
@@ -12954,8 +12928,8 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
-"the decisions read failed, so the ban state of this source is not "
-"knowable right now"
+"the decisions read failed, so the ban state of this source is not knowable "
+"right now"
 msgstr ""
 
 #. Used in the browser
@@ -13451,12 +13425,11 @@ msgstr[0] ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{count} ban in force was raised on this host, but the alerts that earned "
-"it are outside the retention window or the decision was added by hand."
+"{count} ban in force was raised on this host, but the alerts that earned it "
+"are outside the retention window or the decision was added by hand."
 msgid_plural ""
-"{count} bans in force were raised on this host, but the alerts that "
-"earned them are outside the retention window or the decision was added by"
-" hand."
+"{count} bans in force were raised on this host, but the alerts that earned "
+"them are outside the retention window or the decision was added by hand."
 msgstr[0] ""
 
 #. Used in the browser
@@ -13668,8 +13641,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{count} of them match every filter on this row at once. Click to drop the"
-" filters."
+"{count} of them match every filter on this row at once. Click to drop the "
+"filters."
 msgstr ""
 
 #. Used in the browser
@@ -13681,15 +13654,16 @@ msgstr[0] ""
 #. Used in the browser
 #, python-brace-format
 msgid "{count} of them was simulated, so CrowdSec enforced nothing by design"
-msgid_plural "{count} of them were simulated, so CrowdSec enforced nothing by design"
+msgid_plural ""
+"{count} of them were simulated, so CrowdSec enforced nothing by design"
 msgstr[0] ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{count} of these still serve routes, so Traefik requests new certificates"
-" for them on startup. Let's Encrypt allows five identical certificates "
-"per week."
+"{count} of these still serve routes, so Traefik requests new certificates "
+"for them on startup. Let's Encrypt allows five identical certificates per "
+"week."
 msgstr ""
 
 #. Used in the browser
@@ -13713,15 +13687,13 @@ msgstr[0] ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{count} protocol upgrade, a websocket or a CONNECT tunnel, the longest "
-"held open for {span}. Traefik logs the whole connection lifetime as the "
-"duration, so these are left out of the average and the bands here. Click "
-"to list them."
+"{count} protocol upgrade, a websocket or a CONNECT tunnel, the longest held "
+"open for {span}. Traefik logs the whole connection lifetime as the duration, "
+"so these are left out of the average and the bands here. Click to list them."
 msgid_plural ""
-"{count} protocol upgrades, a websocket or a CONNECT tunnel, the longest "
-"held open for {span}. Traefik logs the whole connection lifetime as the "
-"duration, so these are left out of the average and the bands here. Click "
-"to list them."
+"{count} protocol upgrades, a websocket or a CONNECT tunnel, the longest held "
+"open for {span}. Traefik logs the whole connection lifetime as the duration, "
+"so these are left out of the average and the bands here. Click to list them."
 msgstr[0] ""
 
 #. Used in the browser
@@ -13870,8 +13842,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{decErr} A bouncer API key is the only credential CrowdSec accepts on "
-"/v1/decisions, and the loose versus banned split needs it"
+"{decErr} A bouncer API key is the only credential CrowdSec accepts on /v1/"
+"decisions, and the loose versus banned split needs it"
 msgstr ""
 
 #. Used in the browser
@@ -14038,8 +14010,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{k} = {v}. This filter only applies to alerts and is ignored in this "
-"view. Click to clear"
+"{k} = {v}. This filter only applies to alerts and is ignored in this view. "
+"Click to clear"
 msgstr ""
 
 #. Used in the browser
@@ -14062,8 +14034,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{label} must be 72 bytes or fewer, which is the bcrypt limit. Accented "
-"and non-Latin characters take more than one byte each."
+"{label} must be 72 bytes or fewer, which is the bcrypt limit. Accented and "
+"non-Latin characters take more than one byte each."
 msgstr ""
 
 #. Used in the browser
@@ -14079,15 +14051,15 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{lat}, {lon} - CrowdSec coordinates, often a country centroid rather than"
-" a city"
+"{lat}, {lon} - CrowdSec coordinates, often a country centroid rather than a "
+"city"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{loose_count} sources tripped a scenario and hold no active decision "
-"right now. Usually an expired ban rather than a miss"
+"{loose_count} sources tripped a scenario and hold no active decision right "
+"now. Usually an expired ban rather than a miss"
 msgstr ""
 
 #. Used in the browser
@@ -14143,13 +14115,14 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{name} is offline - it is not responding. Its tabs will stay empty until "
-"it responds."
+"{name} is offline - it is not responding. Its tabs will stay empty until it "
+"responds."
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
-msgid "{name} is offline - {error}. Its tabs will stay empty until it responds."
+msgid ""
+"{name} is offline - {error}. Its tabs will stay empty until it responds."
 msgstr ""
 
 #. Used in the browser
@@ -14169,7 +14142,8 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
-msgid "{name}: {n} of {total} requests in this window ({pct}%), {failed} failed."
+msgid ""
+"{name}: {n} of {total} requests in this window ({pct}%), {failed} failed."
 msgstr ""
 
 #. Used in the browser
@@ -14202,8 +14176,8 @@ msgstr[0] ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{n} of the {denom} requests to {path} returned {status} {lgStatusName} "
-"({pct}%). Click to filter the log list to just those."
+"{n} of the {denom} requests to {path} returned {status} {lgStatusName} ({pct}"
+"%). Click to filter the log list to just those."
 msgstr ""
 
 #. Used in the browser
@@ -14228,7 +14202,8 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
-msgid "{n} requests returned {code} {lgStatusName}. Click to filter the log list."
+msgid ""
+"{n} requests returned {code} {lgStatusName}. Click to filter the log list."
 msgstr ""
 
 #. Used in the browser
@@ -14280,15 +14255,14 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{once} paths were requested exactly once in this window, so the ranked "
-"rows are not the whole distribution"
+"{once} paths were requested exactly once in this window, so the ranked rows "
+"are not the whole distribution"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{open} of {count} here came from a source that holds no active decision "
-"now"
+"{open} of {count} here came from a source that holds no active decision now"
 msgstr ""
 
 #. Used in the browser
@@ -14304,15 +14278,15 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{own} decisions in force did not come from a subscription. Their alerts "
-"are outside the retention window, or the decision was added by hand"
+"{own} decisions in force did not come from a subscription. Their alerts are "
+"outside the retention window, or the decision was added by hand"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{own} of them were raised here rather than subscribed, but no alert in "
-"the retained window explains them"
+"{own} of them were raised here rather than subscribed, but no alert in the "
+"retained window explains them"
 msgstr ""
 
 #. Used in the browser
@@ -14333,8 +14307,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{repeat_count} sources tripped a scenario more than once, so they came "
-"back after the first ban"
+"{repeat_count} sources tripped a scenario more than once, so they came back "
+"after the first ban"
 msgstr ""
 
 #. Used in the browser
@@ -14355,8 +14329,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{retries} upstream retry attempts. The client never saw these, but a "
-"backend was flapping."
+"{retries} upstream retry attempts. The client never saw these, but a backend "
+"was flapping."
 msgstr ""
 
 #. Used in the browser
@@ -14387,8 +14361,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{scenario} - trigger bucket, fires on the first matching event, so "
-"capacity and leakspeed say nothing here"
+"{scenario} - trigger bucket, fires on the first matching event, so capacity "
+"and leakspeed say nothing here"
 msgstr ""
 
 #. Used in the browser
@@ -14447,8 +14421,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{size} path patterns collapse a numeric, date or hex segment. Only "
-"patterns that merge two or more real paths are folded."
+"{size} path patterns collapse a numeric, date or hex segment. Only patterns "
+"that merge two or more real paths are folded."
 msgstr ""
 
 #. Used in the browser
@@ -14469,8 +14443,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{sources} distinct addresses tripped at least one scenario in the "
-"retained window"
+"{sources} distinct addresses tripped at least one scenario in the retained "
+"window"
 msgstr ""
 
 #. Used in the browser
@@ -14489,7 +14463,7 @@ msgid "{start} to {end}"
 msgstr ""
 
 #. Used in the browser
-#, python-brace-format, python-format
+#, python-format, python-brace-format
 msgid "{status} on {sdShort}, {pct}% of that path"
 msgstr ""
 
@@ -14511,8 +14485,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{target} - {type} from {origin}, {duration} remaining. The duration "
-"counts down live and is not the value originally requested"
+"{target} - {type} from {origin}, {duration} remaining. The duration counts "
+"down live and is not the value originally requested"
 msgstr ""
 
 #. Used in the browser
@@ -14565,23 +14539,21 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{total} requests: {s5} server errors, {s4} client errors, {v3xx} "
-"redirects, {v2xx} ok"
+"{total} requests: {s5} server errors, {s4} client errors, {v3xx} redirects, "
+"{v2xx} ok"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{total} {label} reported by /api/overview, the object list could not be "
-"read"
+"{total} {label} reported by /api/overview, the object list could not be read"
 msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{truncated} objects are counted in the totals but were not returned by "
-"the list endpoint, so they are missing from the strips and provider "
-"counts."
+"{truncated} objects are counted in the totals but were not returned by the "
+"list endpoint, so they are missing from the strips and provider counts."
 msgstr ""
 
 #. Used in the browser
@@ -14623,9 +14595,8 @@ msgstr ""
 #, python-brace-format
 msgid ""
 "{wide} decisions are Range or Country scoped, so they cover far more "
-"addresses than one row suggests. The loose and banned split above matches"
-" on the exact address, so a source covered only by one of these reads as "
-"loose"
+"addresses than one row suggests. The loose and banned split above matches on "
+"the exact address, so a source covered only by one of these reads as loose"
 msgstr ""
 
 #. Used in the browser
@@ -14656,8 +14627,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid ""
-"{writes_count} write requests (POST, PUT, PATCH or DELETE). Click to "
-"filter to {method}."
+"{writes_count} write requests (POST, PUT, PATCH or DELETE). Click to filter "
+"to {method}."
 msgstr ""
 
 msgctxt "label"
@@ -14675,4 +14646,3 @@ msgstr ""
 #. Used in the browser
 msgid "✓ Passwords match"
 msgstr ""
-
