@@ -72,3 +72,36 @@ def test_a_junk_router_entry_does_not_stop_the_rest():
     apps = [_app()]
     rb.apply_live_rules(apps, {'http': ['not-a-router', None, {'name': 'plex-rtr@file', 'rule': LIVE_RULE}]})
     assert apps[0]['liveRule'] == LIVE_RULE
+
+
+def test_the_routes_tab_uses_the_resolved_rule_everywhere_it_shows_a_host():
+    with open(os.path.join(ROOT, 'static', 'js', 'routes.js')) as f:
+        routes = f.read()
+    assert 'function _rmServedRule(app)' in routes, 'one helper decides which rule the cards read'
+    assert routes.count('_rmServedRule(app)') >= 2, 'both card layouts need it, not just the first'
+    assert "matchAll(/Host\\(`([^`]+)`\\)/g)].map(m => m[1])" in routes
+    assert "(a.liveRule || a.rule)" in routes, 'the domain filter must list the host actually served'
+
+
+def test_the_route_map_and_certs_read_the_resolved_rule_too():
+    for name in ('routemap.js', 'certs.js'):
+        with open(os.path.join(ROOT, 'static', 'js', name)) as f:
+            src = f.read()
+        assert 'liveRule' in src, f'{name} shows hosts from the rule, so it needs the resolved one'
+
+
+def test_a_templated_route_gets_its_live_rule_without_the_external_fetch():
+    from unittest.mock import patch
+    routers = {'http': [{'name': 'plex-rtr@file', 'rule': LIVE_RULE}], 'tcp': [], 'udp': []}
+    apps = [_app()]
+    with patch.object(rb.traefik_mod, '_fetch_traefik_routers_and_services',
+                      return_value=(routers, {})) as fetch:
+        rb.apply_live_rules(apps, {} if False else routers)
+    assert apps[0]['liveRule'] == LIVE_RULE
+    assert fetch.call_count == 0, 'routers already in hand must not be fetched twice'
+
+
+def test_a_plain_route_list_does_not_call_traefik():
+    src = open(os.path.join(ROOT, 'core', 'routes_build.py'), encoding='utf-8').read()
+    assert "if not all_routers and any('{{' in str(app.get('rule') or '') for app in all_apps):" in src, \
+        'the Routes tab must only reach for the Traefik API when a rule actually holds a template'

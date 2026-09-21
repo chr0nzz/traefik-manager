@@ -309,8 +309,9 @@ function _esc(s) {
 const _rmPfx = name => name.split(/[-_\s]/)[0].replace(/\d+$/, '');
 
 const _rmDomain = r => {
-    if (!r.rule) return '';
-    const m = r.rule.match(/Host\(`([^`]+)`\)/i);
+    const rule = (r.liveRule || r.rule) || '';
+    if (!rule) return '';
+    const m = rule.match(/Host\(`([^`]+)`\)/i);
     return m ? m[1] : '';
 };
 
@@ -783,7 +784,7 @@ function rmOpenPopup(type, nodeId, allRoutes, preFiltered) {
         const r = allRoutes.find(r => r.id === nodeId);
         if (!r) return;
         focusedRoutes = [r];
-        const allDomains = [...(r.rule||'').matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
+        const allDomains = [...((r.liveRule || r.rule)||'').matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
         allDomains.forEach(d => { detailsHtml += chip('ph-globe', 'Domain', d); });
         if (r.target && r.target !== 'N/A') detailsHtml += chip('ph-cube', 'Target', r.target);
         detailsHtml += chip('ph-arrows-left-right', 'Protocol', (r.protocol||'http').toUpperCase());

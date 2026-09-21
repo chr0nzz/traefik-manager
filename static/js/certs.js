@@ -239,7 +239,7 @@ async function _certsForRoutes(ids) {
     wanted.forEach(id => {
         const app = pool.find(a => String(a.id) === id);
         if (!app || !app.tls) return;
-        [...String(app.rule || '').matchAll(/Host(?:SNI)?\(`([^`]+)`\)/g)].forEach(m => {
+        [...String((app.liveRule || app.rule) || '').matchAll(/Host(?:SNI)?\(`([^`]+)`\)/g)].forEach(m => {
             const h = m[1].trim().toLowerCase();
             if (h && h !== '*') hosts.add(h);
         });

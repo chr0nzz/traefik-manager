@@ -527,6 +527,8 @@ def _build_all_apps(include_external=True, include_internal=False, complete=None
         all_middlewares.extend(_build_middlewares(config, cf))
     if include_external:
         all_apps.extend(_build_external_routes(all_routers, api_svc_urls, include_internal=include_internal))
+    if not all_routers and any('{{' in str(app.get('rule') or '') for app in all_apps):
+        all_routers = traefik_mod._fetch_traefik_routers_and_services()[0] or {}
     apply_live_rules(all_apps, all_routers)
     for app in all_apps:
         if not app.get('entryPoints') and app.get('name') in router_ep_map:
