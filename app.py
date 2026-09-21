@@ -373,7 +373,6 @@ _otp_failure_limit = limiter.shared_limit(
 
 
 def _setup_checks_a_code() -> bool:
-    """True when this /setup POST is a password reset that has to check a two-factor code."""
     if request.method != 'POST':
         return False
     try:
@@ -383,9 +382,6 @@ def _setup_checks_a_code() -> bool:
     return bool(s.get('setup_password_reset') and s.get('otp_enabled') and s.get('otp_secret'))
 
 
-# /setup checks a code too, during a password reset, and had only its own per-address 5/minute
-# limit. That let someone guess from many addresses without ever touching the account-wide count
-# that /login/otp keeps. Same scope, so the two entry points share one budget.
 _setup_otp_failure_limit = limiter.shared_limit(
     lambda: env.OTP_FAILURE_LIMIT or env.DEFAULT_OTP_FAILURE_LIMIT, scope='otp-failures',
     key_func=lambda: 'account', methods=['POST'], deduct_when=_failed_sign_in,
@@ -719,9 +715,6 @@ _CONTROL_CHARS_RE = re.compile(r'[\x00-\x1f\x7f]')
 
 
 def _safe_next(next_url: str) -> str:
-    # strip() only removes control characters at the ends, so "/\t/evil.example" passed the
-    # prefix checks as a single-slash path. Werkzeug then dropped the tab when serializing the
-    # Location header, leaving "//evil.example" - an off-site redirect. Take them out first.
     nu = _CONTROL_CHARS_RE.sub('', (next_url or '')).strip()
     if nu.startswith('/') and not nu.startswith('//') and not nu.startswith('/\\'):
         root = request.script_root
@@ -735,8 +728,6 @@ def _has_password_set() -> bool:
 
     if os.environ.get('ADMIN_PASSWORD', '').strip():
         return True
-    # An unreadable settings file yields defaults with an empty password_hash. That is not
-    # evidence there is no password, so fail closed rather than report a passwordless install.
     if _settings.settings_unreadable():
         return True
     return bool(load_settings().get('password_hash', ''))
@@ -909,8 +900,6 @@ _PASSWORD_CHANGE_EXEMPT = {
 def _require_password_change():
     if request.endpoint is None or request.endpoint in _PASSWORD_CHANGE_EXEMPT:
         return None
-    # API clients are exempt from the forced password change, but only real ones: checking that
-    # the header is merely present let any value at all skip the gate.
     if request.headers.get('X-Api-Key') and _check_api_key():
         return None
     _auth._drop_stale_session()
@@ -966,11 +955,6 @@ def login():
         if ok:
             remember = request.form.get('remember') == 'on'
 
-            # Two-factor is on but the stored secret will not decrypt, so there is no code to
-            # check. Letting the password through on its own would quietly drop the second
-            # factor for an account that is configured to require it. Refuse instead, and say
-            # how to get back in: ADMIN_PASSWORD skips two-factor by design, and restoring the
-            # encryption key makes the enrolment readable again.
             if settings.get('otp_enabled') and not settings.get('otp_secret') and not admin_pw:
                 logger.error("Login refused for the admin from %s - two-factor is enabled but "
                              "its secret could not be decrypted. Restore %s or "
@@ -1038,15 +1022,9 @@ def setup():
     if not _auth_required():
         return redirect(url_for('index'))
 
-    # The wizard hands out an admin password to whoever reaches it first, so it may only ever run
-    # when we can positively confirm this is a first run. If the settings file is there but
-    # unreadable, the defaults behind load_settings() describe a fresh install that is not real.
     unreadable = _settings.settings_unreadable()
     if unreadable:
         logger.error("Refusing to serve the setup page - %s", unreadable)
-        # The language normally comes from manager.yml, which is the file we could not read, so
-        # this falls back to the browser's language or English. load_settings() returns the
-        # defaults rather than raising, so asking for a translation here is safe.
         return (gettext('Traefik Manager cannot read its configuration file, so it cannot tell '
                         'whether this is a new install. Setup is disabled until the file is '
                         'fixed or restored from a backup. See the container log for the path '
@@ -1258,9 +1236,6 @@ def setup_test_crowdsec():
     if not _ssrf_ok(url):
         return jsonify({'ok': False, 'error': gettext('Target address not allowed')}), 400
     try:
-        # The LAPI key travels on this request, and _ssrf_ok only vouches for the address we
-        # were given. Do not follow a redirect: it would carry the key to wherever it points,
-        # past the check. A CrowdSec LAPI does not answer /v1/decisions with a redirect.
         resp = requests.get(f"{url.rstrip('/')}/v1/decisions",
                             headers={'X-Api-Key': key, 'Accept': 'application/json'},
                             timeout=5, allow_redirects=False)
@@ -1588,9 +1563,6 @@ def api_revoke_sessions():
 def api_otp_status():
     settings = load_settings()
     enabled = bool(settings.get('otp_enabled', False))
-    # otp_secret comes back empty when the stored secret will not decrypt, which happens when
-    # the encryption key was lost or replaced. Two-factor is switched on but cannot be asked
-    # for, so say that rather than reporting a second factor that is not really there.
     unusable = bool(enabled and not settings.get('otp_secret', ''))
     return jsonify({'otp_enabled': enabled,
                     'otp_secret_unreadable': unusable})
@@ -3639,9 +3611,6 @@ def api_setup_test_connection():
     p = str(data.get('password', '')).strip()
     auth = (u, p) if u and p else None
     try:
-        # The saved API password travels on this request. Following a redirect would hand it
-        # to whatever host the redirect names, which _ssrf_ok never saw. A Traefik API does
-        # not answer /api/version with a redirect.
         resp = requests.get(f"{url}/api/version", timeout=4, auth=auth,
                             verify=_traefik_verify(), allow_redirects=False)
         if resp.status_code == 200:
@@ -5124,9 +5093,6 @@ def api_settings_test_connection():
     auth = (u, p) if u and p else None
     logger.info(f"Connection test to {url!r} by {request.remote_addr}")
     try:
-        # The saved API password travels on this request. Following a redirect would hand it
-        # to whatever host the redirect names, which _ssrf_ok never saw. A Traefik API does
-        # not answer /api/version with a redirect.
         resp = requests.get(f"{url}/api/version", timeout=4, auth=auth,
                             verify=_traefik_verify(), allow_redirects=False)
         if resp.status_code == 200:
@@ -7059,14 +7025,6 @@ def delete_middleware(mw_name):
 
 
 def _oidc_redirect_uri() -> str:
-    """The redirect_uri sent to the provider and used again at the token exchange.
-
-    url_for(_external=True) builds this from the request host, which follows
-    X-Forwarded-Host whenever the request arrived from a trusted proxy. The default trusted
-    range covers the whole private network, so on a shared docker bridge or a flat LAN another
-    host can set that header and make this point at itself. Set OIDC_REDIRECT_URI to the exact
-    URL registered with the provider and the header stops mattering.
-    """
     return env.OIDC_REDIRECT_URI or url_for('oidc_callback', _external=True)
 
 
@@ -7126,8 +7084,6 @@ def oidc_callback():
     if not s.get('oidc_enabled'):
         return redirect(url_for('login'))
     state = request.args.get('state', '')
-    # Consume the state here: one authorization request may be answered exactly once, so a
-    # replayed callback finds no state left and is rejected before anything else happens.
     expected_state = session.pop('oidc_state', '')
     if not state or not secrets.compare_digest(state, expected_state):
         session.pop('oidc_nonce', None)
@@ -7236,9 +7192,6 @@ def oidc_callback():
         return redirect(url_for('login'))
     id_token = tokens.get('id_token', '')
     expected_nonce = session.pop('oidc_nonce', '')
-    # The authorization request always asks for the openid scope, so a provider that answers
-    # without an id_token has not proven anything. Refuse rather than falling through to the
-    # unsigned userinfo response, which no signature, issuer or audience check covers.
     if not id_token:
         logger.error("OIDC login refused from %s - the provider returned no id_token",
                      request.remote_addr)
@@ -7250,8 +7203,6 @@ def oidc_callback():
         logger.error("OIDC login refused from %s - %s", request.remote_addr, exc)
         flash(gettext("OIDC login failed - the provider's id_token could not be verified."), "error")
         return redirect(url_for('login'))
-    # Every authorization request sends a nonce, so a missing one means the session was lost
-    # or replayed. Fail closed instead of skipping the check.
     if not expected_nonce or not secrets.compare_digest(
             str(id_claims.get('nonce', '')), expected_nonce):
         logger.warning(f"OIDC nonce mismatch from {request.remote_addr}")
@@ -7271,9 +7222,6 @@ def oidc_callback():
             userinfo = userinfo_resp.json()
         except Exception as e:
             logger.warning("OIDC userinfo fetch failed (%s) - falling back to the id_token claims", e)
-    # userinfo is not signed, so it may only fill gaps in the verified id_token, and only when
-    # it describes the same subject. A mismatched sub means the two responses are about
-    # different accounts; drop it rather than let it override a verified claim.
     if userinfo and str(userinfo.get('sub', '')) != str(id_claims.get('sub', '')):
         logger.warning("OIDC userinfo subject does not match the id_token subject - ignoring userinfo")
         userinfo = {}
@@ -7287,8 +7235,6 @@ def oidc_callback():
     groups = claims.get(s.get('oidc_groups_claim', 'groups'), [])
     if not isinstance(groups, list):
         groups = [str(groups)]
-    # Fail closed: only an affirmative email_verified counts. An absent claim, a null, a 0 or
-    # an empty string is not the provider asserting that it verified the address.
     _ev = claims.get('email_verified')
     if isinstance(_ev, bool):
         email_verified = _ev
@@ -7391,8 +7337,6 @@ def api_test_oidc():
         return jsonify({'ok': False, 'error': gettext('Target address not allowed')})
     logger.info(f"OIDC provider test to {url!r} by {request.remote_addr}")
     try:
-        # No credentials travel here, and providers do redirect their discovery document, so
-        # follow it - but check each hop, since _ssrf_ok above only vouched for the first.
         resp = _reach.safe_get(f"{url}/.well-known/openid-configuration", timeout=5,
                                ssrf=_ssrf_ok)
         resp.raise_for_status()

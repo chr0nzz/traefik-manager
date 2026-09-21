@@ -72,18 +72,15 @@ def _geoip_lookup(ip: str, reader=_GEOIP_SENTINEL):
     return result
 
 
-# The DB-IP city-lite database is roughly 30 MB packed and 90 MB on disk. These leave room to
-# grow several times over while still refusing a file whose only purpose is to keep expanding.
 MAX_DOWNLOAD_BYTES = 128 * 1024 * 1024
 MAX_UNPACKED_BYTES = 384 * 1024 * 1024
 
 
 class GeoIPTooLarge(Exception):
-    """The download, or what it inflated to, went past its cap."""
+    pass
 
 
 def _stream_gunzip(resp, dest: str) -> int:
-    """Inflate a gzip response into dest, refusing to go past the caps. Returns bytes written."""
     import zlib
     decoder = zlib.decompressobj(16 + zlib.MAX_WBITS)
     downloaded = written = 0
@@ -121,10 +118,6 @@ def _geoip_download():
                 os.makedirs(os.path.dirname(path), exist_ok=True)
                 tmp = f"{path}.tmp.{os.getpid()}.{threading.get_ident()}"
                 try:
-                    # Read and inflate in chunks under a cap at each stage. The whole response
-                    # used to be held in memory and then inflated in one call, with nothing
-                    # bounding either step, so a small file claiming to be the database could
-                    # expand until the container ran out of memory or disk.
                     written = _stream_gunzip(resp, tmp)
                     if not written:
                         last_err = f'{ym}: no data'

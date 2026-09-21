@@ -26,7 +26,7 @@ MAX_REDIRECT_HOPS = 5
 
 
 class BlockedTarget(Exception):
-    """A URL, or somewhere a redirect led, that ssrf_ok refuses."""
+    pass
 
 
 def ssrf_ok(url: str) -> bool:
@@ -44,17 +44,6 @@ def ssrf_ok(url: str) -> bool:
 
 
 def safe_get(url: str, *, ssrf=None, getter=None, **kwargs):
-    """GET that checks every hop, not just the first.
-
-    requests follows redirects on its own, so checking the URL before handing it over proves
-    only that the first hop is acceptable. A host that answers 302 to 169.254.169.254 - a
-    target ssrf_ok refuses outright - was followed there anyway, with the guard already
-    satisfied and out of the way.
-
-    Private and loopback addresses stay allowed: reaching a Traefik API on 10.x or a git
-    remote on the LAN is what this application is for. What this stops is a redirect
-    arriving somewhere the guard would have refused had it been asked.
-    """
     ssrf = ssrf or ssrf_ok
     getter = getter or requests.get
     kwargs['allow_redirects'] = False

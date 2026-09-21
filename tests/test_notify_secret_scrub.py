@@ -1,12 +1,8 @@
-"""A provider's error often quotes the request it failed to make, which puts the channel's
-token or webhook URL into the delivery log and into the interface."""
 
 import pytest
 
 import core.notify_providers as providers
 
-
-# --- a channel's own secrets never reach the log -----------------------------------------
 
 @pytest.mark.parametrize('channel,err', [
     ({'kind': 'telegram', 'token': 'bot123456:AAHsupersecrettokenvalue', 'token2': '',

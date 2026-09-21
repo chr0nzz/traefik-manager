@@ -229,10 +229,6 @@ def _new_channel_id():
     return 'ch_' + _s.token_hex(4)
 
 
-# Set when SETTINGS_PATH is present but could not be read or parsed. The loader still hands back
-# the defaults so the rest of the app keeps working, but those defaults describe a fresh install,
-# so anything that decides "has this install been set up yet" has to consult this instead of
-# reading password_hash or setup_complete out of them.
 _unreadable_reason = ''
 _unreadable_logged = False
 
@@ -252,7 +248,6 @@ def _mark_readable() -> None:
 
 
 def settings_unreadable() -> str:
-    """Why the settings file could not be loaded, or '' when it loaded fine."""
     return _unreadable_reason
 
 
@@ -338,9 +333,6 @@ def _load_settings(blob) -> dict:
         'backup_keep_count':         int(os.environ.get('BACKUP_KEEP_COUNT', 0)),
     }
     if blob is None:
-        # A file that exists but cannot be read must not look like a fresh install. Falling back
-        # to the defaults here describes an install with no password and no completed setup,
-        # which is exactly the state that reopens the anonymous setup wizard.
         if os.path.exists(env.SETTINGS_PATH):
             _mark_unreadable(f"{env.SETTINGS_PATH} exists but could not be read")
             return defaults
@@ -369,8 +361,6 @@ def _load_settings(blob) -> dict:
                     except Exception:
                         pass
         if not isinstance(data, dict):
-            # A top-level list or bare scalar parses without error but is not a settings
-            # document, so nothing in it can be merged and every value would silently default.
             understood = False
             data = {}
         if understood:

@@ -1,5 +1,3 @@
-"""The findings held back from 1.14.2 because each changes behaviour: two-factor failing
-closed, the GeoIP download caps, and the own-state filter on a resolved config path."""
 
 import gzip
 import io
@@ -12,8 +10,6 @@ import core.env as env
 import core.geoip as geoip
 import core.settings as settings_mod
 
-
-# --- two-factor fails closed when its secret cannot be read --------------------------------
 
 def _enable_otp_without_a_readable_secret(password_hash):
     s = settings_mod.load_settings(fresh=True)
@@ -40,7 +36,6 @@ def test_a_password_alone_cannot_sign_in_when_the_otp_secret_is_unreadable(anon_
 
 
 def test_admin_password_still_recovers_access(anon_client, app_module, monkeypatch):
-    """The documented way back in: ADMIN_PASSWORD bypasses two-factor by design."""
     _enable_otp_without_a_readable_secret('')
     monkeypatch.setenv('ADMIN_PASSWORD', 'recovery-password')
     with anon_client.session_transaction() as sess:
@@ -51,8 +46,6 @@ def test_admin_password_still_recovers_access(anon_client, app_module, monkeypat
     assert r.status_code == 302 and '/login' not in r.headers.get('Location', ''), \
         'ADMIN_PASSWORD must still get an operator back in'
 
-
-# --- the GeoIP download is bounded ----------------------------------------------------------
 
 class _StreamResp:
     def __init__(self, blob, chunk=64 * 1024):
@@ -79,7 +72,6 @@ def test_an_ordinary_database_still_unpacks(tmp_path):
 
 
 def test_a_gzip_bomb_is_refused(tmp_path, monkeypatch):
-    # A little over the cap, from a tiny compressed file - the shape of the original finding.
     monkeypatch.setattr(geoip, 'MAX_UNPACKED_BYTES', 4 * 1024 * 1024)
     bomb = _gzip_of(b'\0' * (16 * 1024 * 1024))
     assert len(bomb) < 100 * 1024, 'the compressed bomb should be small, that is the point'
@@ -95,8 +87,6 @@ def test_an_oversized_download_is_refused(tmp_path, monkeypatch):
     with pytest.raises(geoip.GeoIPTooLarge):
         geoip._stream_gunzip(_StreamResp(blob), str(dest))
 
-
-# --- a resolved config path is not allowed to be Traefik Manager's own state ----------------
 
 def test_a_bare_selector_cannot_resolve_to_manager_yml(monkeypatch):
     config_dir = os.path.dirname(env.SETTINGS_PATH)

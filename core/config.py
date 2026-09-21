@@ -18,13 +18,6 @@ SECRET_FILE_MODE = 0o600
 
 
 def open_private(tmp_path: str, final_path: str):
-    """Open tmp_path for writing with a mode fit for a file that holds secrets.
-
-    These files are written under a temporary name and moved into place, and the move carries
-    the temporary file's mode with it, so the mode has to be right at creation: a plain open()
-    left manager.yml and agents.yml world-readable, and silently undid an operator's chmod on
-    every save. A file that is already stricter than 0600 keeps its mode; this never widens one.
-    """
     mode = SECRET_FILE_MODE
     try:
         mode = os.stat(final_path).st_mode & 0o777 & SECRET_FILE_MODE
@@ -35,12 +28,6 @@ def open_private(tmp_path: str, final_path: str):
 
 
 def tighten_secret_files(*paths) -> None:
-    """Narrow existing secret-bearing files to 0600 once, at startup.
-
-    open_private covers files as they are written, but an install upgraded from a version that
-    wrote them world-readable keeps that mode until something happens to save. Nothing here
-    widens a mode, and a file that cannot be chmodded is left alone with a warning.
-    """
     for path in paths:
         try:
             current = os.stat(path).st_mode & 0o777
@@ -249,10 +236,6 @@ def resolve_config_path(s: str) -> str:
         if not s.endswith(('.yml', '.yaml')):
             s = s + '.yml'
         candidate = os.path.join(env.ACTIVE_CONFIG_DIR, s)
-        # scan_config_dir, the git push loop and settings-path validation all skip Traefik
-        # Manager's own files. This did not, so a bare "manager" selector resolved to
-        # manager.yml and let the app treat its own settings as a Traefik config to read,
-        # back up and rewrite.
         if is_safe_path(candidate) and not env.is_own_state(candidate):
             return candidate
     logger.warning(f"Config file not in CONFIG_PATHS: {s!r}")

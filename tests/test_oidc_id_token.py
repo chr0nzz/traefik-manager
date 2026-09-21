@@ -274,7 +274,6 @@ def test_a_replayed_callback_is_refused(anon_client, monkeypatch):
 def test_userinfo_for_another_subject_cannot_override_the_id_token(anon_client, monkeypatch):
     client = anon_client
     state, nonce = _start(client, monkeypatch)
-    # The id_token carries no email, so the callback falls back to userinfo for it.
     good = _token(nonce=nonce, sub='u1', email=None)
     monkeypatch.setattr('app.requests.post', lambda *a, **k: _Resp({'id_token': good, 'access_token': 'x'}))
 

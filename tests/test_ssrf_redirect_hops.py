@@ -1,5 +1,3 @@
-"""ssrf_ok vouches for the address it is given. requests follows redirects on its own, so a
-host that answers 302 was able to send the request somewhere the guard would have refused."""
 
 import pytest
 import requests
@@ -22,8 +20,6 @@ class _Resp:
             raise requests.HTTPError(f'{self.status_code}')
 
 
-# 169.254.169.254 is the cloud metadata address. ssrf_ok already refuses it outright, so it is
-# the clearest example of somewhere a redirect must not be able to reach.
 METADATA = 'http://169.254.169.254/latest/meta-data/'
 
 
@@ -59,8 +55,6 @@ def test_an_ordinary_redirect_is_still_followed():
 
 
 def test_a_private_address_is_still_allowed():
-    # Reaching a Traefik API on the LAN is the product working, not a finding. The guard must
-    # not have been tightened into refusing it.
     for addr in ('http://10.0.0.5:8080', 'http://192.168.1.10:8080', 'http://127.0.0.1:8080',
                  'http://172.16.4.2:8080'):
         assert reach.ssrf_ok(addr), f'{addr} must stay reachable'
@@ -104,7 +98,6 @@ def _probe(client, monkeypatch, endpoint, payload):
 
 
 def test_the_traefik_api_probe_does_not_follow_a_redirect(client, monkeypatch):
-    """The saved API password travels on this request; a redirect would hand it to the target."""
     seen = _probe(client, monkeypatch, '/api/settings/test-connection',
                   {'url': 'http://traefik.example.com:8080', 'user': 'admin',
                    'password': 'hunter2'})
@@ -113,7 +106,6 @@ def test_the_traefik_api_probe_does_not_follow_a_redirect(client, monkeypatch):
 
 
 def test_the_crowdsec_probe_does_not_follow_a_redirect(client, monkeypatch):
-    """The LAPI key travels on this request. This route is reachable during first-run setup."""
     import core.settings as settings_mod
     s = settings_mod.load_settings(fresh=True)
     settings_mod.save_settings(domains=s['domains'], cert_resolver=s['cert_resolver'],

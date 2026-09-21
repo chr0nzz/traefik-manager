@@ -39,9 +39,6 @@ PROXY_FIX_HOPS = proxy_fix_hops()
 
 DEFAULT_TRUSTED_PROXIES = '127.0.0.0/8,::1/128,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7,fe80::/10,100.64.0.0/10'
 
-# The OIDC redirect_uri is normally built from the request, which means it follows
-# X-Forwarded-Host when the request came from a trusted proxy. Set this to the exact URL
-# registered with the identity provider and the header stops being able to influence it.
 OIDC_REDIRECT_URI = os.environ.get('OIDC_REDIRECT_URI', '').strip()
 
 
