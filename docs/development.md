@@ -147,6 +147,7 @@ The table is not exhaustive - `tests/` holds more than this. Run `pytest --colle
 - **CSS** - add rules to `static/css/app.css`. No inline styles unless the value is dynamic.
 - **No comments.** Use clear names instead; the codebase follows this throughout.
 - **No dead code.** ruff runs in CI (`ruff.toml`, pyflakes rule set) and fails on unused imports.
+- **One-line commits.** An imperative subject line with a conventional prefix, referencing the issue or discussion in brackets. No body; the reasoning goes in the release notes.
 
 ## Releasing
 
