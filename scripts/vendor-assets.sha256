@@ -1,0 +1,27 @@
+# SHA-256 of every third-party asset the build downloads.
+#
+# scripts/setup-assets.sh and the Dockerfile both verify against this file and refuse to
+# continue on a mismatch. Without it a redirected, cached or replaced download was served
+# straight into the image, and because curl was called without --fail an HTTP error page was
+# written to the destination as if it were the asset.
+#
+# The npm entries were additionally checked against the registry's own published sha512 and
+# sha1 for that exact version, so the hash here is not merely a record of one download.
+#
+# To change a version: update the URL in setup-assets.sh and the Dockerfile, fetch the new
+# file, and replace its line here with `sha256sum <file>`.
+#
+# <sha256>  <url>
+
+c74ab1decb33d7cefa22a7c412345e30d28ac39941b3be6837bc956cbef654d0  https://registry.npmjs.org/@phosphor-icons/web/-/web-2.1.1.tgz
+c541ef06327885a8415bca8df6071e14189b4855336def4f36db54bde8484f36  https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js
+3152d214941a5df3a3d4c079dfa338c3cd7a6c0d4c1b4c3a2fdb6bba6f6facf9  https://cdn.jsdelivr.net/npm/@dagrejs/dagre@3.1.1/dist/dagre.min.js
+5dbda58750b13452de39affcea703af096022d8e3546c67ed5d3bd072763f939  https://registry.npmjs.org/monaco-editor/-/monaco-editor-0.52.0.tgz
+bcf0b86437e43127a9acccc392083d0a85db5c18a399d9d10975e8b1fcba0d92  https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Light.json
+1c8392a0891b45e6fc2587b85f82e940631c440c104d25ca71ba0ba27d544475  https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Dark.json
+dfcbb5c7ca0f2e8db0201133fa0bf9921a852a3db24472078cccb4af77c873c3  https://registry.npmjs.org/@fontsource/inter/-/inter-5.1.1.tgz
+53b0344268b2404a9c194327ee3c83e3e6d5e7d0566ac74cd15497234fc0525f  https://registry.npmjs.org/@fontsource/jetbrains-mono/-/jetbrains-mono-5.1.0.tgz
+089a686cef38474950367fd11d75aae5157f88421524e059240bc8024908742d  https://registry.npmjs.org/country-flag-emoji-polyfill/-/country-flag-emoji-polyfill-0.1.10.tgz
+7d24f7fa191d2193b78cd5f5a42a6093e14409521908529f42d80b11fde1f1d4  https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64
+69b1378b8133192d7d2feb12a116fa12d035594f58db3eff215879e4ad8cf39b  https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-arm64
+704e7d91afba6e1f630889afd0d7db36b4634e628512cc141d504a5beae28860  https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-armv7
