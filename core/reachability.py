@@ -22,6 +22,13 @@ _UNKNOWN_MARKERS = ('name or service not known', 'nodename nor servname', 'tempo
                     'nameresolutionerror', 'getaddrinfo failed', 'timed out', 'timeout')
 
 
+MAX_REDIRECT_HOPS = 5
+
+
+class BlockedTarget(Exception):
+    """A URL, or somewhere a redirect led, that ssrf_ok refuses."""
+
+
 def ssrf_ok(url: str) -> bool:
     try:
         host = urlparse(url).hostname
@@ -34,6 +41,39 @@ def ssrf_ok(url: str) -> bool:
         return True
     except Exception:
         return False
+
+
+def safe_get(url: str, *, ssrf=None, getter=None, **kwargs):
+    """GET that checks every hop, not just the first.
+
+    requests follows redirects on its own, so checking the URL before handing it over proves
+    only that the first hop is acceptable. A host that answers 302 to 169.254.169.254 - a
+    target ssrf_ok refuses outright - was followed there anyway, with the guard already
+    satisfied and out of the way.
+
+    Private and loopback addresses stay allowed: reaching a Traefik API on 10.x or a git
+    remote on the LAN is what this application is for. What this stops is a redirect
+    arriving somewhere the guard would have refused had it been asked.
+    """
+    ssrf = ssrf or ssrf_ok
+    getter = getter or requests.get
+    kwargs['allow_redirects'] = False
+    target = url
+    for _ in range(MAX_REDIRECT_HOPS + 1):
+        if not _is_http(target):
+            raise BlockedTarget(f'{target} is not an http(s) address')
+        if not ssrf(target):
+            raise BlockedTarget(f'{target} is not an allowed address')
+        resp = getter(target, **kwargs)
+        location = ''
+        try:
+            location = resp.headers.get('Location', '') or ''
+        except Exception:
+            pass
+        if resp.status_code not in REDIRECTS or not location:
+            return resp
+        target = urljoin(target, location)
+    raise BlockedTarget(f'{url} redirected more than {MAX_REDIRECT_HOPS} times')
 
 
 def _is_http(url: str) -> bool:

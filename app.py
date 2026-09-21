@@ -1203,9 +1203,12 @@ def setup_test_crowdsec():
     if not _ssrf_ok(url):
         return jsonify({'ok': False, 'error': gettext('Target address not allowed')}), 400
     try:
+        # The LAPI key travels on this request, and _ssrf_ok only vouches for the address we
+        # were given. Do not follow a redirect: it would carry the key to wherever it points,
+        # past the check. A CrowdSec LAPI does not answer /v1/decisions with a redirect.
         resp = requests.get(f"{url.rstrip('/')}/v1/decisions",
                             headers={'X-Api-Key': key, 'Accept': 'application/json'},
-                            timeout=5)
+                            timeout=5, allow_redirects=False)
         if resp.status_code in (401, 403):
             return jsonify({'ok': False, 'error': gettext('Reached the LAPI, but the key was refused')})
         resp.raise_for_status()
@@ -3581,7 +3584,11 @@ def api_setup_test_connection():
     p = str(data.get('password', '')).strip()
     auth = (u, p) if u and p else None
     try:
-        resp = requests.get(f"{url}/api/version", timeout=4, auth=auth, verify=_traefik_verify())
+        # The saved API password travels on this request. Following a redirect would hand it
+        # to whatever host the redirect names, which _ssrf_ok never saw. A Traefik API does
+        # not answer /api/version with a redirect.
+        resp = requests.get(f"{url}/api/version", timeout=4, auth=auth,
+                            verify=_traefik_verify(), allow_redirects=False)
         if resp.status_code == 200:
             info = resp.json()
             return jsonify({'ok': True, 'version': info.get('Version', '?')})
@@ -5062,7 +5069,11 @@ def api_settings_test_connection():
     auth = (u, p) if u and p else None
     logger.info(f"Connection test to {url!r} by {request.remote_addr}")
     try:
-        resp = requests.get(f"{url}/api/version", timeout=4, auth=auth, verify=_traefik_verify())
+        # The saved API password travels on this request. Following a redirect would hand it
+        # to whatever host the redirect names, which _ssrf_ok never saw. A Traefik API does
+        # not answer /api/version with a redirect.
+        resp = requests.get(f"{url}/api/version", timeout=4, auth=auth,
+                            verify=_traefik_verify(), allow_redirects=False)
         if resp.status_code == 200:
             info = resp.json()
             return jsonify({'ok': True, 'version': info.get('Version', '?')})
@@ -7313,7 +7324,10 @@ def api_test_oidc():
         return jsonify({'ok': False, 'error': gettext('Target address not allowed')})
     logger.info(f"OIDC provider test to {url!r} by {request.remote_addr}")
     try:
-        resp = requests.get(f"{url}/.well-known/openid-configuration", timeout=5)
+        # No credentials travel here, and providers do redirect their discovery document, so
+        # follow it - but check each hop, since _ssrf_ok above only vouched for the first.
+        resp = _reach.safe_get(f"{url}/.well-known/openid-configuration", timeout=5,
+                               ssrf=_ssrf_ok)
         resp.raise_for_status()
         cfg = resp.json()
         return jsonify({
