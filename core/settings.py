@@ -228,6 +228,33 @@ def _new_channel_id():
     return 'ch_' + _s.token_hex(4)
 
 
+# Set when SETTINGS_PATH is present but could not be read or parsed. The loader still hands back
+# the defaults so the rest of the app keeps working, but those defaults describe a fresh install,
+# so anything that decides "has this install been set up yet" has to consult this instead of
+# reading password_hash or setup_complete out of them.
+_unreadable_reason = ''
+_unreadable_logged = False
+
+
+def _mark_unreadable(reason: str) -> None:
+    global _unreadable_reason, _unreadable_logged
+    _unreadable_reason = reason
+    if not _unreadable_logged:
+        logger.error("%s - keeping the existing configuration locked instead of treating this "
+                     "as a first run. Fix or restore the file, then reload.", reason)
+        _unreadable_logged = True
+
+
+def _mark_readable() -> None:
+    global _unreadable_reason, _unreadable_logged
+    _unreadable_reason, _unreadable_logged = '', False
+
+
+def settings_unreadable() -> str:
+    """Why the settings file could not be loaded, or '' when it loaded fine."""
+    return _unreadable_reason
+
+
 def load_settings(fresh: bool = False) -> dict:
     blob, digest = config.read_for_cache(env.SETTINGS_PATH)
     _, agents_digest = config.read_for_cache(env.AGENTS_PATH)
@@ -309,18 +336,26 @@ def _load_settings(blob) -> dict:
         'backup_keep_count':         int(os.environ.get('BACKUP_KEEP_COUNT', 0)),
     }
     if blob is None:
+        # A file that exists but cannot be read must not look like a fresh install. Falling back
+        # to the defaults here describes an install with no password and no completed setup,
+        # which is exactly the state that reopens the anonymous setup wizard.
         if os.path.exists(env.SETTINGS_PATH):
-            logger.warning(f"Could not read {env.SETTINGS_PATH}, using defaults")
+            _mark_unreadable(f"{env.SETTINGS_PATH} exists but could not be read")
+            return defaults
+        _mark_readable()
         return defaults
     try:
         raw = blob.decode('utf-8')
+        understood = True
         try:
             data = config.yaml_safe.load(raw) or {}
         except Exception:
+            understood = False
             import re as _re
             stripped = _re.sub(r'(?m)^[-\.]{3}\s*$\n?', '', raw)
             try:
                 data = config.yaml_safe.load(stripped) or {}
+                understood = True
             except Exception:
                 data = {}
                 for part in _re.split(r'(?m)^---\s*$', raw):
@@ -328,8 +363,18 @@ def _load_settings(blob) -> dict:
                         doc = config.yaml_safe.load(part.strip())
                         if isinstance(doc, dict):
                             data.update(doc)
+                            understood = True
                     except Exception:
                         pass
+        if not isinstance(data, dict):
+            # A top-level list or bare scalar parses without error but is not a settings
+            # document, so nothing in it can be merged and every value would silently default.
+            understood = False
+            data = {}
+        if understood:
+            _mark_readable()
+        else:
+            _mark_unreadable(f"{env.SETTINGS_PATH} could not be parsed as a settings document")
         merged = defaults.copy()
         if 'domains' in data and isinstance(data['domains'], list):
             merged['domains'] = [str(d).strip() for d in data['domains'] if str(d).strip()]

@@ -698,6 +698,10 @@ def _has_password_set() -> bool:
 
     if os.environ.get('ADMIN_PASSWORD', '').strip():
         return True
+    # An unreadable settings file yields defaults with an empty password_hash. That is not
+    # evidence there is no password, so fail closed rather than report a passwordless install.
+    if _settings.settings_unreadable():
+        return True
     return bool(load_settings().get('password_hash', ''))
 
 def _get_effective_hash() -> str:
@@ -958,6 +962,17 @@ def login():
 def setup():
     if not _auth_required():
         return redirect(url_for('index'))
+
+    # The wizard hands out an admin password to whoever reaches it first, so it may only ever run
+    # when we can positively confirm this is a first run. If the settings file is there but
+    # unreadable, the defaults behind load_settings() describe a fresh install that is not real.
+    unreadable = _settings.settings_unreadable()
+    if unreadable:
+        logger.error("Refusing to serve the setup page - %s", unreadable)
+        return ("Traefik Manager cannot read its configuration file, so it cannot tell whether "
+                "this is a new install. Setup is disabled until the file is fixed or restored "
+                "from a backup. See the container log for the path and the reason.", 503,
+                {'Content-Type': 'text/plain; charset=utf-8'})
 
     current = load_settings()
 
