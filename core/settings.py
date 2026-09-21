@@ -792,7 +792,7 @@ def _write_settings(domains, cert_resolver, traefik_api_url,
         'backup_keep_count':         backup_keep_count,
     })
     try:
-        with open(tmp, 'w') as f:
+        with config.open_private(tmp, env.SETTINGS_PATH) as f:
             config.yaml.dump(_doc, f)
         os.replace(tmp, env.SETTINGS_PATH)
     finally:

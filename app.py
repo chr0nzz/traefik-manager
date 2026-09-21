@@ -786,6 +786,8 @@ for _label, _path, _err in env.unwritable_storage():
                  f"Settings, backups and scheduled checks will not survive a restart. "
                  f"Check the volume or bind mount for this path.")
 
+_cfg.tighten_secret_files(env.SETTINGS_PATH, env.AGENTS_PATH, env.OTP_KEY_PATH)
+
 _monitor.start()
 
 _SILENT_PREFIXES = (
