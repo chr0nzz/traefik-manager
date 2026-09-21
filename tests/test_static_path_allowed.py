@@ -1,6 +1,10 @@
 import importlib
 import os
 
+import pytest
+
+pytestmark = pytest.mark.usefixtures('restore_core_env')
+
 
 def _reload(monkeypatch, tmp_path, static_path, dynamic_path=None):
     dynamic_path = dynamic_path or str(tmp_path / 'dyn' / 'dynamic.yml')
