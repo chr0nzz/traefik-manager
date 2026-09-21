@@ -687,8 +687,14 @@ def _hash_api_key(key: str) -> str:
     import hashlib
     return 'sha256:' + hashlib.sha256(key.encode()).hexdigest()
 
+_CONTROL_CHARS_RE = re.compile(r'[\x00-\x1f\x7f]')
+
+
 def _safe_next(next_url: str) -> str:
-    nu = (next_url or '').strip()
+    # strip() only removes control characters at the ends, so "/\t/evil.example" passed the
+    # prefix checks as a single-slash path. Werkzeug then dropped the tab when serializing the
+    # Location header, leaving "//evil.example" - an off-site redirect. Take them out first.
+    nu = _CONTROL_CHARS_RE.sub('', (next_url or '')).strip()
     if nu.startswith('/') and not nu.startswith('//') and not nu.startswith('/\\'):
         return nu
     return url_for('index')
@@ -863,7 +869,9 @@ _PASSWORD_CHANGE_EXEMPT = {
 def _require_password_change():
     if request.endpoint is None or request.endpoint in _PASSWORD_CHANGE_EXEMPT:
         return None
-    if request.headers.get('X-Api-Key'):
+    # API clients are exempt from the forced password change, but only real ones: checking that
+    # the header is merely present let any value at all skip the gate.
+    if request.headers.get('X-Api-Key') and _check_api_key():
         return None
     _auth._drop_stale_session()
     if not session.get('authenticated') or os.environ.get('ADMIN_PASSWORD', '').strip():
@@ -1507,7 +1515,13 @@ def api_revoke_sessions():
 @login_required
 def api_otp_status():
     settings = load_settings()
-    return jsonify({'otp_enabled': settings.get('otp_enabled', False)})
+    enabled = bool(settings.get('otp_enabled', False))
+    # otp_secret comes back empty when the stored secret will not decrypt, which happens when
+    # the encryption key was lost or replaced. Two-factor is switched on but cannot be asked
+    # for, so say that rather than reporting a second factor that is not really there.
+    unusable = bool(enabled and not settings.get('otp_secret', ''))
+    return jsonify({'otp_enabled': enabled,
+                    'otp_secret_unreadable': unusable})
 
 
 @app.route('/api/auth/apikey/generate', methods=['POST'])
