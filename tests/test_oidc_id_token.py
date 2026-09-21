@@ -33,7 +33,7 @@ def _cfg(**over):
 def _token(key=_KEY, alg='RS256', kid='k1', **over):
     now = int(time.time())
     claims = {'iss': ISSUER, 'aud': CLIENT_ID, 'exp': now + 300, 'iat': now,
-              'email': 'admin@example.com', 'nonce': 'n-1'}
+              'email': 'admin@example.com', 'email_verified': True, 'nonce': 'n-1'}
     claims.update(over)
     headers = {'kid': kid} if alg.startswith(('RS', 'ES', 'PS')) else None
     return jwt.encode(claims, key, algorithm=alg, headers=headers)
@@ -245,3 +245,56 @@ def test_the_keys_are_cached_and_refetched_when_the_key_id_is_new(monkeypatch):
     with pytest.raises(oidc_tokens.IdTokenError):
         oidc_tokens.verify(_token(kid='missing'), _cfg(), CLIENT_ID, CLIENT_SECRET)
     assert len(calls) == 2, 'a key id the cache does not know must trigger one refetch, for key rotation'
+
+
+def test_a_provider_that_sends_no_id_token_is_refused(anon_client, monkeypatch):
+    client = anon_client
+    state, _nonce = _start(client, monkeypatch)
+    monkeypatch.setattr('app.requests.post', lambda *a, **k: _Resp({'access_token': 'x'}))
+    monkeypatch.setattr('app.requests.get',
+                        lambda *a, **k: _Resp({'sub': 'u1', 'email': 'admin@example.com',
+                                               'email_verified': True}))
+    r = client.get(f'/auth/oidc/callback?code=abc&state={state}')
+    assert r.status_code == 302
+    assert '/login' in r.headers['Location'], 'no id_token means nothing was verified'
+    assert client.get('/').status_code != 200, 'an unsigned userinfo response must not open a session'
+
+
+def test_a_replayed_callback_is_refused(anon_client, monkeypatch):
+    client = anon_client
+    state, nonce = _start(client, monkeypatch)
+    good = _token(nonce=nonce)
+    monkeypatch.setattr('app.requests.post', lambda *a, **k: _Resp({'id_token': good, 'access_token': 'x'}))
+    first = client.get(f'/auth/oidc/callback?code=abc&state={state}')
+    assert '/login' not in first.headers['Location'], 'the first callback should succeed'
+    replay = client.get(f'/auth/oidc/callback?code=abc&state={state}')
+    assert '/login' in replay.headers['Location'], 'state is single-use, so a replay must be refused'
+
+
+def test_userinfo_for_another_subject_cannot_override_the_id_token(anon_client, monkeypatch):
+    client = anon_client
+    state, nonce = _start(client, monkeypatch)
+    # The id_token carries no email, so the callback falls back to userinfo for it.
+    good = _token(nonce=nonce, sub='u1', email=None)
+    monkeypatch.setattr('app.requests.post', lambda *a, **k: _Resp({'id_token': good, 'access_token': 'x'}))
+
+    def _get(url, *a, **k):
+        if url.endswith('/userinfo'):
+            return _Resp({'sub': 'someone-else', 'email': 'admin@example.com',
+                          'email_verified': True})
+        return _Resp(_jwks())
+
+    monkeypatch.setattr('app.requests.get', _get)
+    r = client.get(f'/auth/oidc/callback?code=abc&state={state}')
+    assert '/login' in r.headers['Location'], 'userinfo for a different sub must not grant access'
+
+
+def test_an_absent_email_verified_claim_is_not_treated_as_verified(anon_client, monkeypatch):
+    client = anon_client
+    state, nonce = _start(client, monkeypatch)
+    unasserted = _token(nonce=nonce, email_verified=None)
+    monkeypatch.setattr('app.requests.post',
+                        lambda *a, **k: _Resp({'id_token': unasserted, 'access_token': 'x'}))
+    r = client.get(f'/auth/oidc/callback?code=abc&state={state}')
+    assert '/login' in r.headers['Location'], \
+        'an allowlisted email needs the provider to assert it verified the address'

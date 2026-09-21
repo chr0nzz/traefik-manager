@@ -6996,10 +6996,15 @@ def oidc_callback():
     if not s.get('oidc_enabled'):
         return redirect(url_for('login'))
     state = request.args.get('state', '')
-    if not state or not secrets.compare_digest(state, session.get('oidc_state', '')):
+    # Consume the state here: one authorization request may be answered exactly once, so a
+    # replayed callback finds no state left and is rejected before anything else happens.
+    expected_state = session.pop('oidc_state', '')
+    if not state or not secrets.compare_digest(state, expected_state):
+        session.pop('oidc_nonce', None)
+        session.pop('oidc_verifier', None)
         logger.warning(f"OIDC callback rejected from {request.remote_addr} - state mismatch "
                        f"(provider sent {'a state' if state else 'no state'}, "
-                       f"session {'has one' if session.get('oidc_state') else 'has none'})"
+                       f"session {'has one' if expected_state else 'has none'})"
                        + (f", provider error={request.args.get('error')!r}"
                           if request.args.get('error') else ''))
         flash("Invalid OIDC state. Please try again.", "error")
@@ -7101,19 +7106,27 @@ def oidc_callback():
         return redirect(url_for('login'))
     id_token = tokens.get('id_token', '')
     expected_nonce = session.pop('oidc_nonce', '')
-    id_claims = {}
-    if id_token:
-        try:
-            id_claims = _oidc_tokens.verify(id_token, cfg, client_id, client_secret)
-        except _oidc_tokens.IdTokenError as exc:
-            logger.error("OIDC login refused from %s - %s", request.remote_addr, exc)
-            flash("OIDC login failed - the provider's id_token could not be verified.", "error")
-            return redirect(url_for('login'))
-    if id_token and expected_nonce:
-        if not secrets.compare_digest(str(id_claims.get('nonce', '')), expected_nonce):
-            logger.warning(f"OIDC nonce mismatch from {request.remote_addr}")
-            flash("OIDC login failed - nonce mismatch.", "error")
-            return redirect(url_for('login'))
+    # The authorization request always asks for the openid scope, so a provider that answers
+    # without an id_token has not proven anything. Refuse rather than falling through to the
+    # unsigned userinfo response, which no signature, issuer or audience check covers.
+    if not id_token:
+        logger.error("OIDC login refused from %s - the provider returned no id_token",
+                     request.remote_addr)
+        flash("OIDC login failed - the provider returned no id_token.", "error")
+        return redirect(url_for('login'))
+    try:
+        id_claims = _oidc_tokens.verify(id_token, cfg, client_id, client_secret)
+    except _oidc_tokens.IdTokenError as exc:
+        logger.error("OIDC login refused from %s - %s", request.remote_addr, exc)
+        flash("OIDC login failed - the provider's id_token could not be verified.", "error")
+        return redirect(url_for('login'))
+    # Every authorization request sends a nonce, so a missing one means the session was lost
+    # or replayed. Fail closed instead of skipping the check.
+    if not expected_nonce or not secrets.compare_digest(
+            str(id_claims.get('nonce', '')), expected_nonce):
+        logger.warning(f"OIDC nonce mismatch from {request.remote_addr}")
+        flash("OIDC login failed - nonce mismatch.", "error")
+        return redirect(url_for('login'))
     access_token = tokens.get('access_token', '')
     groups_claim = str(s.get('oidc_groups_claim', '') or 'groups').strip()
     need_email  = not str(id_claims.get('email', '')).strip()
@@ -7128,18 +7141,32 @@ def oidc_callback():
             userinfo = userinfo_resp.json()
         except Exception as e:
             logger.warning("OIDC userinfo fetch failed (%s) - falling back to the id_token claims", e)
-    userinfo = {**id_claims, **userinfo} if (userinfo or id_claims) else {}
-    if not userinfo:
+    # userinfo is not signed, so it may only fill gaps in the verified id_token, and only when
+    # it describes the same subject. A mismatched sub means the two responses are about
+    # different accounts; drop it rather than let it override a verified claim.
+    if userinfo and str(userinfo.get('sub', '')) != str(id_claims.get('sub', '')):
+        logger.warning("OIDC userinfo subject does not match the id_token subject - ignoring userinfo")
+        userinfo = {}
+    claims = {**id_claims, **userinfo}
+    if not claims:
         logger.error("OIDC login failed - no claims from userinfo or the id_token")
         flash("OIDC login failed - the provider returned no account details.", "error")
         return redirect(url_for('login'))
-    email  = str(userinfo.get('email', '')).strip().lower()
-    name   = str(userinfo.get('name', userinfo.get('preferred_username', email))).strip()
-    groups = userinfo.get(s.get('oidc_groups_claim', 'groups'), [])
+    email  = str(claims.get('email', '')).strip().lower()
+    name   = str(claims.get('name', claims.get('preferred_username', email))).strip()
+    groups = claims.get(s.get('oidc_groups_claim', 'groups'), [])
     if not isinstance(groups, list):
         groups = [str(groups)]
-    _ev = userinfo.get('email_verified')
-    email_unverified = _ev is False or (isinstance(_ev, str) and _ev.strip().lower() in ('false', '0', 'no'))
+    # Fail closed: only an affirmative email_verified counts. An absent claim, a null, a 0 or
+    # an empty string is not the provider asserting that it verified the address.
+    _ev = claims.get('email_verified')
+    if isinstance(_ev, bool):
+        email_verified = _ev
+    elif isinstance(_ev, str):
+        email_verified = _ev.strip().lower() in ('true', '1', 'yes')
+    else:
+        email_verified = False
+    email_unverified = not email_verified
     allowed_emails = [e.strip().lower() for e in s.get('oidc_allowed_emails', '').split(',') if e.strip()]
     allowed_groups = [g.strip() for g in s.get('oidc_allowed_groups', '').split(',') if g.strip()]
     if not allowed_emails and not allowed_groups and not s.get('oidc_allow_any_authenticated'):
@@ -7151,7 +7178,12 @@ def oidc_callback():
         flash("Your account is not authorized to access this application.", "error")
         return redirect(url_for('login'))
     if allowed_emails and email in allowed_emails and email_unverified:
-        logger.warning(f"OIDC login denied for {email!r} - email not verified by the identity provider")
+        logger.warning(f"OIDC login denied for {email!r} - "
+                       + ("the provider sent no email_verified claim, so the address is not "
+                          "asserted as verified (map the claim in your provider, or allow the "
+                          "account by group instead)"
+                          if _ev is None else
+                          f"email not verified by the identity provider (email_verified={_ev!r})"))
         flash("Your account is not authorized to access this application.", "error")
         return redirect(url_for('login'))
     if allowed_groups and not any(g in allowed_groups for g in groups):
