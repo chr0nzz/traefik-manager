@@ -32,6 +32,10 @@ const sharedYAML = `http:
     chain-no-auth:
       chain:
         middlewares: [sec-headers]
+    sec-headers:
+      headers:
+        customRequestHeaders:
+          X-Sec: "1"
   serversTransports:
     plex-transport:
       forwardingTimeouts:
@@ -282,5 +286,39 @@ func TestAgentAnotherProviderAndDefaultTLSAreNotMissing(t *testing.T) {
 	code, body := rawSave(t, a, map[string]any{"content": raw, "applyShared": true})
 	if code != http.StatusOK {
 		t.Fatalf("save returned %d %v", code, body)
+	}
+}
+
+func TestAgentChainChildThatDoesNotExistBlocksTheSave(t *testing.T) {
+	dir := t.TempDir()
+	own := filepath.Join(dir, "dynamic.yml")
+	whole := routeOnlyYAML + strings.TrimPrefix(sharedYAML, "http:\n")
+	if err := os.WriteFile(own, []byte(whole), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	a := &App{cfg: &Config{ConfigPath: dir, BackupDir: t.TempDir()}}
+	before, _ := os.ReadFile(own)
+	raw := strings.Replace(rawGet(t, a)["raw"].(string), "- sec-headers", "- sec-headerz", 1)
+	code, body := rawSave(t, a, map[string]any{"content": raw, "applyShared": true})
+	if code != http.StatusConflict || body["code"] != "middleware_not_defined" {
+		t.Fatalf("save returned %d %v", code, body)
+	}
+	if after, _ := os.ReadFile(own); string(after) != string(before) {
+		t.Errorf("a chain with a missing child was written anyway")
+	}
+}
+
+func TestAgentAnUntouchedSharedChainDoesNotBlockAnUnrelatedSave(t *testing.T) {
+	a, own, shared := splitConfigApp(t)
+	if err := os.WriteFile(shared, []byte(strings.Replace(sharedYAML, "sec-headers]", "sec-headerz]", 1)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	raw := strings.Replace(rawGet(t, a)["raw"].(string), "plex.example.com", "new.example.com", 1)
+	code, body := rawSave(t, a, map[string]any{"content": raw})
+	if code != http.StatusOK {
+		t.Fatalf("an already broken chain in another file must not block this save: %d %v", code, body)
+	}
+	if after, _ := os.ReadFile(own); !strings.Contains(string(after), "new.example.com") {
+		t.Errorf("the route edit did not land")
 	}
 }

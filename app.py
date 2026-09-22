@@ -5998,8 +5998,9 @@ def _reference_exists(new_data, config, target_path, scope, kind, name):
     return path is not None
 
 
-def _missing_route_references(new_data, config, target_path):
+def _missing_route_references(new_data, config, target_path, untouched=()):
     missing = []
+    skip = {(c['scope'], c['kind'], c['name']) for c in untouched}
 
     def check(scope, kind, raw):
         name = _file_reference(raw)
@@ -6021,6 +6022,16 @@ def _missing_route_references(new_data, config, target_path):
                 check('tls', 'options', tls.get('options'))
         for svc in _definition_section(new_data, proto, 'services').values():
             check(proto, 'serversTransports', _route_transport_name(svc))
+        for mw_name, mw in _definition_section(new_data, proto, 'middlewares').items():
+            if not isinstance(mw, dict) or (proto, 'middlewares', mw_name) in skip:
+                continue
+            chain = mw.get('chain')
+            if isinstance(chain, dict):
+                for raw in _to_list(chain.get('middlewares')):
+                    check(proto, 'middlewares', raw)
+            errors = mw.get('errors')
+            if isinstance(errors, dict):
+                check(proto, 'services', errors.get('service'))
     return missing
 
 
@@ -6235,12 +6246,6 @@ def api_route_raw_save(route_id):
         with open(target_path, 'r') as f:
             _, file_map = _sanitize_go_templates(f.read())
 
-    missing = _missing_route_references(new_data, config, target_path)
-    if missing:
-        kind, name = missing[0]
-        return jsonify({'ok': False, 'error': _MISSING_REFERENCE_MESSAGES[kind](name),
-                        'missingReferences': [{'kind': k, 'name': n} for k, n in missing]}), 409
-
     renamed, renamed_file = _renamed_shared_definition(new_data, config, target_path)
     if renamed:
         return jsonify({'ok': False, 'renamed': renamed,
@@ -6259,6 +6264,12 @@ def api_route_raw_save(route_id):
         if was and was != _file_fingerprint(change['path']):
             return jsonify({'ok': False, 'stale': change['file'],
                             'error': _ELSEWHERE_MESSAGES['stale'](change['file'])}), 409
+
+    missing = _missing_route_references(new_data, config, target_path, elsewhere)
+    if missing:
+        kind, name = missing[0]
+        return jsonify({'ok': False, 'error': _MISSING_REFERENCE_MESSAGES[kind](name),
+                        'missingReferences': [{'kind': k, 'name': n} for k, n in missing]}), 409
 
     if changed and not body.get('applyShared'):
         return jsonify({'ok': False, 'needsConfirm': True,

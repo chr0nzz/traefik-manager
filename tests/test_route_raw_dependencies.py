@@ -32,6 +32,10 @@ CONFIG = textwrap.dedent('''\
         chain-no-auth:
           chain:
             middlewares: [sec-headers]
+        sec-headers:
+          headers:
+            customRequestHeaders:
+              X-Sec: "1"
         unrelated:
           headers:
             customRequestHeaders:
@@ -407,3 +411,36 @@ def test_a_reference_to_a_definition_in_another_file_is_accepted(client, split_c
     raw = _payload(client)['raw']
     res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
     assert res.status_code == 200, 'shared.yml defines all three, so nothing is missing'
+
+
+def test_a_chain_naming_a_middleware_that_does_not_exist_blocks_the_save(client, route_config):
+    raw = _raw(client).replace('middlewares: [sec-headers]', 'middlewares: [sec-headerz]')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 409, res.data[:300]
+    assert 'sec-headerz' in res.get_json()['error']
+    assert res.get_json()['missingReferences'][0]['kind'] == 'middlewares'
+    assert 'sec-headerz' not in route_config.read_text()
+
+
+def test_a_chain_whose_children_all_exist_saves(client, route_config):
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': _raw(client)}, headers=HDR)
+    assert res.status_code == 200, res.data[:300]
+
+
+def test_an_errors_middleware_pointing_at_a_missing_service_blocks_the_save(client, config_path):
+    config_path.write_text(CONFIG.replace(
+        '    chain-no-auth:\n      chain:\n        middlewares: [sec-headers]',
+        '    chain-no-auth:\n      errors:\n        service: gone-error-svc\n'
+        '        status: ["500-599"]\n        query: /{status}.html'))
+    raw = _raw(client)
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 409, res.data[:300]
+    assert 'gone-error-svc' in res.get_json()['error']
+
+
+def test_a_chain_child_from_another_provider_is_left_to_traefik(client, config_path):
+    config_path.write_text(CONFIG.replace('middlewares: [sec-headers]',
+                                          'middlewares: [only-in-docker@docker]'))
+    raw = _raw(client)
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 200, res.data[:300]

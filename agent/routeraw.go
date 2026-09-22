@@ -195,8 +195,13 @@ func (a *App) referenceExists(newData, cfg map[string]any, targetPath string, de
 	return path != ""
 }
 
-func (a *App) missingRouteReferences(newData, cfg map[string]any, targetPath string) []routeDep {
+func (a *App) missingRouteReferences(newData, cfg map[string]any, targetPath string,
+	untouched []sharedChange) []routeDep {
 	var missing []routeDep
+	skip := map[routeDep]bool{}
+	for _, change := range untouched {
+		skip[change.Dep] = true
+	}
 	check := func(scope, kind, raw string) {
 		name := fileReference(raw)
 		if name == "" || (kind == "options" && name == "default") {
@@ -238,6 +243,25 @@ func (a *App) missingRouteReferences(newData, cfg map[string]any, targetPath str
 		}
 		for _, svc := range sectionMap(newData, proto, "services") {
 			check(proto, "serversTransports", routeTransportName(svc))
+		}
+		for name, raw := range sectionMap(newData, proto, "middlewares") {
+			mw, _ := raw.(map[string]any)
+			if mw == nil || skip[routeDep{proto, "middlewares", name}] {
+				continue
+			}
+			if chain, ok := mw["chain"].(map[string]any); ok {
+				list, _ := chain["middlewares"].([]any)
+				for _, item := range list {
+					if child, ok := item.(string); ok {
+						check(proto, "middlewares", child)
+					}
+				}
+			}
+			if errs, ok := mw["errors"].(map[string]any); ok {
+				if svc, ok := errs["service"].(string); ok {
+					check(proto, "services", svc)
+				}
+			}
 		}
 	}
 	return missing
