@@ -451,6 +451,109 @@ func (a *App) renamedSharedDefinition(newData, cfg map[string]any, targetPath st
 	return "", ""
 }
 
+func (a *App) renamedCopy(newData, cfg map[string]any, targetPath, routeName string) map[string]any {
+	for _, proto := range []string{"http", "tcp"} {
+		oldRouters := sectionMap(cfg, proto, "routers")
+		for name, rawNew := range sectionMap(newData, proto, "routers") {
+			newRouter, _ := rawNew.(map[string]any)
+			oldRouter, _ := oldRouters[name].(map[string]any)
+			if newRouter == nil || oldRouter == nil {
+				continue
+			}
+			kept := map[routeDep]bool{}
+			for _, dep := range routeDependencyNames(proto, newRouter, serviceOf(newData, proto, newRouter, name)) {
+				kept[dep] = true
+			}
+			for _, dep := range routeDependencyNames(proto, oldRouter, serviceOf(cfg, proto, oldRouter, name)) {
+				if kept[dep] || (dep.Kind != "middlewares" && dep.Kind != "serversTransports") {
+					continue
+				}
+				oldBody, oldPath := a.findDefinition(dep, cfg, targetPath)
+				if oldPath == "" {
+					continue
+				}
+				for candidate, body := range sectionMap(newData, dep.Scope, dep.Kind) {
+					if candidate == dep.Name {
+						continue
+					}
+					if _, where := a.findDefinition(routeDep{dep.Scope, dep.Kind, candidate}, cfg,
+						targetPath); where != "" {
+						continue
+					}
+					if !reflect.DeepEqual(body, oldBody) {
+						continue
+					}
+					others := []string{}
+					for _, r := range a.routesUsing(dep) {
+						if r != routeName {
+							others = append(others, r)
+						}
+					}
+					shown := others
+					if len(shown) > 3 {
+						shown = shown[:3]
+					}
+					return map[string]any{
+						"from": dep.Name, "to": candidate, "kind": dep.Kind,
+						"file":   filepath.Base(oldPath),
+						"usedBy": map[string]any{"count": len(others), "routes": shown},
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func serviceOf(data map[string]any, proto string, router map[string]any, rname string) any {
+	svcName := rname
+	if sn, ok := router["service"].(string); ok && sn != "" {
+		svcName = sn
+	}
+	return sectionMap(data, proto, "services")[svcName]
+}
+
+func (a *App) definitionReferenceWarnings(out, origins, cfg map[string]any, targetPath string) []map[string]any {
+	warnings := []map[string]any{}
+	for _, proto := range []string{"http", "tcp", "udp"} {
+		scoped, _ := origins[proto].(map[string]any)
+		where, _ := scoped["middlewares"].(map[string]any)
+		for name, raw := range sectionMap(out, proto, "middlewares") {
+			mw, _ := raw.(map[string]any)
+			if mw == nil {
+				continue
+			}
+			refs := []routeDep{}
+			if chain, ok := mw["chain"].(map[string]any); ok {
+				list, _ := chain["middlewares"].([]any)
+				for _, item := range list {
+					if child, ok := item.(string); ok {
+						refs = append(refs, routeDep{proto, "middlewares", fileReference(child)})
+					}
+				}
+			}
+			if errs, ok := mw["errors"].(map[string]any); ok {
+				if svc, ok := errs["service"].(string); ok {
+					refs = append(refs, routeDep{proto, "services", fileReference(svc)})
+				}
+			}
+			for _, ref := range refs {
+				if ref.Name == "" || a.referenceExists(out, cfg, targetPath, ref) {
+					continue
+				}
+				file := filepath.Base(targetPath)
+				if origin, ok := where[name].(string); ok && origin != "" {
+					file = origin
+				}
+				warnings = append(warnings, map[string]any{
+					"name": name, "kind": ref.Kind, "missing": ref.Name, "file": file,
+				})
+			}
+		}
+	}
+	return warnings
+}
+
 func (a *App) writeSharedDefinitions(changes []sharedChange) error {
 	paths := map[string]bool{}
 	for _, change := range changes {

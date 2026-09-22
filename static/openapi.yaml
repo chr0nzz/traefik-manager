@@ -3425,6 +3425,16 @@ paths:
                     type: object
                     additionalProperties: { type: string }
                     description: Per file, a digest to send back on save so a file that changed underneath aborts it.
+                  warnings:
+                    type: array
+                    description: Definitions shown here that point at something no config file defines. Informational; they do not block a save.
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string }
+                        kind: { type: string }
+                        missing: { type: string }
+                        file: { type: string }
     post:
       tags: [Routes & Middlewares]
       summary: Replace one route's YAML
@@ -3448,6 +3458,9 @@ paths:
                 applyShared:
                   type: boolean
                   description: Write changed definitions that live in other files. Without it such a change answers 409.
+                applyRename:
+                  type: boolean
+                  description: Accept creating a copy under a new name when a definition and its reference were both renamed. Without it that answers 409 with renamedCopy.
                 fingerprints:
                   type: object
                   additionalProperties: { type: string }
@@ -3474,6 +3487,19 @@ paths:
                   readOnly: { type: string }
                   stale: { type: string }
                   renamed: { type: string }
+                  renamedCopy:
+                    type: object
+                    description: Both a definition and its reference were renamed, which copies it rather than renaming it. Repeat with applyRename to accept.
+                    properties:
+                      from: { type: string }
+                      to: { type: string }
+                      kind: { type: string }
+                      file: { type: string }
+                      usedBy:
+                        type: object
+                        properties:
+                          count: { type: integer }
+                          routes: { type: array, items: { type: string } }
                   missingReferences:
                     type: array
                     items:

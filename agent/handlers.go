@@ -1926,7 +1926,8 @@ func (a *App) routeRawGetHandler(w http.ResponseWriter, r *http.Request, routeID
 				return
 			}
 			jsonOK(w, map[string]any{"raw": string(raw), "configFile": filepath.Base(p), "proto": proto,
-				"origins": origins, "fingerprints": a.dependencyFingerprints(origins, p)})
+				"origins": origins, "fingerprints": a.dependencyFingerprints(origins, p),
+				"warnings": a.definitionReferenceWarnings(out, origins, config, p)})
 			return
 		}
 	}
@@ -1937,6 +1938,7 @@ func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeI
 	var body struct {
 		Content      string            `json:"content"`
 		ApplyShared  bool              `json:"applyShared"`
+		ApplyRename  bool              `json:"applyRename"`
 		Fingerprints map[string]string `json:"fingerprints"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || strings.TrimSpace(body.Content) == "" {
@@ -2006,6 +2008,13 @@ func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeI
 	if name, file := a.renamedSharedDefinition(newData, config, targetPath); name != "" {
 		jsonErrorCode(w, "shared_definition_renamed", map[string]any{"name": name, "file": file},
 			"renaming "+name+" here would leave it behind in "+file, http.StatusConflict)
+		return
+	}
+
+	if copied := a.renamedCopy(newData, config, targetPath, rname); copied != nil && !body.ApplyRename {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]any{"ok": false, "renamedCopy": copied})
 		return
 	}
 

@@ -79,6 +79,10 @@ SHARED = textwrap.dedent('''\
         chain-no-auth:
           chain:
             middlewares: [sec-headers]
+        sec-headers:
+          headers:
+            customRequestHeaders:
+              X-Sec: "1"
       serversTransports:
         plex-transport:
           forwardingTimeouts:
@@ -444,3 +448,84 @@ def test_a_chain_child_from_another_provider_is_left_to_traefik(client, config_p
     raw = _raw(client)
     res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
     assert res.status_code == 200, res.data[:300]
+
+
+def _rename_both(raw, old, new):
+    return raw.replace(f'{old}@file', f'{new}@file').replace(f'  {old}:', f'  {new}:')
+
+
+def test_renaming_a_definition_and_its_reference_asks_before_copying(client, split_config,
+                                                                    config_path):
+    raw = _rename_both(_payload(client)['raw'], 'chain-no-auth', 'chain-no-auth-x')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 409, res.data[:300]
+    copy = res.get_json()['renamedCopy']
+    assert copy['from'] == 'chain-no-auth' and copy['to'] == 'chain-no-auth-x'
+    assert copy['file'] == 'shared.yml'
+    assert 'chain-no-auth-x' not in config_path.read_text(), 'nothing is written before the answer'
+
+
+def test_confirming_the_copy_writes_it_and_leaves_the_original(client, split_config, config_path):
+    raw = _rename_both(_payload(client)['raw'], 'chain-no-auth', 'chain-no-auth-x')
+    res = client.post('/api/routes/plex-rtr/raw',
+                      json={'content': raw, 'applyRename': True}, headers=HDR)
+    assert res.status_code == 200, res.data[:300]
+    assert 'chain-no-auth-x:' in config_path.read_text(), 'the copy belongs to this route file'
+    assert 'chain-no-auth:' in split_config.read_text(), 'the original keeps its name and its file'
+
+
+def test_a_genuinely_different_definition_is_not_treated_as_a_rename(client, route_config):
+    raw = _rename_both(_raw(client), 'chain-no-auth', 'chain-no-auth-x')
+    raw = raw.replace('middlewares: [sec-headers]', 'middlewares: [sec-headers, unrelated]')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 200, 'a different body is a new middleware, not a rename'
+    assert 'chain-no-auth-x:' in route_config.read_text()
+
+
+def test_a_rename_inside_one_file_is_caught_too(client, route_config):
+    raw = _rename_both(_raw(client), 'chain-no-auth', 'chain-no-auth-x')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 409, res.data[:300]
+    copy = res.get_json()['renamedCopy']
+    assert copy['from'] == 'chain-no-auth' and copy['to'] == 'chain-no-auth-x'
+
+
+def test_the_prompt_counts_the_routes_still_on_the_original(client, split_config, config_path):
+    config_path.write_text(config_path.read_text().replace(
+        '  services:',
+        '    sonarr-rtr:\n      rule: "Host(`sonarr.example.com`)"\n'
+        '      middlewares:\n        - chain-no-auth@file\n      service: plex-svc\n  services:'))
+    raw = _rename_both(_payload(client)['raw'], 'chain-no-auth', 'chain-no-auth-x')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    used = res.get_json()['renamedCopy']['usedBy']
+    assert used['count'] == 1 and used['routes'] == ['sonarr-rtr'], \
+        'the route being edited is leaving the original, so it is not counted'
+
+
+def test_renaming_only_the_key_is_still_refused_outright(client, split_config):
+    raw = _payload(client)['raw'].replace('  chain-no-auth:', '  chain-no-auth-x:')
+    res = client.post('/api/routes/plex-rtr/raw',
+                      json={'content': raw, 'applyRename': True}, headers=HDR)
+    assert res.status_code == 409
+    assert res.get_json()['renamed'] == 'chain-no-auth', 'an orphan is still refused, not offered'
+
+
+def test_a_broken_chain_in_another_file_is_flagged_on_open(client, split_config):
+    split_config.write_text(split_config.read_text().replace('[sec-headers]', '[sec-headerz]'))
+    warnings = _payload(client)['warnings']
+    assert len(warnings) == 1, warnings
+    assert warnings[0]['name'] == 'chain-no-auth'
+    assert warnings[0]['missing'] == 'sec-headerz'
+    assert warnings[0]['file'] == 'shared.yml'
+
+
+def test_a_flagged_chain_still_does_not_block_an_unrelated_save(client, split_config, config_path):
+    split_config.write_text(split_config.read_text().replace('[sec-headers]', '[sec-headerz]'))
+    raw = _payload(client)['raw'].replace('plex.example.com', 'new.example.com')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 200, res.data[:300]
+    assert 'new.example.com' in config_path.read_text()
+
+
+def test_a_healthy_route_reports_no_warnings(client, route_config):
+    assert _payload(client)['warnings'] == []

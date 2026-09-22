@@ -521,17 +521,30 @@ function _routeYamlOriginList(origins, ownFile) {
     return out;
 }
 
-function _renderRouteYamlOrigins(origins, ownFile) {
+function _renderRouteYamlOrigins(origins, ownFile, warnings) {
     const box = document.getElementById('routeYamlOrigins');
     if (!box) return;
     const shared = _routeYamlOriginList(origins, ownFile);
-    if (!shared.length) { box.style.display = 'none'; box.textContent = ''; return; }
-    const items = shared.map(s => th('{name} is defined in {file}', {
-        name: tmHtml(`<code class="font-mono">${_esc(s.name)}</code>`),
-        file: tmHtml(`<code class="font-mono">${_esc(s.file)}</code>`),
-    })).join(', ');
-    box.innerHTML = `<i class="ph-bold ph-info mr-1"></i>${items}. `
-        + th('Other routes may use these, so this editor shows them but does not write them.');
+    const broken = warnings || [];
+    if (!shared.length && !broken.length) { box.style.display = 'none'; box.textContent = ''; return; }
+    let html = '';
+    if (shared.length) {
+        const items = shared.map(s => th('{name} is defined in {file}', {
+            name: tmHtml(`<code class="font-mono">${_esc(s.name)}</code>`),
+            file: tmHtml(`<code class="font-mono">${_esc(s.file)}</code>`),
+        })).join(', ');
+        html += `<i class="ph-bold ph-info mr-1"></i>${items}. `
+             + th('Other routes may use these, so this editor shows them but does not write them.');
+    }
+    broken.forEach(w => {
+        html += `<div style="color:var(--red);margin-top:4px"><i class="ph-bold ph-warning mr-1"></i>`
+             + th('{name}, defined in {file}, points at {missing}, which is not defined anywhere', {
+                 name: tmHtml(`<code class="font-mono">${_esc(w.name)}</code>`),
+                 file: tmHtml(`<code class="font-mono">${_esc(w.file)}</code>`),
+                 missing: tmHtml(`<code class="font-mono">${_esc(w.missing)}</code>`),
+             }) + '</div>';
+    });
+    box.innerHTML = html;
     box.style.display = 'block';
 }
 
@@ -549,7 +562,7 @@ async function openRouteYamlEditor(id) {
         const overlay = document.getElementById('routeYamlPopout');
         if (overlay) overlay.style.display = 'flex';
         _routeYamlFingerprints = data.fingerprints || {};
-        _renderRouteYamlOrigins(data.origins, data.configFile);
+        _renderRouteYamlOrigins(data.origins, data.configFile, data.warnings);
         _initRouteYamlMonaco(data.raw || '');
     } catch(e) {
         showToast(_netErrText(e, t('Failed to load route YAML')), 'error');
@@ -585,37 +598,65 @@ async function _confirmSharedChanges(changes) {
     }).then(r => r.ok);
 }
 
-async function _postRouteYaml(content, applyShared) {
+async function _postRouteYaml(content, flags) {
     return agentFetch(`/api/routes/${encodeURIComponent(_routeYamlId)}/raw`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
-        body: JSON.stringify({ content, applyShared, fingerprints: _routeYamlFingerprints }),
+        body: JSON.stringify({ content, applyShared: flags.applyShared, applyRename: flags.applyRename,
+                               fingerprints: _routeYamlFingerprints }),
     });
+}
+
+async function _confirmRenamedCopy(copy) {
+    const used = copy.usedBy || {};
+    const notes = [t('{from} stays as it is in {file}', { from: copy.from, file: copy.file }),
+                   t('{to} is created in this route\'s own file', { to: copy.to })];
+    if (used.count) {
+        notes.push(tn('{count} other route still uses {from}: {routes}',
+                      '{count} other routes still use {from}: {routes}', used.count,
+                      { count: used.count, from: copy.from, routes: (used.routes || []).join(', ') }));
+    }
+    return _confirmWith({
+        title: t('Rename it everywhere, or copy it for this route?'),
+        message: t('This looks like a rename, but the definition it came from lives in another file and saving here does not rename it there. To rename it everywhere, cancel and use the Middlewares tab.'),
+        notes,
+        okLabel: t('Create the copy'),
+    }).then(r => r.ok);
 }
 
 async function saveRouteYaml() {
     const content = _routeYamlMonaco ? _routeYamlMonaco.getValue() : _routeYamlContent;
+    const flags = { applyShared: false, applyRename: false };
     try {
-        let res  = await _postRouteYaml(content, false);
-        let data = res.status === 409 ? await res.json() : null;
-        if (data && data.needsConfirm) {
-            if (!await _confirmSharedChanges(data.sharedChanges || [])) return;
-            res  = await _postRouteYaml(content, true);
-            data = null;
-        }
-        if (!res.ok && !data) {
-            showToast(await _errText(res, t('Save failed')), 'error');
+        for (let attempt = 0; attempt < 3; attempt++) {
+            const res = await _postRouteYaml(content, flags);
+            if (res.status === 409) {
+                const data = await res.json();
+                if (data.renamedCopy) {
+                    if (!await _confirmRenamedCopy(data.renamedCopy)) return;
+                    flags.applyRename = true;
+                    continue;
+                }
+                if (data.needsConfirm) {
+                    if (!await _confirmSharedChanges(data.sharedChanges || [])) return;
+                    flags.applyShared = true;
+                    continue;
+                }
+                showToast(data.error || t('Save failed'), 'error');
+                return;
+            }
+            if (!res.ok) { showToast(await _errText(res, t('Save failed')), 'error'); return; }
+            const body = await res.json();
+            if (body.ok) {
+                closeRouteYamlEditor();
+                refreshRoutes();
+                fetchNotifications();
+            } else {
+                showToast(body.error || body.message || t('Save failed'), 'error');
+            }
             return;
         }
-        if (data) { showToast(data.error || t('Save failed'), 'error'); return; }
-        const body = await res.json();
-        if (body.ok) {
-            closeRouteYamlEditor();
-            refreshRoutes();
-            fetchNotifications();
-        } else {
-            showToast(body.error || body.message || t('Save failed'), 'error');
-        }
+        showToast(t('Save failed'), 'error');
     } catch(e) {
         showToast(_netErrText(e, t('Save failed')), 'error');
     }

@@ -6035,6 +6035,29 @@ def _missing_route_references(new_data, config, target_path, untouched=()):
     return missing
 
 
+def _definition_reference_warnings(out, origins, config, target_path):
+    warnings = []
+    for proto in ('http', 'tcp', 'udp'):
+        where = (origins.get(proto) or {}).get('middlewares') or {}
+        for name, mw in _definition_section(out, proto, 'middlewares').items():
+            if not isinstance(mw, dict):
+                continue
+            refs = []
+            chain = mw.get('chain')
+            if isinstance(chain, dict):
+                refs += [(proto, 'middlewares', r) for r in _to_list(chain.get('middlewares'))]
+            errors = mw.get('errors')
+            if isinstance(errors, dict):
+                refs.append((proto, 'services', errors.get('service')))
+            for scope, kind, raw in refs:
+                missing = _file_reference(raw)
+                if not missing or _reference_exists(out, config, target_path, scope, kind, missing):
+                    continue
+                warnings.append({'name': name, 'kind': kind, 'missing': missing,
+                                 'file': where.get(name, os.path.basename(target_path))})
+    return warnings
+
+
 def _file_fingerprint(path):
     try:
         with open(path, 'rb') as f:
@@ -6117,6 +6140,41 @@ def _atomic_write(path, text):
             pass
 
 
+def _renamed_copy(new_data, config, target_path, route_name, user_map):
+    for proto in ('http', 'tcp'):
+        old_routers = _definition_section(config, proto, 'routers')
+        for name, new_router in _definition_section(new_data, proto, 'routers').items():
+            old_router = old_routers.get(name)
+            if not isinstance(old_router, dict) or not isinstance(new_router, dict):
+                continue
+            old_svc = _definition_section(config, proto, 'services').get(
+                _svc_key(old_router.get('service', name)))
+            new_svc = _definition_section(new_data, proto, 'services').get(
+                _svc_key(new_router.get('service', name)))
+            kept = set(_route_dependency_names(proto, new_router, new_svc))
+            for scope, kind, dropped in _route_dependency_names(proto, old_router, old_svc):
+                if (scope, kind, dropped) in kept or kind not in ('middlewares', 'serversTransports'):
+                    continue
+                old_body, old_path = _find_definition(scope, kind, dropped, config, target_path)
+                if old_body is None:
+                    continue
+                with open(old_path, 'r') as f:
+                    _, old_map = _sanitize_go_templates(f.read())
+                for candidate, body in _definition_section(new_data, scope, kind).items():
+                    if candidate == dropped:
+                        continue
+                    _found, where = _find_definition(scope, kind, candidate, config, target_path)
+                    if where is not None:
+                        continue
+                    if _plain_value(body, user_map) != _plain_value(old_body, old_map):
+                        continue
+                    others = [r for r in _routes_using(scope, kind, dropped) if r != route_name]
+                    return {'from': dropped, 'to': candidate, 'kind': kind,
+                            'file': os.path.basename(old_path),
+                            'usedBy': {'count': len(others), 'routes': others[:3]}}
+    return None
+
+
 def _write_shared_definitions(changes, user_map):
     for path in sorted({c['path'] for c in changes}):
         cfg = load_config(path)
@@ -6192,7 +6250,8 @@ def api_route_raw_get(route_id):
                     raw = raw.replace(placeholder, original)
                 return jsonify({'raw': raw, 'configFile': os.path.basename(p), 'proto': proto,
                                 'origins': origins,
-                                'fingerprints': _route_dependency_fingerprints(origins, p)})
+                                'fingerprints': _route_dependency_fingerprints(origins, p),
+                                'warnings': _definition_reference_warnings(out, origins, config, p)})
 
     return jsonify({'error': gettext('Route not found')}), 404
 
@@ -6250,6 +6309,10 @@ def api_route_raw_save(route_id):
     if renamed:
         return jsonify({'ok': False, 'renamed': renamed,
                         'error': _ELSEWHERE_MESSAGES['renamed'](renamed, renamed_file)}), 409
+
+    copied = _renamed_copy(new_data, config, target_path, rname, user_map)
+    if copied and not body.get('applyRename'):
+        return jsonify({'ok': False, 'renamedCopy': copied}), 409
 
     elsewhere, changed = _sections_defined_elsewhere(new_data, config, target_path, user_map)
     for change in changed:

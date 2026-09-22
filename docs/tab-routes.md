@@ -115,10 +115,14 @@ Saving follows the file each section came from:
 
 The save is also refused when the YAML points at something that does not exist. A router naming a middleware, service or TLS option, a service naming a `serversTransport`, a `chain` listing a middleware, or an `errors` middleware naming a service, that is defined in no config file stops the save and says which name is wrong - a typo like `https-redirects@file` for `https-redirect@file` never reaches disk. Names carrying another provider, such as `crowdsec@docker`, are left to Traefik, and `options: default` needs no definition. Only what the save writes is checked, so a chain that is already broken in another file and that you did not touch never blocks an unrelated edit.
 
-Two things the editor refuses rather than guesses:
+Renaming is handled in two ways, depending on what you changed:
 
-- **Renaming** a definition that lives in another file, which would leave the original behind as an orphan. Rename it on the [Middlewares tab](tab-middlewares.md) instead.
-- **Saving at all** when one of the files involved is read-only, or changed on disk after you opened the editor. Nothing is written in either case, not even the route.
+- Change a definition's **key alone**, leaving the router still pointing at the old name, and the save is refused - it would orphan the definition. Rename it on the [Middlewares tab](tab-middlewares.md).
+- Change the **key and the reference together**, and if the body is unchanged the editor asks first, because this does not rename anything: it creates a copy under the new name in this route's file and leaves the original where it is, still used by whatever else uses it. The prompt says so and counts those routes. Change the body as well and it is treated as a new definition, with no prompt.
+
+**Saving at all** is refused when one of the files involved is read-only, or changed on disk after you opened the editor. Nothing is written in either case, not even the route.
+
+A definition shown from another file that itself points at something missing - a `chain` listing a middleware that is gone - is flagged in red above the editor when you open it. It does not block the save, since you did not cause it and the save does not write that file.
 
 **Deleting** a block that belongs to another file only removes it from this view. A route's editor never deletes a definition other routes may depend on.
 

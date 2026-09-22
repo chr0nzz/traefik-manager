@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-22 15:28+0000\n"
+"POT-Creation-Date: 2026-09-22 15:52+0000\n"
 "PO-Revision-Date: 2026-09-22 13:20+0000\n"
 "Last-Translator: slywalker01 <csyl20@yahoo.fr>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/traefik-manager/"
@@ -2510,6 +2510,10 @@ msgid "Create Backup"
 msgstr ""
 
 msgid "Create a Traefik route for this Traefik Manager instance."
+msgstr ""
+
+#. Used in the browser
+msgid "Create the copy"
 msgstr ""
 
 #. Used in the browser
@@ -7558,6 +7562,10 @@ msgid ""
 "undone until it does."
 msgstr ""
 
+#. Used in the browser
+msgid "Rename it everywhere, or copy it for this route?"
+msgstr ""
+
 #, python-format
 msgid ""
 "Renaming %(name)s here would leave it behind in %(file)s. Rename it on the "
@@ -10007,6 +10015,13 @@ msgid ""
 "This is the last step. The password protects the whole interface and is "
 "stored as a bcrypt hash, never in plain text. You can change it, add two-"
 "factor, or switch to an identity provider later in Settings."
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"This looks like a rename, but the definition it came from lives in another "
+"file and saving here does not rename it there. To rename it everywhere, "
+"cancel and use the Middlewares tab."
 msgstr ""
 
 msgid "This page will reconnect automatically."
@@ -13793,6 +13808,13 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{count} other route still uses {from}: {routes}"
+msgid_plural "{count} other routes still use {from}: {routes}"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{count} path"
 msgid_plural "{count} paths"
 msgstr[0] ""
@@ -14107,6 +14129,11 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "{from} stays as it is in {file}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{from}-{to} of {total}"
 msgstr ""
 
@@ -14291,6 +14318,12 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "{name}, defined in {file}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{name}, defined in {file}, points at {missing}, which is not defined anywhere"
 msgstr ""
 
 #. Used in the browser
@@ -14721,6 +14754,11 @@ msgstr ""
 #, python-brace-format
 msgid ""
 "{total} {label} reported by /api/overview, the object list could not be read"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{to} is created in this route's own file"
 msgstr ""
 
 #. Used in the browser

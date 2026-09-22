@@ -332,3 +332,67 @@ func TestAgentEnglishTextMatchesTheHubWording(t *testing.T) {
 		t.Errorf("error = %q, want the same sentence the hub sends for a local route", body["error"])
 	}
 }
+
+func renameBoth(raw, from, to string) string {
+	raw = strings.Replace(raw, from+"@file", to+"@file", 1)
+	return strings.Replace(raw, "    "+from+":", "    "+to+":", 1)
+}
+
+func TestAgentRenamingADefinitionAndItsReferenceAsksFirst(t *testing.T) {
+	a, own, shared := splitConfigApp(t)
+	raw := renameBoth(rawGet(t, a)["raw"].(string), "chain-no-auth", "chain-no-auth-x")
+	code, body := rawSave(t, a, map[string]any{"content": raw})
+	if code != http.StatusConflict {
+		t.Fatalf("save returned %d %v", code, body)
+	}
+	copied, _ := body["renamedCopy"].(map[string]any)
+	if copied == nil || copied["from"] != "chain-no-auth" || copied["to"] != "chain-no-auth-x" {
+		t.Fatalf("renamedCopy = %v", body)
+	}
+	if copied["file"] != "shared.yml" {
+		t.Errorf("file = %v, want shared.yml", copied["file"])
+	}
+	if after, _ := os.ReadFile(own); strings.Contains(string(after), "chain-no-auth-x") {
+		t.Errorf("the copy was written before the answer")
+	}
+	if after, _ := os.ReadFile(shared); !strings.Contains(string(after), "chain-no-auth:") {
+		t.Errorf("the original was touched")
+	}
+}
+
+func TestAgentConfirmedRenameCopyKeepsTheOriginal(t *testing.T) {
+	a, own, shared := splitConfigApp(t)
+	raw := renameBoth(rawGet(t, a)["raw"].(string), "chain-no-auth", "chain-no-auth-x")
+	code, body := rawSave(t, a, map[string]any{"content": raw, "applyRename": true})
+	if code != http.StatusOK {
+		t.Fatalf("save returned %d %v", code, body)
+	}
+	if after, _ := os.ReadFile(own); !strings.Contains(string(after), "chain-no-auth-x:") {
+		t.Errorf("the copy did not land in the route file:\n%s", after)
+	}
+	if after, _ := os.ReadFile(shared); !strings.Contains(string(after), "chain-no-auth:") {
+		t.Errorf("the original lost its name:\n%s", after)
+	}
+}
+
+func TestAgentBrokenChainInAnotherFileIsFlaggedOnOpen(t *testing.T) {
+	a, _, shared := splitConfigApp(t)
+	if err := os.WriteFile(shared, []byte(strings.Replace(sharedYAML, "[sec-headers]", "[sec-headerz]", 1)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	warnings, _ := rawGet(t, a)["warnings"].([]any)
+	if len(warnings) != 1 {
+		t.Fatalf("warnings = %v", warnings)
+	}
+	first, _ := warnings[0].(map[string]any)
+	if first["name"] != "chain-no-auth" || first["missing"] != "sec-headerz" || first["file"] != "shared.yml" {
+		t.Errorf("warning = %v", first)
+	}
+}
+
+func TestAgentAHealthyRouteReportsNoWarnings(t *testing.T) {
+	a, _, _ := splitConfigApp(t)
+	if warnings, _ := rawGet(t, a)["warnings"].([]any); len(warnings) != 0 {
+		t.Errorf("warnings = %v, want none", warnings)
+	}
+}
