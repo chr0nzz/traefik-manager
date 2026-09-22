@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-09-21 04:30+0000\n"
-"PO-Revision-Date: 2026-09-22 13:20+0000\n"
+"PO-Revision-Date: 2026-09-22 16:19+0000\n"
 "Last-Translator: slywalker01 <csyl20@yahoo.fr>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/traefik-manager/"
 "web-app/fr/>\n"
@@ -146,10 +146,10 @@ msgid "(Name: claim, one per line)"
 msgstr ""
 
 msgid "(bytes)"
-msgstr ""
+msgstr "(octets)"
 
 msgid "(bytes, optional - Traefik 3.7+)"
-msgstr ""
+msgstr "(octets, optionnel - Traefik 3.7+)"
 
 #. Used in the browser
 msgid "(empty = stdout)"
@@ -167,15 +167,18 @@ msgstr ""
 msgid "(lines, optional)"
 msgstr ""
 
+#, fuzzy
 msgctxt "option"
 msgid "(none)"
-msgstr ""
+msgstr "(aucun)"
 
+#, fuzzy
 msgid "(one CIDR or IP per line)"
-msgstr ""
+msgstr "(un CIDR ou IP par ligne)"
 
+#, fuzzy
 msgid "(one per line)"
-msgstr ""
+msgstr "(un par ligne)"
 
 msgid "(one per line, * for all)"
 msgstr ""
@@ -190,23 +193,23 @@ msgstr ""
 
 #. Used in the browser
 msgid "(optional)"
-msgstr ""
+msgstr "(optionnel)"
 
 #. Used in the browser
 msgid "(optional, default localhost:4318)"
-msgstr ""
+msgstr "(optionnel, par défaut localhost:4318)"
 
 #. Used in the browser
 msgid "(optional, e.g. 2s)"
-msgstr ""
+msgstr "(optionnel, par exemple 2s)"
 
 #. Used in the browser
 msgid "(optional, e.g. 30s)"
-msgstr ""
+msgstr "(optionnel, par exemple 30s)"
 
 #. Used in the browser
 msgid "(optional, e.g. 60s, 1m30s, 0 = unlimited)"
-msgstr ""
+msgstr "(optionnel, par exemple 60s, 1m30s, 0 = illimité)"
 
 #. Used in the browser
 msgid "(optional, one path per line)"
