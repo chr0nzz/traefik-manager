@@ -101,6 +101,29 @@ Saving rewrites only the parts the form owns: the rule, entry points, service re
 If a router points at a `weighted`, `mirroring`, `failover` or `highestRandomWeight` service that Traefik Manager does not manage, that service is left untouched, so editing the target field in the route form has no effect on it. Edit it on the [Services tab](tab-services.md), which can also take over managing it. A composite Traefik Manager wrote itself is editable straight from this form. A service referenced by a composite, whether or not a router also points at it, is never removed when a route is deleted or disabled.
 :::
 
+## Raw YAML editor
+
+**More > Raw YAML** opens the route as YAML: its router, its service, and the `serversTransports`, middlewares and TLS options it references. Names complete as you type - services after `service:`, middlewares under a `middlewares:` list, entry points, cert resolvers and transports - and only names that exist in this install are ever offered. There is no Traefik schema behind it, so nothing invents a field.
+
+Definitions the route references may live in another file. Those are shown too, with a line above the editor naming each one and its file.
+
+Saving follows the file each section came from:
+
+- A definition in the route's **own file** is saved with the route, no questions asked.
+- A definition in **another file** that you did not change is left alone and never copied into the route's file.
+- A definition in **another file** that you did change prompts first, naming the file and every route that uses it. Confirm and it is written back to the file that owns it; cancel and only the route is saved.
+
+Two things the editor refuses rather than guesses:
+
+- **Renaming** a definition that lives in another file, which would leave the original behind as an orphan. Rename it on the [Middlewares tab](tab-middlewares.md) instead.
+- **Saving at all** when one of the files involved is read-only, or changed on disk after you opened the editor. Nothing is written in either case, not even the route.
+
+**Deleting** a block that belongs to another file only removes it from this view. A route's editor never deletes a definition other routes may depend on.
+
+Every file that changes is backed up first, and dependencies are written before the route, so a router is never pointing at a definition that does not exist yet. TLS options are shown as a reference only - they are managed on the [TLS Options tab](tab-tls-options.md).
+
+Remote agents behave the same way. An agent older than v1.15.0 does not collect referenced definitions at all, so its route YAML holds just the router and service, as it did before.
+
 ## Security headers preset
 
 The **Security headers preset** toggle in the HTTP route form generates a middleware that sets a `Permissions-Policy` and the common security headers, so you don't have to hand-write one. It works on the Host and on remote agents alike - on an agent the middleware is written to that agent's config. When enabled on save it:

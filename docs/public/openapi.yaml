@@ -3398,8 +3398,11 @@ paths:
   /api/routes/{route_id}/raw:
     get:
       tags: [Routes & Middlewares]
-      summary: The YAML for one route and its service
-      description: Go template expressions are preserved rather than expanded.
+      summary: The YAML for one route and its dependencies
+      description: >-
+        Returns the router, its service, and the serversTransports, middlewares and TLS options it
+        references, wherever those are defined. Go template expressions are preserved rather than
+        expanded.
       parameters:
         - { name: route_id, in: path, required: true, schema: { type: string }, description: "Router name, or file.yml::router on a multi-file install" }
       responses:
@@ -3415,10 +3418,22 @@ paths:
                   raw: { type: string }
                   configFile: { type: string }
                   proto: { type: string, enum: [http, tcp, udp] }
+                  origins:
+                    type: object
+                    description: "Scope to kind to name to the file that defines it, e.g. {http: {middlewares: {chain-no-auth: shared.yml}}}. Empty when the route references nothing."
+                  fingerprints:
+                    type: object
+                    additionalProperties: { type: string }
+                    description: Per file, a digest to send back on save so a file that changed underneath aborts it.
     post:
       tags: [Routes & Middlewares]
       summary: Replace one route's YAML
-      description: A backup is taken first. Go templates in the content are preserved.
+      description: >-
+        A backup is taken of every file that changes. Go templates in the content are preserved.
+        A definition that lives in another file is left alone when unchanged; when changed, the
+        first call answers 409 with needsConfirm and sharedChanges, and the caller repeats the
+        request with applyShared true to write it to the file that owns it. Dependencies are
+        written before the route.
       parameters:
         - { name: route_id, in: path, required: true, schema: { type: string } }
       requestBody:
@@ -3430,10 +3445,46 @@ paths:
               required: [content]
               properties:
                 content: { type: string }
+                applyShared:
+                  type: boolean
+                  description: Write changed definitions that live in other files. Without it such a change answers 409.
+                fingerprints:
+                  type: object
+                  additionalProperties: { type: string }
+                  description: The digests from the GET. A file that no longer matches aborts the whole save.
       responses:
         "401": { $ref: '#/components/responses/Unauthorized' }
         "400": { description: Empty content or invalid YAML }
         "404": { description: Route not found }
+        "409":
+          description: >-
+            A definition in another file changed and needs confirming (needsConfirm with
+            sharedChanges), or the save was refused because a target file is read-only, changed on
+            disk, or a shared definition was renamed. Nothing is written.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, enum: [false] }
+                  needsConfirm: { type: boolean }
+                  error: { type: string }
+                  readOnly: { type: string }
+                  stale: { type: string }
+                  renamed: { type: string }
+                  sharedChanges:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string }
+                        kind: { type: string, enum: [middlewares, serversTransports, options] }
+                        file: { type: string }
+                        usedBy:
+                          type: object
+                          properties:
+                            count: { type: integer }
+                            routes: { type: array, items: { type: string } }
         "200": { description: Saved }
 
   /api/mw/templates:
