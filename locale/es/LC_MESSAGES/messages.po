@@ -7,15 +7,17 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.14\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-09-21 04:30+0000\n"
-"PO-Revision-Date: 2026-09-18 09:24-0400\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: es <LL@li.org>\n"
+"PO-Revision-Date: 2026-09-22 13:20+0000\n"
+"Last-Translator: Gilberth Cordova <gilberthcordova@gmail.com>\n"
+"Language-Team: Spanish <https://hosted.weblate.org/projects/traefik-manager/"
+"web-app/es/>\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
 "Generated-By: Babel 2.18.0\n"
+"X-Generator: Weblate 2026.10.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -71,11 +73,11 @@ msgstr ""
 
 #, python-format
 msgid "%(n1)s Welcome"
-msgstr ""
+msgstr "%(n1)s Bienvenido"
 
 #, python-format
 msgid "%(n3)s Self route"
-msgstr ""
+msgstr "%(n3)s Self route"
 
 #, python-format
 msgid "%(n4)s Monitoring"
