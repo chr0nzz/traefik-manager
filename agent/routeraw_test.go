@@ -246,3 +246,41 @@ func TestAgentSameFileDefinitionsStillSaveWithTheRoute(t *testing.T) {
 		t.Errorf("a definition in the route's own file must save with it:\n%s", after)
 	}
 }
+
+func TestAgentMissingMiddlewareBlocksTheSave(t *testing.T) {
+	a, own, _ := splitConfigApp(t)
+	before, _ := os.ReadFile(own)
+	raw := strings.Replace(rawGet(t, a)["raw"].(string), "chain-no-auth@file", "chain-no-auths@file", 1)
+	code, body := rawSave(t, a, map[string]any{"content": raw, "applyShared": true})
+	if code != http.StatusConflict || body["code"] != "middleware_not_defined" {
+		t.Fatalf("save returned %d %v", code, body)
+	}
+	if after, _ := os.ReadFile(own); string(after) != string(before) {
+		t.Errorf("a route with a broken reference was written anyway")
+	}
+}
+
+func TestAgentMissingServiceAndTransportBlockTheSave(t *testing.T) {
+	for _, tc := range []struct{ from, to, code string }{
+		{"service: plex-svc", "service: gone-svc", "service_not_defined"},
+		{"serversTransport: plex-transport", "serversTransport: gone-tr", "transport_not_defined"},
+		{"options: tls-opts", "options: gone-opts", "tls_options_not_defined"},
+	} {
+		a, _, _ := splitConfigApp(t)
+		raw := strings.Replace(rawGet(t, a)["raw"].(string), tc.from, tc.to, 1)
+		code, body := rawSave(t, a, map[string]any{"content": raw, "applyShared": true})
+		if code != http.StatusConflict || body["code"] != tc.code {
+			t.Errorf("%s: returned %d %v", tc.from, code, body)
+		}
+	}
+}
+
+func TestAgentAnotherProviderAndDefaultTLSAreNotMissing(t *testing.T) {
+	a, _, _ := splitConfigApp(t)
+	raw := strings.Replace(rawGet(t, a)["raw"].(string), "chain-no-auth@file", "crowdsec@docker", 1)
+	raw = strings.Replace(raw, "options: tls-opts", "options: default", 1)
+	code, body := rawSave(t, a, map[string]any{"content": raw, "applyShared": true})
+	if code != http.StatusOK {
+		t.Fatalf("save returned %d %v", code, body)
+	}
+}

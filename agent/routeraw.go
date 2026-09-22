@@ -175,6 +175,74 @@ func (a *App) addRouteDependencies(out map[string]any, cfg map[string]any, proto
 	return origins
 }
 
+func fileReference(raw string) string {
+	name := strings.TrimSpace(raw)
+	idx := strings.Index(name, "@")
+	if idx < 0 {
+		return name
+	}
+	if name[idx+1:] != "file" {
+		return ""
+	}
+	return name[:idx]
+}
+
+func (a *App) referenceExists(newData, cfg map[string]any, targetPath string, dep routeDep) bool {
+	if _, ok := sectionMap(newData, dep.Scope, dep.Kind)[dep.Name]; ok {
+		return true
+	}
+	_, path := a.findDefinition(dep, cfg, targetPath)
+	return path != ""
+}
+
+func (a *App) missingRouteReferences(newData, cfg map[string]any, targetPath string) []routeDep {
+	var missing []routeDep
+	check := func(scope, kind, raw string) {
+		name := fileReference(raw)
+		if name == "" || (kind == "options" && name == "default") {
+			return
+		}
+		dep := routeDep{scope, kind, name}
+		if a.referenceExists(newData, cfg, targetPath, dep) {
+			return
+		}
+		for _, seen := range missing {
+			if seen == dep {
+				return
+			}
+		}
+		missing = append(missing, dep)
+	}
+	for _, proto := range []string{"http", "tcp", "udp"} {
+		for rname, raw := range sectionMap(newData, proto, "routers") {
+			router, _ := raw.(map[string]any)
+			if router == nil {
+				continue
+			}
+			list, _ := router["middlewares"].([]any)
+			for _, item := range list {
+				if name, ok := item.(string); ok {
+					check(proto, "middlewares", name)
+				}
+			}
+			svcName := rname
+			if sn, ok := router["service"].(string); ok && sn != "" {
+				svcName = sn
+			}
+			check(proto, "services", svcName)
+			if tls, ok := router["tls"].(map[string]any); ok {
+				if option, ok := tls["options"].(string); ok {
+					check("tls", "options", option)
+				}
+			}
+		}
+		for _, svc := range sectionMap(newData, proto, "services") {
+			check(proto, "serversTransports", routeTransportName(svc))
+		}
+	}
+	return missing
+}
+
 func writableFile(path string) error {
 	fh, err := os.OpenFile(path, os.O_WRONLY, 0o600)
 	if err != nil {

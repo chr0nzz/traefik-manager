@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-22 14:34+0000\n"
+"POT-Creation-Date: 2026-09-22 15:28+0000\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: de <LL@li.org>\n"
@@ -9530,6 +9530,12 @@ msgstr ""
 
 #, python-format
 msgid ""
+"The TLS options %(name)s are not defined anywhere. Create them first, or "
+"correct the name."
+msgstr ""
+
+#, python-format
+msgid ""
 "The Traefik entry point to attach the router to, as named in your static "
 "config - commonly %(websecure)s or %(https)s."
 msgstr ""
@@ -9705,6 +9711,12 @@ msgid ""
 "%(code)s or it can match mid-path."
 msgstr ""
 
+#, python-format
+msgid ""
+"The middleware %(name)s is not defined anywhere. Create it first, or correct "
+"the name."
+msgstr ""
+
 msgid "The middleware body only, without the name above it."
 msgstr ""
 
@@ -9774,6 +9786,18 @@ msgstr ""
 
 #. Used in the browser
 msgid "The server did not return a new key."
+msgstr ""
+
+#, python-format
+msgid ""
+"The serversTransport %(name)s is not defined anywhere. Create it first, or "
+"correct the name."
+msgstr ""
+
+#, python-format
+msgid ""
+"The service %(name)s is not defined anywhere. Create it first, or correct "
+"the name."
 msgstr ""
 
 msgid ""

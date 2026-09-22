@@ -67,6 +67,18 @@ MESSAGES = {
     'shared_definition_renamed': lambda p: gettext(
         'Renaming %(name)s here would leave it behind in %(file)s. Rename it on the Middlewares tab.',
         name=p['name'], file=p['file']),
+    'middleware_not_defined': lambda p: gettext(
+        'The middleware %(name)s is not defined anywhere. Create it first, or correct the name.',
+        name=p['name']),
+    'service_not_defined': lambda p: gettext(
+        'The service %(name)s is not defined anywhere. Create it first, or correct the name.',
+        name=p['name']),
+    'transport_not_defined': lambda p: gettext(
+        'The serversTransport %(name)s is not defined anywhere. Create it first, or correct the name.',
+        name=p['name']),
+    'tls_options_not_defined': lambda p: gettext(
+        'The TLS options %(name)s are not defined anywhere. Create them first, or correct the name.',
+        name=p['name']),
     'invalid_lines': lambda p: gettext('Invalid lines parameter'),
     'reset_failed': lambda p: gettext('Reset failed: %(detail)s', detail=p['detail']),
     'nothing_selected': lambda p: gettext('Nothing was selected'),

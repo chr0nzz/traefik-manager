@@ -5967,6 +5967,63 @@ def _sections_defined_elsewhere(new_data, config, target_path, user_map):
     return unchanged, changed
 
 
+_MISSING_REFERENCE_MESSAGES = {
+    'middlewares': lambda name: gettext(
+        'The middleware %(name)s is not defined anywhere. Create it first, or correct the name.',
+        name=name),
+    'services': lambda name: gettext(
+        'The service %(name)s is not defined anywhere. Create it first, or correct the name.',
+        name=name),
+    'serversTransports': lambda name: gettext(
+        'The serversTransport %(name)s is not defined anywhere. Create it first, or correct the name.',
+        name=name),
+    'options': lambda name: gettext(
+        'The TLS options %(name)s are not defined anywhere. Create them first, or correct the name.',
+        name=name),
+}
+
+
+def _file_reference(raw):
+    name = str(raw or '').strip()
+    if '@' not in name:
+        return name
+    short, provider = name.split('@', 1)
+    return short if provider == 'file' else ''
+
+
+def _reference_exists(new_data, config, target_path, scope, kind, name):
+    if name in _definition_section(new_data, scope, kind):
+        return True
+    _defined, path = _find_definition(scope, kind, name, config, target_path)
+    return path is not None
+
+
+def _missing_route_references(new_data, config, target_path):
+    missing = []
+
+    def check(scope, kind, raw):
+        name = _file_reference(raw)
+        if not name or (kind == 'options' and name == 'default'):
+            return
+        if not _reference_exists(new_data, config, target_path, scope, kind, name):
+            if (kind, name) not in missing:
+                missing.append((kind, name))
+
+    for proto in ('http', 'tcp', 'udp'):
+        for rname, router in _definition_section(new_data, proto, 'routers').items():
+            if not isinstance(router, dict):
+                continue
+            for raw in _to_list(router.get('middlewares')):
+                check(proto, 'middlewares', raw)
+            check(proto, 'services', router.get('service', rname))
+            tls = router.get('tls')
+            if isinstance(tls, dict):
+                check('tls', 'options', tls.get('options'))
+        for svc in _definition_section(new_data, proto, 'services').values():
+            check(proto, 'serversTransports', _route_transport_name(svc))
+    return missing
+
+
 def _file_fingerprint(path):
     try:
         with open(path, 'rb') as f:
@@ -6177,6 +6234,12 @@ def api_route_raw_save(route_id):
     if os.path.exists(target_path):
         with open(target_path, 'r') as f:
             _, file_map = _sanitize_go_templates(f.read())
+
+    missing = _missing_route_references(new_data, config, target_path)
+    if missing:
+        kind, name = missing[0]
+        return jsonify({'ok': False, 'error': _MISSING_REFERENCE_MESSAGES[kind](name),
+                        'missingReferences': [{'kind': k, 'name': n} for k, n in missing]}), 409
 
     renamed, renamed_file = _renamed_shared_definition(new_data, config, target_path)
     if renamed:

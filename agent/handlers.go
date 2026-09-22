@@ -2003,6 +2003,23 @@ func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeI
 		config = map[string]any{}
 	}
 
+	if missing := a.missingRouteReferences(newData, config, targetPath); len(missing) > 0 {
+		name := missing[0].Name
+		params := map[string]any{"name": name}
+		text := name + " is not defined in any config file"
+		switch missing[0].Kind {
+		case "services":
+			jsonErrorCode(w, "service_not_defined", params, text, http.StatusConflict)
+		case "serversTransports":
+			jsonErrorCode(w, "transport_not_defined", params, text, http.StatusConflict)
+		case "options":
+			jsonErrorCode(w, "tls_options_not_defined", params, text, http.StatusConflict)
+		default:
+			jsonErrorCode(w, "middleware_not_defined", params, text, http.StatusConflict)
+		}
+		return
+	}
+
 	if name, file := a.renamedSharedDefinition(newData, config, targetPath); name != "" {
 		jsonErrorCode(w, "shared_definition_renamed", map[string]any{"name": name, "file": file},
 			"renaming "+name+" here would leave it behind in "+file, http.StatusConflict)

@@ -3459,8 +3459,10 @@ paths:
         "409":
           description: >-
             A definition in another file changed and needs confirming (needsConfirm with
-            sharedChanges), or the save was refused because a target file is read-only, changed on
-            disk, or a shared definition was renamed. Nothing is written.
+            sharedChanges), or the save was refused because the YAML references a middleware,
+            service, serversTransport or TLS option no config file defines (missingReferences), a
+            target file is read-only, changed on disk, or a shared definition was renamed. Nothing
+            is written.
           content:
             application/json:
               schema:
@@ -3472,6 +3474,13 @@ paths:
                   readOnly: { type: string }
                   stale: { type: string }
                   renamed: { type: string }
+                  missingReferences:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        kind: { type: string, enum: [middlewares, services, serversTransports, options] }
+                        name: { type: string }
                   sharedChanges:
                     type: array
                     items:

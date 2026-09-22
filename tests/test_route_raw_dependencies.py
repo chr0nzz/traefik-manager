@@ -346,3 +346,64 @@ def test_a_new_definition_still_lands_in_the_route_own_file(client, split_config
     assert 'brand-new:' in config_path.read_text(), \
         'a definition that exists nowhere else is this route file to write'
     assert 'brand-new' not in split_config.read_text(), 'and it does not reach the other file'
+
+
+def test_a_middleware_that_exists_nowhere_blocks_the_save(client, route_config):
+    raw = _raw(client).replace('chain-no-auth@file', 'chain-no-auths@file')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 409, res.data[:300]
+    body = res.get_json()
+    assert 'chain-no-auths' in body['error']
+    assert body['missingReferences'][0] == {'kind': 'middlewares', 'name': 'chain-no-auths'}
+    assert 'chain-no-auths' not in route_config.read_text(), 'the broken reference must not land'
+
+
+def test_a_missing_service_transport_or_tls_option_blocks_the_save(client, route_config):
+    for find, replace, name in (('service: plex-svc', 'service: gone-svc', 'gone-svc'),
+                                ('serversTransport: plex-transport', 'serversTransport: gone-tr', 'gone-tr'),
+                                ('options: tls-opts', 'options: gone-opts', 'gone-opts')):
+        raw = _raw(client).replace(find, replace)
+        res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+        assert res.status_code == 409, (name, res.data[:200])
+        assert name in res.get_json()['error']
+
+
+def test_a_reference_to_another_provider_is_left_to_traefik(client, route_config):
+    raw = _raw(client)
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 200, 'crowdsec@docker is not in any file and must not block a save'
+
+
+def test_the_default_tls_options_need_no_definition(client, route_config):
+    raw = _raw(client).replace('options: tls-opts', 'options: default')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 200, res.data[:200]
+
+
+def test_a_reference_defined_in_the_editor_itself_is_accepted(client, config_path):
+    config_path.write_text(textwrap.dedent('''\
+        http:
+          routers:
+            solo-rtr:
+              rule: "Host(`solo.example.com`)"
+              service: solo-svc
+          services:
+            solo-svc:
+              loadBalancer:
+                servers:
+                  - url: "http://10.0.0.7:80"
+        '''))
+    raw = _raw(client, 'solo-rtr')
+    raw = raw.replace('    solo-rtr:', '    solo-rtr:\n      middlewares:\n        - brand-new-mw')
+    raw = raw.replace('  services:', '  middlewares:\n    brand-new-mw:\n      headers:\n'
+                      '        customRequestHeaders:\n          X-A: "1"\n  services:')
+    res = client.post('/api/routes/solo-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 200, res.data[:300]
+    assert 'brand-new-mw' in config_path.read_text(), \
+        'a middleware the editor defines in the same save is not missing'
+
+
+def test_a_reference_to_a_definition_in_another_file_is_accepted(client, split_config):
+    raw = _payload(client)['raw']
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 200, 'shared.yml defines all three, so nothing is missing'

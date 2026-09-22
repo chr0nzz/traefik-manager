@@ -113,6 +113,8 @@ Saving follows the file each section came from:
 - A definition in **another file** that you did not change is left alone and never copied into the route's file.
 - A definition in **another file** that you did change prompts first, naming the file and every route that uses it. Confirm and it is written back to the file that owns it; cancel and only the route is saved.
 
+The save is also refused when the YAML points at something that does not exist. A router naming a middleware, service or TLS option, or a service naming a `serversTransport`, that is defined in no config file stops the save and says which name is wrong - a typo like `https-redirects@file` for `https-redirect@file` never reaches disk. Names carrying another provider, such as `crowdsec@docker`, are left to Traefik, and `options: default` needs no definition.
+
 Two things the editor refuses rather than guesses:
 
 - **Renaming** a definition that lives in another file, which would leave the original behind as an orphan. Rename it on the [Middlewares tab](tab-middlewares.md) instead.
