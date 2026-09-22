@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 import unicodedata
 from dataclasses import dataclass
-from gettext import GNUTranslations
+from gettext import GNUTranslations, c2py
 
 from babel import Locale, UnknownLocaleError
 from babel.messages.catalog import Catalog
@@ -26,6 +26,8 @@ BROWSER_MARK = 'Used in the browser'
 BUGS_ADDRESS = 'https://github.com/chr0nzz/tm-locale/issues'
 STARTER_LOCALES = ('de', 'fr', 'es', 'zh_Hans', 'ru')
 WRAP_WIDTH = 79
+PLURAL_FORMS_RE = re.compile(r'nplurals\s*=\s*(\d+)\s*;\s*plural\s*=\s*(.+?)\s*;?\s*$')
+PLURAL_TOKEN_RE = re.compile(r'\d+|[A-Za-z_]+|[<>!=]=|&&|\|\||[-+*/%<>?:]')
 
 PY_KEYWORDS = {
     '_': None,
@@ -346,6 +348,25 @@ def check_template(template, where='locale/messages.pot'):
     return problems
 
 
+def same_plural_rule(actual, expected):
+    """Babel writes "plural=(n != 1)" where gettext, and so Weblate, writes "plural=n != 1".
+    Forgive the parentheses and the spacing, nothing else: the rule must hold the same
+    operators in the same order and pick the same form for every count, so a catalogue
+    still cannot carry a rule of its own into the runtime that evaluates it."""
+    if actual == expected:
+        return True
+    mine, theirs = PLURAL_FORMS_RE.match(actual or ''), PLURAL_FORMS_RE.match(expected or '')
+    if not mine or not theirs or mine.group(1) != theirs.group(1):
+        return False
+    if PLURAL_TOKEN_RE.findall(mine.group(2)) != PLURAL_TOKEN_RE.findall(theirs.group(2)):
+        return False
+    try:
+        got, want = c2py(mine.group(2)), c2py(theirs.group(2))
+    except ValueError:
+        return False
+    return all(got(n) == want(n) for n in range(201))
+
+
 def check_catalogue(path, identifier, template=None):
     rel = os.path.relpath(path, ROOT)
     problems = []
@@ -357,7 +378,7 @@ def check_catalogue(path, identifier, template=None):
     expected = Catalog(locale=identifier)
     if str(catalog.locale) != identifier:
         problems.append(Problem(rel, f'Language header is {catalog.locale}, expected {identifier}'))
-    if catalog.plural_forms != expected.plural_forms:
+    if not same_plural_rule(catalog.plural_forms, expected.plural_forms):
         problems.append(Problem(rel, f'Plural-Forms is "{catalog.plural_forms}", expected "{expected.plural_forms}"'))
     content_type = dict(catalog.mime_headers).get('Content-Type', '')
     if 'charset=utf-8' not in content_type.lower():

@@ -341,6 +341,47 @@ def test_repository_catalogues_pass_every_check():
     assert problems == [], '\n'.join(str(p) for p in problems)
 
 
+WEBLATE_HEADER = DE_HEADER.replace('plural=(n != 1);', 'plural=n != 1;')
+
+
+def test_the_plural_rule_weblate_writes_is_accepted(tmp_path):
+    """Weblate writes gettext's "plural=n != 1", Babel writes "plural=(n != 1)"."""
+    path = _po(tmp_path, _entry('Save', 'Speichern'), header=WEBLATE_HEADER)
+    assert [p.message for p in tmi18n.check_catalogue(path, 'de')] == []
+
+
+def test_a_plural_rule_that_picks_a_different_form_is_still_refused(tmp_path):
+    path = _po(tmp_path, _entry('Save', 'Speichern'),
+               header=DE_HEADER.replace('plural=(n != 1);', 'plural=(n > 1);'))
+    assert any('Plural-Forms' in p.message for p in tmi18n.check_catalogue(path, 'de'))
+
+
+def test_a_plural_rule_with_the_wrong_count_is_still_refused(tmp_path):
+    path = _po(tmp_path, _entry('Save', 'Speichern'),
+               header=DE_HEADER.replace('nplurals=2; plural=(n != 1);', 'nplurals=3; plural=(n != 1);'))
+    assert any('Plural-Forms' in p.message for p in tmi18n.check_catalogue(path, 'de'))
+
+
+GETTEXT_PLURALS = {
+    'de': 'nplurals=2; plural=n != 1;',
+    'es': 'nplurals=2; plural=n != 1;',
+    'fr': 'nplurals=2; plural=n > 1;',
+    'zh_Hans': 'nplurals=1; plural=0;',
+    'ru': ('nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : '
+           'n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;'),
+}
+
+
+def test_babel_and_gettext_agree_on_every_starter_locale():
+    """The spelling differs per language, and on the nested rules it differs by more than
+    parentheses. The form each one picks must still match."""
+    from babel.messages.catalog import Catalog
+    assert set(GETTEXT_PLURALS) == set(tmi18n.STARTER_LOCALES)
+    for identifier, written in GETTEXT_PLURALS.items():
+        babel = Catalog(locale=identifier).plural_forms
+        assert tmi18n.same_plural_rule(written, babel), identifier
+
+
 def test_ci_runs_the_translation_checks():
     from ruamel.yaml import YAML
     with open(os.path.join(ROOT, '.github', 'workflows', 'tests.yml'), encoding='utf-8') as fh:
