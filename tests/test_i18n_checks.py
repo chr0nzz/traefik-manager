@@ -345,7 +345,6 @@ WEBLATE_HEADER = DE_HEADER.replace('plural=(n != 1);', 'plural=n != 1;')
 
 
 def test_the_plural_rule_weblate_writes_is_accepted(tmp_path):
-    """Weblate writes gettext's "plural=n != 1", Babel writes "plural=(n != 1)"."""
     path = _po(tmp_path, _entry('Save', 'Speichern'), header=WEBLATE_HEADER)
     assert [p.message for p in tmi18n.check_catalogue(path, 'de')] == []
 
@@ -373,8 +372,6 @@ GETTEXT_PLURALS = {
 
 
 def test_babel_and_gettext_agree_on_every_starter_locale():
-    """The spelling differs per language, and on the nested rules it differs by more than
-    parentheses. The form each one picks must still match."""
     from babel.messages.catalog import Catalog
     assert set(GETTEXT_PLURALS) == set(tmi18n.STARTER_LOCALES)
     for identifier, written in GETTEXT_PLURALS.items():

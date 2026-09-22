@@ -349,10 +349,6 @@ def check_template(template, where='locale/messages.pot'):
 
 
 def same_plural_rule(actual, expected):
-    """Babel writes "plural=(n != 1)" where gettext, and so Weblate, writes "plural=n != 1".
-    Forgive the parentheses and the spacing, nothing else: the rule must hold the same
-    operators in the same order and pick the same form for every count, so a catalogue
-    still cannot carry a rule of its own into the runtime that evaluates it."""
     if actual == expected:
         return True
     mine, theirs = PLURAL_FORMS_RE.match(actual or ''), PLURAL_FORMS_RE.match(expected or '')
