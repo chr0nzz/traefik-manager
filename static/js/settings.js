@@ -4,7 +4,7 @@ function _showSelfRouteEpWarning(badEp, fixEp) {
     el.id = 'selfRouteEpWarning';
     el.className = 'toast-item error';
     el.style.cssText = 'animation:none;cursor:default;align-items:flex-start;gap:10px';
-    el.innerHTML = `<i class="ph-fill ph-warning-circle text-red-400 text-lg" style="margin-top:2px;flex-shrink:0"></i><span style="flex:1;line-height:1.5">Self-route entrypoint <b style="font-family:monospace">${_esc(badEp)}</b> does not exist in Traefik.<br><span style="font-size:12px;opacity:0.8">Your TM domain may not be accessible. Use <b style="font-family:monospace">${_esc(fixEp)}</b> instead?</span></span><div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px"><button onclick="_fixSelfRouteEp(${_jsArg(fixEp)})" style="padding:3px 10px;border-radius:5px;background:var(--red);color:#fff;font-size:12px;border:none;cursor:pointer">Fix</button><button onclick="document.getElementById('selfRouteEpWarning').remove()" style="padding:3px 8px;border-radius:5px;background:transparent;color:var(--muted);font-size:12px;border:1px solid var(--border);cursor:pointer">Dismiss</button></div>`;
+    el.innerHTML = `<i class="ph-fill ph-warning-circle text-red-400 text-lg" style="margin-top:2px;flex-shrink:0"></i><span style="flex:1;line-height:1.5">${th('Self-route entrypoint {b} does not exist in Traefik.{line_break}', { b: tmHtml(`<b style="font-family:monospace">${_esc(badEp)}</b>`), line_break: tmHtml(`<br>`) })}<span style="font-size:12px;opacity:0.8">${th('Your TM domain may not be accessible. Use {b} instead?', { b: tmHtml(`<b style="font-family:monospace">${_esc(fixEp)}</b>`) })}</span></span><div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px"><button onclick="_fixSelfRouteEp(${_jsArg(fixEp)})" style="padding:3px 10px;border-radius:5px;background:var(--red);color:#fff;font-size:12px;border:none;cursor:pointer">${thc('button', 'Fix')}</button><button onclick="document.getElementById('selfRouteEpWarning').remove()" style="padding:3px 8px;border-radius:5px;background:transparent;color:var(--muted);font-size:12px;border:1px solid var(--border);cursor:pointer">${thc('button', 'Dismiss')}</button></div>`;
     document.getElementById('toastContainer').appendChild(el);
 }
 
@@ -19,15 +19,15 @@ async function _fixSelfRouteEp(fixEp) {
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch', 'X-CSRF-Token': token },
             body: JSON.stringify({ domain: sr.domain, service_url: sr.service_url, router_name: sr.router_name || 'traefik-manager', entry_point: fixEp })
         });
-        if (!res.ok) { showToast(await _errText(res, 'Failed to update self-route'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Failed to update self-route')), 'error'); return; }
         const json = await res.json();
         if (json.ok) {
             document.getElementById('selfRouteEpWarning')?.remove();
-            showToast('Self-route entrypoint updated to ' + fixEp);
+            showToast(t('Self-route entrypoint updated to {fixEp}', { fixEp }));
         } else {
-            showToast(json.error || json.message || 'Failed to update self-route', 'error');
+            showToast(json.error || json.message || t('Failed to update self-route'), 'error');
         }
-    } catch(e) { showToast(_netErrText(e, 'Failed to update self-route'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Failed to update self-route')), 'error'); }
 }
 
 function loadTabTogglesIntoModal() {
@@ -84,7 +84,7 @@ function _renderApiKeyList(keys) {
     const addBtn = document.getElementById('btnAddApiKey');
     if (!list) return;
     if (!keys || keys.length === 0) {
-        list.innerHTML = '<div class="text-xs" style="color:var(--muted);padding:8px 0;">No active keys</div>';
+        list.innerHTML = `<div class="text-xs" style="color:var(--muted);padding:8px 0;">${th('No active keys')}</div>`;
         if (addBtn) addBtn.style.display = '';
         return;
     }
@@ -95,13 +95,13 @@ function _renderApiKeyList(keys) {
                 <div class="sc-set-n">${k.name.replace(/</g,'&lt;')}</div>
                 <div class="sc-set-d"><code class="font-mono" style="letter-spacing:.05em">${k.preview}</code></div>
             </div>
-            <div class="sc-set-v"><button onclick="revokeApiKey(${_jsArg(k.preview)})" class="nav-btn text-xs" style="color:var(--red);border-color:rgba(248,81,73,0.3);flex-shrink:0;"><i class="ph-bold ph-x"></i> Revoke</button></div>
+            <div class="sc-set-v"><button onclick="revokeApiKey(${_jsArg(k.preview)})" class="nav-btn text-xs" style="color:var(--red);border-color:rgba(248,81,73,0.3);flex-shrink:0;"><i class="ph-bold ph-x"></i> ${thc('button', 'Revoke')}</button></div>
         </div>`).join('');
 }
 
 async function generateApiKey() {
     const deviceName = (document.getElementById('apikeyDeviceName')?.value || '').trim();
-    if (!deviceName) { showToast('Enter a device name first.', 'error'); return; }
+    if (!deviceName) { showToast(t('Enter a device name first.'), 'error'); return; }
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     try {
         const res = await fetch('/api/auth/apikey/generate', {
@@ -109,22 +109,22 @@ async function generateApiKey() {
             headers: { 'X-Requested-With': 'fetch', 'X-CSRF-Token': token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ device_name: deviceName })
         });
-        if (!res.ok) { showToast(await _errText(res, 'Failed to generate key.'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Failed to generate key.')), 'error'); return; }
         const json = await res.json();
         if (json.ok) {
             hideAddApiKeyForm();
             document.getElementById('apikeyValue').value = json.key;
             document.getElementById('apikeyDisplay').classList.remove('hidden');
-            showToast('API key generated. Copy it now.', 'success');
+            showToast(t('API key generated. Copy it now.'), 'success');
             loadApiKeyStatus();
         } else {
-            showToast(json.error || json.message || 'Failed to generate key.', 'error');
+            showToast(json.error || json.message || t('Failed to generate key.'), 'error');
         }
-    } catch(e) { showToast(_netErrText(e, 'Failed to generate key.'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Failed to generate key.')), 'error'); }
 }
 
 async function revokeApiKey(preview) {
-    if (!await _confirm('Revoke this API key?', 'Revoke API Key', 'Revoke')) return;
+    if (!await _confirm(t('Revoke this API key?'), t('Revoke API Key'), tc('button', 'Revoke'))) return;
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     try {
         const res = await fetch('/api/auth/apikey/revoke', {
@@ -132,20 +132,20 @@ async function revokeApiKey(preview) {
             headers: { 'X-Requested-With': 'fetch', 'X-CSRF-Token': token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ preview })
         });
-        if (!res.ok) { showToast(await _errText(res, 'Failed to revoke key.'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Failed to revoke key.')), 'error'); return; }
         const json = await res.json();
         if (json.ok) {
-            showToast('API key revoked.', 'success');
+            showToast(t('API key revoked.'), 'success');
             loadApiKeyStatus();
         } else {
-            showToast(json.error || json.message || 'Failed to revoke key.', 'error');
+            showToast(json.error || json.message || t('Failed to revoke key.'), 'error');
         }
-    } catch(e) { showToast(_netErrText(e, 'Failed to revoke key.'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Failed to revoke key.')), 'error'); }
 }
 
 function copyApiKey() {
     const val = document.getElementById('apikeyValue')?.value || '';
-    if (val) navigator.clipboard.writeText(val).then(() => showToast('Key copied.', 'success'));
+    if (val) navigator.clipboard.writeText(val).then(() => showToast(t('Key copied.'), 'success'));
 }
 
 async function loadApiKeyStatus() {
@@ -186,22 +186,22 @@ async function saveSelfRoute() {
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch', 'X-CSRF-Token': token },
             body: JSON.stringify({ domain, service_url: serviceUrl, router_name: _selfRouteRouterName, entry_point: entryPoint })
         });
-        if (!res.ok) { showToast(await _errText(res, 'Could not save the self route.'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Could not save the self route.')), 'error'); return; }
         const json = await res.json();
         if (json.ok) {
             const notice    = document.getElementById('selfRouteSavedNotice');
             const deleteBtn = document.getElementById('btnDeleteSelfRoute');
             if (notice) { notice.classList.remove('hidden'); setTimeout(() => notice.classList.add('hidden'), 2500); }
             if (deleteBtn) deleteBtn.classList.toggle('hidden', !domain);
-            showToast(domain ? 'Self route saved.' : 'Self route removed.', 'success');
+            showToast(domain ? t('Self route saved.') : t('Self route removed.'), 'success');
         } else {
-            showToast(json.error || json.message || 'Could not save the self route.', 'error');
+            showToast(json.error || json.message || t('Could not save the self route.'), 'error');
         }
-    } catch(e) { showToast(_netErrText(e, 'Could not save the self route.'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Could not save the self route.')), 'error'); }
 }
 
 async function deleteSelfRoute() {
-    if (!await _confirm('Remove the self route?', 'Remove Self Route', 'Remove')) return;
+    if (!await _confirm(t('Remove the self route?'), t('Remove Self Route'), tc('button', 'Remove'))) return;
     document.getElementById('selfRouteDomain').value = '';
     await saveSelfRoute();
 }
@@ -218,22 +218,22 @@ async function checkForUpdate(currentVersion) {
         const curEl    = document.getElementById('updateCurrentVer');
         const latEl    = document.getElementById('updateLatestVer');
         const linkEl   = document.getElementById('updateReleaseLink');
-        if (curEl) curEl.textContent = 'v' + current;
-        if (latEl) latEl.textContent = latestTag ? 'v' + latestTag : '-';
+        if (curEl) curEl.textContent = t('v{current}', { current });
+        if (latEl) latEl.textContent = latestTag ? t('v{latestTag}', { latestTag }) : '-';
         if (linkEl && data.traefik_release_url) linkEl.href = data.traefik_release_url;
 
         if (latestTag && latestTag !== current && compareVersions(latestTag, current) > 0) {
             const badge = document.getElementById('versionBadge');
             if (badge) {
                 badge.classList.add('update-available');
-                badge.title = `Update available: v${latestTag}`;
+                badge.title = t('Update available: v{latestTag}', { latestTag });
                 badge.onclick = () => openSettingsModal('about');
             }
             document.getElementById('versionText').innerHTML =
-                `v${current} <i class="ph-bold ph-arrow-circle-up" style="font-size:11px"></i>`;
+                `${th('v{current}', { current: tmHtml(current) })} <i class="ph-bold ph-arrow-circle-up" style="font-size:11px"></i>`;
             const notice = document.getElementById('sm-traefik-update-notice');
             const text   = document.getElementById('sm-traefik-update-text');
-            if (notice && text) { text.textContent = `v${latestTag} available`; notice.classList.remove('hidden'); }
+            if (notice && text) { text.textContent = t('v{latestTag} available', { latestTag }); notice.classList.remove('hidden'); }
             if (!sessionStorage.getItem('tm-update-notified-' + latestTag)) {
                 sessionStorage.setItem('tm-update-notified-' + latestTag, '1');
                 fetch('/api/notifications/update', { method: 'POST', headers: { ..._csrfHeaders(), 'X-Requested-With': 'fetch', 'Content-Type': 'application/json' }, body: JSON.stringify({ version: latestTag, product: 'traefik' }) }).catch(() => {});
@@ -266,9 +266,9 @@ async function updateTmVersionBadge() {
     const el  = document.getElementById('tmVersionText');
     const elM = document.getElementById('tmVersionTextMobile');
     const ft  = document.getElementById('footerManagerVer');
-    if (el)  el.textContent  = 'v' + v;
-    if (elM) elM.textContent = 'v' + v;
-    if (ft)  { ft.textContent = 'v' + v; ft.title = 'Traefik Manager v' + v; }
+    if (el)  el.textContent  = t('v{v}', { v });
+    if (elM) elM.textContent = t('v{v}', { v });
+    if (ft)  { ft.textContent = t('v{v}', { v }); ft.title = t('Traefik Manager v{v}', { v }); }
 }
 async function checkManagerVersion() {
     try {
@@ -281,8 +281,8 @@ async function checkManagerVersion() {
 
         if (current && footerEl) {
             _managerVersion = current;
-            footerEl.textContent = 'v' + current;
-            footerEl.title = 'Traefik Manager v' + current;
+            footerEl.textContent = t('v{current}', { current });
+            footerEl.title = t('Traefik Manager v{current}', { current });
         }
 
         if (current) {
@@ -291,7 +291,7 @@ async function checkManagerVersion() {
         }
 
         const curEl = document.getElementById('mgrUpdateCurrentVer');
-        if (curEl && current) curEl.textContent = 'v' + current;
+        if (curEl && current) curEl.textContent = t('v{current}', { current });
 
         if (d.static_config_configured === false && !localStorage.getItem('tm-static-setup-v1')) {
             const b = document.getElementById('staticSetupBanner');
@@ -302,47 +302,47 @@ async function checkManagerVersion() {
 
         const latEl  = document.getElementById('mgrUpdateLatestVer');
         const linkEl = document.getElementById('mgrUpdateReleaseLink');
-        if (latEl) latEl.textContent = latestTag ? 'v' + latestTag : '-';
+        if (latEl) latEl.textContent = latestTag ? t('v{latestTag}', { latestTag }) : '-';
         if (linkEl && d.release_url) linkEl.href = d.release_url;
 
         const tfkEl = document.getElementById('traefikUpdateCurrentVer');
         const tfkLatEl = document.getElementById('traefikUpdateLatestVer');
-        if (tfkEl && d.traefik_running) tfkEl.textContent = 'v' + d.traefik_running;
-        if (tfkLatEl) tfkLatEl.textContent = d.traefik_latest ? 'v' + d.traefik_latest : '-';
+        if (tfkEl && d.traefik_running) tfkEl.textContent = t('v{traefik_running}', { traefik_running: d.traefik_running });
+        if (tfkLatEl) tfkLatEl.textContent = d.traefik_latest ? t('v{traefik_latest}', { traefik_latest: d.traefik_latest }) : '-';
 
         const notesEl = document.getElementById('sm-about-release-notes');
         if (notesEl) {
             if (d.release_notes) notesEl.innerHTML = renderReleaseNotes(d.release_notes);
-            else notesEl.innerHTML = `<span style="color:var(--muted)">${_esc(d.release_error || 'Release notes are not available right now.')}</span>`;
+            else notesEl.innerHTML = `<span style="color:var(--muted)">${_esc(d.release_error || t('Release notes are not available right now.'))}</span>`;
         }
 
         if (!latestTag) return;
 
         if (latestTag && current && compareVersions(latestTag, current) > 0) {
             if (footerEl) {
-                footerEl.innerHTML   = `v${current} <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange);font-size:11px"></i>`;
-                footerEl.title       = `Update available: v${latestTag}`;
+                footerEl.innerHTML   = `${th('v{current}', { current: tmHtml(current) })} <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange);font-size:11px"></i>`;
+                footerEl.title       = t('Update available: v{latestTag}', { latestTag });
                 footerEl.style.color = 'var(--orange)';
             }
             const notice = document.getElementById('sm-mgr-update-notice');
             const text   = document.getElementById('sm-mgr-update-text');
-            if (notice && text) { text.textContent = `v${latestTag} available`; notice.classList.remove('hidden'); }
+            if (notice && text) { text.textContent = t('v{latestTag} available', { latestTag }); notice.classList.remove('hidden'); }
 
             const badge  = document.getElementById('tmVersionBadge');
             if (badge) {
                 badge.classList.add('update-available');
-                badge.title   = `Update available: v${latestTag}`;
+                badge.title   = t('Update available: v{latestTag}', { latestTag });
                 badge.onclick = () => openSettingsModal('about');
             }
             document.getElementById('tmVersionText').innerHTML =
-                `v${current} <i class="ph-bold ph-arrow-circle-up" style="font-size:11px"></i>`;
+                `${th('v{current}', { current: tmHtml(current) })} <i class="ph-bold ph-arrow-circle-up" style="font-size:11px"></i>`;
 
             if (localStorage.getItem('tmUpdateDismissed') !== latestTag) {
                 const popup   = document.getElementById('tmUpdatePopup');
                 const popupV  = document.getElementById('tmUpdatePopupVersion');
                 const popupL  = document.getElementById('tmUpdatePopupLink');
                 if (popup && popupV) {
-                    popupV.textContent = `v${latestTag} is available (current: v${current})`;
+                    popupV.textContent = t('v{latestTag} is available (current: v{current})', { latestTag, current });
                     if (popupL && d.release_url) popupL.href = d.release_url;
                     popup.classList.remove('hidden');
                 }
@@ -361,12 +361,12 @@ function dismissTmUpdatePopup() {
 
 const TRANSLATE_INVITE_KEY = 'tmTranslateInvite';
 const TRANSLATE_INVITE_SNOOZE_DAYS = 14;
-const TRANSLATE_LANGUAGES = {
-    de: 'German', fr: 'French', es: 'Spanish', ru: 'Russian', zh: 'Chinese',
-    pt: 'Portuguese', it: 'Italian', nl: 'Dutch', pl: 'Polish', tr: 'Turkish',
-    sv: 'Swedish', da: 'Danish', nb: 'Norwegian', fi: 'Finnish', cs: 'Czech',
-    uk: 'Ukrainian', ja: 'Japanese', ko: 'Korean', ar: 'Arabic', hu: 'Hungarian',
-};
+const TRANSLATE_LANGUAGES = () => ({
+    de: t('German'), fr: t('French'), es: t('Spanish'), ru: t('Russian'), zh: t('Chinese'),
+    pt: t('Portuguese'), it: t('Italian'), nl: t('Dutch'), pl: t('Polish'), tr: t('Turkish'),
+    sv: t('Swedish'), da: t('Danish'), nb: t('Norwegian'), fi: t('Finnish'), cs: t('Czech'),
+    uk: t('Ukrainian'), ja: t('Japanese'), ko: t('Korean'), ar: t('Arabic'), hu: t('Hungarian'),
+});
 
 function _translateInviteState() {
     try {
@@ -395,10 +395,10 @@ function showTranslateInvite() {
         ? (24 + stacked.reduce((a, el) => a + el.offsetHeight + 12, 0)) + 'px'
         : '24px';
     const lang = String(navigator.language || '').toLowerCase().split('-')[0];
-    const name = TRANSLATE_LANGUAGES[lang];
+    const name = TRANSLATE_LANGUAGES()[lang];
     const txt = document.getElementById('translateInviteText');
     if (txt && name && lang !== 'en') {
-        txt.textContent = `The next release speaks more than English. ${name} is open on Weblate, and nobody has started it yet.`;
+        txt.textContent = th('The next release speaks more than English. {language} is open on Weblate, and nobody has started it yet.', { language: name });
     }
     popup.classList.remove('hidden');
 }
@@ -421,7 +421,7 @@ const TRAEFIK_ADVISORIES = [
         severity: 'Critical',
         url: 'https://github.com/traefik/traefik/security/advisories/GHSA-qqjf-53cj-pwvv',
         forwardAuthRelated: false,
-        summary: 'HTTP/3 backend connection reuse leaks NTLM and Kerberos identity between clients',
+        summary: t('HTTP/3 backend connection reuse leaks NTLM and Kerberos identity between clients'),
         fixedIn: 'v3.7.13 or v2.11.57',
         affected: (p) => {
             const [maj, min, pat] = p;
@@ -436,7 +436,7 @@ const TRAEFIK_ADVISORIES = [
         severity: 'High',
         url: 'https://github.com/traefik/traefik/security/advisories/GHSA-f52w-8j3h-j724',
         forwardAuthRelated: true,
-        summary: 'Rootless request target routes as / but is forwarded verbatim, bypassing path rules, forwardAuth and access logs',
+        summary: t('Rootless request target routes as / but is forwarded verbatim, bypassing path rules, forwardAuth and access logs'),
         fixedIn: 'v3.7.13 or v2.11.57',
         affected: (p) => {
             const [maj, min, pat] = p;
@@ -451,7 +451,7 @@ const TRAEFIK_ADVISORIES = [
         severity: 'High',
         url: 'https://github.com/traefik/traefik/security/advisories/GHSA-w4v4-9rw7-5326',
         forwardAuthRelated: true,
-        summary: 'h2c upgrade headers forwarded to the backend let a client tunnel past the whole middleware chain',
+        summary: t('h2c upgrade headers forwarded to the backend let a client tunnel past the whole middleware chain'),
         fixedIn: 'v3.7.13 or v2.11.57',
         affected: (p) => {
             const [maj, min, pat] = p;
@@ -465,7 +465,7 @@ const TRAEFIK_ADVISORIES = [
         severity: 'High',
         url: 'https://github.com/traefik/traefik/security/advisories/GHSA-v67p-phpq-fc8x',
         forwardAuthRelated: true,
-        summary: 'Header name sanitization (aliasHeadersStrategy, forwarded header stripping) bypassed via request trailers',
+        summary: t('Header name sanitization (aliasHeadersStrategy, forwarded header stripping) bypassed via request trailers'),
         fixedIn: 'v3.7.13',
         affected: (p) => {
             const [maj, min, pat] = p;
@@ -478,7 +478,7 @@ const TRAEFIK_ADVISORIES = [
         severity: 'High',
         url: 'https://github.com/traefik/traefik/security/advisories/GHSA-5m6w-wvh7-57vm',
         forwardAuthRelated: true,
-        summary: 'ForwardAuth authentication bypass via forwarded header aliases',
+        summary: t('ForwardAuth authentication bypass via forwarded header aliases'),
         fixedIn: 'v3.6.14 or v2.11.43',
         affected: (p) => {
             const [maj, min, pat] = p;
@@ -493,7 +493,7 @@ const TRAEFIK_ADVISORIES = [
         severity: 'Moderate',
         url: 'https://github.com/traefik/traefik/security/advisories/GHSA-rf44-j88r-hh8c',
         forwardAuthRelated: true,
-        summary: 'ForwardAuth identity spoofing via dot-form header aliases',
+        summary: t('ForwardAuth identity spoofing via dot-form header aliases'),
         fixedIn: 'v3.7.12 or v2.11.56',
         affected: (p) => {
             const [maj, min, pat] = p;
@@ -508,7 +508,7 @@ const TRAEFIK_ADVISORIES = [
         severity: 'Moderate',
         url: 'https://github.com/traefik/traefik/security/advisories/GHSA-8fcf-v89g-xpg6',
         forwardAuthRelated: false,
-        summary: 'BasicAuth request coalescing reintroduces a username enumeration timing oracle',
+        summary: t('BasicAuth request coalescing reintroduces a username enumeration timing oracle'),
         fixedIn: 'v3.7.13',
         affected: (p) => {
             const [maj, min, pat] = p;
@@ -537,9 +537,7 @@ function checkTraefikAdvisories(version) {
     const link  = document.getElementById('securityAdvisoryLink');
     if (!popup || !txt) return;
     const fa = hit.forwardAuthRelated && _configHasForwardAuth();
-    txt.innerHTML = `Your Traefik <b>v${_esc(version)}</b> is affected by <b>${_esc(hit.id)}</b> (${_esc(hit.severity)}) - ${_esc(hit.summary)}.`
-        + (fa ? ` A forwardAuth middleware is in use, so this is high priority.` : ``)
-        + (hit.fixedIn ? ` Update Traefik to ${_esc(hit.fixedIn)}.` : ` Update Traefik to a patched version.`);
+    txt.innerHTML = `${th('Your Traefik {v} is affected by {b} ({severity}) - {summary}.{value}{fixedIn}', { v: tmHtml(`<b>v${_esc(version)}</b>`), b: tmHtml(`<b>${_esc(hit.id)}</b>`), severity: hit.severity, summary: hit.summary, value: tmHtml(fa ? ' ' + th('A forwardAuth middleware is in use, so this is high priority.') : ''), fixedIn: tmHtml(' ' + (hit.fixedIn ? th('Update Traefik to {version}.', { version: hit.fixedIn }) : th('Update Traefik to a patched version.'))) })}`;
     if (link) link.href = hit.url;
     popup.dataset.advisory = hit.id;
     popup.dataset.version = version;

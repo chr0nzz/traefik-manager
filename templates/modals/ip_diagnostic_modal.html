@@ -3,18 +3,18 @@
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card);border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <i class="ph-bold ph-network" style="color:var(--blue)"></i>
-            <h2 class="font-bold text-sm" style="color:var(--text)">Client IP Diagnostic</h2>
+            <h2 class="font-bold text-sm" style="color:var(--text)">{{ _('Client IP Diagnostic') }}</h2>
         </div>
         <button type="button" onclick="closeIpDiagModal()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
     </div>
 
         <div class="px-6 py-5 space-y-4">
-            <p class="text-xs" style="color:var(--muted)">What this instance sees for your own request right now. Use it to check whether the real client IP is reaching the app before it feeds logs, CrowdSec and <code class="font-mono">ipAllowList</code>.</p>
+            <p class="text-xs" style="color:var(--muted)">{{ _('What this instance sees for your own request right now. Use it to check whether the real client IP is reaching the app before it feeds logs, CrowdSec and %(ipallowlist)s.', ipallowlist=tag('code', 'ipAllowList', class_='font-mono')) }}</p>
             <div id="ipDiagBody"></div>
         </div>
 
     <div class="detail-panel-foot flex justify-end gap-2 px-6 py-4">
-        <button type="button" onclick="loadIpDiagnostic()" class="btn-secondary"><i class="ph-bold ph-arrows-clockwise text-xs" style="margin-right:6px"></i>Refresh</button>
-        <button type="button" onclick="closeIpDiagModal()" class="btn-primary">Close</button>
+        <button type="button" onclick="loadIpDiagnostic()" class="btn-secondary"><i class="ph-bold ph-arrows-clockwise text-xs" style="margin-right:6px"></i>{{ pgettext('button', 'Refresh') }}</button>
+        <button type="button" onclick="closeIpDiagModal()" class="btn-primary">{{ pgettext('button', 'Close') }}</button>
     </div>
 </div>

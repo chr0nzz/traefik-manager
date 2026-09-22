@@ -139,3 +139,20 @@ def test_the_monaco_loader_follows_the_base_path():
     assert 'require.config' in first, 'the Monaco loader config moved'
     assert 'tmUrl(' in first, \
         'the AMD loader injects script tags, so the fetch wrapper never sees it'
+
+
+@pytest.mark.parametrize('script_root, next_url, expected', [
+    ('', '/', '/'),
+    ('', '/?tab=routes', '/?tab=routes'),
+    ('/en', '/', '/en/'),
+    ('/tm', '/', '/tm/'),
+    ('/tm/de', '/', '/tm/de/'),
+    ('/tm', '/de/', '/tm/de/'),
+    ('/tm', '/tm/', '/tm/'),
+    ('/tm', '/tm', '/tm'),
+    ('/tm', '//evil.example', '/tm/'),
+    ('', 'https://evil.example', '/'),
+])
+def test_next_stays_under_base_path_and_language(app_module, script_root, next_url, expected):
+    with app_module.app.test_request_context('/login', base_url='http://localhost' + script_root):
+        assert app_module._safe_next(next_url) == expected

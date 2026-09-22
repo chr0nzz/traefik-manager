@@ -7,6 +7,11 @@ let _staticPendingChanges  = false;
 let _staticSectionEdits    = false;
 let _staticSaved           = false;
 
+function _confirmWordFor(names) {
+    const list = (Array.isArray(names) ? names : [names]).map(n => String(n == null ? '' : n).trim()).filter(Boolean);
+    return list.length === 1 ? list[0] : String(list.length);
+}
+
 function _confirm(message, title, okLabel, typeWord, opts) {
     return _confirmWith({ message, title, okLabel, typeWord, ...(opts || {}) }).then(r => r.ok);
 }
@@ -30,7 +35,7 @@ function _confirmWith(o) {
         const word    = typeWord ? String(typeWord) : '';
         if (msg)    msg.textContent = message;
         if (ttl)    ttl.textContent = title || '';
-        if (ok)     ok.textContent  = okLabel || 'Confirm';
+        if (ok)     ok.textContent  = okLabel || tc('label', 'Confirm');
         if (wrap)   wrap.style.display = word ? '' : 'none';
         if (wordEl) wordEl.textContent = word;
         if (input) { input.value = ''; input.placeholder = word; }
@@ -85,7 +90,7 @@ function _confirmWith(o) {
         if (wordEl) wordEl.onclick  = () => {
             if (typeof _copyToClipboard === 'function') _copyToClipboard(word);
             const was = wordEl.textContent;
-            wordEl.textContent = 'copied';
+            wordEl.textContent = tc('label', 'copied');
             setTimeout(() => { wordEl.textContent = was; }, 900);
             if (input) input.focus();
         };
@@ -215,7 +220,7 @@ function openGitDiffPopout(sha, files) {
     const overlay = document.getElementById('gitDiffPopout');
     if (!overlay) return;
     const title = document.getElementById('gitDiffPopoutTitle');
-    if (title) title.textContent = 'Diff - ' + sha.slice(0, 8);
+    if (title) title.textContent = t('Diff - {slice}', { slice: sha.slice(0, 8) });
     _gitDiffFiles  = files;
     _gitDiffActive = 0;
     overlay.style.display = 'flex';
@@ -289,17 +294,17 @@ function _renderStaticStateBar() {
         bar.className = 'static-state-bar static-state-pending';
         bar.style.display = 'flex';
         bar.innerHTML = `<i class="ph-bold ph-warning"></i>
-            <span class="static-state-text">Unsaved changes - nothing is written to <code>traefik.yml</code> until you save</span>
-            <button onclick="discardStaticChanges()" class="btn-secondary text-xs">Discard</button>
-            <button onclick="saveStaticConfig()" class="btn-primary text-xs">Save</button>`;
+            <span class="static-state-text">${th('Unsaved changes - nothing is written to {traefik_yml} until you save', { traefik_yml: tmHtml(`<code>traefik.yml</code>`) })}</span>
+            <button onclick="discardStaticChanges()" class="btn-secondary text-xs">${thc('button', 'Discard')}</button>
+            <button onclick="saveStaticConfig()" class="btn-primary text-xs">${thc('button', 'Save')}</button>`;
         return;
     }
     if (_staticRestartNeeded) {
         bar.className = 'static-state-bar static-state-restart';
         bar.style.display = 'flex';
         bar.innerHTML = `<i class="ph-bold ph-warning-circle"></i>
-            <span class="static-state-text">Saved. Traefik is still running the previous config.</span>
-            <button onclick="triggerTraefikRestart()" class="btn-secondary text-xs static-state-restart-btn">Restart Traefik</button>`;
+            <span class="static-state-text">${th('Saved. Traefik is still running the previous config.')}</span>
+            <button onclick="triggerTraefikRestart()" class="btn-secondary text-xs static-state-restart-btn">${th('Restart Traefik')}</button>`;
         return;
     }
     bar.style.display = 'none';
@@ -338,7 +343,7 @@ async function saveStaticConfig() {
             ? () => agentFetch('/api/static', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }) })
             : () => fetch('/api/static/config', { method: 'POST', headers: { 'Content-Type': 'application/json', ..._csrfHeaders() }, body: JSON.stringify({ content }) });
         const res  = await fetchFn();
-        if (!res.ok) { showToast(await _errText(res, 'Save failed'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Save failed')), 'error'); return; }
         const data = await res.json();
         if (data.ok) {
             _staticRawContent = content;
@@ -347,7 +352,7 @@ async function saveStaticConfig() {
             _staticSectionEdits = false;
             _clearStaticPending();
             _showStaticRestartBanner();
-            showToast('Static config saved', 'success');
+            showToast(t('Static config saved'), 'success');
             try {
                 const cfgUrl = _activeAgent
                     ? '/api/static/config?server=' + encodeURIComponent(_activeAgent.id)
@@ -357,10 +362,10 @@ async function saveStaticConfig() {
                 if (d2.parsed) _renderStaticSections(d2.parsed);
             } catch(e) {}
         } else {
-            showToast(data.error || data.message || 'Save failed', 'error');
+            showToast(data.error || data.message || t('Save failed'), 'error');
         }
     } catch(e) {
-        showToast(_netErrText(e, 'Save failed'), 'error');
+        showToast(_netErrText(e, t('Save failed')), 'error');
     }
 }
 
@@ -401,17 +406,17 @@ async function openRouteYamlEditor(id) {
     _routeYamlId = id;
     const name = id.includes('::') ? id.slice(id.indexOf('::') + 2) : id;
     const title = document.getElementById('routeYamlPopoutTitle');
-    if (title) title.textContent = `Raw YAML - ${name}`;
+    if (title) title.textContent = t('Raw YAML - {name}', { name });
     try {
         const res  = await agentFetch(`/api/routes/${encodeURIComponent(id)}/raw`);
-        if (!res.ok) { showToast(await _errText(res, 'Failed to load route YAML'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Failed to load route YAML')), 'error'); return; }
         const data = await res.json();
         if (data.error) { showToast(data.error, 'error'); return; }
         const overlay = document.getElementById('routeYamlPopout');
         if (overlay) overlay.style.display = 'flex';
         _initRouteYamlMonaco(data.raw || '');
     } catch(e) {
-        showToast(_netErrText(e, 'Failed to load route YAML'), 'error');
+        showToast(_netErrText(e, t('Failed to load route YAML')), 'error');
     }
 }
 
@@ -428,17 +433,17 @@ async function saveRouteYaml() {
             headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
             body: JSON.stringify({ content }),
         });
-        if (!res.ok) { showToast(await _errText(res, 'Save failed'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Save failed')), 'error'); return; }
         const data = await res.json();
         if (data.ok) {
             closeRouteYamlEditor();
             refreshRoutes();
             fetchNotifications();
         } else {
-            showToast(data.error || data.message || 'Save failed', 'error');
+            showToast(data.error || data.message || t('Save failed'), 'error');
         }
     } catch(e) {
-        showToast(_netErrText(e, 'Save failed'), 'error');
+        showToast(_netErrText(e, t('Save failed')), 'error');
     }
 }
 
@@ -506,7 +511,7 @@ async function triggerTraefikRestart() {
             _waitForReconnect(true);
         } else {
             _hideRestartOverlay();
-            showToast(data.error || data.message || ('Restart failed (HTTP ' + res.status + ')'), 'error');
+            showToast(data.error || data.message || (t('Restart failed (HTTP {status})', { status: res.status })), 'error');
         }
     } catch(e) {
         _hideStaticRestartBanner();
@@ -586,16 +591,16 @@ function _updateEpUnderscoreVisibility() {
     if (!supported) return;
     const alias = _traefikSupportsAliasStrategy();
     const lbl = document.getElementById('sfEpHdrLabel');
-    if (lbl) lbl.textContent = alias ? 'Alias Headers' : 'Underscore Headers';
+    if (lbl) lbl.textContent = alias ? t('Alias Headers') : t('Underscore Headers');
     const del = document.getElementById('sfEpHdrDelete');
     const rej = document.getElementById('sfEpHdrReject');
-    if (del) del.textContent = alias ? 'Delete - strip aliased headers' : 'Delete - strip underscore headers';
-    if (rej) rej.textContent = alias ? 'Reject - 400 on aliased headers' : 'Reject - 400 on underscore headers';
+    if (del) del.textContent = alias ? t('Delete - strip aliased headers') : t('Delete - strip underscore headers');
+    if (rej) rej.textContent = alias ? t('Reject - 400 on aliased headers') : t('Reject - 400 on underscore headers');
     const hint = document.getElementById('sfEpHdrHint');
     if (hint) {
         hint.innerHTML = alias
-            ? 'Stops aliased header names (e.g. <code class="font-mono">X_Auth_User</code>, <code class="font-mono">X.Auth.User</code>) from bypassing forwardAuth. <code class="font-mono">Delete</code> recommended. <a href="https://traefik-manager.xyzlab.dev/hardening.html" target="_blank" style="color:var(--blue)">Learn more</a>'
-            : 'Stops underscore header aliases (e.g. <code class="font-mono">X_Auth_User</code>) from bypassing forwardAuth. Traefik 3.7.12 widens this to every aliased name. <code class="font-mono">Delete</code> recommended. <a href="https://traefik-manager.xyzlab.dev/hardening.html" target="_blank" style="color:var(--blue)">Learn more</a>';
+            ? `${th('Stops aliased header names (e.g. {x_auth_user}, {x_auth_user2}) from bypassing forwardAuth. {delete} recommended. {learn_more}', { x_auth_user: tmHtml(`<code class="font-mono">X_Auth_User</code>`), x_auth_user2: tmHtml(`<code class="font-mono">X.Auth.User</code>`), delete: tmHtml(`<code class="font-mono">Delete</code>`), learn_more: tmHtml(`<a href="https://traefik-manager.xyzlab.dev/hardening.html" target="_blank" style="color:var(--blue)">${th('Learn more')}</a>`) })}`
+            : `${th('Stops underscore header aliases (e.g. {x_auth_user}) from bypassing forwardAuth. Traefik 3.7.12 widens this to every aliased name. {delete} recommended. {learn_more}', { x_auth_user: tmHtml(`<code class="font-mono">X_Auth_User</code>`), delete: tmHtml(`<code class="font-mono">Delete</code>`), learn_more: tmHtml(`<a href="https://traefik-manager.xyzlab.dev/hardening.html" target="_blank" style="color:var(--blue)">${th('Learn more')}</a>`) })}`;
     }
 }
 
@@ -607,7 +612,7 @@ function openStaticAddForm(section) {
     const f = document.getElementById('staticForm-' + section);
     if (f) f.style.display = 'block';
     const btn = document.getElementById('sf' + _sfFormKey(section) + 'Btn');
-    if (btn) btn.textContent = 'Add ' + _sfFormLabel(section);
+    if (btn) btn.textContent = t('Add {sfFormLabel}', { sfFormLabel: _sfFormLabel(section) });
     if (section === 'entrypoints') document.getElementById('sfEpName')?.focus();
     if (section === 'resolvers')   document.getElementById('sfResName')?.focus();
     if (section === 'plugins')     document.getElementById('sfPluginName')?.focus();
@@ -621,7 +626,7 @@ function openStaticEditForm(section, name) {
     const f = document.getElementById('staticForm-' + section);
     if (f) f.style.display = 'block';
     const btn = document.getElementById('sf' + _sfFormKey(section) + 'Btn');
-    if (btn) btn.textContent = 'Save Changes';
+    if (btn) btn.textContent = t('Save Changes');
 }
 
 function closeStaticForm(section) {
@@ -743,9 +748,9 @@ async function _applyStaticSectionChange(body) {
         headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
         body: JSON.stringify({ ...body, current_raw: _staticRawContent }),
     });
-    if (!res.ok) { showToast(await _errText(res, 'Could not update the static config'), 'error'); return; }
+    if (!res.ok) { showToast(await _errText(res, t('Could not update the static config')), 'error'); return; }
     const data = await res.json();
-    if (!data.ok) { showToast(data.error || data.message || 'Could not update the static config', 'error'); return; }
+    if (!data.ok) { showToast(data.error || data.message || t('Could not update the static config'), 'error'); return; }
     _staticParsedData = data.parsed || {};
     _staticRawContent = data.raw || '';
     _renderStaticSections(_staticParsedData);
@@ -788,18 +793,18 @@ async function submitStaticSection(section) {
         name    = document.getElementById('sfPluginName').value.trim();
         payload = { moduleName: document.getElementById('sfPluginModule').value.trim(), version: document.getElementById('sfPluginVersion').value.trim(), local: document.getElementById('sfPluginLocal')?.checked || false };
     }
-    if (!name) { showToast('Name is required', 'error'); return; }
+    if (!name) { showToast(t('Name is required'), 'error'); return; }
     try {
         await _applyStaticSectionChange({ action, section, name, old_name, data: payload });
         closeStaticForm(section);
-    } catch(e) { showToast(_netErrText(e, 'Could not update the static config'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Could not update the static config')), 'error'); }
 }
 
 async function removeStaticItem(section, name) {
-    if (!await _confirm(`Remove "${name}"?`, 'Remove Item', 'Remove')) return;
+    if (!await _confirm(t('Remove "{name}"?', { name }), t('Remove Item'), tc('button', 'Remove'))) return;
     try {
         await _applyStaticSectionChange({ action: 'remove', section, name, data: {} });
-    } catch(e) { showToast(_netErrText(e, 'Could not update the static config'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Could not update the static config')), 'error'); }
 }
 
 function _scFile(path) {
@@ -812,11 +817,7 @@ function _scRowRail(section, name, glyphs) {
     const g = (glyphs || []).map(([ic, cls, tip]) =>
         `<span class="sig-flag ${cls}" title="${_esc(tip)}"><i class="ph-bold ${ic}"></i></span>`).join('');
     const nd = JSON.stringify(name);
-    return '<span class="sc-rail"><span class="sc-rail-glyphs">' + g + '</span>'
-        + '<span class="sc-rail-btns">'
-        + `<button type="button" class="sc-btn" title="Edit" onclick='event.stopPropagation();openStaticEditForm("${section}",${_esc(nd)})'><i class="ph-bold ph-pencil-simple"></i></button>`
-        + `<button type="button" class="sc-btn sc-btn-del" title="Delete" onclick='event.stopPropagation();removeStaticItem("${section}",${_esc(nd)})'><i class="ph-bold ph-trash"></i></button>`
-        + '</span></span>';
+    return `<span class="sc-rail"><span class="sc-rail-glyphs">${g}</span><span class="sc-rail-btns"><button type="button" class="sc-btn" title="${thc('tooltip', 'Edit')}" onclick='event.stopPropagation();openStaticEditForm("${section}",${_esc(nd)})'><i class="ph-bold ph-pencil-simple"></i></button><button type="button" class="sc-btn sc-btn-del" title="${thc('tooltip', 'Delete')}" onclick='event.stopPropagation();removeStaticItem("${section}",${_esc(nd)})'><i class="ph-bold ph-trash"></i></button></span></span>`;
 }
 
 function _scRow(o) {
@@ -862,17 +863,17 @@ function _scEpRow(name, ep) {
     const proto = isUdp ? ['UDP', '#e2c041'] : isTcp ? ['TCP', 'var(--teal)']
                 : port === '443' ? ['HTTPS', 'var(--green)'] : ['HTTP', 'var(--blue)'];
     const glyphs = [];
-    if (ep.http3) glyphs.push(['ph-lightning', 'd-mw', 'HTTP/3 enabled']);
-    if (redir) glyphs.push(['ph-arrow-u-up-right', 'd-off', 'redirects to ' + redir]);
-    if (tips) glyphs.push(['ph-shield', 'd-blue', 'forwardedHeaders.trustedIPs: ' + tips + ' range(s)']);
+    if (ep.http3) glyphs.push(['ph-lightning', 'd-mw', t('HTTP/3 enabled')]);
+    if (redir) glyphs.push(['ph-arrow-u-up-right', 'd-off', t('redirects to {redir}', { redir })]);
+    if (tips) glyphs.push(['ph-shield', 'd-blue', tn('{setting}: {n} range', '{setting}: {n} ranges', tips, { setting: 'forwardedHeaders.trustedIPs' })]);
     if (uhs) glyphs.push(['ph-shield-check', 'd-on', _epHeaderStrategyKey() + ': ' + uhs]);
     let warn = '';
-    if (insecureFwd) warn = 'forwardedHeaders.insecure is on, any client can set X-Forwarded-For';
-    else if (insecurePp) warn = 'proxyProtocol.insecure is on, the PROXY header is trusted from any source';
+    if (insecureFwd) warn = t('forwardedHeaders.insecure is on, any client can set X-Forwarded-For');
+    else if (insecurePp) warn = t('proxyProtocol.insecure is on, the PROXY header is trusted from any source');
     const facts = [];
-    if (redir) facts.push('redirects to ' + redir);
-    if (tips) facts.push(tips + ' trusted range' + (tips > 1 ? 's' : ''));
-    if (uhs) facts.push('underscore headers ' + uhs);
+    if (redir) facts.push(t('redirects to {redir}', { redir }));
+    if (tips) facts.push(tn('{n} trusted range', '{n} trusted ranges', tips));
+    if (uhs) facts.push(t('underscore headers {uhs}', { uhs }));
     return _scRow({
         section: 'entrypoints', name: name, tag: proto[0], tagColor: proto[1],
         addr: addr, n: _scCount('eps', name), glyphs: glyphs, warn: warn, sub: facts.join(' · '),
@@ -893,7 +894,7 @@ function _scResolverRow(name, res) {
     if (acme.email) facts.push(acme.email);
     if (isDns && acme.dnsChallenge.provider) facts.push(acme.dnsChallenge.provider);
     if (acme.keyType) facts.push(acme.keyType);
-    const warn = !acme.email ? 'no email set, Let\'s Encrypt requires one to issue certificates' : '';
+    const warn = !acme.email ? t("no email set, Let's Encrypt requires one to issue certificates") : '';
     return _scRow({
         section: 'resolvers', name: name, tag: tag, tagColor: color,
         addr: acme.storage ? acme.storage.split('/').pop() : '', n: _scCount('resolvers', name),
@@ -909,9 +910,9 @@ function _scPluginRow(name, p) {
         tagColor: local ? 'var(--teal)' : 'var(--purple)',
         addr: local ? '' : (pl.version || ''), n: _scCount('plugins', name),
         glyphs: local
-            ? [['ph-folder-open', 'd-off', 'local plugin, loaded from disk']]
+            ? [['ph-folder-open', 'd-off', t('local plugin, loaded from disk')]]
             : [['ph-package', 'd-mw', pl.moduleName || name]],
-        sub: local ? 'local plugin' : (pl.moduleName || ''),
+        sub: local ? t('local plugin') : (pl.moduleName || ''),
     });
 }
 
@@ -922,7 +923,7 @@ function _renderStaticEntrypoints(eps) {
     const el = document.getElementById('staticEpList');
     if (!el) return;
     if (!keys.length) {
-        el.innerHTML = _scEmpty('No entrypoints configured');
+        el.innerHTML = _scEmpty(t('No entrypoints configured'));
         return;
     }
     el.innerHTML = _scRows(keys.map(name => _scEpRow(name, eps[name] || {})));
@@ -935,7 +936,7 @@ function _renderStaticResolvers(resolvers) {
     const el = document.getElementById('staticResolverList');
     if (!el) return;
     if (!keys.length) {
-        el.innerHTML = _scEmpty('No certificate resolvers configured');
+        el.innerHTML = _scEmpty(t('No certificate resolvers configured'));
         return;
     }
     el.innerHTML = _scRows(keys.map(name => _scResolverRow(name, resolvers[name])));
@@ -951,7 +952,7 @@ function _renderStaticPlugins(plugins, localPlugins) {
     const el = document.getElementById('staticPluginList');
     if (!el) return;
     if (!keys.length) {
-        el.innerHTML = _scEmpty('No plugins installed');
+        el.innerHTML = _scEmpty(t('No plugins installed'));
         return;
     }
     el.innerHTML = _scRows(keys.map(name => _scPluginRow(name, all[name])));
@@ -1006,22 +1007,22 @@ function _scFindings(d) {
     Object.keys(eps).forEach(name => {
         const ep = eps[name] || {};
         if (ep.forwardedHeaders && ep.forwardedHeaders.insecure) {
-            out.push(['ph-shield-warning', name + ' trusts forwarded headers from anyone', 'entrypoints']);
+            out.push(['ph-shield-warning', t('{name} trusts forwarded headers from anyone', { name }), 'entrypoints']);
         }
         if (ep.proxyProtocol && ep.proxyProtocol.insecure) {
-            out.push(['ph-shield-warning', name + ' trusts PROXY protocol from anyone', 'entrypoints']);
+            out.push(['ph-shield-warning', t('{name} trusts PROXY protocol from anyone', { name }), 'entrypoints']);
         }
     });
     const api = d.api;
     if (_scHas(api) && api && api.insecure) {
-        out.push(['ph-lock-open', 'API is exposed without authentication', 'api']);
+        out.push(['ph-lock-open', t('API is exposed without authentication'), 'api']);
     }
     if (!_scHas(d.accessLog)) {
-        out.push(['ph-scroll', 'no access log, the Logs tab has nothing to read', 'log']);
+        out.push(['ph-scroll', t('no access log, the Logs tab has nothing to read'), 'log']);
     }
     Object.keys(d.certificatesResolvers || {}).forEach(name => {
         const acme = (d.certificatesResolvers[name] || {}).acme || {};
-        if (!acme.email) out.push(['ph-certificate', name + ' has no ACME email', 'resolvers']);
+        if (!acme.email) out.push(['ph-certificate', t('{name} has no ACME email', { name }), 'resolvers']);
     });
     return out;
 }
@@ -1037,22 +1038,12 @@ function _renderStaticVerdict(d) {
         ? `<span class="sig-verdict-meta"><b>${_esc(path.split('/').pop())}</b> ${_esc(path)}</span>`
         : '';
     if (!found.length) {
-        el.innerHTML = '<div class="sig-verdict">'
-            + '<i class="ph-fill ph-check-circle sig-verdict-ic"></i>'
-            + '<span class="sig-verdict-txt">Nothing to flag</span>'
-            + '<span class="sig-verdict-items"><span class="sig-ok">every section reads as configured</span></span>'
-            + meta + '</div>';
+        el.innerHTML = `<div class="sig-verdict"><i class="ph-fill ph-check-circle sig-verdict-ic"></i><span class="sig-verdict-txt">${th('Nothing to flag')}</span><span class="sig-verdict-items"><span class="sig-ok">${th('every section reads as configured')}</span></span>${meta}</div>`;
         return;
     }
     const items = shown.map(([ic, txt, sec]) =>
-        `<button type="button" class="sig-flag d-warn" onclick="_scJump(${_jsArg(sec)})" title="Go to ${_esc(sec)}">`
-        + `<i class="ph-bold ${ic}"></i><span class="sig-fl">${_esc(txt)}</span></button>`).join('');
-    el.innerHTML = '<div class="sig-verdict" data-health="warn">'
-        + '<i class="ph-fill ph-warning-circle sig-verdict-ic"></i>'
-        + `<span class="sig-verdict-txt">${found.length} to look at</span>`
-        + `<span class="sig-verdict-items">${items}`
-        + (more > 0 ? `<span class="sig-ok">+${more} more</span>` : '')
-        + '</span>' + meta + '</div>';
+        `<button type="button" class="sig-flag d-warn" onclick="_scJump(${_jsArg(sec)})" title="${th('Go to {sec}', { sec })}"><i class="ph-bold ${ic}"></i><span class="sig-fl">${_esc(txt)}</span></button>`).join('');
+    el.innerHTML = `<div class="sig-verdict" data-health="warn"><i class="ph-fill ph-warning-circle sig-verdict-ic"></i><span class="sig-verdict-txt">${th('{found_count} to look at', { found_count: tmHtml(found.length) })}</span><span class="sig-verdict-items">${items}${more > 0 ? `<span class="sig-ok">${th('+{more} more', { more: tmHtml(more) })}</span>` : ''}</span>${meta}</div>`;
 }
 
 function _scJump(section) {
@@ -1082,10 +1073,8 @@ function _scApplyNoteState() {
 function _renderStaticPluginNotice() {
     const el = document.getElementById('staticPluginNotice');
     if (!el) return;
-    el.innerHTML = _scNotice('plugins', 'Installing plugins',
-        'These rows are what <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">traefik.yml</code> declares. '
-        + 'The <button type="button" onclick="closeSettingsModal();switchTab(\'plugins\')" style="color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font:inherit;text-decoration:underline">Plugins tab</button> '
-        + 'installs and removes them for you, and writes the middleware that uses them.');
+    el.innerHTML = _scNotice(t('plugins'), t('Installing plugins'),
+        `${th('These rows are what {traefik_yml} declares. The', { traefik_yml: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">traefik.yml</code>`) })} <button type="button" onclick="closeSettingsModal();switchTab('plugins')" style="color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font:inherit;text-decoration:underline">${th('Plugins tab')}</button> ${th('installs and removes them for you, and writes the middleware that uses them.')}`);
 }
 
 function _scSetState(key, txt) {
@@ -1093,52 +1082,52 @@ function _scSetState(key, txt) {
     if (el) el.innerHTML = txt;
 }
 
-function _scWarnTxt(t) { return `<span class="d-warn">${_esc(t)}</span>`; }
+function _scWarnTxt(text) { return `<span class="d-warn">${_esc(text)}</span>`; }
 
 function _renderStaticFoldStates(d) {
     const api = d.api;
     const apiOn = _scHas(api);
     _scSetState('api', [
-        apiOn ? 'enabled' : _scWarnTxt('disabled'),
-        apiOn && (api || {}).dashboard !== false ? 'dashboard on' : 'dashboard off',
-        (api || {}).insecure ? _scWarnTxt('insecure on') : 'insecure off',
-        (api || {}).debug ? 'debug on' : 'debug off',
+        apiOn ? thc('status', 'enabled') : _scWarnTxt(tc('status', 'disabled')),
+        apiOn && (api || {}).dashboard !== false ? th('dashboard on') : th('dashboard off'),
+        (api || {}).insecure ? _scWarnTxt(t('insecure on')) : th('insecure off'),
+        (api || {}).debug ? th('debug on') : th('debug off'),
     ].join(' &middot; '));
 
     const log = d.log || {};
     _scSetState('log', [
-        log.level || 'ERROR',
-        log.format || 'text',
-        log.filePath || 'stdout',
-        _scHas(d.accessLog) ? 'access log on' : _scWarnTxt('access log off'),
+        _esc(log.level || 'ERROR'),
+        _esc(log.format || 'text'),
+        _esc(log.filePath || 'stdout'),
+        _scHas(d.accessLog) ? th('access log on') : _scWarnTxt(t('access log off')),
     ].join(' &middot; '));
 
     const prom = (d.metrics || {}).prometheus;
     _scSetState('observability', [
-        _scHas(d.ping) ? 'ping on' : 'ping off',
-        _scHas(prom) ? 'metrics on' : 'metrics off',
-        _scHas(d.tracing) ? 'tracing on' : 'tracing off',
+        _scHas(d.ping) ? th('ping on') : th('ping off'),
+        _scHas(prom) ? th('metrics on') : th('metrics off'),
+        _scHas(d.tracing) ? th('tracing on') : th('tracing off'),
     ].join(' &middot; '));
 
     const g = d['global'] || {};
     const core = d.core || {};
     _scSetState('system', [
-        g.checkNewVersion === false ? 'version check off' : 'version check on',
-        g.sendAnonymousUsage ? 'usage stats on' : 'usage stats off',
-        'rule syntax ' + (core.defaultRuleSyntax === 'v2' ? 'v2' : 'v3'),
+        g.checkNewVersion === false ? th('version check off') : th('version check on'),
+        g.sendAnonymousUsage ? th('usage stats on') : th('usage stats off'),
+        th('rule syntax {version}', { version: core.defaultRuleSyntax === 'v2' ? 'v2' : 'v3' }),
     ].join(' &middot; '));
 
     const plugins = Object.keys((d.experimental || {}).plugins || {})
         .concat(Object.keys((d.experimental || {}).localPlugins || {}));
-    _scSetState('plugins', plugins.length ? _esc(plugins.join(' &middot; ')) : 'none installed');
+    _scSetState('plugins', plugins.length ? plugins.map(_esc).join(' &middot; ') : th('none installed'));
 
     const prov = d.providers || {};
     const provBits = [];
-    if (_scHas(prov.docker)) provBits.push('docker on'); else provBits.push('docker off');
+    provBits.push(_scHas(prov.docker) ? t('docker on') : t('docker off'));
     if (_scHas(prov.file)) {
-        provBits.push('file ' + ((prov.file || {}).directory || (prov.file || {}).filename || 'on'));
+        provBits.push((prov.file || {}).directory || (prov.file || {}).filename ? t('file {path}', { path: (prov.file || {}).directory || (prov.file || {}).filename }) : t('file on'));
     } else {
-        provBits.push('file off');
+        provBits.push(t('file off'));
     }
     const others = Object.keys(prov).filter(k => k !== 'docker' && k !== 'file' && k !== 'providersThrottleDuration');
     if (others.length) provBits.push(others.join(', '));
@@ -1310,15 +1299,7 @@ function _scProviderRow(key, label, on, addr, count, glyphs, warn) {
         `<span class="sig-flag ${cls}" title="${_esc(tip)}"><i class="ph-bold ${ic}"></i></span>`).join('');
     const n = count === null || count === undefined ? ''
         : (count === 0 ? '<span style="color:var(--muted);font-weight:400">-</span>' : _sdNum(count));
-    return `<div class="sig-ep-row"${health} role="button" tabindex="0" onclick="_scToggleProvider(${_jsArg(key)})">`
-        + `<span class="sig-ep-id"><span class="sig-ep-name">${_esc(label)}</span>`
-        + `<span class="sig-idle-txt" style="color:${on ? 'var(--green)' : 'var(--muted)'}">${on ? 'enabled' : 'disabled'}</span></span>`
-        + `<span class="sig-ep-addr">${_esc(addr || '')}</span>`
-        + '<span class="sig-ep-strip"></span>'
-        + `<span class="sig-ep-n">${n}</span>`
-        + `<span class="sig-ep-flags"><span class="sc-rail"><span class="sc-rail-glyphs">${g}</span>`
-        + '<span class="sc-rail-btns"><button type="button" class="sc-btn" title="Edit"><i class="ph-bold ph-pencil-simple"></i></button></span>'
-        + '</span></span>' + sub + '</div>';
+    return `<div class="sig-ep-row"${health} role="button" tabindex="0" onclick="_scToggleProvider(${_jsArg(key)})"><span class="sig-ep-id"><span class="sig-ep-name">${_esc(label)}</span><span class="sig-idle-txt" style="color:${on ? 'var(--green)' : 'var(--muted)'}">${on ? thc('status', 'enabled') : thc('status', 'disabled')}</span></span><span class="sig-ep-addr">${_esc(addr || '')}</span><span class="sig-ep-strip"></span><span class="sig-ep-n">${n}</span><span class="sig-ep-flags"><span class="sc-rail"><span class="sc-rail-glyphs">${g}</span><span class="sc-rail-btns"><button type="button" class="sc-btn" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple"></i></button></span></span></span>${sub}</div>`;
 }
 
 function _scRenderProviderRows(prov) {
@@ -1331,20 +1312,20 @@ function _scRenderProviderRows(prov) {
     const hasDocker = _scHas(prov.docker);
     const d = prov.docker || {};
     rows.push(_scProviderRow('docker', 'docker', hasDocker,
-        hasDocker ? (d.endpoint || 'unix:///var/run/docker.sock') : 'not configured',
+        hasDocker ? (d.endpoint || 'unix:///var/run/docker.sock') : t('not configured'),
         hasDocker ? _scCount('provs', 'docker') : null,
-        hasDocker && d.watch !== false ? [['ph-eye', 'd-on', 'watch on']] : [],
-        hasDocker && d.exposedByDefault !== false ? 'exposedByDefault is on, every container is routable unless it opts out' : ''));
+        hasDocker && d.watch !== false ? [['ph-eye', 'd-on', t('watch on')]] : [],
+        hasDocker && d.exposedByDefault !== false ? t('exposedByDefault is on, every container is routable unless it opts out') : ''));
     const hasFile = _scHas(prov.file);
     const f = prov.file || {};
     rows.push(_scProviderRow('file', 'file', hasFile,
-        hasFile ? (f.directory || f.filename || 'no path set') : 'not configured',
+        hasFile ? (f.directory || f.filename || t('no path set')) : t('not configured'),
         hasFile ? _scCount('provs', 'file') : null,
-        hasFile && f.watch !== false ? [['ph-eye', 'd-on', 'watch on']] : [],
-        hasFile && !f.directory && !f.filename ? 'neither directory nor filename is set' : ''));
+        hasFile && f.watch !== false ? [['ph-eye', 'd-on', t('watch on')]] : [],
+        hasFile && !f.directory && !f.filename ? t('neither directory nor filename is set') : ''));
     Object.keys(prov).filter(k => k !== 'docker' && k !== 'file' && k !== 'providersThrottleDuration')
         .forEach(k => {
-            rows.push(_scProviderRow(k, k, true, 'configured in traefik.yml', _scCount('provs', k), [], ''));
+            rows.push(_scProviderRow(k, k, true, t('configured in traefik.yml'), _scCount('provs', k), [], ''));
         });
     el.innerHTML = _scRows(rows);
 }
@@ -1403,10 +1384,10 @@ const PROVIDER_TEMPLATES = {
     http:               `endpoint: "http://your-config-server/api/config"\npollInterval: "5s"\npollTimeout: "5s"`,
     kubernetesCRD:      `endpoint: ""\ntoken: ""\ncertAuthFilePath: ""\nnamespaces: []\nlabelselector: ""`,
     kubernetesIngress:  `endpoint: ""\ntoken: ""\nnamespaces: []\ningressClass: ""\ningressEndpoint:\n  publishedService: ""`,
-    kubernetesGateway:  `endpoint: ""\nexperimentalChannel: false`,
+    kubernetesGateway:  'endpoint: ""\nexperimentalChannel: false',
     nomad:              `endpoint: "http://localhost:4646"\nprefix: "traefik"\nstale: false\nnamespaces: []`,
-    ecs:                `clusters:\n  - default\nautoDiscoverClusters: false\nregion: "us-east-1"\nexposedByDefault: true`,
-    consulCatalog:      `prefix: "traefik"\nrefreshInterval: "15s"\nendpoint:\n  address: "127.0.0.1:8500"\n  scheme: ""\n  datacenter: ""\n  token: ""\nexposedByDefault: true`,
+    ecs:                'clusters:\n  - default\nautoDiscoverClusters: false\nregion: "us-east-1"\nexposedByDefault: true',
+    consulCatalog:      'prefix: "traefik"\nrefreshInterval: "15s"\nendpoint:\n  address: "127.0.0.1:8500"\n  scheme: ""\n  datacenter: ""\n  token: ""\nexposedByDefault: true',
     consul:             `endpoints:\n  - "127.0.0.1:8500"\nrootKey: "traefik"\nnamespace: ""\ntoken: ""`,
     redis:              `endpoints:\n  - "127.0.0.1:6379"\nrootKey: "traefik"\npassword: ""\ndb: 0`,
     etcd:               `endpoints:\n  - "127.0.0.1:2379"\nrootKey: "traefik"\nusername: ""\npassword: ""`,
@@ -1451,14 +1432,14 @@ function onProviderTypeSelect(val) {
 
 async function submitStaticProvider() {
     const type = (document.getElementById('sfProviderType')?.value || '').trim();
-    if (!type) { showToast('Select a provider type', 'error'); return; }
+    if (!type) { showToast(t('Select a provider type'), 'error'); return; }
     const yaml_config = _providerMonaco ? _providerMonaco.getValue() : '';
     const action   = _staticEditState.name ? 'edit' : 'add';
     const old_name = _staticEditState.name || '';
     try {
         await _applyStaticSectionChange({ action, section: 'providers', name: type, old_name, data: { yaml_config } });
         closeStaticForm('providers');
-    } catch(e) { showToast(_netErrText(e, 'Could not update the static config'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Could not update the static config')), 'error'); }
 }
 
 async function saveStaticSingleSection(section) {
@@ -1528,7 +1509,7 @@ async function saveStaticSingleSection(section) {
         await _applyStaticSectionChange({ action: 'set', section, name: '', data });
         const save = document.querySelector(`.sc-save[data-sc-save="${section}"]`);
         if (save) save.style.display = 'none';
-    } catch(e) { showToast(_netErrText(e, 'Could not update the static config'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Could not update the static config')), 'error'); }
 }
 
 function _buildStaticTabHTML() {
@@ -1538,38 +1519,38 @@ function _buildStaticTabHTML() {
 function _scSectionHead(key, label, icon, color, countId, addLabel) {
     const count = countId ? `<span class="d-n sc-count" id="${countId}">0</span>` : '';
     const add = addLabel
-        ? `<div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)"><button onclick="openStaticAddForm(${_jsArg(key)})" class="proto-btn text-xs px-3 py-1.5" title="Add ${addLabel}"><i class="ph-bold ph-plus"></i></button></div>`
+        ? `<div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)"><button onclick="openStaticAddForm(${_jsArg(key)})" class="proto-btn text-xs px-3 py-1.5" title="${_esc(addLabel)}"><i class="ph-bold ph-plus"></i></button></div>`
         : '';
-    return `<div class="sc-sec-head" id="scHead-${key}"><i class="ph-bold ${icon} sc-sec-icon" style="color:${color}"></i><span class="sc-sec-label">${label}</span>${count}<span class="sc-sec-rule"></span>${add}</div>`;
+    return `<div class="sc-sec-head" id="scHead-${key}"><i class="ph-bold ${icon} sc-sec-icon" style="color:${color}"></i><span class="sc-sec-label">${_esc(label)}</span>${count}<span class="sc-sec-rule"></span>${add}</div>`;
 }
 
 function _scHeadActions() {
     const grp = (fn, icon, title) =>
         `<div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">`
-        + `<button type="button" onclick="${fn}" class="proto-btn text-xs px-3 py-1.5" title="${title}">`
+        + `<button type="button" onclick="${fn}" class="proto-btn text-xs px-3 py-1.5" title="${_esc(title)}">`
         + `<i class="ph-bold ${icon}"></i></button></div>`;
     return '<div class="sc-head-actions">'
-        + grp('openTrustedIpsHelper()', 'ph-shield-check', 'Add trusted proxy IPs to an entrypoint')
-        + grp('openStaticYamlPopout()', 'ph-code', 'Raw YAML editor')
-        + grp('refreshStaticTab()', 'ph-arrows-clockwise', 'Reload from disk')
+        + grp('openTrustedIpsHelper()', 'ph-shield-check', t('Add trusted proxy IPs to an entrypoint'))
+        + grp('openStaticYamlPopout()', 'ph-code', t('Raw YAML editor'))
+        + grp('refreshStaticTab()', 'ph-arrows-clockwise', t('Reload from disk'))
         + '</div>';
 }
 
 const SC_SECTIONS = [
-    ['entrypoints',   'Entrypoints',           'ph-door-open',   'var(--blue)',   'staticEpCount',       'Entrypoint'],
-    ['resolvers',     'Certificate resolvers', 'ph-certificate', 'var(--green)',  'staticResolverCount', 'Resolver'],
-    ['providers',     'Providers',             'ph-cloud',       'var(--teal)',   'staticProviderCount', 'Provider'],
-    ['api',           'API and dashboard',     'ph-gauge',       'var(--orange)', null,                  null],
-    ['log',           'Logging',               'ph-scroll',      '#ca8a04',       null,                  null],
-    ['observability', 'Observability',         'ph-heartbeat',   'var(--green)',  null,                  null],
-    ['system',        'System',                'ph-gear-six',    'var(--muted)',  null,                  null],
-    ['plugins',       'Plugins',               'ph-plug',        'var(--purple)', 'staticPluginCount',   'Plugin'],
+    ['entrypoints',   tc('title', 'Entrypoints'),           'ph-door-open',   'var(--blue)',   'staticEpCount',       tc('button', 'Add entrypoint')],
+    ['resolvers',     t('Certificate resolvers'),           'ph-certificate', 'var(--green)',  'staticResolverCount', tc('button', 'Add resolver')],
+    ['providers',     tc('title', 'Providers'),             'ph-cloud',       'var(--teal)',   'staticProviderCount', tc('button', 'Add provider')],
+    ['api',           t('API and dashboard'),               'ph-gauge',       'var(--orange)', null,                  null],
+    ['log',           tc('title', 'Logging'),               'ph-scroll',      '#ca8a04',       null,                  null],
+    ['observability', tc('title', 'Observability'),         'ph-heartbeat',   'var(--green)',  null,                  null],
+    ['system',        tc('title', 'System'),                'ph-gear-six',    'var(--muted)',  null,                  null],
+    ['plugins',       tc('title', 'Plugins'),               'ph-plug',        'var(--purple)', 'staticPluginCount',   tc('button', 'Add plugin')],
 ];
 
 const SC_GROUPS = [
-    ['Traffic in',   ['entrypoints', 'providers']],
-    ['Certificates', ['resolvers']],
-    ['Operations',   ['api', 'log', 'observability', 'system', 'plugins']],
+    [t('Traffic in'),   ['entrypoints', 'providers']],
+    [tc('title', 'Certificates'), ['resolvers']],
+    [tc('title', 'Operations'),   ['api', 'log', 'observability', 'system', 'plugins']],
 ];
 
 const SC_LIST_SECTIONS = ['entrypoints', 'resolvers', 'providers', 'plugins'];
@@ -1601,7 +1582,7 @@ function _scFoldHead(key, label, icon, color, countId) {
     return `<button type="button" class="sc-fold-head" onclick="toggleStaticFold(${_jsArg(key)})">`
         + `<i class="ph-bold ph-caret-right sc-fold-caret"></i>`
         + `<i class="ph-bold ${icon} sc-sec-icon" style="color:${color}"></i>`
-        + `<span class="sc-sec-label">${label}</span>${count}`
+        + `<span class="sc-sec-label">${_esc(label)}</span>${count}`
         + `<span class="sc-sec-rule"></span>`
         + `<span class="sc-fold-state" id="scState-${key}"></span></button>`;
 }
@@ -1632,29 +1613,26 @@ function _buildStaticOnePage() {
     return '<div id="staticVerdict"></div>'
         + SC_GROUPS.map(([label, keys]) => {
             const body = keys.map(k => byKey[k] || '').join('');
-            return body ? `<div class="sc-grp">${label}</div>${body}` : '';
+            return body ? `<div class="sc-grp">${_esc(label)}</div>${body}` : '';
         }).join('');
 }
 
 function _buildStaticClassicHTML() {
     return `
     <div style="border-bottom:1px solid var(--border);flex-shrink:0;padding:12px 16px 0;display:flex;align-items:flex-end;gap:2px;">
-        <button id="staticTabArrowL" onclick="_scrollStaticTabs(-1)" style="display:none;flex-shrink:0;background:none;border:none;cursor:pointer;padding:4px 3px 6px;color:var(--muted)" title="Scroll left"><i class="ph-bold ph-caret-left text-sm"></i></button>
+        <button id="staticTabArrowL" onclick="_scrollStaticTabs(-1)" style="display:none;flex-shrink:0;background:none;border:none;cursor:pointer;padding:4px 3px 6px;color:var(--muted)" title="${th('Scroll left')}"><i class="ph-bold ph-caret-left text-sm"></i></button>
         <div id="staticTabBar" style="display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex:1;" onscroll="_updateStaticTabArrows()">
             <button onclick="switchStaticSection('entrypoints')" id="ssnBtn-entrypoints" class="auth-sub-tab active">
                 <i class="ph-bold ph-plugs" style="color:var(--blue)"></i>
-                Entrypoints
-                <span id="staticEpCount" style="display:inline-flex;align-items:center;min-width:14px;height:16px;padding:0 2px;font-size:10.5px;font-weight:700;color:var(--blue)">0</span>
+                ${th('Entrypoints {staticEpCount}', { staticEpCount: tmHtml(`<span id="staticEpCount" style="display:inline-flex;align-items:center;min-width:14px;height:16px;padding:0 2px;font-size:10.5px;font-weight:700;color:var(--blue)">0</span>`) })}
             </button>
             <button onclick="switchStaticSection('resolvers')" id="ssnBtn-resolvers" class="auth-sub-tab">
                 <i class="ph-bold ph-seal-check" style="color:var(--green)"></i>
-                Cert Resolvers
-                <span id="staticResolverCount" style="display:inline-flex;align-items:center;min-width:14px;height:16px;padding:0 2px;font-size:10.5px;font-weight:700;color:var(--green)">0</span>
+                ${th('Cert Resolvers {staticResolverCount}', { staticResolverCount: tmHtml(`<span id="staticResolverCount" style="display:inline-flex;align-items:center;min-width:14px;height:16px;padding:0 2px;font-size:10.5px;font-weight:700;color:var(--green)">0</span>`) })}
             </button>
             <button onclick="switchStaticSection('plugins')" id="ssnBtn-plugins" class="auth-sub-tab">
                 <i class="ph-bold ph-puzzle-piece" style="color:var(--purple)"></i>
-                Plugins
-                <span id="staticPluginCount" style="display:inline-flex;align-items:center;min-width:14px;height:16px;padding:0 2px;font-size:10.5px;font-weight:700;color:var(--purple)">0</span>
+                ${th('Plugins {staticPluginCount}', { staticPluginCount: tmHtml(`<span id="staticPluginCount" style="display:inline-flex;align-items:center;min-width:14px;height:16px;padding:0 2px;font-size:10.5px;font-weight:700;color:var(--purple)">0</span>`) })}
             </button>
             <button onclick="switchStaticSection('api')" id="ssnBtn-api" class="auth-sub-tab">
                 <i class="ph-bold ph-gauge" style="color:var(--orange)"></i>
@@ -1662,115 +1640,115 @@ function _buildStaticClassicHTML() {
             </button>
             <button onclick="switchStaticSection('log')" id="ssnBtn-log" class="auth-sub-tab">
                 <i class="ph-bold ph-scroll" style="color:#ca8a04"></i>
-                Logging
+                ${thc('button', 'Logging')}
             </button>
             <button onclick="switchStaticSection('observability')" id="ssnBtn-observability" class="auth-sub-tab">
                 <i class="ph-bold ph-heartbeat" style="color:var(--green)"></i>
-                Observability
+                ${thc('button', 'Observability')}
             </button>
             <button onclick="switchStaticSection('system')" id="ssnBtn-system" class="auth-sub-tab">
                 <i class="ph-bold ph-gear-six" style="color:var(--muted)"></i>
-                System
+                ${thc('button', 'System')}
             </button>
             <button onclick="switchStaticSection('providers')" id="ssnBtn-providers" class="auth-sub-tab">
                 <i class="ph-bold ph-cloud" style="color:var(--teal)"></i>
-                Providers
+                ${thc('button', 'Providers')}
             </button>
         </div>
-        <button id="staticTabArrowR" onclick="_scrollStaticTabs(1)" style="display:none;flex-shrink:0;background:none;border:none;cursor:pointer;padding:4px 3px 6px;color:var(--muted)" title="Scroll right"><i class="ph-bold ph-caret-right text-sm"></i></button>
+        <button id="staticTabArrowR" onclick="_scrollStaticTabs(1)" style="display:none;flex-shrink:0;background:none;border:none;cursor:pointer;padding:4px 3px 6px;color:var(--muted)" title="${th('Scroll right')}"><i class="ph-bold ph-caret-right text-sm"></i></button>
     </div>
 
     <div id="staticPanel-entrypoints">
         <div id="staticEpWarning"></div>
         <div id="staticEpList"></div>
         <div id="staticForm-entrypoints" style="display:none;border-top:1px solid var(--border);background:var(--input-bg)" class="px-5 py-4 space-y-3">
-            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfEpFormTitle">New Entrypoint</p>
+            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfEpFormTitle">${th('New Entrypoint')}</p>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Name</label>
-                    <input id="sfEpName" type="text" class="input-field text-sm" placeholder="websecure">
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Name')}</label>
+                    <input id="sfEpName" type="text" class="input-field text-sm" placeholder="${thc('placeholder', 'websecure')}">
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Address</label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Address')}</label>
                     <input id="sfEpAddr" type="text" class="input-field text-sm" placeholder=":443">
                 </div>
             </div>
             <div>
-                <label class="text-xs block mb-1" style="color:var(--muted)">HTTP → HTTPS redirect <span style="color:var(--muted);font-weight:400">(optional)</span></label>
-                <input id="sfEpRedirect" type="text" class="input-field text-sm" placeholder="Name of the HTTPS entrypoint to redirect to, e.g. websecure">
+                <label class="text-xs block mb-1" style="color:var(--muted)">${th('HTTP → HTTPS redirect {optional}', { optional: tmHtml(`<span style="color:var(--muted);font-weight:400">${th('(optional)')}</span>`) })}</label>
+                <input id="sfEpRedirect" type="text" class="input-field text-sm" placeholder="${th('Name of the HTTPS entrypoint to redirect to, e.g. websecure')}">
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfEpHttp3" class="rounded" style="accent-color:var(--blue)">
-                <span class="text-xs" style="color:var(--text)">Enable HTTP/3 (QUIC)</span>
-                <span class="text-xs" style="color:var(--muted)">- adds <code class="font-mono">http3: {}</code> to this entrypoint</span>
+                <span class="text-xs" style="color:var(--text)">${th('Enable HTTP/3 (QUIC)')}</span>
+                <span class="text-xs" style="color:var(--muted)">${th('- adds {http3} to this entrypoint', { http3: tmHtml(`<code class="font-mono">http3: {}</code>`) })}</span>
             </div>
             <div id="sfEpUnderscoreRow" style="display:none">
-                <label class="text-xs block mb-1" style="color:var(--muted)"><span id="sfEpHdrLabel">Alias Headers</span> <span style="color:var(--muted);font-weight:400">(security)</span></label>
+                <label class="text-xs block mb-1" style="color:var(--muted)"><span id="sfEpHdrLabel">${th('Alias Headers')}</span> <span style="color:var(--muted);font-weight:400">${thc('setting', '(security)')}</span></label>
                 <select id="sfEpUnderscore" class="input-field text-sm">
-                    <option value="">Keep (default)</option>
-                    <option id="sfEpHdrDelete" value="delete">Delete - strip aliased headers</option>
-                    <option id="sfEpHdrReject" value="reject">Reject - 400 on aliased headers</option>
+                    <option value="">${th('Keep (default)')}</option>
+                    <option id="sfEpHdrDelete" value="delete">${th('Delete - strip aliased headers')}</option>
+                    <option id="sfEpHdrReject" value="reject">${th('Reject - 400 on aliased headers')}</option>
                 </select>
-                <p id="sfEpHdrHint" class="text-xs mt-1" style="color:var(--muted)">Stops aliased header names (e.g. <code class="font-mono">X_Auth_User</code>, <code class="font-mono">X.Auth.User</code>) from bypassing forwardAuth. <code class="font-mono">Delete</code> recommended. <a href="https://traefik-manager.xyzlab.dev/hardening.html" target="_blank" style="color:var(--blue)">Learn more</a></p>
+                <p id="sfEpHdrHint" class="text-xs mt-1" style="color:var(--muted)">${th('Stops aliased header names (e.g. {x_auth_user}, {x_auth_user2}) from bypassing forwardAuth. {delete} recommended. {learn_more}', { x_auth_user: tmHtml(`<code class="font-mono">X_Auth_User</code>`), x_auth_user2: tmHtml(`<code class="font-mono">X.Auth.User</code>`), delete: tmHtml(`<code class="font-mono">Delete</code>`), learn_more: tmHtml(`<a href="https://traefik-manager.xyzlab.dev/hardening.html" target="_blank" style="color:var(--blue)">${th('Learn more')}</a>`) })}</p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Trusted IPs - forwarded headers <span style="font-weight:400">(optional)</span></label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Trusted IPs - forwarded headers {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
                     <textarea id="sfEpTrustedIps" class="input-field text-sm font-mono" rows="3" placeholder="173.245.48.0/20&#10;10.0.0.0/8" style="resize:vertical"></textarea>
-                    <p class="text-xs mt-1" style="color:var(--muted)">IPs/CIDRs allowed to set <code class="font-mono">X-Forwarded-*</code>, one per line. The <i class="ph-bold ph-shield-check"></i> helper above can bulk-add Cloudflare ranges.</p>
+                    <p class="text-xs mt-1" style="color:var(--muted)">${th('IPs/CIDRs allowed to set {x_forwarded}, one per line. The', { x_forwarded: tmHtml(`<code class="font-mono">X-Forwarded-*</code>`) })} <i class="ph-bold ph-shield-check"></i> ${th('helper above can bulk-add Cloudflare ranges.')}</p>
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Trusted IPs - PROXY protocol <span style="font-weight:400">(optional)</span></label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Trusted IPs - PROXY protocol {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
                     <textarea id="sfEpProxyIps" class="input-field text-sm font-mono" rows="3" placeholder="192.168.1.10/32" style="resize:vertical"></textarea>
-                    <p class="text-xs mt-1" style="color:var(--muted)">Enables PROXY protocol from these load balancers, one per line.</p>
+                    <p class="text-xs mt-1" style="color:var(--muted)">${th('Enables PROXY protocol from these load balancers, one per line.')}</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfEpFwdInsecure" class="rounded" style="accent-color:var(--red)">
-                <span class="text-xs" style="color:var(--text)">Trust forwarded headers from everyone</span>
-                <span class="text-xs" style="color:var(--red)">- insecure, lets any client forge its IP</span>
+                <span class="text-xs" style="color:var(--text)">${th('Trust forwarded headers from everyone')}</span>
+                <span class="text-xs" style="color:var(--red)">${th('- insecure, lets any client forge its IP')}</span>
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfEpProxyInsecure" class="rounded" style="accent-color:var(--red)">
-                <span class="text-xs" style="color:var(--text)">Accept PROXY protocol from everyone</span>
-                <span class="text-xs" style="color:var(--red)">- insecure, testing only</span>
+                <span class="text-xs" style="color:var(--text)">${th('Accept PROXY protocol from everyone')}</span>
+                <span class="text-xs" style="color:var(--red)">${th('- insecure, testing only')}</span>
             </div>
             <div>
-                <label class="text-xs block mb-1" style="color:var(--muted)">Middleware chain <span style="font-weight:400">(optional)</span></label>
+                <label class="text-xs block mb-1" style="color:var(--muted)">${th('Middleware chain {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
                 <input id="sfEpMiddlewares" type="text" class="input-field text-sm font-mono" placeholder="secure-headers@file, rate-limit@file">
-                <p class="text-xs mt-1" style="color:var(--muted)">Prepended to every router on this entrypoint, comma separated, provider suffix included.</p>
+                <p class="text-xs mt-1" style="color:var(--muted)">${th('Prepended to every router on this entrypoint, comma separated, provider suffix included.')}</p>
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfEpTlsEnabled" class="rounded" style="accent-color:var(--blue)" onchange="document.getElementById('sfEpTlsRow').style.display = this.checked ? '' : 'none'">
-                <span class="text-xs" style="color:var(--text)">TLS on every router</span>
-                <span class="text-xs" style="color:var(--muted)">- adds <code class="font-mono">http.tls</code> so routers here get TLS by default</span>
+                <span class="text-xs" style="color:var(--text)">${th('TLS on every router')}</span>
+                <span class="text-xs" style="color:var(--muted)">${th('- adds {http_tls} so routers here get TLS by default', { http_tls: tmHtml(`<code class="font-mono">http.tls</code>`) })}</span>
             </div>
             <div id="sfEpTlsRow" class="grid grid-cols-1 sm:grid-cols-2 gap-3" style="display:none">
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Default cert resolver <span style="font-weight:400">(optional)</span></label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Default cert resolver {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
                     <input id="sfEpTlsResolver" type="text" class="input-field text-sm" placeholder="cloudflare">
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Default TLS options <span style="font-weight:400">(optional)</span></label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Default TLS options {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
                     <input id="sfEpTlsOptions" type="text" class="input-field text-sm" placeholder="modern@file">
                 </div>
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfEpAsDefault" class="rounded" style="accent-color:var(--blue)">
-                <span class="text-xs" style="color:var(--text)">Default entrypoint</span>
-                <span class="text-xs" style="color:var(--muted)">- used by routers that list no entrypoints</span>
+                <span class="text-xs" style="color:var(--text)">${th('Default entrypoint')}</span>
+                <span class="text-xs" style="color:var(--muted)">${th('- used by routers that list no entrypoints')}</span>
             </div>
             <div>
-                <label class="text-xs block mb-1" style="color:var(--muted)">Responding timeouts <span style="font-weight:400">(optional, e.g. 60s, 1m30s, 0 = unlimited)</span></label>
+                <label class="text-xs block mb-1" style="color:var(--muted)">${th('Responding timeouts {optional_e_g}', { optional_e_g: tmHtml(`<span style="font-weight:400">${th('(optional, e.g. 60s, 1m30s, 0 = unlimited)')}</span>`) })}</label>
                 <div class="grid grid-cols-3 gap-3">
-                    <input id="sfEpReadTimeout" type="text" class="input-field text-sm" placeholder="read (60s)">
-                    <input id="sfEpWriteTimeout" type="text" class="input-field text-sm" placeholder="write (0)">
-                    <input id="sfEpIdleTimeout" type="text" class="input-field text-sm" placeholder="idle (180s)">
+                    <input id="sfEpReadTimeout" type="text" class="input-field text-sm" placeholder="${th('read (60s)')}">
+                    <input id="sfEpWriteTimeout" type="text" class="input-field text-sm" placeholder="${th('write (0)')}">
+                    <input id="sfEpIdleTimeout" type="text" class="input-field text-sm" placeholder="${th('idle (180s)')}">
                 </div>
             </div>
             <div class="flex gap-2 justify-end pt-1">
-                <button onclick="closeStaticForm('entrypoints')" class="btn-secondary text-xs">Cancel</button>
-                <button onclick="submitStaticSection('entrypoints')" class="btn-primary text-xs" id="sfEpBtn">Add Entrypoint</button>
+                <button onclick="closeStaticForm('entrypoints')" class="btn-secondary text-xs">${thc('button', 'Cancel')}</button>
+                <button onclick="submitStaticSection('entrypoints')" class="btn-primary text-xs" id="sfEpBtn">${th('Add Entrypoint')}</button>
             </div>
         </div>
     </div>
@@ -1778,44 +1756,44 @@ function _buildStaticClassicHTML() {
     <div id="staticPanel-resolvers" style="display:none">
         <div id="staticResolverList"></div>
         <div id="staticForm-resolvers" style="display:none;border-top:1px solid var(--border);background:var(--input-bg)" class="px-5 py-4 space-y-3">
-            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfResFormTitle">New Resolver</p>
+            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfResFormTitle">${th('New Resolver')}</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Name</label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Name')}</label>
                     <input id="sfResName" type="text" class="input-field text-sm" placeholder="cloudflare">
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Email</label>
-                    <input id="sfResEmail" type="email" class="input-field text-sm" placeholder="you@example.com">
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Email')}</label>
+                    <input id="sfResEmail" type="email" class="input-field text-sm" placeholder="${thc('placeholder', 'you@example.com')}">
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Storage path</label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Storage path')}</label>
                     <input id="sfResStorage" type="text" class="input-field text-sm" placeholder="/acme.json" value="/acme.json">
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Challenge type</label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Challenge type')}</label>
                     <select id="sfResChallenge" class="input-field text-sm" onchange="onStaticChallengeChange()">
-                        <option value="dnsChallenge">DNS Challenge</option>
-                        <option value="httpChallenge">HTTP Challenge</option>
-                        <option value="tlsChallenge">TLS Challenge</option>
+                        <option value="dnsChallenge">${th('DNS Challenge')}</option>
+                        <option value="httpChallenge">${th('HTTP Challenge')}</option>
+                        <option value="tlsChallenge">${th('TLS Challenge')}</option>
                     </select>
                 </div>
                 <div id="sfResDnsRow">
-                    <label class="text-xs block mb-1" style="color:var(--muted)">DNS Provider</label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('DNS Provider')}</label>
                     <input id="sfResProvider" type="text" class="input-field text-sm" placeholder="cloudflare">
                 </div>
                 <div id="sfResHttpRow" style="display:none">
-                    <label class="text-xs block mb-1" style="color:var(--muted)">HTTP Entrypoint</label>
-                    <input id="sfResHttpEp" type="text" class="input-field text-sm" placeholder="web" value="web">
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('HTTP Entrypoint')}</label>
+                    <input id="sfResHttpEp" type="text" class="input-field text-sm" placeholder="${thc('placeholder', 'web')}" value="web">
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">CA server <span style="font-weight:400">(optional)</span></label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('CA server {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
                     <input id="sfResCaServer" type="text" class="input-field text-sm" placeholder="default: Let's Encrypt production">
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Key type <span style="font-weight:400">(optional)</span></label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Key type {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
                     <select id="sfResKeyType" class="input-field text-sm">
-                        <option value="">Default (RSA4096)</option>
+                        <option value="">${th('Default (RSA4096)')}</option>
                         <option value="EC256">EC256</option>
                         <option value="EC384">EC384</option>
                         <option value="RSA2048">RSA2048</option>
@@ -1825,32 +1803,32 @@ function _buildStaticClassicHTML() {
                     </select>
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">EAB key ID <span style="font-weight:400">(optional)</span></label>
-                    <input id="sfResEabKid" type="text" class="input-field text-sm" placeholder="for CAs requiring external account binding">
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('EAB key ID {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
+                    <input id="sfResEabKid" type="text" class="input-field text-sm" placeholder="${th('for CAs requiring external account binding')}">
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">EAB HMAC <span style="font-weight:400">(optional)</span></label>
-                    <input id="sfResEabHmac" type="text" class="input-field text-sm" placeholder="base64-encoded HMAC key">
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('EAB HMAC {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
+                    <input id="sfResEabHmac" type="text" class="input-field text-sm" placeholder="${th('base64-encoded HMAC key')}">
                 </div>
             </div>
             <div id="sfResDnsAdvanced" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">DNS check resolvers <span style="font-weight:400">(optional)</span></label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('DNS check resolvers {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
                     <textarea id="sfResDnsResolvers" class="input-field text-sm font-mono" rows="2" placeholder="1.1.1.1:53&#10;8.8.8.8:53" style="resize:vertical"></textarea>
-                    <p class="text-xs mt-1" style="color:var(--muted)">Used to verify the DNS record before requesting the certificate, one per line.</p>
+                    <p class="text-xs mt-1" style="color:var(--muted)">${th('Used to verify the DNS record before requesting the certificate, one per line.')}</p>
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Propagation delay <span style="font-weight:400">(optional)</span></label>
-                    <input id="sfResDnsDelay" type="text" class="input-field text-sm" placeholder="e.g. 30s">
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Propagation delay {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
+                    <input id="sfResDnsDelay" type="text" class="input-field text-sm" placeholder="${th('e.g. 30s')}">
                     <div class="flex items-center gap-2 mt-2">
                         <input type="checkbox" id="sfResDnsNoCheck" class="rounded" style="accent-color:var(--blue)">
-                        <span class="text-xs" style="color:var(--text)">Disable propagation checks</span>
+                        <span class="text-xs" style="color:var(--text)">${th('Disable propagation checks')}</span>
                     </div>
                 </div>
             </div>
             <div class="flex gap-2 justify-end pt-1">
-                <button onclick="closeStaticForm('resolvers')" class="btn-secondary text-xs">Cancel</button>
-                <button onclick="submitStaticSection('resolvers')" class="btn-primary text-xs" id="sfResBtn">Add Resolver</button>
+                <button onclick="closeStaticForm('resolvers')" class="btn-secondary text-xs">${thc('button', 'Cancel')}</button>
+                <button onclick="submitStaticSection('resolvers')" class="btn-primary text-xs" id="sfResBtn">${th('Add Resolver')}</button>
             </div>
         </div>
     </div>
@@ -1859,29 +1837,29 @@ function _buildStaticClassicHTML() {
         <div id="staticPluginNotice"></div>
         <div id="staticPluginList"></div>
         <div id="staticForm-plugins" style="display:none;border-top:1px solid var(--border);background:var(--input-bg)" class="px-5 py-4 space-y-3">
-            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfPluginFormTitle">New Plugin</p>
+            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfPluginFormTitle">${th('New Plugin')}</p>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Name</label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Name')}</label>
                     <input id="sfPluginName" type="text" class="input-field text-sm" placeholder="my-plugin">
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Module</label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Module')}</label>
                     <input id="sfPluginModule" type="text" class="input-field text-sm" placeholder="github.com/user/plugin">
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Version</label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Version')}</label>
                     <input id="sfPluginVersion" type="text" class="input-field text-sm" placeholder="v1.0.0">
                 </div>
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfPluginLocal" class="rounded" style="accent-color:var(--teal)" onchange="document.getElementById('sfPluginVersion').disabled = this.checked">
-                <span class="text-xs" style="color:var(--text)">Local plugin</span>
-                <span class="text-xs" style="color:var(--muted)">- loaded from the <code class="font-mono">plugins-local</code> directory, no version needed</span>
+                <span class="text-xs" style="color:var(--text)">${th('Local plugin')}</span>
+                <span class="text-xs" style="color:var(--muted)">${th('- loaded from the {plugins_local} directory, no version needed', { plugins_local: tmHtml(`<code class="font-mono">plugins-local</code>`) })}</span>
             </div>
             <div class="flex gap-2 justify-end pt-1">
-                <button onclick="closeStaticForm('plugins')" class="btn-secondary text-xs">Cancel</button>
-                <button onclick="submitStaticSection('plugins')" class="btn-primary text-xs" id="sfPluginBtn">Add Plugin</button>
+                <button onclick="closeStaticForm('plugins')" class="btn-secondary text-xs">${thc('button', 'Cancel')}</button>
+                <button onclick="submitStaticSection('plugins')" class="btn-primary text-xs" id="sfPluginBtn">${th('Add Plugin')}</button>
             </div>
         </div>
     </div>
@@ -1890,30 +1868,30 @@ function _buildStaticClassicHTML() {
         <div class="px-4 py-4 space-y-1.5">
             <div id="staticApiWarn" class="mb-3 rounded-lg px-3 py-2.5 flex items-start gap-2.5 text-xs" style="display:none;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);color:#ca8a04">
                 <i class="ph-bold ph-warning text-sm shrink-0 mt-0.5"></i>
-                <span>Traefik Manager reads your routes, services and middlewares from the Traefik API. With it disabled those tabs will be empty until you turn it back on and restart Traefik.</span>
+                <span>${th('Traefik Manager reads your routes, services and middlewares from the Traefik API. With it disabled those tabs will be empty until you turn it back on and restart Traefik.')}</span>
             </div>
             <div class="tab-toggle-row" onclick="onApiEnabledToggle()">
-                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-terminal-window" style="color:var(--muted)"></i> API Enabled</span>
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-terminal-window" style="color:var(--muted)"></i> ${th('API Enabled')}</span>
                 <div class="toggle-switch" id="staticT-apiEnabled"><div class="toggle-knob"></div></div>
             </div>
             <div class="tab-toggle-row" onclick="staticToggle('dashboardEnabled')">
-                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-layout" style="color:var(--muted)"></i> Dashboard</span>
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-layout" style="color:var(--muted)"></i> ${thc('label', 'Dashboard')}</span>
                 <div class="toggle-switch" id="staticT-dashboardEnabled"><div class="toggle-knob"></div></div>
             </div>
             <div class="tab-toggle-row" onclick="staticToggle('insecure')">
                 <span class="flex items-center gap-2 text-sm">
                     <i class="ph-bold ph-lock-open" style="color:var(--red)"></i>
-                    <span>Insecure Mode</span>
-                    <span class="text-xs" style="color:var(--muted)">(exposes API without auth)</span>
+                    <span>${th('Insecure Mode')}</span>
+                    <span class="text-xs" style="color:var(--muted)">${th('(exposes API without auth)')}</span>
                 </span>
                 <div class="toggle-switch" id="staticT-insecure"><div class="toggle-knob"></div></div>
             </div>
             <div class="tab-toggle-row" onclick="staticToggle('debugMode')">
-                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-bug" style="color:var(--muted)"></i> Debug Mode</span>
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-bug" style="color:var(--muted)"></i> ${th('Debug Mode')}</span>
                 <div class="toggle-switch" id="staticT-debugMode"><div class="toggle-knob"></div></div>
             </div>
             <div class="flex justify-end pt-2 sc-save" data-sc-save="api" style="display:none">
-                <button onclick="saveStaticSingleSection('api')" class="btn-primary text-xs">Save Changes</button>
+                <button onclick="saveStaticSingleSection('api')" class="btn-primary text-xs">${th('Save Changes')}</button>
             </div>
         </div>
     </div>
@@ -1922,7 +1900,7 @@ function _buildStaticClassicHTML() {
         <div class="px-4 py-4 space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Log Level</label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Log Level')}</label>
                     <select id="sfLogLevel" class="input-field text-sm">
                         <option value="DEBUG">DEBUG</option>
                         <option value="INFO">INFO</option>
@@ -1931,76 +1909,76 @@ function _buildStaticClassicHTML() {
                     </select>
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Log Format</label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Log Format')}</label>
                     <select id="sfLogFormat" class="input-field text-sm">
-                        <option value="">Text (default)</option>
+                        <option value="">${th('Text (default)')}</option>
                         <option value="json">JSON</option>
                     </select>
                 </div>
                 <div class="sm:col-span-2">
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Traefik log file <span style="font-weight:400">(leave empty for stdout)</span></label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Traefik log file {leave_empty_for}', { leave_empty_for: tmHtml(`<span style="font-weight:400">${th('(leave empty for stdout)')}</span>`) })}</label>
                     <input id="sfLogFile" type="text" class="input-field text-sm" placeholder="/var/log/traefik/traefik.log" oninput="document.getElementById('logRotationRow').style.display = this.value.trim() ? '' : 'none'">
                 </div>
             </div>
             <div id="logRotationRow" style="display:none">
-                <label class="text-xs block mb-1" style="color:var(--muted)">Rotation <span style="font-weight:400">(optional)</span></label>
+                <label class="text-xs block mb-1" style="color:var(--muted)">${th('Rotation {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
                 <div class="grid grid-cols-3 gap-3">
-                    <input id="sfLogMaxSize" type="text" class="input-field text-sm" placeholder="max size (MB)">
-                    <input id="sfLogMaxBackups" type="text" class="input-field text-sm" placeholder="max backups">
-                    <input id="sfLogMaxAge" type="text" class="input-field text-sm" placeholder="max age (days)">
+                    <input id="sfLogMaxSize" type="text" class="input-field text-sm" placeholder="${th('max size (MB)')}">
+                    <input id="sfLogMaxBackups" type="text" class="input-field text-sm" placeholder="${th('max backups')}">
+                    <input id="sfLogMaxAge" type="text" class="input-field text-sm" placeholder="${th('max age (days)')}">
                 </div>
                 <div class="flex items-center gap-2 mt-2">
                     <input type="checkbox" id="sfLogCompress" class="rounded" style="accent-color:var(--blue)">
-                    <span class="text-xs" style="color:var(--text)">Compress rotated files</span>
+                    <span class="text-xs" style="color:var(--text)">${th('Compress rotated files')}</span>
                 </div>
             </div>
             <div class="tab-toggle-row" onclick="onAccessLogToggle()">
-                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-file-text" style="color:var(--muted)"></i> Access Log</span>
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-file-text" style="color:var(--muted)"></i> ${th('Access Log')}</span>
                 <div class="toggle-switch" id="staticT-accessLog"><div class="toggle-knob"></div></div>
             </div>
             <div id="accessLogPathRow" style="display:none" class="space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="text-xs block mb-1" style="color:var(--muted)">Access log file <span style="font-weight:400">(empty = stdout)</span></label>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${th('Access log file {empty_stdout}', { empty_stdout: tmHtml(`<span style="font-weight:400">${th('(empty = stdout)')}</span>`) })}</label>
                         <input id="sfAccessLogPath" type="text" class="input-field text-sm" placeholder="/var/log/traefik/access.log">
                     </div>
                     <div>
-                        <label class="text-xs block mb-1" style="color:var(--muted)">Format</label>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Format')}</label>
                         <select id="sfALFormat" class="input-field text-sm">
-                            <option value="">CLF (default)</option>
+                            <option value="">${th('CLF (default)')}</option>
                             <option value="json">JSON</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs block mb-1" style="color:var(--muted)">Status code filter <span style="font-weight:400">(optional)</span></label>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${th('Status code filter {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
                         <input id="sfALStatusCodes" type="text" class="input-field text-sm font-mono" placeholder="400-499, 500">
-                        <p class="text-xs mt-1" style="color:var(--muted)">Only log these responses, comma separated codes or ranges.</p>
+                        <p class="text-xs mt-1" style="color:var(--muted)">${th('Only log these responses, comma separated codes or ranges.')}</p>
                     </div>
                     <div>
-                        <label class="text-xs block mb-1" style="color:var(--muted)">Min duration filter <span style="font-weight:400">(optional)</span></label>
-                        <input id="sfALMinDuration" type="text" class="input-field text-sm" placeholder="e.g. 200ms">
-                        <p class="text-xs mt-1" style="color:var(--muted)">Only log requests slower than this.</p>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${th('Min duration filter {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
+                        <input id="sfALMinDuration" type="text" class="input-field text-sm" placeholder="${th('e.g. 200ms')}">
+                        <p class="text-xs mt-1" style="color:var(--muted)">${th('Only log requests slower than this.')}</p>
                     </div>
                     <div>
-                        <label class="text-xs block mb-1" style="color:var(--muted)">Buffering <span style="font-weight:400">(lines, optional)</span></label>
-                        <input id="sfALBuffering" type="text" class="input-field text-sm" placeholder="e.g. 100">
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${th('Buffering')} <span style="font-weight:400">${th('(lines, optional)')}</span></label>
+                        <input id="sfALBuffering" type="text" class="input-field text-sm" placeholder="${th('e.g. 100')}">
                     </div>
                     <div>
-                        <label class="text-xs block mb-1" style="color:var(--muted)">Headers</label>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Headers')}</label>
                         <select id="sfALHeadersMode" class="input-field text-sm">
-                            <option value="">Drop (default)</option>
-                            <option value="keep">Keep</option>
-                            <option value="redact">Redact</option>
+                            <option value="">${th('Drop (default)')}</option>
+                            <option value="keep">${thc('option', 'Keep')}</option>
+                            <option value="redact">${thc('option', 'Redact')}</option>
                         </select>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
                     <input type="checkbox" id="sfALRetry" class="rounded" style="accent-color:var(--blue)">
-                    <span class="text-xs" style="color:var(--text)">Only log retry attempts</span>
+                    <span class="text-xs" style="color:var(--text)">${th('Only log retry attempts')}</span>
                 </div>
             </div>
             <div class="flex justify-end pt-1 sc-save" data-sc-save="log" style="display:none">
-                <button onclick="saveStaticSingleSection('log')" class="btn-primary text-xs">Save Changes</button>
+                <button onclick="saveStaticSingleSection('log')" class="btn-primary text-xs">${th('Save Changes')}</button>
             </div>
         </div>
     </div>
@@ -2008,49 +1986,49 @@ function _buildStaticClassicHTML() {
     <div id="staticPanel-observability" style="display:none">
         <div class="px-4 py-4 space-y-3">
             <div class="tab-toggle-row" onclick="staticToggle('pingEnabled')">
-                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-heartbeat" style="color:var(--green)"></i> Ping endpoint <span class="text-xs" style="color:var(--muted)">/ping health check</span></span>
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-heartbeat" style="color:var(--green)"></i> ${th('Ping endpoint {ping_health_check}', { ping_health_check: tmHtml(`<span class="text-xs" style="color:var(--muted)">${th('/ping health check')}</span>`) })}</span>
                 <div class="toggle-switch" id="staticT-pingEnabled"><div class="toggle-knob"></div></div>
             </div>
             <div class="tab-toggle-row" onclick="onPromToggle()">
-                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-chart-line" style="color:var(--orange)"></i> Prometheus metrics <span class="text-xs" style="color:var(--muted)">/metrics</span></span>
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-chart-line" style="color:var(--orange)"></i> ${th('Prometheus metrics {metrics}', { metrics: tmHtml(`<span class="text-xs" style="color:var(--muted)">${th('/metrics')}</span>`) })}</span>
                 <div class="toggle-switch" id="staticT-promEnabled"><div class="toggle-knob"></div></div>
             </div>
             <div id="promFields" class="space-y-2" style="display:none">
                 <div class="tab-toggle-row" onclick="staticToggle('promEpLabels')">
-                    <span class="text-sm" style="color:var(--muted)">Entrypoint labels</span>
+                    <span class="text-sm" style="color:var(--muted)">${th('Entrypoint labels')}</span>
                     <div class="toggle-switch" id="staticT-promEpLabels"><div class="toggle-knob"></div></div>
                 </div>
                 <div class="tab-toggle-row" onclick="staticToggle('promRouterLabels')">
-                    <span class="text-sm" style="color:var(--muted)">Router labels</span>
+                    <span class="text-sm" style="color:var(--muted)">${th('Router labels')}</span>
                     <div class="toggle-switch" id="staticT-promRouterLabels"><div class="toggle-knob"></div></div>
                 </div>
                 <div class="tab-toggle-row" onclick="staticToggle('promSvcLabels')">
-                    <span class="text-sm" style="color:var(--muted)">Service labels</span>
+                    <span class="text-sm" style="color:var(--muted)">${th('Service labels')}</span>
                     <div class="toggle-switch" id="staticT-promSvcLabels"><div class="toggle-knob"></div></div>
                 </div>
             </div>
             <div class="tab-toggle-row" onclick="onTraceToggle()">
-                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-waveform" style="color:var(--purple)"></i> Tracing <span class="text-xs" style="color:var(--muted)">OTLP</span></span>
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-waveform" style="color:var(--purple)"></i> ${th('Tracing {otlp}', { otlp: tmHtml(`<span class="text-xs" style="color:var(--muted)">OTLP</span>`) })}</span>
                 <div class="toggle-switch" id="staticT-traceEnabled"><div class="toggle-knob"></div></div>
             </div>
             <div id="traceFields" style="display:none">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="text-xs block mb-1" style="color:var(--muted)">Service name <span style="font-weight:400">(optional)</span></label>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${th('Service name {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
                         <input id="sfTraceService" type="text" class="input-field text-sm" placeholder="traefik">
                     </div>
                     <div>
-                        <label class="text-xs block mb-1" style="color:var(--muted)">Sample rate <span style="font-weight:400">(0 to 1, optional)</span></label>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${th('Sample rate {v0_to_1}', { v0_to_1: tmHtml(`<span style="font-weight:400">${th('(0 to 1, optional)')}</span>`) })}</label>
                         <input id="sfTraceSample" type="text" class="input-field text-sm" placeholder="1.0">
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="text-xs block mb-1" style="color:var(--muted)">OTLP HTTP endpoint <span style="font-weight:400">(optional, default localhost:4318)</span></label>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${th('OTLP HTTP endpoint {optional_default_localhost}', { optional_default_localhost: tmHtml(`<span style="font-weight:400">${th('(optional, default localhost:4318)')}</span>`) })}</label>
                         <input id="sfTraceEndpoint" type="text" class="input-field text-sm" placeholder="http://collector:4318/v1/traces">
                     </div>
                 </div>
             </div>
             <div class="flex justify-end pt-1 sc-save" data-sc-save="observability" style="display:none">
-                <button onclick="saveStaticSingleSection('observability')" class="btn-primary text-xs">Save Changes</button>
+                <button onclick="saveStaticSingleSection('observability')" class="btn-primary text-xs">${th('Save Changes')}</button>
             </div>
         </div>
     </div>
@@ -2058,48 +2036,48 @@ function _buildStaticClassicHTML() {
     <div id="staticPanel-system" style="display:none">
         <div class="px-4 py-4 space-y-3">
             <div class="tab-toggle-row" onclick="staticToggle('checkNewVersion')">
-                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-arrows-clockwise" style="color:var(--blue)"></i> Check for new Traefik versions</span>
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-arrows-clockwise" style="color:var(--blue)"></i> ${th('Check for new Traefik versions')}</span>
                 <div class="toggle-switch" id="staticT-checkNewVersion"><div class="toggle-knob"></div></div>
             </div>
             <div class="tab-toggle-row" onclick="staticToggle('sendUsage')">
-                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-chart-pie-slice" style="color:var(--muted)"></i> Send anonymous usage statistics</span>
+                <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-chart-pie-slice" style="color:var(--muted)"></i> ${th('Send anonymous usage statistics')}</span>
                 <div class="toggle-switch" id="staticT-sendUsage"><div class="toggle-knob"></div></div>
             </div>
             <div>
-                <label class="text-xs block mb-1" style="color:var(--muted)">Default rule syntax</label>
+                <label class="text-xs block mb-1" style="color:var(--muted)">${th('Default rule syntax')}</label>
                 <select id="sfRuleSyntax" class="input-field text-sm">
-                    <option value="">v3 (default)</option>
-                    <option value="v2">v2 (compatibility)</option>
+                    <option value="">${th('v3 (default)')}</option>
+                    <option value="v2">${th('v2 (compatibility)')}</option>
                 </select>
-                <p class="text-xs mt-1" style="color:var(--muted)">Only change this while migrating rules written for Traefik v2.</p>
+                <p class="text-xs mt-1" style="color:var(--muted)">${th('Only change this while migrating rules written for Traefik v2.')}</p>
             </div>
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Servers transport defaults</p>
+                <p class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">${th('Servers transport defaults')}</p>
                 <div class="tab-toggle-row" onclick="staticToggle('stInsecure')">
-                    <span class="text-sm" style="color:var(--text)">Skip backend TLS verification <span class="text-xs" style="color:var(--red)">- insecure</span></span>
+                    <span class="text-sm" style="color:var(--text)">${th('Skip backend TLS verification {insecure}', { insecure: tmHtml(`<span class="text-xs" style="color:var(--red)">${th('- insecure')}</span>`) })}</span>
                     <div class="toggle-switch" id="staticT-stInsecure"><div class="toggle-knob"></div></div>
                 </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Root CAs <span style="font-weight:400">(optional, one path per line)</span></label>
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Root CAs {optional_one_path}', { optional_one_path: tmHtml(`<span style="font-weight:400">${th('(optional, one path per line)')}</span>`) })}</label>
                     <textarea id="sfStRootCAs" class="input-field text-sm font-mono" rows="2" placeholder="/certs/internal-ca.pem" style="resize:vertical"></textarea>
                 </div>
                 <div>
-                    <label class="text-xs block mb-1" style="color:var(--muted)">Max idle conns per host <span style="font-weight:400">(optional)</span></label>
-                    <input id="sfStMaxIdle" type="text" class="input-field text-sm" placeholder="default 200">
+                    <label class="text-xs block mb-1" style="color:var(--muted)">${th('Max idle conns per host {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
+                    <input id="sfStMaxIdle" type="text" class="input-field text-sm" placeholder="${th('default 200')}">
                 </div>
             </div>
             <div>
-                <label class="text-xs block mb-1" style="color:var(--muted)">Forwarding timeouts <span style="font-weight:400">(optional, e.g. 30s)</span></label>
+                <label class="text-xs block mb-1" style="color:var(--muted)">${th('Forwarding timeouts {optional_e_g}', { optional_e_g: tmHtml(`<span style="font-weight:400">${th('(optional, e.g. 30s)')}</span>`) })}</label>
                 <div class="grid grid-cols-3 gap-3">
-                    <input id="sfStDialTimeout" type="text" class="input-field text-sm" placeholder="dial (30s)">
-                    <input id="sfStRespHeaderTimeout" type="text" class="input-field text-sm" placeholder="resp header (0)">
-                    <input id="sfStIdleConnTimeout" type="text" class="input-field text-sm" placeholder="idle conn (90s)">
+                    <input id="sfStDialTimeout" type="text" class="input-field text-sm" placeholder="${th('dial (30s)')}">
+                    <input id="sfStRespHeaderTimeout" type="text" class="input-field text-sm" placeholder="${th('resp header (0)')}">
+                    <input id="sfStIdleConnTimeout" type="text" class="input-field text-sm" placeholder="${th('idle conn (90s)')}">
                 </div>
             </div>
             <div class="flex justify-end pt-1 sc-save" data-sc-save="system" style="display:none">
-                <button onclick="saveStaticSingleSection('system')" class="btn-primary text-xs">Save Changes</button>
+                <button onclick="saveStaticSingleSection('system')" class="btn-primary text-xs">${th('Save Changes')}</button>
             </div>
         </div>
     </div>
@@ -2115,70 +2093,70 @@ function _buildStaticClassicHTML() {
                 </div>
                 <div id="dockerProviderFields" class="mt-3 space-y-2" style="display:none">
                     <div>
-                        <label class="text-xs block mb-1" style="color:var(--muted)">Endpoint</label>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Endpoint')}</label>
                         <input id="sfDockerEndpoint" type="text" class="input-field text-sm" placeholder="unix:///var/run/docker.sock">
                     </div>
                     <div class="tab-toggle-row" onclick="staticToggle('dockerExposedByDefault')">
-                        <span class="text-sm" style="color:var(--muted)">Expose by default</span>
+                        <span class="text-sm" style="color:var(--muted)">${th('Expose by default')}</span>
                         <div class="toggle-switch" id="staticT-dockerExposedByDefault"><div class="toggle-knob"></div></div>
                     </div>
                     <div class="tab-toggle-row" onclick="staticToggle('dockerWatch')">
-                        <span class="text-sm" style="color:var(--muted)">Watch</span>
+                        <span class="text-sm" style="color:var(--muted)">${thc('label', 'Watch')}</span>
                         <div class="toggle-switch" id="staticT-dockerWatch"><div class="toggle-knob"></div></div>
                     </div>
                 </div>
             </div>
             <div class="rounded-lg p-3" id="scProvCard-file" style="border:1px solid var(--border)">
                 <div class="tab-toggle-row" onclick="onFileProviderToggle()">
-                    <span class="flex items-center gap-2 text-sm font-medium"><i class="ph-bold ph-file-code" style="color:var(--green)"></i> File</span>
+                    <span class="flex items-center gap-2 text-sm font-medium"><i class="ph-bold ph-file-code" style="color:var(--green)"></i> ${thc('label', 'File')}</span>
                     <div class="toggle-switch" id="staticT-fileEnabled"><div class="toggle-knob"></div></div>
                 </div>
                 <div id="fileProviderFields" class="mt-3 space-y-2" style="display:none">
                     <div>
-                        <label class="text-xs block mb-1" style="color:var(--muted)">Directory</label>
+                        <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Directory')}</label>
                         <input id="sfFileDirectory" type="text" class="input-field text-sm" placeholder="/etc/traefik/dynamic">
                     </div>
                     <div class="tab-toggle-row" onclick="staticToggle('fileWatch')">
-                        <span class="text-sm" style="color:var(--muted)">Watch</span>
+                        <span class="text-sm" style="color:var(--muted)">${thc('label', 'Watch')}</span>
                         <div class="toggle-switch" id="staticT-fileWatch"><div class="toggle-knob"></div></div>
                     </div>
                 </div>
             </div>
             <div>
-                <label class="text-xs block mb-1" style="color:var(--muted)">Providers throttle <span style="font-weight:400">(optional, e.g. 2s)</span></label>
-                <input id="sfProvidersThrottle" type="text" class="input-field text-sm" placeholder="minimum time between config reloads (default 2s)">
+                <label class="text-xs block mb-1" style="color:var(--muted)">${th('Providers throttle {optional_e_g}', { optional_e_g: tmHtml(`<span style="font-weight:400">${th('(optional, e.g. 2s)')}</span>`) })}</label>
+                <input id="sfProvidersThrottle" type="text" class="input-field text-sm" placeholder="${th('minimum time between config reloads (default 2s)')}">
             </div>
             <div class="flex justify-end pt-1 sc-save" data-sc-save="providers" style="display:none">
-                <button onclick="saveStaticSingleSection('providers')" class="btn-primary text-xs">Save Changes</button>
+                <button onclick="saveStaticSingleSection('providers')" class="btn-primary text-xs">${th('Save Changes')}</button>
             </div>
         </div>
         <div id="staticForm-providers" style="display:none;border-top:1px solid var(--border);background:var(--input-bg)" class="px-5 py-4 space-y-3">
-            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfProviderFormTitle">Add Provider</p>
+            <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted)" id="sfProviderFormTitle">${th('Add Provider')}</p>
             <div>
-                <label class="text-xs block mb-1" style="color:var(--muted)">Provider Type</label>
+                <label class="text-xs block mb-1" style="color:var(--muted)">${th('Provider Type')}</label>
                 <select id="sfProviderType" class="input-field text-sm" onchange="onProviderTypeSelect(this.value)">
-                    <option value="">Select provider...</option>
+                    <option value="">${th('Select provider...')}</option>
                     <option value="swarm">Docker Swarm</option>
                     <option value="http">HTTP</option>
-                    <option value="kubernetesCRD">Kubernetes (CRD)</option>
-                    <option value="kubernetesIngress">Kubernetes Ingress</option>
-                    <option value="kubernetesGateway">Kubernetes Gateway</option>
-                    <option value="nomad">HashiCorp Nomad</option>
-                    <option value="ecs">AWS ECS</option>
+                    <option value="kubernetesCRD">${th('Kubernetes (CRD)')}</option>
+                    <option value="kubernetesIngress">${th('Kubernetes Ingress')}</option>
+                    <option value="kubernetesGateway">${th('Kubernetes Gateway')}</option>
+                    <option value="nomad">${th('HashiCorp Nomad')}</option>
+                    <option value="ecs">${th('AWS ECS')}</option>
                     <option value="consulCatalog">Consul Catalog</option>
                     <option value="consul">Consul KV</option>
-                    <option value="redis">Redis KV</option>
-                    <option value="etcd">etcd KV</option>
-                    <option value="zooKeeper">ZooKeeper KV</option>
+                    <option value="redis">${th('Redis KV')}</option>
+                    <option value="etcd">${th('etcd KV')}</option>
+                    <option value="zooKeeper">${th('ZooKeeper KV')}</option>
                 </select>
             </div>
             <div id="sfProviderEditorWrap" style="display:none">
-                <label class="text-xs block mb-1" style="color:var(--muted)">Configuration</label>
+                <label class="text-xs block mb-1" style="color:var(--muted)">${thc('setting', 'Configuration')}</label>
                 <div id="sfProviderEditorContainer" style="height:220px;border:1px solid var(--border);border-radius:8px;overflow:hidden;"></div>
             </div>
             <div class="flex gap-2 justify-end pt-1">
-                <button onclick="closeStaticForm('providers')" class="btn-secondary text-xs">Cancel</button>
-                <button onclick="submitStaticProvider()" class="btn-primary text-xs" id="sfProviderBtn">Add Provider</button>
+                <button onclick="closeStaticForm('providers')" class="btn-secondary text-xs">${thc('button', 'Cancel')}</button>
+                <button onclick="submitStaticProvider()" class="btn-primary text-xs" id="sfProviderBtn">${th('Add Provider')}</button>
             </div>
         </div>
     </div>`;
@@ -2202,21 +2180,17 @@ function _renderEpRuntimeWarning() {
     if (!rt) return;
     let title = '', body = '';
     if (rt.runtime === 'docker') {
-        title = 'New entrypoints also need a port mapping in your compose file';
-        body  = `After adding an entrypoint here, open your <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">docker-compose.yml</code> and add the port under <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">ports:</code>, then run:
-                 <code class="font-mono block mt-1.5 mb-1 px-2 py-1 rounded" style="background:var(--input-bg);border:1px solid var(--border)">docker compose up -d</code>
-                 Without this the port will not be reachable outside the container even after restarting Traefik.`;
+        title = t('New entrypoints also need a port mapping in your compose file');
+        body  = `${th('After adding an entrypoint here, open your {docker_compose_yml} and add the port under {ports}, then run: {docker_compose_up} Without this the port will not be reachable outside the container even after restarting Traefik.', { docker_compose_yml: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">docker-compose.yml</code>`), ports: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">ports:</code>`), docker_compose_up: tmHtml(`<code class="font-mono block mt-1.5 mb-1 px-2 py-1 rounded" style="background:var(--input-bg);border:1px solid var(--border)">docker compose up -d</code>`) })}`;
     } else if (rt.runtime === 'native') {
-        title = 'New entrypoints need the port open on your system';
-        body  = `After adding an entrypoint and restarting Traefik, ensure the port is accessible:
-                 <code class="font-mono block mt-1.5 mb-1 px-2 py-1 rounded" style="background:var(--input-bg);border:1px solid var(--border)">sudo ufw allow PORT/tcp</code>
-                 For ports below 1024, Traefik needs <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">NET_BIND_SERVICE</code> capability or must run as root.`;
+        title = t('New entrypoints need the port open on your system');
+        body  = `${th('After adding an entrypoint and restarting Traefik, ensure the port is accessible: {sudo_ufw_allow} For ports below 1024, Traefik needs {net_bind_service} capability or must run as root.', { sudo_ufw_allow: tmHtml(`<code class="font-mono block mt-1.5 mb-1 px-2 py-1 rounded" style="background:var(--input-bg);border:1px solid var(--border)">sudo ufw allow PORT/tcp</code>`), net_bind_service: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">NET_BIND_SERVICE</code>`) })}`;
     } else {
-        title = 'New entrypoints require additional steps after saving';
-        body  = `<span class="font-medium" style="color:var(--text)">Docker / Podman / Unraid:</span> add the port under <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">ports:</code> in your compose file and run <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">docker compose up -d</code>
-                 <span class="block mt-1"><span class="font-medium" style="color:var(--text)">Native Linux:</span> open the port in your firewall, e.g. <code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">sudo ufw allow PORT/tcp</code></span>`;
+        title = t('New entrypoints require additional steps after saving');
+        body  = `<span class="font-medium" style="color:var(--text)">${th('Docker / Podman / Unraid:')}</span> ${th('add the port under {ports} in your compose file and run {docker_compose_up}', { ports: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">ports:</code>`), docker_compose_up: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">docker compose up -d</code>`) })}
+                 <span class="block mt-1"><span class="font-medium" style="color:var(--text)">${th('Native Linux:')}</span> ${th('open the port in your firewall, e.g. {sudo_ufw_allow}', { sudo_ufw_allow: tmHtml(`<code class="font-mono" style="background:var(--input-bg);padding:1px 4px;border-radius:3px">sudo ufw allow PORT/tcp</code>`) })}</span>`;
     }
-    el.innerHTML = _scNotice('entrypoints', title, body);
+    el.innerHTML = _scNotice(t('entrypoints'), title, body);
     _scApplyNoteState();
 }
 
@@ -2255,13 +2229,13 @@ async function _loadStaticFromDisk() {
             wrapper.innerHTML = (!_activeAgent && notMounted && typeof _emptyMountState === 'function')
                 ? _emptyMountState({
                     icon: 'ph-sliders',
-                    title: 'traefik.yml not mounted',
-                    description: 'Mount your Traefik <code class="font-mono" style="color:var(--blue)">traefik.yml</code> read-write to edit entrypoints, certificate resolvers, plugins and providers from here.',
+                    title: t('traefik.yml not mounted'),
+                    description: `${th('Mount your Traefik {traefik_yml} read-write to edit entrypoints, certificate resolvers, plugins and providers from here.', { traefik_yml: tmHtml(`<code class="font-mono" style="color:var(--blue)">traefik.yml</code>`) })}`,
                     steps: [
-                        { label: 'Add this volume to the <code class="font-mono">traefik-manager</code> service in your <code class="font-mono">docker-compose.yml</code>:',
+                        { label: `${th('Add this volume to the {traefik_manager} service in your {docker_compose_yml}:', { traefik_manager: tmHtml(`<code class="font-mono">traefik-manager</code>`), docker_compose_yml: tmHtml(`<code class="font-mono">docker-compose.yml</code>`) })}`,
                           code: '- /path/to/traefik/traefik.yml:/app/traefik.yml' },
                     ],
-                    note: 'Mount it read-write, without <code class="font-mono">:ro</code> - this tab writes to the file. A backup is taken before every save.'
+                    note: `${th('Mount it read-write, without {ro} - this tab writes to the file. A backup is taken before every save.', { ro: tmHtml(`<code class="font-mono">:ro</code>`) })}`
                 })
                 : `<div class="text-center py-16" style="color:var(--muted)">
                     <i class="ph-light ph-warning-circle text-4xl block mb-3 opacity-40"></i>
@@ -2291,7 +2265,7 @@ async function _loadStaticFromDisk() {
     } catch(e) {
         wrapper.innerHTML = `<div class="text-center py-16" style="color:var(--muted)">
             <i class="ph-light ph-warning-circle text-4xl block mb-3 opacity-40"></i>
-            <p>${_esc(_netErrText(e, 'Failed to load static config'))}</p></div>`;
+            <p>${_esc(_netErrText(e, t('Failed to load static config')))}</p></div>`;
     }
 }
 
@@ -2443,7 +2417,7 @@ function openStaticTab() {
 
 async function refreshStaticTab() {
     if (_staticPendingChanges) {
-        if (!await _confirm('You have unsaved changes. Discard and reload?', 'Unsaved Changes', 'Discard')) return;
+        if (!await _confirm(t('You have unsaved changes. Discard and reload?'), t('Unsaved Changes'), tc('button', 'Discard'))) return;
     }
     await _loadStaticFromDisk();
 }
@@ -2464,7 +2438,7 @@ function openTrustedIpsHelper() {
     const modal = document.getElementById('trustedIpsModal');
     if (!modal) return;
     _tipData = null;
-    document.getElementById('tipEntrypoint').innerHTML = '<option value="">Loading...</option>';
+    document.getElementById('tipEntrypoint').innerHTML = `<option value="">${thc('option', 'Loading...')}</option>`;
     document.getElementById('tipCurrent').innerHTML = '';
     document.getElementById('tipPreviewBox').innerHTML = '';
     document.getElementById('tipCustom').value = '';
@@ -2487,20 +2461,20 @@ function closeTrustedIpsModal() {
 async function _tipInspect() {
     try {
         const res = await fetch('/api/static/trusted-ips/preview', { method: 'POST', headers: { 'Content-Type': 'application/json', ..._csrfHeaders() }, body: JSON.stringify({ current_raw: _tipBaseRaw() }) });
-        if (!res.ok) { showToast(await _errText(res, 'Failed to read static config'), 'error'); closeTrustedIpsModal(); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Failed to read static config')), 'error'); closeTrustedIpsModal(); return; }
         const d = await res.json();
         if (d.error) { showToast(d.error, 'error'); closeTrustedIpsModal(); return; }
         _tipData = d;
         const sel = document.getElementById('tipEntrypoint');
         if (!d.entrypoints.length) {
-            sel.innerHTML = '<option value="">No entrypoints found</option>';
+            sel.innerHTML = `<option value="">${th('No entrypoints found')}</option>`;
         } else {
             sel.innerHTML = d.entrypoints.map(e => `<option value="${_esc(e.name)}">${_esc(e.name)}${e.address ? ' (' + _esc(e.address) + ')' : ''}</option>`).join('');
         }
         const cf = document.getElementById('tipCfLabel');
-        if (cf) cf.textContent = `Cloudflare edge ranges (${(d.cloudflare_ranges || []).length}, captured ${d.cloudflare_captured})`;
+        if (cf) cf.textContent = t('Cloudflare edge ranges ({cloudflare_ranges_count}, captured {cloudflare_captured})', { cloudflare_ranges_count: (d.cloudflare_ranges || []).length, cloudflare_captured: d.cloudflare_captured });
         _tipRenderCurrent();
-    } catch (e) { showToast(_netErrText(e, 'Failed to read static config'), 'error'); closeTrustedIpsModal(); }
+    } catch (e) { showToast(_netErrText(e, t('Failed to read static config')), 'error'); closeTrustedIpsModal(); }
 }
 
 function _tipRenderCurrent() {
@@ -2516,28 +2490,28 @@ function _tipRenderCurrent() {
     if (!box) return;
     const cur = (ep && ep.trusted_ips) || [];
     if (!cur.length) {
-        box.innerHTML = `<span class="text-xs" style="color:var(--muted)">No <code class="font-mono">trustedIPs</code> on this entrypoint yet.</span>`;
+        box.innerHTML = `<span class="text-xs" style="color:var(--muted)">${th('No {trustedips} on this entrypoint yet.', { trustedips: tmHtml(`<code class="font-mono">trustedIPs</code>`) })}</span>`;
     } else {
-        box.innerHTML = `<div class="text-xs mb-1" style="color:var(--muted)">Current <code class="font-mono">trustedIPs</code> (${cur.length}):</div><div class="flex flex-wrap gap-1">` + cur.map(c => `<span class="text-xs font-mono px-1.5 py-0.5 rounded" style="background:var(--input-bg);color:var(--text)">${_esc(c)}</span>`).join('') + `</div>`;
+        box.innerHTML = `<div class="text-xs mb-1" style="color:var(--muted)">${th('Current {trustedips} ({cur_count}):', { trustedips: tmHtml(`<code class="font-mono">trustedIPs</code>`), cur_count: tmHtml(cur.length) })}</div><div class="flex flex-wrap gap-1">${cur.map(c => `<span class="text-xs font-mono px-1.5 py-0.5 rounded" style="background:var(--input-bg);color:var(--text)">${_esc(c)}</span>`).join('')}</div>`;
     }
 }
 
 async function tipPreview() {
     const sel = document.getElementById('tipEntrypoint');
     const entrypoint = sel ? sel.value : '';
-    if (!entrypoint) { showToast('Pick an entrypoint', 'error'); return; }
+    if (!entrypoint) { showToast(t('Pick an entrypoint'), 'error'); return; }
     const cloudflare = document.getElementById('tipSrcCloudflare').checked;
     const priv = document.getElementById('tipSrcPrivate').checked;
     const custom = document.getElementById('tipCustom').value;
-    if (!cloudflare && !priv && !custom.trim()) { showToast('Select at least one source', 'error'); return; }
+    if (!cloudflare && !priv && !custom.trim()) { showToast(t('Select at least one source'), 'error'); return; }
     try {
         const res = await fetch('/api/static/trusted-ips/preview', { method: 'POST', headers: { 'Content-Type': 'application/json', ..._csrfHeaders() }, body: JSON.stringify({ current_raw: _tipBaseRaw(), entrypoint, cloudflare, private: priv, custom_cidrs: custom }) });
-        if (!res.ok) { showToast(await _errText(res, 'Preview failed'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Preview failed')), 'error'); return; }
         const d = await res.json();
         if (d.error) { showToast(d.error, 'error'); return; }
         if (_tipData) _tipData.preview = d;
         _tipRenderPreview(d);
-    } catch (e) { showToast(_netErrText(e, 'Preview failed'), 'error'); }
+    } catch (e) { showToast(_netErrText(e, t('Preview failed')), 'error'); }
 }
 
 function _tipRenderPreview(d) {
@@ -2546,15 +2520,19 @@ function _tipRenderPreview(d) {
     const added = d.added || [], invalid = d.invalid || [], existing = d.existing || [];
     let html = '';
     if (!added.length && !invalid.length) {
-        html += `<div class="text-xs px-3 py-2 rounded" style="background:rgba(234,179,8,0.1);color:#ca8a04">Nothing new to add - every selected range is already trusted on <span class="font-mono">${_esc(d.entrypoint)}</span>.</div>`;
+        html += `<div class="text-xs px-3 py-2 rounded" style="background:rgba(234,179,8,0.1);color:#ca8a04">${th('Nothing new to add - every selected range is already trusted on {span}.', { span: tmHtml(`<span class="font-mono">${_esc(d.entrypoint)}</span>`) })}</div>`;
     }
     if (added.length) {
-        html += `<div class="text-xs mb-1" style="color:var(--green)"><i class="ph-bold ph-plus-circle"></i> Adding ${added.length} range${added.length > 1 ? 's' : ''}:</div><div class="flex flex-wrap gap-1 mb-2">` + added.map(c => `<span class="text-xs font-mono px-1.5 py-0.5 rounded" style="background:rgba(63,185,80,0.12);color:var(--green)">${_esc(c)}</span>`).join('') + `</div>`;
+        html += `<div class="text-xs mb-1" style="color:var(--green)"><i class="ph-bold ph-plus-circle"></i> ${thn('Adding {n} range:', 'Adding {n} ranges:', added.length)}</div><div class="flex flex-wrap gap-1 mb-2">` + added.map(c => `<span class="text-xs font-mono px-1.5 py-0.5 rounded" style="background:rgba(63,185,80,0.12);color:var(--green)">${_esc(c)}</span>`).join('') + `</div>`;
     }
     if (invalid.length) {
-        html += `<div class="text-xs mb-1" style="color:var(--red)"><i class="ph-bold ph-warning"></i> Skipped ${invalid.length} invalid entr${invalid.length > 1 ? 'ies' : 'y'}:</div><div class="flex flex-wrap gap-1 mb-2">` + invalid.map(c => `<span class="text-xs font-mono px-1.5 py-0.5 rounded" style="background:rgba(239,68,68,0.12);color:var(--red)">${_esc(c)}</span>`).join('') + `</div>`;
+        html += `<div class="text-xs mb-1" style="color:var(--red)"><i class="ph-bold ph-warning"></i> ${thn('Skipped {n} invalid entry:', 'Skipped {n} invalid entries:', invalid.length)}</div><div class="flex flex-wrap gap-1 mb-2">` + invalid.map(c => `<span class="text-xs font-mono px-1.5 py-0.5 rounded" style="background:rgba(239,68,68,0.12);color:var(--red)">${_esc(c)}</span>`).join('') + `</div>`;
     }
-    html += `<div class="text-xs" style="color:var(--muted)">Result: <span style="color:var(--text);font-weight:600">${d.final.length}</span> trusted range${d.final.length !== 1 ? 's' : ''} on <span class="font-mono">${_esc(d.entrypoint)}</span> (was ${existing.length}).</div>`;
+    html += `<div class="text-xs" style="color:var(--muted)">${thn('Result: {count} trusted range on {entrypoint} (was {before}).', 'Result: {count} trusted ranges on {entrypoint} (was {before}).', d.final.length, {
+        count: tmHtml(`<span style="color:var(--text);font-weight:600">${d.final.length}</span>`),
+        entrypoint: tmHtml(`<span class="font-mono">${_esc(d.entrypoint)}</span>`),
+        before: existing.length,
+    })}</div>`;
     box.innerHTML = html;
     document.getElementById('tipApplyBtn').disabled = !added.length;
 }

@@ -3,7 +3,7 @@
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card);border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <i class="ph-bold ph-lock-key" style="color:var(--blue)"></i>
-            <h2 class="font-bold text-sm" style="color:var(--text)" id="tlsOptionsModalTitle">Add TLS Profile</h2>
+            <h2 class="font-bold text-sm" style="color:var(--text)" id="tlsOptionsModalTitle">{{ _('Add TLS Profile') }}</h2>
         </div>
         <button type="button" onclick="closeTlsOptionModal()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
     </div>
@@ -14,11 +14,11 @@
 
             {% if multi_config or config_dir_set %}
             <div>
-                <label>Config File</label>
+                <label>{{ _('Config File') }}</label>
                 <select id="tlsOptConfigFileSelect" class="input-field" onchange="onTlsOptConfigFileChange(this)">
-                    <option value="">Select a file...</option>
+                    <option value="">{{ _('Select a file...') }}</option>
                     {% if config_dir_set %}
-                    <option value="__new__">+ New file...</option>
+                    <option value="__new__">{{ _('+ New file...') }}</option>
                     {% endif %}
                     {% for cp in config_paths_list %}
                     <option value="{{ cp.label }}">{{ cp.label }}</option>
@@ -31,16 +31,16 @@
             {% endif %}
 
             <div>
-                <label>Profile Name</label>
+                <label>{{ _('Profile Name') }}</label>
                 <input type="text" id="tlsOptName" class="input-field font-mono" placeholder="e.g. modern, strict, default">
-                <p class="text-xs mt-1" style="color:var(--muted)">Used as the <code class="font-mono">tls.options</code> key and referenced in router configs.</p>
+                <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Used as the %(tls_options)s key and referenced in router configs.', tls_options=tag('code', 'tls.options', class_='font-mono')) }}</p>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label>Min TLS Version</label>
+                    <label>{{ _('Min TLS Version') }}</label>
                     <select id="tlsOptMinVersion" class="input-field">
-                        <option value="">Default</option>
+                        <option value="">{{ pgettext('option', 'Default') }}</option>
                         <option value="VersionTLS10">TLS 1.0</option>
                         <option value="VersionTLS11">TLS 1.1</option>
                         <option value="VersionTLS12">TLS 1.2</option>
@@ -48,9 +48,9 @@
                     </select>
                 </div>
                 <div>
-                    <label>Max TLS Version</label>
+                    <label>{{ _('Max TLS Version') }}</label>
                     <select id="tlsOptMaxVersion" class="input-field">
-                        <option value="">Default</option>
+                        <option value="">{{ pgettext('option', 'Default') }}</option>
                         <option value="VersionTLS10">TLS 1.0</option>
                         <option value="VersionTLS11">TLS 1.1</option>
                         <option value="VersionTLS12">TLS 1.2</option>
@@ -61,49 +61,49 @@
 
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="tlsOptSniStrict" class="rounded" style="accent-color:var(--blue)">
-                <span class="text-sm" style="color:var(--text)">SNI Strict</span>
+                <span class="text-sm" style="color:var(--text)">{{ _('SNI Strict') }}</span>
             </div>
-            <p class="text-xs -mt-2" style="color:var(--muted)">Reject connections with no or mismatched SNI. Requires non-wildcard certificates.</p>
+            <p class="text-xs -mt-2" style="color:var(--muted)">{{ _('Reject connections with no or mismatched SNI. Requires non-wildcard certificates.') }}</p>
 
             <div>
-                <label>Cipher Suites</label>
+                <label>{{ _('Cipher Suites') }}</label>
                 <textarea id="tlsOptCiphers" class="input-field font-mono text-xs" rows="5" placeholder="TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384&#10;TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384&#10;TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305&#10;TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305" style="resize:vertical"></textarea>
-                <p class="text-xs mt-1" style="color:var(--muted)">One per line. Leave empty to use Traefik defaults. Only applies to TLS 1.0-1.2.</p>
+                <p class="text-xs mt-1" style="color:var(--muted)">{{ _('One per line. Leave empty to use Traefik defaults. Only applies to TLS 1.0-1.2.') }}</p>
             </div>
 
             <div>
-                <label>Curve Preferences</label>
+                <label>{{ _('Curve Preferences') }}</label>
                 <textarea id="tlsOptCurves" class="input-field font-mono text-xs" rows="3" placeholder="X25519&#10;CurveP256&#10;CurveP384" style="resize:vertical"></textarea>
-                <p class="text-xs mt-1" style="color:var(--muted)">One per line. Leave empty to use Traefik defaults.</p>
+                <p class="text-xs mt-1" style="color:var(--muted)">{{ _('One per line. Leave empty to use Traefik defaults.') }}</p>
             </div>
 
             <div>
-                <label>ALPN Protocols</label>
+                <label>{{ _('ALPN Protocols') }}</label>
                 <textarea id="tlsOptAlpn" class="input-field font-mono text-xs" rows="3" placeholder="h2&#10;http/1.1&#10;acme-tls/1" style="resize:vertical"></textarea>
-                <p class="text-xs mt-1" style="color:var(--muted)">One per line. Default: <code class="font-mono">h2, http/1.1, acme-tls/1</code> - leave empty to use Traefik defaults. Include <code class="font-mono">acme-tls/1</code> if using ACME cert challenges.</p>
+                <p class="text-xs mt-1" style="color:var(--muted)">{{ _('One per line. Default: %(h2_http_1)s - leave empty to use Traefik defaults. Include %(acme_tls_1)s if using ACME cert challenges.', h2_http_1=tag('code', 'h2, http/1.1, acme-tls/1', class_='font-mono'), acme_tls_1=tag('code', 'acme-tls/1', class_='font-mono')) }}</p>
             </div>
 
             <div>
-                <label>Client Auth Type</label>
+                <label>{{ _('Client Auth Type') }}</label>
                 <select id="tlsOptClientAuthType" class="input-field" onchange="toggleTlsClientAuthCAs(this.value)">
-                    <option value="">None</option>
-                    <option value="NoClientCert">NoClientCert</option>
-                    <option value="RequestClientCert">RequestClientCert</option>
-                    <option value="RequireAnyClientCert">RequireAnyClientCert</option>
-                    <option value="VerifyClientCertIfGiven">VerifyClientCertIfGiven</option>
-                    <option value="RequireAndVerifyClientCert">RequireAndVerifyClientCert</option>
+                    <option value="">{{ pgettext('option', 'None') }}</option>
+                    <option value="NoClientCert">{{ pgettext('option', 'NoClientCert') }}</option>
+                    <option value="RequestClientCert">{{ pgettext('option', 'RequestClientCert') }}</option>
+                    <option value="RequireAnyClientCert">{{ pgettext('option', 'RequireAnyClientCert') }}</option>
+                    <option value="VerifyClientCertIfGiven">{{ pgettext('option', 'VerifyClientCertIfGiven') }}</option>
+                    <option value="RequireAndVerifyClientCert">{{ _('RequireAndVerifyClientCert') }}</option>
                 </select>
             </div>
 
             <div id="tlsClientAuthCAsRow" style="display:none">
-                <label>CA Files</label>
+                <label>{{ _('CA Files') }}</label>
                 <textarea id="tlsOptClientAuthCAs" class="input-field font-mono text-xs" rows="3" placeholder="/certs/ca.pem" style="resize:vertical"></textarea>
-                <p class="text-xs mt-1" style="color:var(--muted)">Paths to CA certificate files inside the container, one per line.</p>
+                <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Paths to CA certificate files inside the container, one per line.') }}</p>
             </div>
         </div>
 
     <div class="detail-panel-foot flex justify-end gap-2 px-6 py-4">
-        <button type="button" onclick="closeTlsOptionModal()" class="btn-secondary">Cancel</button>
-        <button type="button" onclick="saveTlsOption()" class="btn-primary">Save Profile</button>
+        <button type="button" onclick="closeTlsOptionModal()" class="btn-secondary">{{ pgettext('button', 'Cancel') }}</button>
+        <button type="button" onclick="saveTlsOption()" class="btn-primary">{{ _('Save Profile') }}</button>
     </div>
 </div>

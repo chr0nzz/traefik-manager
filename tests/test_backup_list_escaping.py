@@ -51,7 +51,9 @@ def _render(backups):
         pytest.skip('node is not installed')
     core = _read('static', 'js', 'core.js')
     modal = _read('static', 'js', 'settings-modal.js')
+    i18n = _read('static', 'js', 'i18n.js')
     script = '\n'.join([
+        '(function (window, document) {\n' + i18n + '\n})(globalThis, { getElementById: () => null, documentElement: { lang: "en" } });',
         _fn('_esc', core),
         _fn('_jsArg', core),
         'function formatBytes(n) { return String(n) + " B"; }',

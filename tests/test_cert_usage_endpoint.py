@@ -90,7 +90,8 @@ def test_the_certs_tab_explains_itself_rather_than_guessing():
     js = _read('static', 'js', 'certs.js')
     assert '_loadCertUsage' in js and '/api/certs/usage' in js
     assert '_certUsage.why' in js, 'the strip must say why it cannot tell'
-    assert re.search(r"label: 'unused'", js) and re.search(r"label: 'no resolver'", js)
+    label = r"label: (?:tc?\((?:'\w+', )?)?'{}'"
+    assert re.search(label.format('unused'), js) and re.search(label.format('no resolver'), js)
     assert 'tm-warn' in js, 'chips must use the existing card styling'
 
 

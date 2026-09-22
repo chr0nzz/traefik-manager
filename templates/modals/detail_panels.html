@@ -3,17 +3,17 @@
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card); border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <span id="mwDetailProtoBadge" class="d-flat d-proto">HTTP</span>
-            <h2 class="font-bold text-sm" style="color:var(--text)" id="mwDetailTitle">Middleware Details</h2>
+            <h2 class="font-bold text-sm" style="color:var(--text)" id="mwDetailTitle">{{ _('Middleware Details') }}</h2>
         </div>
         <div class="flex items-center gap-2">
-            <button id="mwDetailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> Edit</button>
+            <button id="mwDetailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> {{ pgettext('button', 'Edit') }}</button>
             <button onclick="closeMwDetail()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
         </div>
     </div>
     <div id="mwDetailContent" class="px-6 py-5 overflow-y-auto">
         <div class="text-center py-12" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-3xl animate-spin block mb-2"></i>
-            Loading...
+            {{ pgettext('label', 'Loading...') }}
         </div>
     </div>
 </div>
@@ -23,10 +23,10 @@
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card); border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <i class="ph-bold ph-lock-key" style="color:var(--blue)"></i>
-            <h2 class="font-bold text-sm" style="color:var(--text)" id="tlsOptDetailTitle">TLS Profile</h2>
+            <h2 class="font-bold text-sm" style="color:var(--text)" id="tlsOptDetailTitle">{{ _('TLS Profile') }}</h2>
         </div>
         <div class="flex items-center gap-2">
-            <button id="tlsOptDetailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> Edit</button>
+            <button id="tlsOptDetailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> {{ pgettext('button', 'Edit') }}</button>
             <button onclick="closeTlsOptDetail()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
         </div>
     </div>
@@ -38,10 +38,10 @@
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card); border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <span id="svcDetailProtoBadge" class="d-flat d-proto">HTTP</span>
-            <h2 class="font-bold text-sm" style="color:var(--text)" id="svcDetailTitle">Service Details</h2>
+            <h2 class="font-bold text-sm" style="color:var(--text)" id="svcDetailTitle">{{ _('Service Details') }}</h2>
         </div>
         <div class="flex items-center gap-2">
-            <button id="svcDetailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> Edit</button>
+            <button id="svcDetailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> {{ pgettext('button', 'Edit') }}</button>
             <button onclick="closeSvcDetail()" class="btn-icon"><i class="ph-bold ph-x"></i></button>
         </div>
     </div>
@@ -53,7 +53,7 @@
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card); border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <i class="ph-bold ph-puzzle-piece text-lg" style="color:var(--blue)"></i>
-            <h2 class="font-bold text-sm" style="color:var(--text)" id="pluginDetailTitle">Plugin Details</h2>
+            <h2 class="font-bold text-sm" style="color:var(--text)" id="pluginDetailTitle">{{ _('Plugin Details') }}</h2>
         </div>
         <button onclick="closePluginDetail()" class="btn-icon"><i class="ph-bold ph-x"></i></button>
     </div>
@@ -65,17 +65,17 @@
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card); border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <span id="detailProtoBadge" class="d-flat d-proto">HTTP</span>
-            <h2 class="font-bold" style="color:var(--text)" id="detailTitle">Route Details</h2>
+            <h2 class="font-bold" style="color:var(--text)" id="detailTitle">{{ _('Route Details') }}</h2>
         </div>
         <div class="flex items-center gap-2">
-            <button id="detailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> Edit</button>
+            <button id="detailEditBtn" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> {{ pgettext('button', 'Edit') }}</button>
             <button onclick="closeRouteDetail()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
         </div>
     </div>
     <div id="detailContent" class="px-6 py-5">
         <div class="text-center py-12" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-3xl animate-spin block mb-2"></i>
-            Loading...
+            {{ pgettext('label', 'Loading...') }}
         </div>
     </div>
 </div>

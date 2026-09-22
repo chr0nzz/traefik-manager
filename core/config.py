@@ -236,7 +236,7 @@ def resolve_config_path(s: str) -> str:
         if not s.endswith(('.yml', '.yaml')):
             s = s + '.yml'
         candidate = os.path.join(env.ACTIVE_CONFIG_DIR, s)
-        if is_safe_path(candidate):
+        if is_safe_path(candidate) and not env.is_own_state(candidate):
             return candidate
     logger.warning(f"Config file not in CONFIG_PATHS: {s!r}")
     return ''

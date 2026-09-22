@@ -89,7 +89,7 @@ func (a *App) eventsHandler(w http.ResponseWriter, r *http.Request) {
 	if raw := r.URL.Query().Get("since"); raw != "" {
 		parsed, err := strconv.ParseInt(raw, 10, 64)
 		if err != nil || parsed < 0 {
-			jsonError(w, "since must be a non-negative integer", http.StatusBadRequest)
+			jsonErrorCode(w, "invalid_since", nil, "since must be a non-negative integer", http.StatusBadRequest)
 			return
 		}
 		since = parsed

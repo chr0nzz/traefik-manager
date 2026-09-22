@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { i18nPrelude } from './i18n_test_prelude.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -10,7 +11,7 @@ if (!listSrc) {
     console.error('could not find TRAEFIK_ADVISORIES in static/js/settings.js');
     process.exit(1);
 }
-const ADVISORIES = eval(listSrc + '\n]');
+const ADVISORIES = new Function(i18nPrelude() + '\nreturn ' + listSrc + '\n];')();
 
 const parts = v => {
     const m = String(v || '').match(/(\d+)\.(\d+)\.(\d+)/);

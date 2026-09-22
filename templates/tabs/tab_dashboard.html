@@ -3,17 +3,17 @@
     <div id="dashFilterBar" class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
         <div class="relative flex-1 min-w-48">
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-            <input type="search" id="dashSearch" oninput="dashApplyFilter()" placeholder="Search routes..." class="input-field pl-9" autocomplete="off" name="dash-search-nofill">
+            <input type="search" id="dashSearch" oninput="dashApplyFilter()" placeholder="{{ _('Search routes...') }}" class="input-field pl-9" autocomplete="off" name="dash-search-nofill">
         </div>
         <div id="dashProtoFilters" class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="dashFilterProto('all')"  id="dashf-all"  class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+            <button onclick="dashFilterProto('all')"  id="dashf-all"  class="proto-btn active-http text-xs px-3 py-1.5">{{ pgettext('button', 'All') }}</button>
             <button onclick="dashFilterProto('http')" id="dashf-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
             <button onclick="dashFilterProto('tcp')"  id="dashf-tcp"  class="proto-btn text-xs px-3 py-1.5">TCP</button>
             <button onclick="dashFilterProto('udp')"  id="dashf-udp"  class="proto-btn text-xs px-3 py-1.5">UDP</button>
         </div>
         <div id="dashProviderFilters" class="flex gap-1 p-1 rounded-lg fb-secondary" style="display:none !important;background:var(--input-bg); border:1px solid var(--border)"></div>
         <div class="flex items-center fb-secondary">
-            <button onclick="rmOpenGroupsModal()" class="btn-icon" title="Dashboard settings - custom groups and hidden apps" style="width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);flex-shrink:0">
+            <button onclick="rmOpenGroupsModal()" class="btn-icon" title="{{ _('Dashboard settings - custom groups and hidden apps') }}" style="width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);flex-shrink:0">
                 <i class="ph-bold ph-sliders-horizontal" style="font-size:13px"></i>
             </button>
         </div>
@@ -21,13 +21,13 @@
 
     <div id="dashLoading" class="text-center py-20 hidden" style="color:var(--muted)">
         <i class="ph-light ph-squares-four text-6xl block mb-4 opacity-30" style="animation:pulse 1.5s ease-in-out infinite"></i>
-        <p class="text-sm">Loading dashboard...</p>
+        <p class="text-sm">{{ _('Loading dashboard...') }}</p>
     </div>
 
     <div id="dashEmpty" class="sig-root hidden">
         <div class="atk-empty">
             <i id="dashEmptyIc" class="ph-fill ph-funnel"></i>
-            <div id="dashEmptyT" class="atk-empty-t">Nothing matches</div>
+            <div id="dashEmptyT" class="atk-empty-t">{{ _('Nothing matches') }}</div>
             <p id="dashEmptyNote" class="lg-note"></p>
             <div id="dashEmptyDo" class="atk-empty-do"></div>
         </div>
@@ -36,16 +36,16 @@
     <div id="dashDegraded" class="sig-root hidden">
         <div class="atk-empty">
             <i class="ph-fill ph-plugs"></i>
-            <div class="atk-empty-t">Dashboard data unavailable</div>
-            <p class="lg-note">The route list could not be read. Names, icons and launch links all come from that call, so nothing can be drawn. Check that traefik-manager can reach the Traefik API and its config files.</p>
+            <div class="atk-empty-t">{{ _('Dashboard data unavailable') }}</div>
+            <p class="lg-note">{{ _('The route list could not be read. Names, icons and launch links all come from that call, so nothing can be drawn. Check that traefik-manager can reach the Traefik API and its config files.') }}</p>
             <div class="atk-empty-do">
-                <button type="button" class="sig-flag d-blue" data-dsk="act=retry"><i class="ph-bold ph-arrow-clockwise"></i>retry</button>
+                <button type="button" class="sig-flag d-blue" data-dsk="act=retry"><i class="ph-bold ph-arrow-clockwise"></i>{{ pgettext('button', 'retry') }}</button>
             </div>
         </div>
     </div>
 
     <div id="dashPodsContainer" class="sig-root hidden">
-        <p id="dashBlind" class="lg-note dsk-blind hidden"><i class="ph-bold ph-info"></i> Traefik API unreachable. Names, icons and links below come from your config; live router and backend status is not shown.</p>
+        <p id="dashBlind" class="lg-note dsk-blind hidden"><i class="ph-bold ph-info"></i> {{ _('Traefik API unreachable. Names, icons and links below come from your config; live router and backend status is not shown.') }}</p>
         <div id="dashPodsGrid" class="dsk-grid"></div>
     </div>
 
@@ -56,7 +56,7 @@
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card);border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <i class="ph-bold ph-sliders-horizontal" style="color:var(--blue)"></i>
-            <h2 class="font-bold text-sm" style="color:var(--text)">Dashboard settings</h2>
+            <h2 class="font-bold text-sm" style="color:var(--text)">{{ _('Dashboard settings') }}</h2>
         </div>
         <button type="button" onclick="rmCloseGroupsModal()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
     </div>
@@ -65,32 +65,32 @@
             <div>
                 <div class="sig-ep-head">
                     <i class="ph-fill ph-tag sig-ep-headic"></i>
-                    <span class="sc-sec-label">Custom groups</span>
+                    <span class="sc-sec-label">{{ _('Custom groups') }}</span>
                     <span class="d-n" id="rmGroupsCount">0</span>
                     <span class="sc-sec-rule"></span>
                 </div>
-                <p class="text-xs" style="color:var(--muted)">Assign a route to a group with the pencil on its card. A group disappears when nothing uses it.</p>
+                <p class="text-xs" style="color:var(--muted)">{{ _('Assign a route to a group with the pencil on its card. A group disappears when nothing uses it.') }}</p>
                 <div id="rmGroupsList" class="mt-2"></div>
                 <div class="flex gap-2 mt-3">
-                    <input type="text" id="rmNewGroupName" placeholder="New group name..." class="input-field" style="flex:1" onkeydown="if(event.key==='Enter')rmAddCustomGroup()">
-                    <button onclick="rmAddCustomGroup()" class="btn-secondary text-xs" style="flex-shrink:0"><i class="ph-bold ph-plus"></i> Add</button>
+                    <input type="text" id="rmNewGroupName" placeholder="{{ _('New group name...') }}" class="input-field" style="flex:1" onkeydown="if(event.key==='Enter')rmAddCustomGroup()">
+                    <button onclick="rmAddCustomGroup()" class="btn-secondary text-xs" style="flex-shrink:0"><i class="ph-bold ph-plus"></i> {{ pgettext('button', 'Add') }}</button>
                 </div>
             </div>
 
             <div style="border-top:1px solid var(--border);padding-top:16px">
                 <div class="sig-ep-head">
                     <i class="ph-fill ph-eye-slash sig-ep-headic"></i>
-                    <span class="sc-sec-label">Hidden apps</span>
+                    <span class="sc-sec-label">{{ _('Hidden apps') }}</span>
                     <span class="d-n" id="rmHiddenCount">0</span>
                     <span class="sc-sec-rule"></span>
                 </div>
-                <p class="text-xs" style="color:var(--muted)">Hidden apps stay off the dashboard only. They keep running and still appear on the Routes tab.</p>
+                <p class="text-xs" style="color:var(--muted)">{{ _('Hidden apps stay off the dashboard only. They keep running and still appear on the Routes tab.') }}</p>
                 <div id="rmHiddenList" class="mt-2"></div>
             </div>
         </div>
 
     <div class="detail-panel-foot flex justify-end gap-2 px-6 py-4">
-        <button type="button" onclick="rmCloseGroupsModal()" class="btn-secondary">Close</button>
+        <button type="button" onclick="rmCloseGroupsModal()" class="btn-secondary">{{ pgettext('button', 'Close') }}</button>
     </div>
 </div>
 
@@ -99,26 +99,26 @@
     <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card);border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-3">
             <i class="ph-bold ph-pencil-simple" style="color:var(--blue)"></i>
-            <h2 class="font-bold text-sm" style="color:var(--text)" id="rmEditModalTitle">Card settings</h2>
+            <h2 class="font-bold text-sm" style="color:var(--text)" id="rmEditModalTitle">{{ _('Card settings') }}</h2>
         </div>
         <button type="button" onclick="rmCloseEditModal()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
     </div>
 
         <div class="px-6 py-5 space-y-4">
-            <p class="text-xs" style="color:var(--muted)">These settings change how this app appears on the dashboard. They do not touch the route itself.</p>
+            <p class="text-xs" style="color:var(--muted)">{{ _('These settings change how this app appears on the dashboard. They do not touch the route itself.') }}</p>
             <div>
-                <label>Display name</label>
-                <input type="text" id="rmEditDisplayName" class="input-field" placeholder="Leave blank to use route name">
+                <label>{{ _('Display name') }}</label>
+                <input type="text" id="rmEditDisplayName" class="input-field" placeholder="{{ _('Leave blank to use route name') }}">
             </div>
             <div>
-                <label>Icon</label>
+                <label>{{ pgettext('setting', 'Icon') }}</label>
                 <div class="flex gap-1 mb-2 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);width:fit-content">
-                    <button id="rmEditIconBtnAuto" onclick="rmEditSetIconType('auto')" class="rm-view-btn active text-xs">Auto</button>
-                    <button id="rmEditIconBtnSlug" onclick="rmEditSetIconType('slug')" class="rm-view-btn text-xs">selfh.st slug</button>
-                    <button id="rmEditIconBtnUrl" onclick="rmEditSetIconType('url')" class="rm-view-btn text-xs">Custom URL</button>
+                    <button id="rmEditIconBtnAuto" onclick="rmEditSetIconType('auto')" class="rm-view-btn active text-xs">{{ pgettext('button', 'Auto') }}</button>
+                    <button id="rmEditIconBtnSlug" onclick="rmEditSetIconType('slug')" class="rm-view-btn text-xs">{{ _('selfh.st slug') }}</button>
+                    <button id="rmEditIconBtnUrl" onclick="rmEditSetIconType('url')" class="rm-view-btn text-xs">{{ _('Custom URL') }}</button>
                 </div>
                 <div id="rmEditIconSlugRow" style="display:none">
-                    <input type="text" id="rmEditIconSlug" class="input-field" placeholder="e.g. plex" oninput="rmEditPreviewIcon()">
+                    <input type="text" id="rmEditIconSlug" class="input-field" placeholder="{{ _('e.g. plex') }}" oninput="rmEditPreviewIcon()">
                 </div>
                 <div id="rmEditIconUrlRow" style="display:none">
                     <input type="text" id="rmEditIconUrl" class="input-field" placeholder="https://example.com/icon.png" oninput="rmEditPreviewIcon()">
@@ -129,28 +129,28 @@
                 </div>
             </div>
             <div>
-                <label>Group</label>
+                <label>{{ pgettext('setting', 'Group') }}</label>
                 <select id="rmEditGroup" class="input-field"></select>
             </div>
             <div>
-                <label>Link URL</label>
-                <input type="text" id="rmEditUrl" class="input-field" placeholder="Leave blank to use the route's URL">
-                <p class="text-xs mt-1" style="color:var(--muted)">Useful when the route has a wildcard host, or the app lives on a different port.</p>
+                <label>{{ _('Link URL') }}</label>
+                <input type="text" id="rmEditUrl" class="input-field" placeholder="{{ _("Leave blank to use the route's URL") }}">
+                <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Useful when the route has a wildcard host, or the app lives on a different port.') }}</p>
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="rmEditLinkDisabled" class="rounded" style="accent-color:var(--blue)">
-                <span class="text-xs" style="color:var(--text)">Do not make this card clickable</span>
+                <span class="text-xs" style="color:var(--text)">{{ _('Do not make this card clickable') }}</span>
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="rmEditHidden" class="rounded" style="accent-color:var(--blue)">
-                <span class="text-xs" style="color:var(--text)">Hide from the dashboard</span>
-                <span class="text-xs" style="color:var(--muted)">- restore it under Dashboard settings</span>
+                <span class="text-xs" style="color:var(--text)">{{ _('Hide from the dashboard') }}</span>
+                <span class="text-xs" style="color:var(--muted)">{{ _('- restore it under Dashboard settings') }}</span>
             </div>
         </div>
 
     <div class="detail-panel-foot flex justify-end gap-2 px-6 py-4">
-        <button type="button" onclick="rmCloseEditModal()" class="btn-secondary">Cancel</button>
-        <button type="button" onclick="rmSaveRouteEdit()" class="btn-primary">Save</button>
+        <button type="button" onclick="rmCloseEditModal()" class="btn-secondary">{{ pgettext('button', 'Cancel') }}</button>
+        <button type="button" onclick="rmSaveRouteEdit()" class="btn-primary">{{ pgettext('button', 'Save') }}</button>
     </div>
 </div>
 

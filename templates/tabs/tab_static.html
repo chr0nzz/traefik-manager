@@ -3,39 +3,39 @@
     <div id="staticDangerWarn" class="mb-4 rounded-lg" style="border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.05)">
         <div class="px-4 py-2.5 flex items-center gap-3">
             <i class="ph-bold ph-warning-octagon text-sm shrink-0" style="color:var(--red)"></i>
-            <span class="text-xs font-semibold flex-1" style="color:var(--text)">Changes here can break Traefik</span>
-            <button onclick="hideStaticDangerWarn()" class="btn-secondary text-xs" style="height:22px;padding:0 8px;font-size:11px">Hide</button>
+            <span class="text-xs font-semibold flex-1" style="color:var(--text)">{{ _('Changes here can break Traefik') }}</span>
+            <button onclick="hideStaticDangerWarn()" class="btn-secondary text-xs" style="height:22px;padding:0 8px;font-size:11px">{{ pgettext('button', 'Hide') }}</button>
         </div>
         <div class="static-warn-body px-4 pb-3 text-xs" style="color:var(--muted)">
-            Only edit what you understand - a misconfigured static config will prevent Traefik from starting.
-            <span class="block mt-1"><i class="ph-bold ph-shield-check" style="color:var(--green)"></i> A backup is created automatically before every save. Restore from <button onclick="openSettingsModal('backups');loadBackups()" style="color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-size:inherit;text-decoration:underline">Backups</button> if something goes wrong.</span>
+            {{ _('Only edit what you understand - a misconfigured static config will prevent Traefik from starting.') }}
+            <span class="block mt-1"><i class="ph-bold ph-shield-check" style="color:var(--green)"></i> {% set backups_link %}<button onclick="openSettingsModal('backups');loadBackups()" style="color:var(--blue);background:none;border:none;cursor:pointer;padding:0;font-size:inherit;text-decoration:underline">{{ pgettext('button', 'Backups') }}</button>{% endset %}{{ _('A backup is created automatically before every save. Restore from %(backups)s if something goes wrong.', backups=backups_link) }}</span>
         </div>
     </div>
 
     <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar" id="staticFilterBar">
         <div class="relative flex-1 min-w-48" id="staticSearchWrap">
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-            <input type="text" id="staticSearch" oninput="filterStatic()" placeholder="Search entrypoints, resolvers, plugins..." class="input-field pl-9">
+            <input type="text" id="staticSearch" oninput="filterStatic()" placeholder="{{ _('Search entrypoints, resolvers, plugins...') }}" class="input-field pl-9">
         </div>
         <div id="staticTrustedIpsWrap" class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="openTrustedIpsHelper()" class="proto-btn text-xs px-3 py-1.5" title="Add trusted proxy IPs to an entrypoint"><i class="ph-bold ph-shield-check"></i></button>
+            <button onclick="openTrustedIpsHelper()" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Add trusted proxy IPs to an entrypoint') }}"><i class="ph-bold ph-shield-check"></i></button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" id="staticYamlBtnWrap" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="openStaticYamlPopout()" class="proto-btn text-xs px-3 py-1.5" title="Raw YAML editor"><i class="ph-bold ph-code"></i></button>
+            <button onclick="openStaticYamlPopout()" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Raw YAML editor') }}"><i class="ph-bold ph-code"></i></button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="refreshStaticTab()" class="proto-btn text-xs px-3 py-1.5" title="Reload from disk"><i class="ph-bold ph-arrows-clockwise"></i></button>
+            <button onclick="refreshStaticTab()" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Reload from disk') }}"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>
     </div>
 
     <div id="staticStateBar" class="static-state-bar" style="display:none"></div>
 
-    <div id="staticNoMatch" class="text-center py-12 rounded-xl" style="display:none;color:var(--muted);border:1px solid var(--border)">No static config entries match your search</div>
+    <div id="staticNoMatch" class="text-center py-12 rounded-xl" style="display:none;color:var(--muted);border:1px solid var(--border)">{{ _('No static config entries match your search') }}</div>
 
     <div id="staticSettingsContent">
         <div class="text-center py-16" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
-            <p>Loading...</p>
+            <p>{{ pgettext('label', 'Loading...') }}</p>
         </div>
     </div>
 </div>

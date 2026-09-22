@@ -3,10 +3,10 @@
     <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
         <div class="relative flex-1 min-w-48">
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-            <input type="search" id="rmSearch" oninput="rmApplyFilter()" placeholder="Search routes..." class="input-field pl-9" autocomplete="off" name="routemap-search-nofill">
+            <input type="search" id="rmSearch" oninput="rmApplyFilter()" placeholder="{{ _('Search routes...') }}" class="input-field pl-9" autocomplete="off" name="routemap-search-nofill">
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">
-            <button onclick="rmFilterProto('all','All')"  id="rmf-all"  class="proto-btn active-http text-xs px-3 py-1.5">All</button>
+            <button onclick="rmFilterProto('all','All')"  id="rmf-all"  class="proto-btn active-http text-xs px-3 py-1.5">{{ pgettext('button', 'All') }}</button>
             <button onclick="rmFilterProto('http','HTTP')" id="rmf-http" class="proto-btn text-xs px-3 py-1.5">HTTP</button>
             <button onclick="rmFilterProto('tcp','TCP')"  id="rmf-tcp"  class="proto-btn text-xs px-3 py-1.5">TCP</button>
             <button onclick="rmFilterProto('udp','UDP')"  id="rmf-udp"  class="proto-btn text-xs px-3 py-1.5">UDP</button>
@@ -14,40 +14,40 @@
         <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg);border:1px solid var(--border)">
             <div class="live-dd" id="rm-dd-provider">
                 <button class="live-dd-btn-inner" id="rm-dd-provider-btn" onclick="toggleLiveDd('rm-dd-provider')">
-                    <span id="rm-provider-label">All Providers</span>
+                    <span id="rm-provider-label">{{ _('All Providers') }}</span>
                     <i class="ph-bold ph-caret-down live-dd-caret"></i>
                 </button>
                 <div class="live-dd-menu" id="rm-dd-provider-menu">
-                    <button class="live-dd-item active" onclick="rmPickProvider('all','All Providers')">All Providers</button>
+                    <button class="live-dd-item active" data-value="all" onclick="rmPickProvider('all','All Providers')">{{ _('All Providers') }}</button>
                 </div>
             </div>
         </div>
         <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg);border:1px solid var(--border)">
             <div class="live-dd" id="rm-dd-ep">
                 <button class="live-dd-btn-inner" id="rm-dd-ep-btn" onclick="toggleLiveDd('rm-dd-ep')">
-                    <span id="rm-ep-label">All Entry Points</span>
+                    <span id="rm-ep-label">{{ _('All Entry Points') }}</span>
                     <i class="ph-bold ph-caret-down live-dd-caret"></i>
                 </button>
                 <div class="live-dd-menu" id="rm-dd-ep-menu">
-                    <button class="live-dd-item active" onclick="rmPickEp('all','All Entry Points')">All Entry Points</button>
+                    <button class="live-dd-item active" data-value="all" onclick="rmPickEp('all','All Entry Points')">{{ _('All Entry Points') }}</button>
                 </div>
             </div>
         </div>
         <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg);border:1px solid var(--border)">
-            <button onclick="rmClearFilters()" class="proto-btn text-xs px-3 py-1.5" title="Clear filters"><i class="ph-bold ph-x-circle"></i></button>
+            <button onclick="rmClearFilters()" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Clear filters') }}"><i class="ph-bold ph-x-circle"></i></button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)">
-            <button onclick="refreshRoutemapTab(true)" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+            <button onclick="refreshRoutemapTab(true)" class="proto-btn text-xs px-3 py-1.5" title="{{ pgettext('tooltip', 'Refresh') }}"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>
     </div>
 
     <div id="rmLoading" class="text-center py-20 hidden" style="color:var(--muted)">
         <i class="ph-light ph-graph text-6xl block mb-4 opacity-30" style="animation:pulse 1.5s ease-in-out infinite"></i>
-        <p class="text-sm">Loading topology...</p>
+        <p class="text-sm">{{ _('Loading topology...') }}</p>
     </div>
     <div id="rmEmpty" class="text-center py-20 hidden" style="color:var(--muted)">
         <i class="ph-light ph-graph text-6xl block mb-4 opacity-30"></i>
-        <p class="text-base font-medium">No routes to map</p>
+        <p class="text-base font-medium">{{ _('No routes to map') }}</p>
     </div>
 
     <div id="rmTopoContainer" class="routemap-container hidden">
@@ -55,10 +55,10 @@
         <div id="rmCols" class="routemap-cols"></div>
     </div>
     <div id="rmMobileZoomBar" class="hidden" style="position:fixed;bottom:84px;right:14px;z-index:300;display:flex;flex-direction:column;align-items:center;gap:5px">
-        <button onclick="rmZoomBy(1.3)"  class="rm-zoom-btn" title="Zoom in"><i class="ph-bold ph-plus"></i></button>
+        <button onclick="rmZoomBy(1.3)"  class="rm-zoom-btn" title="{{ _('Zoom in') }}"><i class="ph-bold ph-plus"></i></button>
         <span id="rmZoomPct" style="font-size:10px;font-weight:700;color:var(--muted);min-width:34px;text-align:center">100%</span>
-        <button onclick="rmZoomBy(1/1.3)" class="rm-zoom-btn" title="Zoom out"><i class="ph-bold ph-minus"></i></button>
-        <button onclick="rmZoomReset()" class="rm-zoom-btn" title="Fit to screen" style="margin-top:2px"><i class="ph-bold ph-arrows-in"></i></button>
+        <button onclick="rmZoomBy(1/1.3)" class="rm-zoom-btn" title="{{ _('Zoom out') }}"><i class="ph-bold ph-minus"></i></button>
+        <button onclick="rmZoomReset()" class="rm-zoom-btn" title="{{ _('Fit to screen') }}" style="margin-top:2px"><i class="ph-bold ph-arrows-in"></i></button>
     </div>
 
     <div id="rmPopupOverlay" style="display:none;position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px)" onclick="_onBackdropClick(event,rmClosePopup)"></div>
@@ -69,7 +69,7 @@
                 <h3 id="rmPopupTitle" class="font-bold text-sm" style="color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></h3>
                 <span id="rmPopupTypeBadge" class="rm-popup-type-badge"></span>
             </div>
-            <button type="button" onclick="rmClosePopup()" class="btn-icon" title="Close (Esc)"><i class="ph-bold ph-x text-sm"></i></button>
+            <button type="button" onclick="rmClosePopup()" class="btn-icon" title="{{ _('Close (Esc)') }}"><i class="ph-bold ph-x text-sm"></i></button>
         </div>
         <div id="rmPopupDetails" class="rm-popup-details"></div>
         <div style="padding:16px;overflow-x:auto;-webkit-overflow-scrolling:touch">

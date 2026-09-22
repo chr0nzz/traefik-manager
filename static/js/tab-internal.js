@@ -3,7 +3,7 @@ let _internalFilter    = 'all';
 
 async function refreshInternalTab() {
     const container = document.getElementById('internalContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading Traefik internal routes...</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading Traefik internal routes...')}</p></div>`;
 
     try {
         const [routerRes, mwRes] = await Promise.all([
@@ -23,11 +23,11 @@ async function refreshInternalTab() {
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         if (all.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-xs mt-1">Configure <code class="font-mono">TRAEFIK_API_URL</code> in Settings</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p><p class="text-xs mt-1">${th('Configure {traefik_api_url} in Settings', { traefik_api_url: tmHtml(`<code class="font-mono">TRAEFIK_API_URL</code>`) })}</p></div>`;
             return;
         }
         if (_allInternalRoutes.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-traffic-signal text-5xl block mb-3 opacity-30"></i><p class="font-medium">No Traefik internal routes found</p><p class="text-xs mt-1">Traefik serves these itself. The dashboard, API and ping live here</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-traffic-signal text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('No Traefik internal routes found')}</p><p class="text-xs mt-1">${th('Traefik serves these itself. The dashboard, API and ping live here')}</p></div>`;
             return;
         }
 
@@ -37,7 +37,7 @@ async function refreshInternalTab() {
         setTabCount('internal', _allInternalRoutes.length);
         renderInternalRoutes();
     } catch(e) {
-        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p></div>`;
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p></div>`;
     }
 }
 
@@ -85,7 +85,7 @@ function renderInternalRoutes() {
 
     if (items.length === 0) {
         document.getElementById('internalContent').innerHTML =
-            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No routes match filter</div>`;
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">${th('No routes match filter')}</div>`;
         return;
     }
 
@@ -104,7 +104,7 @@ async function openInternalRouteDetail(idx) {
 
     document.getElementById('detailEditBtn').style.display = 'none';
 
-    const badge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-traffic-signal"></i> internal</span>`;
+    const badge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-traffic-signal"></i> ${thc('label', 'internal')}</span>`;
 
     const appData = {
         id:           (r.name || '').split('@')[0],

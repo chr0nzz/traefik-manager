@@ -4,7 +4,7 @@
             <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card);border-bottom:1px solid var(--border)">
                 <div class="flex items-center gap-3">
                     <i class="ph-bold ph-layout" style="color:var(--blue)"></i>
-                    <h2 class="font-bold text-sm" style="color:var(--text)" id="modalTitle">Add Route</h2>
+                    <h2 class="font-bold text-sm" style="color:var(--text)" id="modalTitle">{{ _('Add Route') }}</h2>
                 </div>
                 <button type="button" onclick="closeModal()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
             </div>
@@ -16,10 +16,10 @@
                 <input type="hidden" name="protocol" id="protocolHidden" value="http">
                 <input type="hidden" name="configFile" id="configFile" value="">
                 <div id="configFileSelectWrap" {% if not multi_config and not config_dir_set %}style="display:none"{% endif %}>
-                    <label>Config File</label>
+                    <label>{{ _('Config File') }}</label>
                     <select id="configFileSelect" class="input-field" onchange="onRouteConfigFileChange(this)">
-                        <option value="">Select a file...</option>
-                        <option value="__new__" id="cfNewFileOpt" {% if not config_dir_set %}style="display:none"{% endif %}>+ New file...</option>
+                        <option value="">{{ _('Select a file...') }}</option>
+                        <option value="__new__" id="cfNewFileOpt" {% if not config_dir_set %}style="display:none"{% endif %}>{{ _('+ New file...') }}</option>
                         {% for cp in config_paths_list %}
                         <option value="{{ cp.label }}">{{ cp.label }}</option>
                         {% endfor %}
@@ -27,7 +27,7 @@
                     <input type="text" id="newRouteFileName" class="input-field mt-2" placeholder="app-myservice.yml" style="display:none" oninput="document.getElementById('configFile').value=this.value">
                 </div>
                 <div>
-                    <label>Protocol</label>
+                    <label>{{ pgettext('setting', 'Protocol') }}</label>
                     <div class="proto-toggle">
                         <button type="button" class="proto-btn active-http" id="protoHTTP" onclick="setProtocol('http')">HTTP</button>
                         <button type="button" class="proto-btn" id="protoTCP" onclick="setProtocol('tcp')">TCP</button>
@@ -41,24 +41,24 @@
                 </div>
 
                 <div>
-                    <label>Route / Service Name</label>
-                    <input type="text" name="serviceName" id="serviceName" required maxlength="100" class="input-field" placeholder="e.g. my-app">
+                    <label>{{ _('Route / Service Name') }}</label>
+                    <input type="text" name="serviceName" id="serviceName" required maxlength="100" class="input-field" placeholder="{{ _('e.g. my-app') }}">
                 </div>
 
                 <div id="httpSection" class="protocol-section active space-y-4">
                     <div class="flex gap-2">
-                        <button type="button" id="httpModeSimpleBtn" onclick="setHttpRuleMode('simple')" class="proto-btn active-http" style="padding:4px 12px;font-size:11px;border-radius:6px">Simple</button>
-                        <button type="button" id="httpModeAdvancedBtn" onclick="setHttpRuleMode('advanced')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Advanced rule</button>
+                        <button type="button" id="httpModeSimpleBtn" onclick="setHttpRuleMode('simple')" class="proto-btn active-http" style="padding:4px 12px;font-size:11px;border-radius:6px">{{ pgettext('button', 'Simple') }}</button>
+                        <button type="button" id="httpModeAdvancedBtn" onclick="setHttpRuleMode('advanced')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">{{ _('Advanced rule') }}</button>
                     </div>
 
                     <div id="httpSimpleFields">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label id="routeSubdomainLabel">Subdomain</label>
+                            <label id="routeSubdomainLabel">{{ pgettext('setting', 'Subdomain') }}</label>
                             <input type="text" name="subdomain" id="subdomain" class="input-field" placeholder="app">
                         </div>
                         <div id="routeDomainCol">
-                            <label id="agentDomainLabel">Domain{% if domains | length > 1 %}s{% endif %}</label>
+                            <label id="agentDomainLabel">{{ pgettext('setting', 'Domain') }}{% if domains | length > 1 %}s{% endif %}</label>
                             <div id="routeDomainBody">
                             {% if domains | length > 1 %}
                             <div id="domainChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px"></div>
@@ -73,35 +73,35 @@
                             </div>
                         </div>
                     </div>
-                    <p id="httpSimpleLossNote" class="text-xs mt-2" style="display:none;color:var(--yellow)"><i class="ph-bold ph-warning"></i> This route's original rule does not fit the simple form. Saving in Simple mode replaces it with a rule built from these fields. Switch back to Advanced rule to keep it as it is.</p>
+                    <p id="httpSimpleLossNote" class="text-xs mt-2" style="display:none;color:var(--yellow)"><i class="ph-bold ph-warning"></i> {{ _("This route's original rule does not fit the simple form. Saving in Simple mode replaces it with a rule built from these fields. Switch back to Advanced rule to keep it as it is.") }}</p>
                     </div>
 
                     <div id="httpAdvancedFields" style="display:none">
-                        <label>Rule</label>
+                        <label>{{ pgettext('setting', 'Rule') }}</label>
                         <textarea name="httpRule" id="httpRule" rows="1" oninput="_onHttpRuleInput(this)" onkeydown="_onHttpRuleKey(event)" onfocus="_fitHttpRule(this)" class="input-field font-mono text-sm" style="resize:vertical;overflow-y:hidden;box-sizing:border-box" placeholder="Host(`app.example.com`) || PathPrefix(`/api`)"></textarea>
-                        <p class="text-xs mt-1" style="color:var(--muted)">Any valid <a href="https://doc.traefik.io/traefik/routing/routers/#rule" target="_blank" style="color:var(--blue)">Traefik router rule</a> expression.</p>
+                        <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Any valid %(traefik_router_rule)s expression.', traefik_router_rule=tag('a', _('Traefik router rule'), href='https://doc.traefik.io/traefik/routing/routers/#rule', target='_blank', style_='color:var(--blue)')) }}</p>
                     </div>
                     <div>
                         <div class="flex gap-2 mb-3">
-                            <button type="button" id="httpSvcModeManualBtn" onclick="setServiceRefMode('http', false)" class="proto-btn active-http" style="padding:4px 12px;font-size:11px;border-radius:6px">Build backends</button>
-                            <button type="button" id="httpSvcModeRefBtn" onclick="setServiceRefMode('http', true)" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Use a service</button>
+                            <button type="button" id="httpSvcModeManualBtn" onclick="setServiceRefMode('http', false)" class="proto-btn active-http" style="padding:4px 12px;font-size:11px;border-radius:6px">{{ _('Build backends') }}</button>
+                            <button type="button" id="httpSvcModeRefBtn" onclick="setServiceRefMode('http', true)" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">{{ _('Use a service') }}</button>
                         </div>
                         <div id="httpRefBackend" style="display:none">
-                            <label>Backend service</label>
+                            <label>{{ _('Backend service') }}</label>
                             <select id="serviceRefHttp" class="input-field" onchange="_updateRefTarget('http')"></select>
                             <div id="httpRefTarget" class="text-xs mt-1" style="color:var(--muted);font-family:monospace;display:none"></div>
-                            <p class="text-xs mt-1" style="color:var(--muted)">This route will reference the selected service. Backends, sticky sessions and health checks are managed where the service is defined.</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('This route will reference the selected service. Backends, sticky sessions and health checks are managed where the service is defined.') }}</p>
                         </div>
                         <div id="httpBackendsHead" class="flex items-center justify-between mb-1">
-                            <label style="margin:0">Backends</label>
+                            <label style="margin:0">{{ pgettext('setting', 'Backends') }}</label>
                             <button type="button" onclick="addBackendRow('http')" class="btn-secondary text-xs" style="height:24px;padding:0 8px">
-                                <i class="ph-bold ph-plus text-xs"></i> Add backend
+                                <i class="ph-bold ph-plus text-xs"></i> {{ _('Add backend') }}
                             </button>
                         </div>
                         <div id="httpTargetGrid" class="tm-backend-row grid gap-3" style="grid-template-columns:104px 96px 1fr 1fr 74px">
                             <select class="input-field bk-kind text-sm" onchange="_bkKindChanged(this)">
-                                <option value="manual">IP : Port</option>
-                                <option value="service">Service</option>
+                                <option value="manual">{{ _('IP : Port') }}</option>
+                                <option value="service">{{ pgettext('option', 'Service') }}</option>
                             </select>
                             <select name="scheme" id="scheme" class="input-field bk-scheme text-sm">
                                 <option value="http">HTTP</option>
@@ -111,125 +111,125 @@
                             <input type="text" name="targetIp" id="targetIp" class="input-field bk-host" placeholder="10.0.0.10">
                             <input type="text" name="targetPort" id="targetPort" class="input-field bk-port" placeholder="8080">
                             <select class="input-field bk-svc text-sm" style="display:none"></select>
-                            <input type="number" class="input-field bk-weight text-sm" value="1" min="0" title="Weight" style="display:none">
+                            <input type="number" class="input-field bk-weight text-sm" value="1" min="0" title="{{ pgettext('tooltip', 'Weight') }}" style="display:none">
                         </div>
                         <div id="httpBackendRows"></div>
                         <div id="httpCompositeRow" class="flex items-center gap-2 mt-2" style="display:none">
-                            <span class="text-xs" style="color:var(--muted)">Combine backends as</span>
+                            <span class="text-xs" style="color:var(--muted)">{{ _('Combine backends as') }}</span>
                             <select id="httpCompositeType" class="input-field text-sm" style="width:150px" onchange="_bkCompositeChanged()">
-                                <option value="weighted">Weighted</option>
-                                <option value="mirroring">Mirroring</option>
-                                <option value="failover">Failover</option>
+                                <option value="weighted">{{ pgettext('option', 'Weighted') }}</option>
+                                <option value="mirroring">{{ pgettext('option', 'Mirroring') }}</option>
+                                <option value="failover">{{ pgettext('option', 'Failover') }}</option>
                             </select>
                             <span id="httpCompositeHint" class="text-xs" style="color:var(--muted)"></span>
                         </div>
-                        <p id="httpBackendsHint" class="text-xs mt-1" style="color:var(--muted)">Add more backends to load-balance across several servers.</p>
+                        <p id="httpBackendsHint" class="text-xs mt-1" style="color:var(--muted)">{{ _('Add more backends to load-balance across several servers.') }}</p>
                     </div>
                     <div id="httpLbAdvanced">
                         <button type="button" onclick="toggleLbAdvanced('http')" class="text-xs flex items-center gap-1" style="background:none;border:none;cursor:pointer;padding:0;color:var(--muted)">
                             <i id="httpLbAdvChevron" class="ph-bold ph-caret-right text-xs"></i>
-                            <span class="font-semibold uppercase tracking-wider">Load balancing</span>
+                            <span class="font-semibold uppercase tracking-wider">{{ _('Load balancing') }}</span>
                         </button>
                         <div id="httpLbAdvBody" class="mt-2 p-3 rounded-lg space-y-3" style="display:none;background:var(--input-bg);border:1px solid var(--border)">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
                                     <input type="checkbox" id="lbStickyEnabled" onchange="_lbSyncToggles()" class="rounded" style="accent-color:var(--blue)">
-                                    <label for="lbStickyEnabled" class="text-sm" style="margin:0;color:var(--text)">Sticky sessions</label>
+                                    <label for="lbStickyEnabled" class="text-sm" style="margin:0;color:var(--text)">{{ _('Sticky sessions') }}</label>
                                 </div>
-                                <span class="tm-info-btn" data-tip="Pins a client to the same backend using a cookie (loadBalancer.sticky.cookie)."><i class="ph-bold ph-info"></i></span>
+                                <span class="tm-info-btn" data-tip="{{ _('Pins a client to the same backend using a cookie (loadBalancer.sticky.cookie).') }}"><i class="ph-bold ph-info"></i></span>
                             </div>
                             <div id="lbStickyBody" style="display:none" class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label>Cookie name</label>
+                                    <label>{{ _('Cookie name') }}</label>
                                     <input type="text" id="lbStickyCookie" class="input-field" placeholder="tm_sticky">
                                 </div>
                                 <div class="flex items-end gap-3 pb-1">
-                                    <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" id="lbStickySecure" class="rounded" style="accent-color:var(--blue)"> Secure</label>
-                                    <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" id="lbStickyHttpOnly" class="rounded" style="accent-color:var(--blue)"> HttpOnly</label>
+                                    <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" id="lbStickySecure" class="rounded" style="accent-color:var(--blue)"> {{ pgettext('setting', 'Secure') }}</label>
+                                    <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" id="lbStickyHttpOnly" class="rounded" style="accent-color:var(--blue)"> {{ pgettext('setting', 'HttpOnly') }}</label>
                                 </div>
                             </div>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
                                     <input type="checkbox" id="lbHealthEnabled" onchange="_lbSyncToggles()" class="rounded" style="accent-color:var(--blue)">
-                                    <label for="lbHealthEnabled" class="text-sm" style="margin:0;color:var(--text)">Health check</label>
+                                    <label for="lbHealthEnabled" class="text-sm" style="margin:0;color:var(--text)">{{ _('Health check') }}</label>
                                 </div>
-                                <span class="tm-info-btn" data-tip="Traefik polls this path and stops sending traffic to backends that fail (loadBalancer.healthCheck)."><i class="ph-bold ph-info"></i></span>
+                                <span class="tm-info-btn" data-tip="{{ _('Traefik polls this path and stops sending traffic to backends that fail (loadBalancer.healthCheck).') }}"><i class="ph-bold ph-info"></i></span>
                             </div>
                             <div id="lbHealthBody" style="display:none" class="grid grid-cols-3 gap-3">
                                 <div>
-                                    <label>Path</label>
-                                    <input type="text" id="lbHealthPath" class="input-field" placeholder="/health">
+                                    <label>{{ pgettext('setting', 'Path') }}</label>
+                                    <input type="text" id="lbHealthPath" class="input-field" placeholder="{{ pgettext('placeholder', '/health') }}">
                                 </div>
                                 <div>
-                                    <label>Interval</label>
+                                    <label>{{ pgettext('setting', 'Interval') }}</label>
                                     <input type="text" id="lbHealthInterval" class="input-field" placeholder="10s">
                                 </div>
                                 <div>
-                                    <label>Timeout</label>
+                                    <label>{{ pgettext('setting', 'Timeout') }}</label>
                                     <input type="text" id="lbHealthTimeout" class="input-field" placeholder="3s">
                                 </div>
                             </div>
                             <div>
-                                <label>Router priority <span class="text-xs font-normal" style="color:var(--muted)">(optional)</span></label>
-                                <input type="number" id="lbPriority" class="input-field" placeholder="leave empty for Traefik's default" style="width:260px">
+                                <label>{{ _('Router priority %(optional)s', optional=tag('span', _('(optional)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
+                                <input type="number" id="lbPriority" class="input-field" placeholder="{{ _("leave empty for Traefik's default") }}" style="width:260px">
                             </div>
                         </div>
                     </div>
                     <input type="hidden" name="backendsJsonHttp" id="backendsJsonHttp">
                     <div>
-                        <label>Entry Points</label>
+                        <label>{{ _('Entry Points') }}</label>
                         <div id="httpEntrypointChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px">
-                            <span class="text-xs" style="color:var(--muted);align-self:center">Loading...</span>
+                            <span class="text-xs" style="color:var(--muted);align-self:center">{{ pgettext('label', 'Loading...') }}</span>
                         </div>
                         <input type="hidden" name="entryPoints" id="entryPoints">
                     </div>
                     <div>
-                        <label>Middlewares</label>
-                        <div id="middlewareChipsFilterWrap" class="relative mb-1.5" style="display:none"><i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted)"></i><input type="text" id="middlewareChipsFilter" class="input-field pl-9 text-xs" style="height:30px" placeholder="Filter middlewares..." oninput="window._mwChipFilter_http && window._mwChipFilter_http()"></div>
+                        <label>{{ pgettext('setting', 'Middlewares') }}</label>
+                        <div id="middlewareChipsFilterWrap" class="relative mb-1.5" style="display:none"><i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted)"></i><input type="text" id="middlewareChipsFilter" class="input-field pl-9 text-xs" style="height:30px" placeholder="{{ _('Filter middlewares...') }}" oninput="window._mwChipFilter_http && window._mwChipFilter_http()"></div>
                         <div id="middlewareChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px">
-                            <span class="text-xs" style="color:var(--muted);align-self:center">Loading...</span>
+                            <span class="text-xs" style="color:var(--muted);align-self:center">{{ pgettext('label', 'Loading...') }}</span>
                         </div>
                         <input type="hidden" name="middlewares" id="middlewares">
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" name="passHostHeader" id="passHostHeader" value="true" checked class="rounded" style="accent-color:var(--blue)">
-                            <span class="text-sm" style="color:var(--text)">Pass Host Header</span>
+                            <span class="text-sm" style="color:var(--text)">{{ _('Pass Host Header') }}</span>
                         </div>
-                        <span class="tm-info-btn" data-tip="Forward the original Host header to the backend. Disable if the backend needs to see its own hostname."><i class="ph-bold ph-info"></i></span>
+                        <span class="tm-info-btn" data-tip="{{ _('Forward the original Host header to the backend. Disable if the backend needs to see its own hostname.') }}"><i class="ph-bold ph-info"></i></span>
                     </div>
                     <div id="httpSkipVerifyRow" class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" name="insecureSkipVerify" id="insecureSkipVerify" value="true" class="rounded" style="accent-color:var(--blue)">
-                            <span class="text-sm" style="color:var(--text)">Skip TLS Verification</span>
+                            <span class="text-sm" style="color:var(--text)">{{ _('Skip TLS Verification') }}</span>
                         </div>
-                        <span class="tm-info-btn" data-tip="Disables certificate validation for the backend. Use for self-signed certs (e.g. Proxmox, Kasm). Adds insecureSkipVerify via a named serversTransport."><i class="ph-bold ph-info"></i></span>
+                        <span class="tm-info-btn" data-tip="{{ _('Disables certificate validation for the backend. Use for self-signed certs (e.g. Proxmox, Kasm). Adds insecureSkipVerify via a named serversTransport.') }}"><i class="ph-bold ph-info"></i></span>
                     </div>
                     <div id="headersPresetSection">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="hpEnabled" onchange="_onHeadersPresetToggle(this.checked)" class="rounded" style="accent-color:var(--blue)">
-                                <span class="text-sm" style="color:var(--text)">Security headers preset</span>
+                                <span class="text-sm" style="color:var(--text)">{{ _('Security headers preset') }}</span>
                             </div>
-                            <span class="tm-info-btn" data-tip="Creates a tool-managed <route>-headers middleware: a Permissions-Policy plus common security headers (HSTS, nosniff, frame-deny, referrer). It stays a normal, editable file middleware in the Middlewares tab."><i class="ph-bold ph-info"></i></span>
+                            <span class="tm-info-btn" data-tip="{{ _('Creates a tool-managed %(middleware_name)s middleware: a Permissions-Policy plus common security headers (HSTS, nosniff, frame-deny, referrer). It stays a normal, editable file middleware in the Middlewares tab.', middleware_name='<route>-headers') }}"><i class="ph-bold ph-info"></i></span>
                         </div>
                         <input type="hidden" name="headersPresetPresent" id="headersPresetPresent" value="">
                         <input type="hidden" name="headersPresetEnabled" id="headersPresetEnabled" value="false">
                         <input type="hidden" name="headersPresetCustom" id="headersPresetCustom" value="false">
                         <div id="hpCustomNotice" class="text-xs mt-2 p-2 rounded-lg" style="display:none;background:rgba(240,180,0,0.1);border:1px solid rgba(240,180,0,0.3);color:var(--text)">
-                            The <code id="hpCustomName"></code> middleware has been hand-edited beyond what these toggles cover, so it's shown as custom and kept as-is. Edit it in the Middlewares tab, or turn the preset off and on again to replace it with the toggle defaults. Turn it off to remove it.
+                            {{ _("The %(hp_custom_name)s middleware has been hand-edited beyond what these toggles cover, so it's shown as custom and kept as-is. Edit it in the Middlewares tab, or turn the preset off and on again to replace it with the toggle defaults. Turn it off to remove it.", hp_custom_name=tag('code', '', id_='hpCustomName')) }}
                         </div>
                         <div id="hpBody" class="mt-2 p-3 rounded-lg" style="display:none;background:var(--input-bg);border:1px solid var(--border)">
-                            <p class="text-xs mb-2" style="color:var(--muted)">Permissions-Policy - who may use each browser feature. <code>self</code> = only your own site · <code>all</code> = any site, including embedded iframes · <code>block</code> = no one.</p>
+                            <p class="text-xs mb-2" style="color:var(--muted)">{{ _('Permissions-Policy - who may use each browser feature. %(self)s = only your own site · %(all)s = any site, including embedded iframes · %(block)s = no one.', self=tag('code', 'self'), all=tag('code', 'all'), block=tag('code', 'block')) }}</p>
                             <div id="hpPerms" class="grid grid-cols-2 gap-2"></div>
                             <div class="grid grid-cols-2 gap-2 mt-3">
-                                <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" name="hp_hsts" id="hp_hsts" value="true" onchange="_hpUserEdited()" class="rounded" style="accent-color:var(--blue)"> HSTS (force HTTPS)</label>
-                                <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" name="hp_nosniff" id="hp_nosniff" value="true" onchange="_hpUserEdited()" class="rounded" style="accent-color:var(--blue)"> Content-Type nosniff</label>
-                                <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" name="hp_frameDeny" id="hp_frameDeny" value="true" onchange="_hpUserEdited()" class="rounded" style="accent-color:var(--blue)"> Frame deny (anti-clickjacking)</label>
+                                <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" name="hp_hsts" id="hp_hsts" value="true" onchange="_hpUserEdited()" class="rounded" style="accent-color:var(--blue)"> {{ _('HSTS (force HTTPS)') }}</label>
+                                <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" name="hp_nosniff" id="hp_nosniff" value="true" onchange="_hpUserEdited()" class="rounded" style="accent-color:var(--blue)"> {{ _('Content-Type nosniff') }}</label>
+                                <label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" name="hp_frameDeny" id="hp_frameDeny" value="true" onchange="_hpUserEdited()" class="rounded" style="accent-color:var(--blue)"> {{ _('Frame deny (anti-clickjacking)') }}</label>
                                 <div>
-                                    <label class="text-sm" style="color:var(--text)">Referrer-Policy</label>
+                                    <label class="text-sm" style="color:var(--text)">{{ pgettext('setting', 'Referrer-Policy') }}</label>
                                     <select name="hp_referrer" id="hp_referrer" onchange="_hpUserEdited()" class="input-field">
-                                        <option value="">(none)</option>
+                                        <option value="">{{ pgettext('option', '(none)') }}</option>
                                         <option value="no-referrer">no-referrer</option>
                                         <option value="strict-origin-when-cross-origin">strict-origin-when-cross-origin</option>
                                         <option value="same-origin">same-origin</option>
@@ -244,174 +244,174 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="streamingEnabled" onchange="_onStreamingToggle(this.checked)" class="rounded" style="accent-color:var(--blue)">
-                                <span class="text-sm" style="color:var(--text)">Optimize for streaming (Jellyfin / Emby / Plex)</span>
+                                <span class="text-sm" style="color:var(--text)">{{ _('Optimize for streaming (Jellyfin / Emby / Plex)') }}</span>
                             </div>
-                            <span class="tm-info-btn" data-tip="Sets forwardingTimeouts on the service's serversTransport (unlimited response-header timeout for long transcodes) and forces passHostHeader. Composes with Skip TLS Verification on the same transport."><i class="ph-bold ph-info"></i></span>
+                            <span class="tm-info-btn" data-tip="{{ _("Sets forwardingTimeouts on the service's serversTransport (unlimited response-header timeout for long transcodes) and forces passHostHeader. Composes with Skip TLS Verification on the same transport.") }}"><i class="ph-bold ph-info"></i></span>
                         </div>
                         <input type="hidden" name="streamingPresetPresent" id="streamingPresetPresent" value="">
                         <input type="hidden" name="streamingPresetEnabled" id="streamingPresetEnabled" value="false">
                         <div id="streamingNote" class="text-xs mt-2 p-2 rounded-lg" style="display:none;background:var(--input-bg);border:1px solid var(--border);color:var(--muted)">
-                            Forces <code>passHostHeader</code> and sets long <code>forwardingTimeouts</code> on <code><span id="streamingTpName"></span></code>. Entry-point <code>respondingTimeouts</code> are global and static - adjust them in the Static Config editor if long transcodes still cut off.
-                            <span id="streamingBufWarn" style="display:none;color:var(--yellow, #d4a017)"><br>⚠ A <code>buffering</code>/<code>compress</code> middleware is attached - remove it for smooth streaming and seeking.</span>
+                            {% set streaming_transport %}<code><span id="streamingTpName"></span></code>{% endset %}{{ _('Forces %(pass_host_header)s and sets long %(forwarding_timeouts)s on %(transport)s. Entry-point %(responding_timeouts)s are global and static - adjust them in the Static Config editor if long transcodes still cut off.', pass_host_header=tag('code', 'passHostHeader'), forwarding_timeouts=tag('code', 'forwardingTimeouts'), transport=streaming_transport, responding_timeouts=tag('code', 'respondingTimeouts')) }}
+                            <span id="streamingBufWarn" style="display:none;color:var(--yellow, #d4a017)">{{ _('%(line_break)s⚠ A %(buffering)s/%(compress)s middleware is attached - remove it for smooth streaming and seeking.', line_break=tag('br'), buffering=tag('code', 'buffering'), compress=tag('code', 'compress')) }}</span>
                         </div>
                     </div>
                     <div id="wildcardCheckboxRow" style="display:none" class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="wildcardCheckbox" onchange="_onWildcardToggle(this.checked)" class="rounded" style="accent-color:var(--blue)">
-                            <span class="text-sm" style="color:var(--text)">Request wildcard certificate</span>
+                            <span class="text-sm" style="color:var(--text)">{{ _('Request wildcard certificate') }}</span>
                         </div>
-                        <span class="tm-info-btn" data-tip="Adds a tls.domains block with main: domain.com and sans: *.domain.com. Use with DNS challenge resolvers (Cloudflare, Route 53, etc.) to issue wildcard certs."><i class="ph-bold ph-info"></i></span>
+                        <span class="tm-info-btn" data-tip="{{ _('Adds a tls.domains block with main: domain.com and sans: *.domain.com. Use with DNS challenge resolvers (Cloudflare, Route 53, etc.) to issue wildcard certs.') }}"><i class="ph-bold ph-info"></i></span>
                     </div>
                     <div id="wildcardFields" style="display:none" class="space-y-2">
                         <div>
                             <div class="flex items-center justify-between mb-1">
-                                <label style="margin:0">Certificate domain</label>
-                                <span class="tm-info-btn" data-tip="The main entry of the tls.domains block. Traefik asks your resolver for a certificate covering this name."><i class="ph-bold ph-info"></i></span>
+                                <label style="margin:0">{{ _('Certificate domain') }}</label>
+                                <span class="tm-info-btn" data-tip="{{ _('The main entry of the tls.domains block. Traefik asks your resolver for a certificate covering this name.') }}"><i class="ph-bold ph-info"></i></span>
                             </div>
                             <input type="text" name="tlsWildcardMain" id="tlsWildcardMain" class="input-field font-mono text-sm" placeholder="example.com">
                         </div>
                         <div>
                             <div class="flex items-center justify-between mb-1">
-                                <label style="margin:0">Extra domains</label>
-                                <span class="tm-info-btn" data-tip="One per line, written as sans. A wildcard needs a DNS challenge resolver such as Cloudflare or Route 53."><i class="ph-bold ph-info"></i></span>
+                                <label style="margin:0">{{ _('Extra domains') }}</label>
+                                <span class="tm-info-btn" data-tip="{{ _('One per line, written as sans. A wildcard needs a DNS challenge resolver such as Cloudflare or Route 53.') }}"><i class="ph-bold ph-info"></i></span>
                             </div>
                             <textarea name="tlsWildcardSans" id="tlsWildcardSans" class="input-field font-mono text-sm" rows="2" placeholder="*.example.com"></textarea>
                         </div>
                     </div>
                     <div>
-                        <label>Cert Resolver</label>
+                        <label>{{ _('Cert Resolver') }}</label>
                         <select name="certResolver" id="certResolver" class="input-field" onchange="toggleWildcardSection(this.value)">
-                            <option value="__disabled__">No TLS</option>
+                            <option value="__disabled__">{{ _('No TLS') }}</option>
                             {% for r in cert_resolvers %}
                             <option value="{{ r }}">{{ r }}</option>
                             {% endfor %}
-                            <option value="__none__">None (external / custom cert)</option>
+                            <option value="__none__">{{ _('None (external / custom cert)') }}</option>
                         </select>
                     </div>
                     <div id="wildcardSection" style="display:none">
                         <div class="flex items-center justify-between mb-1">
-                            <label style="margin:0">TLS Options Profile</label>
-                            <span class="tm-info-btn" data-tip="Assigns a tls.options profile to this router (e.g. min version, ciphers). Enable and manage profiles via the TLS Options tab in Settings - Interface - TABS."><i class="ph-bold ph-info"></i></span>
+                            <label style="margin:0">{{ _('TLS Options Profile') }}</label>
+                            <span class="tm-info-btn" data-tip="{{ _('Assigns a tls.options profile to this router (e.g. min version, ciphers). Enable and manage profiles via the TLS Options tab in Settings - Interface - TABS.') }}"><i class="ph-bold ph-info"></i></span>
                         </div>
                         <select name="tlsOptionsProfile" id="tlsOptionsProfileSelect" class="input-field">
-                            <option value="">None (default)</option>
+                            <option value="">{{ _('None (default)') }}</option>
                         </select>
                     </div>
                 </div>
 
                 <div id="tcpSection" class="protocol-section space-y-4">
                     <div>
-                        <label>Rule (SNI)</label>
-                        <input type="text" name="tcpRule" id="tcpRule" class="input-field" placeholder="HostSNI(`tcp.example.com`) or HostSNI(`*`)">
-                        <p class="text-xs mt-1" style="color:var(--muted)">Use <code class="font-mono">HostSNI(`*`)</code> to match all TLS or leave empty for passthrough</p>
+                        <label>{{ _('Rule (SNI)') }}</label>
+                        <input type="text" name="tcpRule" id="tcpRule" class="input-field" placeholder="{{ _('HostSNI(`tcp.example.com`) or HostSNI(`*`)') }}">
+                        <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Use %(hostsni)s to match all TLS or leave empty for passthrough', hostsni=tag('code', 'HostSNI(`*`)', class_='font-mono')) }}</p>
                     </div>
                     <div class="flex gap-2 mb-3">
-                        <button type="button" id="tcpSvcModeManualBtn" onclick="setServiceRefMode('tcp', false)" class="proto-btn active-tcp" style="padding:4px 12px;font-size:11px;border-radius:6px">Build backends</button>
-                        <button type="button" id="tcpSvcModeRefBtn" onclick="setServiceRefMode('tcp', true)" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Use a service</button>
+                        <button type="button" id="tcpSvcModeManualBtn" onclick="setServiceRefMode('tcp', false)" class="proto-btn active-tcp" style="padding:4px 12px;font-size:11px;border-radius:6px">{{ _('Build backends') }}</button>
+                        <button type="button" id="tcpSvcModeRefBtn" onclick="setServiceRefMode('tcp', true)" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">{{ _('Use a service') }}</button>
                     </div>
                     <div id="tcpRefBackend" style="display:none">
-                        <label>Backend service</label>
+                        <label>{{ _('Backend service') }}</label>
                         <select id="serviceRefTcp" class="input-field" onchange="_updateRefTarget('tcp')"></select>
                         <div id="tcpRefTarget" class="text-xs mt-1" style="color:var(--muted);font-family:monospace;display:none"></div>
-                        <p class="text-xs mt-1" style="color:var(--muted)">This route will reference the selected service. Backends, sticky sessions and health checks are managed where the service is defined.</p>
+                        <p class="text-xs mt-1" style="color:var(--muted)">{{ _('This route will reference the selected service. Backends, sticky sessions and health checks are managed where the service is defined.') }}</p>
                     </div>
                     <div id="tcpTargetGrid" class="grid grid-cols-2 gap-3">
                         <div>
-                            <label>Target IP / Host</label>
+                            <label>{{ _('Target IP / Host') }}</label>
                             <input type="text" name="targetIp" id="targetIpTcp" class="input-field" placeholder="10.0.0.10">
                         </div>
                         <div>
-                            <label>Port</label>
+                            <label>{{ pgettext('setting', 'Port') }}</label>
                             <input type="text" name="targetPort" id="targetPortTcp" class="input-field" placeholder="5432">
                         </div>
                     </div>
                     <div id="tcpBackendRows"></div>
                     <div id="tcpBackendsFoot" class="flex items-center justify-between mt-1">
-                        <p class="text-xs" style="color:var(--muted)">Add more backends to load-balance across several servers.</p>
-                        <button type="button" onclick="addBackendRow('tcp')" class="btn-secondary text-xs" style="height:24px;padding:0 8px"><i class="ph-bold ph-plus text-xs"></i> Add backend</button>
+                        <p class="text-xs" style="color:var(--muted)">{{ _('Add more backends to load-balance across several servers.') }}</p>
+                        <button type="button" onclick="addBackendRow('tcp')" class="btn-secondary text-xs" style="height:24px;padding:0 8px"><i class="ph-bold ph-plus text-xs"></i> {{ _('Add backend') }}</button>
                     </div>
                     <div id="tcpPriorityRow" class="mt-2">
-                        <label>Router priority <span class="text-xs font-normal" style="color:var(--muted)">(optional)</span></label>
-                        <input type="number" id="lbPriorityTcp" class="input-field" placeholder="leave empty for Traefik's default" style="width:260px">
+                        <label>{{ _('Router priority %(optional)s', optional=tag('span', _('(optional)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
+                        <input type="number" id="lbPriorityTcp" class="input-field" placeholder="{{ _("leave empty for Traefik's default") }}" style="width:260px">
                     </div>
                     <input type="hidden" name="backendsJsonTcp" id="backendsJsonTcp">
                     <div>
-                        <label>Entry Points</label>
+                        <label>{{ _('Entry Points') }}</label>
                         <div id="tcpEntrypointChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px">
-                            <span class="text-xs" style="color:var(--muted);align-self:center">Loading...</span>
+                            <span class="text-xs" style="color:var(--muted);align-self:center">{{ pgettext('label', 'Loading...') }}</span>
                         </div>
                         <input type="hidden" name="entryPoints" id="entryPointsTcp">
                     </div>
                     <div>
-                        <label>Middlewares</label>
-                        <div id="tcpMiddlewareChipsFilterWrap" class="relative mb-1.5" style="display:none"><i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted)"></i><input type="text" id="tcpMiddlewareChipsFilter" class="input-field pl-9 text-xs" style="height:30px" placeholder="Filter middlewares..." oninput="window._mwChipFilter_tcp && window._mwChipFilter_tcp()"></div>
+                        <label>{{ pgettext('setting', 'Middlewares') }}</label>
+                        <div id="tcpMiddlewareChipsFilterWrap" class="relative mb-1.5" style="display:none"><i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted)"></i><input type="text" id="tcpMiddlewareChipsFilter" class="input-field pl-9 text-xs" style="height:30px" placeholder="{{ _('Filter middlewares...') }}" oninput="window._mwChipFilter_tcp && window._mwChipFilter_tcp()"></div>
                         <div id="tcpMiddlewareChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px">
-                            <span class="text-xs" style="color:var(--muted);align-self:center">Loading...</span>
+                            <span class="text-xs" style="color:var(--muted);align-self:center">{{ pgettext('label', 'Loading...') }}</span>
                         </div>
                         <input type="hidden" name="middlewaresTcp" id="middlewaresTcp">
                     </div>
                     <div>
-                        <label>TLS Mode</label>
+                        <label>{{ _('TLS Mode') }}</label>
                         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);width:fit-content">
-                            <button type="button" onclick="setTcpTlsMode('none',this)" id="tcpTlsNone" class="proto-btn active-http text-xs px-3 py-1.5">No TLS</button>
+                            <button type="button" onclick="setTcpTlsMode('none',this)" id="tcpTlsNone" class="proto-btn active-http text-xs px-3 py-1.5">{{ _('No TLS') }}</button>
                             <button type="button" onclick="setTcpTlsMode('tls',this)" id="tcpTlsTls" class="proto-btn text-xs px-3 py-1.5">TLS</button>
-                            <button type="button" onclick="setTcpTlsMode('passthrough',this)" id="tcpTlsPassthrough" class="proto-btn text-xs px-3 py-1.5">Passthrough</button>
+                            <button type="button" onclick="setTcpTlsMode('passthrough',this)" id="tcpTlsPassthrough" class="proto-btn text-xs px-3 py-1.5">{{ pgettext('button', 'Passthrough') }}</button>
                         </div>
                         <input type="hidden" name="useTls" id="useTls" value="">
                         <input type="hidden" name="tlsPassthrough" id="tlsPassthrough" value="">
                     </div>
                     <div id="tcpCertResolverRow" style="display:none">
-                        <label>Cert Resolver</label>
+                        <label>{{ _('Cert Resolver') }}</label>
                         <select name="certResolver" id="certResolverTcp" class="input-field">
                             {% for r in cert_resolvers %}
                             <option value="{{ r }}">{{ r }}</option>
                             {% endfor %}
-                            <option value="__none__">None (external / custom cert)</option>
+                            <option value="__none__">{{ _('None (external / custom cert)') }}</option>
                         </select>
                     </div>
                 </div>
 
                 <div id="udpSection" class="protocol-section space-y-4">
                     <div class="flex gap-2 mb-3">
-                        <button type="button" id="udpSvcModeManualBtn" onclick="setServiceRefMode('udp', false)" class="proto-btn active-udp" style="padding:4px 12px;font-size:11px;border-radius:6px">Build backends</button>
-                        <button type="button" id="udpSvcModeRefBtn" onclick="setServiceRefMode('udp', true)" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">Use a service</button>
+                        <button type="button" id="udpSvcModeManualBtn" onclick="setServiceRefMode('udp', false)" class="proto-btn active-udp" style="padding:4px 12px;font-size:11px;border-radius:6px">{{ _('Build backends') }}</button>
+                        <button type="button" id="udpSvcModeRefBtn" onclick="setServiceRefMode('udp', true)" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">{{ _('Use a service') }}</button>
                     </div>
                     <div id="udpRefBackend" style="display:none">
-                        <label>Backend service</label>
+                        <label>{{ _('Backend service') }}</label>
                         <select id="serviceRefUdp" class="input-field" onchange="_updateRefTarget('udp')"></select>
                         <div id="udpRefTarget" class="text-xs mt-1" style="color:var(--muted);font-family:monospace;display:none"></div>
-                        <p class="text-xs mt-1" style="color:var(--muted)">This route will reference the selected service. Backends, sticky sessions and health checks are managed where the service is defined.</p>
+                        <p class="text-xs mt-1" style="color:var(--muted)">{{ _('This route will reference the selected service. Backends, sticky sessions and health checks are managed where the service is defined.') }}</p>
                     </div>
                     <div id="udpTargetGrid" class="grid grid-cols-2 gap-3">
                         <div>
-                            <label>Target IP / Host</label>
+                            <label>{{ _('Target IP / Host') }}</label>
                             <input type="text" name="targetIp" id="targetIpUdp" class="input-field" placeholder="10.0.0.10">
                         </div>
                         <div>
-                            <label>Port</label>
+                            <label>{{ pgettext('setting', 'Port') }}</label>
                             <input type="text" name="targetPort" id="targetPortUdp" class="input-field" placeholder="53">
                         </div>
                     </div>
                     <div id="udpBackendRows"></div>
                     <div id="udpBackendsFoot" class="flex items-center justify-between mt-1">
-                        <p class="text-xs" style="color:var(--muted)">Add more backends to load-balance across several servers.</p>
-                        <button type="button" onclick="addBackendRow('udp')" class="btn-secondary text-xs" style="height:24px;padding:0 8px"><i class="ph-bold ph-plus text-xs"></i> Add backend</button>
+                        <p class="text-xs" style="color:var(--muted)">{{ _('Add more backends to load-balance across several servers.') }}</p>
+                        <button type="button" onclick="addBackendRow('udp')" class="btn-secondary text-xs" style="height:24px;padding:0 8px"><i class="ph-bold ph-plus text-xs"></i> {{ _('Add backend') }}</button>
                     </div>
                     <input type="hidden" name="backendsJsonUdp" id="backendsJsonUdp">
                     <div>
-                        <label>Entry Point</label>
+                        <label>{{ _('Entry Point') }}</label>
                         <input type="hidden" name="udpEntryPoint" id="entryPointsUdp">
                         <div id="udpEntrypointChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px"></div>
                     </div>
                     <div class="rounded-md p-3 text-xs" style="background:rgba(240,136,62,0.08);border:1px solid rgba(240,136,62,0.25);color:#d29922">
-                        <i class="ph-bold ph-info"></i> UDP routers don't support rules. Traffic is routed by entry point only.
+                        <i class="ph-bold ph-info"></i> {{ _("UDP routers don't support rules. Traffic is routed by entry point only.") }}
                     </div>
                 </div>
             </div>
 
             <div class="detail-panel-foot flex justify-end gap-2 px-6 py-4">
-                <button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button>
-                <button type="submit" class="btn-primary">Save Route</button>
+                <button type="button" onclick="closeModal()" class="btn-secondary">{{ pgettext('button', 'Cancel') }}</button>
+                <button type="submit" class="btn-primary">{{ _('Save Route') }}</button>
             </div>
         </form>
 </div>

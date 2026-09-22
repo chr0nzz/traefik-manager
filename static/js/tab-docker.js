@@ -3,7 +3,7 @@ let _dockerFilter    = 'all';
 
 async function refreshDockerTab() {
     const container = document.getElementById('dockerContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading docker routes...</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading docker routes...')}</p></div>`;
 
     try {
         const [routerRes, svcRes, mwRes] = await Promise.all([
@@ -44,11 +44,11 @@ async function refreshDockerTab() {
             .sort((a,b) => (a.name||'').localeCompare(b.name||''));
 
         if (all.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-xs mt-1">Configure <code class="font-mono">TRAEFIK_API_URL</code> in Settings</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p><p class="text-xs mt-1">${th('Configure {traefik_api_url} in Settings', { traefik_api_url: tmHtml(`<code class="font-mono">TRAEFIK_API_URL</code>`) })}</p></div>`;
             return;
         }
         if (_allDockerRoutes.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cube text-5xl block mb-3 opacity-30"></i><p class="font-medium">No Docker routes found</p><p class="text-xs mt-1">Routes discovered via Docker labels will appear here automatically</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cube text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('No Docker routes found')}</p><p class="text-xs mt-1">${th('Routes discovered via Docker labels will appear here automatically')}</p></div>`;
             return;
         }
 
@@ -58,7 +58,7 @@ async function refreshDockerTab() {
         renderProviderMiddlewareSection(dockerMws, 'dockerMiddlewares');
         renderDockerRoutes();
     } catch(e) {
-        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p></div>`;
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p></div>`;
     }
 }
 
@@ -106,7 +106,7 @@ function renderDockerRoutes() {
 
     if (items.length === 0) {
         document.getElementById('dockerContent').innerHTML =
-            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No routes match filter</div>`;
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">${th('No routes match filter')}</div>`;
         return;
     }
 
@@ -117,7 +117,7 @@ function renderDockerRoutes() {
         return renderProviderCard(r, {
             onDetailClick: `openDockerRouteDetail(${globalIdx})`,
             target,
-            rows: showContainer ? [{ label: 'Container', value: r._svcInfo.containerAddr, icon: 'ph-cube' }] : [],
+            rows: showContainer ? [{ label: tc('label', 'Container'), value: r._svcInfo.containerAddr, icon: 'ph-cube' }] : [],
         });
     }).join('');
 

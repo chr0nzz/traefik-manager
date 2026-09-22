@@ -120,8 +120,37 @@ The suite runs against a temporary config directory and never touches a real Tra
 | `test_restore_static_target.py` | A static backup restores to `traefik.yml`, never over the dynamic config |
 | `test_static_provider_keys.py` | Saving a provider section preserves keys the form does not manage |
 | `test_no_dashes.py` | No em dashes anywhere |
+| `test_i18n.py` | Language prefixes, the language setting and picker, the browser catalogue and plural mapping |
+| `test_i18n_security.py` | A hostile catalogue renders as text in every template form and cannot break out of the inline catalogue |
+| `test_i18n_checks.py` | The translation checks reject hostile or broken catalogues, the JS extractor reads every call, and the repository passes |
+| `test_i18n_templates.py` | Every template string renders translated under a pseudo-locale, no English is left unmarked, and every `tag()` call is allowed |
 
 The table is not exhaustive - `tests/` holds more than this. Run `pytest --collect-only -q` for the full list.
+
+### Translations
+
+Strings are marked with `_()`, `ngettext()` and `pgettext()` in Python and templates, and with `t()`, `tn()` and `tc()` in JavaScript. Pass plain string literals with named placeholders (`%(name)s` in Python, `{name}` in JavaScript) and keep HTML outside the translated text.
+
+```bash
+make i18n-tools     # once: installs the pinned JS parser under scripts/i18n
+make i18n-extract   # rebuild locale/messages.pot and update every catalogue
+make i18n-check     # every translation check CI runs
+make i18n-pseudo    # pseudo-translated catalogue in /tmp/tm-pseudo-locale (OUT=dir to change)
+```
+
+In templates, a sentence stays one message even when it holds markup. Inline code, emphasis and links go in as named placeholders built with `tag()`, which only produces a short list of inline tags and refuses `on*` attributes and non-http links:
+
+```jinja
+{{ _('Leave blank to use the %(acme_json_path)s env var.', acme_json_path=tag('code', 'ACME_JSON_PATH', class_='font-mono')) }}
+```
+
+Markup `tag()` cannot build, such as a button with an `onclick`, is captured with `{% set name %}...{% endset %}` and passed the same way. Single words get a context with `pgettext('button', 'Save')`, so translators know where they appear. Text that must stay English sits in `<code>`, a `font-mono` element or an element with `translate="no"`.
+
+In JavaScript, `t()`, `tn()` and `tc()` return plain text for `textContent`, `showToast` and attributes set through the DOM. Text that goes into HTML uses `th()`, `thn()` and `thc()`, which escape the translation and every value; a value that is markup on purpose is wrapped in `tmHtml()`. CI rejects a plain `t()` placed into HTML, a translation used as a class, id, style or input value, a helper hidden by a local variable named `t`, and a call whose values do not match its placeholders. Numbers, dates and relative times go through `tmNumber()`, `tmDate()` and `tmAgo()`, and code never compares displayed text: state lives in a data attribute. Only strings JavaScript uses are sent to the browser; the extractor marks them `Used in the browser` in `messages.pot`.
+
+CI fails when a template shows English text that is not marked for translation, and when `messages.pot` is stale, so run `make i18n-extract` and commit the result with the change that added or reworded a string. `make i18n-check` also rejects translations that add markup, quotes, links, placeholders or invisible control characters, and a pull request from Weblate may only change `locale/<lang>/LC_MESSAGES/messages.po`. Every translation is escaped when a template renders it, so none can inject HTML. The translator side lives in [tm-locale](https://github.com/chr0nzz/tm-locale).
+
+To find English that never reaches a catalogue, build the pseudo catalogue, copy its `eo` folder into `locale/` of a test install, add `eo` to `locale/LINGUAS` there, and pick Esperanto in Settings. Every translated string shows as accented text between `⟦` and `⟧`, so plain English on screen is a string that is not marked. Do not commit the `eo` catalogue.
 
 ### Screenshots
 

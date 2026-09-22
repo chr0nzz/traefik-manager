@@ -3,37 +3,63 @@
         <div class="flex items-center justify-between h-14">
 
             <div class="flex items-center gap-3 min-w-0">
-                <button type="button" class="nav-btn" id="sideNavDrawerBtn" onclick="toggleSideNavDrawer()" title="Navigation">
+                <button type="button" class="nav-btn" id="sideNavDrawerBtn" onclick="toggleSideNavDrawer()" title="{{ pgettext('tooltip', 'Navigation') }}">
                     <i class="ph-bold ph-list"></i>
                 </button>
                 <div class="flex items-center gap-2 nav-brand-wrap">
-                    <img src="{{ base_path }}/static/icons/icon.png" alt="logo" style="width:24px;height:24px">
+                    <img src="{{ base_path }}/static/icons/icon.png" alt="{{ pgettext('label', 'logo') }}" style="width:24px;height:24px">
                     <span class="font-bold text-base tracking-tight nav-brand" style="color:var(--text)">Traefik <span style="color:var(--blue)">Manager</span></span>
                     <span id="agentServerLabel" class="agent-srv-label" style="display:none"></span>
                 </div>
             </div>
 
             <div class="flex items-center gap-2" id="navActions">
-                <button id="versionBadge" class="hidden nav-btn font-mono" data-navprio="30" title="Traefik version">
+                <button id="versionBadge" class="hidden nav-btn font-mono" data-navprio="30" title="{{ _('Traefik version') }}">
                     <span id="apiStatusDot" style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span>
                     <i class="ph-bold ph-git-branch"></i>
                     <span id="versionText">-</span>
                 </button>
                 <div id="updateBadge" class="hidden"></div>
-                <button id="tmVersionBadge" class="hidden nav-btn font-mono" data-navprio="25" title="Traefik Manager version">
+                <button id="tmVersionBadge" class="hidden nav-btn font-mono" data-navprio="25" title="{{ _('Traefik Manager version') }}">
                     <i class="ph-bold ph-package"></i>
                     <span id="tmVersionText">-</span>
                 </button>
-                <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="nav-btn nav-docs-link" data-navprio="10" title="Documentation">
+                <div id="langPickerWrap" class="nav-lang-picker" data-navprio="12" style="position:relative;">
+                    <button type="button" id="langPickerBtn" onclick="toggleLangMenu()" class="nav-btn" title="{{ _('Language') }}" aria-haspopup="true">
+                        {% if html_lang_region %}<span class="tm-flag tm-lang-flag" translate="no" aria-hidden="true">{{ html_lang_region | flag }}</span>
+                        {% else %}<i class="ph-bold ph-globe"></i>{% endif %}
+                        <span class="sr-only" translate="no">{{ html_lang_code }}</span>
+                    </button>
+                    <div id="langPickerMenu" class="notif-panel">
+                        <div class="notif-item lang-opt{% if not language_setting %} active{% endif %}" onclick="setLanguage('')">
+                            <div class="flex items-center gap-2 py-1">
+                                <i class="ph-bold ph-desktop" style="width:18px;text-align:center;color:var(--muted)"></i>
+                                <div class="text-xs font-medium truncate" style="color:var(--text);flex:1;min-width:0">{{ _('Follow system') }}</div>
+                                {% if not language_setting %}<i class="ph-bold ph-check text-xs ml-auto flex-shrink-0" style="color:var(--blue)"></i>{% endif %}
+                            </div>
+                        </div>
+                        {% for lang in language_options %}
+                        <div class="notif-item lang-opt{% if language_setting == lang.tag %} active{% endif %}" data-lang="{{ lang.tag }}" onclick="setLanguage(this.dataset.lang)" lang="{{ lang.tag }}">
+                            <div class="flex items-center gap-2 py-1">
+                                {% if lang.region %}<span class="tm-flag tm-lang-flag" translate="no" aria-hidden="true" style="width:18px;text-align:center">{{ lang.region | flag }}</span>
+                                {% else %}<i class="ph-bold ph-globe" style="width:18px;text-align:center;color:var(--muted)"></i>{% endif %}
+                                <div class="text-xs font-medium truncate" style="color:var(--text);flex:1;min-width:0">{{ lang.name }}</div>
+                                {% if language_setting == lang.tag %}<i class="ph-bold ph-check text-xs ml-auto flex-shrink-0" style="color:var(--blue)"></i>{% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <a href="https://traefik-manager.xyzlab.dev" target="_blank" rel="noopener" class="nav-btn nav-docs-link" data-navprio="10" title="{{ pgettext('tooltip', 'Documentation') }}">
                     <i class="ph-bold ph-book-open"></i>
                 </a>
-                <a href="/api" class="nav-btn nav-api-link" data-navprio="15" title="API Reference">
+                <a href="/api" class="nav-btn nav-api-link" data-navprio="15" title="{{ _('API Reference') }}">
                     <span style="font-size:11px;font-weight:700;font-family:monospace">API</span>
                 </a>
                 <div id="serverSwitcherWrap" data-navprio="95" style="display:none;position:relative;">
-                    <button id="serverSwitcherBtn" onclick="toggleServerMenu()" class="nav-btn" title="Switch server">
+                    <button id="serverSwitcherBtn" onclick="toggleServerMenu()" class="nav-btn" title="{{ _('Switch server') }}">
                         <i class="ph-bold ph-stack"></i>
-                        <span id="serverSwitcherLabel" style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Host</span>
+                        <span id="serverSwitcherLabel" style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ pgettext('button', 'Host') }}</span>
                         <i class="ph-bold ph-caret-down" style="font-size:10px;opacity:0.6;"></i>
                     </button>
                     <div id="serverSwitcherMenu" class="notif-panel" style="position:absolute;top:44px;right:0;width:220px;max-height:320px;overflow-y:auto;z-index:1000;">
@@ -41,48 +67,48 @@
                     </div>
                 </div>
                 <div class="shortcuts-btn-wrap" data-navprio="35">
-                    <button onclick="toggleShortcutsPanel()" class="nav-btn" id="shortcutsBellBtn" title="Keyboard shortcuts">
+                    <button onclick="toggleShortcutsPanel()" class="nav-btn" id="shortcutsBellBtn" title="{{ _('Keyboard shortcuts') }}">
                         <i class="ph-bold ph-keyboard"></i>
                     </button>
                 </div>
                 <div class="notif-bell-wrap" id="notifBellWrap">
-                    <button onclick="toggleNotifPanel()" class="nav-btn" id="notifBellBtn" title="Notifications">
+                    <button onclick="toggleNotifPanel()" class="nav-btn" id="notifBellBtn" title="{{ pgettext('tooltip', 'Notifications') }}">
                         <i class="ph-bold ph-bell"></i>
                         <span id="notifBadge" class="notif-badge hidden"></span>
                     </button>
                 </div>
-                <button onclick="cycleTheme()" id="themeToggleBtn" class="nav-btn" data-navprio="45" title="Toggle theme">
+                <button onclick="cycleTheme()" id="themeToggleBtn" class="nav-btn" data-navprio="45" title="{{ _('Toggle theme') }}">
                     <i class="ph-bold ph-moon tm-theme-icon" data-pref="dark"></i>
                     <i class="ph-bold ph-sun tm-theme-icon" data-pref="light"></i>
                     <i class="ph-bold ph-desktop tm-theme-icon" data-pref="system"></i>
                 </button>
-                <button onclick="openIpDiagModal()" class="nav-btn nav-ipdiag-btn" data-navprio="20" title="Client IP diagnostic">
+                <button onclick="openIpDiagModal()" class="nav-btn nav-ipdiag-btn" data-navprio="20" title="{{ _('Client IP diagnostic') }}">
                     <i class="ph-bold ph-network"></i>
                 </button>
-                <button onclick="openSettingsModal()" class="nav-btn nav-dup-sidenav" data-navprio="80" title="Settings">
+                <button onclick="openSettingsModal()" class="nav-btn nav-dup-sidenav" data-navprio="80" title="{{ pgettext('tooltip', 'Settings') }}">
                     <i class="ph-bold ph-gear"></i>
                 </button>
                 {% if auth_enabled %}
                 <form method="POST" action="{{ url_for('logout') }}" class="nav-dup-sidenav" style="display:inline" data-navprio="40">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <button type="submit" class="nav-btn" title="Sign out" style="color:var(--muted)">
+                    <button type="submit" class="nav-btn" title="{{ _('Sign out') }}" style="color:var(--muted)">
                         <i class="ph-bold ph-sign-out"></i>
                     </button>
                 </form>
                 {% endif %}
-                <button id="pwaInstallBtn" onclick="installPWA()" class="hidden nav-btn" data-navprio="5" title="Install as App">
+                <button id="pwaInstallBtn" onclick="installPWA()" class="hidden nav-btn" data-navprio="5" title="{{ _('Install as App') }}">
                     <i class="ph-bold ph-device-mobile"></i>
                 </button>
-                <button id="navAddMwBtn" onclick="openMwModal()" class="nav-btn nav-labelled" data-navprio="50" title="Add Middleware">
+                <button id="navAddMwBtn" onclick="openMwModal()" class="nav-btn nav-labelled" data-navprio="50" title="{{ _('Add Middleware') }}">
                     <i class="ph-bold ph-stack"></i>
-                    <span>Middleware</span>
+                    <span>{{ pgettext('button', 'Middleware') }}</span>
                 </button>
-                <button id="navAddRouteBtn" onclick="openModal()" class="nav-btn nav-btn-primary nav-labelled" data-navprio="90" title="Add Route">
+                <button id="navAddRouteBtn" onclick="openModal()" class="nav-btn nav-btn-primary nav-labelled" data-navprio="90" title="{{ _('Add Route') }}">
                     <i class="ph-bold ph-plus"></i>
-                    <span>Add Route</span>
+                    <span>{{ _('Add Route') }}</span>
                 </button>
                 <div class="nav-more-wrap" id="navMoreWrap" style="display:none">
-                    <button type="button" class="nav-btn" id="navMoreBtn" onclick="toggleNavMore()" title="More">
+                    <button type="button" class="nav-btn" id="navMoreBtn" onclick="toggleNavMore()" title="{{ pgettext('tooltip', 'More') }}">
                         <i class="ph-bold ph-dots-three"></i>
                     </button>
                     <div class="nav-more-menu" id="navMoreMenu"></div>
@@ -94,45 +120,45 @@
 
     <div class="notif-panel" id="shortcutsPanel">
         <div class="notif-panel-header">
-            <span class="notif-panel-title"><i class="ph-bold ph-keyboard" style="margin-right:6px"></i>Keyboard Shortcuts</span>
+            <span class="notif-panel-title"><i class="ph-bold ph-keyboard" style="margin-right:6px"></i>{{ _('Keyboard Shortcuts') }}</span>
         </div>
         <div class="notif-list" style="max-height:480px;padding:10px 12px;">
-            <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Actions</div>
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">{{ pgettext('label', 'Actions') }}</div>
             <div class="shortcuts-grid">
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>N</kbd><span>New Route</span></div>
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>M</kbd><span>New Middleware</span></div>
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>F</kbd><span>Focus search</span></div>
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>X</kbd><span>Raw YAML editor</span></div>
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>P</kbd><span>Settings</span></div>
-                <div class="shortcut-row"><kbd>Esc</kbd><span>Close panel</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>N</kbd><span>{{ _('New Route') }}</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>M</kbd><span>{{ _('New Middleware') }}</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>F</kbd><span>{{ _('Focus search') }}</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>X</kbd><span>{{ _('Raw YAML editor') }}</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>P</kbd><span>{{ pgettext('label', 'Settings') }}</span></div>
+                <div class="shortcut-row"><kbd>Esc</kbd><span>{{ _('Close panel') }}</span></div>
             </div>
-            <div class="text-xs font-semibold uppercase tracking-wide mb-2 mt-4" style="color:var(--muted)">Navigation</div>
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2 mt-4" style="color:var(--muted)">{{ pgettext('label', 'Navigation') }}</div>
             <div class="shortcuts-grid">
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>R</kbd><span>Routes</span></div>
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>W</kbd><span>Middleware</span></div>
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>S</kbd><span>Services</span></div>
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>L</kbd><span>Logs</span></div>
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>D</kbd><span>Dashboard</span></div>
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>A</kbd><span>Next server</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>R</kbd><span>{{ pgettext('label', 'Routes') }}</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>W</kbd><span>{{ pgettext('label', 'Middleware') }}</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>S</kbd><span>{{ pgettext('label', 'Services') }}</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>L</kbd><span>{{ pgettext('label', 'Logs') }}</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>D</kbd><span>{{ pgettext('label', 'Dashboard') }}</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>A</kbd><span>{{ _('Next server') }}</span></div>
             </div>
-            <div class="text-xs font-semibold uppercase tracking-wide mb-2 mt-4" style="color:var(--muted)">This panel</div>
+            <div class="text-xs font-semibold uppercase tracking-wide mb-2 mt-4" style="color:var(--muted)">{{ _('This panel') }}</div>
             <div class="shortcuts-grid">
-                <div class="shortcut-row"><kbd>Shift</kbd><kbd>?</kbd><span>Toggle shortcuts</span></div>
+                <div class="shortcut-row"><kbd>Shift</kbd><kbd>?</kbd><span>{{ _('Toggle shortcuts') }}</span></div>
             </div>
         </div>
     </div>
 
     <div class="notif-panel" id="notifPanel">
         <div class="notif-panel-header">
-            <span class="notif-panel-title">Notifications</span>
+            <span class="notif-panel-title">{{ pgettext('heading', 'Notifications') }}</span>
             <div class="flex items-center gap-2">
-                <button onclick="markNotifsRead()" class="notif-mark-read" id="notifMarkRead">Mark all read</button>
-                <button onclick="clearAllNotifications()" class="notif-mark-read notif-clear-all" id="notifClearAll" style="color:var(--muted);display:none">Clear all</button>
+                <button onclick="markNotifsRead()" class="notif-mark-read" id="notifMarkRead">{{ _('Mark all read') }}</button>
+                <button onclick="clearAllNotifications()" class="notif-mark-read notif-clear-all" id="notifClearAll" style="color:var(--muted);display:none">{{ _('Clear all') }}</button>
             </div>
         </div>
         <div id="notifFilters" class="notif-filters" style="display:none"></div>
         <div id="notifList" class="notif-list">
-            <div class="notif-empty"><i class="ph-light ph-bell-slash" style="font-size:32px;opacity:0.3;display:block;margin-bottom:8px"></i>No notifications yet</div>
+            <div class="notif-empty"><i class="ph-light ph-bell-slash" style="font-size:32px;opacity:0.3;display:block;margin-bottom:8px"></i>{{ _('No notifications yet') }}</div>
         </div>
     </div>
 </nav>

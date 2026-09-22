@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Traefik Manager API
-  version: 1.14.2
+  version: 1.15.0
   description: |
     REST API powering the Traefik Manager web UI and official mobile app.
 
@@ -1387,6 +1387,33 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/settings/language:
+    post:
+      tags: [Settings]
+      summary: Set default language
+      description: Set the instance default UI language, stored as `default_language` in `manager.yml`. An empty string follows each browser's language. `GET /api/settings` lists the choices in `available_languages`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [default_language]
+              properties:
+                default_language: { type: string, description: 'A language tag from available_languages, or empty' }
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  default_language: { type: string }
+        "400":
+          description: Unknown language
 
   /api/settings/theme:
     post:

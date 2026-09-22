@@ -2,7 +2,7 @@
 
 Static Config lets you view and edit Traefik's static configuration (`traefik.yml`) from the Traefik Manager UI. Changes are staged and backed up before saving; a banner then prompts you to restart Traefik with one click, using whichever restart method you configure.
 
-It is off by default. Once a static config path is set and the file exists, a **Static Config** row appears under **Settings → Interface** with three placements:
+It is off by default. Once a static config path is set and the file exists, a **Static Config** row appears under **Settings → Interface → Tabs** with three placements:
 
 | Placement | Where it appears |
 |---|---|

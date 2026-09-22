@@ -188,11 +188,11 @@ def test_a_single_service_row_still_sends_its_payload():
 
 def test_the_backend_mode_labels_say_what_they_do():
     html = _read(MODAL)
-    assert html.count('>Build backends</button>') == 3, 'http, tcp and udp each have the toggle'
-    assert html.count('>Use a service</button>') == 3
-    assert '>Manual</button>' not in html, \
+    assert html.count(">{{ _('Build backends') }}</button>") == 3, 'http, tcp and udp each have the toggle'
+    assert html.count(">{{ _('Use a service') }}</button>") == 3
+    assert "'Manual')" not in html, \
         'Manual read as the opposite of existing, when it means build the list here'
-    assert '>Existing service</button>' not in html
+    assert "'Existing service')" not in html
 
 
 def test_the_picker_precedes_the_weight_so_it_cannot_wrap():

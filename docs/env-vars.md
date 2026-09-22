@@ -44,6 +44,7 @@ from `manager.yml` and restart.
 |---|---|---|---|
 | `OIDC_ENABLED` | `false` | Seeds `oidc_enabled` | Turn on OIDC login |
 | `OIDC_PROVIDER_URL` | _(unset)_ | Seeds `oidc_provider_url` | Issuer URL, without `/.well-known/openid-configuration` |
+| `OIDC_REDIRECT_URI` | _(unset)_ | - | Callback URL sent to the provider. Unset, it is built from the request and follows `X-Forwarded-Host` |
 | `OIDC_CLIENT_ID` | _(unset)_ | Seeds `oidc_client_id` | Client ID from your provider |
 | `OIDC_CLIENT_SECRET` | _(unset)_ | Seeds `oidc_client_secret` | Client secret (stored encrypted) |
 | `OIDC_DISPLAY_NAME` | `OIDC` | Seeds `oidc_display_name` | Name on the login button |
@@ -274,6 +275,36 @@ Environment=OIDC_ALLOWED_GROUPS=admins
 
 ::: warning
 Leaving both `OIDC_ALLOWED_EMAILS` and `OIDC_ALLOWED_GROUPS` empty denies every login unless `OIDC_ALLOW_ANY_AUTHENTICATED` is `true`.
+:::
+
+---
+
+### `OIDC_REDIRECT_URI`
+
+**Default:** _(unset - built from the request)_
+
+The callback URL sent to the provider, and sent again at the token exchange. Left unset, it is
+built from the request, which follows `X-Forwarded-Host` when the request came from a
+[trusted proxy](#trusted-proxies). The default trusted range is wide, so on a shared Docker
+network or a flat LAN another host can set that header and make the `redirect_uri` point at
+itself. Whether that is exploitable depends on how strictly your provider matches
+`redirect_uri` against the one registered for the client, which is not something Traefik Manager
+can see.
+
+Set it to the exact URL registered with your provider and the header stops mattering. It must
+match what the provider has registered, character for character, or the provider rejects the
+sign-in.
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - OIDC_REDIRECT_URI=https://tm.example.com/auth/oidc/callback
+```
+== Linux (systemd)
+```ini
+Environment=OIDC_REDIRECT_URI=https://tm.example.com/auth/oidc/callback
+```
 :::
 
 ---
@@ -664,7 +695,7 @@ volumes:
 **Default:** _(auto-downloaded to `/app/config/geoip/dbip-country-lite.mmdb`, next to `manager.yml`. The location follows `SETTINGS_PATH`, not `CONFIG_DIR`.)_  
 **Fallback:** `geoip_db_path`
 
-Path to a MaxMind DB format (`.mmdb`) GeoIP database for [IP geolocation](geoip.md) in the Logs and CrowdSec tabs. Leave unset to use the free DB-IP Lite country database TM downloads automatically; set it to use your own (e.g. MaxMind GeoLite2). Geolocation must be enabled in **Settings → Interface → Geolocation**.
+Path to a MaxMind DB format (`.mmdb`) GeoIP database for [IP geolocation](geoip.md) in the Logs and CrowdSec tabs. Leave unset to use the free DB-IP Lite country database TM downloads automatically; set it to use your own (e.g. MaxMind GeoLite2). Geolocation must be enabled in **Settings → Interface → General → Geolocation**.
 
 :::tabs
 == Docker / Podman
@@ -903,6 +934,17 @@ Use a sub domain instead where you can. It needs no configuration on either side
 Comma-separated addresses or networks allowed to set forwarding headers. A request from any other address has its `X-Forwarded-For`, `X-Forwarded-Proto` and `X-Forwarded-Host` ignored, so a client that reaches Traefik Manager directly cannot choose its own IP for the login rate limit or the audit log. The default covers Docker networks, a LAN, loopback and Tailscale. If your reverse proxy connects from a public address, add that address, or set `*` to trust every peer.
 
 The active list is shown in the startup log as `Trusted Proxies` and in the Client IP Diagnostic.
+
+The default is deliberately wide, because the usual install has Traefik in another container on
+the same Docker network and Traefik Manager has no way to know that address in advance. It does
+mean that on a shared Docker network or a flat LAN, any other host in those ranges can set its
+own client IP for the login rate limit and the audit log, and can set the host used to build the
+OIDC `redirect_uri`. Narrowing this to your proxy's actual address closes that, and is worth
+doing on a network you share with anything you do not control. Narrow it deliberately rather than
+by trial: if the value no longer covers your proxy, every request looks like it comes from the
+proxy, so all clients share one rate-limit bucket and one failed-login count.
+
+See [`OIDC_REDIRECT_URI`](#oidc-redirect-uri) for pinning the OIDC callback URL independently.
 
 :::tabs
 == Docker / Podman

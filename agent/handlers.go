@@ -40,6 +40,16 @@ func jsonError(w http.ResponseWriter, msg string, code int) {
 	json.NewEncoder(w).Encode(map[string]any{"error": msg, "ok": false})
 }
 
+func jsonErrorCode(w http.ResponseWriter, errCode string, params map[string]any, msg string, status int) {
+	body := map[string]any{"error": msg, "code": errCode, "ok": false}
+	if len(params) > 0 {
+		body["params"] = params
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(body)
+}
+
 func (a *App) debugf(format string, args ...any) {
 	if a.cfg.Debug {
 		log.Printf("[debug] "+format, args...)
@@ -59,7 +69,7 @@ func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) routerDetailHandler(w http.ResponseWriter, r *http.Request, rest string) {
 	parts := strings.SplitN(rest, "/", 2)
 	if len(parts) != 2 || parts[1] == "" {
-		jsonError(w, "router name is required", http.StatusBadRequest)
+		jsonErrorCode(w, "router_name_required", nil, "router name is required", http.StatusBadRequest)
 		return
 	}
 	proto := strings.ToLower(parts[0])
@@ -75,14 +85,14 @@ func (a *App) traefikProxy(w http.ResponseWriter, r *http.Request, traefikPath s
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
 	if err != nil {
-		jsonError(w, "proxy error: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "proxy_error", map[string]any{"detail": err.Error()}, "proxy error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	a.applyTraefikAuth(req)
 	resp, err := a.httpClient.Do(req)
 	if err != nil {
 		a.debugf("traefik proxy %s failed: %v", target, err)
-		jsonError(w, "traefik unavailable: "+err.Error(), http.StatusBadGateway)
+		jsonErrorCode(w, "traefik_unavailable", map[string]any{"detail": err.Error()}, "traefik unavailable: "+err.Error(), http.StatusBadGateway)
 		return
 	}
 	defer resp.Body.Close()
@@ -168,7 +178,7 @@ func (a *App) traefikFetchProto(ctx context.Context, traefikPath string) (json.R
 func (a *App) routersHandler(w http.ResponseWriter, r *http.Request) {
 	httpR, err := a.traefikFetchProto(r.Context(), "/api/http/routers")
 	if err != nil {
-		jsonError(w, "traefik unavailable at "+a.cfg.TraefikAPIURL+": "+err.Error(), http.StatusBadGateway)
+		jsonErrorCode(w, "traefik_unavailable_at", map[string]any{"url": a.cfg.TraefikAPIURL, "detail": err.Error()}, "traefik unavailable at "+a.cfg.TraefikAPIURL+": "+err.Error(), http.StatusBadGateway)
 		return
 	}
 	tcpR, tcpErr := a.traefikFetchProto(r.Context(), "/api/tcp/routers")
@@ -186,7 +196,7 @@ func (a *App) routersHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) servicesHandler(w http.ResponseWriter, r *http.Request) {
 	httpS, err := a.traefikFetchProto(r.Context(), "/api/http/services")
 	if err != nil {
-		jsonError(w, "traefik unavailable at "+a.cfg.TraefikAPIURL+": "+err.Error(), http.StatusBadGateway)
+		jsonErrorCode(w, "traefik_unavailable_at", map[string]any{"url": a.cfg.TraefikAPIURL, "detail": err.Error()}, "traefik unavailable at "+a.cfg.TraefikAPIURL+": "+err.Error(), http.StatusBadGateway)
 		return
 	}
 	tcpS, _ := a.traefikFetchProto(r.Context(), "/api/tcp/services")
@@ -197,7 +207,7 @@ func (a *App) servicesHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) middlewaresHandler(w http.ResponseWriter, r *http.Request) {
 	httpM, err := a.traefikFetchProto(r.Context(), "/api/http/middlewares")
 	if err != nil {
-		jsonError(w, "traefik unavailable at "+a.cfg.TraefikAPIURL+": "+err.Error(), http.StatusBadGateway)
+		jsonErrorCode(w, "traefik_unavailable_at", map[string]any{"url": a.cfg.TraefikAPIURL, "detail": err.Error()}, "traefik unavailable at "+a.cfg.TraefikAPIURL+": "+err.Error(), http.StatusBadGateway)
 		return
 	}
 	tcpM, _ := a.traefikFetchProto(r.Context(), "/api/tcp/middlewares")
@@ -213,14 +223,14 @@ func (a *App) configsReadHandler(w http.ResponseWriter, r *http.Request) {
 	cfgPath := a.cfg.ConfigPath
 	info, err := os.Stat(cfgPath)
 	if err != nil {
-		jsonError(w, "config path not found", http.StatusNotFound)
+		jsonErrorCode(w, "config_path_not_found", nil, "config path not found", http.StatusNotFound)
 		return
 	}
 	files := []fileEntry{}
 	if info.IsDir() {
 		entries, err := os.ReadDir(cfgPath)
 		if err != nil {
-			jsonError(w, "cannot read config dir", http.StatusInternalServerError)
+			jsonErrorCode(w, "config_dir_unreadable", nil, "cannot read config dir", http.StatusInternalServerError)
 			return
 		}
 		for _, e := range entries {
@@ -236,7 +246,7 @@ func (a *App) configsReadHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		data, err := os.ReadFile(cfgPath)
 		if err != nil {
-			jsonError(w, "cannot read config file", http.StatusInternalServerError)
+			jsonErrorCode(w, "config_file_unreadable", nil, "cannot read config file", http.StatusInternalServerError)
 			return
 		}
 		files = append(files, fileEntry{Name: filepath.Base(cfgPath), Content: string(data)})
@@ -250,7 +260,7 @@ func (a *App) configsWriteHandler(w http.ResponseWriter, r *http.Request) {
 		Content string `json:"content"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		jsonError(w, "invalid request body", http.StatusBadRequest)
+		jsonErrorCode(w, "invalid_body", nil, "invalid request body", http.StatusBadRequest)
 		return
 	}
 	cfgPath := a.cfg.ConfigPath
@@ -258,7 +268,7 @@ func (a *App) configsWriteHandler(w http.ResponseWriter, r *http.Request) {
 	var targetPath string
 	if err == nil && info.IsDir() {
 		if _, ok := safeBaseName(body.Name); !ok {
-			jsonError(w, "invalid file name", http.StatusBadRequest)
+			jsonErrorCode(w, "invalid_file_name", nil, "invalid file name", http.StatusBadRequest)
 			return
 		}
 		targetPath = filepath.Join(cfgPath, body.Name)
@@ -269,11 +279,11 @@ func (a *App) configsWriteHandler(w http.ResponseWriter, r *http.Request) {
 	defer a.cfgMu.Unlock()
 	if err := a.createFileBak(targetPath, filepath.Base(targetPath)); err != nil {
 		a.failuref("backup", "pre-write backup of %s failed: %v", targetPath, err)
-		jsonError(w, "backup failed, nothing was written: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "backup_failed_nothing_written", map[string]any{"detail": err.Error()}, "backup failed, nothing was written: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if err := atomicWrite(targetPath, []byte(body.Content)); err != nil {
-		jsonError(w, "write failed: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "write_failed", map[string]any{"detail": err.Error()}, "write failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if a.cfg.GitBackupEnabled && a.cfg.GitBackupAutoPush && a.cfg.GitBackupRepo != "" {
@@ -312,12 +322,12 @@ func atomicWrite(path string, data []byte) error {
 
 func (a *App) staticReadHandler(w http.ResponseWriter, r *http.Request) {
 	if a.cfg.StaticConfigPath == "" {
-		jsonError(w, "STATIC_CONFIG_PATH not configured", http.StatusNotFound)
+		jsonErrorCode(w, "static_config_missing", nil, "STATIC_CONFIG_PATH not configured", http.StatusNotFound)
 		return
 	}
 	data, err := os.ReadFile(a.cfg.StaticConfigPath)
 	if err != nil {
-		jsonError(w, "cannot read static config: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "static_config_unreadable", map[string]any{"detail": err.Error()}, "cannot read static config: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	jsonOK(w, map[string]any{"content": string(data), "path": a.cfg.StaticConfigPath})
@@ -325,23 +335,23 @@ func (a *App) staticReadHandler(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) staticWriteHandler(w http.ResponseWriter, r *http.Request) {
 	if a.cfg.StaticConfigPath == "" {
-		jsonError(w, "STATIC_CONFIG_PATH not configured", http.StatusNotFound)
+		jsonErrorCode(w, "static_config_missing", nil, "STATIC_CONFIG_PATH not configured", http.StatusNotFound)
 		return
 	}
 	var body struct {
 		Content string `json:"content"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		jsonError(w, "invalid request body", http.StatusBadRequest)
+		jsonErrorCode(w, "invalid_body", nil, "invalid request body", http.StatusBadRequest)
 		return
 	}
 	if err := a.createFileBak(a.cfg.StaticConfigPath, ""); err != nil {
 		a.failuref("backup", "pre-write backup of %s failed: %v", a.cfg.StaticConfigPath, err)
-		jsonError(w, "backup failed, nothing was written: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "backup_failed_nothing_written", map[string]any{"detail": err.Error()}, "backup failed, nothing was written: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if err := atomicWrite(a.cfg.StaticConfigPath, []byte(body.Content)); err != nil {
-		jsonError(w, "write failed: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "write_failed", map[string]any{"detail": err.Error()}, "write failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	jsonOK(w, map[string]any{"ok": true})
@@ -350,12 +360,12 @@ func (a *App) staticWriteHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) pluginsHandler(w http.ResponseWriter, r *http.Request) {
 	empty := []map[string]any{}
 	if a.cfg.StaticConfigPath == "" {
-		jsonOK(w, map[string]any{"plugins": empty, "error": "STATIC_CONFIG_PATH not configured on this agent"})
+		jsonOK(w, map[string]any{"plugins": empty, "error": "STATIC_CONFIG_PATH not configured on this agent", "code": "static_config_missing"})
 		return
 	}
 	data, err := os.ReadFile(a.cfg.StaticConfigPath)
 	if err != nil {
-		jsonOK(w, map[string]any{"plugins": empty, "error": "cannot read static config: " + err.Error()})
+		jsonOK(w, map[string]any{"plugins": empty, "error": "cannot read static config: " + err.Error(), "code": "static_config_unreadable", "params": map[string]any{"detail": err.Error()}})
 		return
 	}
 	var cfg struct {
@@ -368,7 +378,7 @@ func (a *App) pluginsHandler(w http.ResponseWriter, r *http.Request) {
 		} `yaml:"experimental"`
 	}
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		jsonOK(w, map[string]any{"plugins": empty, "error": "invalid YAML: " + err.Error()})
+		jsonOK(w, map[string]any{"plugins": empty, "error": "invalid YAML: " + err.Error(), "code": "invalid_yaml", "params": map[string]any{"detail": err.Error()}})
 		return
 	}
 	plugins := make([]map[string]any, 0, len(cfg.Experimental.Plugins))
@@ -394,18 +404,18 @@ func (a *App) staticRestartHandler(w http.ResponseWriter, r *http.Request) {
 	switch a.cfg.RestartMethod {
 	case "poison-pill":
 		if a.cfg.SignalFilePath == "" {
-			jsonError(w, "SIGNAL_FILE_PATH not configured", http.StatusBadRequest)
+			jsonErrorCode(w, "signal_file_missing", nil, "SIGNAL_FILE_PATH not configured", http.StatusBadRequest)
 			return
 		}
 		if err := os.WriteFile(a.cfg.SignalFilePath, []byte("restart"), 0o644); err != nil {
-			jsonError(w, "failed to write signal file: "+err.Error(), http.StatusInternalServerError)
+			jsonErrorCode(w, "signal_file_write_failed", map[string]any{"detail": err.Error()}, "failed to write signal file: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		jsonOK(w, map[string]any{"ok": true, "restarting": true})
 
 	case "socket", "proxy":
 		if err := a.dockerPreflight(r.Context()); err != nil {
-			jsonError(w, "docker restart failed: "+err.Error(), http.StatusInternalServerError)
+			jsonErrorCode(w, "docker_restart_failed", map[string]any{"detail": err.Error()}, "docker restart failed: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		jsonOK(w, map[string]any{"ok": true, "restarting": true})
@@ -419,7 +429,7 @@ func (a *App) staticRestartHandler(w http.ResponseWriter, r *http.Request) {
 		}()
 
 	default:
-		jsonError(w, "RESTART_METHOD not configured or unsupported", http.StatusBadRequest)
+		jsonErrorCode(w, "restart_method_missing", nil, "RESTART_METHOD not configured or unsupported", http.StatusBadRequest)
 	}
 }
 
@@ -682,12 +692,12 @@ func (a *App) csActiveDecisions(ctx context.Context, forceFull bool) ([]json.Raw
 
 func (a *App) crowdsecDecisionsHandler(w http.ResponseWriter, r *http.Request) {
 	if a.cfg.CrowdSecLAPIURL == "" {
-		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		jsonErrorCode(w, "crowdsec_missing", nil, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
 		return
 	}
 	rows, staleNote, err := a.csActiveDecisions(r.Context(), r.URL.Query().Get("full") == "1")
 	if err != nil {
-		jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
+		jsonErrorCode(w, "crowdsec_unavailable", map[string]any{"detail": err.Error()}, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -699,12 +709,12 @@ func (a *App) crowdsecDecisionsHandler(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) crowdsecDecisionsSearchHandler(w http.ResponseWriter, r *http.Request) {
 	if a.cfg.CrowdSecLAPIURL == "" {
-		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		jsonErrorCode(w, "crowdsec_missing", nil, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
 		return
 	}
 	rows, staleNote, err := a.csActiveDecisions(r.Context(), false)
 	if err != nil {
-		jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
+		jsonErrorCode(w, "crowdsec_unavailable", map[string]any{"detail": err.Error()}, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
 		return
 	}
 	if staleNote != "" {
@@ -834,7 +844,7 @@ type csSearchRow struct {
 
 func (a *App) crowdsecAlertsHandler(w http.ResponseWriter, r *http.Request) {
 	if a.cfg.CrowdSecLAPIURL == "" {
-		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		jsonErrorCode(w, "crowdsec_missing", nil, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
 		return
 	}
 	limit := a.cfg.CrowdSecAlertLimit
@@ -846,7 +856,7 @@ func (a *App) crowdsecAlertsHandler(w http.ResponseWriter, r *http.Request) {
 	forceFull := r.URL.Query().Get("full") == "1"
 	chunk, _, _, err := a.csAlerts(r.Context(), limit, forceFull)
 	if err != nil {
-		jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
+		jsonErrorCode(w, "crowdsec_unavailable", map[string]any{"detail": err.Error()}, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
 		return
 	}
 	capped := limit > 0 && len(chunk) >= limit
@@ -874,7 +884,7 @@ func (a *App) crowdsecAlertsHandler(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) crowdsecAddDecisionHandler(w http.ResponseWriter, r *http.Request) {
 	if a.cfg.CrowdSecLAPIURL == "" {
-		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		jsonErrorCode(w, "crowdsec_missing", nil, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
 		return
 	}
 	var body struct {
@@ -884,12 +894,12 @@ func (a *App) crowdsecAddDecisionHandler(w http.ResponseWriter, r *http.Request)
 		Reason   string `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		jsonError(w, "invalid request body", http.StatusBadRequest)
+		jsonErrorCode(w, "invalid_body", nil, "invalid request body", http.StatusBadRequest)
 		return
 	}
 	ip := strings.TrimSpace(body.Value)
 	if ip == "" {
-		jsonError(w, "IP/Range is required", http.StatusBadRequest)
+		jsonErrorCode(w, "ip_required", nil, "IP/Range is required", http.StatusBadRequest)
 		return
 	}
 	dtype := strings.TrimSpace(body.Type)
@@ -897,7 +907,7 @@ func (a *App) crowdsecAddDecisionHandler(w http.ResponseWriter, r *http.Request)
 		dtype = "ban"
 	}
 	if dtype != "ban" && dtype != "captcha" && dtype != "bypass" {
-		jsonError(w, "Invalid type", http.StatusBadRequest)
+		jsonErrorCode(w, "invalid_type", nil, "Invalid type", http.StatusBadRequest)
 		return
 	}
 	duration := strings.TrimSpace(body.Duration)
@@ -924,13 +934,13 @@ func (a *App) crowdsecAddDecisionHandler(w http.ResponseWriter, r *http.Request)
 	buf, _ := json.Marshal(payload)
 	resp, err := a.csRequest(r.Context(), http.MethodPost, "/v1/alerts", bytes.NewReader(buf), true)
 	if err != nil {
-		jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
+		jsonErrorCode(w, "crowdsec_unavailable", map[string]any{"detail": err.Error()}, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
 		return
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		b, _ := io.ReadAll(resp.Body)
-		jsonError(w, "failed to add decision: "+strings.TrimSpace(string(b)), resp.StatusCode)
+		jsonErrorCode(w, "decision_add_failed", map[string]any{"detail": strings.TrimSpace(string(b))}, "failed to add decision: "+strings.TrimSpace(string(b)), resp.StatusCode)
 		return
 	}
 	csCacheReset()
@@ -940,12 +950,12 @@ func (a *App) crowdsecAddDecisionHandler(w http.ResponseWriter, r *http.Request)
 
 func (a *App) crowdsecProxy(w http.ResponseWriter, r *http.Request, method, csPath string) {
 	if a.cfg.CrowdSecLAPIURL == "" {
-		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		jsonErrorCode(w, "crowdsec_missing", nil, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
 		return
 	}
 	resp, err := a.csRequest(r.Context(), method, csPath, r.Body, true)
 	if err != nil {
-		jsonError(w, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
+		jsonErrorCode(w, "crowdsec_unavailable", map[string]any{"detail": err.Error()}, "crowdsec unavailable: "+err.Error(), http.StatusBadGateway)
 		return
 	}
 	defer resp.Body.Close()
@@ -1075,7 +1085,7 @@ func (a *App) backupsListHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) backupCreateHandler(w http.ResponseWriter, r *http.Request) {
 	names, err := a.createBackup()
 	if err != nil {
-		jsonError(w, "backup failed: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "backup_failed", map[string]any{"detail": err.Error()}, "backup failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	last := ""
@@ -1126,13 +1136,13 @@ func (a *App) createBackup() ([]string, error) {
 func (a *App) restoreHandler(w http.ResponseWriter, r *http.Request) {
 	filename := strings.TrimPrefix(r.URL.Path, "/api/restore/")
 	if _, ok := safeBaseName(filename); !ok || !strings.HasSuffix(filename, ".bak") {
-		jsonError(w, "invalid filename", http.StatusBadRequest)
+		jsonErrorCode(w, "invalid_file_name", nil, "invalid filename", http.StatusBadRequest)
 		return
 	}
 	bakPath := filepath.Join(a.backupDir(), filename)
 	data, err := os.ReadFile(bakPath)
 	if err != nil {
-		jsonError(w, "cannot read backup: "+err.Error(), http.StatusNotFound)
+		jsonErrorCode(w, "backup_unreadable", map[string]any{"detail": err.Error()}, "cannot read backup: "+err.Error(), http.StatusNotFound)
 		return
 	}
 	origName := bakBaseName(filename)
@@ -1147,7 +1157,7 @@ func (a *App) restoreHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if sameName > 1 {
-		jsonError(w, origName+" matches more than one certificate store, so this backup cannot be restored safely", http.StatusConflict)
+		jsonErrorCode(w, "acme_store_ambiguous", map[string]any{"file": origName}, origName+" matches more than one certificate store, so this backup cannot be restored safely", http.StatusConflict)
 		return
 	}
 	var dest string
@@ -1158,7 +1168,7 @@ func (a *App) restoreHandler(w http.ResponseWriter, r *http.Request) {
 		info, _ := os.Stat(cfgPath)
 		isDir := info != nil && info.IsDir()
 		if !dynamicConfigName(origName) && (isDir || origName != filepath.Base(cfgPath)) {
-			jsonError(w, "no config file matches "+origName, http.StatusBadRequest)
+			jsonErrorCode(w, "no_config_match", map[string]any{"file": origName}, "no config file matches "+origName, http.StatusBadRequest)
 			return
 		}
 		if isDir {
@@ -1171,11 +1181,11 @@ func (a *App) restoreHandler(w http.ResponseWriter, r *http.Request) {
 	defer a.cfgMu.Unlock()
 	if err := a.createFileBak(dest, origName); err != nil {
 		a.failuref("backup", "pre-restore backup of %s failed: %v", dest, err)
-		jsonError(w, "backup failed, nothing was restored: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "backup_failed_nothing_restored", map[string]any{"detail": err.Error()}, "backup failed, nothing was restored: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if err := atomicWrite(dest, data); err != nil {
-		jsonError(w, "restore failed: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "restore_failed", map[string]any{"detail": err.Error()}, "restore failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	jsonOK(w, map[string]any{"ok": true})
@@ -1184,27 +1194,27 @@ func (a *App) restoreHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) restoreCertStore(w http.ResponseWriter, r *http.Request, path string, data []byte) {
 	restart := a.cfg.RestartMethod == "proxy" || a.cfg.RestartMethod == "socket" || a.cfg.RestartMethod == "poison-pill"
 	if !restart {
-		jsonError(w, "no RESTART_METHOD is configured on this agent, and Traefik only reads acme.json at startup", http.StatusForbidden)
+		jsonErrorCode(w, "acme_needs_restart", nil, "no RESTART_METHOD is configured on this agent, and Traefik only reads acme.json at startup", http.StatusForbidden)
 		return
 	}
 	if trimmed := bytes.TrimSpace(data); len(trimmed) > 0 && !json.Valid(trimmed) {
-		jsonError(w, "this backup is not valid JSON, nothing was restored", http.StatusBadRequest)
+		jsonErrorCode(w, "backup_not_json", nil, "this backup is not valid JSON, nothing was restored", http.StatusBadRequest)
 		return
 	}
 	acmeMu.Lock()
 	defer acmeMu.Unlock()
 	if !acmeWritable(path) {
-		jsonError(w, filepath.Base(path)+" is mounted read only on this agent, nothing was restored", http.StatusForbidden)
+		jsonErrorCode(w, "read_only_not_restored", map[string]any{"file": filepath.Base(path)}, filepath.Base(path)+" is mounted read only on this agent, nothing was restored", http.StatusForbidden)
 		return
 	}
 	current, err := os.ReadFile(path)
 	if err != nil {
-		jsonError(w, "could not read "+filepath.Base(path)+": "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "file_unreadable", map[string]any{"file": filepath.Base(path), "detail": err.Error()}, "could not read "+filepath.Base(path)+": "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if _, err := acmeBackupBytes(path, current, a); err != nil {
 		a.failuref("backup", "pre-restore backup of %s failed: %v", path, err)
-		jsonError(w, "backup failed, nothing was restored: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "backup_failed_nothing_restored", map[string]any{"detail": err.Error()}, "backup failed, nothing was restored: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if err := acmeWriteInPlace(path, data, current); err != nil {
@@ -1212,7 +1222,7 @@ func (a *App) restoreCertStore(w http.ResponseWriter, r *http.Request, path stri
 		if _, changed := err.(acmeChangedError); changed {
 			status = http.StatusConflict
 		}
-		jsonError(w, "restore failed: "+err.Error(), status)
+		jsonErrorCode(w, "restore_failed", map[string]any{"detail": err.Error()}, "restore failed: "+err.Error(), status)
 		return
 	}
 	restarted := a.restartAfterCertChange(r)
@@ -1222,12 +1232,12 @@ func (a *App) restoreCertStore(w http.ResponseWriter, r *http.Request, path stri
 func (a *App) backupDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	filename := strings.TrimPrefix(r.URL.Path, "/api/backup/delete/")
 	if _, ok := safeBaseName(filename); !ok || !strings.HasSuffix(filename, ".bak") {
-		jsonError(w, "invalid filename", http.StatusBadRequest)
+		jsonErrorCode(w, "invalid_file_name", nil, "invalid filename", http.StatusBadRequest)
 		return
 	}
 	path := filepath.Join(a.backupDir(), filename)
 	if err := os.Remove(path); err != nil {
-		jsonError(w, "delete failed: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "delete_failed", map[string]any{"detail": err.Error()}, "delete failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	jsonOK(w, map[string]any{"ok": true})
@@ -1498,20 +1508,20 @@ func (a *App) gitTestHandler(w http.ResponseWriter, r *http.Request) {
 		token = a.cfg.GitBackupToken
 	}
 	if repo == "" {
-		jsonError(w, "no repository URL configured", http.StatusBadRequest)
+		jsonErrorCode(w, "git_no_repo", nil, "no repository URL configured", http.StatusBadRequest)
 		return
 	}
 	if !validGitURL(repo) {
-		jsonError(w, "invalid repository URL scheme", http.StatusBadRequest)
+		jsonErrorCode(w, "git_bad_scheme", nil, "invalid repository URL scheme", http.StatusBadRequest)
 		return
 	}
 	if !ssrfOK(repo) {
-		jsonError(w, "target address not allowed", http.StatusBadRequest)
+		jsonErrorCode(w, "target_not_allowed", nil, "target address not allowed", http.StatusBadRequest)
 		return
 	}
 	tmpDir, err := os.MkdirTemp("", "tma-git-test-*")
 	if err != nil {
-		jsonError(w, "internal error", http.StatusInternalServerError)
+		jsonErrorCode(w, "internal_error", nil, "internal error", http.StatusInternalServerError)
 		return
 	}
 	defer os.RemoveAll(tmpDir)
@@ -1561,7 +1571,7 @@ func (a *App) gitCommitsHandler(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) gitDiffHandler(w http.ResponseWriter, r *http.Request, sha string) {
 	if !shaRe.MatchString(sha) {
-		jsonError(w, "invalid sha", http.StatusBadRequest)
+		jsonErrorCode(w, "invalid_sha", nil, "invalid sha", http.StatusBadRequest)
 		return
 	}
 	repoDir := a.gitRepoDir()
@@ -1572,7 +1582,7 @@ func (a *App) gitDiffHandler(w http.ResponseWriter, r *http.Request, sha string)
 	stat, _, _ := a.gitRun([]string{"show", "--stat", "--format=", sha}, repoDir)
 	changed, _, rc := a.gitRun([]string{"diff-tree", "--no-commit-id", "-r", "--name-status", sha}, repoDir)
 	if rc != 0 {
-		jsonError(w, "diff failed", http.StatusInternalServerError)
+		jsonErrorCode(w, "diff_failed", nil, "diff failed", http.StatusInternalServerError)
 		return
 	}
 	type fileDiff struct {
@@ -1660,28 +1670,28 @@ func (a *App) gitRestoreTargets(repoDir, sha string) ([]gitRestoreItem, bool) {
 
 func (a *App) gitRestoreHandler(w http.ResponseWriter, r *http.Request, sha string) {
 	if !shaRe.MatchString(sha) {
-		jsonError(w, "invalid sha", http.StatusBadRequest)
+		jsonErrorCode(w, "invalid_sha", nil, "invalid sha", http.StatusBadRequest)
 		return
 	}
 	a.cfgMu.Lock()
 	defer a.cfgMu.Unlock()
 	repoDir := a.gitRepoDir()
 	if _, err := os.Stat(filepath.Join(repoDir, ".git")); err != nil {
-		jsonError(w, "git repo not initialized", http.StatusBadRequest)
+		jsonErrorCode(w, "git_not_initialized", nil, "git repo not initialized", http.StatusBadRequest)
 		return
 	}
 	items, found := a.gitRestoreTargets(repoDir, sha)
 	if !found {
-		jsonError(w, "commit not found", http.StatusNotFound)
+		jsonErrorCode(w, "commit_not_found", nil, "commit not found", http.StatusNotFound)
 		return
 	}
 	if len(items) == 0 {
-		jsonError(w, "the commit holds no config files for this agent", http.StatusNotFound)
+		jsonErrorCode(w, "commit_no_configs", nil, "the commit holds no config files for this agent", http.StatusNotFound)
 		return
 	}
 	if _, err := a.createBackup(); err != nil {
 		a.failuref("backup", "pre-restore backup failed: %v", err)
-		jsonError(w, "backup failed, nothing was restored: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "backup_failed_nothing_restored", map[string]any{"detail": err.Error()}, "backup failed, nothing was restored: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	for _, item := range items {
@@ -1694,7 +1704,7 @@ func (a *App) gitRestoreHandler(w http.ResponseWriter, r *http.Request, sha stri
 		}
 		if err != nil {
 			a.failuref("git", "restore of %s stopped at %s: %v", sha, item.repoPath, err)
-			jsonError(w, "restore stopped at "+item.repoPath+": "+err.Error()+". A backup was taken before the restore", http.StatusInternalServerError)
+			jsonErrorCode(w, "restore_stopped", map[string]any{"file": item.repoPath, "detail": err.Error()}, "restore stopped at "+item.repoPath+": "+err.Error()+". A backup was taken before the restore", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -1751,7 +1761,7 @@ func (a *App) certsHandler(w http.ResponseWriter, r *http.Request) {
 
 	paths := acmeJSONPaths(a.cfg.ACMEJSONPath)
 	if len(paths) == 0 {
-		jsonOK(w, map[string]any{"certs": []any{}, "error": "ACME_JSON_PATH not configured"})
+		jsonOK(w, map[string]any{"certs": []any{}, "error": "ACME_JSON_PATH not configured", "code": "acme_path_missing"})
 		return
 	}
 
@@ -1871,7 +1881,7 @@ func (a *App) routeRawGetHandler(w http.ResponseWriter, r *http.Request, routeID
 	var scanPaths []string
 	if cf != "" {
 		if _, ok := safeBaseName(cf); !ok {
-			jsonError(w, "invalid config file", http.StatusBadRequest)
+			jsonErrorCode(w, "invalid_config_file", nil, "invalid config file", http.StatusBadRequest)
 			return
 		}
 		scanPaths = []string{filepath.Join(a.cfg.ConfigPath, cf)}
@@ -1910,14 +1920,14 @@ func (a *App) routeRawGetHandler(w http.ResponseWriter, r *http.Request, routeID
 			}
 			raw, err := yaml.Marshal(out)
 			if err != nil {
-				jsonError(w, "failed to marshal YAML", http.StatusInternalServerError)
+				jsonErrorCode(w, "yaml_marshal_failed", nil, "failed to marshal YAML", http.StatusInternalServerError)
 				return
 			}
 			jsonOK(w, map[string]any{"raw": string(raw), "configFile": filepath.Base(p), "proto": proto})
 			return
 		}
 	}
-	jsonError(w, "Route not found", http.StatusNotFound)
+	jsonErrorCode(w, "route_not_found", nil, "Route not found", http.StatusNotFound)
 }
 
 func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeID string) {
@@ -1925,7 +1935,7 @@ func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeI
 		Content string `json:"content"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || strings.TrimSpace(body.Content) == "" {
-		jsonError(w, "invalid request body", http.StatusBadRequest)
+		jsonErrorCode(w, "invalid_body", nil, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
@@ -1939,7 +1949,7 @@ func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeI
 
 	var newData map[string]any
 	if err := yaml.Unmarshal([]byte(body.Content), &newData); err != nil {
-		jsonError(w, "invalid YAML: "+err.Error(), http.StatusBadRequest)
+		jsonErrorCode(w, "invalid_yaml", map[string]any{"detail": err.Error()}, "invalid YAML: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -1949,7 +1959,7 @@ func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeI
 	var targetPath string
 	if cf != "" {
 		if _, ok := safeBaseName(cf); !ok {
-			jsonError(w, "invalid config file", http.StatusBadRequest)
+			jsonErrorCode(w, "invalid_config_file", nil, "invalid config file", http.StatusBadRequest)
 			return
 		}
 		targetPath = filepath.Join(a.cfg.ConfigPath, cf)
@@ -1977,7 +1987,7 @@ func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeI
 		}
 	}
 	if targetPath == "" {
-		jsonError(w, "Route not found", http.StatusNotFound)
+		jsonErrorCode(w, "route_not_found", nil, "Route not found", http.StatusNotFound)
 		return
 	}
 
@@ -2041,16 +2051,16 @@ func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeI
 
 	if err := a.createFileBak(targetPath, filepath.Base(targetPath)); err != nil {
 		a.failuref("backup", "pre-write backup of %s failed: %v", targetPath, err)
-		jsonError(w, "backup failed, nothing was written: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "backup_failed_nothing_written", map[string]any{"detail": err.Error()}, "backup failed, nothing was written: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	out, err := yaml.Marshal(config)
 	if err != nil {
-		jsonError(w, "failed to marshal YAML", http.StatusInternalServerError)
+		jsonErrorCode(w, "yaml_marshal_failed", nil, "failed to marshal YAML", http.StatusInternalServerError)
 		return
 	}
 	if err := atomicWrite(targetPath, out); err != nil {
-		jsonError(w, "write failed: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "write_failed", map[string]any{"detail": err.Error()}, "write failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if a.cfg.GitBackupEnabled && a.cfg.GitBackupAutoPush && a.cfg.GitBackupRepo != "" {
@@ -2068,7 +2078,7 @@ func (a *App) logsHandler(w http.ResponseWriter, r *http.Request) {
 	if values, present := r.URL.Query()["lines"]; present {
 		n, err := strconv.Atoi(strings.TrimSpace(values[0]))
 		if err != nil || n < 1 {
-			jsonError(w, "Invalid lines parameter", http.StatusBadRequest)
+			jsonErrorCode(w, "invalid_lines", nil, "Invalid lines parameter", http.StatusBadRequest)
 			return
 		}
 		linesReq = n
@@ -2077,12 +2087,12 @@ func (a *App) logsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if a.cfg.AccessLogPath == "" {
-		jsonOK(w, map[string]any{"error": "ACCESS_LOG_PATH not configured", "lines": []any{}})
+		jsonOK(w, map[string]any{"error": "ACCESS_LOG_PATH not configured", "code": "access_log_missing", "lines": []any{}})
 		return
 	}
 	f, err := os.Open(a.cfg.AccessLogPath)
 	if err != nil {
-		jsonOK(w, map[string]any{"error": "Access log not found at " + a.cfg.AccessLogPath, "lines": []any{}})
+		jsonOK(w, map[string]any{"error": "Access log not found at " + a.cfg.AccessLogPath, "code": "access_log_not_found", "params": map[string]any{"path": a.cfg.AccessLogPath}, "lines": []any{}})
 		return
 	}
 	defer f.Close()
@@ -2124,7 +2134,7 @@ func (a *App) logsHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) gitResetHandler(w http.ResponseWriter, r *http.Request) {
 	repoDir := a.gitRepoDir()
 	if err := os.RemoveAll(repoDir); err != nil {
-		jsonError(w, "reset failed: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "reset_failed", map[string]any{"detail": err.Error()}, "reset failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	log.Printf("git repo directory reset by user")
@@ -2558,7 +2568,7 @@ func csSummaryVersion(decisionIDs, alertIDs []int64, decisionsOK, alertsOK bool)
 
 func (a *App) crowdsecSummaryHandler(w http.ResponseWriter, r *http.Request) {
 	if a.cfg.CrowdSecLAPIURL == "" {
-		jsonError(w, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
+		jsonErrorCode(w, "crowdsec_missing", nil, "CROWDSEC_LAPI_URL not configured", http.StatusNotFound)
 		return
 	}
 	q := r.URL.Query()
@@ -2616,14 +2626,14 @@ func (a *App) certsStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	restart := a.cfg.RestartMethod == "proxy" || a.cfg.RestartMethod == "socket" || a.cfg.RestartMethod == "poison-pill"
 	writable := len(paths) > 0 && len(found) == len(paths)
-	reason := ""
+	reason, reasonCode := "", ""
 	switch {
 	case len(paths) == 0:
-		reason = "ACME_JSON_PATH is not set on this agent"
+		reason, reasonCode = "ACME_JSON_PATH is not set on this agent", "acme_path_missing"
 	case !writable:
-		reason = "acme.json is mounted read only on this agent"
+		reason, reasonCode = "acme.json is mounted read only on this agent", "acme_read_only"
 	case !restart:
-		reason = "no RESTART_METHOD is configured on this agent, and Traefik only reads acme.json at startup"
+		reason, reasonCode = "no RESTART_METHOD is configured on this agent, and Traefik only reads acme.json at startup", "acme_needs_restart"
 	}
 	method := ""
 	if restart {
@@ -2631,7 +2641,7 @@ func (a *App) certsStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonOK(w, map[string]any{
 		"available": writable && restart, "writable": writable,
-		"restart_method": method, "reason": reason, "paths": found,
+		"restart_method": method, "reason": reason, "reason_code": reasonCode, "paths": found,
 	})
 }
 
@@ -2655,17 +2665,17 @@ func (e acmeChangedError) Error() string {
 func (a *App) certsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	var body certDeleteBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || len(body.Certs) == 0 {
-		jsonError(w, "nothing was selected", http.StatusBadRequest)
+		jsonErrorCode(w, "nothing_selected", nil, "nothing was selected", http.StatusBadRequest)
 		return
 	}
 	paths := acmeJSONPaths(a.cfg.ACMEJSONPath)
 	if len(paths) == 0 {
-		jsonError(w, "ACME_JSON_PATH is not set on this agent", http.StatusForbidden)
+		jsonErrorCode(w, "acme_path_missing", nil, "ACME_JSON_PATH is not set on this agent", http.StatusForbidden)
 		return
 	}
 	restart := a.cfg.RestartMethod == "proxy" || a.cfg.RestartMethod == "socket" || a.cfg.RestartMethod == "poison-pill"
 	if !restart {
-		jsonError(w, "no RESTART_METHOD is configured on this agent, and Traefik only reads acme.json at startup", http.StatusForbidden)
+		jsonErrorCode(w, "acme_needs_restart", nil, "no RESTART_METHOD is configured on this agent, and Traefik only reads acme.json at startup", http.StatusForbidden)
 		return
 	}
 	wanted := map[string]bool{}
@@ -2678,7 +2688,7 @@ func (a *App) certsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	defer acmeMu.Unlock()
 	for _, path := range paths {
 		if !acmeWritable(path) {
-			jsonError(w, filepath.Base(path)+" is mounted read only on this agent, nothing was changed", http.StatusForbidden)
+			jsonErrorCode(w, "read_only_not_changed", map[string]any{"file": filepath.Base(path)}, filepath.Base(path)+" is mounted read only on this agent, nothing was changed", http.StatusForbidden)
 			return
 		}
 	}
@@ -2708,7 +2718,7 @@ func (a *App) certsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 				a.failuref("certs", "%s", msg)
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusInternalServerError)
-				_ = json.NewEncoder(w).Encode(map[string]any{"error": msg, "removed": removed, "partial": true, "backup": filepath.Base(saved), "restarted": restarted})
+				_ = json.NewEncoder(w).Encode(map[string]any{"error": msg, "code": "certs_partial", "params": map[string]any{"removed": removed, "file": filepath.Base(p.path), "detail": err.Error()}, "removed": removed, "partial": true, "backup": filepath.Base(saved), "restarted": restarted})
 				return
 			}
 			status := http.StatusInternalServerError
@@ -2724,7 +2734,7 @@ func (a *App) certsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if removed == 0 {
-		jsonError(w, "no matching certificate was found", http.StatusNotFound)
+		jsonErrorCode(w, "no_matching_cert", nil, "no matching certificate was found", http.StatusNotFound)
 		return
 	}
 	restarted := a.restartAfterCertChange(r)

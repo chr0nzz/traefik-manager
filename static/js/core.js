@@ -52,17 +52,17 @@ let _visibleTabsCache = {};
 let _localTabsCache   = {};
 
 const TAB_DEFS = [
-    { id: 'dashboard',     label: 'Dashboard',       icon: 'ph-house' },
-    { id: 'services',      label: 'Routes',          icon: 'ph-arrows-split' },
-    { id: 'middlewares',   label: 'Middlewares',     icon: 'ph-stack' },
-    { id: 'live',          label: 'Services',        icon: 'ph-hard-drives' },
-    { id: 'routemap',      label: 'Route Map',       icon: 'ph-tree-structure' },
-    { id: 'logs',          label: 'Logs',            icon: 'ph-receipt' },
+    { id: 'dashboard',     label: tc('label', 'Dashboard'),       icon: 'ph-house' },
+    { id: 'services',      label: tc('label', 'Routes'),          icon: 'ph-arrows-split' },
+    { id: 'middlewares',   label: tc('label', 'Middlewares'),     icon: 'ph-stack' },
+    { id: 'live',          label: tc('label', 'Services'),        icon: 'ph-hard-drives' },
+    { id: 'routemap',      label: t('Route Map'),       icon: 'ph-tree-structure' },
+    { id: 'logs',          label: tc('label', 'Logs'),            icon: 'ph-receipt' },
     { id: 'crowdsec',      label: 'CrowdSec',        icon: 'ph-shield' },
-    { id: 'certs',         label: 'Certs',           icon: 'ph-shield-check' },
-    { id: 'tls',           label: 'TLS Options',     icon: 'ph-lock-laminated' },
-    { id: 'plugins',       label: 'Plugins',         icon: 'ph-puzzle-piece' },
-    { id: 'static',        label: 'Static Config',   icon: 'ph-file-code' },
+    { id: 'certs',         label: tc('label', 'Certs'),           icon: 'ph-shield-check' },
+    { id: 'tls',           label: t('TLS Options'),     icon: 'ph-lock-laminated' },
+    { id: 'plugins',       label: tc('label', 'Plugins'),         icon: 'ph-puzzle-piece' },
+    { id: 'static',        label: t('Static Config'),   icon: 'ph-file-code' },
     { id: 'docker',        label: 'Docker',          icon: 'ph-cube' },
     { id: 'kubernetes',    label: 'Kubernetes',      icon: 'ph-circles-three' },
     { id: 'swarm',         label: 'Swarm',           icon: 'ph-graph' },
@@ -73,9 +73,9 @@ const TAB_DEFS = [
     { id: 'etcd',          label: 'etcd',            icon: 'ph-database' },
     { id: 'consul',        label: 'Consul KV',       icon: 'ph-database' },
     { id: 'zookeeper',     label: 'ZooKeeper',       icon: 'ph-database' },
-    { id: 'internal',      label: 'Internal',        icon: 'ph-traffic-signal' },
-    { id: 'http_provider', label: 'HTTP Provider',   icon: 'ph-link' },
-    { id: 'file_external', label: 'File (external)', icon: 'ph-file-text' },
+    { id: 'internal',      label: tc('label', 'Internal'),        icon: 'ph-traffic-signal' },
+    { id: 'http_provider', label: t('HTTP Provider'),   icon: 'ph-link' },
+    { id: 'file_external', label: t('File (external)'), icon: 'ph-file-text' },
 ];
 const TAB_BY_ID = Object.fromEntries(TAB_DEFS.map(t => [t.id, t]));
 
@@ -91,10 +91,10 @@ function setTabCount(tab, n) {
 }
 
 const SIDE_NAV_GROUPS = [
-    { label: 'Traffic',        tabs: ['dashboard', 'services', 'middlewares', 'live', 'routemap'] },
-    { label: 'Observability',  tabs: ['logs', 'crowdsec'] },
-    { label: 'Infrastructure', tabs: ['certs', 'tls', 'plugins', 'static'] },
-    { label: 'Providers',      tabs: ['docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'internal'] },
+    { label: tc('label', 'Traffic'),        tabs: ['dashboard', 'services', 'middlewares', 'live', 'routemap'] },
+    { label: tc('label', 'Observability'),  tabs: ['logs', 'crowdsec'] },
+    { label: tc('label', 'Infrastructure'), tabs: ['certs', 'tls', 'plugins', 'static'] },
+    { label: tc('label', 'Providers'),      tabs: ['docker', 'kubernetes', 'swarm', 'nomad', 'ecs', 'consulcatalog', 'redis', 'etcd', 'consul', 'zookeeper', 'http_provider', 'file_external', 'internal'] },
 ];
 
 function _tabVisible(tab) {
@@ -197,7 +197,7 @@ function _initDetailPanelSizers() {
         if (panel.querySelector('.detail-panel-sizer')) return;
         const grip = document.createElement('div');
         grip.className = 'detail-panel-sizer';
-        grip.title = 'Drag to resize - double-click to reset';
+        grip.title = t('Drag to resize - double-click to reset');
         panel.appendChild(grip);
         let dragging = false;
         const reset = () => { panel.style.width = ''; panel.style.maxWidth = ''; };
@@ -331,9 +331,9 @@ function switchTab(tab) {
 }
 
 function _buildConfigSelectOptions(sel, files, allowNew) {
-    sel.innerHTML = '<option value="">Select a file...</option>';
+    sel.innerHTML = `<option value="">${th('Select a file...')}</option>`;
     if (allowNew) {
-        const o = document.createElement('option'); o.value = '__new__'; o.textContent = '+ New file...'; sel.appendChild(o);
+        const o = document.createElement('option'); o.value = '__new__'; o.textContent = t('+ New file...'); sel.appendChild(o);
     }
     files.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f; sel.appendChild(o); });
 }
@@ -395,7 +395,7 @@ function _dText(v, cls) {
 }
 
 function _dBool(on, yes, no) {
-    return `<span class="d-flat ${on ? 'd-on' : 'd-off'}">${on ? (yes || 'Yes') : (no || 'No')}</span>`;
+    return `<span class="d-flat ${on ? 'd-on' : 'd-off'}">${_esc(on ? yes || tc('label', 'Yes') : no || tc('label', 'No'))}</span>`;
 }
 
 function _dList(items, cls) {
@@ -408,14 +408,16 @@ function _dState(state) {
     const s = String(state || '').toLowerCase();
     const dot = s === 'enabled' ? 'status-online' : (s === 'disabled' || s === 'error') ? 'status-offline' : 'status-unknown';
     const cls = s === 'enabled' ? 'd-on' : (s === 'disabled' || s === 'error') ? 'd-bad' : 'd-off';
-    return `<span class="d-state d-flat ${cls}"><span class="status-dot ${dot}"></span>${_esc(state || 'Unknown')}</span>`;
+    const label = s === 'enabled' ? tc('status', 'Enabled') : s === 'disabled' ? tc('status', 'Disabled') : s === 'error' ? tc('status', 'Error')
+        : s === 'warning' ? tc('status', 'Warning') : (state || t('Unknown'));
+    return `<span class="d-state d-flat ${cls}"><span class="status-dot ${dot}"></span>${_esc(label)}</span>`;
 }
 
 function renderSection(title, icon, rows) {
     const rowsHtml = rows.map(([key, val, isHtml]) => {
         const displayVal = isHtml ? val
             : `<span class="font-mono" style="color:var(--text)">${String(val).replace(/</g, '&lt;')}</span>`;
-        return `<div class="detail-key">${key}</div><div class="detail-val">${displayVal}</div>`;
+        return `<div class="detail-key">${_esc(key)}</div><div class="detail-val">${displayVal}</div>`;
     }).join('');
     return `<div class="detail-section">
         <div class="detail-section-header">
@@ -444,10 +446,10 @@ function _dCount(n) {
 }
 
 async function _errText(res, fallback) {
-    if (res && res.status === 502) return 'Cannot reach the agent. Check that it is running and reachable.';
-    if (res && res.status === 401) { tabCacheClear(); return 'Session expired. Sign in again.'; }
-    if (res && res.status === 403) return 'Not allowed. Your session may have expired.';
-    if (res && res.status === 404) return fallback + ' (not found)';
+    if (res && res.status === 502) return t('Cannot reach the agent. Check that it is running and reachable.');
+    if (res && res.status === 401) { tabCacheClear(); return t('Session expired. Sign in again.'); }
+    if (res && res.status === 403) return t('Not allowed. Your session may have expired.');
+    if (res && res.status === 404) return t('{fallback} (not found)', { fallback });
     try {
         const data = await res.json();
         const detail = data.error || data.message;
@@ -458,11 +460,10 @@ async function _errText(res, fallback) {
 
 
 function _passwordError(pw, label) {
-    label = label || 'Password';
-    if (pw.length < 8) return label + ' must be at least 8 characters.';
+    label = label || t('Password');
+    if (pw.length < 8) return t('{label} must be at least 8 characters.', { label });
     if (new TextEncoder().encode(pw).length > 72) {
-        return label + ' must be 72 bytes or fewer, which is the bcrypt limit. '
-             + 'Accented and non-Latin characters take more than one byte each.';
+        return t('{label} must be 72 bytes or fewer, which is the bcrypt limit. Accented and non-Latin characters take more than one byte each.', { label });
     }
     return null;
 }
@@ -471,7 +472,7 @@ function _passwordError(pw, label) {
 function _netErrText(err, fallback) {
     const msg = String((err && err.message) || err || '');
     if (/Failed to fetch|NetworkError|Load failed/i.test(msg)) {
-        return 'No response from Traefik Manager. Check that it is still running.';
+        return t('No response from Traefik Manager. Check that it is still running.');
     }
     return msg ? `${fallback}: ${msg.slice(0, 200)}` : fallback;
 }
@@ -610,8 +611,8 @@ async function refreshStorageBanner() {
     el.innerHTML = `<div class="flex items-start gap-2">
             <i class="ph-bold ph-warning-octagon flex-shrink-0 mt-0.5" style="color:var(--red)"></i>
             <div class="text-xs">
-                <div class="font-semibold" style="color:var(--text)">Storage is not writable</div>
-                <div class="mt-1" style="color:var(--muted)">Settings, backups and scheduled checks will not survive a restart. Check the volume or bind mount for:</div>
+                <div class="font-semibold" style="color:var(--text)">${th('Storage is not writable')}</div>
+                <div class="mt-1" style="color:var(--muted)">${th('Settings, backups and scheduled checks will not survive a restart. Check the volume or bind mount for:')}</div>
                 ${problems.map(p => `<div class="mt-1 font-mono" style="color:var(--muted)">${_esc(p.label)}: ${_esc(p.path)} <span style="opacity:.75">(${_esc(p.error)})</span></div>`).join('')}
             </div>
         </div>`;
@@ -732,6 +733,7 @@ const TM_PREF_DEFAULTS = {
     showStatCards: true, compactStatCards: false, showEntrypoints: true,
     showDocsLink: true, showApiLink: false, showShortcutsBtn: true,
     showIpDiagBtn: true, showTraefikBadge: true, showTmBadge: true,
+    showLangPicker: true,
     showRouteIcons: false,
     routeViewMode: 'grid', mwViewMode: 'grid', svcViewMode: 'grid',
     statBarScope: 'all',
@@ -826,6 +828,50 @@ function cycleTheme() {
     setTheme(next);
 }
 
+function toggleLangMenu() {
+    const menu = document.getElementById('langPickerMenu');
+    if (!menu) return;
+    const opening = !menu.classList.contains('open');
+    document.querySelectorAll('.notif-panel.open').forEach(p => p.classList.remove('open'));
+    if (opening) menu.classList.add('open');
+}
+
+document.addEventListener('click', e => {
+    const wrap = document.getElementById('langPickerWrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('langPickerMenu')?.classList.remove('open');
+    }
+});
+
+function _tmLanguageUrl() {
+    const tags = window.TM_LANGUAGE_TAGS || [];
+    let path = _tmAppPath(window.location.pathname);
+    const first = path.split('/')[1] || '';
+    if (tags.includes(first)) path = path.slice(first.length + 1) || '/';
+    const params = new URLSearchParams(window.location.search);
+    params.delete('lang');
+    const query = params.toString();
+    return tmUrl(path) + (query ? '?' + query : '') + window.location.hash;
+}
+
+function setLanguage(tag) {
+    const value = tag || '';
+    document.getElementById('langPickerMenu')?.classList.remove('open');
+    if (value === (window.TM_LANGUAGE || '')) return;
+    fetch('/api/settings/language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+        body: JSON.stringify({ default_language: value })
+    })
+        .then(r => r.json().then(d => ({ ok: r.ok, d })))
+        .then(({ ok, d }) => {
+            if (!ok || !d.success) throw new Error(d.error || t('save failed'));
+            window.TM_LANGUAGE = d.default_language;
+            window.location.href = _tmLanguageUrl();
+        })
+        .catch(() => showToast(t('Could not save the language'), 'error'));
+}
+
 const _autofillAllowed = new Set(['pwCurrent', 'pwNew', 'pwConfirm', 'otpVerifyCode']);
 
 function _guardAutofillField(el) {
@@ -879,7 +925,7 @@ function installPWA() {
 function _emptyMountState({ icon, title, description, steps, note }) {
     const stepHtml = steps.map((step, i) => `
         <div class="text-left" style="max-width:480px;margin:0 auto">
-            <p class="text-xs mb-2" style="color:var(--muted)">${steps.length > 1 ? `<span class="font-bold" style="color:var(--text)">Step ${i+1}.</span> ` : ''}${step.label}</p>
+            <p class="text-xs mb-2" style="color:var(--muted)">${steps.length > 1 ? `<span class="font-bold" style="color:var(--text)">${th('Step {n}.', { n: i + 1 })}</span> ` : ''}${step.label}</p>
             <div class="relative rounded-lg overflow-hidden" style="background:var(--input-bg);border:1px solid var(--border)">
                 <pre class="text-xs font-mono px-4 py-3 pr-16 leading-relaxed overflow-x-auto" style="color:var(--blue);white-space:pre">${step.code}</pre>
                 <button onclick="_copyCode(this, ${JSON.stringify(step.code)})"
@@ -887,7 +933,7 @@ function _emptyMountState({ icon, title, description, steps, note }) {
                     style="background:var(--btn-secondary-bg);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all 0.15s"
                     onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
                     onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-                    <i class="ph-bold ph-copy text-sm"></i> Copy
+                    <i class="ph-bold ph-copy text-sm"></i> ${thc('button', 'Copy')}
                 </button>
             </div>
         </div>`).join('<div style="height:12px"></div>');
@@ -906,7 +952,7 @@ function _emptyMountState({ icon, title, description, steps, note }) {
 function _copyCode(btn, text) {
     navigator.clipboard.writeText(text).then(() => {
         const orig = btn.innerHTML;
-        btn.innerHTML = '<i class="ph-bold ph-check text-sm"></i> Copied';
+        btn.innerHTML = `<i class="ph-bold ph-check text-sm"></i> ${thc('label', 'Copied')}`;
         btn.style.color      = 'var(--green)';
         btn.style.borderColor = 'var(--green)';
         setTimeout(() => {
@@ -945,7 +991,7 @@ async function _populateTlsOptionsSelect() {
     const current = sel.value;
     try {
         const names = await _tlsOptionNames();
-        sel.innerHTML = `<option value="">None (default)</option>` + names.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('');
+        sel.innerHTML = `<option value="">${th('None (default)')}</option>${names.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('')}`;
         sel.value = current;
     } catch(e) {}
 }
@@ -1101,7 +1147,7 @@ function _geoPanelHtml(panelId, countryData, activeCC, onClearAttr) {
     const top = entries.slice(0, 8).map(([cc, d]) => {
         const sel = activeCC === cc;
         const pct = (d.count / total * 100).toFixed(1);
-        return `<div class="lg-row${sel ? ' lg-row-on' : ''}" role="button" tabindex="0" onclick="${panelId}_click(${_jsArg(cc)})" title="${_esc(d.name)} - ${d.count.toLocaleString()} requests, ${pct}%">
+        return `<div class="lg-row${sel ? ' lg-row-on' : ''}" role="button" tabindex="0" onclick="${panelId}_click(${_jsArg(cc)})" title="${th('{name} - {count} requests, {pct}%', { name: d.name, count: tmHtml(d.count.toLocaleString()), pct: tmHtml(pct) })}">
             <span class="lg-id"><span class="lg-g">${_flagEmoji(cc)}</span><span class="lg-name">${_esc(d.name)}</span></span>
             <span class="lg-bad"></span>
             <span class="lg-n">${d.count.toLocaleString()}</span>
@@ -1109,15 +1155,15 @@ function _geoPanelHtml(panelId, countryData, activeCC, onClearAttr) {
         </div>`;
     }).join('');
     const clear = activeCC
-        ? `<button type="button" class="sig-explore" onclick="${onClearAttr}" title="Clear the country filter">${_flagEmoji(activeCC)} ${_esc((countryData[activeCC] || {}).name || activeCC)} <i class="ph-bold ph-x"></i></button>`
+        ? `<button type="button" class="sig-explore" onclick="${onClearAttr}" title="${th('Clear the country filter')}">${_flagEmoji(activeCC)} ${_esc((countryData[activeCC] || {}).name || activeCC)} <i class="ph-bold ph-x"></i></button>`
         : '';
-    const label = entries.length === 1 ? 'country' : 'countries';
-    const more = entries.length > 8 ? `<div class="lg-tail">+${(entries.length - 8).toLocaleString()} more ${entries.length - 8 === 1 ? 'country' : 'countries'}</div>` : '';
+    const label = entries.length === 1 ? t('country') : t('countries');
+    const more = entries.length > 8 ? `<div class="lg-tail">${thn('+{count} more country', '+{count} more countries', entries.length - 8, { count: tmNumber(entries.length - 8) })}</div>` : '';
     return `<div class="sig-root">
         <section class="sig-ep lg-geo">
             <div class="sig-ep-head">
                 <i class="ph-fill ph-globe-hemisphere-west sig-ep-headic"></i>
-                <span class="sc-sec-label">Geography</span><span class="d-n">${entries.length}</span>
+                <span class="sc-sec-label">${thc('heading', 'Geography')}</span><span class="d-n">${entries.length}</span>
                 <span class="sc-sec-rule"></span>
                 ${clear || `<span class="sig-ep-tot">${entries.length.toLocaleString()} ${label}</span>`}
             </div>
@@ -1158,17 +1204,17 @@ function classifyIp(ip) {
 }
 
 const _IP_CLASS_META = {
-    'public':     ['Public', 'ip-badge-public'],
-    'private':    ['Private', 'ip-badge-private'],
+    'public':     [tc('ip', 'Public'), 'ip-badge-public'],
+    'private':    [tc('ip', 'Private'), 'ip-badge-private'],
     'cgnat':      ['CGNAT', 'ip-badge-cgnat'],
-    'loopback':   ['Loopback', 'ip-badge-muted'],
-    'link-local': ['Link-local', 'ip-badge-muted'],
+    'loopback':   [tc('ip', 'Loopback'), 'ip-badge-muted'],
+    'link-local': [tc('ip', 'Link-local'), 'ip-badge-muted'],
     'unknown':    ['?', 'ip-badge-muted'],
 };
 
 function ipClassBadge(cls) {
     const [label, klass] = _IP_CLASS_META[cls] || _IP_CLASS_META['unknown'];
-    return `<span class="ip-badge ${klass}">${label}</span>`;
+    return `<span class="ip-badge ${klass}">${_esc(label)}</span>`;
 }
 
 function openIpDiagModal() {
@@ -1191,51 +1237,51 @@ function closeIpDiagModal() {
 async function loadIpDiagnostic() {
     const body = document.getElementById('ipDiagBody');
     if (!body) return;
-    body.innerHTML = `<div class="text-xs py-4 text-center" style="color:var(--muted)">Loading...</div>`;
+    body.innerHTML = `<div class="text-xs py-4 text-center" style="color:var(--muted)">${thc('label', 'Loading...')}</div>`;
     let d;
     try {
         d = await fetch('/api/diagnostics/client-ip').then(r => r.json());
     } catch (_) {
-        body.innerHTML = `<div class="text-xs py-4 text-center" style="color:var(--red)">Failed to load diagnostic.</div>`;
+        body.innerHTML = `<div class="text-xs py-4 text-center" style="color:var(--red)">${th('Failed to load diagnostic.')}</div>`;
         return;
     }
     const row = (label, ip, cls, hint) => `
         <div style="border-bottom:1px solid var(--border);padding:8px 0">
             <div class="flex items-center gap-2">
-                <span class="text-xs" style="color:var(--muted);min-width:120px">${label}</span>
+                <span class="text-xs" style="color:var(--muted);min-width:120px">${_esc(label)}</span>
                 <span class="text-xs font-mono truncate" style="color:var(--text);flex:1;min-width:0" title="${_esc(ip || '')}">${ip ? _esc(ip) : '<span style="color:var(--muted)">-</span>'}</span>
                 ${ip ? ipClassBadge(cls || classifyIp(ip)) : ''}
             </div>
-            ${hint ? `<div class="text-xs" style="color:var(--muted);margin-top:5px;padding-left:128px">${hint}</div>` : ''}
+            ${hint ? `<div class="text-xs" style="color:var(--muted);margin-top:5px;padding-left:128px">${_esc(hint)}</div>` : ''}
         </div>`;
 
     const hdrRows = Object.entries(d.headers || {}).map(([k, v]) => `
         <div class="flex items-center gap-2 py-1.5" style="border-bottom:1px solid var(--border)">
             <span class="text-xs font-mono" style="color:var(--muted);min-width:120px">${_esc(k)}</span>
-            <span class="text-xs font-mono truncate" style="color:${v ? 'var(--text)' : 'var(--muted)'};flex:1;min-width:0" title="${_esc(v || '')}">${v ? _esc(v) : 'not set'}</span>
+            <span class="text-xs font-mono truncate" style="color:${v ? 'var(--text)' : 'var(--muted)'};flex:1;min-width:0" title="${_esc(v || '')}">${v ? _esc(v) : th('not set')}</span>
         </div>`).join('');
 
     const spoofable = d.effective_class === 'private' || d.effective_class === 'loopback' || d.effective_class === 'cgnat';
 
     body.innerHTML = `
         <div class="rounded-xl p-3 mb-3" style="background:var(--card);border:1px solid var(--border)">
-            ${row('App sees (client)', d.effective_ip, d.effective_class)}
-            ${row('Socket peer', d.socket_peer, d.socket_peer_class, 'The direct TCP connection - your reverse proxy, or the real client if none.')}
+            ${row(t('App sees (client)'), d.effective_ip, d.effective_class)}
+            ${row(t('Socket peer'), d.socket_peer, d.socket_peer_class, t('The direct TCP connection - your reverse proxy, or the real client if none.'))}
             <div class="flex items-center gap-2 py-2" style="border-bottom:1px solid var(--border)">
-                <span class="text-xs" style="color:var(--muted);min-width:120px">Proxy trusted</span>
-                <span class="text-xs font-mono" style="color:var(--text)">${d.proxy_trusted === undefined ? '-' : (d.proxy_trusted ? 'yes' : 'no')}</span>
+                <span class="text-xs" style="color:var(--muted);min-width:120px">${th('Proxy trusted')}</span>
+                <span class="text-xs font-mono" style="color:var(--text)">${d.proxy_trusted === undefined ? '-' : d.proxy_trusted ? 'yes' : 'no'}</span>
             </div>
             <div class="flex items-center gap-2 py-2">
-                <span class="text-xs" style="color:var(--muted);min-width:120px">Trusted hops</span>
+                <span class="text-xs" style="color:var(--muted);min-width:120px">${th('Trusted hops')}</span>
                 <span class="text-xs font-mono" style="color:var(--text)">${d.proxy_hops}</span>
             </div>
         </div>
-        <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">Forwarding Headers</div>
+        <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">${th('Forwarding Headers')}</div>
         <div class="rounded-xl p-3 mb-3" style="background:var(--card);border:1px solid var(--border)">
             ${hdrRows}
         </div>
-        ${d.proxy_trusted === false && ((d.headers || {})['X-Forwarded-For'] || (d.headers || {})['X-Forwarded-Proto'] || (d.headers || {})['X-Forwarded-Host']) ? `<div class="rounded-xl p-3 mb-3 text-xs" style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);color:var(--text)"><i class="ph-bold ph-warning" style="color:var(--yellow);margin-right:6px"></i>Forwarding headers arrived from <strong>${_esc(d.socket_peer || '')}</strong>, which is not in <code class="font-mono">TRUSTED_PROXIES</code>, so they were ignored. If that address is your reverse proxy, add it to <code class="font-mono">TRUSTED_PROXIES</code>.</div>` : ''}
-        ${spoofable ? `<div class="rounded-xl p-3 text-xs" style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);color:var(--text)"><i class="ph-bold ph-warning" style="color:var(--yellow);margin-right:6px"></i>The client IP the app trusts is <strong>${_esc(d.effective_class)}</strong>. If clients should reach you from the public internet, a proxy in front is rewriting it - check that your trusted hops and the upstream <code class="font-mono">trustedIPs</code> are set correctly, or real client IPs will be lost to logs, CrowdSec and ipAllowList.</div>` : ''}`;
+        ${d.proxy_trusted === false && ((d.headers || {})['X-Forwarded-For'] || (d.headers || {})['X-Forwarded-Proto'] || (d.headers || {})['X-Forwarded-Host']) ? `<div class="rounded-xl p-3 mb-3 text-xs" style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);color:var(--text)"><i class="ph-bold ph-warning" style="color:var(--yellow);margin-right:6px"></i>${th('Forwarding headers arrived from {strong}, which is not in {trusted_proxies}, so they were ignored. If that address is your reverse proxy, add it to {trusted_proxies2}.', { strong: tmHtml(`<strong>${_esc(d.socket_peer || '')}</strong>`), trusted_proxies: tmHtml(`<code class="font-mono">TRUSTED_PROXIES</code>`), trusted_proxies2: tmHtml(`<code class="font-mono">TRUSTED_PROXIES</code>`) })}</div>` : ''}
+        ${spoofable ? `<div class="rounded-xl p-3 text-xs" style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);color:var(--text)"><i class="ph-bold ph-warning" style="color:var(--yellow);margin-right:6px"></i>${th('The client IP the app trusts is {strong}. If clients should reach you from the public internet, a proxy in front is rewriting it - check that your trusted hops and the upstream {trustedips} are set correctly, or real client IPs will be lost to logs, CrowdSec and ipAllowList.', { strong: tmHtml(`<strong>${_esc(d.effective_class)}</strong>`), trustedips: tmHtml(`<code class="font-mono">trustedIPs</code>`) })}</div>` : ''}`;
 }
 
 function _initMobileFilterBars() {
@@ -1244,7 +1290,7 @@ function _initMobileFilterBars() {
         bar.dataset.fbInit = '1';
         const searchBtn = document.createElement('button');
         searchBtn.className = 'fb-search-icon';
-        searchBtn.title = 'Search';
+        searchBtn.title = tc('tooltip', 'Search');
         searchBtn.innerHTML = '<i class="ph-bold ph-magnifying-glass" style="font-size:13px"></i>';
         searchBtn.onclick = () => {
             bar.classList.add('fb-open');
@@ -1252,7 +1298,7 @@ function _initMobileFilterBars() {
         };
         const cancelBtn = document.createElement('button');
         cancelBtn.className = 'fb-cancel-icon';
-        cancelBtn.title = 'Cancel';
+        cancelBtn.title = tc('tooltip', 'Cancel');
         cancelBtn.innerHTML = '<i class="ph-bold ph-arrow-left" style="font-size:13px"></i>';
         cancelBtn.onclick = () => {
             bar.classList.remove('fb-open');
@@ -1264,7 +1310,7 @@ function _initMobileFilterBars() {
         if (bar.querySelector('.fb-secondary')) {
             const filterBtn = document.createElement('button');
             filterBtn.className = 'fb-filter-icon';
-            filterBtn.title = 'More filters';
+            filterBtn.title = t('More filters');
             filterBtn.innerHTML = '<i class="ph-bold ph-sliders" style="font-size:13px"></i>';
             filterBtn.onclick = () => {
                 const open = bar.classList.toggle('fb-filter-open');
@@ -1288,10 +1334,10 @@ const _NOTIF_ICONS = {
 
 function _notifRelTime(ts) {
     const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
-    if (diff < 60)  return 'just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+    if (diff < 60)  return t('just now');
+    if (diff < 3600) return t('{floor}m ago', { floor: Math.floor(diff / 60) });
+    if (diff < 86400) return t('{floor}h ago', { floor: Math.floor(diff / 3600) });
+    return t('{floor}d ago', { floor: Math.floor(diff / 86400) });
 }
 
 async function fetchNotifications() {
@@ -1312,8 +1358,8 @@ async function fetchNotifications() {
 }
 
 const NOTIF_CATEGORY_LABELS = {
-    config: 'Config', backup: 'Backups', security: 'Security', traefik: 'Traefik',
-    certs: 'Certificates', crowdsec: 'CrowdSec', agent: 'Agents', update: 'Updates',
+    config: t('Config'), backup: t('Backups'), security: t('Security'), traefik: 'Traefik',
+    certs: t('Certificates'), crowdsec: 'CrowdSec', agent: t('Agents'), update: t('Updates'),
 };
 
 const _tabIcon = id => (TAB_DEFS.find(t => t.id === id) || {}).icon;
@@ -1358,7 +1404,7 @@ function _renderNotifFilters() {
         return `<button class="notif-cat-chip${on ? ' active' : ''}" onclick="setNotifCategory(${_jsArg(cat)}, event)"`
              + ` title="${_esc(label)} (${count})" aria-label="${_esc(label)}"><i class="ph-bold ${icon}"></i></button>`;
     };
-    row.innerHTML = chip('', 'All', 'ph-stack', _notifData.length)
+    row.innerHTML = chip('', tc('filter', 'All'), 'ph-stack', _notifData.length)
         + present.map(c => chip(c, NOTIF_CATEGORY_LABELS[c] || c,
                                 NOTIF_CATEGORY_ICONS[c] || 'ph-circle',
                                 _notifData.filter(x => (x.category || 'config') === c).length)).join('');
@@ -1386,13 +1432,13 @@ function _renderNotifPanel() {
     if (clearAllBtn) clearAllBtn.style.display = _notifData.length ? '' : 'none';
 
     if (!_notifData.length) {
-        list.innerHTML = `<div class="notif-empty"><i class="ph-light ph-bell-slash" style="font-size:32px;opacity:0.3;display:block;margin-bottom:8px"></i>No notifications yet</div>`;
+        list.innerHTML = `<div class="notif-empty"><i class="ph-light ph-bell-slash" style="font-size:32px;opacity:0.3;display:block;margin-bottom:8px"></i>${th('No notifications yet')}</div>`;
         return;
     }
 
     if (!shown.length) {
         const label = NOTIF_CATEGORY_LABELS[_notifCatFilter] || _notifCatFilter;
-        list.innerHTML = `<div class="notif-empty"><i class="ph-light ph-funnel" style="font-size:32px;opacity:0.3;display:block;margin-bottom:8px"></i>Nothing in ${_esc(label)}</div>`;
+        list.innerHTML = `<div class="notif-empty"><i class="ph-light ph-funnel" style="font-size:32px;opacity:0.3;display:block;margin-bottom:8px"></i>${th('Nothing in {label}', { label })}</div>`;
         return;
     }
 
@@ -1404,9 +1450,9 @@ function _renderNotifPanel() {
             <div class="notif-icon ${type}"><i class="ph-bold ${icon}"></i></div>
             <div class="notif-body">
                 <div class="notif-msg">${_esc(n.msg)}</div>
-                <div class="notif-ts">${_notifRelTime(n.ts)}<span class="notif-cat">${_esc(NOTIF_CATEGORY_LABELS[n.category] || n.category || 'Config')}</span></div>
+                <div class="notif-ts">${_notifRelTime(n.ts)}<span class="notif-cat">${_esc(NOTIF_CATEGORY_LABELS[n.category] || n.category || t('Config'))}</span></div>
             </div>
-            <button class="notif-delete-btn" onclick="deleteNotification(${_jsArg(n.ts)}, ${Number(n.id) || 0})" title="Dismiss"><i class="ph-bold ph-x"></i></button>
+            <button class="notif-delete-btn" onclick="deleteNotification(${_jsArg(n.ts)}, ${Number(n.id) || 0})" title="${thc('tooltip', 'Dismiss')}"><i class="ph-bold ph-x"></i></button>
         </div>`;
     }).join('');
 }
@@ -1480,8 +1526,8 @@ const BROWSER_NOTIF_BURST = 3;
 const _BROWSER_NOTIF_TITLES = {
     success: 'Traefik Manager',
     info:    'Traefik Manager',
-    warning: 'Traefik Manager: warning',
-    error:   'Traefik Manager: error',
+    warning: t('Traefik Manager: warning'),
+    error:   t('Traefik Manager: error'),
 };
 
 const _BROWSER_NOTIF_RANK = { info: 0, success: 0, warning: 1, error: 2 };
@@ -1489,8 +1535,8 @@ const _BROWSER_NOTIF_RANK = { info: 0, success: 0, warning: 1, error: 2 };
 let _notifSeenTs = null;
 
 function browserNotifSupport() {
-    if (window.isSecureContext === false) return { ok: false, reason: 'insecure' };
-    if (typeof Notification === 'undefined') return { ok: false, reason: 'unsupported' };
+    if (window.isSecureContext === false) return { ok: false, reason: t('insecure') };
+    if (typeof Notification === 'undefined') return { ok: false, reason: t('unsupported') };
     return { ok: true, reason: '' };
 }
 
@@ -1536,7 +1582,7 @@ async function enableBrowserNotifs() {
     if (perm === 'default') perm = await _requestNotifPermission();
     if (perm !== 'granted') {
         localStorage.setItem(BROWSER_NOTIF_KEY, '0');
-        return { ok: false, reason: 'denied' };
+        return { ok: false, reason: t('denied') };
     }
     localStorage.setItem(BROWSER_NOTIF_KEY, '1');
     _notifSeenTs = new Set(_notifData.map(n => n.ts));
@@ -1575,14 +1621,14 @@ function _syncBrowserNotifs() {
     if (Notification.permission !== 'granted') {
         disableBrowserNotifs();
         if (typeof renderBrowserNotifs === 'function') renderBrowserNotifs();
-        showToast('Desktop notifications are blocked by this browser, so they have been turned off', 'error', false);
+        showToast(t('Desktop notifications are blocked by this browser, so they have been turned off'), 'error', false);
         return;
     }
     if (seen === null) return;
     const fresh = _notifData.filter(n => !seen.has(n.ts) && _browserNotifWanted(n.type || 'info'));
     if (!fresh.length) return;
     if (fresh.length > BROWSER_NOTIF_BURST) {
-        _showBrowserNotif('info', fresh.length + ' new notifications', 'burst');
+        _showBrowserNotif('info', t('{fresh_count} new notifications', { fresh_count: fresh.length }), 'burst');
         return;
     }
     fresh.slice().reverse().forEach(n => _showBrowserNotif(n.type || 'info', n.msg || '', n.ts));

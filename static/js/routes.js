@@ -72,7 +72,7 @@ function _renderRouteDeepFilters() {
     if (!bar) return;
     const chips = [];
     if (_routeEpFilter) {
-        chips.push(['ph-door-open', 'entry point', _routeEpFilter, 'filterRouteEntryPoint(' + JSON.stringify(_routeEpFilter) + ')']);
+        chips.push(['ph-door-open', t('entry point'), _routeEpFilter, 'filterRouteEntryPoint(' + JSON.stringify(_routeEpFilter) + ')']);
     }
     if (_apiStatusFilter) {
         chips.push(['ph-pulse', 'status', _apiStatusFilter, 'filterApiStatus(' + JSON.stringify(_apiStatusFilter) + ')']);
@@ -110,16 +110,16 @@ function filterRoutes() {
     const emptyEl = document.getElementById('routeEmpty');
     if (emptyEl && _routeCardEls.length > 0) {
         if (visible === 0) {
-            const t = document.getElementById('routeEmptyText');
+            const emptyText = document.getElementById('routeEmptyText');
             const sub = document.getElementById('routeEmptySub');
             const cta = document.getElementById('routeEmptyCta');
-            if (t) t.textContent = 'No routes match your filters';
+            if (emptyText) emptyText.textContent = t('No routes match your filters');
             if (sub) {
                 if (_routeEpFilter) {
-                    sub.textContent = 'No route binds the entry point ' + _routeEpFilter + '.';
+                    sub.textContent = t('No route binds the entry point {routeEpFilter}.', { routeEpFilter: _routeEpFilter });
                     sub.style.display = '';
                 } else if (_apiStatusFilter) {
-                    sub.textContent = 'No route currently reports status ' + _apiStatusFilter + '.';
+                    sub.textContent = t('No route currently reports status {apiStatusFilter}.', { apiStatusFilter: _apiStatusFilter });
                     sub.style.display = '';
                 } else {
                     sub.style.display = 'none';
@@ -129,7 +129,7 @@ function filterRoutes() {
                 if (_routeEpFilter || _apiStatusFilter) {
                     cta.style.display = 'inline-flex';
                     cta.setAttribute('onclick', 'clearRouteDeepFilters()');
-                    cta.innerHTML = '<i class="ph-bold ph-x"></i> Clear filter';
+                    cta.innerHTML = `<i class="ph-bold ph-x"></i> ${th('Clear filter')}`;
                 } else {
                     cta.style.display = 'none';
                 }
@@ -239,7 +239,7 @@ function _updateRefTarget(proto) {
     const owner = pool.find(a => a.protocol === proto && ((a.service_name || '').split('@')[0]) === bare
         && a.target && a.target !== 'N/A');
     if (owner) {
-        el.textContent = '\u2192 ' + owner.target + ((owner.servers || []).length > 1 ? ` (+${owner.servers.length - 1} more)` : '');
+        el.textContent = '\u2192 ' + owner.target + ((owner.servers || []).length > 1 ? ' ' + t('(+{count} more)', { count: owner.servers.length - 1 }) : '');
         el.style.display = '';
     } else {
         el.style.display = 'none';
@@ -333,7 +333,7 @@ function _applyServiceTypeNotice(svcType, owned) {
     if (notice) notice.style.display = editable ? 'none' : 'flex';
     if (!editable) {
         const text = document.getElementById('svcTypeNoticeText');
-        if (text) text.textContent = `This route points at a ${svcType} service, which can't be edited here. The target field is ignored on save - edit the service on the Services tab.`;
+        if (text) text.textContent = t("This route points at a {svcType} service, which can't be edited here. The target field is ignored on save - edit the service on the Services tab.", { svcType });
     }
     ['targetIp', 'targetPort', 'targetIpTcp', 'targetPortTcp', 'targetIpUdp', 'targetPortUdp'].forEach(id => {
         const el = document.getElementById(id);
@@ -357,9 +357,7 @@ function _buildHeadersPresetPerms() {
     HP_FEATURES.forEach(f => {
         const wrap = document.createElement('div');
         wrap.className = 'flex items-center justify-between gap-2';
-        wrap.innerHTML = `<span class="text-sm" style="color:var(--text)">${f}</span>`
-            + `<select id="hp_perm_${f}" name="hp_perm_${f}" onchange="_hpUserEdited()" class="input-field" style="max-width:9rem">`
-            + `<option value="self">self</option><option value="all">all</option><option value="block">block</option></select>`;
+        wrap.innerHTML = `<span class="text-sm" style="color:var(--text)">${f}</span><select id="hp_perm_${f}" name="hp_perm_${f}" onchange="_hpUserEdited()" class="input-field" style="max-width:9rem"><option value="self">${thc('option', 'self')}</option><option value="all">${thc('option', 'all')}</option><option value="block">${thc('option', 'block')}</option></select>`;
         host.appendChild(wrap);
     });
 }
@@ -509,7 +507,7 @@ function _applyStreamingPreset(on) {
 function _resetRouteForm() {
     closeOtherPanels('appModal');
     document.getElementById('isEdit').value = 'false';
-    document.getElementById('modalTitle').innerText = 'Add Route';
+    document.getElementById('modalTitle').innerText = t('Add Route');
     _applyServiceTypeNotice('loadBalancer');
     _resetLbAdvanced();
     document.getElementById('originalId').value = '';
@@ -612,13 +610,13 @@ function _updateRouteModalForAgent(rebuildBody) {
     const list = _domainsForForm();
     if (_activeAgent && list.length === 0) {
         if (domainCol) domainCol.style.display = 'none';
-        if (subLabel) subLabel.textContent = 'Hostname';
+        if (subLabel) subLabel.textContent = tc('label', 'Hostname');
         if (subInput) subInput.placeholder = 'app.example.com';
     } else {
         if (domainCol) domainCol.style.display = '';
-        if (subLabel) subLabel.textContent = 'Subdomain';
-        if (subInput) subInput.placeholder = 'app';
-        if (domLabel) domLabel.textContent = list.length > 1 ? 'Domains' : 'Domain';
+        if (subLabel) subLabel.textContent = tc('label', 'Subdomain');
+        if (subInput) subInput.placeholder = tc('placeholder', 'app');
+        if (domLabel) domLabel.textContent = list.length > 1 ? tc('label', 'Domains') : tc('label', 'Domain');
         if (rebuildBody !== false && domBody) {
             if (list.length >= 1) {
                 if (!document.getElementById('domainChips')) {
@@ -657,7 +655,7 @@ async function saveRouteAjax(event) {
     const cfSel  = document.getElementById('configFileSelect');
     if (cfWrap && cfWrap.style.display !== 'none' && cfSel && !cfSel.value
             && !document.getElementById('configFile').value) {
-        showToast('Select a config file for this route', 'error');
+        showToast(t('Select a config file for this route'), 'error');
         return;
     }
     const btn = form.querySelector('button[type=submit]');
@@ -671,12 +669,12 @@ async function saveRouteAjax(event) {
         }
         if (_activeAgent) fd.append('agent_id', _activeAgent.id);
         const res = await fetch(form.action, { method:'POST', headers:{'X-Requested-With':'fetch'}, body: fd });
-        if (!res.ok) { showToast(await _errText(res, 'Error saving route'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Error saving route')), 'error'); return; }
         const json = await res.json();
-        showToast(json.message || json.error || 'Error saving route', json.ok ? 'success' : 'error');
+        showToast(json.message || json.error || t('Error saving route'), json.ok ? 'success' : 'error');
         if (json.ok) { closeModal(); refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); setTimeout(fetchNotifications, 8000); }
     } catch(e) {
-        showToast(_netErrText(e, 'Error saving route'), 'error');
+        showToast(_netErrText(e, t('Error saving route')), 'error');
     } finally {
         btn.disabled = false;
     }
@@ -688,20 +686,21 @@ async function _routeCertOption(ids) {
         const certs = await _certsForRoutes(ids);
         if (!certs.length) return null;
         const names = certs.map(c => c.main);
-        return { certs, label: (names.length === 1
-                 ? 'Also remove its certificate for ' + names[0]
-                 : 'Also remove their ' + names.length + ' certificates')
-                 + ', and restart Traefik so the change sticks' };
+        return { certs, label: names.length === 1
+                 ? t('Also remove its certificate for {name}, and restart Traefik so the change sticks', { name: names[0] })
+                 : tn('Also remove their {n} certificate, and restart Traefik so the change sticks',
+                      'Also remove their {n} certificates, and restart Traefik so the change sticks', names.length) };
     } catch (e) { return null; }
 }
 
 async function deleteRoute(id, configFile) {
     const shown = String(id).includes('::') ? String(id).split('::').slice(1).join('::') : String(id);
-    const where = configFile ? ' from ' + configFile : '';
     const pending = _routeCertOption([id]);
     const answer = await _confirmWith({
-        message: 'Delete route "' + shown + '"' + where + '? This removes it from the config file and stops serving it.',
-        title: 'Delete Route', okLabel: 'Delete', typeWord: 'DELETE',
+        message: configFile
+            ? t('Delete route "{shown}" from {file}? This removes it from the config file and stops serving it.', { shown, file: configFile })
+            : t('Delete route "{shown}"? This removes it from the config file and stops serving it.', { shown }),
+        title: t('Delete Route'), okLabel: tc('button', 'Delete'), typeWord: _confirmWordFor(shown),
         checkboxAsync: pending.then(c => c ? { label: c.label, checked: false } : null),
     });
     if (!answer.ok) return;
@@ -713,15 +712,15 @@ async function deleteRoute(id, configFile) {
     if (_activeAgent) data.append('agent_id', _activeAgent.id);
     try {
         const res = await fetch('/delete/' + encodeURIComponent(id), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
-        if (!res.ok) { showToast(await _errText(res, 'Error deleting route'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Error deleting route')), 'error'); return; }
         const json = await res.json();
-        showToast(json.message || json.error || 'Error deleting route', json.ok ? 'success' : 'error');
+        showToast(json.message || json.error || t('Error deleting route'), json.ok ? 'success' : 'error');
         if (json.ok) {
             refreshRoutes(); fetchNotifications();
             if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData();
             if (alsoCerts && typeof removeCerts === 'function') await removeCerts(alsoCerts, { confirmed: true });
         }
-    } catch(e) { showToast(_netErrText(e, 'Error deleting route'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Error deleting route')), 'error'); }
 }
 
 async function toggleRoute(id, currentlyEnabled, silent = false) {
@@ -734,17 +733,17 @@ async function toggleRoute(id, currentlyEnabled, silent = false) {
             body: JSON.stringify({ enable: !currentlyEnabled, agent_id: _activeAgent ? _activeAgent.id : '', csrf_token: document.querySelector('meta[name="csrf-token"]')?.content || '' })
         });
         if (!res.ok) {
-            if (!silent) showToast(await _errText(res, 'Failed to toggle route'), 'error');
+            if (!silent) showToast(await _errText(res, t('Failed to toggle route')), 'error');
             return;
         }
         const json = await res.json();
         if (json.ok) {
-            if (!silent) { showToast(currentlyEnabled ? 'Route disabled.' : 'Route enabled.', 'success'); refreshRoutes(); }
+            if (!silent) { showToast(currentlyEnabled ? t('Route disabled.') : t('Route enabled.'), 'success'); refreshRoutes(); }
             if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData();
         } else {
-            if (!silent) showToast(json.message || json.error || 'Failed to toggle route.', 'error');
+            if (!silent) showToast(json.message || json.error || t('Failed to toggle route.'), 'error');
         }
-    } catch(e) { if (!silent) showToast(_netErrText(e, 'Error toggling route'), 'error'); }
+    } catch(e) { if (!silent) showToast(_netErrText(e, t('Error toggling route')), 'error'); }
 }
 
 function _clearRouteViews(message) {
@@ -753,9 +752,9 @@ function _clearRouteViews(message) {
     try { renderMwGrid([]); } catch (e) {}
     try { loadOverviewStats(); } catch (e) {}
     const where = (typeof _activeAgent !== 'undefined' && _activeAgent)
-        ? _activeAgent.name : 'this server';
+        ? _activeAgent.name : t('this server');
     _renderConfigErrorBanner([
-        `Showing nothing for ${where}: ${message}. Nothing below is from another server.`,
+        t('Showing nothing for {where}: {message}. Nothing below is from another server.', { where, message }),
     ]);
     if (message) showToast(message, 'error');
 }
@@ -783,7 +782,7 @@ async function refreshRoutes() {
             res = await fetch('/api/routes');
         }
         if (!res.ok) {
-            _clearRouteViews(await _errText(res, 'Could not load routes'));
+            _clearRouteViews(await _errText(res, t('Could not load routes')));
             return;
         }
         const data = await res.json();
@@ -792,7 +791,7 @@ async function refreshRoutes() {
                                 services: data.services || null, configErrors: data.configErrors || [] });
     } catch(e) {
         console.error('refreshRoutes failed:', e);
-        _clearRouteViews(_netErrText(e, 'Could not load routes'));
+        _clearRouteViews(_netErrText(e, t('Could not load routes')));
     }
 }
 
@@ -818,8 +817,8 @@ async function pingAllRoutes() {
         const d = (c.dataset.domains || '').split('|').find(d => d && !d.includes('{') && !d.includes('*'));
         return !!d;
     });
-    if (!pingable.length) { showToast('No pingable HTTP routes found', 'info'); return; }
-    showToast(`Pinging ${pingable.length} HTTP route${pingable.length > 1 ? 's' : ''}\u2026`, 'success');
+    if (!pingable.length) { showToast(t('No pingable HTTP routes found'), 'info'); return; }
+    showToast(tn('Pinging {n} HTTP route\u2026', 'Pinging {n} HTTP routes\u2026', pingable.length), 'success');
     let online = 0, degraded = 0, offline = 0;
     const offlineRoutes = [], degradedRoutes = [];
     for (const card of pingable) {
@@ -829,7 +828,7 @@ async function pingAllRoutes() {
         const scheme   = card.dataset.tls === '1' ? 'https' : 'http';
         const rid      = card.dataset.rid || card.dataset.routekey;
         const statusEl = card.querySelector('.status-dot');
-        if (statusEl) { statusEl.className = 'status-dot status-checking'; statusEl.title = 'Pinging\u2026'; }
+        if (statusEl) { statusEl.className = 'status-dot status-checking'; statusEl.title = tc('tooltip', 'Pinging…'); }
         try {
             const params = `/api/ping?url=${encodeURIComponent(scheme + '://' + domain)}`
                 + (target ? '&fallback=' + encodeURIComponent(target) : '')
@@ -845,19 +844,19 @@ async function pingAllRoutes() {
             else if (data.ok) { online++; }
             else { offline++; offlineRoutes.push(domain); }
         } catch(e) {
-            if (statusEl) { statusEl.className = 'status-dot status-unknown'; statusEl.title = 'Ping failed'; }
+            if (statusEl) { statusEl.className = 'status-dot status-unknown'; statusEl.title = t('Ping failed'); }
             offline++; offlineRoutes.push(domain);
         }
     }
     if (typeof _sdApplyRouteCards === 'function') _sdApplyRouteCards();
     const total = online + degraded + offline;
     const bits  = [];
-    if (offlineRoutes.length)  bits.push('unreachable: ' + offlineRoutes.join(', '));
-    if (degradedRoutes.length) bits.push('degraded: ' + degradedRoutes.join(', '));
+    if (offlineRoutes.length)  bits.push(t('unreachable: {routes}', { routes: offlineRoutes.join(', ') }));
+    if (degradedRoutes.length) bits.push(t('degraded: {routes}', { routes: degradedRoutes.join(', ') }));
     const type = bits.length ? 'warning' : 'info';
     const msg  = bits.length
-        ? `Ping all: ${online}/${total} fully online - ${bits.join(' - ')}`
-        : `Ping all: all ${total} route${total !== 1 ? 's' : ''} online`;
+        ? t('Ping all: {online}/{total} fully online - {bits}', { online, total, bits: bits.join(' - ') })
+        : tn('Ping all: all {n} route online', 'Ping all: all {n} routes online', total);
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     fetch('/api/notifications/add', { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':csrf}, body: JSON.stringify({type, message: msg, category: 'traefik'}) })
         .then(() => fetchNotifications());
@@ -907,7 +906,7 @@ function _tmFolderMode(apps) {
 }
 
 function _tmCopy(val) {
-    return `<button type="button" class="tm-copy" title="Copy" onclick="event.stopPropagation();_copyToClipboard(${_jsArg(val)})"><i class="ph-bold ph-copy"></i></button>`;
+    return `<button type="button" class="tm-copy" title="${thc('tooltip', 'Copy')}" onclick="event.stopPropagation();_copyToClipboard(${_jsArg(val)})"><i class="ph-bold ph-copy"></i></button>`;
 }
 
 function _tmCf(name) {
@@ -934,19 +933,19 @@ function _tmRouteCard(app, i, opts) {
 
     const glyphs = [
         app.provider && app.provider !== 'file'
-            ? `<i class="ph-bold ph-cube tm-glyph" style="color:var(--muted)" title="Managed by ${_esc(app.provider)} - read only"></i>` : '',
-        !enabled ? '<i class="ph-bold ph-pause tm-glyph" style="color:var(--muted)" title="Disabled"></i>' : '',
+            ? `<i class="ph-bold ph-cube tm-glyph" style="color:var(--muted)" title="${th('Managed by {provider} - read only', { provider: app.provider })}"></i>` : '',
+        !enabled ? `<i class="ph-bold ph-pause tm-glyph" style="color:var(--muted)" title="${thc('tooltip', 'Disabled')}"></i>` : '',
         app.insecureSkipVerify
-            ? '<i class="ph-bold ph-shield-warning tm-glyph" style="color:var(--orange)" title="insecureSkipVerify - backend certificate not verified"></i>' : '',
+            ? `<i class="ph-bold ph-shield-warning tm-glyph" style="color:var(--orange)" title="${th('insecureSkipVerify - backend certificate not verified')}"></i>` : '',
         proto === 'udp' ? '' : (app.tls
             ? '<i class="ph-bold ph-lock-simple tm-glyph" style="color:var(--muted)" title="TLS"></i>'
-            : '<i class="ph-bold ph-lock-simple-open tm-glyph" style="color:var(--yellow)" title="No TLS"></i>'),
+            : `<i class="ph-bold ph-lock-simple-open tm-glyph" style="color:var(--yellow)" title="${th('No TLS')}"></i>`),
     ].join('');
 
     const iconUrl = (typeof _routeIconUrl === 'function' && window._showRouteIcons) ? _routeIconUrl(app) : '';
     const head = iconUrl
-        ? `<span class="tm-ic tm-ic-tile" data-mono="${_esc(_tmMono(app.name))}"><img src="${iconUrl}" data-slug="${_esc(_routeIconSlug(app))}" onerror="window.rmIconFallback(this)" alt="" class="route-app-icon"><span class="status-dot status-checking" title="Checking..."></span></span>`
-        : `<span class="tm-ic-bare"><span class="status-dot status-checking" title="Checking..."></span></span>`;
+        ? `<span class="tm-ic tm-ic-tile" data-mono="${_esc(_tmMono(app.name))}"><img src="${iconUrl}" data-slug="${_esc(_routeIconSlug(app))}" onerror="window.rmIconFallback(this)" alt="" class="route-app-icon"><span class="status-dot status-checking" title="${thc('tooltip', 'Checking...')}"></span></span>`
+        : `<span class="tm-ic-bare"><span class="status-dot status-checking" title="${thc('tooltip', 'Checking...')}"></span></span>`;
 
     let valRows;
     if (proto === 'http' && simpleHost && allDomains.length) {
@@ -961,13 +960,13 @@ function _tmRouteCard(app, i, opts) {
     }
     const nBackends = (app.servers || []).length;
     valRows += `<div class="tm-val tm-val-target"><i class="ph-bold ph-arrow-elbow-down-right"></i><span class="tm-v">${_esc(app.target)}</span>` +
-        (nBackends > 1 ? `<span class="tm-more" title="${nBackends} backends, load balanced">+${nBackends - 1}</span>` : '') +
+        (nBackends > 1 ? `<span class="tm-more" title="${th('{nBackends} backends, load balanced', { nBackends: tmHtml(nBackends) })}">+${nBackends - 1}</span>` : '') +
         _tmCopy(app.target) + '</div>';
 
     const eps = (app.entryPoints || []).join(' \u00b7 ');
     const mws = [
         ...(app.middlewares || []).map(m => _esc(m)),
-        ...(app.entrypointMiddlewares || []).map(m => `<span title="Applied via entrypoint">${_esc(m)} ep</span>`),
+        ...(app.entrypointMiddlewares || []).map(m => `<span title="${th('Applied via entrypoint')}">${th('{m} ep', { m })}</span>`),
     ].join(' \u00b7 ');
     const meta = [
         eps ? `<span>${_esc(eps)}</span>` : '',
@@ -975,12 +974,7 @@ function _tmRouteCard(app, i, opts) {
         app.service_name ? `<span class="tm-svcname">${_esc(app.service_name)}</span>` : '',
     ].filter(Boolean).join('<span class="tm-sep"> \u00b7 </span>');
 
-    const rail = `<span class="tm-rail" onclick="event.stopPropagation()">` +
-        (openUrl ? '<i class="ph-bold ph-arrow-up-right tm-hint"></i>' : '') +
-        `<button type="button" class="tm-btn" title="More" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)"><i class="ph-bold ph-dots-three"></i></button>` +
-        `<button type="button" class="tm-btn" title="Edit" data-app='${appJson}' onclick="event.stopPropagation();handleEdit(this)"><i class="ph-bold ph-pencil-simple"></i></button>` +
-        (isFile ? `<span role="switch" tabindex="0" aria-checked="${enabled}" class="toggle-switch toggle-sm${enabled ? ' on' : ''}" title="${enabled ? 'Disable route' : 'Enable route'}" onclick="event.stopPropagation();toggleRoute(${_jsArg(app.id)},${enabled})" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();event.stopPropagation();toggleRoute(${_jsArg(app.id)},${enabled});}"><span class="toggle-knob"></span></span>` : '') +
-        '</span>';
+    const rail = `<span class="tm-rail" onclick="event.stopPropagation()">${openUrl ? '<i class="ph-bold ph-arrow-up-right tm-hint"></i>' : ''}<button type="button" class="tm-btn" title="${thc('tooltip', 'More')}" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)"><i class="ph-bold ph-dots-three"></i></button><button type="button" class="tm-btn" title="${thc('tooltip', 'Edit')}" data-app='${appJson}' onclick="event.stopPropagation();handleEdit(this)"><i class="ph-bold ph-pencil-simple"></i></button>${isFile ? `<span role="switch" tabindex="0" aria-checked="${enabled}" class="toggle-switch toggle-sm${enabled ? ' on' : ''}" title="${enabled ? th('Disable route') : th('Enable route')}" onclick="event.stopPropagation();toggleRoute(${_jsArg(app.id)},${enabled})" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();event.stopPropagation();toggleRoute(${_jsArg(app.id)},${enabled});}"><span class="toggle-knob"></span></span>` : ''}</span>`;
 
     const bulkCheckbox = _bulkMode
         ? `<input type="checkbox" class="bulk-check" onclick="event.stopPropagation()" ${bulkSel ? 'checked' : ''} onchange="toggleBulkSelect(${_jsArg(app.id)})" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;margin-top:6px">`
@@ -1017,17 +1011,17 @@ function renderRouteGrid(apps) {
         grid.innerHTML = '';
         _routeCardEls = [];
         if (emptyEl) {
-            const t = document.getElementById('routeEmptyText');
+            const emptyText = document.getElementById('routeEmptyText');
             const sub = document.getElementById('routeEmptySub');
             const cta = document.getElementById('routeEmptyCta');
-            if (t) t.textContent = _activeAgent ? 'No routes on this server yet' : 'No routes yet';
+            if (emptyText) emptyText.textContent = _activeAgent ? t('No routes on this server yet') : t('No routes yet');
             if (sub) {
-                sub.textContent = 'Create your first route to start managing your Traefik proxy.';
+                sub.textContent = t('Create your first route to start managing your Traefik proxy.');
                 sub.style.display = '';
             }
             if (cta) {
                 cta.setAttribute('onclick', 'openModal()');
-                cta.innerHTML = '<i class="ph-bold ph-plus"></i> Add Route';
+                cta.innerHTML = `<i class="ph-bold ph-plus"></i> ${th('Add Route')}`;
                 cta.style.display = 'inline-flex';
             }
             emptyEl.style.display = '';
@@ -1049,28 +1043,28 @@ function renderRouteGrid(apps) {
         const ruleLabel  = isComplexRule ? 'Rule' : 'Domain';
         const badgeClass = proto === 'http' ? 'badge-http' : (proto === 'tcp' ? 'badge-tcp' : 'badge-udp');
         const tlsBadge = app.tls ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS${app.tlsOptionsProfile ? ' ' + _esc(app.tlsOptionsProfile) : ''}</span>` : '';
-        const insecureBadge = app.insecureSkipVerify ? `<span class="badge" style="font-size:9px;background:rgba(240,180,0,0.12);color:#d4a017;border:1px solid rgba(240,180,0,0.3)" title="insecureSkipVerify enabled"><i class="ph-bold ph-warning"></i> TLS skip</span>` : '';
+        const insecureBadge = app.insecureSkipVerify ? `<span class="badge" style="font-size:9px;background:rgba(240,180,0,0.12);color:#d4a017;border:1px solid rgba(240,180,0,0.3)" title="${th('insecureSkipVerify enabled')}"><i class="ph-bold ph-warning"></i> ${th('TLS skip')}</span>` : '';
         const tlsProfileBadge = '';
         const openLink = (proto === 'http' && domain && !domain.includes('{') && !domain.includes('*') && !domain.includes('HostRegexp'))
-            ? `<a href="https://${domain}" target="_blank" class="pill-btn pill-btn-blue" title="Open site"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : '';
+            ? `<a href="https://${domain}" target="_blank" class="pill-btn pill-btn-blue" title="${th('Open site')}"><i class="ph-bold ph-arrow-square-out text-sm"></i></a>` : '';
         const openUrl  = (proto === 'http' && domain && !domain.includes('{') && !domain.includes('*') && !domain.includes('HostRegexp')) ? 'https://' + domain : '';
         const epBadges = (app.entryPoints || []).map(ep => '<span class="badge badge-muted" style="font-size:9px">' + _esc(ep) + '</span>').join('');
         const mwBadges   = (app.middlewares || []).map(mw => `<span class="badge" style="background:rgba(163,113,247,0.1);color:var(--purple);border:1px solid rgba(163,113,247,0.25)">${_esc(mw)}</span>`).join('');
-        const epMwBadges = (app.entrypointMiddlewares || []).map(mw => `<span class="badge badge-muted" title="Applied via entrypoint">${_esc(mw)} <span style="font-size:9px;opacity:0.6">ep</span></span>`).join('');
+        const epMwBadges = (app.entrypointMiddlewares || []).map(mw => `<span class="badge badge-muted" title="${th('Applied via entrypoint')}">${_esc(mw)} <span style="font-size:9px;opacity:0.6">${thc('status', 'ep')}</span></span>`).join('');
         const enabled = app.enabled !== false;
         const isFileRoute = !app.provider || app.provider === 'file';
         const appJson = JSON.stringify(app).replace(/'/g, '&#39;');
         const iconHtml = _routeIconHtml(app);
         const toggleIcon = enabled ? 'ph-toggle-right' : 'ph-toggle-left';
-        const toggleTitle = enabled ? 'Disable route' : 'Enable route';
+        const toggleTitle = enabled ? t('Disable route') : t('Enable route');
         const toggleBtn = isFileRoute ? `<button type="button" onclick="toggleRoute(${_jsArg(app.id)},${enabled})" class="pill-btn ${enabled ? 'pill-btn-green' : 'pill-btn-muted'}" title="${toggleTitle}"><i class="ph-bold ${toggleIcon} text-sm"></i></button>` : '';
-        const _copyBtn = (val, col) => `<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(val)})" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--${col})'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button>`;
+        const _copyBtn = (val, col) => `<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(val)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--${col})'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button>`;
         const domainDisplay = allDomains.length > 1
             ? `<div style="display:flex;flex-direction:column;gap:2px">${allDomains.map(d => `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(d)}</div>${_copyBtn(d,'blue')}</div>`).join('')}</div>`
             : isComplexRule
                 ? `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono" style="color:var(--blue);word-break:break-all" title="${_esc(servedRule)}">${_esc(servedRule)}</div>${_copyBtn(servedRule,'blue')}</div>`
                 : `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || servedRule)}</div>${_copyBtn(domain || servedRule,'blue')}</div>`;
-        const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${ruleLabel}</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1?`<span class="badge badge-muted" style="font-size:9px" title="${(app.servers||[]).length} backends">+${(app.servers||[]).length-1}</span>`:''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`; const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1?`<span class="badge badge-muted" style="font-size:9px" title="${(app.servers||[]).length} backends">+${(app.servers||[]).length-1}</span>`:''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`;
+        const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${ruleLabel}</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Target')}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1 ? `<span class="badge badge-muted" style="font-size:9px" title="${th('{servers_count} backends', { servers_count: tmHtml((app.servers||[]).length) })}">+${(app.servers||[]).length-1}</span>` : ''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`; const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Rule')}</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Target')}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1 ? `<span class="badge badge-muted" style="font-size:9px" title="${th('{servers_count} backends', { servers_count: tmHtml((app.servers||[]).length) })}">+${(app.servers||[]).length-1}</span>` : ''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`;
         const cfArg = `,${_jsArg(app.configFile || '')}`;
         const cfBadge = (epBadges || mwBadges || epMwBadges || app.configFile) ? `<div class="flex flex-wrap items-center gap-1 mt-2">${epBadges}${mwBadges}${epMwBadges}${app.configFile ? `<span class="badge badge-muted" style="font-size:9px;margin-left:auto">${_esc(app.configFile)}</span>` : ''}</div>` : '';
         const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-rid="${_esc(app.id)}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}" data-target="${_esc(app.target)}" data-configfile="${_esc(app.configFile||'')}" data-eps="${(app.entryPoints||[]).map(e => _esc(e)).join('|')}" data-servers="${(app.servers || []).map(sv => _esc(sv)).join('|')}" data-tls="${app.tls ? '1' : ''}"`;
@@ -1087,15 +1081,15 @@ function renderRouteGrid(apps) {
             const mwCompact = _dList((app.middlewares || []).map(mw => mw.split('@')[0]), 'd-mw');
             const listGlyphs = (proto === 'udp' ? '' : (app.tls
                 ? `<i class="ph-bold ph-lock-simple d-glyph" style="color:var(--muted)" title="TLS${app.tlsOptionsProfile ? ' ' + _esc(app.tlsOptionsProfile) : ''}"></i>`
-                : '<i class="ph-bold ph-lock-simple-open d-glyph" style="color:var(--yellow)" title="No TLS"></i>'))
-                + (app.insecureSkipVerify ? '<i class="ph-bold ph-shield-warning d-glyph" style="color:var(--orange)" title="insecureSkipVerify - backend certificate not verified"></i>' : '');
-            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="svc-list-col-status" style="display:flex;align-items:center;gap:6px">${bulkCheckbox}<span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span><span class="d-flat ${enabled ? 'd-on' : 'd-off'} rl-state">${enabled ? 'Active' : 'Paused'}</span></div><div style="display:flex;align-items:center;gap:5px"><span class="d-flat d-proto d-proto-${proto}">${proto.toUpperCase()}</span>${listGlyphs}</div><div class="svc-list-col-name"><div style="display:flex;align-items:center;gap:5px">${iconHtml}<span class="truncate">${_esc(app.name)}</span></div></div><div class="rl-svc"><span class="d-flat d-off truncate" title="${_esc(app.service_name)}">${_esc(app.service_name)}</span></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1?`<span class="d-flat d-off" title="${(app.servers||[]).length} backends">+${(app.servers||[]).length-1}</span>`:''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${epCompact}</div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${mwCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="More"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
+                : `<i class="ph-bold ph-lock-simple-open d-glyph" style="color:var(--yellow)" title="${th('No TLS')}"></i>`))
+                + (app.insecureSkipVerify ? `<i class="ph-bold ph-shield-warning d-glyph" style="color:var(--orange)" title="${th('insecureSkipVerify - backend certificate not verified')}"></i>` : '');
+            return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="svc-list-col-status" style="display:flex;align-items:center;gap:6px">${bulkCheckbox}<span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span><span class="d-flat ${enabled ? 'd-on' : 'd-off'} rl-state">${enabled ? thc('status', 'Active') : thc('status', 'Paused')}</span></div><div style="display:flex;align-items:center;gap:5px"><span class="d-flat d-proto d-proto-${proto}">${proto.toUpperCase()}</span>${listGlyphs}</div><div class="svc-list-col-name"><div style="display:flex;align-items:center;gap:5px">${iconHtml}<span class="truncate">${_esc(app.name)}</span></div></div><div class="rl-svc"><span class="d-flat d-off truncate" title="${_esc(app.service_name)}">${_esc(app.service_name)}</span></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1 ? `<span class="d-flat d-off" title="${th('{servers_count} backends', { servers_count: tmHtml((app.servers||[]).length) })}">+${(app.servers||[]).length-1}</span>` : ''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${epCompact}</div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${mwCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'More')}"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
         }
-        return `<div class="card route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5">${bulkCheckbox}<span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}${tlsProfileBadge}<span class="status-dot status-checking" title="Checking..."></span></div><div class="flex items-center gap-1.5 mt-1.5">${iconHtml}<h3 class="font-bold text-sm truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3></div><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="More"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div>${cfBadge}</div></div>`;
+        return `<div class="card route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="route-card-inner p-4 pb-2"><div class="flex justify-between items-start mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-0.5">${bulkCheckbox}<span class="badge ${badgeClass}">${proto.toUpperCase()}</span>${tlsBadge}${insecureBadge}${tlsProfileBadge}<span class="status-dot status-checking" title="Checking..."></span></div><div class="flex items-center gap-1.5 mt-1.5">${iconHtml}<h3 class="font-bold text-sm truncate transition-colors" style="color:var(--text)">${_esc(app.name)}</h3></div><div class="text-xs font-mono truncate" style="color:var(--muted)">${_esc(app.service_name)}</div></div><div class="flex items-center gap-1.5 ml-2 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'More')}"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div><div class="space-y-2">${proto === 'http' ? httpBody : tcpBody}</div>${cfBadge}</div></div>`;
     }).join('');
 
     if (_routeViewMode === 'list') {
-        const header = `<div class="svc-list-header route-list-grid"><div>Status</div><div>Protocol</div><div>Name</div><div>Service</div><div>Domain / Rule</div><div>Target</div><div>Entry Points</div><div>Middlewares</div><div class="rl-actions-head">Actions</div></div>`;
+        const header = `<div class="svc-list-header route-list-grid"><div>${thc('label', 'Status')}</div><div>${thc('label', 'Protocol')}</div><div>${thc('label', 'Name')}</div><div>${thc('label', 'Service')}</div><div>${th('Domain / Rule')}</div><div>${thc('label', 'Target')}</div><div>${th('Entry Points')}</div><div>${thc('label', 'Middlewares')}</div><div class="rl-actions-head">${thc('label', 'Actions')}</div></div>`;
         grid.className = '';
         grid.innerHTML = `<div class="svc-list">${header}${_rowsHtml}</div>`;
     } else if (_tmOn) {
@@ -1166,9 +1160,9 @@ function _fillResolverSelects(list) {
         if (!sel) return;
         const cur = sel.value;
         sel.innerHTML = '';
-        sel.add(new Option('No TLS', '__disabled__'));
+        sel.add(new Option(t('No TLS'), '__disabled__'));
         (list || []).forEach(r => sel.add(new Option(r, r)));
-        sel.add(new Option('None (external / custom cert)', '__none__'));
+        sel.add(new Option(t('None (external / custom cert)'), '__none__'));
         if (cur) _ensureResolverOption(sel, cur);
         else sel.value = '__disabled__';
     });
@@ -1198,7 +1192,7 @@ function _copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
         const el = document.getElementById('_copyToast');
         if (!el) return;
-        el.textContent = 'Copied!';
+        el.textContent = tc('label', 'Copied!');
         el.style.opacity = '1';
         clearTimeout(el._t);
         el._t = setTimeout(() => { el.style.opacity = '0'; }, 1500);
@@ -1239,10 +1233,10 @@ function _initDomainChips(selectedDomains) {
     function render() {
         const list = _domainsForForm();
         hiddenContainer.innerHTML = [...selected].map(d => `<input type="hidden" name="domains" value="${_esc(d)}">`).join('');
-        container.innerHTML = list.map(d => {
+        container.innerHTML = `${list.map(d => {
             const on = selected.has(d);
             return `<button type="button" onclick="_toggleDomainChip(this,${_jsArg(d)})" class="dom-chip${on ? ' on' : ''}" title="${_esc(d)}">${_esc(d)}</button>`;
-        }).join('') + `<button type="button" onclick="_customDomainPrompt(this)" class="dom-chip-add" title="Add another domain"><i class="ph-bold ph-plus" style="font-size:10px"></i></button>`;
+        }).join('')}<button type="button" onclick="_customDomainPrompt(this)" class="dom-chip-add" title="${th('Add another domain')}"><i class="ph-bold ph-plus" style="font-size:10px"></i></button>`;
     }
     render();
     window._domainChipSelected = selected;
@@ -1314,7 +1308,7 @@ async function _initEntrypointChips(proto, selectedEntrypoints) {
             const borderColor = on ? (isOrphan ? 'var(--yellow,#eab308)' : 'var(--green)') : 'var(--border)';
             const bgColor = on ? (isOrphan ? 'rgba(234,179,8,0.12)' : 'rgba(34,197,94,0.12)') : 'transparent';
             const textColor = on ? (isOrphan ? 'var(--yellow,#eab308)' : 'var(--green)') : 'var(--muted)';
-            const titleAttr = isOrphan ? `${_esc(ep)} (not found in Traefik entrypoints - click to remove)` : _esc(ep);
+            const titleAttr = isOrphan ? th('{ep} (not found in Traefik entrypoints - click to remove)', { ep }) : _esc(ep);
             return `<button type="button" onclick="_toggleEpChip(this,${_jsArg(ep)},${_jsArg(proto)})" style="padding:3px 10px;border-radius:6px;border:1px solid ${borderColor};background:${bgColor};color:${textColor};font-size:12px;font-family:monospace;cursor:pointer" title="${titleAttr}">${_esc(ep)}</button>`;
         }).join('');
     }
@@ -1384,8 +1378,8 @@ async function _initMiddlewareChips(selectedMiddlewares, proto) {
             ? `<span style="align-self:center;width:1px;height:18px;background:var(--border);margin:0 2px;flex-shrink:0"></span>`
             : '';
         const note = hiddenCount
-            ? `<span class="d-n" style="align-self:center">${hiddenCount} hidden</span>`
-            : (q && !unsel.length && !sel.length ? '<span class="d-n" style="align-self:center">no matches</span>' : '');
+            ? `<span class="d-n" style="align-self:center">${th('{hiddenCount} hidden', { hiddenCount: tmHtml(hiddenCount) })}</span>`
+            : (q && !unsel.length && !sel.length ? `<span class="d-n" style="align-self:center">${th('no matches')}</span>` : '');
         container.innerHTML = sel.map((mw, i) => chip(mw, i, true)).join('')
             + divider
             + unsel.map(mw => chip(mw, 0, false)).join('')
@@ -1512,13 +1506,13 @@ function _bkCompositeChanged() {
     const kind = document.getElementById('httpCompositeType')?.value || 'weighted';
     const hint = document.getElementById('httpCompositeHint');
     if (hint) {
-        hint.textContent = kind === 'weighted' ? 'Traffic is split by weight.'
-            : kind === 'mirroring' ? 'The first backend serves; the rest receive a copy by percentage.'
-            : 'The first backend serves; the second takes over if it fails.';
+        hint.textContent = kind === 'weighted' ? t('Traffic is split by weight.')
+            : kind === 'mirroring' ? t('The first backend serves; the rest receive a copy by percentage.')
+            : t('The first backend serves; the second takes over if it fails.');
     }
     _bkRows().forEach(r => {
         const w = r.querySelector('.bk-weight');
-        if (w) w.title = kind === 'mirroring' ? 'Percent' : 'Weight';
+        if (w) w.title = kind === 'mirroring' ? tc('tooltip', 'Percent') : tc('tooltip', 'Weight');
     });
 }
 
@@ -1528,7 +1522,7 @@ async function _bkFillServiceSelect(row, selected) {
     const svcs = (await _ensureServicesList()).http || [];
     sel.innerHTML = svcs.length
         ? svcs.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('')
-        : '<option value="">No other services to reference yet</option>';
+        : `<option value="">${th('No other services to reference yet')}</option>`;
     if (selected && !svcs.includes(selected)) {
         sel.insertAdjacentHTML('afterbegin', `<option value="${_esc(selected)}">${_esc(selected)}</option>`);
     }
@@ -1564,7 +1558,7 @@ function addBackendRow(proto, data) {
     const kind = document.getElementById('httpCompositeType')?.value || 'weighted';
     if (proto === 'http' && kind === 'failover' && !data
             && wrap.querySelectorAll('.tm-backend-row').length >= 2) {
-        showToast('Failover takes two backends: the one that serves and the one that takes over',
+        showToast(t('Failover takes two backends: the one that serves and the one that takes over'),
                   'error');
         return;
     }
@@ -1576,14 +1570,9 @@ function addBackendRow(proto, data) {
         ? `<select class="input-field bk-scheme"><option value="http">HTTP</option><option value="https">HTTPS</option><option value="h2c">h2c</option></select>`
         : '';
     const kindCell = proto === 'http'
-        ? `<select class="input-field bk-kind text-sm" onchange="_bkKindChanged(this)"><option value="manual">IP : Port</option><option value="service">Service</option></select>`
+        ? `<select class="input-field bk-kind text-sm" onchange="_bkKindChanged(this)"><option value="manual">${th('IP : Port')}</option><option value="service">${thc('option', 'Service')}</option></select>`
         : '';
-    row.innerHTML = kindCell + schemeCell +
-        `<input type="text" class="input-field bk-host" placeholder="10.0.0.11">` +
-        `<input type="text" class="input-field bk-port" placeholder="8080">` +
-        (proto === 'http' ? `<select class="input-field bk-svc text-sm" style="display:none"></select>` : '') +
-        (proto === 'http' ? `<input type="number" class="input-field bk-weight text-sm" value="1" min="0" title="Weight" style="display:none">` : '') +
-        `<button type="button" onclick="removeBackendRow(this)" class="btn-secondary" title="Remove backend" style="padding:0;width:32px;display:flex;align-items:center;justify-content:center"><i class="ph-bold ph-trash text-xs" style="color:var(--red)"></i></button>`;
+    row.innerHTML = `${kindCell + schemeCell}<input type="text" class="input-field bk-host" placeholder="10.0.0.11"><input type="text" class="input-field bk-port" placeholder="8080">${proto === 'http' ? `<select class="input-field bk-svc text-sm" style="display:none"></select>` : ''}${proto === 'http' ? `<input type="number" class="input-field bk-weight text-sm" value="1" min="0" title="${thc('tooltip', 'Weight')}" style="display:none">` : ''}<button type="button" onclick="removeBackendRow(this)" class="btn-secondary" title="${th('Remove backend')}" style="padding:0;width:32px;display:flex;align-items:center;justify-content:center"><i class="ph-bold ph-trash text-xs" style="color:var(--red)"></i></button>`;
     if (proto === 'http') row.style.gridTemplateColumns = '104px 96px 1fr 1fr 74px 32px';
     wrap.appendChild(row);
     if (proto === 'http' && d.scheme) row.querySelector('.bk-scheme').value = d.scheme;
@@ -1902,7 +1891,7 @@ async function cloneRoute(btn) {
     const app = JSON.parse(btn.getAttribute('data-app'));
     _routeWasComposite = false;
     _resetRouteForm();
-    document.getElementById('modalTitle').innerText = 'Clone Route';
+    document.getElementById('modalTitle').innerText = t('Clone Route');
     document.getElementById('serviceName').value = (app.name || '') + '-copy';
     _populateBackends(app.protocol || 'http', app.servers);
     _applyLbAdvanced(app);
@@ -1974,12 +1963,12 @@ function _openRouteMenu(event, btn) {
     const menu = document.getElementById('routeActionsMenu');
     if (!menu) return;
 
-    let items = `<button class="route-ctx-item" onclick="_closeRouteMenu();openRouteDetailFromCard(_routeMenuCard)"><i class="ph-bold ph-info"></i> View Details</button>`;
-    if (openUrl) items += `<a class="route-ctx-item" href="${_esc(openUrl)}" target="_blank" rel="noopener" onclick="_closeRouteMenu()"><i class="ph-bold ph-arrow-square-out"></i> Open</a>`;
-    items += `<button class="route-ctx-item" data-app='${appJsonStr}' onclick="_closeRouteMenu();cloneRoute(this)"><i class="ph-bold ph-copy"></i> Clone</button>`;
-    items += `<button class="route-ctx-item" onclick="_closeRouteMenu();openRouteYamlEditor(${_jsArg(id)})"><i class="ph-bold ph-code"></i> Raw YAML</button>`;
+    let items = `<button class="route-ctx-item" onclick="_closeRouteMenu();openRouteDetailFromCard(_routeMenuCard)"><i class="ph-bold ph-info"></i> ${th('View Details')}</button>`;
+    if (openUrl) items += `<a class="route-ctx-item" href="${_esc(openUrl)}" target="_blank" rel="noopener" onclick="_closeRouteMenu()"><i class="ph-bold ph-arrow-square-out"></i> ${thc('button', 'Open')}</a>`;
+    items += `<button class="route-ctx-item" data-app='${appJsonStr}' onclick="_closeRouteMenu();cloneRoute(this)"><i class="ph-bold ph-copy"></i> ${thc('button', 'Clone')}</button>`;
+    items += `<button class="route-ctx-item" onclick="_closeRouteMenu();openRouteYamlEditor(${_jsArg(id)})"><i class="ph-bold ph-code"></i> ${th('Raw YAML')}</button>`;
     items += `<div style="height:1px;background:var(--border);margin:3px 6px"></div>`;
-    items += `<button class="route-ctx-item route-ctx-danger" onclick="_closeRouteMenu();deleteRoute(${_jsArg(id)},${cf})"><i class="ph-bold ph-trash"></i> Delete</button>`;
+    items += `<button class="route-ctx-item route-ctx-danger" onclick="_closeRouteMenu();deleteRoute(${_jsArg(id)},${cf})"><i class="ph-bold ph-trash"></i> ${thc('button', 'Delete')}</button>`;
     menu.innerHTML = items;
     menu.style.display = 'block';
 
@@ -2002,7 +1991,7 @@ async function handleEdit(btn) {
     const app = JSON.parse(btn.getAttribute('data-app'));
     document.getElementById('isEdit').value = 'true';
     document.getElementById('originalId').value = app.id;
-    document.getElementById('modalTitle').innerText = 'Edit ' + app.name;
+    document.getElementById('modalTitle').innerText = t('Edit {name}', { name: app.name });
     document.getElementById('serviceName').value = app.name;
     document.getElementById('configFile').value = app.configFile || '';
     const newRouteInput = document.getElementById('newRouteFileName');
@@ -2101,7 +2090,7 @@ function updateBulkBar() {
     const count = document.getElementById('bulkCount');
     if (!bar) return;
     bar.style.display = (_bulkMode && _bulkSelected.size > 0) ? '' : 'none';
-    if (count) count.textContent = `${_bulkSelected.size} selected`;
+    if (count) count.textContent = t('{size} selected', { size: _bulkSelected.size });
 }
 
 async function bulkEnable() {
@@ -2128,7 +2117,7 @@ function _routeNameList(ids, limit = 6) {
     const pool  = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
     const names = ids.map(id => (pool.find(a => String(a.id) === String(id)) || {}).name || id);
     if (names.length <= limit) return names.join(', ');
-    return names.slice(0, limit).join(', ') + ` and ${names.length - limit} more`;
+    return t('{items} and {count} more', { items: names.slice(0, limit).join(', '), count: names.length - limit });
 }
 
 async function bulkDelete() {
@@ -2136,9 +2125,11 @@ async function bulkDelete() {
     if (!ids.length) return;
     const pending = _routeCertOption(ids);
     const answer  = await _confirmWith({
-        message: `Delete ${ids.length} route${ids.length > 1 ? 's' : ''}: ${_routeNameList(ids)}? `
-                 + 'This removes them from the config files and stops serving them.',
-        title: 'Bulk Delete', okLabel: 'Delete', typeWord: 'DELETE',
+        message: tn('Delete {n} route: {names}? This removes them from the config files and stops serving them.',
+                    'Delete {n} routes: {names}? This removes them from the config files and stops serving them.',
+                    ids.length, { names: _routeNameList(ids) }),
+        title: t('Bulk Delete'), okLabel: tc('button', 'Delete'),
+        typeWord: _confirmWordFor(ids.map(i => String(i).includes('::') ? String(i).split('::').slice(1).join('::') : String(i))),
         checkboxAsync: pending.then(c => c ? { label: c.label, checked: false } : null),
     });
     if (!answer.ok) return;
@@ -2157,7 +2148,7 @@ async function bulkDelete() {
             const res  = await fetch('/delete/' + encodeURIComponent(id), { method:'POST', headers:{'X-Requested-With':'fetch'}, body: data });
             if (!res.ok) {
                 failed++;
-                if (!firstErr) firstErr = await _errText(res, 'Route could not be deleted');
+                if (!firstErr) firstErr = await _errText(res, t('Route could not be deleted'));
                 continue;
             }
             const json = await res.json();
@@ -2165,10 +2156,10 @@ async function bulkDelete() {
                 failed++;
                 if (!firstErr) firstErr = json.message || json.error || '';
             }
-        } catch(e) { failed++; if (!firstErr) firstErr = _netErrText(e, 'Route could not be deleted'); }
+        } catch(e) { failed++; if (!firstErr) firstErr = _netErrText(e, t('Route could not be deleted')); }
     }
-    if (failed) showToast(`${failed} of ${ids.length} route${ids.length > 1 ? 's' : ''} could not be deleted.` + (firstErr ? ' ' + firstErr : ''), 'error');
-    else showToast(`Deleted ${ids.length} route${ids.length > 1 ? 's' : ''}.`, 'success');
+    if (failed) showToast(tn('{failed} of {n} route could not be deleted.', '{failed} of {n} routes could not be deleted.', ids.length, { failed }) + (firstErr ? ' ' + firstErr : ''), 'error');
+    else showToast(tn('Deleted {n} route.', 'Deleted {n} routes.', ids.length), 'success');
     _bulkSelected.clear(); updateBulkBar(); refreshRoutes(); fetchNotifications();
     if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData();
     if (alsoCerts && typeof removeCerts === 'function') await removeCerts(alsoCerts, { confirmed: true });
@@ -2240,7 +2231,7 @@ async function openRouteDetail(name, protocol, appData) {
 
     content.innerHTML = `<div class="text-center py-12" style="color:var(--muted)">
         <i class="ph-light ph-spinner-gap text-3xl animate-spin block mb-2 opacity-50"></i>
-        <p class="text-sm">Fetching live data…</p>
+        <p class="text-sm">${th('Fetching live data…')}</p>
     </div>`;
 
     try {
@@ -2307,8 +2298,8 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
             .map(x => String(x).trim()).filter(Boolean).join(' - ') || null;
     const isDisabled = app.enabled === false;
     const statusBadge = isDisabled
-        ? _dState('Disabled')
-        : _dState(status === 'enabled' ? 'Enabled' : status);
+        ? _dState('disabled')
+        : _dState(status);
     const errorBanner = routerError
         ? `<div class="mt-4 p-3 rounded-lg text-xs font-mono leading-relaxed" style="color:var(--red);background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.25);word-break:break-word"><i class="ph-bold ph-warning-circle" style="margin-right:6px"></i>${_esc(routerError)}</div>`
         : '';
@@ -2316,16 +2307,16 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     const isFileRoute = !app.provider || app.provider === 'file';
     const _warnNote = html => `<div class="text-xs mb-5 p-2.5 rounded" style="color:var(--yellow);background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.2);line-height:1.6"><i class="ph-bold ph-warning text-sm" style="margin-right:5px"></i>${html}</div>`;
     const apiNote = liveRouter
-        ? `<div class="flex items-center gap-1.5 text-xs mb-5" style="color:var(--muted)"><div style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block"></div> Live data from Traefik API</div>`
+        ? `<div class="flex items-center gap-1.5 text-xs mb-5" style="color:var(--muted)"><div style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block"></div> ${th('Live data from Traefik API')}</div>`
         : isDisabled
-        ? `<div class="flex items-center gap-1.5 text-xs mb-5 p-2 rounded" style="color:var(--muted);background:var(--input-bg);border:1px solid var(--border)"><i class="ph-bold ph-pause-circle text-sm"></i> Not served by Traefik while disabled - showing your saved configuration</div>`
+        ? `<div class="flex items-center gap-1.5 text-xs mb-5 p-2 rounded" style="color:var(--muted);background:var(--input-bg);border:1px solid var(--border)"><i class="ph-bold ph-pause-circle text-sm"></i> ${th('Not served by Traefik while disabled - showing your saved configuration')}</div>`
         : !(apiState && apiState.reachable)
-        ? _warnNote(`<b>Traefik API unreachable</b> - showing your saved configuration. Check the API URL under Settings &gt; Connection, and that Traefik has <span class="font-mono">api: {}</span> enabled.`)
+        ? _warnNote(`<b>${th('Traefik API unreachable')}</b> ${th('- showing your saved configuration. Check the API URL under Settings > Connection, and that Traefik has {api} enabled.', { api: tmHtml(`<span class="font-mono">api: {}</span>`) })}`)
         : isFileRoute && apiState.fileRouters === 0
-        ? _warnNote(`<b>Traefik is running but has loaded nothing from the file provider</b>, so this route is not being served. Traefik is most likely not watching the file Traefik Manager writes to - check that both containers mount the same config path and that <span class="font-mono">providers.file</span> points at it with <span class="font-mono">watch: true</span>. Showing your saved configuration.`)
+        ? _warnNote(`<b>${th('Traefik is running but has loaded nothing from the file provider')}</b>${th(', so this route is not being served. Traefik is most likely not watching the file Traefik Manager writes to - check that both containers mount the same config path and that {providers_file} points at it with {watch_true}. Showing your saved configuration.', { providers_file: tmHtml(`<span class="font-mono">providers.file</span>`), watch_true: tmHtml(`<span class="font-mono">watch: true</span>`) })}`)
         : isFileRoute
-        ? _warnNote(`<b>Traefik has not loaded this route</b>, although other file-provider routes are live. If you saved it seconds ago, close and reopen. Otherwise check the Traefik logs for a config error${app.configFile ? `, and that <span class="font-mono">${_esc(app.configFile)}</span> is inside the watched path` : ''}. Showing your saved configuration.`)
-        : _warnNote(`<b>Traefik does not report this route</b> - showing your saved configuration.`);
+        ? _warnNote(`<b>${th('Traefik has not loaded this route')}</b>${th(', although other file-provider routes are live. If you saved it seconds ago, close and reopen. Otherwise check the Traefik logs for a config error{configFile}. Showing your saved configuration.', { configFile: tmHtml(app.configFile ? `${th(', and that {span} is inside the watched path', { span: tmHtml(`<span class="font-mono">${_esc(app.configFile)}</span>`) })}` : '') })}`)
+        : _warnNote(`<b>${th('Traefik does not report this route')}</b> ${th('- showing your saved configuration.')}`);
 
     
     const routerEPs = (liveRouter ? liveRouter.entryPoints : app.entryPoints) || [];
@@ -2337,12 +2328,12 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
         const port = addr.split(':').pop();
         const isHttps = ['443','8443'].includes(port);
         return `<div class="flow-box text-center">
-            <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">Entry Point</div>
+            <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">${th('Entry Point')}</div>
             <div class="font-bold text-sm" style="color:var(--text)">${_esc(epName).toUpperCase()}</div>
             ${addr ? `<div class="font-mono text-xs mt-1" style="color:var(--muted)">${_esc(addr)}</div>` : ''}
             ${isHttps ? '<div class="mt-1 d-flat d-on">TLS</div>' : ''}
         </div>`;
-    }).join('') || `<div class="flow-box text-center"><div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">Entry Point</div><div class="text-sm" style="color:var(--muted)">-</div></div>`;
+    }).join('') || `<div class="flow-box text-center"><div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">${th('Entry Point')}</div><div class="text-sm" style="color:var(--muted)">-</div></div>`;
 
     const hasTls = liveRouter ? !!(liveRouter.tls) : !!(app.entryPoints && app.entryPoints.includes('https'));
     const tlsInfo = hasTls ? '<div class="mt-1.5 d-flat d-on"><i class="ph-bold ph-shield-check"></i> TLS</div>' : '';
@@ -2352,19 +2343,19 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
         ? serversList.map(s => `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:var(--green);background:var(--input-bg);word-break:break-all">${_esc(s.url || s.address || '-')}</div>`).join('')
         : `<div class="font-mono text-xs break-all mt-1 px-2 py-1 rounded" style="color:var(--green);background:var(--input-bg);word-break:break-all">${_esc(app.target)}</div>`;
 
-    const flowHtml = renderDetailBlock('Traffic Flow', 'ph-flow-arrow', `
+    const flowHtml = renderDetailBlock(t('Traffic Flow'), 'ph-flow-arrow', `
         <div class="flex items-stretch gap-2 flow-diagram-row">
             <div class="flex flex-col gap-2 flex-1">${epBoxes}</div>
             <div class="flow-arrow">→</div>
             <div class="flow-box active-box text-center flex-1">
-                <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--blue)">Router</div>
+                <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--blue)">${thc('label', 'Router')}</div>
                 <div class="font-bold text-sm" style="color:var(--text)">${_esc(app.name)}</div>
                 ${tlsInfo}
                 <div class="mt-1.5">${statusBadge}</div>
             </div>
             <div class="flow-arrow">→</div>
             <div class="flow-box text-center flex-1">
-                <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">Service</div>
+                <div class="text-xs font-bold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Service')}</div>
                 <div class="font-bold text-sm truncate" style="color:var(--text)">${_esc(app.service_name)}</div>
                 <div class="mt-2">${serversHtml}</div>
             </div>
@@ -2376,13 +2367,13 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     const priority = liveRouter ? (liveRouter.priority ?? '-') : '-';
 
     const routerRows = [
-        ['Status', statusBadge, true],
-        ['Provider', _dText(provider, 'd-off'), true],
-        ['Rule', rule || '-', false],
-        ['Name', (liveRouter ? liveRouter.name : app.name) || '-', false],
-        ['Entry Points', _dList(routerEPs), true],
-        ['Service', app.service_name || '-', false],
-        ['Priority', String(priority), false],
+        [tc('label', 'Status'), statusBadge, true],
+        [tc('label', 'Provider'), _dText(provider, 'd-off'), true],
+        [tc('label', 'Rule'), rule || '-', false],
+        [tc('label', 'Name'), (liveRouter ? liveRouter.name : app.name) || '-', false],
+        [t('Entry Points'), _dList(routerEPs), true],
+        [tc('label', 'Service'), app.service_name || '-', false],
+        [tc('label', 'Priority'), String(priority), false],
     ];
 
     
@@ -2390,12 +2381,12 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     let tlsSection = '';
     if (protocol === 'http' || protocol === 'tcp') {
         const tlsRows = [
-            ['TLS', _dBool(!!tlsData, 'Enabled', 'Disabled'), true],
-            ['Certificate Resolver', tlsData ? (tlsData.certResolver || '-') : '-', false],
-            ['Options', tlsData ? (tlsData.options || 'default') : '-', false],
-            ['Passthrough', _dBool(protocol === 'tcp' && tlsData && !!tlsData.passthrough), true],
+            [tc('label', 'TLS'), _dBool(!!tlsData, tc('status', 'Enabled'), tc('status', 'Disabled')), true],
+            [t('Certificate Resolver'), tlsData ? (tlsData.certResolver || '-') : '-', false],
+            [tc('label', 'Options'), tlsData ? (tlsData.options || 'default') : '-', false],
+            [tc('label', 'Passthrough'), _dBool(protocol === 'tcp' && tlsData && !!tlsData.passthrough), true],
         ];
-        tlsSection = renderSection('TLS', 'ph-shield', tlsRows);
+        tlsSection = renderSection(tc('label', 'TLS'), 'ph-shield', tlsRows);
     }
 
     
@@ -2404,12 +2395,12 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     if (protocol !== 'udp') {
         const mwBody = mws.length > 0
             ? `<div class="flex flex-wrap gap-1.5">${mws.map(m =>
-                `<button type="button" class="route-deep-chip" onclick="_openMwByName(${_jsArg(String(m))})" title="Open middleware"><i class="ph-bold ph-plugs-connected"></i>${_esc(String(m).split('@')[0])}</button>`).join('')}</div>`
+                `<button type="button" class="route-deep-chip" onclick="_openMwByName(${_jsArg(String(m))})" title="${th('Open middleware')}"><i class="ph-bold ph-plugs-connected"></i>${_esc(String(m).split('@')[0])}</button>`).join('')}</div>`
             : `<div class="text-center py-3" style="color:var(--muted)">
                     <i class="ph-light ph-stack text-2xl block mb-1 opacity-30"></i>
-                    <p class="text-xs">No middlewares configured</p>
+                    <p class="text-xs">${th('No middlewares configured')}</p>
                 </div>`;
-        mwSection = renderDetailBlock('Middlewares', 'ph-plugs-connected', mwBody,
+        mwSection = renderDetailBlock(tc('label', 'Middlewares'), 'ph-plugs-connected', mwBody,
             mws.length > 0 ? _dCount(mws.length) : '');
     }
 
@@ -2437,25 +2428,25 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
         const up = svcChecked
             ? (svcServerStatus[url] === undefined ? undefined : String(svcServerStatus[url]).toUpperCase() === 'UP')
             : tmServerUp(url);
-        if (up === undefined) return [`Server ${i + 1}`, url, false];
-        return [`Server ${i + 1}`,
-            `<span class="d-state d-flat ${up ? 'd-on' : 'd-bad'}"><span class="status-dot ${up ? 'status-online' : 'status-offline'}"></span>${up ? 'UP' : 'DOWN'}</span> <span class="font-mono">${_esc(url)}</span>`,
+        if (up === undefined) return [tc('label', 'Server {n}', { n: i + 1 }), url, false];
+        return [tc('label', 'Server {n}', { n: i + 1 }),
+            `<span class="d-state d-flat ${up ? 'd-on' : 'd-bad'}"><span class="status-dot ${up ? 'status-online' : 'status-offline'}"></span>${up ? thc('status', 'UP') : thc('status', 'DOWN')}</span> <span class="font-mono">${_esc(url)}</span>`,
             true];
     });
     const tmSv = (tmCheck && tmCheck.servers) || {};
     const svcHealthTxt = svcChecked
-        ? (svcUp === svcTotal ? `<span class="text-xs ml-2" style="color:var(--muted)">${svcUp} of ${svcTotal} servers up</span>`
-            : `<span class="text-xs ml-2 font-semibold" style="color:${svcUp === 0 ? 'var(--red)' : 'var(--yellow)'}">${svcUp === 0 ? 'all' : svcTotal - svcUp + ' of'} ${svcTotal} servers down</span>`)
+        ? (svcUp === svcTotal ? `<span class="text-xs ml-2" style="color:var(--muted)">${th('{svcUp} of {svcTotal} servers up', { svcUp: tmHtml(svcUp), svcTotal: tmHtml(svcTotal) })}</span>`
+            : `<span class="text-xs ml-2 font-semibold" style="color:${svcUp === 0 ? 'var(--red)' : 'var(--yellow)'}">${(svcUp === 0 ? th('all {total} servers down', { total: svcTotal }) : th('{down} of {total} servers down', { down: svcTotal - svcUp, total: svcTotal }))}</span>`)
         : !tmChecked ? ''
-        : tmCheck.state === 'up' ? `<span class="text-xs ml-2" style="color:var(--muted)">backend reachable</span>`
-        : tmCheck.state === 'degraded' ? `<span class="text-xs ml-2 font-semibold" style="color:var(--yellow)">${tmSv.total - tmSv.up} of ${tmSv.total} servers down</span>`
-        : `<span class="text-xs ml-2 font-semibold" style="color:var(--red)">backend unreachable${tmCheck.error ? ', ' + _esc(tmCheck.error) : ''}</span>`;
+        : tmCheck.state === 'up' ? `<span class="text-xs ml-2" style="color:var(--muted)">${th('backend reachable')}</span>`
+        : tmCheck.state === 'degraded' ? `<span class="text-xs ml-2 font-semibold" style="color:var(--yellow)">${th('{down} of {total} servers down', { down: tmSv.total - tmSv.up, total: tmSv.total })}</span>`
+        : `<span class="text-xs ml-2 font-semibold" style="color:var(--red)">${tmCheck.error ? th('backend unreachable, {error}', { error: tmCheck.error }) : th('backend unreachable')}</span>`;
 
     const svcRows = [
-        ['Status', svcStatus !== '-' ? _dState(svcStatus === 'enabled' ? 'Enabled' : svcStatus) + svcHealthTxt : '-', svcStatus !== '-'],
-        ['Type', app.serviceType && app.serviceType !== 'loadBalancer' ? app.serviceType : 'Load Balancer', false],
-        ['Pass Host Header', svcPassHostHeader, false],
-        ...(app.containerAddr ? [['Container', app.containerAddr, false]] : []),
+        [tc('label', 'Status'), svcStatus !== '-' ? _dState(svcStatus) + svcHealthTxt : '-', svcStatus !== '-'],
+        [tc('label', 'Type'), app.serviceType && app.serviceType !== 'loadBalancer' ? app.serviceType : t('Load Balancer'), false],
+        [t('Pass Host Header'), svcPassHostHeader, false],
+        ...(app.containerAddr ? [[tc('label', 'Container'), app.containerAddr, false]] : []),
         ...svcServerRows,
     ];
 
@@ -2472,7 +2463,7 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
                     <span style="color:var(--text);text-align:right;word-break:break-all">${String(v).replace(/</g,'&lt;')}</span>
                 </div>`
             ).join('');
-            labelsSection = renderDetailBlock('Docker Labels', 'ph-tag', labelRows,
+            labelsSection = renderDetailBlock(t('Docker Labels'), 'ph-tag', labelRows,
                 _dCount(labelEntries.length));
         }
     }
@@ -2481,10 +2472,10 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
     ${apiNote}
     ${errorBanner}
     ${flowHtml}
-    ${renderSection('Router Details', 'ph-info', routerRows)}
+    ${renderSection(t('Router Details'), 'ph-info', routerRows)}
     ${tlsSection}
     ${mwSection}
-    ${renderSection('Service', 'ph-lightning', svcRows)}
+    ${renderSection(tc('label', 'Service'), 'ph-lightning', svcRows)}
     ${labelsSection}
     `;
 }

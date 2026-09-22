@@ -4,7 +4,7 @@
         <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card);border-bottom:1px solid var(--border)">
             <div class="flex items-center gap-3">
                 <i class="ph-bold ph-tree-structure" style="color:var(--blue)"></i>
-                <h2 class="font-bold text-sm" style="color:var(--text)" id="svcModalTitle">Add Service</h2>
+                <h2 class="font-bold text-sm" style="color:var(--text)" id="svcModalTitle">{{ _('Add Service') }}</h2>
             </div>
             <button type="button" onclick="closeServiceModal()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
         </div>
@@ -13,25 +13,25 @@
         <div class="px-6 py-5 space-y-4">
             <input type="hidden" id="svcOriginalName" value="">
             <div>
-                <label>Name</label>
+                <label>{{ pgettext('setting', 'Name') }}</label>
                 <input type="text" id="svcName" maxlength="100" class="input-field" placeholder="api-pool" autocomplete="off">
-                <p class="text-xs mt-1" style="color:var(--muted)">Letters, numbers, dots, dashes and underscores.</p>
+                <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Letters, numbers, dots, dashes and underscores.') }}</p>
             </div>
             <div>
-                <label>Type</label>
+                <label>{{ pgettext('setting', 'Type') }}</label>
                 <select id="svcType" class="input-field" onchange="_svcTypeChanged()">
-                    <option value="loadBalancer">Load Balancer</option>
-                    <option value="weighted">Weighted</option>
-                    <option value="mirroring">Mirroring</option>
-                    <option value="failover">Failover</option>
+                    <option value="loadBalancer">{{ _('Load Balancer') }}</option>
+                    <option value="weighted">{{ pgettext('option', 'Weighted') }}</option>
+                    <option value="mirroring">{{ pgettext('option', 'Mirroring') }}</option>
+                    <option value="failover">{{ pgettext('option', 'Failover') }}</option>
                 </select>
                 <p id="svcTypeHint" class="text-xs mt-1" style="color:var(--muted)"></p>
             </div>
             <div>
                 <div class="flex items-center justify-between mb-1">
-                    <label class="mb-0">Backends</label>
+                    <label class="mb-0">{{ pgettext('setting', 'Backends') }}</label>
                     <button type="button" onclick="addServiceRow()" class="btn-secondary text-xs" style="height:24px;padding:0 8px">
-                        <i class="ph-bold ph-plus text-xs"></i> Add backend
+                        <i class="ph-bold ph-plus text-xs"></i> {{ _('Add backend') }}
                     </button>
                 </div>
                 <div id="svcRows"></div>
@@ -39,40 +39,40 @@
             <div id="svcHealthSection">
                 <button type="button" onclick="toggleSvcHealth()" class="text-xs flex items-center gap-1" style="background:none;border:none;cursor:pointer;padding:0;color:var(--muted)">
                     <i id="svcHealthChevron" class="ph-bold ph-caret-right text-xs"></i>
-                    <span class="font-semibold uppercase tracking-wider">Health check</span>
+                    <span class="font-semibold uppercase tracking-wider">{{ _('Health check') }}</span>
                 </button>
                 <div id="svcHealthAdvBody" class="mt-2 p-3 rounded-lg space-y-3" style="display:none;background:var(--input-bg);border:1px solid var(--border)">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="svcHcEnabled" onchange="_svcHcSync()" class="rounded" style="accent-color:var(--blue)">
-                            <label for="svcHcEnabled" class="text-sm" style="margin:0;color:var(--text)">Poll the servers</label>
+                            <label for="svcHcEnabled" class="text-sm" style="margin:0;color:var(--text)">{{ _('Poll the servers') }}</label>
                         </div>
-                        <span class="tm-info-btn" data-tip="Traefik polls this path on every server and stops sending traffic to the ones that fail. Without it Traefik reports every server as up, so a dead server keeps receiving requests."><i class="ph-bold ph-info"></i></span>
+                        <span class="tm-info-btn" data-tip="{{ _('Traefik polls this path on every server and stops sending traffic to the ones that fail. Without it Traefik reports every server as up, so a dead server keeps receiving requests.') }}"><i class="ph-bold ph-info"></i></span>
                     </div>
                     <div id="svcHcBody" style="display:none" class="space-y-3">
                         <div class="grid grid-cols-3 gap-3">
-                            <div><label>Path</label><input type="text" id="svcHcPath" class="input-field" placeholder="/ (server root)"></div>
-                            <div><label>Interval</label><input type="text" id="svcHcInterval" class="input-field" placeholder="30s"></div>
-                            <div><label>Timeout</label><input type="text" id="svcHcTimeout" class="input-field" placeholder="5s"></div>
+                            <div><label>{{ pgettext('setting', 'Path') }}</label><input type="text" id="svcHcPath" class="input-field" placeholder="{{ _('/ (server root)') }}"></div>
+                            <div><label>{{ pgettext('setting', 'Interval') }}</label><input type="text" id="svcHcInterval" class="input-field" placeholder="30s"></div>
+                            <div><label>{{ pgettext('setting', 'Timeout') }}</label><input type="text" id="svcHcTimeout" class="input-field" placeholder="5s"></div>
                         </div>
                         <div class="grid grid-cols-3 gap-3">
-                            <div><label>Method</label><input type="text" id="svcHcMethod" class="input-field" placeholder="GET"></div>
-                            <div><label>Expected status</label><input type="number" id="svcHcStatus" class="input-field" placeholder="any 2xx or 3xx"></div>
-                            <div><label>Interval when down</label><input type="text" id="svcHcUnhealthy" class="input-field" placeholder="same as interval"></div>
+                            <div><label>{{ pgettext('setting', 'Method') }}</label><input type="text" id="svcHcMethod" class="input-field" placeholder="GET"></div>
+                            <div><label>{{ _('Expected status') }}</label><input type="number" id="svcHcStatus" class="input-field" placeholder="{{ _('any 2xx or 3xx') }}"></div>
+                            <div><label>{{ _('Interval when down') }}</label><input type="text" id="svcHcUnhealthy" class="input-field" placeholder="{{ _('same as interval') }}"></div>
                         </div>
                         <div class="grid grid-cols-3 gap-3">
-                            <div><label>Scheme</label><select id="svcHcScheme" class="input-field"><option value="">same as server</option><option value="http">http</option><option value="https">https</option></select></div>
-                            <div><label>Port</label><input type="number" id="svcHcPort" class="input-field" placeholder="same as server"></div>
-                            <div><label>Host header</label><input type="text" id="svcHcHostname" class="input-field" placeholder="optional"></div>
+                            <div><label>{{ pgettext('setting', 'Scheme') }}</label><select id="svcHcScheme" class="input-field"><option value="">{{ _('same as server') }}</option><option value="http">http</option><option value="https">https</option></select></div>
+                            <div><label>{{ pgettext('setting', 'Port') }}</label><input type="number" id="svcHcPort" class="input-field" placeholder="{{ _('same as server') }}"></div>
+                            <div><label>{{ _('Host header') }}</label><input type="text" id="svcHcHostname" class="input-field" placeholder="{{ pgettext('placeholder', 'optional') }}"></div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
-                            <div><label>Mode</label><select id="svcHcMode" class="input-field"><option value="">http</option><option value="grpc">grpc</option></select></div>
-                            <div class="flex items-end pb-1"><label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" id="svcHcFollow" checked class="rounded" style="accent-color:var(--blue)"> Follow redirects</label></div>
+                            <div><label>{{ pgettext('setting', 'Mode') }}</label><select id="svcHcMode" class="input-field"><option value="">http</option><option value="grpc">grpc</option></select></div>
+                            <div class="flex items-end pb-1"><label class="flex items-center gap-2 text-sm" style="color:var(--text)"><input type="checkbox" id="svcHcFollow" checked class="rounded" style="accent-color:var(--blue)"> {{ _('Follow redirects') }}</label></div>
                         </div>
                         <div>
                             <div class="flex items-center justify-between mb-1">
-                                <label class="mb-0">Headers</label>
-                                <button type="button" onclick="addSvcHcHeader()" class="btn-secondary text-xs" style="height:24px;padding:0 8px"><i class="ph-bold ph-plus text-xs"></i> Add header</button>
+                                <label class="mb-0">{{ pgettext('setting', 'Headers') }}</label>
+                                <button type="button" onclick="addSvcHcHeader()" class="btn-secondary text-xs" style="height:24px;padding:0 8px"><i class="ph-bold ph-plus text-xs"></i> {{ _('Add header') }}</button>
                             </div>
                             <div id="svcHcHeaders"></div>
                         </div>
@@ -80,7 +80,7 @@
                 </div>
             </div>
             <div id="svcConfigFileSelectWrap">
-                <label>Config file</label>
+                <label>{{ _('Config file') }}</label>
                 <select id="svcConfigFileSelect" class="input-field" onchange="onSvcConfigFileChange(this)"></select>
                 <input type="text" id="newSvcFileName" class="input-field mt-2" placeholder="new-file.yml" style="display:none">
             </div>
@@ -88,9 +88,9 @@
         </div>
 
         <div class="detail-panel-foot flex justify-end gap-2 px-6 py-4">
-            <button type="button" id="svcDeleteBtn" onclick="deleteServiceFromModal()" class="btn-secondary mr-auto" style="display:none">Delete</button>
-            <button type="button" onclick="closeServiceModal()" class="btn-secondary">Cancel</button>
-            <button type="button" onclick="saveServiceModal()" class="btn-primary" id="svcSaveBtn">Save Service</button>
+            <button type="button" id="svcDeleteBtn" onclick="deleteServiceFromModal()" class="btn-secondary mr-auto" style="display:none">{{ pgettext('button', 'Delete') }}</button>
+            <button type="button" onclick="closeServiceModal()" class="btn-secondary">{{ pgettext('button', 'Cancel') }}</button>
+            <button type="button" onclick="saveServiceModal()" class="btn-primary" id="svcSaveBtn">{{ _('Save Service') }}</button>
         </div>
     </div>
 </div>

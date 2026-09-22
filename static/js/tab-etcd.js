@@ -3,7 +3,7 @@ let _etcdFilter    = 'all';
 
 async function refreshEtcdTab() {
     const container = document.getElementById('etcdContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading etcd routes...</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading etcd routes...')}</p></div>`;
 
     try {
         const [routerRes, mwRes] = await Promise.all([
@@ -23,11 +23,11 @@ async function refreshEtcdTab() {
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         if (all.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-xs mt-1">Configure <code class="font-mono">TRAEFIK_API_URL</code> in Settings</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p><p class="text-xs mt-1">${th('Configure {traefik_api_url} in Settings', { traefik_api_url: tmHtml(`<code class="font-mono">TRAEFIK_API_URL</code>`) })}</p></div>`;
             return;
         }
         if (_allEtcdRoutes.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-database text-5xl block mb-3 opacity-30"></i><p class="font-medium">No etcd routes found</p><p class="text-xs mt-1">Routes stored in etcd will appear here</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-database text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('No etcd routes found')}</p><p class="text-xs mt-1">${th('Routes stored in etcd will appear here')}</p></div>`;
             return;
         }
 
@@ -37,7 +37,7 @@ async function refreshEtcdTab() {
         setTabCount('etcd', _allEtcdRoutes.length);
         renderEtcdRoutes();
     } catch(e) {
-        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p></div>`;
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p></div>`;
     }
 }
 
@@ -85,7 +85,7 @@ function renderEtcdRoutes() {
 
     if (items.length === 0) {
         document.getElementById('etcdContent').innerHTML =
-            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No routes match filter</div>`;
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">${th('No routes match filter')}</div>`;
         return;
     }
 

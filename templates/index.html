@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="{{ html_lang }}" dir="{{ html_dir }}" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -14,9 +14,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Traefik Manager">
+    <script type="application/json" id="i18n-catalog">{{ i18n_catalog | tojson }}</script>
+    <script src="{{ base_path }}/static/js/i18n.js?v={{ asset_version }}"></script>
     <script>
         window.TM_DEFAULT_THEME = '{{ default_theme }}' || 'dark';
         window.TM_UI_PREFS = {{ ui_prefs | tojson }};
+        window.TM_LANGUAGE = {{ language_setting | tojson }};
+        window.TM_LANGUAGE_TAGS = {{ language_options | map(attribute='tag') | list | tojson }};
         (function() {
             var server = window.TM_UI_PREFS || {};
             var t = localStorage.getItem('tm-theme') || window.TM_DEFAULT_THEME;
@@ -38,6 +42,7 @@
             if (!pref('showApiLink', false))     d.add('tm-hide-api');
             if (!pref('showShortcutsBtn', true)) d.add('tm-hide-shortcuts');
             if (!pref('showIpDiagBtn', true))    d.add('tm-hide-ipdiag');
+            if (!pref('showLangPicker', true))   d.add('tm-hide-lang');
             var _lm = pref('layoutMode', 'fluid');
             if (_lm === 'classic') _lm = 'fixed';
             if (_lm === 'fixed') d.add('tm-fixed');
@@ -59,6 +64,7 @@
         html.tm-hide-api .nav-api-link { display: none !important; }
         html.tm-hide-shortcuts .shortcuts-btn-wrap { display: none !important; }
         html.tm-hide-ipdiag .nav-ipdiag-btn { display: none !important; }
+        html.tm-hide-lang .nav-lang-picker { display: none !important; }
         .tm-theme-icon { display: none; }
         html[data-tm-pref="dark"] .tm-theme-icon[data-pref="dark"],
         html[data-tm-pref="light"] .tm-theme-icon[data-pref="light"],
@@ -92,7 +98,7 @@
 {% if no_auth %}
 <div id="noAuthBanner" style="background:var(--red);color:#fff;text-align:center;padding:8px 16px;font-size:13px;font-weight:600;position:sticky;top:0;z-index:99997;">
     <i class="ph-bold ph-warning" style="margin-right:6px"></i>
-    No authentication is active - this interface is publicly accessible. Enable a password or OIDC in Settings - Authentication.
+    {{ _('No authentication is active - this interface is publicly accessible. Enable a password or OIDC in Settings - Authentication.') }}
 </div>
 {% endif %}
 
@@ -113,12 +119,12 @@
             </label>
         </div>
         <div id="customConfirmTypeWrap" style="display:none;padding:16px 22px 0">
-            <label class="text-xs block mb-1.5" style="color:var(--muted)">Type <button type="button" id="customConfirmWord" title="Click to copy" style="color:var(--red);letter-spacing:0.06em;font-weight:700;background:none;border:none;padding:0 2px;cursor:copy;font-size:inherit;font-family:inherit">DELETE</button> to confirm</label>
-            <input type="text" id="customConfirmType" class="input-field" autocomplete="off" spellcheck="false" placeholder="DELETE">
+            <label class="text-xs block mb-1.5" style="color:var(--muted)">{% set confirm_word %}<button type="button" id="customConfirmWord" title="{{ _('Click to copy') }}" style="color:var(--red);font-weight:700;background:none;border:none;padding:0 2px;cursor:copy;font-size:inherit;font-family:inherit;word-break:break-all;text-align:left" translate="no"></button>{% endset %}{{ _('Type %(confirm_word)s to confirm', confirm_word=confirm_word) }}</label>
+            <input type="text" id="customConfirmType" class="input-field" autocomplete="off" spellcheck="false" placeholder="">
         </div>
         <div class="flex gap-2 justify-end" style="padding:18px 22px;margin-top:4px">
-            <button id="customConfirmCancel" class="btn-secondary text-xs">Cancel</button>
-            <button id="customConfirmOk" class="btn-primary text-xs">Confirm</button>
+            <button id="customConfirmCancel" class="btn-secondary text-xs">{{ pgettext('button', 'Cancel') }}</button>
+            <button id="customConfirmOk" class="btn-primary text-xs">{{ pgettext('button', 'Confirm') }}</button>
         </div>
     </div>
 </div>
@@ -127,11 +133,11 @@
     <div class="flex items-center justify-between px-6 py-3.5" style="border-bottom:1px solid var(--border);flex-shrink:0;">
         <div class="flex items-center gap-2">
             <i class="ph-bold ph-code" style="color:var(--purple)"></i>
-            <span class="font-semibold text-sm">Raw YAML - traefik.yml</span>
+            <span class="font-semibold text-sm">{{ _('Raw YAML - traefik.yml') }}</span>
         </div>
         <div class="flex gap-2">
-            <button onclick="saveStaticPopout()" class="btn-primary text-xs"><i class="ph-bold ph-floppy-disk mr-1"></i>Save</button>
-            <button onclick="closeStaticYamlPopout()" class="btn-secondary text-xs"><i class="ph-bold ph-arrows-in mr-1"></i>Close</button>
+            <button onclick="saveStaticPopout()" class="btn-primary text-xs"><i class="ph-bold ph-floppy-disk mr-1"></i>{{ pgettext('button', 'Save') }}</button>
+            <button onclick="closeStaticYamlPopout()" class="btn-secondary text-xs"><i class="ph-bold ph-arrows-in mr-1"></i>{{ pgettext('button', 'Close') }}</button>
         </div>
     </div>
     <div id="staticYamlPopoutEditor" style="flex:1;min-height:0;"></div>
@@ -141,11 +147,11 @@
     <div class="flex items-center justify-between px-6 py-3.5" style="border-bottom:1px solid var(--border);flex-shrink:0;">
         <div class="flex items-center gap-2">
             <i class="ph-bold ph-code" style="color:var(--blue)"></i>
-            <span class="font-semibold text-sm" id="routeYamlPopoutTitle">Raw YAML</span>
+            <span class="font-semibold text-sm" id="routeYamlPopoutTitle">{{ _('Raw YAML') }}</span>
         </div>
         <div class="flex gap-2">
-            <button onclick="saveRouteYaml()" class="btn-primary text-xs"><i class="ph-bold ph-floppy-disk mr-1"></i>Save</button>
-            <button onclick="closeRouteYamlEditor()" class="btn-secondary text-xs"><i class="ph-bold ph-arrows-in mr-1"></i>Close</button>
+            <button onclick="saveRouteYaml()" class="btn-primary text-xs"><i class="ph-bold ph-floppy-disk mr-1"></i>{{ pgettext('button', 'Save') }}</button>
+            <button onclick="closeRouteYamlEditor()" class="btn-secondary text-xs"><i class="ph-bold ph-arrows-in mr-1"></i>{{ pgettext('button', 'Close') }}</button>
         </div>
     </div>
     <div id="routeYamlPopoutEditor" style="flex:1;min-height:0;"></div>
@@ -156,11 +162,11 @@
         <div class="flex items-center gap-3" style="min-width:0;flex:1;">
             <div class="flex items-center gap-2 flex-shrink-0">
                 <i class="ph-bold ph-git-diff" style="color:var(--blue)"></i>
-                <span class="font-semibold text-sm" id="gitDiffPopoutTitle">Diff</span>
+                <span class="font-semibold text-sm" id="gitDiffPopoutTitle">{{ pgettext('label', 'Diff') }}</span>
             </div>
             <div id="gitDiffFileTabs" class="flex gap-1 flex-wrap"></div>
         </div>
-        <button onclick="closeGitDiffPopout()" class="btn-secondary text-xs flex-shrink-0"><i class="ph-bold ph-arrows-in mr-1"></i>Close</button>
+        <button onclick="closeGitDiffPopout()" class="btn-secondary text-xs flex-shrink-0"><i class="ph-bold ph-arrows-in mr-1"></i>{{ pgettext('button', 'Close') }}</button>
     </div>
     <div id="gitDiffPopoutEditor" style="flex:1;min-height:0;"></div>
 </div>
@@ -168,19 +174,19 @@
 <div id="traefikRestartOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);flex-direction:column;align-items:center;justify-content:center;gap:16px">
     <i class="ph-bold ph-arrows-clockwise text-5xl animate-spin" style="color:var(--blue);opacity:0.9"></i>
     <div class="text-center">
-        <p class="text-lg font-semibold" style="color:var(--text)">Restarting Traefik...</p>
-        <p class="text-sm mt-1" style="color:var(--muted)">This page will reconnect automatically.</p>
+        <p class="text-lg font-semibold" style="color:var(--text)">{{ _('Restarting Traefik...') }}</p>
+        <p class="text-sm mt-1" style="color:var(--muted)">{{ _('This page will reconnect automatically.') }}</p>
     </div>
-    <button id="traefikRestartManualReload" onclick="location.reload()" style="display:none;margin-top:8px;padding:8px 20px;border-radius:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:13px;cursor:pointer">Reload now</button>
+    <button id="traefikRestartManualReload" onclick="location.reload()" style="display:none;margin-top:8px;padding:8px 20px;border-radius:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:13px;cursor:pointer">{{ _('Reload now') }}</button>
 </div>
 
 <div id="tmUpdatePopup" class="hidden" style="position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--card);border:1px solid var(--orange);border-radius:10px;padding:14px 16px;min-width:240px;max-width:300px;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
     <div class="flex items-start gap-3">
         <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange);font-size:20px;flex-shrink:0;margin-top:1px"></i>
         <div style="flex:1;min-width:0;">
-            <div class="text-sm font-medium" style="color:var(--text)">Traefik Manager update available</div>
+            <div class="text-sm font-medium" style="color:var(--text)">{{ _('Traefik Manager update available') }}</div>
             <div class="text-xs mt-0.5" style="color:var(--muted)"><span id="tmUpdatePopupVersion"></span></div>
-            <a id="tmUpdatePopupLink" href="#" target="_blank" rel="noopener" class="text-xs mt-2 inline-block" style="color:var(--blue)">View release notes</a>
+            <a id="tmUpdatePopupLink" href="#" target="_blank" rel="noopener" class="text-xs mt-2 inline-block" style="color:var(--blue)">{{ _('View release notes') }}</a>
         </div>
         <button onclick="dismissTmUpdatePopup()" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0;line-height:1;flex-shrink:0">
             <i class="ph-bold ph-x text-sm"></i>
@@ -192,20 +198,20 @@
     <div class="flex items-start gap-3">
         <i class="ph-bold ph-translate" style="color:var(--blue);font-size:20px;flex-shrink:0;margin-top:1px"></i>
         <div style="flex:1;min-width:0;">
-            <div class="text-sm font-medium" style="color:var(--text)">Traefik Manager is being translated</div>
-            <div class="text-xs mt-0.5" style="color:var(--muted)"><span id="translateInviteText">The next release speaks more than English, and the whole interface is waiting for translators.</span></div>
+            <div class="text-sm font-medium" style="color:var(--text)">{{ _('Traefik Manager is being translated') }}</div>
+            <div class="text-xs mt-0.5" style="color:var(--muted)"><span id="translateInviteText">{{ _('The next release speaks more than English, and the whole interface is waiting for translators.') }}</span></div>
             <div class="flex items-center gap-3 mt-2.5">
                 <a href="https://hosted.weblate.org/engage/traefik-manager/" target="_blank" rel="noopener"
-                   style="font-size:12px;font-weight:600;padding:5px 10px;border-radius:6px;background:var(--blue);color:#fff;text-decoration:none">Help translate</a>
-                <button type="button" onclick="snoozeTranslateInvite()" class="text-xs" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0">Show me later</button>
+                   style="font-size:12px;font-weight:600;padding:5px 10px;border-radius:6px;background:var(--blue);color:#fff;text-decoration:none">{{ _('Help translate') }}</a>
+                <button type="button" onclick="snoozeTranslateInvite()" class="text-xs" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0">{{ _('Show me later') }}</button>
             </div>
             <div class="text-xs mt-2" style="color:var(--muted)">
-                <a href="https://github.com/chr0nzz/tm-locale" target="_blank" rel="noopener" style="color:var(--blue)">How it works</a>
+                <a href="https://github.com/chr0nzz/tm-locale" target="_blank" rel="noopener" style="color:var(--blue)">{{ _('How it works') }}</a>
                 &middot;
-                <a href="https://github.com/chr0nzz/tm-locale/issues/new?template=language-request.yml" target="_blank" rel="noopener" style="color:var(--blue)">Request a language</a>
+                <a href="https://github.com/chr0nzz/tm-locale/issues/new?template=language-request.yml" target="_blank" rel="noopener" style="color:var(--blue)">{{ _('Request a language') }}</a>
             </div>
         </div>
-        <button onclick="dismissTranslateInvite()" title="Do not show this again" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0;line-height:1;flex-shrink:0">
+        <button onclick="dismissTranslateInvite()" title="{{ _('Do not show this again') }}" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0;line-height:1;flex-shrink:0">
             <i class="ph-bold ph-x text-sm"></i>
         </button>
     </div>
@@ -215,9 +221,9 @@
     <div class="flex items-start gap-3">
         <i class="ph-bold ph-shield-warning" style="color:var(--red);font-size:20px;flex-shrink:0;margin-top:1px"></i>
         <div style="flex:1;min-width:0;">
-            <div class="text-sm font-medium" style="color:var(--text)">Traefik security advisory</div>
+            <div class="text-sm font-medium" style="color:var(--text)">{{ _('Traefik security advisory') }}</div>
             <div class="text-xs mt-0.5" style="color:var(--muted)"><span id="securityAdvisoryText"></span></div>
-            <a id="securityAdvisoryLink" href="#" target="_blank" rel="noopener" class="text-xs mt-2 inline-block" style="color:var(--blue)">View advisory</a>
+            <a id="securityAdvisoryLink" href="#" target="_blank" rel="noopener" class="text-xs mt-2 inline-block" style="color:var(--blue)">{{ _('View advisory') }}</a>
         </div>
         <button onclick="dismissSecurityAdvisory()" style="color:var(--muted);background:none;border:none;cursor:pointer;padding:0;line-height:1;flex-shrink:0">
             <i class="ph-bold ph-x text-sm"></i>
@@ -249,10 +255,9 @@
         <div class="flex items-center gap-3 rounded-lg px-4 py-2.5" style="background:rgba(9,105,218,0.08);border:1px solid rgba(9,105,218,0.25)">
             <i class="ph-bold ph-info text-sm shrink-0" style="color:var(--blue)"></i>
             <p class="text-xs flex-1" style="color:var(--text)">
-                <strong>New in v1:</strong> Static Config Editor lets you manage your Traefik static config from the UI.
-                <a href="https://traefik-manager.xyzlab.dev/static" target="_blank" style="color:var(--blue);text-decoration:underline;margin-left:4px">Set it up →</a>
+                {{ _('%(new_in_v1)s Static Config Editor lets you manage your Traefik static config from the UI. %(set_it_up)s', new_in_v1=tag('strong', _('New in v1:')), set_it_up=tag('a', _('Set it up →'), href='https://traefik-manager.xyzlab.dev/static', target='_blank', style_='color:var(--blue);text-decoration:underline;margin-left:4px')) }}
             </p>
-            <button onclick="document.getElementById('staticSetupBanner').style.display='none';localStorage.setItem('tm-static-setup-v1','1')" class="shrink-0" style="color:var(--muted);line-height:1" aria-label="Dismiss">
+            <button onclick="document.getElementById('staticSetupBanner').style.display='none';localStorage.setItem('tm-static-setup-v1','1')" class="shrink-0" style="color:var(--muted);line-height:1" aria-label="{{ pgettext('label', 'Dismiss') }}">
                 <i class="ph-bold ph-x text-sm"></i>
             </button>
         </div>
@@ -263,11 +268,11 @@
 <aside id="sideNav">
     <div class="side-nav-app" id="sideNavApp">
         <div class="side-nav-brand-row">
-            <img src="{{ base_path }}/static/icons/icon.png" alt="logo">
+            <img src="{{ base_path }}/static/icons/icon.png" alt="{{ pgettext('label', 'logo') }}">
             <span>Traefik <span style="color:var(--blue)">Manager</span></span>
         </div>
         <div id="drawerServerWrap" style="display:none">
-            <button class="drawer-srv-head" id="drawerServerBtn" onclick="toggleDrawerServerList()" title="Switch server">
+            <button class="drawer-srv-head" id="drawerServerBtn" onclick="toggleDrawerServerList()" title="{{ _('Switch server') }}">
                 <span class="drawer-srv-mark" id="drawerServerMark">
                     <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <rect x="206" y="206" width="100" height="100" rx="20" stroke="currentColor" stroke-width="34"/>
@@ -285,7 +290,7 @@
                 </span>
                 <span class="drawer-srv-dot" id="drawerServerDot" style="background:var(--green)"></span>
                 <span class="drawer-srv-t">
-                    <span class="drawer-srv-n" id="drawerServerName">Host</span>
+                    <span class="drawer-srv-n" id="drawerServerName">{{ pgettext('button', 'Host') }}</span>
                     <span class="drawer-srv-s" id="drawerServerSub">Traefik Manager</span>
                 </span>
                 <i class="ph-bold ph-caret-down" id="drawerServerCaret"></i>
@@ -295,19 +300,19 @@
     </div>
     <nav id="sideNavItems"></nav>
     <div class="side-nav-foot">
-        <button onclick="toggleSideNavCollapse()" id="sideNavCollapseBtn" title="Collapse navigation">
-            <i class="ph-bold ph-caret-double-left" id="sideNavCollapseIcon"></i><span class="side-nav-toggle-label">Collapse</span>
+        <button onclick="toggleSideNavCollapse()" id="sideNavCollapseBtn" title="{{ _('Collapse navigation') }}">
+            <i class="ph-bold ph-caret-double-left" id="sideNavCollapseIcon"></i><span class="side-nav-toggle-label">{{ pgettext('button', 'Collapse') }}</span>
         </button>
         {% if auth_enabled %}
         <form method="POST" action="{{ url_for('logout') }}" onsubmit="tabCacheClear()">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <button type="submit" id="sideNavLogoutBtn" title="Sign out">
-                <i class="ph-bold ph-sign-out"></i><span class="side-nav-toggle-label">Sign out</span>
+            <button type="submit" id="sideNavLogoutBtn" title="{{ _('Sign out') }}">
+                <i class="ph-bold ph-sign-out"></i><span class="side-nav-toggle-label">{{ _('Sign out') }}</span>
             </button>
         </form>
         {% endif %}
-        <button onclick="closeSideNavDrawer(); openSettingsModal()" id="sideNavSettingsBtn" title="Settings">
-            <i class="ph-bold ph-gear"></i><span class="side-nav-toggle-label">Settings</span>
+        <button onclick="closeSideNavDrawer(); openSettingsModal()" id="sideNavSettingsBtn" title="{{ pgettext('tooltip', 'Settings') }}">
+            <i class="ph-bold ph-gear"></i><span class="side-nav-toggle-label">{{ pgettext('button', 'Settings') }}</span>
         </button>
     </div>
 </aside>
@@ -511,7 +516,7 @@ function _renderServerSwitcherList(runHealthChecks) {
             </div>
         </div>`;
     const hostDot = 'var(--green)';
-    list.innerHTML = desktopItem(null, 'Host', hostDot, localActive, null) +
+    list.innerHTML = desktopItem(null, thc('button', 'Host'), hostDot, localActive, null) +
         agents.map(a => desktopItem(a.id, _esc(a.name), _agentHealthCache[a.id] || 'var(--muted)', _activeAgent && _activeAgent.id === a.id, 'ss-dot-' + a.id)).join('');
     if (runHealthChecks) {
         agents.forEach(a => fetch('/api/agents/' + a.id + '/health').then(r => r.json()).then(d => {
@@ -530,7 +535,7 @@ const _agentHealthInfo = {};
 function _agentSubLine(a) {
     const d = _agentHealthInfo[a.id];
     if (!d) return '';
-    if (!d.ok) return 'offline';
+    if (!d.ok) return tc('label', 'offline');
     const v  = d.version ? 'v' + d.version : '';
     const ms = (typeof d.latency_ms === 'number' && d.latency_ms >= 0) ? d.latency_ms + 'ms' : '';
     return [v, ms].filter(Boolean).join(' · ');
@@ -545,8 +550,8 @@ function _renderDrawerServerList() {
     const name = document.getElementById('drawerServerName');
     const sub  = document.getElementById('drawerServerSub');
     const dot  = document.getElementById('drawerServerDot');
-    if (name) name.textContent = _activeAgent ? _activeAgent.name : 'Host';
-    if (sub)  sub.textContent  = _activeAgent ? (_agentSubLine(_activeAgent) || 'Agent') : 'Traefik Manager';
+    if (name) name.textContent = _activeAgent ? _activeAgent.name : tc('button', 'Host');
+    if (sub)  sub.textContent  = _activeAgent ? (_agentSubLine(_activeAgent) || tc('label', 'Agent')) : 'Traefik Manager';
     if (dot)  dot.style.background = _activeAgent ? (_agentHealthCache[_activeAgent.id] || 'var(--muted)') : 'var(--green)';
     const mark  = document.getElementById('drawerServerMark');
     const badge = document.getElementById('drawerServerBadge');
@@ -573,8 +578,8 @@ function _renderDrawerServerList() {
             ${active ? '<i class="ph-bold ph-check drawer-srv-check"></i>' : `<span class="drawer-srv-dot" style="background:${dotColor}"></span>`}
         </button>`;
     list.innerHTML =
-        '<div class="drawer-srv-title">Switch server</div>' +
-        item(null, null, 'Host', 'Traefik Manager', !_activeAgent, 'var(--green)') +
+        `<div class="drawer-srv-title">${th('Switch server')}</div>` +
+        item(null, null, thc('button', 'Host'), 'Traefik Manager', !_activeAgent, 'var(--green)') +
         _agentList.map(a => item(a.id, 'ph-hard-drives', _esc(a.name), _esc(_agentSubLine(a)), _activeAgent && _activeAgent.id === a.id, _agentHealthCache[a.id] || 'var(--muted)')).join('');
 }
 
@@ -615,10 +620,11 @@ function _updateServerSwitcherList(agents) {
 function _warnIfAgentUnreachable(agent) {
     const d = _agentHealthInfo[agent.id];
     if (!d || d.ok) return;
-    const why = d.error || 'it is not responding';
     if (typeof showToast === 'function') {
-        showToast(`${agent.name} is offline - ${why}. Its tabs will stay empty until it responds.`,
-                  'error', false);
+        showToast(d.error
+            ? t('{name} is offline - {error}. Its tabs will stay empty until it responds.', { name: agent.name, error: d.error })
+            : t('{name} is offline - it is not responding. Its tabs will stay empty until it responds.', { name: agent.name }),
+            'error', false);
     }
 }
 
@@ -662,7 +668,7 @@ function switchServer(agentId) {
         applyTabVisibility(_localTabsCache);
     }
     const label = document.getElementById('serverSwitcherLabel');
-    if (label) label.textContent = agent ? agent.name : 'Host';
+    if (label) label.textContent = agent ? agent.name : tc('button', 'Host');
     document.getElementById('serverSwitcherMenu')?.classList.remove('open');
     const chip = document.getElementById('agentServerLabel');
     if (chip) { chip.textContent = agent ? agent.name : ''; chip.style.display = agent ? '' : 'none'; }
@@ -719,11 +725,11 @@ document.addEventListener('click', e => {
 <footer style="text-align:center;padding:20px 0 24px;font-size:12px;color:var(--muted)">
     <a href="https://github.com/traefik/traefik" target="_blank"
        style="color:var(--muted);text-decoration:none" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Traefik</a>
-    &nbsp;·&nbsp;
+    {{ pgettext('label', '·') }}
     <a href="https://github.com/chr0nzz/traefik-manager" target="_blank"
        style="color:var(--muted);text-decoration:none" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Traefik Manager</a>
-    &nbsp;·&nbsp;
-    <span id="footerManagerVer" style="cursor:pointer" title="About" onclick="openSettingsModal('about')">-</span>
+    {{ pgettext('label', '·') }}
+    <span id="footerManagerVer" style="cursor:pointer" title="{{ pgettext('tooltip', 'About') }}" onclick="openSettingsModal('about')">-</span>
 </footer>
 
 <div id="_copyToast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:500;pointer-events:none;opacity:0;transition:opacity 0.2s;z-index:9999"></div>

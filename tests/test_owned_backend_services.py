@@ -142,5 +142,5 @@ def test_owned_backends_stay_in_the_loaded_list_so_they_remain_reachable():
     src = _src()
     assert '_allServices = [...http, ...tcp, ...udp]' in src, \
         'hiding happens at render time, the child must still be openable by name'
-    assert "['Backend of'," in src, \
+    assert "[t('Backend of')," in src, \
         'the child detail panel must name the parent that owns it'

@@ -206,12 +206,12 @@ func (a *App) keysCreateHandler(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&body)
 	name := strings.TrimSpace(body.Name)
 	if name == "" {
-		jsonError(w, "name is required", http.StatusBadRequest)
+		jsonErrorCode(w, "name_required", nil, "name is required", http.StatusBadRequest)
 		return
 	}
 	id, rawKey, err := a.keys.create(name)
 	if err != nil {
-		jsonError(w, "failed to create key: "+err.Error(), http.StatusInternalServerError)
+		jsonErrorCode(w, "key_create_failed", map[string]any{"detail": err.Error()}, "failed to create key: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	jsonOK(w, map[string]any{"ok": true, "id": id, "name": name, "key": rawKey})
@@ -219,7 +219,7 @@ func (a *App) keysCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) keysDeleteHandler(w http.ResponseWriter, r *http.Request, id string) {
 	if !a.keys.delete(id) {
-		jsonError(w, "key not found", http.StatusNotFound)
+		jsonErrorCode(w, "key_not_found", nil, "key not found", http.StatusNotFound)
 		return
 	}
 	jsonOK(w, map[string]any{"ok": true})

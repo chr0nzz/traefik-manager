@@ -5,7 +5,7 @@ import threading
 import time
 
 GITHUB_REPO = "chr0nzz/traefik-manager"
-APP_VERSION = "1.14.2"
+APP_VERSION = "1.15.0"
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
@@ -38,6 +38,8 @@ def proxy_fix_hops() -> int:
 PROXY_FIX_HOPS = proxy_fix_hops()
 
 DEFAULT_TRUSTED_PROXIES = '127.0.0.0/8,::1/128,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7,fe80::/10,100.64.0.0/10'
+
+OIDC_REDIRECT_URI = os.environ.get('OIDC_REDIRECT_URI', '').strip()
 
 
 def trusted_proxies():

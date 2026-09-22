@@ -3,18 +3,20 @@ let _fileExternalFilter    = 'all';
 
 function _fileExternalEmptyState(managedFileRoutes) {
     const title = managedFileRoutes
-        ? 'Every file provider route is managed here'
-        : 'Traefik reports no file provider routes';
+        ? th('Every file provider route is managed here')
+        : th('Traefik reports no file provider routes');
     const why = managedFileRoutes
-        ? `Traefik reports ${managedFileRoutes} file provider route${managedFileRoutes === 1 ? '' : 's'}, all from a file Traefik Manager manages, so they are on the Routes tab.`
-        : 'Traefik is not loading any routes through its file provider.';
-    const what = 'This tab lists routes from other files your file provider loads, such as the rest of a conf.d directory. They are shown read-only.';
-    return `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-file-text text-5xl block mb-3 opacity-30"></i><p class="font-medium">${title}</p><p class="text-xs mt-1">${why}</p><p class="text-xs mt-1">${what}</p>${managedFileRoutes ? `<button type="button" onclick="switchTab('services')" class="btn-secondary text-xs mt-3">Open Routes</button>` : ''}</div>`;
+        ? thn('Traefik reports {n} file provider route, all from a file Traefik Manager manages, so they are on the Routes tab.',
+              'Traefik reports {n} file provider routes, all from a file Traefik Manager manages, so they are on the Routes tab.',
+              managedFileRoutes)
+        : th('Traefik is not loading any routes through its file provider.');
+    const what = th('This tab lists routes from other files your file provider loads, such as the rest of a conf.d directory. They are shown read-only.');
+    return `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-file-text text-5xl block mb-3 opacity-30"></i><p class="font-medium">${title}</p><p class="text-xs mt-1">${why}</p><p class="text-xs mt-1">${what}</p>${managedFileRoutes ? `<button type="button" onclick="switchTab('services')" class="btn-secondary text-xs mt-3">${th('Open Routes')}</button>` : ''}</div>`;
 }
 
 async function refreshFileExternalTab() {
     const container = document.getElementById('fileExternalContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading file provider routes...</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading file provider routes...')}</p></div>`;
 
     try {
         const [routerRes, managedNames, mwRes] = await Promise.all([
@@ -39,7 +41,7 @@ async function refreshFileExternalTab() {
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         if (all.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-xs mt-1">Configure <code class="font-mono">TRAEFIK_API_URL</code> in Settings</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p><p class="text-xs mt-1">${th('Configure {traefik_api_url} in Settings', { traefik_api_url: tmHtml(`<code class="font-mono">TRAEFIK_API_URL</code>`) })}</p></div>`;
             return;
         }
         if (_allFileExternalRoutes.length === 0) {
@@ -54,7 +56,7 @@ async function refreshFileExternalTab() {
         setTabCount('file_external', _allFileExternalRoutes.length);
         renderFileExternalRoutes();
     } catch(e) {
-        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p></div>`;
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p></div>`;
     }
 }
 
@@ -102,7 +104,7 @@ function renderFileExternalRoutes() {
 
     if (items.length === 0) {
         document.getElementById('fileExternalContent').innerHTML =
-            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No routes match filter</div>`;
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">${th('No routes match filter')}</div>`;
         return;
     }
 
@@ -121,7 +123,7 @@ async function openFileExternalRouteDetail(idx) {
 
     document.getElementById('detailEditBtn').style.display = 'none';
 
-    const badge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-file-text"></i> file provider</span>`;
+    const badge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-file-text"></i> ${th('file provider')}</span>`;
 
     const appData = {
         id:           (r.name || '').split('@')[0],

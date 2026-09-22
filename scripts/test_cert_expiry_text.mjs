@@ -1,12 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { i18nPrelude } from './i18n_test_prelude.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = readFileSync(join(root, 'static', 'js', 'certs.js'), 'utf8');
 
 const certLeft = new Function(
-    src.slice(src.indexOf('function _certLeft('), src.indexOf('async function _loadCertUsage')) +
+    i18nPrelude() + src.slice(src.indexOf('function _certLeft('), src.indexOf('async function _loadCertUsage')) +
     '; return _certLeft;')();
 
 let fails = 0;
@@ -26,7 +27,7 @@ check('no negative day count is ever shown', /-\d/.test(certLeft(-9)), false);
 
 console.log('summary strip');
 const verdict = src.slice(src.indexOf('function renderCertsVerdict()'), src.indexOf('function _certFlags('));
-check('expired certificates are counted apart', verdict.includes("label: 'expired'"), true);
+check('expired certificates are counted apart', /label: (?:tc?\((?:'\w+', )?)?'expired'/.test(verdict), true);
 check('an expired certificate is not called expiring', verdict.includes('if (d < 0) { expired++; return; }'), true);
 check('next expiry skips what already expired', verdict.indexOf('expired++; return;') < verdict.indexOf('if (next === null'), true);
 check('the headline mentions expiry first', verdict.includes('certificate has expired'), true);

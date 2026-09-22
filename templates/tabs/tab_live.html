@@ -2,62 +2,62 @@
     <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
         <div class="relative flex-1 min-w-48">
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-            <input type="text" id="svcSearch" oninput="filterServices()" placeholder="Search services..." class="input-field pl-9">
+            <input type="text" id="svcSearch" oninput="filterServices()" placeholder="{{ _('Search services...') }}" class="input-field pl-9">
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
             <div class="live-dd" id="dd-status">
                 <button class="live-dd-btn-inner" id="dd-status-btn" onclick="toggleLiveDd('dd-status')">
-                    <span id="dd-status-label">All Status</span>
+                    <span id="dd-status-label">{{ _('All Status') }}</span>
                     <i class="ph-bold ph-caret-down live-dd-caret"></i>
                 </button>
                 <div class="live-dd-menu" id="dd-status-menu">
-                    <button class="live-dd-item active" onclick="pickLiveStatus('all','All Status')">All Status</button>
-                    <button class="live-dd-item" onclick="pickLiveStatus('success','Success')">Success</button>
-                    <button class="live-dd-item" onclick="pickLiveStatus('warning','Warnings')">Warnings</button>
-                    <button class="live-dd-item" onclick="pickLiveStatus('error','Errors')">Errors</button>
+                    <button class="live-dd-item active" onclick="pickLiveStatus('all','All Status')">{{ _('All Status') }}</button>
+                    <button class="live-dd-item" onclick="pickLiveStatus('success','Success')">{{ pgettext('button', 'Success') }}</button>
+                    <button class="live-dd-item" onclick="pickLiveStatus('warning','Warnings')">{{ pgettext('button', 'Warnings') }}</button>
+                    <button class="live-dd-item" onclick="pickLiveStatus('error','Errors')">{{ pgettext('button', 'Errors') }}</button>
                 </div>
             </div>
         </div>
         <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg); border:1px solid var(--border)">
             <div class="live-dd" id="dd-proto">
                 <button class="live-dd-btn-inner" id="dd-proto-btn" onclick="toggleLiveDd('dd-proto')">
-                    <span id="dd-proto-label">All Protocols</span>
+                    <span id="dd-proto-label">{{ _('All Protocols') }}</span>
                     <i class="ph-bold ph-caret-down live-dd-caret"></i>
                 </button>
                 <div class="live-dd-menu" id="dd-proto-menu">
-                    <button class="live-dd-item active" onclick="pickLiveProto('all','All Protocols')">All Protocols</button>
+                    <button class="live-dd-item active" onclick="pickLiveProto('all','All Protocols')">{{ _('All Protocols') }}</button>
                 </div>
             </div>
         </div>
         <div class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg); border:1px solid var(--border)">
             <div class="live-dd" id="dd-provider">
                 <button class="live-dd-btn-inner" id="dd-provider-btn" onclick="toggleLiveDd('dd-provider')">
-                    <span id="dd-provider-label">All Providers</span>
+                    <span id="dd-provider-label">{{ _('All Providers') }}</span>
                     <i class="ph-bold ph-caret-down live-dd-caret"></i>
                 </button>
                 <div class="live-dd-menu" id="dd-provider-menu">
-                    <button class="live-dd-item active" onclick="pickLiveProvider('all','All Providers')">All Providers</button>
+                    <button class="live-dd-item active" onclick="pickLiveProvider('all','All Providers')">{{ _('All Providers') }}</button>
                 </div>
             </div>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="clearLiveFilters()" class="proto-btn text-xs px-3 py-1.5" title="Clear filters"><i class="ph-bold ph-x-circle"></i></button>
+            <button onclick="clearLiveFilters()" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Clear filters') }}"><i class="ph-bold ph-x-circle"></i></button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="toggleSvcView()" id="svcViewToggle" class="proto-btn text-xs px-3 py-1.5" title="Toggle view"><i class="ph-bold ph-list" id="svcViewIcon"></i></button>
+            <button onclick="toggleSvcView()" id="svcViewToggle" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Toggle view') }}"><i class="ph-bold ph-list" id="svcViewIcon"></i></button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="refreshLiveView()" class="proto-btn text-xs px-3 py-1.5" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+            <button onclick="refreshLiveView()" class="proto-btn text-xs px-3 py-1.5" title="{{ pgettext('tooltip', 'Refresh') }}"><i class="ph-bold ph-arrows-clockwise"></i></button>
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
-            <button onclick="openServiceModal()" class="proto-btn text-xs px-3 py-1.5" title="Add service"><i class="ph-bold ph-plus"></i></button>
+            <button onclick="openServiceModal()" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Add service') }}"><i class="ph-bold ph-plus"></i></button>
         </div>
     </div>
 
     <div id="liveContent">
         <div class="text-center py-16" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
-            <p>Loading services...</p>
+            <p>{{ _('Loading services...') }}</p>
         </div>
     </div>
 </div>

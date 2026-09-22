@@ -4,7 +4,7 @@
             <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4" style="background:var(--card);border-bottom:1px solid var(--border)">
                 <div class="flex items-center gap-3">
                     <i class="ph-bold ph-stack" style="color:var(--purple)"></i>
-                    <h2 class="font-bold text-sm" style="color:var(--text)" id="mwModalTitle">Add Middleware</h2>
+                    <h2 class="font-bold text-sm" style="color:var(--text)" id="mwModalTitle">{{ _('Add Middleware') }}</h2>
                 </div>
                 <button type="button" onclick="closeMwModal()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
             </div>
@@ -15,10 +15,10 @@
                 <input type="hidden" name="originalMwId" id="originalMwId" value="">
                 <input type="hidden" name="configFile" id="mwConfigFile" value="">
                 <div id="mwConfigFileSelectWrap" {% if not multi_config and not config_dir_set %}style="display:none"{% endif %}>
-                    <label>Config File</label>
+                    <label>{{ _('Config File') }}</label>
                     <select id="mwConfigFileSelect" class="input-field" onchange="onMwConfigFileChange(this)">
-                        <option value="">Select a file...</option>
-                        <option value="__new__" id="mwCfNewFileOpt" {% if not config_dir_set %}style="display:none"{% endif %}>+ New file...</option>
+                        <option value="">{{ _('Select a file...') }}</option>
+                        <option value="__new__" id="mwCfNewFileOpt" {% if not config_dir_set %}style="display:none"{% endif %}>{{ _('+ New file...') }}</option>
                         {% for cp in config_paths_list %}
                         <option value="{{ cp.label }}">{{ cp.label }}</option>
                         {% endfor %}
@@ -29,7 +29,7 @@
                 <input type="hidden" name="mwProtocol" id="mwProtocol" value="http">
                 <input type="hidden" name="originalMwProtocol" id="originalMwProtocol" value="">
                 <div>
-                    <label>Protocol</label>
+                    <label>{{ pgettext('setting', 'Protocol') }}</label>
                     <div class="flex gap-1.5">
                         <button type="button" class="proto-btn active-http" id="mwProtoHTTP" onclick="setMwProtocol('http')">HTTP</button>
                         <button type="button" class="proto-btn" id="mwProtoTCP" onclick="setMwProtocol('tcp')">TCP</button>
@@ -37,50 +37,50 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label>Name</label>
+                        <label>{{ pgettext('setting', 'Name') }}</label>
                         <input type="text" name="middlewareName" id="middlewareName" required maxlength="100" class="input-field" placeholder="my-auth">
                     </div>
                     <div id="mwTemplateWrap">
-                        <label>Template</label>
+                        <label>{{ pgettext('setting', 'Template') }}</label>
                         <select id="mwTemplate" onchange="applyMwTemplate(this)" class="input-field">
-                            <option value="">Custom…</option>
+                            <option value="">{{ pgettext('option', 'Custom…') }}</option>
                             <optgroup label="Auth">
-                                <option value="basicAuth">Basic Auth</option>
-                                <option value="digestAuth">Digest Auth</option>
-                                <option value="forwardAuth">Forward Auth</option>
-                                <option value="forwardAuthAuthentik">Forward Auth (Authentik)</option>
-                                <option value="forwardAuthAuthelia">Forward Auth (Authelia)</option>
-                                <option value="forwardAuthGatekeeper">Forward Auth (Gatekeeper)</option>
-                                <option value="oidcAuth">OIDC Auth (traefik-oidc-auth)</option>
+                                <option value="basicAuth">{{ _('Basic Auth') }}</option>
+                                <option value="digestAuth">{{ _('Digest Auth') }}</option>
+                                <option value="forwardAuth">{{ _('Forward Auth') }}</option>
+                                <option value="forwardAuthAuthentik">{{ _('Forward Auth (Authentik)') }}</option>
+                                <option value="forwardAuthAuthelia">{{ _('Forward Auth (Authelia)') }}</option>
+                                <option value="forwardAuthGatekeeper">{{ _('Forward Auth (Gatekeeper)') }}</option>
+                                <option value="oidcAuth">{{ _('OIDC Auth (traefik-oidc-auth)') }}</option>
                             </optgroup>
                             <optgroup label="Security">
-                                <option value="ipAllowList">IP Allow List</option>
-                                <option value="ipAllowListPrivate">IP Allow List (Private Ranges)</option>
-                                <option value="rateLimit">Rate Limit</option>
-                                <option value="secureHeaders">Secure Headers</option>
-                                <option value="corsHeaders">CORS Headers</option>
-                                <option value="encodedCharacters">Encoded Characters (Traefik 3.7+)</option>
+                                <option value="ipAllowList">{{ _('IP Allow List') }}</option>
+                                <option value="ipAllowListPrivate">{{ _('IP Allow List (Private Ranges)') }}</option>
+                                <option value="rateLimit">{{ _('Rate Limit') }}</option>
+                                <option value="secureHeaders">{{ _('Secure Headers') }}</option>
+                                <option value="corsHeaders">{{ _('CORS Headers') }}</option>
+                                <option value="encodedCharacters">{{ _('Encoded Characters (Traefik 3.7+)') }}</option>
                             </optgroup>
                             <optgroup label="Routing">
-                                <option value="redirectScheme">Redirect to HTTPS</option>
-                                <option value="redirectRegex">Redirect Regex</option>
-                                <option value="stripPrefix">Strip Prefix</option>
-                                <option value="addPrefix">Add Prefix</option>
-                                <option value="replacePath">Replace Path</option>
-                                <option value="replacePathRegex">Replace Path Regex</option>
-                                <option value="stripPrefixRegex">Strip Prefix Regex</option>
+                                <option value="redirectScheme">{{ _('Redirect to HTTPS') }}</option>
+                                <option value="redirectRegex">{{ _('Redirect Regex') }}</option>
+                                <option value="stripPrefix">{{ _('Strip Prefix') }}</option>
+                                <option value="addPrefix">{{ _('Add Prefix') }}</option>
+                                <option value="replacePath">{{ _('Replace Path') }}</option>
+                                <option value="replacePathRegex">{{ _('Replace Path Regex') }}</option>
+                                <option value="stripPrefixRegex">{{ _('Strip Prefix Regex') }}</option>
                             </optgroup>
                             <optgroup label="Advanced">
-                                <option value="compress">Gzip Compress</option>
-                                <option value="retry">Retry</option>
-                                <option value="circuitBreaker">Circuit Breaker</option>
-                                <option value="buffering">Buffering</option>
-                                <option value="chain">Middleware Chain</option>
-                                <option value="inFlightReq">In-Flight Limit</option>
-                                <option value="errors">Custom Error Pages</option>
-                                <option value="contentType">Content Type</option>
+                                <option value="compress">{{ _('Gzip Compress') }}</option>
+                                <option value="retry">{{ pgettext('option', 'Retry') }}</option>
+                                <option value="circuitBreaker">{{ _('Circuit Breaker') }}</option>
+                                <option value="buffering">{{ pgettext('option', 'Buffering') }}</option>
+                                <option value="chain">{{ _('Middleware Chain') }}</option>
+                                <option value="inFlightReq">{{ _('In-Flight Limit') }}</option>
+                                <option value="errors">{{ _('Custom Error Pages') }}</option>
+                                <option value="contentType">{{ _('Content Type') }}</option>
                                 <option value="grpcWeb">gRPC-Web</option>
-                                <option value="passTLSClientCert">Pass TLS Client Cert</option>
+                                <option value="passTLSClientCert">{{ _('Pass TLS Client Cert') }}</option>
                             </optgroup>
                             <optgroup label="My Templates" id="mwCustomOptgroup" style="display:none"></optgroup>
                         </select>
@@ -88,130 +88,130 @@
                 </div>
 
                 <div class="flex gap-2">
-                    <button type="button" id="mwModeWizBtn" onclick="setMwMode('wizard')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-magic-wand" style="margin-right:4px"></i>Wizard</button>
+                    <button type="button" id="mwModeWizBtn" onclick="setMwMode('wizard')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-magic-wand" style="margin-right:4px"></i>{{ pgettext('button', 'Wizard') }}</button>
                     <button type="button" id="mwModeYamlBtn" onclick="setMwMode('yaml')" class="proto-btn active-http" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-code" style="margin-right:4px"></i>YAML</button>
                 </div>
 
                 <div id="mwWizardSection" style="display:none">
-                    <div id="mwWiz-none" class="mw-wiz-form text-sm py-4 text-center" style="color:var(--muted)">Select a template above to use the wizard.</div>
+                    <div id="mwWiz-none" class="mw-wiz-form text-sm py-4 text-center" style="color:var(--muted)">{{ _('Select a template above to use the wizard.') }}</div>
 
                     <div id="mwWiz-basicAuth" class="mw-wiz-form space-y-3" style="display:none">
                         <div class="rounded-lg p-3 space-y-2" style="background:var(--input-bg);border:1px solid var(--border)">
-                            <div class="text-xs font-semibold" style="color:var(--muted)">Generate entry</div>
+                            <div class="text-xs font-semibold" style="color:var(--muted)">{{ _('Generate entry') }}</div>
                             <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="wizBaGenUser" class="input-field text-sm" placeholder="Username">
+                                <input type="text" id="wizBaGenUser" class="input-field text-sm" placeholder="{{ pgettext('placeholder', 'Username') }}">
                                 <div class="relative">
-                                    <input type="password" id="wizBaGenPass" class="input-field text-sm pr-8" placeholder="Password">
+                                    <input type="password" id="wizBaGenPass" class="input-field text-sm pr-8" placeholder="{{ pgettext('placeholder', 'Password') }}">
                                     <button type="button" onclick="togglePwVis('wizBaGenPass',this)" class="absolute right-2 top-1/2 -translate-y-1/2" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0"><i class="ph-bold ph-eye text-sm"></i></button>
                                 </div>
                             </div>
-                            <button type="button" onclick="generateHtpasswd()" class="proto-btn active-http text-xs px-3 py-1" style="border-radius:6px"><i class="ph-bold ph-plus" style="margin-right:4px"></i>Generate &amp; Add</button>
+                            <button type="button" onclick="generateHtpasswd()" class="proto-btn active-http text-xs px-3 py-1" style="border-radius:6px"><i class="ph-bold ph-plus" style="margin-right:4px"></i>{{ _('Generate & Add') }}</button>
                         </div>
                         <div>
-                            <label>Users <span class="text-xs font-normal" style="color:var(--muted)">(one per line, format: <code class="font-mono">user:htpasswd-hash</code>)</span></label>
+                            <label>{{ pgettext('setting', 'Users') }} <span class="text-xs font-normal" style="color:var(--muted)">{{ _('(one per line, format: %(user_htpasswd_hash)s)', user_htpasswd_hash=tag('code', 'user:htpasswd-hash', class_='font-mono')) }}</span></label>
                             <textarea id="wizBaUsers" class="input-field font-mono text-xs" rows="4" placeholder="admin:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/"></textarea>
                         </div>
                         <div>
-                            <label>Realm <span class="text-xs font-normal" style="color:var(--muted)">(optional)</span></label>
-                            <input type="text" id="wizBaRealm" class="input-field" placeholder="My Protected Area">
+                            <label>{{ _('Realm %(optional)s', optional=tag('span', _('(optional)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
+                            <input type="text" id="wizBaRealm" class="input-field" placeholder="{{ _('My Protected Area') }}">
                         </div>
                     </div>
 
                     <div id="mwWiz-forwardAuth" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Auth Service URL</label>
+                            <label>{{ _('Auth Service URL') }}</label>
                             <input type="text" id="wizFaAddress" class="input-field font-mono text-sm" placeholder="http://auth-service:4181">
                         </div>
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="wizFaTrust" checked class="rounded" style="accent-color:var(--blue)">
-                            <span class="text-sm" style="color:var(--text)">Trust Forward Header</span>
+                            <span class="text-sm" style="color:var(--text)">{{ _('Trust Forward Header') }}</span>
                         </div>
                         <div>
-                            <label>Auth Response Headers <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                            <label>{{ _('Auth Response Headers %(one_per_line)s', one_per_line=tag('span', _('(one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <textarea id="wizFaHeaders" class="input-field font-mono text-xs" rows="4" placeholder="X-Auth-User&#10;X-Auth-Token"></textarea>
                         </div>
                         <div>
-                            <label>Max Response Body Size <span class="text-xs font-normal" style="color:var(--muted)">(bytes, optional - Traefik 3.7+)</span></label>
+                            <label>{{ _('Max Response Body Size %(bytes_optional_traefik)s', bytes_optional_traefik=tag('span', _('(bytes, optional - Traefik 3.7+)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <input type="number" min="0" id="wizFaMaxBody" class="input-field text-sm" placeholder="4096">
-                            <p class="text-xs mt-1" style="color:var(--muted)">Caps the auth server response body. Auth responses are tiny, so a small limit is safe.</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Caps the auth server response body. Auth responses are tiny, so a small limit is safe.') }}</p>
                         </div>
                     </div>
 
                     <div id="mwWiz-forwardAuthGatekeeper" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Gatekeeper URL</label>
+                            <label>{{ _('Gatekeeper URL') }}</label>
                             <input type="text" id="wizGkUrl" class="input-field font-mono text-sm" placeholder="https://auth.example.com">
-                            <p class="text-xs mt-1" style="color:var(--muted)"><code class="font-mono">/auth/verify</code> is appended automatically</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('%(auth_verify)s is appended automatically', auth_verify=tag('code', '/auth/verify', class_='font-mono')) }}</p>
                         </div>
                         <div>
-                            <label>Policy <span class="text-xs font-normal" style="color:var(--muted)">(optional)</span></label>
+                            <label>{{ _('Policy %(optional)s', optional=tag('span', _('(optional)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <input type="text" id="wizGkPolicy" class="input-field" placeholder="admin">
-                            <p class="text-xs mt-1" style="color:var(--muted)">Appends <code class="font-mono">?policy=name</code> to the verify URL</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Appends %(policy_name)s to the verify URL', policy_name=tag('code', '?policy=name', class_='font-mono')) }}</p>
                         </div>
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="wizGkTrust" class="rounded" style="accent-color:var(--blue)">
-                            <span class="text-sm" style="color:var(--text)">Trust Forward Header</span>
+                            <span class="text-sm" style="color:var(--text)">{{ _('Trust Forward Header') }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="wizGkAuthorization" class="rounded" style="accent-color:var(--blue)">
-                            <span class="text-sm" style="color:var(--text)">Forward Authorization header</span>
+                            <span class="text-sm" style="color:var(--text)">{{ _('Forward Authorization header') }}</span>
                         </div>
                         <div>
-                            <label>Auth Response Headers <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                            <label>{{ _('Auth Response Headers %(one_per_line)s', one_per_line=tag('span', _('(one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <textarea id="wizGkHeaders" class="input-field font-mono text-xs" rows="4">X-Auth-User
 X-Auth-Email
 X-Auth-Groups</textarea>
                         </div>
                         <div>
-                            <label>Max Response Body Size <span class="text-xs font-normal" style="color:var(--muted)">(bytes, optional - Traefik 3.7+)</span></label>
+                            <label>{{ _('Max Response Body Size %(bytes_optional_traefik)s', bytes_optional_traefik=tag('span', _('(bytes, optional - Traefik 3.7+)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <input type="number" min="0" id="wizGkMaxBody" class="input-field text-sm" placeholder="4096">
                         </div>
                     </div>
 
                     <div id="mwWiz-oidcAuth" class="mw-wiz-form space-y-3" style="display:none">
                         <div class="rounded-md px-3 py-2 text-xs" style="background:rgba(163,113,247,0.08);border:1px solid rgba(163,113,247,0.25);color:var(--purple)">
-                            <i class="ph-bold ph-info mr-1"></i>Requires the <code class="font-mono">sevensolutions/traefik-oidc-auth</code> plugin installed via the Plugins tab.
+                            <i class="ph-bold ph-info mr-1"></i>{{ _('Requires the %(sevensolutions_traefik_oidc)s plugin installed via the Plugins tab.', sevensolutions_traefik_oidc=tag('code', 'sevensolutions/traefik-oidc-auth', class_='font-mono')) }}
                         </div>
                         <div class="grid grid-cols-1 gap-3">
                             <div>
-                                <label>Provider URL</label>
+                                <label>{{ _('Provider URL') }}</label>
                                 <input type="text" id="wizOidcProviderUrl" class="input-field font-mono text-sm" placeholder="https://login.microsoftonline.com/{tenant}/v2.0">
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label>Client ID</label>
+                                    <label>{{ _('Client ID') }}</label>
                                     <input type="text" id="wizOidcClientId" class="input-field font-mono text-sm" placeholder="client-id">
                                 </div>
                                 <div>
-                                    <label>Client Secret</label>
+                                    <label>{{ _('Client Secret') }}</label>
                                     <input type="text" id="wizOidcClientSecret" class="input-field font-mono text-sm" placeholder="client-secret">
                                 </div>
                             </div>
                             <div>
-                                <label>Session Secret <span class="text-xs font-normal" style="color:var(--muted)">(32+ character random string)</span></label>
+                                <label>{{ _('Session Secret %(n32_character_random)s', n32_character_random=tag('span', _('(32+ character random string)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                                 <input type="text" id="wizOidcSecret" class="input-field font-mono text-sm" placeholder="change-me-with-own-32-character-secret">
                             </div>
                             <div>
-                                <label>Scopes <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                                <label>{{ _('Scopes %(one_per_line)s', one_per_line=tag('span', _('(one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                                 <textarea id="wizOidcScopes" class="input-field font-mono text-xs" rows="3">openid
 profile
 email</textarea>
                             </div>
                             <div>
-                                <label>Session Max Age <span class="text-xs font-normal" style="color:var(--muted)">(seconds)</span></label>
+                                <label>{{ _('Session Max Age %(seconds)s', seconds=tag('span', _('(seconds)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                                 <input type="number" id="wizOidcSessionMaxAge" class="input-field" value="86400" min="0">
                             </div>
                             <div>
-                                <label>Forward Claims as Headers <span class="text-xs font-normal" style="color:var(--muted)">(Name: claim, one per line)</span></label>
+                                <label>{{ _('Forward Claims as Headers %(name_claim_one)s', name_claim_one=tag('span', _('(Name: claim, one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                                 <textarea id="wizOidcHeaders" class="input-field font-mono text-xs" rows="4">X-Forwarded-User: preferred_username
 X-Forwarded-Email: email
 X-Forwarded-Name: name</textarea>
-                                <p class="text-xs mt-1" style="color:var(--muted)">Format: <code class="font-mono">Header-Name: claim_field</code></p>
+                                <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Format: %(header_name_claim)s', header_name_claim=tag('code', 'Header-Name: claim_field', class_='font-mono')) }}</p>
                             </div>
                             <div>
-                                <label>Bypass Rules <span class="text-xs font-normal" style="color:var(--muted)">(regex, one per line - optional)</span></label>
+                                <label>{{ _('Bypass Rules %(regex_one_per)s', regex_one_per=tag('span', _('(regex, one per line - optional)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                                 <textarea id="wizOidcBypass" class="input-field font-mono text-xs" rows="3" placeholder="^/health$&#10;^/metrics$&#10;^/api/public/.*"></textarea>
-                                <p class="text-xs mt-1" style="color:var(--muted)">Paths matching these patterns skip authentication.</p>
+                                <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Paths matching these patterns skip authentication.') }}</p>
                             </div>
                         </div>
                     </div>
@@ -219,44 +219,44 @@ X-Forwarded-Name: name</textarea>
                     <div id="mwWiz-rateLimit" class="mw-wiz-form space-y-3" style="display:none">
                         <div class="grid grid-cols-3 gap-3">
                             <div>
-                                <label>Average <span class="text-xs font-normal" style="color:var(--muted)">(req/s)</span></label>
+                                <label>{{ _('Average %(req_s)s', req_s=tag('span', '(req/s)', class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                                 <input type="number" id="wizRlAvg" class="input-field" value="100" min="1">
                             </div>
                             <div>
-                                <label>Burst</label>
+                                <label>{{ pgettext('setting', 'Burst') }}</label>
                                 <input type="number" id="wizRlBurst" class="input-field" value="50" min="1">
                             </div>
                             <div>
-                                <label>Period</label>
+                                <label>{{ pgettext('setting', 'Period') }}</label>
                                 <input type="text" id="wizRlPeriod" class="input-field" value="1s" placeholder="1s">
                             </div>
                         </div>
-                        <p class="text-xs" style="color:var(--muted)">Allows <strong>average</strong> req/s sustained, with a <strong>burst</strong> of extra requests over the <strong>period</strong>.</p>
+                        <p class="text-xs" style="color:var(--muted)">{{ _('Allows %(average)s req/s sustained, with a %(burst)s of extra requests over the %(period)s.', average=tag('strong', _('average')), burst=tag('strong', _('burst')), period=tag('strong', _('period'))) }}</p>
                     </div>
 
                     <div id="mwWiz-ipAllowList" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Allowed CIDRs <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                            <label>{{ _('Allowed CIDRs %(one_per_line)s', one_per_line=tag('span', _('(one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <textarea id="wizIpCidrs" class="input-field font-mono text-sm" rows="5" placeholder="192.168.1.0/24&#10;10.0.0.0/8&#10;127.0.0.1/32"></textarea>
                         </div>
                         <div>
-                            <label>Client IP source <span class="text-xs font-normal" style="color:var(--muted)">(ipStrategy)</span></label>
+                            <label>{{ _('Client IP source %(ipstrategy)s', ipstrategy=tag('span', '(ipStrategy)', class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <select id="wizIpStrategy" class="input-field" onchange="_wizIpStrategySync()">
-                                <option value="direct">Direct connection - Traefik is exposed directly</option>
-                                <option value="depth">Behind proxies - trusted hop depth</option>
-                                <option value="excluded">Behind proxies - exclude proxy IPs</option>
+                                <option value="direct">{{ _('Direct connection - Traefik is exposed directly') }}</option>
+                                <option value="depth">{{ _('Behind proxies - trusted hop depth') }}</option>
+                                <option value="excluded">{{ _('Behind proxies - exclude proxy IPs') }}</option>
                             </select>
-                            <p class="text-xs mt-1" style="color:var(--muted)">If a reverse proxy (Cloudflare, another Traefik, nginx) sits in front, the list must read the real client IP from <code class="font-mono">X-Forwarded-For</code> instead of the proxy's connection IP - otherwise every request looks like it comes from the proxy.</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _("If a reverse proxy (Cloudflare, another Traefik, nginx) sits in front, the list must read the real client IP from %(x_forwarded_for)s instead of the proxy's connection IP - otherwise every request looks like it comes from the proxy.", x_forwarded_for=tag('code', 'X-Forwarded-For', class_='font-mono')) }}</p>
                         </div>
                         <div id="wizIpDepthRow" style="display:none">
-                            <label>Trusted hop depth</label>
+                            <label>{{ _('Trusted hop depth') }}</label>
                             <input type="number" id="wizIpDepth" class="input-field" value="1" min="1" style="width:120px">
-                            <p class="text-xs mt-1" style="color:var(--muted)">Number of trusted proxies in front of Traefik. It takes the IP that many positions from the right of <code class="font-mono">X-Forwarded-For</code>. One proxy (e.g. Cloudflare only) = <code class="font-mono">1</code>.</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Number of trusted proxies in front of Traefik. It takes the IP that many positions from the right of %(x_forwarded_for)s. One proxy (e.g. Cloudflare only) = %(n1)s.', x_forwarded_for=tag('code', 'X-Forwarded-For', class_='font-mono'), n1=tag('code', '1', class_='font-mono')) }}</p>
                         </div>
                         <div id="wizIpExcludedRow" style="display:none">
-                            <label>Proxy IPs to exclude <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                            <label>{{ _('Proxy IPs to exclude %(one_per_line)s', one_per_line=tag('span', _('(one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <textarea id="wizIpExcluded" class="input-field font-mono text-sm" rows="3" placeholder="173.245.48.0/20&#10;103.21.244.0/22"></textarea>
-                            <p class="text-xs mt-1" style="color:var(--muted)">Traefik strips these from the right of <code class="font-mono">X-Forwarded-For</code> and uses the next IP. Use when the proxy's own IPs vary. Cannot be combined with a fixed depth.</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _("Traefik strips these from the right of %(x_forwarded_for)s and uses the next IP. Use when the proxy's own IPs vary. Cannot be combined with a fixed depth.", x_forwarded_for=tag('code', 'X-Forwarded-For', class_='font-mono')) }}</p>
                         </div>
                     </div>
 
@@ -264,67 +264,67 @@ X-Forwarded-Name: name</textarea>
                         <div class="rounded-lg p-3 space-y-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="wizShSsl" checked class="rounded" style="accent-color:var(--blue)">
-                                <span class="text-sm" style="color:var(--text)">SSL Redirect (force HTTPS)</span>
+                                <span class="text-sm" style="color:var(--text)">{{ _('SSL Redirect (force HTTPS)') }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="wizShHsts" checked class="rounded" style="accent-color:var(--blue)" onchange="document.getElementById('wizShHstsOptions').style.display=this.checked?'':'none'">
-                                <span class="text-sm" style="color:var(--text)">HSTS (Strict Transport Security)</span>
+                                <span class="text-sm" style="color:var(--text)">{{ _('HSTS (Strict Transport Security)') }}</span>
                             </div>
                             <div id="wizShHstsOptions" class="pl-6 space-y-1.5">
                                 <div class="flex items-center gap-3">
-                                    <label class="text-xs" style="color:var(--muted)">Max Age (seconds)</label>
+                                    <label class="text-xs" style="color:var(--muted)">{{ _('Max Age (seconds)') }}</label>
                                     <input type="number" id="wizShHstsAge" class="input-field text-xs" value="315360000" style="width:130px">
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <input type="checkbox" id="wizShSub" checked class="rounded" style="accent-color:var(--blue)">
-                                    <span class="text-xs" style="color:var(--text)">Include Subdomains</span>
+                                    <span class="text-xs" style="color:var(--text)">{{ _('Include Subdomains') }}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <input type="checkbox" id="wizShPreload" checked class="rounded" style="accent-color:var(--blue)">
-                                    <span class="text-xs" style="color:var(--text)">Preload</span>
+                                    <span class="text-xs" style="color:var(--text)">{{ pgettext('label', 'Preload') }}</span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="wizShNosniff" checked class="rounded" style="accent-color:var(--blue)">
-                                <span class="text-sm" style="color:var(--text)">X-Content-Type-Options (nosniff)</span>
+                                <span class="text-sm" style="color:var(--text)">{{ _('X-Content-Type-Options (nosniff)') }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="wizShXss" checked class="rounded" style="accent-color:var(--blue)">
-                                <span class="text-sm" style="color:var(--text)">X-XSS-Protection</span>
+                                <span class="text-sm" style="color:var(--text)">{{ pgettext('label', 'X-XSS-Protection') }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="wizShFrame" checked class="rounded" style="accent-color:var(--blue)">
-                                <span class="text-sm" style="color:var(--text)">X-Frame-Options (deny)</span>
+                                <span class="text-sm" style="color:var(--text)">{{ _('X-Frame-Options (deny)') }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="wizShReferrer" class="rounded" style="accent-color:var(--blue)">
-                                <span class="text-sm" style="color:var(--text)">Same-origin Referrer Policy</span>
+                                <span class="text-sm" style="color:var(--text)">{{ _('Same-origin Referrer Policy') }}</span>
                             </div>
                         </div>
                     </div>
 
                     <div id="mwWiz-digestAuth" class="mw-wiz-form space-y-3" style="display:none">
                         <div class="rounded-lg p-3 space-y-2" style="background:var(--input-bg);border:1px solid var(--border)">
-                            <div class="text-xs font-semibold" style="color:var(--muted)">Generate entry</div>
+                            <div class="text-xs font-semibold" style="color:var(--muted)">{{ _('Generate entry') }}</div>
                             <div class="grid grid-cols-3 gap-2">
-                                <input type="text" id="wizDaGenUser" class="input-field text-sm" placeholder="Username">
-                                <input type="text" id="wizDaGenRealm" class="input-field text-sm" placeholder="Realm (e.g. traefik)">
+                                <input type="text" id="wizDaGenUser" class="input-field text-sm" placeholder="{{ pgettext('placeholder', 'Username') }}">
+                                <input type="text" id="wizDaGenRealm" class="input-field text-sm" placeholder="{{ _('Realm (e.g. traefik)') }}">
                                 <div class="relative">
-                                    <input type="password" id="wizDaGenPass" class="input-field text-sm pr-8" placeholder="Password">
+                                    <input type="password" id="wizDaGenPass" class="input-field text-sm pr-8" placeholder="{{ pgettext('placeholder', 'Password') }}">
                                     <button type="button" onclick="togglePwVis('wizDaGenPass',this)" class="absolute right-2 top-1/2 -translate-y-1/2" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0"><i class="ph-bold ph-eye text-sm"></i></button>
                                 </div>
                             </div>
-                            <button type="button" onclick="generateDigestAuth()" class="proto-btn active-http text-xs px-3 py-1" style="border-radius:6px"><i class="ph-bold ph-plus" style="margin-right:4px"></i>Generate &amp; Add</button>
+                            <button type="button" onclick="generateDigestAuth()" class="proto-btn active-http text-xs px-3 py-1" style="border-radius:6px"><i class="ph-bold ph-plus" style="margin-right:4px"></i>{{ _('Generate & Add') }}</button>
                         </div>
                         <div>
-                            <label>Users <span class="text-xs font-normal" style="color:var(--muted)">(one per line, format: <code class="font-mono">user:realm:md5hash</code>)</span></label>
+                            <label>{{ pgettext('setting', 'Users') }} <span class="text-xs font-normal" style="color:var(--muted)">{{ _('(one per line, format: %(user_realm_md5hash)s)', user_realm_md5hash=tag('code', 'user:realm:md5hash', class_='font-mono')) }}</span></label>
                             <textarea id="wizDaUsers" class="input-field font-mono text-xs" rows="4" placeholder="admin:traefik:a2688e031edb4be6fe3079ef99a6274e"></textarea>
                         </div>
                     </div>
 
                     <div id="mwWiz-corsHeaders" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Allowed Methods</label>
+                            <label>{{ _('Allowed Methods') }}</label>
                             <div class="flex flex-wrap gap-2 rounded-lg p-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
                                 <label class="flex items-center gap-1.5 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizCorsGet" checked style="accent-color:var(--blue)"> GET</label>
                                 <label class="flex items-center gap-1.5 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizCorsPost" checked style="accent-color:var(--blue)"> POST</label>
@@ -336,39 +336,39 @@ X-Forwarded-Name: name</textarea>
                             </div>
                         </div>
                         <div>
-                            <label>Allowed Origins <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                            <label>{{ _('Allowed Origins %(one_per_line)s', one_per_line=tag('span', _('(one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <textarea id="wizCorsOrigins" class="input-field font-mono text-xs" rows="3" placeholder="https://example.com&#10;https://app.example.com"></textarea>
                         </div>
                         <div>
-                            <label>Allowed Headers <span class="text-xs font-normal" style="color:var(--muted)">(one per line, * for all)</span></label>
+                            <label>{{ _('Allowed Headers %(one_per_line)s', one_per_line=tag('span', _('(one per line, * for all)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <textarea id="wizCorsHeaders" class="input-field font-mono text-xs" rows="2" placeholder="*"></textarea>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label>Max Age <span class="text-xs font-normal" style="color:var(--muted)">(seconds)</span></label>
+                                <label>{{ _('Max Age %(seconds)s', seconds=tag('span', _('(seconds)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                                 <input type="number" id="wizCorsMaxAge" class="input-field" value="100" min="0">
                             </div>
                             <div class="flex items-end pb-2">
-                                <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizCorsVary" checked style="accent-color:var(--blue)"> Add Vary Header</label>
+                                <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizCorsVary" checked style="accent-color:var(--blue)"> {{ _('Add Vary Header') }}</label>
                             </div>
                         </div>
                     </div>
 
                     <div id="mwWiz-encodedCharacters" class="mw-wiz-form space-y-3" style="display:none">
-                        <p class="text-xs" style="color:var(--muted)">All are rejected by default (secure). Check a character only if a backend genuinely needs it in the request path. Requires Traefik 3.7+.</p>
+                        <p class="text-xs" style="color:var(--muted)">{{ _('All are rejected by default (secure). Check a character only if a backend genuinely needs it in the request path. Requires Traefik 3.7+.') }}</p>
                         <div class="flex flex-col gap-2 rounded-lg p-2.5" style="background:var(--input-bg);border:1px solid var(--border)">
-                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcSlash" style="accent-color:var(--blue)"> Allow encoded slash <code class="font-mono text-xs" style="color:var(--muted)">%2F</code></label>
-                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcBackSlash" style="accent-color:var(--blue)"> Allow encoded backslash <code class="font-mono text-xs" style="color:var(--muted)">%5C</code></label>
-                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcSemicolon" style="accent-color:var(--blue)"> Allow encoded semicolon <code class="font-mono text-xs" style="color:var(--muted)">%3B</code></label>
-                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcPercent" style="accent-color:var(--blue)"> Allow encoded percent <code class="font-mono text-xs" style="color:var(--muted)">%25</code></label>
-                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcQuestion" style="accent-color:var(--blue)"> Allow encoded question mark <code class="font-mono text-xs" style="color:var(--muted)">%3F</code></label>
-                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcHash" style="accent-color:var(--blue)"> Allow encoded hash <code class="font-mono text-xs" style="color:var(--muted)">%23</code></label>
+                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcSlash" style="accent-color:var(--blue)"> {{ _('Allow encoded slash') }} <code class="font-mono text-xs" style="color:var(--muted)">%2F</code></label>
+                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcBackSlash" style="accent-color:var(--blue)"> {{ _('Allow encoded backslash') }} <code class="font-mono text-xs" style="color:var(--muted)">%5C</code></label>
+                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcSemicolon" style="accent-color:var(--blue)"> {{ _('Allow encoded semicolon') }} <code class="font-mono text-xs" style="color:var(--muted)">%3B</code></label>
+                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcPercent" style="accent-color:var(--blue)"> {{ _('Allow encoded percent') }} <code class="font-mono text-xs" style="color:var(--muted)">%25</code></label>
+                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcQuestion" style="accent-color:var(--blue)"> {{ _('Allow encoded question mark') }} <code class="font-mono text-xs" style="color:var(--muted)">%3F</code></label>
+                            <label class="flex items-center gap-2 text-sm cursor-pointer" style="color:var(--text)"><input type="checkbox" id="wizEcHash" style="accent-color:var(--blue)"> {{ _('Allow encoded hash') }} <code class="font-mono text-xs" style="color:var(--muted)">%23</code></label>
                         </div>
                     </div>
 
                     <div id="mwWiz-redirectScheme" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Scheme</label>
+                            <label>{{ pgettext('setting', 'Scheme') }}</label>
                             <select id="wizRsScheme" class="input-field">
                                 <option value="https">https</option>
                                 <option value="http">http</option>
@@ -376,134 +376,134 @@ X-Forwarded-Name: name</textarea>
                         </div>
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="wizRsPermanent" checked class="rounded" style="accent-color:var(--blue)">
-                            <span class="text-sm" style="color:var(--text)">Permanent redirect (301)</span>
+                            <span class="text-sm" style="color:var(--text)">{{ _('Permanent redirect (301)') }}</span>
                         </div>
                     </div>
 
                     <div id="mwWiz-redirectRegex" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Regex</label>
+                            <label>{{ pgettext('setting', 'Regex') }}</label>
                             <input type="text" id="wizRrRegex" class="input-field font-mono text-sm" placeholder="^http://(.*)">
                         </div>
                         <div>
-                            <label>Replacement</label>
+                            <label>{{ pgettext('setting', 'Replacement') }}</label>
                             <input type="text" id="wizRrReplacement" class="input-field font-mono text-sm" placeholder="https://${1}">
                         </div>
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="wizRrPermanent" checked class="rounded" style="accent-color:var(--blue)">
-                            <span class="text-sm" style="color:var(--text)">Permanent redirect (301)</span>
+                            <span class="text-sm" style="color:var(--text)">{{ _('Permanent redirect (301)') }}</span>
                         </div>
                     </div>
 
                     <div id="mwWiz-stripPrefix" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Prefixes <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                            <label>{{ _('Prefixes %(one_per_line)s', one_per_line=tag('span', _('(one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <textarea id="wizSpPrefixes" class="input-field font-mono text-sm" rows="4" placeholder="/api&#10;/v1"></textarea>
                         </div>
                     </div>
 
                     <div id="mwWiz-stripPrefixRegex" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Regexes <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                            <label>{{ _('Regexes %(one_per_line)s', one_per_line=tag('span', _('(one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <textarea id="wizSprRegex" class="input-field font-mono text-sm" rows="3" placeholder="^/api/v[0-9]+"></textarea>
-                            <p class="text-xs mt-1" style="color:var(--muted)">The matched prefix is removed before the request is forwarded. Anchor with <code class="font-mono">^</code> or it can match mid-path.</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('The matched prefix is removed before the request is forwarded. Anchor with %(code)s or it can match mid-path.', code=tag('code', '^', class_='font-mono')) }}</p>
                         </div>
                     </div>
 
                     <div id="mwWiz-replacePathRegex" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Regex</label>
+                            <label>{{ pgettext('setting', 'Regex') }}</label>
                             <input id="wizRprRegex" type="text" class="input-field font-mono text-sm" placeholder="^/foo/(.*)">
                         </div>
                         <div>
-                            <label>Replacement</label>
+                            <label>{{ pgettext('setting', 'Replacement') }}</label>
                             <input id="wizRprReplacement" type="text" class="input-field font-mono text-sm" placeholder="/bar/$1">
-                            <p class="text-xs mt-1" style="color:var(--muted)">Capture groups are <code class="font-mono">$1</code>, <code class="font-mono">$2</code> and so on. In a compose file <code class="font-mono">$</code> must be written <code class="font-mono">$$</code>.</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Capture groups are %(n1)s, %(n2)s and so on. In a compose file %(code)s must be written %(code2)s.', n1=tag('code', '$1', class_='font-mono'), n2=tag('code', '$2', class_='font-mono'), code=tag('code', '$', class_='font-mono'), code2=tag('code', '$$', class_='font-mono')) }}</p>
                         </div>
                     </div>
 
                     <div id="mwWiz-errors" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Status codes <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                            <label>{{ _('Status codes %(one_per_line)s', one_per_line=tag('span', _('(one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <textarea id="wizErrStatus" class="input-field font-mono text-sm" rows="3" placeholder="500-599&#10;404"></textarea>
-                            <p class="text-xs mt-1" style="color:var(--muted)">Single codes or ranges. Only these responses are replaced.</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Single codes or ranges. Only these responses are replaced.') }}</p>
                         </div>
                         <div>
-                            <label>Service</label>
+                            <label>{{ pgettext('setting', 'Service') }}</label>
                             <select id="wizErrService" class="input-field text-sm"></select>
-                            <p class="text-xs mt-1" style="color:var(--muted)">The service that serves the error page. It must already exist in this config.</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('The service that serves the error page. It must already exist in this config.') }}</p>
                         </div>
                         <div>
-                            <label>Query <span class="text-xs font-normal" style="color:var(--muted)">(optional)</span></label>
+                            <label>{{ _('Query %(optional)s', optional=tag('span', _('(optional)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <input id="wizErrQuery" type="text" class="input-field font-mono text-sm" placeholder="/{status}.html">
-                            <p class="text-xs mt-1" style="color:var(--muted)"><code class="font-mono">{status}</code> is replaced with the response code.</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('%(status)s is replaced with the response code.', status=tag('code', '{status}', class_='font-mono')) }}</p>
                         </div>
                     </div>
 
                     <div id="mwWiz-contentType" class="mw-wiz-form space-y-3" style="display:none">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="wizCtAutoDetect" class="rounded" style="accent-color:var(--blue)">
-                            <span class="text-sm" style="color:var(--text)">Auto-detect the content type</span>
+                            <span class="text-sm" style="color:var(--text)">{{ _('Auto-detect the content type') }}</span>
                         </div>
-                        <p class="text-xs" style="color:var(--muted)">Off leaves the Content-Type header alone when the backend does not set one. On restores Go's automatic detection.</p>
+                        <p class="text-xs" style="color:var(--muted)">{{ _("Off leaves the Content-Type header alone when the backend does not set one. On restores Go's automatic detection.") }}</p>
                     </div>
 
                     <div id="mwWiz-grpcWeb" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Allowed origins <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                            <label>{{ _('Allowed origins %(one_per_line)s', one_per_line=tag('span', _('(one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <textarea id="wizGrpcOrigins" class="input-field font-mono text-sm" rows="3" placeholder="https://app.example.com&#10;*"></textarea>
-                            <p class="text-xs mt-1" style="color:var(--muted)">Converts gRPC-Web requests to gRPC before forwarding. <code class="font-mono">*</code> allows any origin.</p>
+                            <p class="text-xs mt-1" style="color:var(--muted)">{{ _('Converts gRPC-Web requests to gRPC before forwarding. %(code)s allows any origin.', code=tag('code', '*', class_='font-mono')) }}</p>
                         </div>
                     </div>
 
                     <div id="mwWiz-passTLSClientCert" class="mw-wiz-form space-y-3" style="display:none">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="wizPtcPem" checked class="rounded" style="accent-color:var(--blue)">
-                            <span class="text-sm" style="color:var(--text)">Pass the whole certificate</span>
+                            <span class="text-sm" style="color:var(--text)">{{ _('Pass the whole certificate') }}</span>
                         </div>
-                        <p class="text-xs" style="color:var(--muted)">Adds <code class="font-mono">X-Forwarded-Tls-Client-Cert</code> carrying the PEM. Only forward this to a backend you trust.</p>
+                        <p class="text-xs" style="color:var(--muted)">{{ _('Adds %(x_forwarded_tls)s carrying the PEM. Only forward this to a backend you trust.', x_forwarded_tls=tag('code', 'X-Forwarded-Tls-Client-Cert', class_='font-mono')) }}</p>
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="wizPtcInfo" class="rounded" style="accent-color:var(--blue)" onchange="document.getElementById('wizPtcInfoFields').style.display=this.checked?'':'none'">
-                            <span class="text-sm" style="color:var(--text)">Also pass selected certificate fields</span>
+                            <span class="text-sm" style="color:var(--text)">{{ _('Also pass selected certificate fields') }}</span>
                         </div>
                         <div id="wizPtcInfoFields" class="rounded-lg p-3 space-y-2.5" style="display:none;background:var(--input-bg);border:1px solid var(--border)">
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="wizPtcSubjectCN" checked class="rounded" style="accent-color:var(--blue)">
-                                <span class="text-sm" style="color:var(--text)">Subject Common Name</span>
+                                <span class="text-sm" style="color:var(--text)">{{ _('Subject Common Name') }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="wizPtcIssuerCN" class="rounded" style="accent-color:var(--blue)">
-                                <span class="text-sm" style="color:var(--text)">Issuer Common Name</span>
+                                <span class="text-sm" style="color:var(--text)">{{ _('Issuer Common Name') }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="wizPtcSerial" class="rounded" style="accent-color:var(--blue)">
-                                <span class="text-sm" style="color:var(--text)">Serial Number</span>
+                                <span class="text-sm" style="color:var(--text)">{{ _('Serial Number') }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="wizPtcNotAfter" class="rounded" style="accent-color:var(--blue)">
-                                <span class="text-sm" style="color:var(--text)">Expiry Date</span>
+                                <span class="text-sm" style="color:var(--text)">{{ _('Expiry Date') }}</span>
                             </div>
-                            <p class="text-xs" style="color:var(--muted)">Adds <code class="font-mono">X-Forwarded-Tls-Client-Cert-Info</code>. Traefik supports more fields than these, use the YAML editor for the rest.</p>
+                            <p class="text-xs" style="color:var(--muted)">{{ _('Adds %(x_forwarded_tls)s. Traefik supports more fields than these, use the YAML editor for the rest.', x_forwarded_tls=tag('code', 'X-Forwarded-Tls-Client-Cert-Info', class_='font-mono')) }}</p>
                         </div>
                     </div>
 
                     <div id="mwWiz-addPrefix" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Prefix</label>
+                            <label>{{ pgettext('setting', 'Prefix') }}</label>
                             <input type="text" id="wizApPrefix" class="input-field font-mono text-sm" placeholder="/api">
                         </div>
                     </div>
 
                     <div id="mwWiz-replacePath" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Path</label>
+                            <label>{{ pgettext('setting', 'Path') }}</label>
                             <input type="text" id="wizRpPath" class="input-field font-mono text-sm" placeholder="/foo">
                         </div>
                     </div>
 
                     <div id="mwWiz-compress" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Min Response Body Bytes <span class="text-xs font-normal" style="color:var(--muted)">(responses smaller than this are not compressed)</span></label>
+                            <label>{{ _('Min Response Body Bytes %(responses_smaller_than)s', responses_smaller_than=tag('span', _('(responses smaller than this are not compressed)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <input type="number" id="wizCmpMin" class="input-field" value="1200" min="0">
                         </div>
                     </div>
@@ -511,11 +511,11 @@ X-Forwarded-Name: name</textarea>
                     <div id="mwWiz-retry" class="mw-wiz-form space-y-3" style="display:none">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label>Attempts</label>
+                                <label>{{ pgettext('setting', 'Attempts') }}</label>
                                 <input type="number" id="wizRtAttempts" class="input-field" value="4" min="1">
                             </div>
                             <div>
-                                <label>Initial Interval</label>
+                                <label>{{ _('Initial Interval') }}</label>
                                 <input type="text" id="wizRtInterval" class="input-field" value="100ms" placeholder="100ms">
                             </div>
                         </div>
@@ -523,54 +523,54 @@ X-Forwarded-Name: name</textarea>
 
                     <div id="mwWiz-circuitBreaker" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Expression</label>
+                            <label>{{ pgettext('setting', 'Expression') }}</label>
                             <input type="text" id="wizCbExpr" class="input-field font-mono text-sm" value="NetworkErrorRatio() > 0.5">
                         </div>
-                        <p class="text-xs" style="color:var(--muted)">Supported functions: <code class="font-mono">NetworkErrorRatio()</code>, <code class="font-mono">ResponseCodeRatio()</code>, <code class="font-mono">LatencyAtQuantileMS()</code></p>
+                        <p class="text-xs" style="color:var(--muted)">{{ _('Supported functions: %(networkerrorratio)s, %(responsecoderatio)s, %(latencyatquantilems)s', networkerrorratio=tag('code', 'NetworkErrorRatio()', class_='font-mono'), responsecoderatio=tag('code', 'ResponseCodeRatio()', class_='font-mono'), latencyatquantilems=tag('code', 'LatencyAtQuantileMS()', class_='font-mono')) }}</p>
                     </div>
 
                     <div id="mwWiz-buffering" class="mw-wiz-form space-y-3" style="display:none">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label>Max Request Body <span class="text-xs font-normal" style="color:var(--muted)">(bytes)</span></label>
+                                <label>{{ _('Max Request Body %(bytes)s', bytes=tag('span', _('(bytes)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                                 <input type="number" id="wizBufReq" class="input-field" value="10485760" min="0">
                             </div>
                             <div>
-                                <label>Max Response Body <span class="text-xs font-normal" style="color:var(--muted)">(bytes)</span></label>
+                                <label>{{ _('Max Response Body %(bytes)s', bytes=tag('span', _('(bytes)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                                 <input type="number" id="wizBufRes" class="input-field" value="10485760" min="0">
                             </div>
                         </div>
                         <div>
-                            <label>Retry Expression <span class="text-xs font-normal" style="color:var(--muted)">(optional)</span></label>
+                            <label>{{ _('Retry Expression %(optional)s', optional=tag('span', _('(optional)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <input type="text" id="wizBufRetry" class="input-field font-mono text-sm" placeholder="IsNetworkError() &amp;&amp; Attempts() &lt; 2">
                         </div>
                     </div>
 
                     <div id="mwWiz-chain" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Middlewares <span class="text-xs font-normal" style="color:var(--muted)">(one per line)</span></label>
+                            <label>{{ _('Middlewares %(one_per_line)s', one_per_line=tag('span', _('(one per line)'), class_='text-xs font-normal', style_='color:var(--muted)')) }}</label>
                             <textarea id="wizChMiddlewares" class="input-field font-mono text-sm" rows="4" placeholder="redirect-https&#10;secure-headers&#10;rate-limit"></textarea>
                         </div>
                     </div>
 
                     <div id="mwWiz-inFlightReq" class="mw-wiz-form space-y-3" style="display:none">
                         <div>
-                            <label>Max In-Flight Requests</label>
+                            <label>{{ _('Max In-Flight Requests') }}</label>
                             <input type="number" id="wizIfAmount" class="input-field" value="10" min="1">
                         </div>
                     </div>
                 </div>
 
                 <div id="mwEditorSection">
-                    <label>Configuration (YAML)</label>
+                    <label>{{ _('Configuration (YAML)') }}</label>
                     <div id="mwEditorContainer" class="rounded-lg overflow-hidden" style="height:260px;border:1px solid var(--border)"></div>
                     <textarea name="middlewareContent" id="middlewareContent" style="display:none"></textarea>
                 </div>
             </div>
 
             <div class="detail-panel-foot flex justify-end gap-2 px-6 py-4">
-                <button type="button" onclick="closeMwModal()" class="btn-secondary">Cancel</button>
-                <button type="submit" class="btn-primary">Save Middleware</button>
+                <button type="button" onclick="closeMwModal()" class="btn-secondary">{{ pgettext('button', 'Cancel') }}</button>
+                <button type="submit" class="btn-primary">{{ _('Save Middleware') }}</button>
             </div>
         </form>
 </div>

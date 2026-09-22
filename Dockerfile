@@ -15,6 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
 COPY . .
 
+RUN pybabel compile -d locale -D messages --statistics
+
 RUN mkdir -p /app/config /app/backups /app/templates /app/static/icons \
              /app/static/vendor/monaco /app/static/vendor/fonts/inter \
              /app/static/vendor/fonts/jetbrains-mono \

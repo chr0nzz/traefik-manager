@@ -3,6 +3,8 @@ import os
 import re
 import subprocess
 
+from js_i18n import i18n_prelude
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JS = os.path.join(ROOT, 'static', 'js', 'dashboard-tab.js')
 
@@ -34,7 +36,7 @@ Date.now = () => 1000 * 1000;
 
 def _run(body):
     src = _src()
-    stub = HARNESS + _fn('_dskChecksOn', src) + '\n' + _fn('_dskAgo', src) + '\n' + _fn('_dskState', src) + '\n' + body
+    stub = i18n_prelude() + HARNESS + _fn('_dskChecksOn', src) + '\n' + _fn('_dskAgo', src) + '\n' + _fn('_dskState', src) + '\n' + body
     out = subprocess.run(['node', '-e', stub], capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
     return json.loads(out.stdout.strip().splitlines()[-1])
@@ -123,9 +125,9 @@ def _read_js(name):
 
 def _alarm(down, warn):
     src = _src()
-    stub = ("const _esc = s => String(s == null ? '' : s);\n"
+    stub = (i18n_prelude() + "const _esc = s => String(s == null ? '' : s);\n"
             "function _dskSpec(p) { return JSON.stringify(p); }\n"
-            + _fn('_dskAlarm', src)
+            + _fn('_dskGroupLabel', src) + '\n' + _fn('_dskAlarm', src)
             + "\nconsole.log(JSON.stringify(_dskAlarm({ name: 'Media' }, %d, %d)));" % (down, warn))
     out = subprocess.run(['node', '-e', stub], capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
@@ -148,7 +150,8 @@ def test_a_pod_with_only_one_kind_reports_only_that_kind():
 def test_the_hidden_roll_up_names_both_kinds():
     src = _src()
     body = src[src.index('const hidden = list.slice(limit);'):src.index('pod.appendChild(btn);')]
-    assert "(hDown ? ', ' + hDown + ' of them down' : '') + (hWarn ? ', ' + hWarn + ' of them degraded' : '')" in body, \
+    assert "hDown ? ', ' + t('{count} of them down', { count: hDown })" in body \
+        and "hWarn ? ', ' + t('{count} of them degraded', { count: hWarn })" in body, \
         'the +N more aria label still collapses degraded into down'
     assert body.count('class="dsk-more-w"') == 1 and body.count('class="dsk-more-n"') == 1
 
@@ -157,7 +160,7 @@ def test_the_dashboard_launch_url_skips_a_negated_host():
     src = _src()
     body = _fn('_dashLaunchInfo', src)
     assert "m[1] !== '!'" in body, 'a negated Host() must not become the launch URL'
-    stub = ("const _esc = s => String(s == null ? '' : s);\n" + _fn('_dskRuleBranches', src) + '\n'
+    stub = (i18n_prelude() + "const _esc = s => String(s == null ? '' : s);\n" + _fn('_dskRuleBranches', src) + '\n'
             + _fn('_dskWebUrl', src) + '\n' + body
             + "\nconsole.log(JSON.stringify([_dashLaunchInfo({ rule: 'Host(`a.example.com`) && !Host(`b.example.com`)', tls: true }, {}).url,"
               " _dashLaunchInfo({ rule: '!Host(`b.example.com`) && Host(`a.example.com`)', tls: true }, {}).url,"

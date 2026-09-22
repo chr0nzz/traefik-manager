@@ -34,6 +34,16 @@ Page routes (everything outside `/api/`) still redirect to `/login` as a browser
 Before v1.10.1, `/api/` paths also redirected to `/login`, which returned the login page's HTML with status `200`. Clients could not distinguish "logged out" from "no data". If you parsed those responses, switch to checking for `401`.
 :::
 
+### Language of error messages
+
+`error` and `message` texts are for people, so a browser session gets them in the interface language: the saved language setting, else the browser's `Accept-Language`, else English.
+
+Requests authenticated with an API key always get English, whatever the settings or headers say, so scripts and the mobile app see the same text on every instance. Add `?lang=de` (any language the instance ships) to ask for one explicitly.
+
+::: tip New in v1.15.0
+Before v1.15.0 every message was English. Nothing changes for API key clients; branch on the status code and fields such as `ok`, not on the wording.
+:::
+
 ---
 
 ## Response format
@@ -726,6 +736,18 @@ Update one or more preferences. Keys not sent keep their current value. A bare o
 | `staticOpenSections`, `settingsOpenSections` | string arrays of accordion section names |
 
 Anything else is dropped rather than stored. Returns `400` if `ui_prefs` is not an object.
+
+---
+
+### `POST /api/settings/language`
+
+Set the default language. Takes a tag from `available_languages` in `GET /api/settings`, or an empty string to follow each browser's language.
+
+```json
+{ "default_language": "de" }
+```
+
+`400` for a language that is not available.
 
 ---
 

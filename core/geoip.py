@@ -72,8 +72,37 @@ def _geoip_lookup(ip: str, reader=_GEOIP_SENTINEL):
     return result
 
 
+MAX_DOWNLOAD_BYTES = 128 * 1024 * 1024
+MAX_UNPACKED_BYTES = 384 * 1024 * 1024
+
+
+class GeoIPTooLarge(Exception):
+    pass
+
+
+def _stream_gunzip(resp, dest: str) -> int:
+    import zlib
+    decoder = zlib.decompressobj(16 + zlib.MAX_WBITS)
+    downloaded = written = 0
+    with open(dest, 'wb') as out:
+        for chunk in resp.iter_content(chunk_size=256 * 1024):
+            if not chunk:
+                continue
+            downloaded += len(chunk)
+            if downloaded > MAX_DOWNLOAD_BYTES:
+                raise GeoIPTooLarge(f'download passed {MAX_DOWNLOAD_BYTES} bytes')
+            written += out.write(decoder.decompress(chunk, MAX_UNPACKED_BYTES - written + 1))
+            if written > MAX_UNPACKED_BYTES:
+                raise GeoIPTooLarge(f'unpacked past {MAX_UNPACKED_BYTES} bytes')
+            if decoder.unconsumed_tail:
+                raise GeoIPTooLarge(f'unpacked past {MAX_UNPACKED_BYTES} bytes')
+        written += out.write(decoder.flush())
+        if written > MAX_UNPACKED_BYTES:
+            raise GeoIPTooLarge(f'unpacked past {MAX_UNPACKED_BYTES} bytes')
+    return written
+
+
 def _geoip_download():
-    import gzip
     now = time.gmtime()
     y, m = now.tm_year, now.tm_mon
     pm = (y, m - 1) if m > 1 else (y - 1, 12)
@@ -82,15 +111,17 @@ def _geoip_download():
     for ym in months:
         url = _DBIP_URL.format(ym=ym)
         try:
-            resp = requests.get(url, timeout=90, headers={'User-Agent': f'traefik-manager/{env.APP_VERSION}'})
-            if resp.status_code == 200 and resp.content:
-                data = gzip.decompress(resp.content)
+            resp = requests.get(url, timeout=90, stream=True,
+                                headers={'User-Agent': f'traefik-manager/{env.APP_VERSION}'})
+            if resp.status_code == 200:
                 path = _geoip_db_path()
                 os.makedirs(os.path.dirname(path), exist_ok=True)
                 tmp = f"{path}.tmp.{os.getpid()}.{threading.get_ident()}"
                 try:
-                    with open(tmp, 'wb') as f:
-                        f.write(data)
+                    written = _stream_gunzip(resp, tmp)
+                    if not written:
+                        last_err = f'{ym}: no data'
+                        continue
                     os.replace(tmp, path)
                 finally:
                     if os.path.exists(tmp):

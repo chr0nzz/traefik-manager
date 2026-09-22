@@ -10,7 +10,7 @@ All lookups happen **on the server against a local database**. IP addresses are 
 
 The setup wizard offers it as **GeoIP lookup** on the **Monitoring** step. Afterwards:
 
-1. Open **Settings → Interface → Geolocation** and turn on **IP geolocation**.
+1. Open **Settings → Interface → General → Geolocation** and turn on **IP geolocation**.
 2. TM downloads the country database automatically. Use **Download** / **Update** to refresh it at any time.
 
 Open the Logs or CrowdSec tab and IPs will show their country.
@@ -50,7 +50,7 @@ volumes:
 
 | Setting | Where | Description |
 |---|---|---|
-| IP geolocation | Settings → Interface → Geolocation, or `geoip_enabled` in `manager.yml` | Master on/off toggle (off by default) |
+| IP geolocation | Settings → Interface → General → Geolocation, or `geoip_enabled` in `manager.yml` | Master on/off toggle (off by default) |
 | `GEOIP_DB_PATH` | Environment variable, or `geoip_db_path` in `manager.yml` | Path to a custom `.mmdb`; overrides the built-in DB-IP download |
 
 ## Notes

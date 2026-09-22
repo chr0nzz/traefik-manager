@@ -83,7 +83,7 @@ window.rmEnsureData = async function(force, opts) {
             wantSvc ? agentFetch('/api/traefik/services').catch(() => null) : null
         ]);
         if (!routeRes.ok) {
-            _rmLoadErr = await _errText(routeRes, 'Could not load route map data');
+            _rmLoadErr = await _errText(routeRes, t('Could not load route map data'));
             throw new Error(_rmLoadErr);
         }
         const routeData = await routeRes.json();
@@ -132,7 +132,7 @@ window.rmEnsureData = async function(force, opts) {
             }
         } catch(_) {}
     } catch(e) {
-        if (!_rmLoadErr) _rmLoadErr = _netErrText(e, 'Could not load route map data');
+        if (!_rmLoadErr) _rmLoadErr = _netErrText(e, t('Could not load route map data'));
         _rmAllRoutes    = [];
         _rmAllEps       = {};
         _rmRouterStatus = {};
@@ -255,7 +255,7 @@ function _rmBuildDagre(routes) {
         { ...dims('route', _rmNodeHtml('route', r.id, { route:r })), type:'route', id:r.id, route:r }));
     Object.entries(collapsed).forEach(([prov, rs]) => {
         const ctx = { label: prov, count: rs.length,
-                      title: rs.length + ' ' + prov + ' routes - click to list them' };
+                      title: t('{rs_count} {prov} routes - click to list them', { rs_count: rs.length, prov }) };
         g.setNode(`group:${prov}`,
             { ...dims('group', _rmNodeHtml('group', prov, ctx)), type:'group', id:prov,
               label: prov, count: rs.length, title: ctx.title, members: rs });
@@ -300,10 +300,6 @@ function _rmBuildDagre(routes) {
 
     dagre.layout(g);
     return { g, mwUsage, svcMap, epNames, mwNames, collapsed };
-}
-
-function _esc(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 const _rmPfx = name => name.split(/[-_\s]/)[0].replace(/\d+$/, '');
@@ -374,7 +370,7 @@ window.rmPickProvider = function(p, label) {
     _rmProvider = p;
     document.getElementById('rm-provider-label').textContent = label;
     document.getElementById('rm-dd-provider-btn').classList.toggle('active', p !== 'all');
-    document.querySelectorAll('#rm-dd-provider-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === label));
+    document.querySelectorAll('#rm-dd-provider-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.dataset.value === p));
     toggleLiveDd('rm-dd-provider');
     rmRender();
 };
@@ -383,7 +379,7 @@ window.rmPickEp = function(ep, label) {
     _rmEpFilter = ep;
     document.getElementById('rm-ep-label').textContent = label;
     document.getElementById('rm-dd-ep-btn').classList.toggle('active', ep !== 'all');
-    document.querySelectorAll('#rm-dd-ep-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === label));
+    document.querySelectorAll('#rm-dd-ep-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.dataset.value === ep));
     toggleLiveDd('rm-dd-ep');
     rmRender();
 };
@@ -392,11 +388,12 @@ function rmRenderEpFilters() {
     const epNames = Object.keys(_rmAllEps).sort();
     const menu = document.getElementById('rm-dd-ep-menu');
     if (!menu) return;
-    menu.innerHTML = `<button class="live-dd-item${_rmEpFilter === 'all' ? ' active' : ''}" onclick="rmPickEp('all','All Entry Points')">All Entry Points</button>`;
+    menu.innerHTML = `<button class="live-dd-item${_rmEpFilter === 'all' ? ' active' : ''}" data-value="all" onclick="rmPickEp('all','All Entry Points')">${th('All Entry Points')}</button>`;
     epNames.forEach(ep => {
         const btn = document.createElement('button');
         btn.className = 'live-dd-item' + (ep === _rmEpFilter ? ' active' : '');
         btn.textContent = ep;
+        btn.dataset.value = ep;
         btn.onclick = () => window.rmPickEp(ep, ep);
         menu.appendChild(btn);
     });
@@ -406,12 +403,13 @@ function rmRenderProviderFilters() {
     const providers = [...new Set(_rmAllRoutes.map(r => r.provider || 'file'))].sort();
     const menu = document.getElementById('rm-dd-provider-menu');
     if (!menu) return;
-    menu.innerHTML = `<button class="live-dd-item${_rmProvider === 'all' ? ' active' : ''}" onclick="rmPickProvider('all','All Providers')">All Providers</button>`;
+    menu.innerHTML = `<button class="live-dd-item${_rmProvider === 'all' ? ' active' : ''}" data-value="all" onclick="rmPickProvider('all','All Providers')">${th('All Providers')}</button>`;
     if (providers.length > 1) {
         providers.forEach(p => {
             const btn = document.createElement('button');
             btn.className = 'live-dd-item' + (p === _rmProvider ? ' active' : '');
             btn.textContent = p;
+            btn.dataset.value = p;
             btn.onclick = () => window.rmPickProvider(p, p);
             menu.appendChild(btn);
         });
@@ -427,11 +425,11 @@ window.rmClearFilters = function() {
         const btn = document.getElementById('rmf-' + p);
         if (btn) btn.className = 'proto-btn text-xs px-3 py-1.5' + (p === 'all' ? ' active-http' : '');
     });
-    document.getElementById('rm-provider-label').textContent = 'All Providers';
-    document.getElementById('rm-ep-label').textContent = 'All Entry Points';
+    document.getElementById('rm-provider-label').textContent = t('All Providers');
+    document.getElementById('rm-ep-label').textContent = t('All Entry Points');
     ['rm-dd-provider-btn','rm-dd-ep-btn'].forEach(id => document.getElementById(id)?.classList.remove('active'));
-    document.querySelectorAll('#rm-dd-provider-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === 'All Providers'));
-    document.querySelectorAll('#rm-dd-ep-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.textContent.trim() === 'All Entry Points'));
+    document.querySelectorAll('#rm-dd-provider-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.dataset.value === 'all'));
+    document.querySelectorAll('#rm-dd-ep-menu .live-dd-item').forEach(b => b.classList.toggle('active', b.dataset.value === 'all'));
     rmRender();
 };
 
@@ -453,10 +451,10 @@ window.refreshRoutemapTab = async function(force) {
     document.getElementById('rmLoading').classList.add('hidden');
     if (!ok) {
         if (!_rmDrawn) {
-            showToast((_rmLoadErr || 'Could not load route map data').replace(/\.?$/, '.') + ' Retrying on next open.', 'error');
+            showToast(t('{replace} Retrying on next open.', { replace: (_rmLoadErr || 'Could not load route map data').replace(/\.?$/, '.') }), 'error');
             return;
         }
-        showToast((_rmLoadErr || 'Could not refresh the route map').replace(/\.?$/, '.') + ' Showing the last data.', 'error');
+        showToast(t('{replace} Showing the last data.', { replace: (_rmLoadErr || 'Could not refresh the route map').replace(/\.?$/, '.') }), 'error');
     }
     _rmDrawn = true;
     rmRenderProviderFilters();
@@ -760,7 +758,7 @@ function rmOpenPopup(type, nodeId, allRoutes, preFiltered) {
     const popup   = document.getElementById('rmPopup');
     if (!popup) return;
 
-    const typeLabels = { ep: 'Entry Point', mw: 'Middleware', svc: 'Service', route: 'Route', group: 'Group' };
+    const typeLabels = { ep: t('Entry Point'), mw: 'Middleware', svc: 'Service', route: 'Route', group: 'Group' };
     const typeIcons  = { ep: 'ph-arrows-in', mw: 'ph-shield-check', svc: 'ph-hard-drives',
                          route: 'ph-arrows-split', group: 'ph-stack' };
     document.getElementById('rmPopupTypeBadge').textContent = typeLabels[type] || type;
@@ -771,7 +769,7 @@ function rmOpenPopup(type, nodeId, allRoutes, preFiltered) {
     const chip = (icon, label, val, color) => {
         if (!val) return '';
         const c = color ? `style="color:${color};border-color:${color}44;background:${color}11"` : '';
-        return `<span class="rm-detail-chip" ${c}><i class="ph-bold ${icon}"></i><span>${label}</span><b>${_esc(String(val))}</b></span>`;
+        return `<span class="rm-detail-chip" ${c}><i class="ph-bold ${icon}"></i><span>${_esc(label)}</span><b>${_esc(String(val))}</b></span>`;
     };
 
     let focusedRoutes = [];
@@ -779,33 +777,33 @@ function rmOpenPopup(type, nodeId, allRoutes, preFiltered) {
 
     if (type === 'group') {
         focusedRoutes = preFiltered || [];
-        detailsHtml   = chip('ph-git-branch', 'Routes', focusedRoutes.length);
+        detailsHtml   = chip('ph-git-branch', tc('label', 'Routes'), focusedRoutes.length);
     } else if (type === 'route') {
         const r = allRoutes.find(r => r.id === nodeId);
         if (!r) return;
         focusedRoutes = [r];
         const allDomains = [...((r.liveRule || r.rule)||'').matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
-        allDomains.forEach(d => { detailsHtml += chip('ph-globe', 'Domain', d); });
-        if (r.target && r.target !== 'N/A') detailsHtml += chip('ph-cube', 'Target', r.target);
-        detailsHtml += chip('ph-arrows-left-right', 'Protocol', (r.protocol||'http').toUpperCase());
-        _rmEps(r).forEach(ep => { detailsHtml += chip('ph-arrows-in', 'Entry Point', ep); });
-        if (r.tls)          detailsHtml += chip('ph-lock', 'TLS', 'Enabled');
-        if (r.certResolver) detailsHtml += chip('ph-certificate', 'Resolver', r.certResolver);
-        if (!r.enabled)     detailsHtml += chip('ph-eye-slash', 'Status', 'Inactive');
-        if (r.provider && r.provider !== 'file') detailsHtml += chip('ph-package', 'Provider', r.provider);
+        allDomains.forEach(d => { detailsHtml += chip('ph-globe', tc('label', 'Domain'), d); });
+        if (r.target && r.target !== 'N/A') detailsHtml += chip('ph-cube', tc('label', 'Target'), r.target);
+        detailsHtml += chip('ph-arrows-left-right', tc('label', 'Protocol'), (r.protocol||'http').toUpperCase());
+        _rmEps(r).forEach(ep => { detailsHtml += chip('ph-arrows-in', t('Entry Point'), ep); });
+        if (r.tls)          detailsHtml += chip('ph-lock', tc('label', 'TLS'), tc('status', 'Enabled'));
+        if (r.certResolver) detailsHtml += chip('ph-certificate', tc('label', 'Resolver'), r.certResolver);
+        if (!r.enabled)     detailsHtml += chip('ph-eye-slash', tc('label', 'Status'), tc('status', 'Inactive'));
+        if (r.provider && r.provider !== 'file') detailsHtml += chip('ph-package', tc('label', 'Provider'), r.provider);
     } else if (type === 'ep') {
         focusedRoutes = allRoutes.filter(r => _rmEps(r).includes(nodeId));
         const addr = _rmAllEps[nodeId]?.address || '';
-        if (addr) detailsHtml += chip('ph-plugs-connected', 'Address', addr);
-        detailsHtml += chip('ph-git-branch', 'Routes', focusedRoutes.length);
+        if (addr) detailsHtml += chip('ph-plugs-connected', tc('label', 'Address'), addr);
+        detailsHtml += chip('ph-git-branch', tc('label', 'Routes'), focusedRoutes.length);
     } else if (type === 'mw') {
         focusedRoutes = allRoutes.filter(r => (r.middlewares||[]).includes(nodeId));
-        detailsHtml   = chip('ph-git-branch', 'Routes', focusedRoutes.length);
+        detailsHtml   = chip('ph-git-branch', tc('label', 'Routes'), focusedRoutes.length);
     } else if (type === 'svc') {
         focusedRoutes = allRoutes.filter(r => r.service_name === nodeId);
         const target  = focusedRoutes.find(r => r.target && r.target !== 'N/A')?.target || '';
-        if (target) detailsHtml += chip('ph-cube', 'Target', target);
-        detailsHtml += chip('ph-git-branch', 'Routes', focusedRoutes.length);
+        if (target) detailsHtml += chip('ph-cube', tc('label', 'Target'), target);
+        detailsHtml += chip('ph-git-branch', tc('label', 'Routes'), focusedRoutes.length);
     }
 
     document.getElementById('rmPopupDetails').innerHTML = detailsHtml;
@@ -1118,17 +1116,17 @@ function rmShowTooltip(anchorEl, routeId, routes) {
     const eps    = route.entryPoints || [];
     const mwHtml = mws.length
         ? mws.map(m => `<span class="rm-mw-pill">${_esc(m.split('@')[0])}</span>`).join('')
-        : `<span style="color:var(--muted);font-size:10px">none</span>`;
+        : `<span style="color:var(--muted);font-size:10px">${thc('label', 'none')}</span>`;
     const epHtml = eps.length
         ? eps.map(e => `<span class="rm-shield-pill">${_esc(e)}</span>`).join('')
-        : `<span style="color:var(--muted);font-size:10px">none</span>`;
+        : `<span style="color:var(--muted);font-size:10px">${thc('label', 'none')}</span>`;
 
     _rmTipEl.innerHTML = `
         <div class="rm-tooltip-name">${_esc(route.name)}</div>
-        ${route.target ? `<div class="rm-tooltip-row"><span class="rm-tooltip-label">Target</span><code>${_esc(route.target)}</code></div>` : ''}
-        <div class="rm-tooltip-row"><span class="rm-tooltip-label">Entry points</span><div class="rm-mw-pills">${epHtml}</div></div>
-        <div class="rm-tooltip-row"><span class="rm-tooltip-label">Middlewares</span><div class="rm-mw-pills">${mwHtml}</div></div>
-        <div style="margin-top:6px;font-size:10px;color:var(--muted);opacity:0.7">Click to inspect</div>
+        ${route.target ? `<div class="rm-tooltip-row"><span class="rm-tooltip-label">${thc('label', 'Target')}</span><code>${_esc(route.target)}</code></div>` : ''}
+        <div class="rm-tooltip-row"><span class="rm-tooltip-label">${th('Entry points')}</span><div class="rm-mw-pills">${epHtml}</div></div>
+        <div class="rm-tooltip-row"><span class="rm-tooltip-label">${thc('label', 'Middlewares')}</span><div class="rm-mw-pills">${mwHtml}</div></div>
+        <div style="margin-top:6px;font-size:10px;color:var(--muted);opacity:0.7">${th('Click to inspect')}</div>
     `;
 
     const rect = anchorEl.getBoundingClientRect();
@@ -1151,15 +1149,15 @@ function rmShowNodeTooltip(anchorEl, type, nodeId, routes) {
         _rmTipEl.className = 'rm-tooltip';
         document.body.appendChild(_rmTipEl);
     }
-    const label = type === 'ep' ? 'Entry Point' : type === 'mw' ? 'Middleware' : 'Service';
+    const label = type === 'ep' ? t('Entry Point') : type === 'mw' ? t('Middleware') : t('Service');
     const routeList = connected.length
         ? connected.map(r => `<span class="rm-shield-pill">${_esc(r.name)}</span>`).join('')
-        : `<span style="color:var(--muted);font-size:10px">none</span>`;
+        : `<span style="color:var(--muted);font-size:10px">${thc('label', 'none')}</span>`;
     _rmTipEl.innerHTML = `
         <div class="rm-tooltip-name">${_esc(nodeId.split('@')[0])}</div>
         <div class="rm-tooltip-row"><span class="rm-tooltip-label">${label}</span></div>
-        <div class="rm-tooltip-row"><span class="rm-tooltip-label">Used by</span><div class="rm-mw-pills">${routeList}</div></div>
-        <div style="margin-top:6px;font-size:10px;color:var(--muted);opacity:0.7">Click to inspect</div>
+        <div class="rm-tooltip-row"><span class="rm-tooltip-label">${th('Used by')}</span><div class="rm-mw-pills">${routeList}</div></div>
+        <div style="margin-top:6px;font-size:10px;color:var(--muted);opacity:0.7">${th('Click to inspect')}</div>
     `;
     const rect = anchorEl.getBoundingClientRect();
     _rmTipEl.style.display = 'block';
@@ -1175,7 +1173,7 @@ function rmHideTooltip() {
 
 function _rmTouchLayout() {
     try {
-        if (window.matchMedia('(pointer: coarse)').matches) return true;
+        if (window.matchMedia(t('(pointer: coarse)')).matches) return true;
     } catch (e) {}
     return window.innerWidth <= 640;
 }

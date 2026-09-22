@@ -61,7 +61,7 @@ Always visible. These tabs read and write your Traefik dynamic config.
 
 Tabs live in the left side nav, grouped Traffic, Observability, Infrastructure and Providers. Settings opens from its foot, or with **Shift** + **P**.
 
-Layout is set under **Settings - Interface - Layout**, instance-wide.
+Layout is set under **Settings - Interface - General - Layout**, instance-wide.
 
 | Layout | Content | Detail panel |
 |--------|---------|--------------|
@@ -80,7 +80,7 @@ Colour is rationed: a healthy install is almost monochrome, so anything coloured
 
 The HTTP routers card also counts routes whose backend the background reachability check found down, as **unreachable**, and routes with only some backend servers answering, as **degraded**, alongside what Traefik itself reports. Click either count to filter the Routes tab to those routes. Entry point rows and the Dashboard pod headers count both the same way.
 
-Choose which of the four tabs show it under **Settings - Interface - Show on**, and switch to a denser layout with **Compact stat cards**. The [Logs](tab-logs.md) and [CrowdSec](tab-crowdsec.md) analytics panels use the same visual language.
+Choose which of the four tabs show it under **Settings - Interface - Dashboard - Show on**, and switch to a denser layout with **Compact stat cards**. The [Logs](tab-logs.md) and [CrowdSec](tab-crowdsec.md) analytics panels use the same visual language.
 
 ---
 

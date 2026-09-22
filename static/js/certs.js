@@ -38,8 +38,7 @@ function _paintCertDomainFilter() {
     }));
     const names = [...seen.keys()].sort();
     const keep  = names.includes(sel.value) ? sel.value : '';
-    sel.innerHTML = '<option value="">All domains</option>'
-        + names.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('');
+    sel.innerHTML = `<option value="">${th('All domains')}</option>${names.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('')}`;
     sel.value = keep;
     sel.style.display = names.length > 1 ? '' : 'none';
 }
@@ -75,25 +74,25 @@ function renderCertsVerdict() {
     });
     const resolvers = new Set(_allCerts.map(c => c.resolver).filter(Boolean)).size;
     const flags = [{ cls: 'd-off', ic: 'ph-bold ph-shield-check', n: _allCerts.length,
-                     label: _allCerts.length === 1 ? 'certificate' : 'certificates' }];
-    if (expired)  flags.push({ cls: 'd-bad', ic: 'ph-fill ph-x-circle', n: expired, label: 'expired' });
-    if (critical) flags.push({ cls: 'd-bad', ic: 'ph-fill ph-warning-octagon', n: critical, label: 'under 7d' });
-    if (expiring) flags.push({ cls: 'd-warn', ic: 'ph-fill ph-hourglass-high', n: expiring, label: 'under 30d' });
-    if (!expired && !critical && !expiring) flags.push({ cls: 'd-on', ic: 'ph-bold ph-check', n: '', label: 'none expiring soon' });
-    if (resolvers > 1) flags.push({ cls: 'd-off', ic: 'ph-bold ph-certificate', n: resolvers, label: 'resolvers' });
+                     label: _allCerts.length === 1 ? tc('label', 'certificate') : tc('label', 'certificates') }];
+    if (expired)  flags.push({ cls: 'd-bad', ic: 'ph-fill ph-x-circle', n: expired, label: tc('label', 'expired') });
+    if (critical) flags.push({ cls: 'd-bad', ic: 'ph-fill ph-warning-octagon', n: critical, label: t('under 7d') });
+    if (expiring) flags.push({ cls: 'd-warn', ic: 'ph-fill ph-hourglass-high', n: expiring, label: t('under 30d') });
+    if (!expired && !critical && !expiring) flags.push({ cls: 'd-on', ic: 'ph-bold ph-check', n: '', label: t('none expiring soon') });
+    if (resolvers > 1) flags.push({ cls: 'd-off', ic: 'ph-bold ph-certificate', n: resolvers, label: tc('label', 'resolvers') });
     const unused   = _certUsage.certs.filter(u => u.unused).length;
     const orphaned = _certUsage.certs.filter(u => u.orphaned).length;
-    if (unused)   flags.push({ cls: 'd-warn', ic: 'ph-bold ph-plugs', n: unused, label: 'unused' });
-    if (orphaned) flags.push({ cls: 'd-warn', ic: 'ph-bold ph-link-break', n: orphaned, label: 'no resolver' });
+    if (unused)   flags.push({ cls: 'd-warn', ic: 'ph-bold ph-plugs', n: unused, label: tc('label', 'unused') });
+    if (orphaned) flags.push({ cls: 'd-warn', ic: 'ph-bold ph-link-break', n: orphaned, label: t('no resolver') });
     _tvStrip('certsVerdict', {
         health: (expired || critical) ? 'down' : expiring ? 'warn' : 'up',
         ic: (expired || critical) ? 'ph-fill ph-warning-octagon' : expiring ? 'ph-fill ph-hourglass-high' : 'ph-fill ph-check-circle',
-        txt: expired  ? _sdNum(expired) + (expired === 1 ? ' certificate has expired' : ' certificates have expired')
-           : critical ? _sdNum(critical) + ' expiring within 7 days'
-           : expiring ? _sdNum(expiring) + ' expiring within 30 days'
-           : 'All certificates healthy',
+        txt: expired  ? tn('{count} certificate has expired', '{count} certificates have expired', expired, { count: _sdNum(expired) })
+           : critical ? t('{critical} expiring within 7 days', { critical: _sdNum(critical) })
+           : expiring ? t('{expiring} expiring within 30 days', { expiring: _sdNum(expiring) })
+           : t('All certificates healthy'),
         flags,
-        meta: [next !== null ? 'next expiry in <b>' + _sdNum(next) + 'd</b>' : '',
+        meta: [next !== null ? `${th('next expiry in {d}', { d: tmHtml(`<b>${_sdNum(next)}d</b>`) })}` : '',
                _certUsage.why ? _esc(_certUsage.why) : ''].filter(Boolean).join(' · '),
     });
 }
@@ -102,17 +101,17 @@ function _certFlags(c) {
     const v = _certVerdict(c);
     if (!v) return [];
     const out = [];
-    if (v.orphaned) out.push('no resolver');
-    if (v.unused)   out.push('unused');
+    if (v.orphaned) out.push(t('no resolver'));
+    if (v.unused)   out.push(tc('label', 'unused'));
     return out;
 }
 
 function _certFlagClass(c) { return _certFlags(c).length ? ' tm-warn' : ''; }
 
 function _certLeft(days) {
-    if (days > 0) return days + 'd left';
-    if (days === 0) return 'expires today';
-    return days === -1 ? 'expired yesterday' : 'expired ' + Math.abs(days) + 'd ago';
+    if (days > 0) return t('{days}d left', { days });
+    if (days === 0) return t('expires today');
+    return days === -1 ? t('expired yesterday') : t('expired {abs}d ago', { abs: Math.abs(days) });
 }
 
 function _certDeleteRail(c, main, resolver, sans) {
@@ -123,17 +122,15 @@ function _certDeleteRail(c, main, resolver, sans) {
             + `onchange="toggleCertPick(${_jsArg(_certKey(c))})" `
             + `style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer"></span>`;
     }
-    return `<span class="tm-rail" onclick="event.stopPropagation()">`
-        + `<button type="button" class="tm-btn" title="Remove from acme.json" onclick="event.stopPropagation();removeCerts([{main:${_jsArg(main)},resolver:${_jsArg(resolver)},source:${_jsArg(c.source || '')}}],{server:${_jsArg(_certsFor)}})">`
-        + `<i class="ph-bold ph-trash"></i></button></span>`;
+    return `<span class="tm-rail" onclick="event.stopPropagation()"><button type="button" class="tm-btn" title="${th('Remove from acme.json')}" onclick="event.stopPropagation();removeCerts([{main:${_jsArg(main)},resolver:${_jsArg(resolver)},source:${_jsArg(c.source || '')}}],{server:${_jsArg(_certsFor)}})"><i class="ph-bold ph-trash"></i></button></span>`;
 }
 
 function _certFlagText(c) {
     const flags = _certFlags(c);
     if (!flags.length) return '';
     const v = _certVerdict(c) || {};
-    const why = v.orphaned ? 'no certificate resolver by this name is configured any more'
-                           : 'no router on this server serves a domain this certificate covers';
+    const why = v.orphaned ? t('no certificate resolver by this name is configured any more')
+                           : t('no router on this server serves a domain this certificate covers');
     return ` · <span title="${_esc(why)}">${_esc(flags.join(' · '))}</span>`;
 }
 
@@ -183,7 +180,7 @@ function _paintCertBulkBar() {
     const bar = document.getElementById('certBulkBar');
     if (bar) bar.style.display = _certBulk ? '' : 'none';
     const n = document.getElementById('certBulkCount');
-    if (n) n.textContent = _certPicked.size + ' selected';
+    if (n) n.textContent = t('{size} selected', { size: _certPicked.size });
 }
 
 async function bulkRemoveCerts() {
@@ -276,7 +273,7 @@ async function removeCerts(rows, opts) {
                  : list[0].server !== undefined ? String(list[0].server || '')
                  : String(_certsFor || '');
     if (server !== _tlsSrv()) {
-        showToast('The server changed, reload the list and select again', 'error');
+        showToast(t('The server changed, reload the list and select again'), 'error');
         _certPicked.clear();
         _certPickedFor = null;
         _paintCertBulkBar();
@@ -286,27 +283,27 @@ async function removeCerts(rows, opts) {
     if (opts && opts.confirmed) return _sendCertRemoval(list, server);
     const names = list.map(c => c.main);
     const shown = names.length <= 6 ? names.join(', ')
-                : names.slice(0, 6).join(', ') + ' and ' + (names.length - 6) + ' more';
+                : t('{items} and {count} more', { items: names.slice(0, 6).join(', '), count: names.length - 6 });
     const inUse = list.filter(c => {
         const v = _certUsage.certs.find(u => _certKey(u) === _certKey(c));
         return v && !v.unused;
     }).length;
 
-    const notes = ['Traefik is restarted afterwards. It only reads acme.json at startup, so without that the change would be undone.'];
+    const notes = [t('Traefik is restarted afterwards. It only reads acme.json at startup, so without that the change would be undone.')];
     if (inUse) {
-        notes.push((inUse === 1 ? 'One of these still serves a route, so Traefik requests a new certificate for it'
-                    : inUse + ' of these still serve routes, so Traefik requests new certificates for them')
-                   + " on startup. Let's Encrypt allows five identical certificates per week.");
+        notes.push((inUse === 1
+            ? t("One of these still serves a route, so Traefik requests a new certificate for it on startup. Let's Encrypt allows five identical certificates per week.")
+            : t("{count} of these still serve routes, so Traefik requests new certificates for them on startup. Let's Encrypt allows five identical certificates per week.", { count: inUse })));
     }
-    notes.push('A copy of acme.json is saved to your backups first, and can be restored from Settings, Backups, Certificates.');
+    notes.push(t('A copy of acme.json is saved to your backups first, and can be restored from Settings, Backups, Certificates.'));
 
     const where = server && typeof _activeAgent !== 'undefined' && _activeAgent ? ' on ' + _activeAgent.name : '';
     const answer = await _confirmWith({
         message: list.length === 1
-            ? 'Remove ' + shown + ' from acme.json' + where + '?'
-            : 'Remove ' + list.length + ' certificates from acme.json' + where + ': ' + shown + '?',
-        title: list.length === 1 ? 'Remove Certificate' : 'Remove Certificates',
-        okLabel: 'Remove', typeWord: 'DELETE', notes,
+            ? t('Remove {shown} from acme.json{where}?', { shown, where })
+            : t('Remove {list_count} certificates from acme.json{where}: {shown}?', { list_count: list.length, where, shown }),
+        title: list.length === 1 ? t('Remove Certificate') : t('Remove Certificates'),
+        okLabel: tc('button', 'Remove'), typeWord: _confirmWordFor(names), notes,
     });
     if (!answer.ok) return false;
     return _sendCertRemoval(list, server);
@@ -318,7 +315,7 @@ async function _sendCertRemoval(list, server) {
                  && typeof _waitForReconnect === 'function';
     const back = (removed) => {
         const n = removed || list.length;
-        showToast('Removed ' + n + (n === 1 ? ' certificate' : ' certificates'));
+        showToast(tn('Removed {n} certificate', 'Removed {n} certificates', n));
         refreshCertsTab();
     };
     const stop = (msg) => {
@@ -339,17 +336,17 @@ async function _sendCertRemoval(list, server) {
         const body = await res.json().catch(() => ({}));
         if (!res.ok || !body.ok) {
             if (body.partial && body.restarted && canWait) {
-                showToast(body.error || 'Certificate removal stopped partway', 'error');
+                showToast(body.error || t('Certificate removal stopped partway'), 'error');
                 _waitForReconnect(false, () => refreshCertsTab());
                 return;
             }
-            stop(body.error || 'Could not remove the certificate');
+            stop(body.error || t('Could not remove the certificate'));
             return;
         }
         if (!body.restarted) {
-            stop('Removed ' + body.removed + ', but Traefik did not restart'
-                 + (body.restart_error ? ': ' + body.restart_error : '')
-                 + '. The change is undone until it does.');
+            stop((body.restart_error
+                ? t('Removed {removed}, but Traefik did not restart: {error}. The change is undone until it does.', { removed: body.removed, error: body.restart_error })
+                : t('Removed {removed}, but Traefik did not restart. The change is undone until it does.', { removed: body.removed })));
             refreshCertsTab();
             return;
         }
@@ -363,7 +360,7 @@ async function _sendCertRemoval(list, server) {
             _waitForReconnect(true, () => back());
             return;
         }
-        showToast(_netErrText(e, 'Could not remove the certificate'), 'error');
+        showToast(_netErrText(e, t('Could not remove the certificate')), 'error');
     }
 }
 
@@ -390,8 +387,7 @@ function renderCertCards() {
     if (items.length === 0) {
         const narrowed = _certFilter !== 'all' || domain || q;
         document.getElementById('certsContent').innerHTML =
-            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">`
-            + (narrowed ? 'No certificates match these filters' : 'No certificates') + `</div>`;
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">${narrowed ? th('No certificates match these filters') : th('No certificates')}</div>`;
         return;
     }
     const cards = items.map(cert => {
@@ -408,12 +404,12 @@ function renderCertCards() {
         }
         const expiryColor = daysLeft === null ? 'var(--muted)' : daysLeft < 7 ? 'var(--red)' : daysLeft < 30 ? 'var(--yellow)' : 'var(--green)';
         const expiryBadge = daysLeft !== null
-            ? `<span class="badge" style="background:${daysLeft<7?'rgba(248,81,73,0.15)':daysLeft<30?'rgba(210,153,34,0.15)':'rgba(63,185,80,0.15)'};color:${expiryColor};border-color:${expiryColor}40">${daysLeft}d left</span>`
+            ? `<span class="badge" style="background:${daysLeft<7 ? 'rgba(248,81,73,0.15)' : daysLeft<30 ? 'rgba(210,153,34,0.15)' : 'rgba(63,185,80,0.15)'};color:${expiryColor};border-color:${expiryColor}40">${th('{daysLeft}d left', { daysLeft: tmHtml(daysLeft) })}</span>`
             : '';
         const extra = sans.filter(d => d !== main);
         const vals = extra.slice(0, 2).map(d =>
             `<div class="tm-val tm-val-host"><i class="ph-bold ph-globe-simple"></i><span class="tm-v">${_esc(d)}</span>${_tmCopy(d)}</div>`).join('')
-            + (extra.length > 2 ? `<div class="tm-val"><i class="ph-bold ph-dot" style="opacity:0"></i><span class="tm-more" title="${_esc(extra.join(', '))}">+${extra.length - 2} more</span></div>` : '');
+            + (extra.length > 2 ? `<div class="tm-val"><i class="ph-bold ph-dot" style="opacity:0"></i><span class="tm-more" title="${_esc(extra.join(', '))}">${th('+{count} more', { count: extra.length - 2 })}</span></div>` : '');
         return `<div class="tm-card tm-card-flat"${daysLeft !== null && daysLeft < 7 ? ' data-health="down"' : ''} style="--tm-accent:${expiryColor}">
             <div class="tm-head">
                 <span class="tm-ic tm-ic-tile"><i class="ph-bold ph-shield-check"></i></span>
@@ -424,7 +420,7 @@ function renderCertCards() {
                 ${_certDeleteRail(cert, main, resolver, sans)}
             </div>
             ${vals ? `<div class="tm-vals">${vals}</div>` : ''}
-            <div class="tm-foot"><span class="tm-meta${_certFlagClass(cert)}">${daysLeft !== null && daysLeft < 0 ? 'expired' : 'expires'} ${_esc(expiryStr)}${extra.length ? ` · ${extra.length + 1} domains` : ''}${_certFlagText(cert)}</span>${daysLeft !== null ? `<span class="tm-cf" style="color:${expiryColor}">${_certLeft(daysLeft)}</span>` : ''}</div>
+            <div class="tm-foot"><span class="tm-meta${_certFlagClass(cert)}">${daysLeft !== null && daysLeft < 0 ? th('expired {date}', { date: expiryStr }) : th('expires {date}', { date: expiryStr })}${extra.length ? ' · ' + th('{count} domains', { count: extra.length + 1 }) : ''}${_certFlagText(cert)}</span>${daysLeft !== null ? `<span class="tm-cf" style="color:${expiryColor}">${_certLeft(daysLeft)}</span>` : ''}</div>
         </div>`;
     }).join('');
     document.getElementById('certsContent').innerHTML =
@@ -443,12 +439,12 @@ async function refreshCertsTab() {
         _certsFor = srv;
     };
     const container = document.getElementById('certsContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading certificates...</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading certificates...')}</p></div>`;
     try {
         const certRes = await agentFetch('/api/traefik/certs');
         if (stale()) return;
         if (!certRes.ok) {
-            const msg = await _errText(certRes, 'Could not load certificate data');
+            const msg = await _errText(certRes, t('Could not load certificate data'));
             if (stale()) return;
             settle();
             _allCerts = [];
@@ -466,13 +462,13 @@ async function refreshCertsTab() {
             renderCertsVerdict();
             container.innerHTML = _emptyMountState({
                 icon: 'ph-shield',
-                title: 'acme.json not mounted',
-                description: 'Mount your Traefik <code class="font-mono" style="color:var(--blue)">acme.json</code> into this container read-only to view and track your TLS certificates.',
+                title: t('acme.json not mounted'),
+                description: `${th('Mount your Traefik {acme_json} into this container read-only to view and track your TLS certificates.', { acme_json: tmHtml(`<code class="font-mono" style="color:var(--blue)">acme.json</code>`) })}`,
                 steps: [
-                    { label: 'Add this volume to the <code class="font-mono">traefik-manager</code> service in your <code class="font-mono">docker-compose.yml</code>:',
+                    { label: `${th('Add this volume to the {traefik_manager} service in your {docker_compose_yml}:', { traefik_manager: tmHtml(`<code class="font-mono">traefik-manager</code>`), docker_compose_yml: tmHtml(`<code class="font-mono">docker-compose.yml</code>`) })}`,
                       code: '- /path/to/traefik/acme.json:/app/acme.json:ro' },
                 ],
-                note: 'No Traefik restart needed - only traefik-manager needs to be updated.'
+                note: t('No Traefik restart needed - only traefik-manager needs to be updated.')
             });
             setTabCount('certs', '0');
             return;
@@ -483,8 +479,8 @@ async function refreshCertsTab() {
             renderCertsVerdict();
             container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">
                 <i class="ph-light ph-shield text-5xl block mb-3 opacity-30"></i>
-                <p class="font-medium">No certificates found</p>
-                <p class="text-xs mt-1">acme.json may be empty - certs are issued on first request.</p>
+                <p class="font-medium">${th('No certificates found')}</p>
+                <p class="text-xs mt-1">${th('acme.json may be empty - certs are issued on first request.')}</p>
             </div>`;
             setTabCount('certs', '0');
             return;
@@ -503,7 +499,7 @@ async function refreshCertsTab() {
         renderCertCards();
     } catch(e) {
         if (stale()) return;
-        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p>${_esc(_netErrText(e, 'Could not load certificate data'))}</p></div>`;
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p>${_esc(_netErrText(e, t('Could not load certificate data')))}</p></div>`;
     }
 }
 
@@ -516,18 +512,18 @@ function _tlsSrv() {
 async function refreshTlsOptionsTab() {
     const el = document.getElementById('tlsOptsContent');
     if (!el) return;
-    el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading TLS profiles...</p></div>`;
+    el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading TLS profiles...')}</p></div>`;
     try {
         const res = await fetch('/api/tls-options' + (_tlsSrv() ? '?server=' + encodeURIComponent(_tlsSrv()) : ''));
         if (!res.ok) {
-            const msg = await _errText(res, 'Failed to load TLS profiles');
+            const msg = await _errText(res, t('Failed to load TLS profiles'));
             el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-bold ph-warning text-3xl block mb-2"></i><p>${_esc(msg)}</p></div>`;
             return;
         }
         _tlsOptions = await res.json();
         renderTlsOptions(_tlsOptions);
     } catch(e) {
-        el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-bold ph-warning text-3xl block mb-2"></i><p>${_esc(_netErrText(e, 'Failed to load TLS profiles'))}</p></div>`;
+        el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-bold ph-warning text-3xl block mb-2"></i><p>${_esc(_netErrText(e, t('Failed to load TLS profiles')))}</p></div>`;
     }
 }
 
@@ -550,24 +546,20 @@ function _tmTlsOptCard(o, i) {
     const mtls = o.clientAuthType && o.clientAuthType !== 'NoClientCert';
     const sub = [
         o.minVersion ? _tlsVer(o.minVersion) + '+' : '',
-        o.maxVersion ? 'max ' + _tlsVer(o.maxVersion) : '',
-        o.sniStrict ? 'SNI strict' : '',
+        o.maxVersion ? t('max {version}', { version: _tlsVer(o.maxVersion) }) : '',
+        o.sniStrict ? t('SNI strict') : '',
         mtls ? 'mTLS' : '',
     ].filter(Boolean).join(' \u00b7 ') || 'defaults';
 
     const val = (icon, text, title) => `<div class="tm-val"><i class="ph-bold ${icon}"></i><span class="tm-v" title="${_esc(title || text)}">${_esc(text)}</span></div>`;
     const vals = [
-        o.cipherSuites?.length ? val('ph-list-numbers', `${o.cipherSuites.length} cipher suite${o.cipherSuites.length > 1 ? 's' : ''}`, o.cipherSuites.join('\n')) : '',
+        o.cipherSuites?.length ? val('ph-list-numbers', tn('{n} cipher suite', '{n} cipher suites', o.cipherSuites.length), o.cipherSuites.join('\n')) : '',
         o.curvePreferences?.length ? val('ph-circle-notch', o.curvePreferences.join(', ')) : '',
         o.alpnProtocols?.length ? val('ph-swap', o.alpnProtocols.join(', ')) : '',
         mtls ? val('ph-identification-card', o.clientAuthType) : '',
     ].filter(Boolean).join('');
 
-    const rail = `<span class="tm-rail" onclick="event.stopPropagation()">` +
-        `<button type="button" class="tm-btn" title="Details" data-idx="${i}" onclick="event.stopPropagation();_tlsOptInfo(this)"><i class="ph-bold ph-info"></i></button>` +
-        `<button type="button" class="tm-btn" title="Edit" data-idx="${i}" onclick="event.stopPropagation();_tlsOptEdit(this)"><i class="ph-bold ph-pencil-simple"></i></button>` +
-        `<button type="button" class="tm-btn" title="Delete" onclick="event.stopPropagation();deleteTlsOption(${_jsArg(o.name)},${_jsArg(o.configFile || '')})"><i class="ph-bold ph-trash"></i></button>` +
-        '</span>';
+    const rail = `<span class="tm-rail" onclick="event.stopPropagation()"><button type="button" class="tm-btn" title="${thc('tooltip', 'Details')}" data-idx="${i}" onclick="event.stopPropagation();_tlsOptInfo(this)"><i class="ph-bold ph-info"></i></button><button type="button" class="tm-btn" title="${thc('tooltip', 'Edit')}" data-idx="${i}" onclick="event.stopPropagation();_tlsOptEdit(this)"><i class="ph-bold ph-pencil-simple"></i></button><button type="button" class="tm-btn" title="${thc('tooltip', 'Delete')}" onclick="event.stopPropagation();deleteTlsOption(${_jsArg(o.name)},${_jsArg(o.configFile || '')})"><i class="ph-bold ph-trash"></i></button></span>`;
 
     return `<div class="tm-card tls-opt-card" data-name="${_esc(o.name.toLowerCase())}" data-idx="${i}" style="--tm-accent:var(--green)" onclick="openTlsOptDetail(_tlsOptions[${i}])">
         <div class="tm-head">
@@ -585,14 +577,14 @@ function _tmTlsOptCard(o, i) {
 function _tmTlsOptUsage(o) {
     const pool = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
     const n = pool.filter(r => r.tlsOptionsProfile === o.name).length;
-    return n ? `used by ${n} route${n > 1 ? 's' : ''}` : 'unused';
+    return n ? tn('used by {n} route', 'used by {n} routes', n) : t('unused');
 }
 
 function renderTlsOptions(opts) {
     const el = document.getElementById('tlsOptsContent');
     if (!el) return;
     if (!opts || opts.length === 0) {
-        el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-lock-key text-4xl block mb-3 opacity-30"></i><p class="text-sm">No TLS profiles defined.</p><p class="text-xs mt-1">Click <strong>Add TLS Profile</strong> to create one.</p></div>`;
+        el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-lock-key text-4xl block mb-3 opacity-30"></i><p class="text-sm">${th('No TLS profiles defined.')}</p><p class="text-xs mt-1">${th('Click {add_tls_profile} to create one.', { add_tls_profile: tmHtml(`<strong>${th('Add TLS Profile')}</strong>`) })}</p></div>`;
         return;
     }
     const cards = opts.map(o => {
@@ -617,28 +609,28 @@ function openTlsOptDetail(o) {
     document.getElementById('tlsOptDetailTitle').textContent = o.name;
     document.getElementById('tlsOptDetailEditBtn').onclick = () => { closeTlsOptDetail(); openTlsOptionModal(o); };
     const rows = [
-        o.configFile && ['Config File', _dText(o.configFile, 'd-off'), true],
-        o.minVersion && ['Min Version', _dText(o.minVersion), true],
-        o.maxVersion && ['Max Version', _dText(o.maxVersion), true],
-        o.sniStrict && ['SNI Strict', _dBool(true), true],
-        o.cipherSuites?.length && ['Cipher Suites', _dList(o.cipherSuites, 'd-on'), true],
-        o.curvePreferences?.length && ['Curve Preferences', _dList(o.curvePreferences, 'd-on'), true],
-        o.alpnProtocols?.length && ['ALPN Protocols', _dList(o.alpnProtocols, 'd-on'), true],
-        (o.clientAuthType && o.clientAuthType !== 'NoClientCert') && ['Client Auth Type', _dText(o.clientAuthType), true],
-        o.clientAuthCAs?.length && ['CA Files', _dList(o.clientAuthCAs, 'd-on'), true],
+        o.configFile && [t('Config File'), _dText(o.configFile, 'd-off'), true],
+        o.minVersion && [t('Min Version'), _dText(o.minVersion), true],
+        o.maxVersion && [t('Max Version'), _dText(o.maxVersion), true],
+        o.sniStrict && [t('SNI Strict'), _dBool(true), true],
+        o.cipherSuites?.length && [t('Cipher Suites'), _dList(o.cipherSuites, 'd-on'), true],
+        o.curvePreferences?.length && [t('Curve Preferences'), _dList(o.curvePreferences, 'd-on'), true],
+        o.alpnProtocols?.length && [t('ALPN Protocols'), _dList(o.alpnProtocols, 'd-on'), true],
+        (o.clientAuthType && o.clientAuthType !== 'NoClientCert') && [t('Client Auth Type'), _dText(o.clientAuthType), true],
+        o.clientAuthCAs?.length && [t('CA Files'), _dList(o.clientAuthCAs, 'd-on'), true],
     ].filter(Boolean);
     const allRoutes = window._lastRenderedApps || APP_DATA || [];
     const usedBy = allRoutes.filter(r => r.tlsOptionsProfile === o.name);
-    const usedByHtml = renderDetailBlock('Used by', 'ph-arrows-split',
+    const usedByHtml = renderDetailBlock(t('Used by'), 'ph-arrows-split',
         usedBy.length
             ? `<div class="flex flex-wrap gap-1.5">${usedBy.map(r =>
-                `<button type="button" class="route-deep-chip" onclick="_openRouteByName(${_jsArg(String(r.name))})" title="Open route"><i class="ph-bold ph-arrows-split"></i>${_esc(String(r.name).split('@')[0])}</button>`).join('')}</div>`
-            : `<div class="text-xs" style="color:var(--muted)">No routes using this profile.</div>`,
+                `<button type="button" class="route-deep-chip" onclick="_openRouteByName(${_jsArg(String(r.name))})" title="${th('Open route')}"><i class="ph-bold ph-arrows-split"></i>${_esc(String(r.name).split('@')[0])}</button>`).join('')}</div>`
+            : `<div class="text-xs" style="color:var(--muted)">${th('No routes using this profile.')}</div>`,
         _dCount(usedBy.length));
-    const yamlHtml = o.yaml ? renderDetailBlock('Raw YAML', 'ph-code',
+    const yamlHtml = o.yaml ? renderDetailBlock(t('Raw YAML'), 'ph-code',
         `<div class="rounded-lg p-3 overflow-x-auto" style="background:var(--input-bg);border:1px solid var(--border)"><pre class="text-xs font-mono leading-relaxed" style="color:var(--green);margin:0">${_esc(o.yaml)}</pre></div>`) : '';
     document.getElementById('tlsOptDetailContent').innerHTML =
-        `${renderSection('Profile', 'ph-lock-laminated', rows)}${usedByHtml}${yamlHtml}`;
+        `${renderSection(tc('label', 'Profile'), 'ph-lock-laminated', rows)}${usedByHtml}${yamlHtml}`;
     document.getElementById('tlsOptDetailPanel').classList.add('open');
     setDetailDockOpen(true);
     document.getElementById('tlsOptDetailBackdrop').classList.add('open');
@@ -666,7 +658,7 @@ function openTlsOptionModal(opt) {
     closeOtherPanels('tlsOptionsModal');
     const modal = document.getElementById('tlsOptionsModal');
     const isEdit = !!opt;
-    document.getElementById('tlsOptionsModalTitle').textContent = isEdit ? 'Edit TLS Profile' : 'Add TLS Profile';
+    document.getElementById('tlsOptionsModalTitle').textContent = isEdit ? t('Edit TLS Profile') : t('Add TLS Profile');
     document.getElementById('tlsOptEditName').value    = isEdit ? (opt.name || '') : '';
     document.getElementById('tlsOptName').value        = isEdit ? (opt.name || '') : '';
     document.getElementById('tlsOptName').readOnly     = false;
@@ -700,12 +692,12 @@ function closeTlsOptionModal() {
 async function saveTlsOption() {
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const name = document.getElementById('tlsOptName').value.trim();
-    if (!name) { showToast('Profile name is required', 'error'); return; }
+    if (!name) { showToast(t('Profile name is required'), 'error'); return; }
     const cfSel = document.getElementById('tlsOptConfigFileSelect');
     let configFile = cfSel ? cfSel.value : (document.getElementById('tlsOptConfigFile').value || '');
     if (configFile === '__new__') {
         const newName = (document.getElementById('tlsOptNewFileName')?.value || '').trim();
-        if (!newName) { showToast('Enter a filename for the new config file', 'error'); return; }
+        if (!newName) { showToast(t('Enter a filename for the new config file'), 'error'); return; }
         configFile = newName.endsWith('.yml') || newName.endsWith('.yaml') ? newName : newName + '.yml';
     }
     const toList = v => v.split('\n').map(s => s.trim()).filter(Boolean);
@@ -729,22 +721,22 @@ async function saveTlsOption() {
             body: JSON.stringify({ ...body, server: _tlsSrv(),
                                originalName: (document.getElementById('tlsOptEditName')?.value || '').trim() }),
         });
-        if (!res.ok) { showToast(await _errText(res, 'Save failed'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Save failed')), 'error'); return; }
         const json = await res.json();
         if (json.ok) {
             closeTlsOptionModal();
-            showToast('TLS profile saved');
+            showToast(t('TLS profile saved'));
             refreshTlsOptionsTab();
             _dropTlsOptionsCache();
             _populateTlsOptionsSelect();
         } else {
-            showToast(json.error || json.message || 'Save failed', 'error');
+            showToast(json.error || json.message || t('Save failed'), 'error');
         }
-    } catch(e) { showToast(_netErrText(e, 'Save failed'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Save failed')), 'error'); }
 }
 
 async function deleteTlsOption(name, configFile) {
-    if (!confirm(`Delete TLS profile "${name}"?`)) return;
+    if (!confirm(t('Delete TLS profile "{name}"?', { name }))) return;
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const _sv = _tlsSrv();
     const params = '?' + new URLSearchParams({ ...(configFile ? { configFile } : {}), ...(_sv ? { server: _sv } : {}) }).toString();
@@ -753,15 +745,15 @@ async function deleteTlsOption(name, configFile) {
             method: 'DELETE',
             headers: { 'X-Requested-With': 'fetch', 'X-CSRF-Token': token },
         });
-        if (!res.ok) { showToast(await _errText(res, 'Delete failed'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Delete failed')), 'error'); return; }
         const json = await res.json();
         if (json.ok) {
-            showToast('TLS profile deleted');
+            showToast(t('TLS profile deleted'));
             refreshTlsOptionsTab();
             _dropTlsOptionsCache();
             _populateTlsOptionsSelect();
         } else {
-            showToast(json.error || json.message || 'Delete failed', 'error');
+            showToast(json.error || json.message || t('Delete failed'), 'error');
         }
-    } catch(e) { showToast(_netErrText(e, 'Delete failed'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Delete failed')), 'error'); }
 }

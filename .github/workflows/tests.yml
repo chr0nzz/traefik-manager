@@ -29,6 +29,20 @@ jobs:
       - name: Lint (ruff)
         run: ruff check app.py core tests
 
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Install translation tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gettext
+          npm install --prefix scripts/i18n --no-save --ignore-scripts --no-audit --no-fund acorn@8.18.0
+
+      - name: Check translations
+        run: python scripts/i18n/check.py --require-tools
+
       - name: Run tests with coverage
         run: |
           set -o pipefail
@@ -37,6 +51,31 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           sed -n '/^---------/,$p' pytest.out | head -40 >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+  weblate-scope:
+    if: github.event_name == 'pull_request' && (github.event.pull_request.user.login == 'weblate' || startsWith(github.head_ref, 'weblate'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Translation pull requests may only change catalogues
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          outside=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -vE '^locale/[A-Za-z]{2,3}(_[A-Za-z0-9]+)*/LC_MESSAGES/messages\.po$' || true)
+          if [ -n "$outside" ]; then
+            echo "::error::A translation pull request changed files outside locale/<lang>/LC_MESSAGES/messages.po:"
+            echo "$outside"
+            exit 1
+          fi
+          echo "Only catalogues changed."
 
   go:
     runs-on: ubuntu-latest

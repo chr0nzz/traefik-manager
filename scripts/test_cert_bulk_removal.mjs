@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import vm from 'node:vm';
+import { i18nPrelude } from './i18n_test_prelude.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -31,6 +32,7 @@ function harness(deleteBody, mode) {
         _tlsSrv: () => '',
         _esc: s => String(s),
         _jsArg: s => JSON.stringify(s),
+        _confirmWordFor: names => (names.length === 1 ? String(names[0]) : String(names.length)),
         _netErrText: (e, f) => f,
         _errText: async (r, f) => f,
         agentFetch: async () => ({ ok: true, json: async () => ({ certs: [] }) }),
@@ -57,6 +59,7 @@ function harness(deleteBody, mode) {
     ctx.window = ctx;
     ctx.globalThis = ctx;
     vm.createContext(ctx);
+    vm.runInContext(i18nPrelude(), ctx);
     vm.runInContext(readFileSync(join(root, 'static', 'js', 'certs.js'), 'utf8'), ctx);
     vm.runInContext(`
         _certManage = { available: true };
@@ -106,6 +109,7 @@ console.log('removing several at once');
         await bulkRemoveCerts();
     })()`, ctx);
     check('both certificates were sent', log.posted && log.posted.certs.length === 2, JSON.stringify(log.posted));
+    check('removing two asks for the count, not DELETE', vm.runInContext('_confirmSeen.typeWord', ctx) === '2');
     check('the confirm names them', /a\.example\.com/.test(vm.runInContext('_confirmSeen.message', ctx))
           && /b\.example\.com/.test(vm.runInContext('_confirmSeen.message', ctx)),
           vm.runInContext('_confirmSeen.message', ctx));

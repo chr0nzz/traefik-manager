@@ -12,7 +12,7 @@ def _read(*parts):
 def test_the_services_tab_offers_a_way_to_create_one():
     html = _read('templates', 'tabs', 'tab_live.html')
     assert 'openServiceModal()' in html
-    assert 'title="Add service"' in html
+    assert 'title="{{ _(\'Add service\') }}"' in html
 
 
 def test_the_modal_is_included_in_the_page():

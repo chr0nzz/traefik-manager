@@ -91,4 +91,19 @@ if ! grep -q "\.flex{" "$REPO_ROOT/static/css/tailwind.css"; then
   exit 1
 fi
 
+PYBABEL=""
+if [ -x "$REPO_ROOT/venv/bin/pybabel" ]; then
+  PYBABEL="$REPO_ROOT/venv/bin/pybabel"
+elif command -v pybabel >/dev/null 2>&1; then
+  PYBABEL="pybabel"
+fi
+if [ -d "$REPO_ROOT/locale" ]; then
+  if [ -n "$PYBABEL" ]; then
+    echo "Compiling translations..."
+    "$PYBABEL" compile -d "$REPO_ROOT/locale" -D messages || echo "WARNING: translations did not compile, the interface stays in English."
+  else
+    echo "WARNING: pybabel not found, the interface stays in English. Install requirements.txt and run this script again."
+  fi
+fi
+
 echo "Done."

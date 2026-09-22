@@ -48,13 +48,13 @@ function pickLiveProvider(val, label, silent) {
     renderServicesTable();
 }
 
-function filterLiveProto(p) { pickLiveProto(p, p === 'all' ? 'All Protocols' : p); }
-function filterLiveProvider(v) { pickLiveProvider(v, v === 'all' ? 'All Providers' : v); }
+function filterLiveProto(p) { pickLiveProto(p, p === 'all' ? t('All Protocols') : p); }
+function filterLiveProvider(v) { pickLiveProvider(v, v === 'all' ? t('All Providers') : v); }
 
 function clearLiveFilters() {
-    pickLiveStatus('all', 'All Status');
-    pickLiveProto('all', 'All Protocols');
-    pickLiveProvider('all', 'All Providers');
+    pickLiveStatus(t('all'), t('All Status'));
+    pickLiveProto('all', t('All Protocols'));
+    pickLiveProvider('all', t('All Providers'));
     document.querySelectorAll('.live-dd-menu.open').forEach(m => m.classList.remove('open'));
     document.querySelectorAll('.live-dd-btn-inner.open').forEach(b => b.classList.remove('open'));
     const s = document.getElementById('svcSearch');
@@ -64,18 +64,18 @@ function clearLiveFilters() {
 
 async function refreshLiveView() {
     const container = document.getElementById('liveContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading services...</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading services...')}</p></div>`;
 
     try {
         const r = await fetch(_svcApiPath('/api/traefik/services'), { headers: _csrfHeaders() });
         if (!r.ok) {
-            const why = await _errText(r, 'Could not load services');
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Could not load services</p><p class="text-sm mt-2 px-4" style="color:var(--text-secondary);word-break:break-word">${_esc(why)}</p></div>`;
+            const why = await _errText(r, t('Could not load services'));
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Could not load services')}</p><p class="text-sm mt-2 px-4" style="color:var(--text-secondary);word-break:break-word">${_esc(why)}</p></div>`;
             return;
         }
         const res = await r.json();
         if (res.error) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-sm mt-2 font-mono px-4" style="color:var(--text-secondary);word-break:break-all">${_esc(res.error)}</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p><p class="text-sm mt-2 font-mono px-4" style="color:var(--text-secondary);word-break:break-all">${_esc(res.error)}</p></div>`;
             return;
         }
         const http = (res.http || []).map(s => ({ ...s, _proto: 'HTTP' }));
@@ -86,19 +86,19 @@ async function refreshLiveView() {
         _allServices = [...http, ...tcp, ...udp].sort((a,b) => (a.name||'').localeCompare(b.name||''));
 
         if (_allServices.length === 0) {
-            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Traefik API not reachable</p><p class="text-sm mt-1">Set <code class="font-mono">TRAEFIK_API_URL</code> and enable <code class="font-mono">api: {}</code> in Traefik static config</p></div>`;
+            container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Traefik API not reachable')}</p><p class="text-sm mt-1">${th('Set {traefik_api_url} and enable {api} in Traefik static config', { traefik_api_url: tmHtml(`<code class="font-mono">TRAEFIK_API_URL</code>`), api: tmHtml(`<code class="font-mono">api: {}</code>`) })}</p></div>`;
             return;
         }
 
         renderServicesTable();
     } catch(e) {
-        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">Could not load services</p><p class="text-sm mt-2 px-4" style="color:var(--text-secondary);word-break:break-word">${_esc(_netErrText(e, 'Traefik API not reachable'))}</p></div>`;
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p class="font-medium">${th('Could not load services')}</p><p class="text-sm mt-2 px-4" style="color:var(--text-secondary);word-break:break-word">${_esc(_netErrText(e, t('Traefik API not reachable')))}</p></div>`;
     }
 }
 
 function filterServices(f) {
     if (f && f !== _svcFilter) {
-        const labels = { all: 'All Status', success: 'Success', warning: 'Warnings', error: 'Errors' };
+        const labels = { all: t('All Status'), success: 'Success', warning: t('Warnings'), error: 'Errors' };
         pickLiveStatus(f, labels[f] || f);
         return;
     }
@@ -134,14 +134,14 @@ function renderServicesTable() {
     const protoMenu = document.getElementById('dd-proto-menu');
     if (protoMenu) {
         protoMenu.innerHTML = ['all', ...uniqueProtos].map(p => {
-            const label = p === 'all' ? 'All Protocols' : p;
+            const label = p === 'all' ? t('All Protocols') : p;
             return `<button class="live-dd-item${_protoLiveFilter === p ? ' active' : ''}" onclick="pickLiveProto(${_jsArg(p)},${_jsArg(label)})">${_esc(label)}</button>`;
         }).join('');
     }
     const provMenu = document.getElementById('dd-provider-menu');
     if (provMenu) {
         provMenu.innerHTML = ['all', ...uniqueProviders].map(v => {
-            const label = v === 'all' ? 'All Providers' : v;
+            const label = v === 'all' ? t('All Providers') : v;
             return `<button class="live-dd-item${_providerFilter === v ? ' active' : ''}" onclick="pickLiveProvider(${_jsArg(v)},${_jsArg(label)})">${_esc(label)}</button>`;
         }).join('');
     }
@@ -175,12 +175,12 @@ function renderServicesTable() {
         const ownerName = ownedIdx.has(globalIdx) ? _svcOwnerName(_allServices, s) : '';
 
         const stColor = st === 'success' ? 'var(--green)' : st === 'error' ? 'var(--red)' : 'var(--yellow)';
-        const stLabel = st === 'success' ? 'Success'      : st === 'error' ? 'Error'      : 'Warning';
+        const stLabel = st === 'success' ? tc('status', 'Success') : st === 'error' ? tc('status', 'Error') : tc('status', 'Warning');
 
         const serverStatus  = s.serverStatus || {};
         const serverEntries = Object.entries(serverStatus);
         const activeCount   = serverEntries.filter(([,v]) => (v||'').toLowerCase() === 'up').length;
-        const serverSummary = serverEntries.length > 0 ? `${activeCount}/${serverEntries.length} active` : null;
+        const serverSummary = serverEntries.length > 0 ? th('{active}/{total} active', { active: activeCount, total: serverEntries.length }) : null;
         const srvColor      = serverEntries.length > 0 && activeCount === serverEntries.length ? 'var(--green)' : 'var(--orange)';
 
         const usedBy = s.usedBy || [];
@@ -197,34 +197,34 @@ function renderServicesTable() {
             const anyDown = serverEntries.length > 0 && activeCount < serverEntries.length;
             const dotCls = st === 'error' || (anyDown && activeCount === 0) ? 'status-offline'
                          : anyDown || st !== 'success' ? 'status-checking' : 'status-online';
-            const dotTitle = anyDown ? `${activeCount} of ${serverEntries.length} servers up` : stLabel;
+            const dotTitle = anyDown ? t('{activeCount} of {serverEntries_count} servers up', { activeCount, serverEntries_count: serverEntries.length }) : stLabel;
             const lb = s.loadBalancer || {};
             const composite = (s.weighted?.services || []).map(x => `${x.name}${x.weight != null ? ` (${x.weight})` : ''}`)
                 .concat((s.highestRandomWeight?.services || []).map(x => `${x.name}${x.weight != null ? ` (${x.weight})` : ''}`))
                 .concat(s.mirroring?.service ? [s.mirroring.service] : [])
-                .concat((s.mirroring?.mirrors || []).map(m => `${m.name} mirror (${m.percent || 0}%)`))
+                .concat((s.mirroring?.mirrors || []).map(m => t('{name} mirror ({percent}%)', { name: m.name, percent: m.percent || 0 })))
                 .concat(s.failover?.service ? [s.failover.service] : [])
-                .concat(s.failover?.fallback ? [`${s.failover.fallback} fallback`] : []);
+                .concat(s.failover?.fallback ? [t('{name} fallback', { name: s.failover.fallback })] : []);
             const servers = (lb.servers || []).map(x => x.url || x.address).filter(Boolean)
                 .concat(composite);
             const rows = servers.slice(0, 2).map(u =>
                 `<div class="tm-val tm-val-target"><i class="ph-bold ph-arrow-elbow-down-right"></i><span class="tm-v">${_esc(u)}</span>${_tmCopy(u)}</div>`).join('')
-                + (servers.length > 2 ? `<div class="tm-val"><i class="ph-bold ph-dot" style="opacity:0"></i><span class="tm-more" title="${_esc(servers.join(', '))}">+${servers.length - 2} more</span></div>` : '');
+                + (servers.length > 2 ? `<div class="tm-val"><i class="ph-bold ph-dot" style="opacity:0"></i><span class="tm-more" title="${_esc(servers.join(', '))}">${th('+{count} more', { count: servers.length - 2 })}</span></div>` : '');
             const meta = [
-                composite.length ? '' : (servers.length ? `${servers.length} server${servers.length > 1 ? 's' : ''}` : ''),
+                composite.length ? '' : (servers.length ? thn('{n} server', '{n} servers', servers.length) : ''),
                 serverSummary ? `<span style="color:${srvColor}">${serverSummary}</span>` : '',
-                lb.sticky ? 'sticky' : '',
-                (lb.healthCheck ? 'health check' : ''),
+                lb.sticky ? th('sticky') : '',
+                (lb.healthCheck ? th('health check') : ''),
             ].filter(Boolean).join(' \u00b7 ');
-            const usedTxt = usedBy.length ? `used by ${usedBy.length} route${usedBy.length > 1 ? 's' : ''}` : '';
+            const usedTxt = usedBy.length ? tn('used by {n} route', 'used by {n} routes', usedBy.length) : '';
             return `<div class="tm-card" data-health="${st === 'error' ? 'down' : 'up'}" style="--tm-accent:${stColor}" onclick="openSvcDetail(${globalIdx})">
                 <div class="tm-head">
                     <span class="tm-ic tm-ic-tile"><i class="ph-bold ${composite.length ? 'ph-share-network' : 'ph-hard-drives'}"></i><span class="status-dot ${dotCls}" title="${_esc(dotTitle)}"></span></span>
                     <div class="tm-head-txt">
                         <div class="tm-title">${proto !== 'HTTP' ? `<span class="tm-proto tm-proto-${proto.toLowerCase()}">${proto}</span>` : ''}<span class="tm-name">${_esc(name)}</span></div>
-                        <div class="tm-sub">${_esc(type || 'service')} \u00b7 ${_esc(provider)}${ownerName ? ' \u00b7 backend of ' + _esc(ownerName) : ''}</div>
+                        <div class="tm-sub">${_esc(type || t('service'))} · ${_esc(provider)}${ownerName ? ' \u00b7 ' + th('backend of {owner}', { owner: ownerName }) : ''}</div>
                     </div>
-                    <span class="tm-rail tm-rail-sm" onclick="event.stopPropagation()">${_svcNeedsHealthCheck(s) ? `<button type="button" class="tm-btn" title="More than one server and no health check - Traefik reports them all as up and keeps sending traffic to a dead one. Click to add one" onclick="event.stopPropagation();openServiceModal(_allServices[${globalIdx}])"><i class="ph-bold ph-warning" style="color:var(--yellow)"></i></button>` : ''}<button type="button" class="tm-btn" title="Details" onclick="event.stopPropagation();openSvcDetail(${globalIdx})"><i class="ph-bold ph-info"></i></button>${_svcEditable(s) ? `<button type="button" class="tm-btn" title="Edit" onclick="event.stopPropagation();openServiceModal(_allServices[${globalIdx}])"><i class="ph-bold ph-pencil-simple"></i></button>` : ''}</span>
+                    <span class="tm-rail tm-rail-sm" onclick="event.stopPropagation()">${_svcNeedsHealthCheck(s) ? `<button type="button" class="tm-btn" title="${th('More than one server and no health check - Traefik reports them all as up and keeps sending traffic to a dead one. Click to add one')}" onclick="event.stopPropagation();openServiceModal(_allServices[${globalIdx}])"><i class="ph-bold ph-warning" style="color:var(--yellow)"></i></button>` : ''}<button type="button" class="tm-btn" title="${thc('tooltip', 'Details')}" onclick="event.stopPropagation();openSvcDetail(${globalIdx})"><i class="ph-bold ph-info"></i></button>${_svcEditable(s) ? `<button type="button" class="tm-btn" title="${thc('tooltip', 'Edit')}" onclick="event.stopPropagation();openServiceModal(_allServices[${globalIdx}])"><i class="ph-bold ph-pencil-simple"></i></button>` : ''}</span>
                 </div>
                 ${rows ? `<div class="tm-vals">${rows}</div>` : ''}
                 <div class="tm-foot"><span class="tm-meta">${meta}</span>${usedTxt ? `<span class="tm-cf">${_esc(usedTxt)}</span>` : ''}</div>
@@ -238,10 +238,10 @@ function renderServicesTable() {
                     ${type ? `<span class="svc-type-badge">${type}</span>` : ''}
                 </div>
                 <span class="svc-status-chip" style="color:${stColor};background:color-mix(in srgb,${stColor} 14%,transparent)">
-                    <span class="svc-status-dot" style="background:${stColor}"></span>${stLabel}
+                    <span class="svc-status-dot" style="background:${stColor}"></span>${_esc(stLabel)}
                 </span>
             </div>
-            <div class="svc-card-name">${_esc(name)}${ownerName ? `<span class="svc-type-badge" style="margin-left:6px">backend of ${_esc(ownerName)}</span>` : ''}</div>
+            <div class="svc-card-name">${_esc(name)}${ownerName ? `<span class="svc-type-badge" style="margin-left:6px">${th('backend of {ownerName}', { ownerName })}</span>` : ''}</div>
             <div class="svc-card-meta">
                 <span class="svc-meta-chip"><i class="ph-bold ph-database" style="font-size:10px"></i>${_esc(provider)}</span>
                 ${serverSummary ? `<span class="svc-meta-chip" style="color:${srvColor};background:color-mix(in srgb,${srvColor} 10%,transparent);border-color:color-mix(in srgb,${srvColor} 35%,transparent)"><i class="ph-bold ph-hard-drives" style="font-size:10px"></i>${serverSummary}</span>` : ''}
@@ -251,7 +251,7 @@ function renderServicesTable() {
     }).join('');
 
     const empty = items.length === 0
-        ? `<div class="text-center py-12" style="color:var(--muted)">No services match filter</div>`
+        ? `<div class="text-center py-12" style="color:var(--muted)">${th('No services match filter')}</div>`
         : '';
 
     if (_svcViewMode === 'list') {
@@ -283,12 +283,12 @@ function renderServicesTable() {
                 }).join('')}</div>`
                 : '<span style="color:var(--muted);font-size:11px">-</span>';
             return `<div class="svc-list-row svc-list-grid" onclick="openSvcDetail(${globalIdx})">
-                <div class="svc-list-col-status"><span class="svc-status-dot" style="background:${stColor}"></span><span class="d-flat rl-state" style="color:${stColor}">${st === 'success' ? 'Success' : st === 'error' ? 'Error' : 'Warning'}</span></div>
+                <div class="svc-list-col-status"><span class="svc-status-dot" style="background:${stColor}"></span><span class="d-flat rl-state" style="color:${stColor}">${st === 'success' ? thc('status', 'Success') : st === 'error' ? thc('status', 'Error') : thc('status', 'Warning')}</span></div>
                 <div class="svc-list-col-proto">
                     <span class="d-flat d-proto d-proto-${proto.toLowerCase()}">${proto}</span>
                     ${type ? `<span class="d-flat d-blue">${type}</span>` : ''}
                 </div>
-                <div class="svc-list-col-name">${_esc(name)}${ownerName ? ` <span class="d-flat d-off">backend of ${_esc(ownerName)}</span>` : ''}</div>
+                <div class="svc-list-col-name">${_esc(name)}${ownerName ? ` <span class="d-flat d-off">${th('backend of {owner}', { owner: ownerName })}</span>` : ''}</div>
                 <div class="svc-list-col-url overflow-hidden">${serverUrlHtml}</div>
                 <div class="svc-list-col-provider"><span class="d-flat d-off"><i class="ph-bold ph-database" style="font-size:10px;margin-right:4px"></i>${_esc(provider)}</span></div>
                 <div class="svc-list-col-servers">${serverSummary ? `<span class="d-flat" style="color:${srvColor}"><i class="ph-bold ph-hard-drives" style="font-size:10px;margin-right:4px"></i>${serverSummary}</span>` : '<span class="d-flat d-off">-</span>'}</div>
@@ -296,13 +296,13 @@ function renderServicesTable() {
             </div>`;
         }).join('');
         const header = `<div class="svc-list-header svc-list-grid">
-            <div class="svc-list-col-status">Status</div>
-            <div class="svc-list-col-proto">Protocol</div>
-            <div class="svc-list-col-name">Name</div>
-            <div class="svc-list-col-url">Backend URL</div>
-            <div class="svc-list-col-provider">Provider</div>
-            <div class="svc-list-col-servers">Servers</div>
-            <div class="svc-list-col-usedby">Used By</div>
+            <div class="svc-list-col-status">${thc('status', 'Status')}</div>
+            <div class="svc-list-col-proto">${thc('label', 'Protocol')}</div>
+            <div class="svc-list-col-name">${thc('label', 'Name')}</div>
+            <div class="svc-list-col-url">${th('Backend URL')}</div>
+            <div class="svc-list-col-provider">${thc('label', 'Provider')}</div>
+            <div class="svc-list-col-servers">${thc('label', 'Servers')}</div>
+            <div class="svc-list-col-usedby">${th('Used By')}</div>
         </div>`;
         document.getElementById('liveContent').innerHTML = `<div class="svc-list">${header}${rows}${empty}</div>`;
     } else {
@@ -329,11 +329,9 @@ function _svcEditable(s) {
 function _svcOwnershipHtml(s) {
     const bare = _svcBareName(s.name);
     const owned = _ownedServiceNames.has(bare);
-    return `<div class="text-xs" style="color:var(--muted)">${owned
-            ? 'Traefik Manager manages this service. Routes using it can edit their backends here.'
-            : 'This service is not managed by Traefik Manager, so routes using it are read only.'}</div>
+    return `<div class="text-xs" style="color:var(--muted)">${owned ? th('Traefik Manager manages this service. Routes using it can edit their backends here.') : th('This service is not managed by Traefik Manager, so routes using it are read only.')}</div>
         <button type="button" class="btn-secondary text-xs mt-2" onclick="_setServiceOwnership(${_jsArg(bare)}, ${owned ? 'false' : 'true'})">
-            <i class="ph-bold ${owned ? 'ph-hand-withdraw' : 'ph-hand-deposit'} text-xs"></i> ${owned ? 'Stop managing' : 'Manage this service'}
+            <i class="ph-bold ${owned ? 'ph-hand-withdraw' : 'ph-hand-deposit'} text-xs"></i> ${owned ? th('Stop managing') : th('Manage this service')}
         </button>`;
 }
 
@@ -351,13 +349,13 @@ async function _setServiceOwnership(name, adopt) {
         });
         const body = await res.json();
         if (!res.ok || !body.ok) {
-            showToast(body.error || 'Could not change management', 'error');
+            showToast(body.error || t('Could not change management'), 'error');
             return;
         }
-        showToast(adopt ? 'Traefik Manager now manages ' + name : 'Released ' + name, 'success');
+        showToast(adopt ? t('Traefik Manager now manages {name}', { name }) : t('Released {name}', { name }), 'success');
         loadServices();
     } catch (e) {
-        showToast('Could not change management', 'error');
+        showToast(t('Could not change management'), 'error');
     }
 }
 
@@ -373,6 +371,12 @@ function _compositeChildren(s) {
     if (s.failover?.service)  out.push({ name: s.failover.service,  role: 'Primary',  share: '-' });
     if (s.failover?.fallback) out.push({ name: s.failover.fallback, role: 'Fallback', share: '-' });
     return out.filter(c => c.name);
+}
+
+function _compositeRoleLabel(role) {
+    const labels = { Weighted: tc('role', 'Weighted'), Main: tc('role', 'Main'), Mirror: tc('role', 'Mirror'),
+                     Primary: tc('role', 'Primary'), Fallback: tc('role', 'Fallback') };
+    return labels[role] || role;
 }
 
 function _svcBareName(name) {
@@ -426,7 +430,7 @@ function _openServiceByName(name) {
     const bare = String(name || '').split('@')[0];
     const idx = _allServices.findIndex(x => (x.name || '').split('@')[0] === bare);
     if (idx >= 0) openSvcDetail(idx);
-    else showToast('Service ' + bare + ' is not in this list', 'error');
+    else showToast(t('Service {bare} is not in this list', { bare }), 'error');
 }
 
 function _svcServerState(s, url) {
@@ -434,9 +438,9 @@ function _svcServerState(s, url) {
     if (st === undefined) return '<span class="text-xs" style="color:var(--muted)">-</span>';
     const up = String(st).toUpperCase() === 'UP';
     if (up && !(s.loadBalancer && s.loadBalancer.healthCheck)) {
-        return '<span class="flex items-center gap-1.5" title="No health check on this service, so Traefik reports every server as UP"><span class="status-dot status-online"></span><span class="text-xs" style="color:var(--muted)">UP, not checked</span></span>';
+        return `<span class="flex items-center gap-1.5" title="${th('No health check on this service, so Traefik reports every server as UP')}"><span class="status-dot status-online"></span><span class="text-xs" style="color:var(--muted)">${thc('status', 'UP, not checked')}</span></span>`;
     }
-    return `<span class="flex items-center gap-1.5"><span class="status-dot ${up ? 'status-online' : 'status-offline'}"></span><span class="text-xs" style="color:${up ? 'var(--green)' : 'var(--red)'}">${up ? 'UP' : 'DOWN'}</span></span>`;
+    return `<span class="flex items-center gap-1.5"><span class="status-dot ${up ? 'status-online' : 'status-offline'}"></span><span class="text-xs" style="color:${up ? 'var(--green)' : 'var(--red)'}">${up ? thc('status', 'UP') : thc('status', 'DOWN')}</span></span>`;
 }
 
 function openSvcDetail(idx) {
@@ -457,10 +461,10 @@ function openSvcDetail(idx) {
     const provider = (s.name || '').includes('@') ? s.name.split('@').pop() : 'file';
     const type = s.loadBalancer ? 'loadbalancer' : s.mirroring ? 'mirroring' : s.weighted ? 'weighted' : s.failover ? 'failover' : s.highestRandomWeight ? 'highestrandomweight' : '-';
     const status = s.status || 'unknown';
-    const stKind = status === 'enabled' ? ['status-online', 'd-on', 'Success']
-                 : status === 'disabled' || status === 'error' ? ['status-offline', 'd-bad', 'Error']
-                 : ['status-checking', 'd-warn', 'Warning'];
-    const statusBadge = `<span class="d-state d-flat ${stKind[1]}"><span class="status-dot ${stKind[0]}"></span>${stKind[2]}</span>`;
+    const stKind = status === 'enabled' ? ['status-online', 'd-on', tc('status', 'Success')]
+                 : status === 'disabled' || status === 'error' ? ['status-offline', 'd-bad', tc('status', 'Error')]
+                 : ['status-checking', 'd-warn', tc('status', 'Warning')];
+    const statusBadge = `<span class="d-state d-flat ${stKind[1]}"><span class="status-dot ${stKind[0]}"></span>${_esc(stKind[2])}</span>`;
 
     const lb = s.loadBalancer || {};
     const servers = lb.servers || [];
@@ -472,7 +476,7 @@ function openSvcDetail(idx) {
         <table class="w-full text-left mt-2">
             <thead style="background:var(--card)">
                 <tr>
-                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Status</th>
+                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Status')}</th>
                     <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">URL</th>
                 </tr>
             </thead>
@@ -485,7 +489,7 @@ function openSvcDetail(idx) {
                     <td class="px-3 py-2.5 font-mono text-xs break-all" style="color:var(--text)">${_esc(sv.url || sv.address || '-')}</td>
                 </tr>`).join('')}
             </tbody>
-        </table>` : `<div class="text-xs mt-2" style="color:var(--muted)">No servers configured</div>`;
+        </table>` : `<div class="text-xs mt-2" style="color:var(--muted)">${th('No servers configured')}</div>`;
 
     
     const children = _compositeChildren(s);
@@ -493,17 +497,17 @@ function openSvcDetail(idx) {
         <table class="w-full text-left mt-2">
             <thead style="background:var(--card)">
                 <tr>
-                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Role</th>
-                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Service</th>
-                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">Share</th>
+                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Role')}</th>
+                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Service')}</th>
+                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Share')}</th>
                 </tr>
             </thead>
             <tbody>
                 ${children.map(c => `
                 <tr style="border-top:1px solid var(--border)">
-                    <td class="px-3 py-2.5 text-xs" style="color:var(--muted)">${_esc(c.role)}</td>
+                    <td class="px-3 py-2.5 text-xs" style="color:var(--muted)">${_esc(_compositeRoleLabel(c.role))}</td>
                     <td class="px-3 py-2.5">
-                        <button type="button" class="route-deep-chip" onclick="_openServiceByName(${_jsArg(c.name)})" title="Open service"><i class="ph-bold ph-stack"></i>${_esc(String(c.name).split('@')[0])}</button>
+                        <button type="button" class="route-deep-chip" onclick="_openServiceByName(${_jsArg(c.name)})" title="${th('Open service')}"><i class="ph-bold ph-stack"></i>${_esc(String(c.name).split('@')[0])}</button>
                     </td>
                     <td class="px-3 py-2.5 font-mono text-xs" style="color:var(--text)">${_esc(c.share)}</td>
                 </tr>`).join('')}
@@ -513,29 +517,29 @@ function openSvcDetail(idx) {
     const usedBy = s.usedBy || [];
     const usedByHtml = usedBy.length > 0
         ? `<div class="flex flex-wrap gap-1.5">${usedBy.map(r =>
-            `<button type="button" class="route-deep-chip" onclick="_openRouteByName(${_jsArg(String(r))})" title="Open route"><i class="ph-bold ph-arrows-split"></i>${_esc(String(r).split('@')[0])}</button>`).join('')}</div>`
+            `<button type="button" class="route-deep-chip" onclick="_openRouteByName(${_jsArg(String(r))})" title="${th('Open route')}"><i class="ph-bold ph-arrows-split"></i>${_esc(String(r).split('@')[0])}</button>`).join('')}</div>`
         : `<span class="text-xs" style="color:var(--muted)">-</span>`;
 
     const ownerName = _svcOwnerName(_allServices, s);
     const detailRows = [
-        ['Type', type, false],
-        ['Provider', _dText(provider, 'd-off'), true],
-        ['Status', statusBadge, true],
-        ['Pass Host Header', passHostHeader === '-' ? '-' : _dBool(passHostHeader === 'true'), true],
+        [tc('label', 'Type'), type, false],
+        [tc('label', 'Provider'), _dText(provider, 'd-off'), true],
+        [tc('label', 'Status'), statusBadge, true],
+        [t('Pass Host Header'), passHostHeader === '-' ? '-' : _dBool(passHostHeader === 'true'), true],
     ];
     if (ownerName) {
-        detailRows.splice(1, 0, ['Backend of',
-            `<button type="button" class="route-deep-chip" onclick="_openServiceByName(${_jsArg(ownerName)})" title="Open service"><i class="ph-bold ph-stack"></i>${_esc(ownerName)}</button>`,
+        detailRows.splice(1, 0, [t('Backend of'),
+            `<button type="button" class="route-deep-chip" onclick="_openServiceByName(${_jsArg(ownerName)})" title="${th('Open service')}"><i class="ph-bold ph-stack"></i>${_esc(ownerName)}</button>`,
             true]);
     }
 
     body.innerHTML =
-        renderSection('Service Details', 'ph-info', detailRows)
+        renderSection(t('Service Details'), 'ph-info', detailRows)
         + (children.length
-            ? renderDetailBlock('Backends', 'ph-tree-structure', childrenHtml, _dCount(children.length))
-            : renderDetailBlock('Servers', 'ph-globe', serversHtml, _dCount(servers.length)))
-        + (children.length && _svcProvider(s) === 'file' ? renderDetailBlock('Management', 'ph-user-gear', _svcOwnershipHtml(s)) : '')
-        + renderDetailBlock('Used by Routers', 'ph-git-branch', usedByHtml);
+            ? renderDetailBlock(tc('label', 'Backends'), 'ph-tree-structure', childrenHtml, _dCount(children.length))
+            : renderDetailBlock(tc('label', 'Servers'), 'ph-globe', serversHtml, _dCount(servers.length)))
+        + (children.length && _svcProvider(s) === 'file' ? renderDetailBlock(tc('label', 'Management'), 'ph-user-gear', _svcOwnershipHtml(s)) : '')
+        + renderDetailBlock(t('Used by Routers'), 'ph-git-branch', usedByHtml);
 
     const editBtn = document.getElementById('svcDetailEditBtn');
     if (editBtn) {
@@ -580,9 +584,7 @@ function addSvcHcHeader(data) {
     const d = data || {};
     const row = document.createElement('div');
     row.className = 'svc-hc-hdr flex gap-2 mb-2';
-    row.innerHTML = '<input type="text" class="input-field svc-hc-k" placeholder="Header" value="' + _esc(d.k || '') + '">'
-        + '<input type="text" class="input-field svc-hc-v" placeholder="Value" value="' + _esc(d.v || '') + '">'
-        + '<button type="button" class="btn-secondary text-xs" style="height:32px;padding:0 10px" onclick="this.closest(\'.svc-hc-hdr\').remove()"><i class="ph-bold ph-x text-xs"></i></button>';
+    row.innerHTML = `<input type="text" class="input-field svc-hc-k" placeholder="${thc('placeholder', 'Header')}" value="${_esc(d.k || '')}"><input type="text" class="input-field svc-hc-v" placeholder="${thc('placeholder', 'Value')}" value="${_esc(d.v || '')}"><button type="button" class="btn-secondary text-xs" style="height:32px;padding:0 10px" onclick="this.closest('.svc-hc-hdr').remove()"><i class="ph-bold ph-x text-xs"></i></button>`;
     wrap.appendChild(row);
 }
 
@@ -652,10 +654,10 @@ function _svcTypeChanged() {
     const kind = document.getElementById('svcType')?.value || 'weighted';
     const hint = document.getElementById('svcTypeHint');
     if (hint) {
-        hint.textContent = kind === 'loadBalancer' ? 'Requests are spread evenly across the servers.'
-            : kind === 'weighted' ? 'Traffic is split between the backends by weight.'
-            : kind === 'mirroring' ? 'The first backend serves every request; the rest receive a copy by percentage.'
-            : 'The first backend serves; the second takes over if it fails.';
+        hint.textContent = kind === 'loadBalancer' ? t('Requests are spread evenly across the servers.')
+            : kind === 'weighted' ? t('Traffic is split between the backends by weight.')
+            : kind === 'mirroring' ? t('The first backend serves every request; the rest receive a copy by percentage.')
+            : t('The first backend serves; the second takes over if it fails.');
     }
     const plain = kind === 'loadBalancer';
     const hcSection = document.getElementById('svcHealthSection');
@@ -664,11 +666,11 @@ function _svcTypeChanged() {
     if (addBtn) {
         const over = kind === 'failover' && document.querySelectorAll('#svcRows .svc-row').length >= 2;
         addBtn.disabled = over;
-        addBtn.title = over ? 'Failover takes two backends' : '';
+        addBtn.title = over ? t('Failover takes two backends') : '';
     }
     document.querySelectorAll('#svcRows .svc-row').forEach(r => {
         const w = r.querySelector('.svc-weight');
-        if (w) { w.style.display = plain ? 'none' : ''; w.title = kind === 'mirroring' ? 'Percent' : 'Weight'; }
+        if (w) { w.style.display = plain ? 'none' : ''; w.title = kind === 'mirroring' ? tc('tooltip', 'Percent') : tc('tooltip', 'Weight'); }
         _svcRowKindChanged(r.querySelector('.svc-kind'));
     });
 }
@@ -678,7 +680,7 @@ async function addServiceRow(data) {
     if (!wrap) return;
     const kind = document.getElementById('svcType')?.value || 'loadBalancer';
     if (kind === 'failover' && wrap.querySelectorAll('.svc-row').length >= 2) {
-        showToast('Failover takes two backends: the one that serves and the one that takes over', 'error');
+        showToast(t('Failover takes two backends: the one that serves and the one that takes over'), 'error');
         return;
     }
     const d = data || {};
@@ -688,12 +690,7 @@ async function addServiceRow(data) {
     row.style.gridTemplateColumns = '104px 96px 1fr 74px 32px';
     row.id = id;
     row.innerHTML =
-        `<select class="input-field svc-kind text-sm" onchange="_svcRowKindChanged(this)"><option value="manual">IP : Port</option><option value="service">Service</option></select>`
-        + `<select class="input-field svc-scheme text-sm"><option value="http">HTTP</option><option value="https">HTTPS</option><option value="h2c">h2c</option></select>`
-        + `<input type="text" class="input-field svc-addr text-sm" placeholder="10.0.0.10:80">`
-        + `<select class="input-field svc-ref text-sm" style="display:none"></select>`
-        + `<input type="number" class="input-field svc-weight text-sm" value="1" min="0" title="Weight">`
-        + `<button type="button" onclick="this.closest('.svc-row').remove()" class="btn-secondary" title="Remove" style="padding:0;width:32px;display:flex;align-items:center;justify-content:center"><i class="ph-bold ph-trash text-xs" style="color:var(--red)"></i></button>`;
+        `<select class="input-field svc-kind text-sm" onchange="_svcRowKindChanged(this)"><option value="manual">${th('IP : Port')}</option><option value="service">${thc('option', 'Service')}</option></select><select class="input-field svc-scheme text-sm"><option value="http">HTTP</option><option value="https">HTTPS</option><option value="h2c">h2c</option></select><input type="text" class="input-field svc-addr text-sm" placeholder="10.0.0.10:80"><select class="input-field svc-ref text-sm" style="display:none"></select><input type="number" class="input-field svc-weight text-sm" value="1" min="0" title="${thc('tooltip', 'Weight')}"><button type="button" onclick="this.closest('.svc-row').remove()" class="btn-secondary" title="${thc('tooltip', 'Remove')}" style="padding:0;width:32px;display:flex;align-items:center;justify-content:center"><i class="ph-bold ph-trash text-xs" style="color:var(--red)"></i></button>`;
     wrap.appendChild(row);
     if (d.kind === 'service') row.querySelector('.svc-kind').value = 'service';
     if (d.scheme) row.querySelector('.svc-scheme').value = d.scheme;
@@ -712,7 +709,7 @@ async function _svcFillRefSelect(row, selected) {
     const usable = svcs.filter(n => n !== editing);
     sel.innerHTML = usable.length
         ? usable.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('')
-        : '<option value="">No other services to reference yet</option>';
+        : `<option value="">${th('No other services to reference yet')}</option>`;
     if (selected && !usable.includes(selected)) {
         sel.insertAdjacentHTML('afterbegin', `<option value="${_esc(selected)}">${_esc(selected)}</option>`);
     }
@@ -767,7 +764,7 @@ async function openServiceModal(existing) {
     const err = document.getElementById('svcError');
     if (err) err.style.display = 'none';
     const title = document.getElementById('svcModalTitle');
-    if (title) title.textContent = existing ? 'Edit Service' : 'Add Service';
+    if (title) title.textContent = existing ? t('Edit Service') : t('Add Service');
     const del = document.getElementById('svcDeleteBtn');
     if (del) del.style.display = existing ? '' : 'none';
     const rows = document.getElementById('svcRows');
@@ -854,8 +851,8 @@ async function saveServiceModal() {
     const name = (document.getElementById('svcName')?.value || '').trim();
     const children = _collectServiceRows();
     const healthCheck = _collectHealthCheck();
-    if (!name) return show('Give the service a name.');
-    if (!children.length) return show('Add at least one backend.');
+    if (!name) return show(t('Give the service a name.'));
+    if (!children.length) return show(t('Add at least one backend.'));
     const btn = document.getElementById('svcSaveBtn');
     if (btn) btn.disabled = true;
     try {
@@ -874,13 +871,13 @@ async function saveServiceModal() {
             }),
         });
         const body = await res.json();
-        if (!res.ok || !body.ok) return show(body.error || 'Could not save the service');
+        if (!res.ok || !body.ok) return show(body.error || t('Could not save the service'));
         closeServiceModal();
-        showToast('Service ' + name + ' saved', 'success');
+        showToast(t('Service {name} saved', { name }), 'success');
         window._tmServices = null;
         loadServices();
     } catch (e) {
-        show('Could not save the service');
+        show(t('Could not save the service'));
     } finally {
         if (btn) btn.disabled = false;
     }
@@ -889,7 +886,7 @@ async function saveServiceModal() {
 async function deleteServiceFromModal() {
     const name = (document.getElementById('svcOriginalName')?.value || '').trim();
     if (!name) return;
-    if (!await _confirm('Delete the service ' + name + '? Its own backends are removed with it.', 'Delete Service', 'Delete', 'DELETE')) return;
+    if (!await _confirm(t('Delete the service {name}? Its own backends are removed with it.', { name }), t('Delete Service'), tc('button', 'Delete'), _confirmWordFor(name))) return;
     await _sendServiceDelete(name, false);
 }
 
@@ -902,28 +899,32 @@ async function _sendServiceDelete(name, force) {
         const body = await res.json().catch(() => null);
         if (res.status === 409 && body && ((body.inUseBy || []).length || (body.parents || []).length)) {
             const routes = body.inUseBy || [], parents = body.parents || [];
-            const show = a => a.slice(0, 5).join(', ') + (a.length > 5 ? ' and ' + (a.length - 5) + ' more' : '');
+            const show = a => a.length > 5 ? t('{items} and {count} more', { items: a.slice(0, 5).join(', '), count: a.length - 5 }) : a.join(', ');
             const parts = [];
-            if (routes.length) parts.push('Delete ' + (routes.length === 1 ? 'the route ' : routes.length + ' routes: ') + show(routes));
-            if (parents.length) parts.push('remove it from ' + show(parents) + (parents.length === 1 ? ' (which is deleted if nothing is left in it)' : ' (any left empty are deleted too)'));
-            if (await _confirm('"' + name + '" is still in use. ' + parts.join(', and ') + ', then delete it?',
-                               'Service In Use', 'Delete all of it', 'DELETE')) {
+            if (routes.length) parts.push(routes.length === 1 ? t('Delete the route {names}', { names: show(routes) })
+                                                              : t('Delete {n} routes: {names}', { n: routes.length, names: show(routes) }));
+            if (parents.length) parts.push(parents.length === 1
+                ? t('remove it from {names} (which is deleted if nothing is left in it)', { names: show(parents) })
+                : t('remove it from {names} (any left empty are deleted too)', { names: show(parents) }));
+            if (await _confirm(t('"{name}" is still in use. {parts}, then delete it?', { name, parts: parts.join(', ' + t('and') + ' ') }),
+                               t('Service In Use'), t('Delete all of it'), _confirmWordFor(name))) {
                 await _sendServiceDelete(name, true);
             }
             return;
         }
         if (!res.ok || !body || !body.ok) {
-            if (err) { err.textContent = (body && body.error) || 'Could not delete'; err.style.display = ''; }
+            if (err) { err.textContent = (body && body.error) || t('Could not delete'); err.style.display = ''; }
             return;
         }
         closeServiceModal();
         const d = body.deleted || {};
-        const extra = (d.routers || []).length ? ' and ' + d.routers.length + (d.routers.length === 1 ? ' route' : ' routes') : '';
-        showToast('Service ' + name + ' deleted' + extra, 'success');
+        const routers = (d.routers || []).length;
+        showToast(routers ? tn('Service {name} deleted and {n} route', 'Service {name} deleted and {n} routes', routers, { name })
+                          : t('Service {name} deleted', { name }), 'success');
         window._tmServices = null;
         loadServices();
         if (extra && typeof refreshRoutes === 'function') refreshRoutes();
     } catch (e) {
-        if (err) { err.textContent = 'Could not delete'; err.style.display = ''; }
+        if (err) { err.textContent = t('Could not delete'); err.style.display = ''; }
     }
 }

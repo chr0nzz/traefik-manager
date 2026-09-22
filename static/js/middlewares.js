@@ -28,7 +28,7 @@ function openMwModal() {
     if (editEl) editEl.value = 'false';
     if (nameEl) nameEl.value = '';
     if (contentEl) contentEl.value = '';
-    if (titleEl) titleEl.innerText = 'Add Middleware';
+    if (titleEl) titleEl.innerText = t('Add Middleware');
     const mwCfSel = document.getElementById('mwConfigFileSelect');
     const mwCfHid = document.getElementById('mwConfigFile');
     const newMwInput = document.getElementById('newMwFileName');
@@ -71,36 +71,36 @@ async function generateDigestAuth() {
     const user  = (document.getElementById('wizDaGenUser')?.value || '').trim();
     const realm = (document.getElementById('wizDaGenRealm')?.value || '').trim();
     const pass  = (document.getElementById('wizDaGenPass')?.value || '');
-    if (!user || !realm || !pass) { showToast('Enter a username, realm and password', 'error'); return; }
+    if (!user || !realm || !pass) { showToast(t('Enter a username, realm and password'), 'error'); return; }
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     try {
         const res  = await fetch('/api/tools/digestauth', { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token': csrf}, body: JSON.stringify({username: user, realm, password: pass}) });
-        if (!res.ok) { showToast(await _errText(res, 'Error generating hash'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Error generating hash')), 'error'); return; }
         const json = await res.json();
-        if (!json.ok) { showToast(json.error || json.message || 'Error generating hash', 'error'); return; }
+        if (!json.ok) { showToast(json.error || json.message || t('Error generating hash'), 'error'); return; }
         const ta = document.getElementById('wizDaUsers');
         if (ta) ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + json.hash;
         document.getElementById('wizDaGenUser').value = '';
         document.getElementById('wizDaGenRealm').value = '';
         document.getElementById('wizDaGenPass').value = '';
-    } catch(e) { showToast(_netErrText(e, 'Error generating hash'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Error generating hash')), 'error'); }
 }
 
 async function generateHtpasswd() {
     const user = (document.getElementById('wizBaGenUser')?.value || '').trim();
     const pass = (document.getElementById('wizBaGenPass')?.value || '');
-    if (!user || !pass) { showToast('Enter a username and password', 'error'); return; }
+    if (!user || !pass) { showToast(t('Enter a username and password'), 'error'); return; }
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     try {
         const res  = await fetch('/api/tools/htpasswd', { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token': csrf}, body: JSON.stringify({username: user, password: pass}) });
-        if (!res.ok) { showToast(await _errText(res, 'Error generating hash'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Error generating hash')), 'error'); return; }
         const json = await res.json();
-        if (!json.ok) { showToast(json.error || json.message || 'Error generating hash', 'error'); return; }
+        if (!json.ok) { showToast(json.error || json.message || t('Error generating hash'), 'error'); return; }
         const ta = document.getElementById('wizBaUsers');
         if (ta) ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + json.hash;
         document.getElementById('wizBaGenUser').value = '';
         document.getElementById('wizBaGenPass').value = '';
-    } catch(e) { showToast(_netErrText(e, 'Error generating hash'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Error generating hash')), 'error'); }
 }
 
 function setMwMode(mode) {
@@ -172,12 +172,12 @@ function _wizIpStrategySync() {
 async function _populateMwErrorService() {
     const sel = document.getElementById('wizErrService');
     if (!sel) return;
-    sel.innerHTML = '<option value="">Loading services...</option>';
+    sel.innerHTML = `<option value="">${th('Loading services...')}</option>`;
     let svcs = [];
     try { svcs = (await _ensureServicesList()).http || []; } catch (e) { svcs = []; }
     sel.innerHTML = svcs.length
         ? svcs.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('')
-        : '<option value="">No HTTP services defined yet</option>';
+        : `<option value="">${th('No HTTP services defined yet')}</option>`;
 }
 
 function _showMwWizard(tpl) {
@@ -445,7 +445,7 @@ async function saveMwAjax(event) {
     const _mwCfSel  = document.getElementById('mwConfigFileSelect');
     if (_mwCfWrap && _mwCfWrap.style.display !== 'none' && _mwCfSel && !_mwCfSel.value
             && !document.getElementById('mwConfigFile').value) {
-        showToast('Select a config file for this middleware', 'error');
+        showToast(t('Select a config file for this middleware'), 'error');
         return;
     }
     const mwMode = document.getElementById('mwCurrentMode')?.value;
@@ -454,21 +454,21 @@ async function saveMwAjax(event) {
         if (tpl === 'basicAuth' || tpl === 'digestAuth') {
             const usersEl = document.getElementById(tpl === 'basicAuth' ? 'wizBaUsers' : 'wizDaUsers');
             const users = (usersEl?.value || '').trim().split('\n').map(l => l.trim()).filter(Boolean);
-            if (!users.length) { showToast('Add at least one user before saving', 'error'); return; }
+            if (!users.length) { showToast(t('Add at least one user before saving'), 'error'); return; }
         }
         if (['forwardAuth','forwardAuthAuthentik','forwardAuthAuthelia'].includes(tpl)) {
             const addr = (document.getElementById('wizFaAddress')?.value || '').trim();
-            if (!addr) { showToast('Forward auth address is required', 'error'); return; }
+            if (!addr) { showToast(t('Forward auth address is required'), 'error'); return; }
         }
         if (tpl === 'forwardAuthGatekeeper') {
             const url = (document.getElementById('wizGkUrl')?.value || '').trim();
-            if (!url) { showToast('Gatekeeper URL is required', 'error'); return; }
+            if (!url) { showToast(t('Gatekeeper URL is required'), 'error'); return; }
         }
         buildYamlFromWizard();
     } else {
         const content = _mwMonacoEditor ? _mwMonacoEditor.getValue() : (document.getElementById('middlewareContent')?.value || '');
         if (_mwMonacoEditor) document.getElementById('middlewareContent').value = content;
-        if (!content.trim()) { showToast('Middleware content cannot be empty', 'error'); return; }
+        if (!content.trim()) { showToast(t('Middleware content cannot be empty'), 'error'); return; }
     }
     const form = event.target;
     const mwFn = document.getElementById('newMwFileName');
@@ -482,19 +482,19 @@ async function saveMwAjax(event) {
         const fd = new FormData(form);
         if (_activeAgent) fd.append('agent_id', _activeAgent.id);
         const res = await fetch(form.action, { method:'POST', headers:{'X-Requested-With':'fetch'}, body: fd });
-        if (!res.ok) { showToast(await _errText(res, 'Error saving middleware'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Error saving middleware')), 'error'); return; }
         const json = await res.json();
-        showToast(json.message || json.error || 'Error saving middleware', json.ok ? 'success' : 'error');
+        showToast(json.message || json.error || t('Error saving middleware'), json.ok ? 'success' : 'error');
         if (json.ok) { closeMwModal(); _cachedMiddlewares = null; refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); setTimeout(fetchNotifications, 8000); }
     } catch(e) {
-        showToast(_netErrText(e, 'Error saving middleware'), 'error');
+        showToast(_netErrText(e, t('Error saving middleware')), 'error');
     } finally {
         btn.disabled = false;
     }
 }
 
 async function deleteMw(name, configFile) {
-    if (!await _confirm('Delete middleware "' + name + '"?', 'Delete Middleware', 'Delete', 'DELETE')) return;
+    if (!await _confirm(t('Delete middleware "{name}"?', { name }), t('Delete Middleware'), tc('button', 'Delete'), _confirmWordFor(name))) return;
     await _sendMwDelete(name, configFile, false);
 }
 
@@ -509,18 +509,18 @@ async function _sendMwDelete(name, configFile, force) {
         const json = await res.json().catch(() => null);
         if (res.status === 409 && json && (json.inUseBy || []).length) {
             const routes = json.inUseBy;
-            const shown = routes.slice(0, 5).join(', ') + (routes.length > 5 ? ' and ' + (routes.length - 5) + ' more' : '');
-            const label = routes.length === 1 ? '1 route' : routes.length + ' routes';
-            if (await _confirm('"' + name + '" is still used by ' + shown + '. Remove it from ' + label + ' and delete it?',
-                               'Middleware In Use', 'Remove and delete', 'DELETE')) {
+            const shown = routes.length > 5 ? t('{items} and {count} more', { items: routes.slice(0, 5).join(', '), count: routes.length - 5 }) : routes.join(', ');
+            const label = routes.length === 1 ? t('1 route') : t('{routes_count} routes', { routes_count: routes.length });
+            if (await _confirm(t('"{name}" is still used by {shown}. Remove it from {label} and delete it?', { name, shown, label }),
+                               t('Middleware In Use'), t('Remove and delete'), _confirmWordFor(name))) {
                 await _sendMwDelete(name, configFile, true);
             }
             return;
         }
-        if (!res.ok) { showToast((json && (json.message || json.error)) || await _errText(res, 'Error deleting middleware'), 'error'); return; }
-        showToast((json && (json.message || json.error)) || 'Error deleting middleware', json && json.ok ? 'success' : 'error');
+        if (!res.ok) { showToast((json && (json.message || json.error)) || await _errText(res, t('Error deleting middleware')), 'error'); return; }
+        showToast((json && (json.message || json.error)) || t('Error deleting middleware'), json && json.ok ? 'success' : 'error');
         if (json && json.ok) { _cachedMiddlewares = null; refreshRoutes(); fetchNotifications(); if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData(); }
-    } catch(e) { showToast(_netErrText(e, 'Error deleting middleware'), 'error'); }
+    } catch(e) { showToast(_netErrText(e, t('Error deleting middleware')), 'error'); }
 }
 
 function _tmMwIcon(mw) {
@@ -560,14 +560,10 @@ function _tmMwCard(mw, showCf) {
     const typeLower = (mw.type || 'http').toLowerCase();
     const used = _tmMwUsage(mw);
     const chained = used ? false : _tmMwChained(mw);
-    const usage = used ? `used by ${used} route${used > 1 ? 's' : ''}`
-                       : chained ? 'used in a chain' : 'unused';
+    const usage = used ? tn('used by {n} route', 'used by {n} routes', used)
+                       : chained ? t('used in a chain') : 'unused';
     const yaml = String(mw.yaml || '').split('\n').slice(0, 4).join('\n');
-    const rail = `<span class="tm-rail tm-rail-sm" onclick="event.stopPropagation()">` +
-        (_faNeedsLimit(mw.yaml) ? `<button type="button" class="tm-btn" title="No response size limit set - Traefik 3.7 warns about this. Click to add one" data-mw='${mwJson}' onclick="event.stopPropagation();addFaLimit(this)"><i class="ph-bold ph-warning" style="color:var(--yellow)"></i></button>` : '') +
-        `<button type="button" class="tm-btn" title="Edit" data-mw='${mwJson}' onclick="event.stopPropagation();handleMwEdit(this)"><i class="ph-bold ph-pencil-simple"></i></button>` +
-        `<button type="button" class="tm-btn" title="Delete" onclick="event.stopPropagation();deleteMw(${_jsArg(mw.name)}${cfArg})"><i class="ph-bold ph-trash"></i></button>` +
-        '</span>';
+    const rail = `<span class="tm-rail tm-rail-sm" onclick="event.stopPropagation()">${_faNeedsLimit(mw.yaml) ? `<button type="button" class="tm-btn" title="${th('No response size limit set - Traefik 3.7 warns about this. Click to add one')}" data-mw='${mwJson}' onclick="event.stopPropagation();addFaLimit(this)"><i class="ph-bold ph-warning" style="color:var(--yellow)"></i></button>` : ''}<button type="button" class="tm-btn" title="${thc('tooltip', 'Edit')}" data-mw='${mwJson}' onclick="event.stopPropagation();handleMwEdit(this)"><i class="ph-bold ph-pencil-simple"></i></button><button type="button" class="tm-btn" title="${thc('tooltip', 'Delete')}" onclick="event.stopPropagation();deleteMw(${_jsArg(mw.name)}${cfArg})"><i class="ph-bold ph-trash"></i></button></span>`;
     return `<div class="tm-card mw-card" data-mwname="${_esc(mw.name.toLowerCase())}" data-mwtype="${typeLower}" style="--tm-accent:var(--purple)" data-mw='${mwJson}' onclick="openMwDetail(this)">
         <div class="tm-head">
             <span class="tm-ic tm-ic-tile"><i class="ph-bold ${_tmMwIcon(mw)}"></i></span>
@@ -598,7 +594,7 @@ function renderMwGrid(middlewares) {
         const mwCfArg = `,${_jsArg(mw.configFile || '')}`;
         const mwCfBadge = mw.configFile ? `<span class="badge badge-muted" style="font-size:9px;white-space:nowrap">${_esc(mw.configFile)}</span>` : '';
         const dataAttrs = `data-mwname="${_esc(mw.name.toLowerCase())}" data-mwtype="${typeLower}"`;
-        const actions = `<div class="flex gap-1.5"><button type="button" data-mw='${mwJson}' onclick="openMwDetail(this)" class="pill-btn pill-btn-blue" title="View details"><i class="ph-bold ph-info text-xs"></i></button><button type="button" onclick="deleteMw(${_jsArg(mw.name)}${mwCfArg})" class="pill-btn pill-btn-red" title="Delete"><i class="ph-bold ph-trash text-xs"></i></button><button type="button" data-mw='${mwJson}' onclick="handleMwEdit(this)" class="pill-btn pill-btn-blue" title="Edit"><i class="ph-bold ph-pencil-simple text-xs"></i></button></div>`;
+        const actions = `<div class="flex gap-1.5"><button type="button" data-mw='${mwJson}' onclick="openMwDetail(this)" class="pill-btn pill-btn-blue" title="${th('View details')}"><i class="ph-bold ph-info text-xs"></i></button><button type="button" onclick="deleteMw(${_jsArg(mw.name)}${mwCfArg})" class="pill-btn pill-btn-red" title="${thc('tooltip', 'Delete')}"><i class="ph-bold ph-trash text-xs"></i></button><button type="button" data-mw='${mwJson}' onclick="handleMwEdit(this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple text-xs"></i></button></div>`;
         if (_mwViewMode === 'list') {
             return `<div class="svc-list-row mw-list-grid mw-card" ${dataAttrs}><div style="display:flex;align-items:center"><span class="d-flat d-proto d-proto-${typeLower}">${typeUpper}</span></div><div class="svc-list-col-name">${_esc(mw.name)}</div><div>${mw.configFile ? `<span class="d-flat d-off" style="white-space:nowrap">${_esc(mw.configFile)}</span>` : ''}</div>${actions}</div>`;
         }
@@ -606,7 +602,7 @@ function renderMwGrid(middlewares) {
     }).join('');
 
     if (_mwViewMode === 'list') {
-        const header = `<div class="svc-list-header mw-list-grid"><div>Protocol</div><div>Name</div><div>Config File</div><div class="rl-actions-head">Actions</div></div>`;
+        const header = `<div class="svc-list-header mw-list-grid"><div>${thc('label', 'Protocol')}</div><div>${thc('label', 'Name')}</div><div>${th('Config File')}</div><div class="rl-actions-head">${thc('label', 'Actions')}</div></div>`;
         grid.className = '';
         grid.innerHTML = `<div class="svc-list">${header}${grid.innerHTML}</div>`;
     } else if (_tmOn) {
@@ -628,7 +624,7 @@ async function addFaLimit(btn) {
         box.value = withLimit;
         if (_mwMonacoEditor) _mwMonacoEditor.setValue(withLimit);
     }
-    showToast('Review the limit and save', 'info');
+    showToast(t('Review the limit and save'), 'info');
 }
 
 async function handleMwEdit(btn) {
@@ -636,7 +632,7 @@ async function handleMwEdit(btn) {
     document.getElementById('isMwEdit').value = 'true';
     document.getElementById('originalMwId').value = mw.name;
     document.getElementById('middlewareName').value = mw.name;
-    document.getElementById('mwModalTitle').innerText = 'Edit ' + mw.name;
+    document.getElementById('mwModalTitle').innerText = t('Edit {name}', { name: mw.name });
     document.getElementById('mwConfigFile').value = mw.configFile || '';
     const newMwInput = document.getElementById('newMwFileName');
     if (newMwInput) { newMwInput.style.display = 'none'; newMwInput.value = ''; }
@@ -712,7 +708,7 @@ function filterMw(f) {
     const emptyText = document.getElementById('mwEmptyText');
     if (emptyEl) {
         emptyEl.classList.toggle('hidden', visible > 0 || _mwCardEls.length === 0);
-        if (emptyText) emptyText.textContent = search ? `No middlewares match "${search}"` : 'No middlewares found';
+        if (emptyText) emptyText.textContent = search ? t('No middlewares match "{search}"', { search }) : t('No middlewares found');
     }
 }
 let _mwViewMode = tmPref('mwViewMode');
@@ -812,38 +808,36 @@ function renderMwDetailPanel(mw) {
         ? (((mw.yaml || '').match(/^\s+([\w-]+)\s*:/m) || [])[1] || '')
         : '';
 
-    rows.push(['Name', _dText(mw.name), true]);
-    if (kind) rows.push(['Type', _dText(kind) + (pluginName ? ` <span class="d-flat d-off">(${_esc(pluginName)})</span>` : ''), true]);
-    if (mw.type) rows.push(['Protocol', _dText((mw.type || '').toUpperCase()), true]);
-    if (mw.provider && mw.provider !== 'file') rows.push(['Provider', _dText(mw.provider, 'd-off'), true]);
-    if (mw.status && mw.status !== 'enabled') rows.push(['Status', `<span class="d-flat" style="color:var(--red)">${_esc(mw.status)}</span>`, true]);
-    if (mw.error) rows.push(['Error', `<span class="d-flat" style="color:var(--red)">${_esc(Array.isArray(mw.error) ? mw.error.join(', ') : mw.error)}</span>`, true]);
-    if (mw.configFile) rows.push(['Config File', _dText(mw.configFile, 'd-off'), true]);
+    rows.push([tc('label', 'Name'), _dText(mw.name), true]);
+    if (kind) rows.push([tc('label', 'Type'), _dText(kind) + (pluginName ? ` <span class="d-flat d-off">(${_esc(pluginName)})</span>` : ''), true]);
+    if (mw.type) rows.push([tc('label', 'Protocol'), _dText((mw.type || '').toUpperCase()), true]);
+    if (mw.provider && mw.provider !== 'file') rows.push([tc('label', 'Provider'), _dText(mw.provider, 'd-off'), true]);
+    if (mw.status && mw.status !== 'enabled') rows.push([tc('label', 'Status'), `<span class="d-flat" style="color:var(--red)">${_esc(mw.status)}</span>`, true]);
+    if (mw.error) rows.push([tc('label', 'Error'), `<span class="d-flat" style="color:var(--red)">${_esc(Array.isArray(mw.error) ? mw.error.join(', ') : mw.error)}</span>`, true]);
+    if (mw.configFile) rows.push([t('Config File'), _dText(mw.configFile, 'd-off'), true]);
 
     const routes = _mwRoutesUsing(mw);
     const chains = _mwChainsUsing(mw);
     let usedHtml = '';
     if (!routes.length && !chains.length) {
-        usedHtml += '<div class="text-xs" style="color:var(--yellow)">Not referenced by any route</div>';
+        usedHtml += `<div class="text-xs" style="color:var(--yellow)">${th('Not referenced by any route')}</div>`;
     } else {
         usedHtml += '<div class="flex flex-wrap gap-1.5">'
             + routes.map(({ a, viaEp }) =>
-                `<button type="button" class="route-deep-chip" onclick="_mwOpenRoute(${_jsArg(String(a.id))})" title="${viaEp ? 'Attached via entry point' : 'Open route'}">`
-                + `<i class="ph-bold ${viaEp ? 'ph-arrows-in' : 'ph-arrows-split'}"></i>${_esc(a.name)}</button>`).join('')
+                `<button type="button" class="route-deep-chip" onclick="_mwOpenRoute(${_jsArg(String(a.id))})" title="${viaEp ? th('Attached via entry point') : th('Open route')}"><i class="ph-bold ${viaEp ? 'ph-arrows-in' : 'ph-arrows-split'}"></i>${_esc(a.name)}</button>`).join('')
             + chains.map(c =>
-                `<button type="button" class="route-deep-chip" onclick="_mwOpenSibling(${_jsArg(c.name)})" title="Referenced by this middleware">`
-                + `<i class="ph-bold ph-stack"></i>${_esc(c.name.split('@')[0])}</button>`).join('')
+                `<button type="button" class="route-deep-chip" onclick="_mwOpenSibling(${_jsArg(c.name)})" title="${th('Referenced by this middleware')}"><i class="ph-bold ph-stack"></i>${_esc(c.name.split('@')[0])}</button>`).join('')
             + '</div>';
     }
-    usedHtml = renderDetailBlock('Used by', 'ph-stack', usedHtml);
+    usedHtml = renderDetailBlock(t('Used by'), 'ph-stack', usedHtml);
 
     let yamlHtml = '';
     if (mw.yaml) {
-        yamlHtml = renderDetailBlock('Configuration', 'ph-code',
+        yamlHtml = renderDetailBlock(tc('label', 'Configuration'), 'ph-code',
             `<div class="rounded-lg p-3 overflow-x-auto" style="background:var(--input-bg);border:1px solid var(--border)"><pre class="text-xs font-mono leading-relaxed whitespace-pre-wrap" style="color:var(--green);margin:0">${_esc(mw.yaml)}</pre></div>`);
     }
 
-    return `${renderSection('Details', 'ph-info', rows)}${usedHtml}${yamlHtml}`;
+    return `${renderSection(tc('label', 'Details'), 'ph-info', rows)}${usedHtml}${yamlHtml}`;
 }
 
 let _allPlugins = [];
@@ -867,7 +861,7 @@ function _pluginsHydrate(c) {
 async function refreshPluginsTab() {
     const container = document.getElementById('pluginsContent');
     if (!tabCacheHydrate('plugins', _pluginsHydrate)) {
-        container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>Loading plugins...</p></div>`;
+        container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading plugins...')}</p></div>`;
     }
     try {
         const availP = _activeAgent
@@ -878,7 +872,7 @@ async function refreshPluginsTab() {
             availP,
         ]);
         if (!pluginsRes.ok) {
-            const why = await _errText(pluginsRes, 'Could not load plugin data');
+            const why = await _errText(pluginsRes, t('Could not load plugin data'));
             container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p>${_esc(why)}</p></div>`;
             setTabCount('plugins', '0');
             return;
@@ -898,11 +892,11 @@ async function refreshPluginsTab() {
             container.innerHTML = `
             <div class="text-center py-10 rounded-xl" style="border:1px solid var(--border);color:var(--muted)">
                 <i class="ph-light ph-puzzle-piece text-5xl block mb-3 opacity-30"></i>
-                <p class="font-semibold mb-1" style="color:var(--text)">Static config not configured${_activeAgent ? ' on this agent' : ''}</p>
-                <p class="text-xs max-w-xs mx-auto mb-5">To list plugins here, mount the Traefik static config into the <code class="font-mono" style="color:var(--blue)">${svcName}</code> service and set <code class="font-mono" style="color:var(--blue)">STATIC_CONFIG_PATH</code>.</p>
+                <p class="font-semibold mb-1" style="color:var(--text)">${(_activeAgent ? th('Static config not configured on this agent') : th('Static config not configured'))}</p>
+                <p class="text-xs max-w-xs mx-auto mb-5">${th('To list plugins here, mount the Traefik static config into the {code} service and set {static_config_path}.', { code: tmHtml(`<code class="font-mono" style="color:var(--blue)">${svcName}</code>`), static_config_path: tmHtml(`<code class="font-mono" style="color:var(--blue)">STATIC_CONFIG_PATH</code>`) })}</p>
                 <div class="flex flex-col gap-2 items-center text-xs">
-                    <a href="https://get-traefik.xyzlab.dev" target="_blank" class="btn-secondary" style="text-decoration:none"><i class="ph-bold ph-terminal"></i> Install script</a>
-                    <a href="${docsUrl}" target="_blank" class="btn-secondary" style="text-decoration:none"><i class="ph-bold ph-book-open"></i> Setup docs</a>
+                    <a href="https://get-traefik.xyzlab.dev" target="_blank" class="btn-secondary" style="text-decoration:none"><i class="ph-bold ph-terminal"></i> ${th('Install script')}</a>
+                    <a href="${docsUrl}" target="_blank" class="btn-secondary" style="text-decoration:none"><i class="ph-bold ph-book-open"></i> ${th('Setup docs')}</a>
                 </div>
                 <div class="mt-5 mx-auto text-left rounded-lg p-3 text-xs font-mono" style="max-width:420px;background:var(--input-bg);border:1px solid var(--border);color:var(--muted)">
                     <div style="color:var(--text);margin-bottom:4px">docker-compose.yml - ${svcName}</div>
@@ -919,11 +913,11 @@ async function refreshPluginsTab() {
         if (plugins.length === 0) {
             tabCachePut('plugins', null);
             const addHint = _pluginCanManage
-                ? `<button onclick="openPluginForm()" class="btn-primary text-xs mt-3"><i class="ph-bold ph-plus"></i> Add Plugin</button>`
-                : `<p class="text-xs max-w-sm mx-auto mt-1">Add plugins under <code class="font-mono">experimental.plugins</code> in your <code class="font-mono">traefik.yml</code>.</p>`;
+                ? `<button onclick="openPluginForm()" class="btn-primary text-xs mt-3"><i class="ph-bold ph-plus"></i> ${th('Add Plugin')}</button>`
+                : `<p class="text-xs max-w-sm mx-auto mt-1">${th('Add plugins under {experimental_plugins} in your {traefik_yml}.', { experimental_plugins: tmHtml(`<code class="font-mono">experimental.plugins</code>`), traefik_yml: tmHtml(`<code class="font-mono">traefik.yml</code>`) })}</p>`;
             container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">
                 <i class="ph-light ph-puzzle-piece text-5xl block mb-3 opacity-30"></i>
-                <p class="font-medium mb-1">No plugins configured</p>
+                <p class="font-medium mb-1">${th('No plugins configured')}</p>
                 ${addHint}
             </div>`;
             setTabCount('plugins', '0');
@@ -942,7 +936,7 @@ async function refreshPluginsTab() {
             renderPluginCards();
         }).catch(() => {});
     } catch(e) {
-        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p>${_esc(_netErrText(e, 'Could not load plugin data'))}</p></div>`;
+        container.innerHTML = `<div class="text-center py-16 rounded-xl" style="color:var(--muted);border:1px solid var(--border)"><i class="ph-light ph-cloud-slash text-5xl block mb-3 opacity-30"></i><p>${_esc(_netErrText(e, t('Could not load plugin data')))}</p></div>`;
     }
 }
 
@@ -1012,14 +1006,14 @@ function openPluginForm(idx = -1) {
         document.getElementById('pluginFormModule').value  = p.moduleName || '';
         document.getElementById('pluginFormVersion').value = p.version || '';
         _pluginEditName = p.name;
-        if (title) title.textContent = 'Edit Plugin';
+        if (title) title.textContent = t('Edit Plugin');
         if (addSection) addSection.style.display = 'none';
         if (editSection) editSection.style.display = 'block';
         _openPluginPanel();
         setTimeout(() => document.getElementById('pluginFormName')?.focus(), 50);
     } else {
         _pluginEditName = null;
-        if (title) title.textContent = 'Add Plugin';
+        if (title) title.textContent = t('Add Plugin');
         if (addSection) addSection.style.display = 'block';
         if (editSection) editSection.style.display = 'none';
         const rb = document.getElementById('pluginRestartBanner');
@@ -1058,31 +1052,36 @@ async function savePlugin() {
         const name       = document.getElementById('pluginFormName').value.trim();
         const moduleName = document.getElementById('pluginFormModule').value.trim();
         const version    = document.getElementById('pluginFormVersion').value.trim();
-        if (!name || !moduleName || !version) { showToast('Name, module, and version are required', 'error'); return; }
+        if (!name || !moduleName || !version) { showToast(t('Name, module, and version are required'), 'error'); return; }
         const d1 = await _pluginSectionWrite({ section: 'plugins', action: 'edit', name, old_name: _pluginEditName, data: { moduleName, version } });
         if (!d1) return;
         closePluginForm();
-        showToast('Plugin saved - restart Traefik to apply', 'success');
+        showToast(t('Plugin saved - restart Traefik to apply'), 'success');
         refreshPluginsTab();
     } else {
         const staticYaml = _pluginStaticMonaco ? _pluginStaticMonaco.getValue().trim() : '';
         const mwYaml = _pluginMwMonaco ? _pluginMwMonaco.getValue().trim() : '';
-        if (!staticYaml) { showToast('Paste the static config snippet', 'error'); return; }
+        if (!staticYaml) { showToast(t('Paste the static config snippet'), 'error'); return; }
         const res = await fetch('/api/plugins/install', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
             body: JSON.stringify({ static_yaml: staticYaml, middleware_yaml: mwYaml, middleware_file: _pluginMwFileChoice(), server: _activeAgent ? _activeAgent.id : '' }),
         });
-        if (!res.ok) { showToast(await _errText(res, 'Failed to install plugin'), 'error'); return; }
+        if (!res.ok) { showToast(await _errText(res, t('Failed to install plugin')), 'error'); return; }
         const data = await res.json();
-        if (!data.ok) { showToast(data.error || data.message || 'Failed to install plugin', 'error'); return; }
+        if (!data.ok) { showToast(data.error || data.message || t('Failed to install plugin'), 'error'); return; }
         closePluginForm();
         const banner = document.getElementById('pluginRestartBanner');
         const detail = document.getElementById('pluginRestartBannerDetail');
         if (banner) {
             const names = (data.plugins || []).join(', ');
             const hasMw = mwYaml.length > 0 && !data.warning;
-            if (detail) detail.textContent = `Plugin${data.plugins?.length > 1 ? 's' : ''} "${names}" saved to traefik.yml${hasMw ? ` and middleware saved to ${data.middleware_file || 'plugin-middlewares.yml'}` : ''}.`;
+            const pluginCount = Math.max(1, data.plugins?.length || 0);
+            if (detail) detail.textContent = hasMw
+                ? tn('Plugin "{names}" saved to traefik.yml and middleware saved to {file}.',
+                     'Plugins "{names}" saved to traefik.yml and middleware saved to {file}.',
+                     pluginCount, { names, file: data.middleware_file || 'plugin-middlewares.yml' })
+                : tn('Plugin "{names}" saved to traefik.yml.', 'Plugins "{names}" saved to traefik.yml.', pluginCount, { names });
             banner.style.display = 'block';
         }
         if (data.warning) showToast(data.warning, 'warning');
@@ -1114,13 +1113,13 @@ async function _pluginSectionWrite(body) {
         let cur = null;
         try {
             const curRes = await agentFetch('/api/static');
-            if (!curRes.ok) { showToast(await _errText(curRes, 'Cannot read the agent static config'), 'error'); return null; }
+            if (!curRes.ok) { showToast(await _errText(curRes, t('Cannot read the agent static config')), 'error'); return null; }
             cur = await curRes.json();
         } catch (e) {
-            showToast(_netErrText(e, 'Cannot read the agent static config'), 'error');
+            showToast(_netErrText(e, t('Cannot read the agent static config')), 'error');
             return null;
         }
-        if (!cur || cur.content === undefined) { showToast('Cannot read the agent static config', 'error'); return null; }
+        if (!cur || cur.content === undefined) { showToast(t('Cannot read the agent static config'), 'error'); return null; }
         body.current_raw = cur.content;
     }
     const r1 = await fetch('/api/static/section', {
@@ -1128,30 +1127,30 @@ async function _pluginSectionWrite(body) {
         headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
         body: JSON.stringify(body),
     });
-    if (!r1.ok) { showToast(await _errText(r1, 'Could not update the static config'), 'error'); return null; }
+    if (!r1.ok) { showToast(await _errText(r1, t('Could not update the static config')), 'error'); return null; }
     const d1 = await r1.json();
-    if (!d1.ok) { showToast(d1.error || d1.message || 'Could not update the static config', 'error'); return null; }
+    if (!d1.ok) { showToast(d1.error || d1.message || t('Could not update the static config'), 'error'); return null; }
     const r2 = _activeAgent
         ? await agentFetch('/api/static', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: d1.raw }) })
         : await fetch('/api/static/config', { method: 'POST', headers: { 'Content-Type': 'application/json', ..._csrfHeaders() }, body: JSON.stringify({ content: d1.raw }) });
-    if (!r2.ok) { showToast(await _errText(r2, 'Failed to save the static config'), 'error'); return null; }
+    if (!r2.ok) { showToast(await _errText(r2, t('Failed to save the static config')), 'error'); return null; }
     const d2 = await r2.json();
-    if (!d2.ok) { showToast(d2.error || d2.message || 'Failed to save the static config', 'error'); return null; }
+    if (!d2.ok) { showToast(d2.error || d2.message || t('Failed to save the static config'), 'error'); return null; }
     return d1;
 }
 
 async function deletePlugin(name) {
     const users = _pluginMwsUsing(name).map(m => m.name);
     if (users.length) {
-        const shown = users.slice(0, 5).join(', ') + (users.length > 5 ? ' and ' + (users.length - 5) + ' more' : '');
-        await _confirm(`"${name}" is still used by ${shown}. Delete those middlewares first.`,
-                       'Plugin In Use', 'OK');
+        const shown = users.length > 5 ? t('{items} and {count} more', { items: users.slice(0, 5).join(', '), count: users.length - 5 }) : users.join(', ');
+        await _confirm(t('"{name}" is still used by {shown}. Delete those middlewares first.', { name, shown }),
+                       t('Plugin In Use'), tc('button', 'OK'));
         return;
     }
-    if (!await _confirm(`Remove plugin "${name}"?`, 'Remove Plugin', 'Remove')) return;
+    if (!await _confirm(t('Remove plugin "{name}"?', { name }), t('Remove Plugin'), tc('button', 'Remove'))) return;
     const d1 = await _pluginSectionWrite({ section: 'plugins', action: 'remove', name, old_name: name, data: {} });
     if (!d1) return;
-    showToast('Plugin removed - restart Traefik to apply', 'success');
+    showToast(t('Plugin removed - restart Traefik to apply'), 'success');
     refreshPluginsTab();
 }
 
@@ -1190,20 +1189,20 @@ function renderPluginsVerdict() {
     const unused = _allPlugins.length - used;
     const known = Object.keys(_pluginCatalog).length > 0;
     const flags = [{ cls: 'd-off', ic: 'ph-bold ph-puzzle-piece', n: _allPlugins.length,
-                     label: _allPlugins.length === 1 ? 'plugin' : 'plugins' }];
-    if (used) flags.push({ cls: 'd-on', ic: 'ph-bold ph-plugs-connected', n: used, label: 'in use' });
-    if (unused) flags.push({ cls: 'd-off', ic: 'ph-bold ph-plugs', n: unused, label: 'unused' });
+                     label: _allPlugins.length === 1 ? tc('label', 'plugin') : tc('label', 'plugins') }];
+    if (used) flags.push({ cls: 'd-on', ic: 'ph-bold ph-plugs-connected', n: used, label: t('in use') });
+    if (unused) flags.push({ cls: 'd-off', ic: 'ph-bold ph-plugs', n: unused, label: tc('label', 'unused') });
     if (updates) flags.push({ cls: 'd-warn', ic: 'ph-fill ph-arrow-circle-up', n: updates,
-                              label: updates === 1 ? 'update available' : 'updates available' });
-    else if (known) flags.push({ cls: 'd-on', ic: 'ph-bold ph-check', n: '', label: 'all current' });
+                              label: updates === 1 ? t('update available') : t('updates available') });
+    else if (known) flags.push({ cls: 'd-on', ic: 'ph-bold ph-check', n: '', label: t('all current') });
     _tvStrip('pluginsVerdict', {
         health: updates ? 'warn' : 'up',
         ic: updates ? 'ph-fill ph-arrow-circle-up' : 'ph-fill ph-check-circle',
-        txt: updates ? _sdNum(updates) + (updates === 1 ? ' update available' : ' updates available')
-           : known ? 'All plugins current'
-           : _sdNum(_allPlugins.length) + (_allPlugins.length === 1 ? ' plugin' : ' plugins'),
+        txt: updates ? tn('{count} update available', '{count} updates available', updates, { count: _sdNum(updates) })
+           : known ? t('All plugins current')
+           : tn('{count} plugin', '{count} plugins', _allPlugins.length, { count: _sdNum(_allPlugins.length) }),
         flags,
-        meta: known ? 'catalog checked <b>daily</b>' : '',
+        meta: known ? `${th('catalog checked {daily}', { daily: tmHtml(`<b>${th('daily')}</b>`) })}` : '',
     });
 }
 
@@ -1214,7 +1213,7 @@ function renderPluginCards() {
     );
     if (items.length === 0) {
         document.getElementById('pluginsContent').innerHTML =
-            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">No plugins match your search</div>`;
+            `<div class="text-center py-12 rounded-xl" style="color:var(--muted);border:1px solid var(--border)">${th('No plugins match your search')}</div>`;
         return;
     }
     const cards = items.map(p => {
@@ -1225,27 +1224,20 @@ function renderPluginCards() {
         const moduleName = p.moduleName || '';
         const repoUrl    = moduleName.startsWith('github.com/') ? 'https://' + moduleName : '';
         const mgmtBtns   = _pluginCanManage ? `
-            <button onclick="openPluginForm(${idx})" class="btn-icon" title="Edit" style="padding:4px 6px"><i class="ph-bold ph-pencil text-sm"></i></button>
-            <button onclick="deletePlugin(${_jsArg(name)})" class="btn-icon" title="Remove" style="padding:4px 6px;color:var(--red)"><i class="ph-bold ph-trash text-sm"></i></button>` : '';
+            <button onclick="openPluginForm(${idx})" class="btn-icon" title="${thc('tooltip', 'Edit')}" style="padding:4px 6px"><i class="ph-bold ph-pencil text-sm"></i></button>
+            <button onclick="deletePlugin(${_jsArg(name)})" class="btn-icon" title="${thc('tooltip', 'Remove')}" style="padding:4px 6px;color:var(--red)"><i class="ph-bold ph-trash text-sm"></i></button>` : '';
         const pluginUse = _tmPluginUsage(name);
-        const rail = `<span class="tm-rail" onclick="event.stopPropagation()">` +
-            (repoUrl ? `<a href="${_esc(repoUrl)}" target="_blank" rel="noopener" class="tm-btn" title="View on GitHub" onclick="event.stopPropagation()"><i class="ph-bold ph-github-logo"></i></a>` : '') +
-            `<button type="button" class="tm-btn" title="Details" onclick="event.stopPropagation();openPluginDetail(${idx})"><i class="ph-bold ph-info"></i></button>` +
-            (_pluginCanManage
-                ? `<button type="button" class="tm-btn" title="Edit" onclick="event.stopPropagation();openPluginForm(${idx})"><i class="ph-bold ph-pencil-simple"></i></button>` +
-                  `<button type="button" class="tm-btn" title="Remove" onclick="event.stopPropagation();deletePlugin(${_jsArg(name)})"><i class="ph-bold ph-trash"></i></button>`
-                : '') +
-            '</span>';
+        const rail = `<span class="tm-rail" onclick="event.stopPropagation()">${repoUrl ? `<a href="${_esc(repoUrl)}" target="_blank" rel="noopener" class="tm-btn" title="${th('View on GitHub')}" onclick="event.stopPropagation()"><i class="ph-bold ph-github-logo"></i></a>` : ''}<button type="button" class="tm-btn" title="${thc('tooltip', 'Details')}" onclick="event.stopPropagation();openPluginDetail(${idx})"><i class="ph-bold ph-info"></i></button>${_pluginCanManage ? `<button type="button" class="tm-btn" title="${thc('tooltip', 'Edit')}" onclick="event.stopPropagation();openPluginForm(${idx})"><i class="ph-bold ph-pencil-simple"></i></button><button type="button" class="tm-btn" title="${thc('tooltip', 'Remove')}" onclick="event.stopPropagation();deletePlugin(${_jsArg(name)})"><i class="ph-bold ph-trash"></i></button>` : ''}</span>`;
         return `<div class="tm-card" style="--tm-accent:var(--blue)" onclick="openPluginDetail(${idx})">
             <div class="tm-head">
                 <span class="tm-ic tm-ic-tile"><i class="ph-bold ph-puzzle-piece"></i></span>
                 <div class="tm-head-txt">
                     <div class="tm-title"><span class="tm-name">${_esc(name)}</span></div>
-                    <div class="tm-sub">${_esc(version.startsWith('v') ? version : 'v' + version)}${latest ? ` <span class="sig-flag d-warn lg-static" style="margin-left:4px" title="Update available: change the version in traefik.yml and restart Traefik"><i class="ph-fill ph-arrow-circle-up"></i><b>${_esc(latest)}</b></span>` : ''}</div>
+                    <div class="tm-sub">${_esc(version.startsWith('v') ? version : t('v{version}', { version }))}${latest ? ` <span class="sig-flag d-warn lg-static" style="margin-left:4px" title="${th('Update available: change the version in traefik.yml and restart Traefik')}"><i class="ph-fill ph-arrow-circle-up"></i><b>${_esc(latest)}</b></span>` : ''}</div>
                 </div>${rail}
             </div>
             ${moduleName ? `<div class="tm-vals"><div class="tm-val"><i class="ph-bold ph-package"></i><span class="tm-v" title="${_esc(moduleName)}">${_esc(moduleName)}</span>${_tmCopy(moduleName)}</div></div>` : ''}
-            <div class="tm-foot"><span class="tm-meta ${pluginUse ? '' : 'tm-warn'}">${pluginUse ? `used by ${pluginUse} middleware${pluginUse > 1 ? 's' : ''}` : 'not referenced'}</span></div>
+            <div class="tm-foot"><span class="tm-meta ${pluginUse ? '' : 'tm-warn'}">${pluginUse ? thn('used by {n} middleware', 'used by {n} middlewares', pluginUse) : th('not referenced')}</span></div>
         </div>`;
     }).join('');
     document.getElementById('pluginsContent').innerHTML =
@@ -1267,33 +1259,33 @@ function openPluginDetail(idx) {
     const latest = _pluginLatest(p);
     const known = Object.keys(_pluginCatalog).length > 0;
     const versionVal = latest
-        ? `${_esc(version)} <span class="sig-flag d-warn lg-static" style="margin-left:6px"><i class="ph-fill ph-arrow-circle-up"></i><b>${_esc(latest)} available</b></span>`
+        ? `${_esc(version)} <span class="sig-flag d-warn lg-static" style="margin-left:6px"><i class="ph-fill ph-arrow-circle-up"></i><b>${th('{latest} available', { latest })}</b></span>`
         : known && _pluginCatalog[(moduleName || '').trim().toLowerCase()]
-        ? `${_esc(version)} <span style="color:var(--green)"><i class="ph-bold ph-check"></i> latest</span>`
+        ? `${_esc(version)} <span style="color:var(--green)"><i class="ph-bold ph-check"></i> ${thc('label', 'latest')}</span>`
         : _esc(version);
     const rows = [
-        ['Name',        _esc(name)],
-        ['Version',     versionVal],
-        ['Module',      _esc(moduleName || '-')],
-        ...(repoUrl ? [['Repository', `<a href="${_esc(repoUrl)}" target="_blank" style="color:var(--blue)">${_esc(repoUrl)} <i class="ph-bold ph-arrow-square-out text-sm"></i></a>`]] : []),
+        [tc('label', 'Name'),        _esc(name)],
+        [tc('label', 'Version'),     versionVal],
+        [tc('label', 'Module'),      _esc(moduleName || '-')],
+        ...(repoUrl ? [[tc('label', 'Repository'), `<a href="${_esc(repoUrl)}" target="_blank" style="color:var(--blue)">${_esc(repoUrl)} <i class="ph-bold ph-arrow-square-out text-sm"></i></a>`]] : []),
     ];
 
     const infoRows = rows.map(([k, v]) =>
-        [_esc(k), `<span class="font-mono" style="color:var(--text)">${v}</span>`, true]);
+        [k, `<span class="font-mono" style="color:var(--text)">${v}</span>`, true]);
 
     const settingsSection = p.settings ? `
-        ${renderDetailBlock('Configuration Schema', 'ph-sliders',
+        ${renderDetailBlock(t('Configuration Schema'), 'ph-sliders',
             `<pre class="text-xs font-mono leading-relaxed overflow-x-auto" style="color:var(--muted);max-height:300px;margin:0">${JSON.stringify(p.settings, null, 2).replace(/</g,'&lt;')}</pre>`)}` : '';
 
     const mws = _pluginMwsUsing(name);
     const usedSection = `
-        ${renderDetailBlock('Used by', 'ph-stack', mws.length
+        ${renderDetailBlock(t('Used by'), 'ph-stack', mws.length
             ? '<div class="flex flex-wrap gap-1.5">' + mws.map(m =>
-                `<button type="button" class="route-deep-chip" onclick="_pluginOpenMw(${_jsArg(m.name)})" title="Open middleware"><i class="ph-bold ph-stack"></i>${_esc(m.name.split('@')[0])}</button>`).join('') + '</div>'
-            : '<span class="text-xs" style="color:var(--yellow)">No middleware references this plugin</span>')}`;
+                `<button type="button" class="route-deep-chip" onclick="_pluginOpenMw(${_jsArg(m.name)})" title="${th('Open middleware')}"><i class="ph-bold ph-stack"></i>${_esc(m.name.split('@')[0])}</button>`).join('') + '</div>'
+            : `<span class="text-xs" style="color:var(--yellow)">${th('No middleware references this plugin')}</span>`)}`;
 
     document.getElementById('pluginDetailBody').innerHTML = `
-        ${renderSection('Plugin Info', 'ph-info', infoRows)}
+        ${renderSection(t('Plugin Info'), 'ph-info', infoRows)}
         ${usedSection}
         ${settingsSection}`;
 

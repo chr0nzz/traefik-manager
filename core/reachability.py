@@ -22,6 +22,13 @@ _UNKNOWN_MARKERS = ('name or service not known', 'nodename nor servname', 'tempo
                     'nameresolutionerror', 'getaddrinfo failed', 'timed out', 'timeout')
 
 
+MAX_REDIRECT_HOPS = 5
+
+
+class BlockedTarget(Exception):
+    pass
+
+
 def ssrf_ok(url: str) -> bool:
     try:
         host = urlparse(url).hostname
@@ -34,6 +41,28 @@ def ssrf_ok(url: str) -> bool:
         return True
     except Exception:
         return False
+
+
+def safe_get(url: str, *, ssrf=None, getter=None, **kwargs):
+    ssrf = ssrf or ssrf_ok
+    getter = getter or requests.get
+    kwargs['allow_redirects'] = False
+    target = url
+    for _ in range(MAX_REDIRECT_HOPS + 1):
+        if not _is_http(target):
+            raise BlockedTarget(f'{target} is not an http(s) address')
+        if not ssrf(target):
+            raise BlockedTarget(f'{target} is not an allowed address')
+        resp = getter(target, **kwargs)
+        location = ''
+        try:
+            location = resp.headers.get('Location', '') or ''
+        except Exception:
+            pass
+        if resp.status_code not in REDIRECTS or not location:
+            return resp
+        target = urljoin(target, location)
+    raise BlockedTarget(f'{url} redirected more than {MAX_REDIRECT_HOPS} times')
 
 
 def _is_http(url: str) -> bool:
