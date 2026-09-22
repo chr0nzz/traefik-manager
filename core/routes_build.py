@@ -397,14 +397,44 @@ def _build_middlewares(config, config_file=''):
 
 def _traefik_router_ep_map(all_routers: dict) -> dict:
     ep_map = {}
-    for proto, routers in all_routers.items():
+    for routers in (all_routers or {}).values():
+        if not isinstance(routers, list):
+            continue
         for r in routers:
+            if not isinstance(r, dict):
+                continue
             name = r.get('name', '')
             key  = name.split('@')[0] if '@' in name else name
             eps  = r.get('entryPoints', [])
             if key and eps:
                 ep_map[key] = eps
     return ep_map
+
+def _traefik_router_rule_map(all_routers: dict) -> dict:
+    rule_map = {}
+    for routers in (all_routers or {}).values():
+        if not isinstance(routers, list):
+            continue
+        for r in routers:
+            if not isinstance(r, dict):
+                continue
+            name = r.get('name', '')
+            key  = name.split('@')[0] if '@' in name else name
+            rule = r.get('rule', '')
+            if key and rule:
+                rule_map[key] = rule
+    return rule_map
+
+def apply_live_rules(apps, all_routers: dict):
+    rule_map = _traefik_router_rule_map(all_routers or {})
+    for app in apps:
+        rule = str(app.get('rule') or '')
+        if '{{' not in rule:
+            continue
+        live = rule_map.get(app.get('name'), '')
+        if live and '{{' not in live:
+            app['liveRule'] = live
+    return apps
 
 def _traefik_service_url_map(all_services: dict = None):
     if all_services is None:
@@ -497,6 +527,9 @@ def _build_all_apps(include_external=True, include_internal=False, complete=None
         all_middlewares.extend(_build_middlewares(config, cf))
     if include_external:
         all_apps.extend(_build_external_routes(all_routers, api_svc_urls, include_internal=include_internal))
+    if not all_routers and any('{{' in str(app.get('rule') or '') for app in all_apps):
+        all_routers = traefik_mod._fetch_traefik_routers_and_services()[0] or {}
+    apply_live_rules(all_apps, all_routers)
     for app in all_apps:
         if not app.get('entryPoints') and app.get('name') in router_ep_map:
             app['entryPoints'] = router_ep_map[app['name']]

@@ -15,8 +15,13 @@ def get_otp_fernet() -> Fernet:
         else:
             key = Fernet.generate_key().decode()
             os.makedirs(os.path.dirname(env.OTP_KEY_PATH), exist_ok=True)
-            with open(env.OTP_KEY_PATH, 'w') as f:
+            fd = os.open(env.OTP_KEY_PATH, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, 'w') as f:
                 f.write(key)
+            logger.warning(
+                "Generated a new secret encryption key at %s. Any secret stored with an earlier "
+                "key - the two-factor secret, the OIDC client secret, the git backup token - "
+                "can no longer be read and has to be entered again.", env.OTP_KEY_PATH)
     return Fernet(key.encode() if isinstance(key, str) else key)
 
 
@@ -53,5 +58,8 @@ def decrypt_secret(token: str) -> str:
     try:
         return get_otp_fernet().decrypt(token.encode()).decode()
     except (InvalidToken, Exception):
-        logger.warning("Failed to decrypt secret (encryption key mismatch?) - treating as empty")
+        logger.error("Failed to decrypt a stored secret - the encryption key does not match the "
+                     "one it was stored with. Anything relying on that secret, including "
+                     "two-factor sign-in, will behave as if it was never set. Restore %s or "
+                     "OTP_ENCRYPTION_KEY, or set the secret again.", env.OTP_KEY_PATH)
         return ''

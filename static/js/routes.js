@@ -916,13 +916,18 @@ function _tmCf(name) {
     return `<span class="tm-cf" title="${_esc(name)}"><i class="ph-bold ph-file-code"></i>${_esc(short)}</span>`;
 }
 
+function _rmServedRule(app) {
+    return (app && (app.liveRule || app.rule)) || '';
+}
+
 function _tmRouteCard(app, i, opts) {
     const proto      = (app.protocol || 'http').toLowerCase();
     const enabled    = app.enabled !== false;
     const isFile     = !app.provider || app.provider === 'file';
     const appJson    = JSON.stringify(app).replace(/'/g, '&#39;');
-    const simpleHost = /^Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*$/.test((app.rule || '').trim());
-    const allDomains = [...(app.rule || '').matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
+    const servedRule = _rmServedRule(app);
+    const simpleHost = /^Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*$/.test(servedRule.trim());
+    const allDomains = [...servedRule.matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
     const domain0    = allDomains[0] || '';
     const openUrl    = (proto === 'http' && simpleHost && domain0 && !domain0.includes('{') && !domain0.includes('*') && !domain0.includes('HostRegexp')) ? 'https://' + domain0 : '';
     const bulkSel    = _bulkMode && _bulkSelected.has(app.id);
@@ -949,8 +954,8 @@ function _tmRouteCard(app, i, opts) {
             `<div class="tm-val tm-val-host"><i class="ph-bold ph-globe-simple" ${n ? 'style="opacity:0"' : ''}></i><span class="tm-v">${_esc(d)}</span>` +
             (allDomains.length > 2 && n === 1 ? `<span class="tm-more" title="${_esc(allDomains.join(', '))}">+${allDomains.length - 2}</span>` : '') +
             _tmCopy(d) + '</div>').join('');
-    } else if (app.rule) {
-        valRows = `<div class="tm-val tm-val-rule"><i class="ph-bold ph-brackets-curly"></i><span class="tm-v" title="${_esc(app.rule)}">${_esc(app.rule)}</span>${_tmCopy(app.rule)}</div>`;
+    } else if (servedRule) {
+        valRows = `<div class="tm-val tm-val-rule"><i class="ph-bold ph-brackets-curly"></i><span class="tm-v" title="${_esc(servedRule)}">${_esc(servedRule)}</span>${_tmCopy(servedRule)}</div>`;
     } else {
         valRows = '';
     }
@@ -1036,10 +1041,11 @@ function renderRouteGrid(apps) {
     const _rowsHtml = apps.map((app, i) => {
         if (_tmOn) return _tmRouteCard(app, i, { showCf: _tmCfShow });
         const proto = app.protocol || 'http';
-        const allDomains = [...(app.rule || '').matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
+        const servedRule = _rmServedRule(app);
+        const allDomains = [...servedRule.matchAll(/Host\(`([^`]+)`\)/g)].map(m => m[1]);
         const domain     = allDomains[0] || '';
-        const isSimpleHostRule = /^(Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*)$/.test((app.rule || '').trim());
-        const isComplexRule = !isSimpleHostRule && !!app.rule;
+        const isSimpleHostRule = /^(Host\(`[^`]+`\)(\s*\|\|\s*Host\(`[^`]+`\))*)$/.test(servedRule.trim());
+        const isComplexRule = !isSimpleHostRule && !!servedRule;
         const ruleLabel  = isComplexRule ? 'Rule' : 'Domain';
         const badgeClass = proto === 'http' ? 'badge-http' : (proto === 'tcp' ? 'badge-tcp' : 'badge-udp');
         const tlsBadge = app.tls ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS${app.tlsOptionsProfile ? ' ' + _esc(app.tlsOptionsProfile) : ''}</span>` : '';
@@ -1062,8 +1068,8 @@ function renderRouteGrid(apps) {
         const domainDisplay = allDomains.length > 1
             ? `<div style="display:flex;flex-direction:column;gap:2px">${allDomains.map(d => `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(d)}</div>${_copyBtn(d,'blue')}</div>`).join('')}</div>`
             : isComplexRule
-                ? `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono" style="color:var(--blue);word-break:break-all" title="${_esc(app.rule)}">${_esc(app.rule)}</div>${_copyBtn(app.rule,'blue')}</div>`
-                : `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</div>${_copyBtn(domain || app.rule,'blue')}</div>`;
+                ? `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono" style="color:var(--blue);word-break:break-all" title="${_esc(servedRule)}">${_esc(servedRule)}</div>${_copyBtn(servedRule,'blue')}</div>`
+                : `<div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || servedRule)}</div>${_copyBtn(domain || servedRule,'blue')}</div>`;
         const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${ruleLabel}</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1?`<span class="badge badge-muted" style="font-size:9px" title="${(app.servers||[]).length} backends">+${(app.servers||[]).length-1}</span>`:''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`; const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Rule</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">Target</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1?`<span class="badge badge-muted" style="font-size:9px" title="${(app.servers||[]).length} backends">+${(app.servers||[]).length-1}</span>`:''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="Copy" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`;
         const cfArg = `,${_jsArg(app.configFile || '')}`;
         const cfBadge = (epBadges || mwBadges || epMwBadges || app.configFile) ? `<div class="flex flex-wrap items-center gap-1 mt-2">${epBadges}${mwBadges}${epMwBadges}${app.configFile ? `<span class="badge badge-muted" style="font-size:9px;margin-left:auto">${_esc(app.configFile)}</span>` : ''}</div>` : '';
@@ -1074,8 +1080,8 @@ function renderRouteGrid(apps) {
         const listDomainDisplay = allDomains.length > 1
             ? `<div style="display:flex;flex-direction:column;gap:1px">${allDomains.map(d => `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(d)}</span>${_copyBtn(d,'blue')}</div>`).join('')}</div>`
             : isComplexRule
-                ? `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono" style="color:var(--blue);word-break:break-all" title="${_esc(app.rule)}">${_esc(app.rule)}</span>${_copyBtn(app.rule,'blue')}</div>`
-                : `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || app.rule)}</span>${_copyBtn(domain || app.rule,'blue')}</div>`;
+                ? `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono" style="color:var(--blue);word-break:break-all" title="${_esc(servedRule)}">${_esc(servedRule)}</span>${_copyBtn(servedRule,'blue')}</div>`
+                : `<div style="display:flex;align-items:center;gap:4px"><span class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(domain || servedRule)}</span>${_copyBtn(domain || servedRule,'blue')}</div>`;
         if (_routeViewMode === 'list') {
             const epCompact = _dList((app.entryPoints || []).slice(0, 2));
             const mwCompact = _dList((app.middlewares || []).map(mw => mw.split('@')[0]), 'd-mw');
@@ -1205,7 +1211,7 @@ function _derivedDomains() {
     const apps = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
     const out = new Set();
     apps.forEach(a => {
-        [...(a.rule || '').matchAll(/Host(?:SNI)?\(`([^`]+)`\)/g)].forEach(m => {
+        [...((a.liveRule || a.rule) || '').matchAll(/Host(?:SNI)?\(`([^`]+)`\)/g)].forEach(m => {
             const h = m[1].toLowerCase().trim();
             if (!h || h.includes('*') || h.includes('{')) return;
             const parts = h.split('.').filter(Boolean);

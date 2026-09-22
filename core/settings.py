@@ -228,6 +228,28 @@ def _new_channel_id():
     return 'ch_' + _s.token_hex(4)
 
 
+_unreadable_reason = ''
+_unreadable_logged = False
+
+
+def _mark_unreadable(reason: str) -> None:
+    global _unreadable_reason, _unreadable_logged
+    _unreadable_reason = reason
+    if not _unreadable_logged:
+        logger.error("%s - keeping the existing configuration locked instead of treating this "
+                     "as a first run. Fix or restore the file, then reload.", reason)
+        _unreadable_logged = True
+
+
+def _mark_readable() -> None:
+    global _unreadable_reason, _unreadable_logged
+    _unreadable_reason, _unreadable_logged = '', False
+
+
+def settings_unreadable() -> str:
+    return _unreadable_reason
+
+
 def load_settings(fresh: bool = False) -> dict:
     blob, digest = config.read_for_cache(env.SETTINGS_PATH)
     _, agents_digest = config.read_for_cache(env.AGENTS_PATH)
@@ -310,17 +332,22 @@ def _load_settings(blob) -> dict:
     }
     if blob is None:
         if os.path.exists(env.SETTINGS_PATH):
-            logger.warning(f"Could not read {env.SETTINGS_PATH}, using defaults")
+            _mark_unreadable(f"{env.SETTINGS_PATH} exists but could not be read")
+            return defaults
+        _mark_readable()
         return defaults
     try:
         raw = blob.decode('utf-8')
+        understood = True
         try:
             data = config.yaml_safe.load(raw) or {}
         except Exception:
+            understood = False
             import re as _re
             stripped = _re.sub(r'(?m)^[-\.]{3}\s*$\n?', '', raw)
             try:
                 data = config.yaml_safe.load(stripped) or {}
+                understood = True
             except Exception:
                 data = {}
                 for part in _re.split(r'(?m)^---\s*$', raw):
@@ -328,8 +355,16 @@ def _load_settings(blob) -> dict:
                         doc = config.yaml_safe.load(part.strip())
                         if isinstance(doc, dict):
                             data.update(doc)
+                            understood = True
                     except Exception:
                         pass
+        if not isinstance(data, dict):
+            understood = False
+            data = {}
+        if understood:
+            _mark_readable()
+        else:
+            _mark_unreadable(f"{env.SETTINGS_PATH} could not be parsed as a settings document")
         merged = defaults.copy()
         if 'domains' in data and isinstance(data['domains'], list):
             merged['domains'] = [str(d).strip() for d in data['domains'] if str(d).strip()]
@@ -747,7 +782,7 @@ def _write_settings(domains, cert_resolver, traefik_api_url,
         'backup_keep_count':         backup_keep_count,
     })
     try:
-        with open(tmp, 'w') as f:
+        with config.open_private(tmp, env.SETTINGS_PATH) as f:
             config.yaml.dump(_doc, f)
         os.replace(tmp, env.SETTINGS_PATH)
     finally:

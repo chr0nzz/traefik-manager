@@ -14,6 +14,36 @@ from core import env, locks
 from core.env import logger
 
 
+SECRET_FILE_MODE = 0o600
+
+
+def open_private(tmp_path: str, final_path: str):
+    mode = SECRET_FILE_MODE
+    try:
+        mode = os.stat(final_path).st_mode & 0o777 & SECRET_FILE_MODE
+    except OSError:
+        pass
+    fd = os.open(tmp_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
+    return os.fdopen(fd, 'w')
+
+
+def tighten_secret_files(*paths) -> None:
+    for path in paths:
+        try:
+            current = os.stat(path).st_mode & 0o777
+        except OSError:
+            continue
+        if not current & 0o077:
+            continue
+        try:
+            os.chmod(path, current & SECRET_FILE_MODE)
+            logger.info("Narrowed %s from %o to %o - it holds secrets and was readable by "
+                        "other users on the host", path, current, current & SECRET_FILE_MODE)
+        except OSError as exc:
+            logger.warning("Could not narrow the permissions on %s (%s). It holds secrets and "
+                           "is readable by other users; chmod 600 it by hand.", path, exc)
+
+
 class ThreadLocalYAML:
     def __init__(self, typ=None):
         self._tl = threading.local()

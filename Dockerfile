@@ -20,12 +20,15 @@ RUN mkdir -p /app/config /app/backups /app/templates /app/static/icons \
              /app/static/vendor/fonts/jetbrains-mono \
              /app/static/vendor/phosphor
 
-RUN curl -sLo /usr/local/bin/tailwindcss \
-    https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64 \
+# Every download below goes through scripts/fetch-asset.sh, which fails on an HTTP error
+# instead of saving the error page, and refuses anything whose SHA-256 is not the one recorded
+# in scripts/vendor-assets.sha256. This binary is executed during the build, so it matters most.
+RUN /app/scripts/fetch-asset.sh \
+    "https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64" \
+    /usr/local/bin/tailwindcss \
     && chmod +x /usr/local/bin/tailwindcss
 
-RUN curl -sL "https://registry.npmjs.org/@phosphor-icons/web/-/web-2.1.1.tgz" \
-    | tar -xz -C /tmp \
+RUN /app/scripts/fetch-asset.sh --tar-xz "https://registry.npmjs.org/@phosphor-icons/web/-/web-2.1.1.tgz" /tmp \
     && for w in regular bold fill thin light duotone; do \
          cat /tmp/package/src/$w/style.css; \
        done \
@@ -35,25 +38,19 @@ RUN curl -sL "https://registry.npmjs.org/@phosphor-icons/web/-/web-2.1.1.tgz" \
     && cp /tmp/package/src/*/Phosphor*.woff /app/static/vendor/phosphor/ \
     && rm -rf /tmp/package
 
-RUN curl -sLo /app/static/vendor/qrcode.min.js \
-    "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+RUN /app/scripts/fetch-asset.sh "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" /app/static/vendor/qrcode.min.js
 
-RUN curl -sLo /app/static/vendor/dagre.min.js \
-    "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@3.1.1/dist/dagre.min.js"
+RUN /app/scripts/fetch-asset.sh "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@3.1.1/dist/dagre.min.js" /app/static/vendor/dagre.min.js
 
-RUN curl -sL "https://registry.npmjs.org/monaco-editor/-/monaco-editor-0.52.0.tgz" \
-    | tar -xz -C /tmp \
+RUN /app/scripts/fetch-asset.sh --tar-xz "https://registry.npmjs.org/monaco-editor/-/monaco-editor-0.52.0.tgz" /tmp \
     && mv /tmp/package/min/vs /app/static/vendor/monaco/vs \
     && rm -rf /tmp/package
 
 RUN mkdir -p /app/static/vendor/monaco-themes \
-    && curl -sLo "/app/static/vendor/monaco-themes/GitHub Light.json" \
-        "https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Light.json" \
-    && curl -sLo "/app/static/vendor/monaco-themes/GitHub Dark.json" \
-        "https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Dark.json"
+    && /app/scripts/fetch-asset.sh "https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Light.json" "/app/static/vendor/monaco-themes/GitHub Light.json" \
+    && /app/scripts/fetch-asset.sh "https://cdn.jsdelivr.net/npm/monaco-themes@0.4.4/themes/GitHub%20Dark.json" "/app/static/vendor/monaco-themes/GitHub Dark.json"
 
-RUN curl -sL "https://registry.npmjs.org/@fontsource/inter/-/inter-5.1.1.tgz" \
-    | tar -xz -C /tmp \
+RUN /app/scripts/fetch-asset.sh --tar-xz "https://registry.npmjs.org/@fontsource/inter/-/inter-5.1.1.tgz" /tmp \
     && cp /tmp/package/index.css /app/static/vendor/fonts/inter.css \
     && sed -i \
         -e "s|url('./files/|url('./inter/|g" \
@@ -63,8 +60,7 @@ RUN curl -sL "https://registry.npmjs.org/@fontsource/inter/-/inter-5.1.1.tgz" \
     && cp /tmp/package/files/* /app/static/vendor/fonts/inter/ \
     && rm -rf /tmp/package
 
-RUN curl -sL "https://registry.npmjs.org/@fontsource/jetbrains-mono/-/jetbrains-mono-5.1.0.tgz" \
-    | tar -xz -C /tmp \
+RUN /app/scripts/fetch-asset.sh --tar-xz "https://registry.npmjs.org/@fontsource/jetbrains-mono/-/jetbrains-mono-5.1.0.tgz" /tmp \
     && cp /tmp/package/index.css /app/static/vendor/fonts/jetbrains-mono.css \
     && sed -i \
         -e "s|url('./files/|url('./jetbrains-mono/|g" \
@@ -74,8 +70,7 @@ RUN curl -sL "https://registry.npmjs.org/@fontsource/jetbrains-mono/-/jetbrains-
     && cp /tmp/package/files/* /app/static/vendor/fonts/jetbrains-mono/ \
     && rm -rf /tmp/package
 
-RUN curl -sL "https://registry.npmjs.org/country-flag-emoji-polyfill/-/country-flag-emoji-polyfill-0.1.10.tgz" \
-    | tar -xz -C /tmp \
+RUN /app/scripts/fetch-asset.sh --tar-xz "https://registry.npmjs.org/country-flag-emoji-polyfill/-/country-flag-emoji-polyfill-0.1.10.tgz" /tmp \
     && cp /tmp/package/dist/TwemojiCountryFlags.woff2 /app/static/vendor/fonts/ \
     && cp /tmp/package/LICENSE.md /app/static/vendor/fonts/TwemojiCountryFlags-LICENSE.md \
     && rm -rf /tmp/package

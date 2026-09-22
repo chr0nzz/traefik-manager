@@ -38,7 +38,7 @@ def interval(settings=None) -> int:
 
 
 def route_url(app: dict) -> str:
-    for host in cfg_mod.rule_hosts(app.get('rule')):
+    for host in cfg_mod.rule_hosts(app.get('liveRule') or app.get('rule')):
         if '*' in host or '{' in host:
             continue
         return ('https' if app.get('tls') else 'http') + '://' + host

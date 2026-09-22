@@ -72,6 +72,7 @@ from core import cert_usage as _cert_usage
 from core import locks as _locks
 from core import acme_store as _acme
 from core import route_health as _rh
+from core import oidc_tokens as _oidc_tokens
 from core import updates as _updates
 from core import traefik as _trae
 from core import agents_http as _agen
@@ -686,8 +687,11 @@ def _hash_api_key(key: str) -> str:
     import hashlib
     return 'sha256:' + hashlib.sha256(key.encode()).hexdigest()
 
+_CONTROL_CHARS_RE = re.compile(r'[\x00-\x1f\x7f]')
+
+
 def _safe_next(next_url: str) -> str:
-    nu = (next_url or '').strip()
+    nu = _CONTROL_CHARS_RE.sub('', (next_url or '')).strip()
     if nu.startswith('/') and not nu.startswith('//') and not nu.startswith('/\\'):
         return nu
     return url_for('index')
@@ -696,6 +700,8 @@ def _safe_next(next_url: str) -> str:
 def _has_password_set() -> bool:
 
     if os.environ.get('ADMIN_PASSWORD', '').strip():
+        return True
+    if _settings.settings_unreadable():
         return True
     return bool(load_settings().get('password_hash', ''))
 
@@ -781,6 +787,8 @@ for _label, _path, _err in env.unwritable_storage():
                  f"Settings, backups and scheduled checks will not survive a restart. "
                  f"Check the volume or bind mount for this path.")
 
+_cfg.tighten_secret_files(env.SETTINGS_PATH, env.AGENTS_PATH, env.OTP_KEY_PATH)
+
 _monitor.start()
 
 _SILENT_PREFIXES = (
@@ -856,7 +864,7 @@ _PASSWORD_CHANGE_EXEMPT = {
 def _require_password_change():
     if request.endpoint is None or request.endpoint in _PASSWORD_CHANGE_EXEMPT:
         return None
-    if request.headers.get('X-Api-Key'):
+    if request.headers.get('X-Api-Key') and _check_api_key():
         return None
     _auth._drop_stale_session()
     if not session.get('authenticated') or os.environ.get('ADMIN_PASSWORD', '').strip():
@@ -957,6 +965,14 @@ def login():
 def setup():
     if not _auth_required():
         return redirect(url_for('index'))
+
+    unreadable = _settings.settings_unreadable()
+    if unreadable:
+        logger.error("Refusing to serve the setup page - %s", unreadable)
+        return ("Traefik Manager cannot read its configuration file, so it cannot tell whether "
+                "this is a new install. Setup is disabled until the file is fixed or restored "
+                "from a backup. See the container log for the path and the reason.", 503,
+                {'Content-Type': 'text/plain; charset=utf-8'})
 
     current = load_settings()
 
@@ -1489,7 +1505,10 @@ def api_revoke_sessions():
 @login_required
 def api_otp_status():
     settings = load_settings()
-    return jsonify({'otp_enabled': settings.get('otp_enabled', False)})
+    enabled = bool(settings.get('otp_enabled', False))
+    unusable = bool(enabled and not settings.get('otp_secret', ''))
+    return jsonify({'otp_enabled': enabled,
+                    'otp_secret_unreadable': unusable})
 
 
 @app.route('/api/auth/apikey/generate', methods=['POST'])
@@ -5761,6 +5780,49 @@ def api_toggle_route(route_id):
         return jsonify({'ok': False, 'message': str(e)}), 500
 
 
+def _route_transport_name(svc):
+    lb = svc.get('loadBalancer') if isinstance(svc, dict) else None
+    return str(lb.get('serversTransport') or '') if isinstance(lb, dict) else ''
+
+
+def _local_middleware_names(router):
+    names = []
+    for raw in _to_list(router.get('middlewares')):
+        name = str(raw or '')
+        provider = name.split('@', 1)[1] if '@' in name else ''
+        if provider and provider != 'file':
+            continue
+        short = name.split('@', 1)[0]
+        if short and short not in names:
+            names.append(short)
+    return names
+
+
+def _add_route_dependencies(out, config, proto, router, svc):
+    section = config.get(proto, {})
+    transport = _route_transport_name(svc)
+    if transport:
+        defined = (section.get('serversTransports') or {}).get(transport)
+        if defined is not None:
+            out[proto]['serversTransports'] = {transport: dict(defined)}
+
+    middlewares = {}
+    for name in _local_middleware_names(router):
+        defined = (section.get('middlewares') or {}).get(name)
+        if defined is not None:
+            middlewares[name] = dict(defined)
+    if middlewares:
+        out[proto]['middlewares'] = middlewares
+
+    tls = router.get('tls')
+    option = str((tls or {}).get('options') or '') if isinstance(tls, dict) else ''
+    option = option.split('@', 1)[0]
+    if option:
+        defined = ((config.get('tls') or {}).get('options') or {}).get(option)
+        if defined is not None:
+            out['tls'] = {'options': {option: dict(defined)}}
+
+
 @app.route('/api/routes/<path:route_id>/raw', methods=['GET'])
 @login_required
 def api_route_raw_get(route_id):
@@ -5782,6 +5844,7 @@ def api_route_raw_get(route_id):
                 out      = {proto: {'routers': {rname: dict(router)}}}
                 if svc is not None:
                     out[proto]['services'] = {svc_name: dict(svc)}
+                _add_route_dependencies(out, config, proto, router, svc)
                 stream = StringIO()
                 yaml.dump(out, stream)
                 raw = stream.getvalue()
@@ -5856,6 +5919,14 @@ def api_route_raw_save(route_id):
             section.setdefault('routers', {}).update(new_routers)
         if new_services:
             section.setdefault('services', {}).update(new_services)
+        for name in ('serversTransports', 'middlewares'):
+            edited = new_proto.get(name) or {}
+            if edited:
+                section.setdefault(name, {}).update(edited)
+
+    new_tls_options = (new_data.get('tls') or {}).get('options') or {}
+    if new_tls_options:
+        config.setdefault('tls', {}).setdefault('options', {}).update(new_tls_options)
 
     try:
         create_backup(target_path)
@@ -6995,10 +7066,13 @@ def oidc_callback():
     if not s.get('oidc_enabled'):
         return redirect(url_for('login'))
     state = request.args.get('state', '')
-    if not state or not secrets.compare_digest(state, session.get('oidc_state', '')):
+    expected_state = session.pop('oidc_state', '')
+    if not state or not secrets.compare_digest(state, expected_state):
+        session.pop('oidc_nonce', None)
+        session.pop('oidc_verifier', None)
         logger.warning(f"OIDC callback rejected from {request.remote_addr} - state mismatch "
                        f"(provider sent {'a state' if state else 'no state'}, "
-                       f"session {'has one' if session.get('oidc_state') else 'has none'})"
+                       f"session {'has one' if expected_state else 'has none'})"
                        + (f", provider error={request.args.get('error')!r}"
                           if request.args.get('error') else ''))
         flash("Invalid OIDC state. Please try again.", "error")
@@ -7100,23 +7174,22 @@ def oidc_callback():
         return redirect(url_for('login'))
     id_token = tokens.get('id_token', '')
     expected_nonce = session.pop('oidc_nonce', '')
-    id_claims = {}
-    if id_token:
-        try:
-            import json as _json
-            payload_b64 = id_token.split('.')[1]
-            payload_b64 += '=' * (-len(payload_b64) % 4)
-            id_claims = _json.loads(base64.urlsafe_b64decode(payload_b64))
-        except Exception:
-            logger.warning("OIDC could not decode the id_token payload")
-    if id_token and expected_nonce:
-        try:
-            if not secrets.compare_digest(str(id_claims.get('nonce', '')), expected_nonce):
-                logger.warning(f"OIDC nonce mismatch from {request.remote_addr}")
-                flash("OIDC login failed - nonce mismatch.", "error")
-                return redirect(url_for('login'))
-        except Exception:
-            logger.warning("OIDC id_token nonce verification skipped - could not decode token")
+    if not id_token:
+        logger.error("OIDC login refused from %s - the provider returned no id_token",
+                     request.remote_addr)
+        flash("OIDC login failed - the provider returned no id_token.", "error")
+        return redirect(url_for('login'))
+    try:
+        id_claims = _oidc_tokens.verify(id_token, cfg, client_id, client_secret)
+    except _oidc_tokens.IdTokenError as exc:
+        logger.error("OIDC login refused from %s - %s", request.remote_addr, exc)
+        flash("OIDC login failed - the provider's id_token could not be verified.", "error")
+        return redirect(url_for('login'))
+    if not expected_nonce or not secrets.compare_digest(
+            str(id_claims.get('nonce', '')), expected_nonce):
+        logger.warning(f"OIDC nonce mismatch from {request.remote_addr}")
+        flash("OIDC login failed - nonce mismatch.", "error")
+        return redirect(url_for('login'))
     access_token = tokens.get('access_token', '')
     groups_claim = str(s.get('oidc_groups_claim', '') or 'groups').strip()
     need_email  = not str(id_claims.get('email', '')).strip()
@@ -7131,18 +7204,27 @@ def oidc_callback():
             userinfo = userinfo_resp.json()
         except Exception as e:
             logger.warning("OIDC userinfo fetch failed (%s) - falling back to the id_token claims", e)
-    userinfo = {**id_claims, **userinfo} if (userinfo or id_claims) else {}
-    if not userinfo:
+    if userinfo and str(userinfo.get('sub', '')) != str(id_claims.get('sub', '')):
+        logger.warning("OIDC userinfo subject does not match the id_token subject - ignoring userinfo")
+        userinfo = {}
+    claims = {**id_claims, **userinfo}
+    if not claims:
         logger.error("OIDC login failed - no claims from userinfo or the id_token")
         flash("OIDC login failed - the provider returned no account details.", "error")
         return redirect(url_for('login'))
-    email  = str(userinfo.get('email', '')).strip().lower()
-    name   = str(userinfo.get('name', userinfo.get('preferred_username', email))).strip()
-    groups = userinfo.get(s.get('oidc_groups_claim', 'groups'), [])
+    email  = str(claims.get('email', '')).strip().lower()
+    name   = str(claims.get('name', claims.get('preferred_username', email))).strip()
+    groups = claims.get(s.get('oidc_groups_claim', 'groups'), [])
     if not isinstance(groups, list):
         groups = [str(groups)]
-    _ev = userinfo.get('email_verified')
-    email_unverified = _ev is False or (isinstance(_ev, str) and _ev.strip().lower() in ('false', '0', 'no'))
+    _ev = claims.get('email_verified')
+    if isinstance(_ev, bool):
+        email_verified = _ev
+    elif isinstance(_ev, str):
+        email_verified = _ev.strip().lower() in ('true', '1', 'yes')
+    else:
+        email_verified = False
+    email_unverified = not email_verified
     allowed_emails = [e.strip().lower() for e in s.get('oidc_allowed_emails', '').split(',') if e.strip()]
     allowed_groups = [g.strip() for g in s.get('oidc_allowed_groups', '').split(',') if g.strip()]
     if not allowed_emails and not allowed_groups and not s.get('oidc_allow_any_authenticated'):
@@ -7154,7 +7236,12 @@ def oidc_callback():
         flash("Your account is not authorized to access this application.", "error")
         return redirect(url_for('login'))
     if allowed_emails and email in allowed_emails and email_unverified:
-        logger.warning(f"OIDC login denied for {email!r} - email not verified by the identity provider")
+        logger.warning(f"OIDC login denied for {email!r} - "
+                       + ("the provider sent no email_verified claim, so the address is not "
+                          "asserted as verified (map the claim in your provider, or allow the "
+                          "account by group instead)"
+                          if _ev is None else
+                          f"email not verified by the identity provider (email_verified={_ev!r})"))
         flash("Your account is not authorized to access this application.", "error")
         return redirect(url_for('login'))
     if allowed_groups and not any(g in allowed_groups for g in groups):
@@ -7353,6 +7440,7 @@ def _agent_routes_payload(agent, agent_id):
         middlewares.extend(_build_middlewares(config, config_file=fname))
 
     apps.extend(_build_external_routes(all_routers, svc_urls))
+    _rb.apply_live_rules(apps, all_routers)
 
     prefix = f"agent_{agent_id}::"
     for store_key, rdata in load_settings().get('disabled_routes', {}).items():

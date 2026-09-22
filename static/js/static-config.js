@@ -112,6 +112,12 @@ function _ensureMonacoThemes() {
     return _monacoThemesPromise;
 }
 
+function _syncMonacoTheme() {
+    if (typeof monaco === 'undefined' || !monaco.editor) return;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    _ensureMonacoThemes().then(() => monaco.editor.setTheme(_monacoThemeName(isDark)));
+}
+
 function _initMwMonaco(value) {
     const container = document.getElementById('mwEditorContainer');
     if (!container) return;
@@ -368,6 +374,7 @@ function _initRouteYamlMonaco(content) {
     if (_routeYamlMonaco) {
         _routeYamlMonaco.setValue(content);
         _routeYamlContent = content;
+        _syncMonacoTheme();
         setTimeout(() => _routeYamlMonaco.layout(), 50);
         return;
     }
@@ -2564,8 +2571,5 @@ async function tipApply() {
 const _origSetTheme = setTheme;
 setTheme = function(theme) {
     _origSetTheme(theme);
-    if (_staticMonaco || _mwMonacoEditor || _pluginStaticMonaco || _pluginMwMonaco || _providerMonaco) {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        _ensureMonacoThemes().then(() => monaco.editor.setTheme(_monacoThemeName(isDark)));
-    }
+    _syncMonacoTheme();
 };

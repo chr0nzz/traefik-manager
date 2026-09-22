@@ -36,6 +36,21 @@ const SD_PROV_ALIAS = {
 
 const SD_ORDER = { err: 0, warn: 1, idle: 2, ok: 3 };
 
+const SD_PROVIDER_TABS = {
+    docker:         new Set(['docker']),
+    swarm:          new Set(['swarm']),
+    internal:       new Set(['internal']),
+    kubernetes:     new Set(['kubernetes']),
+    nomad:          new Set(['nomad']),
+    ecs:            new Set(['ecs']),
+    consul:         new Set(['consul']),
+    consulcatalog:  new Set(['consulcatalog']),
+    redis:          new Set(['redis']),
+    etcd:           new Set(['etcd']),
+    zookeeper:      new Set(['zookeeper']),
+    http_provider:  new Set(['http']),
+};
+
 let _sdScope = null;
 let _sdModel = null;
 let _sdStamp = 0;
@@ -1078,6 +1093,7 @@ function _sdRender(model) {
 }
 
 let _sdApiStatusMap = null;
+let _translateInviteShown = false;
 let _sdSkeletonHtml = null;
 let _rhMap  = {};
 const _rhMeta = { enabled: true, interval: 300, checked_at: null, loaded: false };
@@ -1269,7 +1285,9 @@ function _sdApplyPayloads(p) {
     _sdModel = model;
     _sdRender(model);
 
-    setTabCount('docker', model.pairs.filter(p => p.obj.provider === 'docker').length || '-');
+    Object.entries(SD_PROVIDER_TABS).forEach(([tab, providers]) => {
+        setTabCount(tab, model.pairs.filter(p => providers.has(p.obj.provider)).length || '-');
+    });
     if (model.avail.service) setTabCount('live', model.counts.allSvc);
 
     _sdApiStatusMap = {};
@@ -1326,6 +1344,10 @@ async function loadOverviewStats() {
         if (apiUp) {
             checkForUpdate(payloads.version.Version);
             checkTraefikAdvisories(payloads.version.Version);
+        }
+        if (typeof showTranslateInvite === 'function' && !_translateInviteShown) {
+            _translateInviteShown = true;
+            setTimeout(showTranslateInvite, 2000);
         }
 
         tabCachePut('stats', payloads);

@@ -171,6 +171,7 @@ wrangler.toml                 # Cloudflare Pages builds and deploys the docs sit
 - **CSS:** add rules to `static/css/app.css`. No inline styles in HTML unless they're dynamic values.
 - **No comments:** don't add explanatory comments to code - use clear names instead. The existing codebase follows this convention.
 - **No dead code:** don't leave commented-out blocks or unused variables.
+- **Commit messages:** one imperative subject line with a conventional prefix (`fix:`, `feat:`, `docs:`, `build:`, `ci:`, `chore:`, `test:`), with the issue or discussion in brackets when there is one. No body - the reasoning belongs in the release notes.
 
 ---
 

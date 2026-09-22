@@ -1697,13 +1697,29 @@ function _applyApiLinkVisibility() {
 
 function renderReleaseNotes(md) {
     function esc(s) {
-        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function safeUrl(u) {
+        try {
+            const parsed = new URL(u, window.location.origin);
+            if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+            return parsed.href.replace(/["'<>`]/g, encodeURIComponent);
+        } catch (e) {
+            return '';
+        }
     }
     function inline(s) {
         return esc(s)
             .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text)">$1</strong>')
             .replace(/`([^`]+)`/g, '<code style="background:var(--border);padding:1px 5px;border-radius:3px;font-size:11px;font-family:monospace">$1</code>')
-            .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--blue);text-decoration:none">$1</a>');
+            .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, (m, text, url) => {
+                const href = safeUrl(url.replace(/&amp;/g, '&'));
+                return href
+                    ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none">${text}</a>`
+                    : text;
+            });
     }
     function isTableRow(l) { const t = l.trim(); return t.startsWith('|') && t.endsWith('|'); }
     function isSepRow(l) { return l.replace(/^\||\|$/g, '').split('|').every(c => /^[\s\-:]+$/.test(c)); }

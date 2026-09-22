@@ -1,6 +1,10 @@
 import importlib
 import os
 
+import pytest
+
+pytestmark = pytest.mark.usefixtures('restore_core_env')
+
 
 def _boot(monkeypatch, tmp_path, env_overrides=None):
     dyn = str(tmp_path / 'dyn' / 'dynamic.yml')
