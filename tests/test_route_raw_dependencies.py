@@ -240,32 +240,100 @@ def test_reordering_or_reformatting_a_shared_definition_is_not_a_change(client, 
     assert 'dialTimeout' not in config_path.read_text()
 
 
-def test_editing_a_definition_from_another_file_is_refused(client, split_config, config_path):
+def test_editing_a_definition_from_another_file_asks_first(client, split_config, config_path):
     raw = _payload(client)['raw'].replace('dialTimeout: 30s', 'dialTimeout: 99s')
     res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
     assert res.status_code == 409, res.data[:200]
     body = res.get_json()
-    assert body['ok'] is False
-    assert 'shared.yml' in body['error'], 'the refusal must name the file that owns the definition'
-    assert body['definedElsewhere'][0]['name'] == 'plex-transport'
-    assert 'dialTimeout: 30s' in split_config.read_text(), 'the other file is left alone'
-    assert 'dialTimeout' not in config_path.read_text(), 'and nothing is written here either'
+    assert body['needsConfirm'] is True
+    change = body['sharedChanges'][0]
+    assert change['name'] == 'plex-transport' and change['file'] == 'shared.yml'
+    assert 'dialTimeout: 30s' in split_config.read_text(), 'nothing is written before the confirm'
 
 
-def test_a_refused_save_writes_nothing_at_all(client, split_config, config_path):
-    before = config_path.read_text()
+def test_the_prompt_says_how_many_routes_the_change_reaches(client, split_config, config_path):
+    config_path.write_text(config_path.read_text().replace(
+        '  services:',
+        '    sonarr-rtr:\n      rule: "Host(`sonarr.example.com`)"\n'
+        '      service: plex-svc\n  services:'))
+    raw = _payload(client)['raw'].replace('dialTimeout: 30s', 'dialTimeout: 99s')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    used = res.get_json()['sharedChanges'][0]['usedBy']
+    assert used['count'] == 2, 'both routes share the service that names this transport'
+    assert 'sonarr-rtr' in used['routes'] and 'plex-rtr' in used['routes']
+
+
+def test_confirming_writes_the_change_to_the_file_that_owns_it(client, split_config, config_path):
+    raw = _payload(client)['raw'].replace('dialTimeout: 30s', 'dialTimeout: 99s')
+    res = client.post('/api/routes/plex-rtr/raw',
+                      json={'content': raw, 'applyShared': True}, headers=HDR)
+    assert res.status_code == 200, res.data[:200]
+    assert 'dialTimeout: 99s' in split_config.read_text(), 'the edit belongs in the file it came from'
+    assert 'dialTimeout' not in config_path.read_text(), 'and must not be duplicated into the route'
+
+
+def test_confirming_also_saves_the_route_itself(client, split_config, config_path):
     raw = _payload(client)['raw'].replace('dialTimeout: 30s', 'dialTimeout: 99s')
     raw = raw.replace('Host(`plex.example.com`)', 'Host(`new.example.com`)')
+    res = client.post('/api/routes/plex-rtr/raw',
+                      json={'content': raw, 'applyShared': True}, headers=HDR)
+    assert res.status_code == 200, res.data[:200]
+    assert 'new.example.com' in config_path.read_text()
+    assert 'dialTimeout: 99s' in split_config.read_text()
+
+
+def test_cancelling_leaves_the_other_file_byte_identical(client, split_config, config_path):
+    before = split_config.read_text()
+    raw = _payload(client)['raw'].replace('dialTimeout: 30s', 'dialTimeout: 99s')
     res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
     assert res.status_code == 409
-    assert config_path.read_text() == before, 'the router edit must not land when the save is refused'
+    assert split_config.read_text() == before
 
 
-def test_refusing_a_middleware_edit_points_at_the_middlewares_tab(client, split_config):
-    raw = _payload(client)['raw'].replace('[sec-headers]', '[sec-headers, other]')
-    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+def test_a_read_only_file_is_refused_before_anything_is_written(client, split_config, config_path):
+    import os
+    before = config_path.read_text()
+    os.chmod(split_config, 0o444)
+    try:
+        raw = _payload(client)['raw'].replace('dialTimeout: 30s', 'dialTimeout: 99s')
+        res = client.post('/api/routes/plex-rtr/raw',
+                          json={'content': raw, 'applyShared': True}, headers=HDR)
+    finally:
+        os.chmod(split_config, 0o644)
     assert res.status_code == 409, res.data[:200]
-    assert 'Middlewares' in res.get_json()['error']
+    assert res.get_json()['readOnly'] == 'shared.yml'
+    assert 'read-only' in res.get_json()['error']
+    assert config_path.read_text() == before, 'the route must not be written either'
+
+
+def test_a_file_that_changed_on_disk_aborts_the_whole_save(client, split_config, config_path):
+    payload = _payload(client)
+    raw = payload['raw'].replace('dialTimeout: 30s', 'dialTimeout: 99s')
+    split_config.write_text(split_config.read_text().replace('30s', '31s'))
+    res = client.post('/api/routes/plex-rtr/raw',
+                      json={'content': raw, 'applyShared': True,
+                            'fingerprints': payload['fingerprints']}, headers=HDR)
+    assert res.status_code == 409, res.data[:200]
+    assert res.get_json()['stale'] == 'shared.yml'
+    assert '31s' in split_config.read_text(), 'the file that moved underneath is left as it is'
+
+
+def test_the_fingerprints_cover_every_file_the_route_touches(client, split_config, config_path):
+    prints = _payload(client)['fingerprints']
+    assert set(prints) == {config_path.name, 'shared.yml'}
+    assert all(prints.values()), 'each file needs a fingerprint to compare against'
+
+
+def test_renaming_a_shared_definition_is_refused(client, split_config, config_path):
+    raw = _payload(client)['raw'].replace('    plex-transport:', '    plex-transport-x:')
+    res = client.post('/api/routes/plex-rtr/raw',
+                      json={'content': raw, 'applyShared': True}, headers=HDR)
+    assert res.status_code == 409, res.data[:200]
+    body = res.get_json()
+    assert body['renamed'] == 'plex-transport'
+    assert 'shared.yml' in body['error']
+    assert 'plex-transport-x' not in config_path.read_text(), 'no orphan is created'
+    assert 'plex-transport:' in split_config.read_text(), 'the original keeps its name'
 
 
 def test_a_new_definition_still_lands_in_the_route_own_file(client, split_config, config_path):

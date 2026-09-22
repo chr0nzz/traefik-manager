@@ -5930,12 +5930,14 @@ def _plain_value(value, templates=None):
 
 
 _ELSEWHERE_MESSAGES = {
-    'middlewares': lambda name, where: gettext(
-        '%(name)s is defined in %(file)s. Edit it on the Middlewares tab.', name=name, file=where),
-    'options': lambda name, where: gettext(
-        '%(name)s is defined in %(file)s. Edit it on the TLS Options tab.', name=name, file=where),
-    'serversTransports': lambda name, where: gettext(
-        '%(name)s is defined in %(file)s, which this editor does not write.', name=name, file=where),
+    'readonly': lambda name, where: gettext(
+        '%(name)s is defined in %(file)s, which is read-only here.', name=name, file=where),
+    'stale': lambda where: gettext(
+        '%(file)s changed on disk since this editor opened. Reopen it and make the change again.',
+        file=where),
+    'renamed': lambda name, where: gettext(
+        'Renaming %(name)s here would leave it behind in %(file)s. Rename it on the Middlewares tab.',
+        name=name, file=where),
 }
 
 
@@ -5948,7 +5950,7 @@ def _dependency_scopes(data):
         yield 'tls', 'options'
 
 
-def _sections_defined_elsewhere(new_data, config, target_path, user_map, file_map):
+def _sections_defined_elsewhere(new_data, config, target_path, user_map):
     unchanged, changed = [], []
     for scope, kind in _dependency_scopes(new_data):
         for name, edited in _definition_section(new_data, scope, kind).items():
@@ -5960,8 +5962,135 @@ def _sections_defined_elsewhere(new_data, config, target_path, user_map, file_ma
             here = _plain_value(edited, user_map)
             there = _plain_value(defined, their_map)
             (unchanged if here == there else changed).append(
-                (scope, kind, name, os.path.basename(path)))
+                {'scope': scope, 'kind': kind, 'name': name, 'path': path,
+                 'file': os.path.basename(path), 'value': edited})
     return unchanged, changed
+
+
+def _file_fingerprint(path):
+    try:
+        with open(path, 'rb') as f:
+            return hashlib.sha256(f.read()).hexdigest()[:16]
+    except OSError:
+        return ''
+
+
+def _route_dependency_fingerprints(origins, own_path):
+    prints = {os.path.basename(own_path): _file_fingerprint(own_path)}
+    for kinds in origins.values():
+        for names in kinds.values():
+            for where in names.values():
+                if where in prints:
+                    continue
+                for path in env.CONFIG_PATHS:
+                    if os.path.basename(path) == where:
+                        prints[where] = _file_fingerprint(path)
+                        break
+    return prints
+
+
+def _routes_using(scope, kind, name):
+    users = []
+    services = set()
+    if kind == 'serversTransports':
+        for path in env.CONFIG_PATHS:
+            try:
+                cfg = load_config(path)
+            except Exception:
+                continue
+            for svc_name, svc in _definition_section(cfg, scope, 'services').items():
+                if _route_transport_name(svc) == name:
+                    services.add(str(svc_name))
+    for path in env.CONFIG_PATHS:
+        try:
+            cfg = load_config(path)
+        except Exception:
+            continue
+        for proto in ('http', 'tcp', 'udp'):
+            if kind != 'options' and proto != scope:
+                continue
+            for rname, router in _definition_section(cfg, proto, 'routers').items():
+                if not isinstance(router, dict):
+                    continue
+                if kind == 'middlewares':
+                    hit = name in _local_middleware_names(router)
+                elif kind == 'serversTransports':
+                    hit = _svc_key(router.get('service', rname)) in services
+                else:
+                    tls = router.get('tls')
+                    option = str((tls or {}).get('options') or '') if isinstance(tls, dict) else ''
+                    hit = option.split('@', 1)[0] == name
+                if hit:
+                    users.append(str(rname))
+    return sorted(set(users))
+
+
+def _shared_change_prompt(changes):
+    out = []
+    for change in changes:
+        routes = _routes_using(change['scope'], change['kind'], change['name'])
+        out.append({'name': change['name'], 'kind': change['kind'], 'file': change['file'],
+                    'usedBy': {'count': len(routes), 'routes': routes[:3]}})
+    return out
+
+
+def _atomic_write(path, text):
+    tmp = f"{path}.tmp.{os.getpid()}.{threading.get_ident()}"
+    try:
+        with open(tmp, 'w') as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        _cfg._replace_or_copy(tmp, path)
+    finally:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+
+
+def _write_shared_definitions(changes, user_map):
+    for path in sorted({c['path'] for c in changes}):
+        cfg = load_config(path)
+        with open(path, 'r') as f:
+            _, their_map = _sanitize_go_templates(f.read())
+        for change in changes:
+            if change['path'] != path:
+                continue
+            holder = cfg.setdefault(change['scope'], {})
+            holder.setdefault(change['kind'], {})[change['name']] = change['value']
+        create_backup(path)
+        stream = StringIO()
+        yaml.dump(_strip_empty_sections(cfg), stream)
+        text = stream.getvalue()
+        for placeholder, original in {**their_map, **user_map}.items():
+            text = text.replace(placeholder, original)
+        _atomic_write(path, text)
+        logger.info(f"Shared definitions written to {path} from a route raw save")
+
+
+def _renamed_shared_definition(new_data, config, target_path):
+    for scope, kind in (('http', 'middlewares'), ('tcp', 'middlewares'),
+                        ('http', 'serversTransports'), ('tcp', 'serversTransports')):
+        present = _definition_section(new_data, scope, kind)
+        routers = _definition_section(new_data, scope, 'routers')
+        for rname, router in routers.items():
+            if not isinstance(router, dict):
+                continue
+            svc = _definition_section(new_data, scope, 'services').get(
+                _svc_key(router.get('service', rname)))
+            for dep_scope, dep_kind, dep_name in _route_dependency_names(scope, router, svc):
+                if dep_kind != kind or dep_scope != scope or dep_name in present:
+                    continue
+                _defined, path = _find_definition(dep_scope, dep_kind, dep_name, config,
+                                                  target_path)
+                if path is None or os.path.abspath(path) == os.path.abspath(target_path):
+                    continue
+                for candidate in present:
+                    _found, where = _find_definition(scope, kind, candidate, config, target_path)
+                    if where is None:
+                        return dep_name, os.path.basename(path)
+    return None, None
 
 
 @app.route('/api/routes/<path:route_id>/raw', methods=['GET'])
@@ -5994,7 +6123,8 @@ def api_route_raw_get(route_id):
                 for placeholder, original in template_map.items():
                     raw = raw.replace(placeholder, original)
                 return jsonify({'raw': raw, 'configFile': os.path.basename(p), 'proto': proto,
-                                'origins': origins})
+                                'origins': origins,
+                                'fingerprints': _route_dependency_fingerprints(origins, p)})
 
     return jsonify({'error': gettext('Route not found')}), 404
 
@@ -6048,16 +6178,33 @@ def api_route_raw_save(route_id):
         with open(target_path, 'r') as f:
             _, file_map = _sanitize_go_templates(f.read())
 
-    elsewhere, conflicts = _sections_defined_elsewhere(new_data, config, target_path,
-                                                       user_map, file_map)
-    if conflicts:
-        scope, kind, name, where = conflicts[0]
-        message = _ELSEWHERE_MESSAGES[kind](name, where)
-        return jsonify({'ok': False, 'error': message,
-                        'definedElsewhere': [{'scope': s, 'kind': k, 'name': n, 'file': f}
-                                             for s, k, n, f in conflicts]}), 409
-    for scope, kind, name, _where in elsewhere:
-        _definition_section(new_data, scope, kind).pop(name, None)
+    renamed, renamed_file = _renamed_shared_definition(new_data, config, target_path)
+    if renamed:
+        return jsonify({'ok': False, 'renamed': renamed,
+                        'error': _ELSEWHERE_MESSAGES['renamed'](renamed, renamed_file)}), 409
+
+    elsewhere, changed = _sections_defined_elsewhere(new_data, config, target_path, user_map)
+    for change in changed:
+        if not os.access(change['path'], os.W_OK):
+            return jsonify({'ok': False, 'readOnly': change['file'],
+                            'error': _ELSEWHERE_MESSAGES['readonly'](change['name'],
+                                                                     change['file'])}), 409
+
+    sent = body.get('fingerprints') or {}
+    for change in changed:
+        was = sent.get(change['file'])
+        if was and was != _file_fingerprint(change['path']):
+            return jsonify({'ok': False, 'stale': change['file'],
+                            'error': _ELSEWHERE_MESSAGES['stale'](change['file'])}), 409
+
+    if changed and not body.get('applyShared'):
+        return jsonify({'ok': False, 'needsConfirm': True,
+                        'sharedChanges': _shared_change_prompt(changed)}), 409
+
+    for change in elsewhere:
+        _definition_section(new_data, change['scope'], change['kind']).pop(change['name'], None)
+    for change in changed:
+        _definition_section(new_data, change['scope'], change['kind']).pop(change['name'], None)
 
     for proto in ('http', 'tcp', 'udp'):
         proto_cfg  = config.get(proto, {})
@@ -6087,6 +6234,8 @@ def api_route_raw_save(route_id):
         config.setdefault('tls', {}).setdefault('options', {}).update(new_tls_options)
 
     try:
+        if changed:
+            _write_shared_definitions(changed, user_map)
         create_backup(target_path)
         combined_map = {**file_map, **user_map}
         stream = StringIO()

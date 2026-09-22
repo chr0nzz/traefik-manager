@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-22 14:30+0000\n"
+"POT-Creation-Date: 2026-09-22 14:34+0000\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: de <LL@li.org>\n"
@@ -47,6 +47,12 @@ msgstr ""
 
 #, python-format
 msgid "%(claimed)s already belongs to %(claimed2)s. Pick a different name"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(file)s changed on disk since this editor opened. Reopen it and make the "
+"change again."
 msgstr ""
 
 #, python-format
@@ -98,15 +104,7 @@ msgid "%(name)s cannot use itself as a backend"
 msgstr ""
 
 #, python-format
-msgid "%(name)s is defined in %(file)s, which this editor does not write."
-msgstr ""
-
-#, python-format
-msgid "%(name)s is defined in %(file)s. Edit it on the Middlewares tab."
-msgstr ""
-
-#, python-format
-msgid "%(name)s is defined in %(file)s. Edit it on the TLS Options tab."
+msgid "%(name)s is defined in %(file)s, which is read-only here."
 msgstr ""
 
 #, python-format
@@ -7559,6 +7557,12 @@ msgid ""
 "undone until it does."
 msgstr ""
 
+#, python-format
+msgid ""
+"Renaming %(name)s here would leave it behind in %(file)s. Rename it on the "
+"Middlewares tab."
+msgstr ""
+
 #. Used in the browser
 msgid ""
 "Rendered a page at a time, so a busy instance never builds tens of thousands "
@@ -8249,7 +8253,15 @@ msgstr ""
 msgid "Save Template"
 msgstr ""
 
+#. Used in the browser
+msgid "Save changes to shared definitions?"
+msgstr ""
+
 msgid "Save configuration"
+msgstr ""
+
+#. Used in the browser
+msgid "Save everywhere"
 msgstr ""
 
 #. Used in the browser
@@ -9786,6 +9798,12 @@ msgstr ""
 #. Used in the browser
 msgid ""
 "These alerts ran in simulation mode. CrowdSec saw them and enforced nothing"
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"These are defined in other files, so saving changes them for every route "
+"that uses them. Cancel to save this route only."
 msgstr ""
 
 msgid "These build the compose snippet, they are not sent to the agent."
@@ -14243,6 +14261,23 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "{name} trusts forwarded headers from anyone"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{name}, defined in {file}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{name}, defined in {file}, used by {count} route: {routes}"
+msgid_plural "{name}, defined in {file}, used by {count} routes: {routes}"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{name}, defined in {file}, used by {count} routes including {routes}"
 msgstr ""
 
 #. Used in the browser

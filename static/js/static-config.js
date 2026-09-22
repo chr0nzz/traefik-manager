@@ -372,6 +372,7 @@ async function saveStaticConfig() {
 let _routeYamlMonaco  = null;
 let _routeYamlId      = '';
 let _routeYamlContent = '';
+let _routeYamlFingerprints = {};
 
 function _initRouteYamlMonaco(content) {
     const container = document.getElementById('routeYamlPopoutEditor');
@@ -432,6 +433,7 @@ function _renderRouteYamlOrigins(origins, ownFile) {
 
 async function openRouteYamlEditor(id) {
     _routeYamlId = id;
+    _routeYamlFingerprints = {};
     const name = id.includes('::') ? id.slice(id.indexOf('::') + 2) : id;
     const title = document.getElementById('routeYamlPopoutTitle');
     if (title) title.textContent = t('Raw YAML - {name}', { name });
@@ -442,6 +444,7 @@ async function openRouteYamlEditor(id) {
         if (data.error) { showToast(data.error, 'error'); return; }
         const overlay = document.getElementById('routeYamlPopout');
         if (overlay) overlay.style.display = 'flex';
+        _routeYamlFingerprints = data.fingerprints || {};
         _renderRouteYamlOrigins(data.origins, data.configFile);
         _initRouteYamlMonaco(data.raw || '');
     } catch(e) {
@@ -454,22 +457,60 @@ function closeRouteYamlEditor() {
     if (overlay) overlay.style.display = 'none';
 }
 
+function _sharedChangeNote(change) {
+    const used = change.usedBy || {};
+    const shown = (used.routes || []).join(', ');
+    if (!used.count) {
+        return t('{name}, defined in {file}', { name: change.name, file: change.file });
+    }
+    if (used.count > (used.routes || []).length) {
+        return t('{name}, defined in {file}, used by {count} routes including {routes}',
+                 { name: change.name, file: change.file, count: used.count, routes: shown });
+    }
+    return tn('{name}, defined in {file}, used by {count} route: {routes}',
+              '{name}, defined in {file}, used by {count} routes: {routes}', used.count,
+              { name: change.name, file: change.file, count: used.count, routes: shown });
+}
+
+async function _confirmSharedChanges(changes) {
+    return _confirmWith({
+        title: t('Save changes to shared definitions?'),
+        message: t('These are defined in other files, so saving changes them for every route that uses them. Cancel to save this route only.'),
+        notes: changes.map(_sharedChangeNote),
+        okLabel: t('Save everywhere'),
+    }).then(r => r.ok);
+}
+
+async function _postRouteYaml(content, applyShared) {
+    return agentFetch(`/api/routes/${encodeURIComponent(_routeYamlId)}/raw`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
+        body: JSON.stringify({ content, applyShared, fingerprints: _routeYamlFingerprints }),
+    });
+}
+
 async function saveRouteYaml() {
     const content = _routeYamlMonaco ? _routeYamlMonaco.getValue() : _routeYamlContent;
     try {
-        const res = await agentFetch(`/api/routes/${encodeURIComponent(_routeYamlId)}/raw`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
-            body: JSON.stringify({ content }),
-        });
-        if (!res.ok) { showToast(await _errText(res, t('Save failed')), 'error'); return; }
-        const data = await res.json();
-        if (data.ok) {
+        let res  = await _postRouteYaml(content, false);
+        let data = res.status === 409 ? await res.json() : null;
+        if (data && data.needsConfirm) {
+            if (!await _confirmSharedChanges(data.sharedChanges || [])) return;
+            res  = await _postRouteYaml(content, true);
+            data = null;
+        }
+        if (!res.ok && !data) {
+            showToast(await _errText(res, t('Save failed')), 'error');
+            return;
+        }
+        if (data) { showToast(data.error || t('Save failed'), 'error'); return; }
+        const body = await res.json();
+        if (body.ok) {
             closeRouteYamlEditor();
             refreshRoutes();
             fetchNotifications();
         } else {
-            showToast(data.error || data.message || t('Save failed'), 'error');
+            showToast(body.error || body.message || t('Save failed'), 'error');
         }
     } catch(e) {
         showToast(_netErrText(e, t('Save failed')), 'error');
