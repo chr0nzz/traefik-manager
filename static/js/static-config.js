@@ -402,6 +402,34 @@ function _initRouteYamlMonaco(content) {
     });
 }
 
+function _routeYamlOriginList(origins, ownFile) {
+    const out = [];
+    Object.keys(origins || {}).forEach(scope => {
+        const kinds = origins[scope] || {};
+        Object.keys(kinds).forEach(kind => {
+            const names = kinds[kind] || {};
+            Object.keys(names).forEach(name => {
+                if (names[name] && names[name] !== ownFile) out.push({ name, file: names[name] });
+            });
+        });
+    });
+    return out;
+}
+
+function _renderRouteYamlOrigins(origins, ownFile) {
+    const box = document.getElementById('routeYamlOrigins');
+    if (!box) return;
+    const shared = _routeYamlOriginList(origins, ownFile);
+    if (!shared.length) { box.style.display = 'none'; box.textContent = ''; return; }
+    const items = shared.map(s => th('{name} is defined in {file}', {
+        name: tmHtml(`<code class="font-mono">${_esc(s.name)}</code>`),
+        file: tmHtml(`<code class="font-mono">${_esc(s.file)}</code>`),
+    })).join(', ');
+    box.innerHTML = `<i class="ph-bold ph-info mr-1"></i>${items}. `
+        + th('Other routes may use these, so this editor shows them but does not write them.');
+    box.style.display = 'block';
+}
+
 async function openRouteYamlEditor(id) {
     _routeYamlId = id;
     const name = id.includes('::') ? id.slice(id.indexOf('::') + 2) : id;
@@ -414,6 +442,7 @@ async function openRouteYamlEditor(id) {
         if (data.error) { showToast(data.error, 'error'); return; }
         const overlay = document.getElementById('routeYamlPopout');
         if (overlay) overlay.style.display = 'flex';
+        _renderRouteYamlOrigins(data.origins, data.configFile);
         _initRouteYamlMonaco(data.raw || '');
     } catch(e) {
         showToast(_netErrText(e, t('Failed to load route YAML')), 'error');

@@ -4,9 +4,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Traefik Manager 1.14\n"
+"Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-21 04:30+0000\n"
+"POT-Creation-Date: 2026-09-22 14:30+0000\n"
 "PO-Revision-Date: 2026-09-22 13:20+0000\n"
 "Last-Translator: Gilberth Cordova <gilberthcordova@gmail.com>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/traefik-manager/"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "Generated-By: Babel 2.18.0\n"
-"X-Generator: Weblate 2026.10.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -97,6 +96,18 @@ msgstr ""
 
 #, python-format
 msgid "%(name)s cannot use itself as a backend"
+msgstr ""
+
+#, python-format
+msgid "%(name)s is defined in %(file)s, which this editor does not write."
+msgstr ""
+
+#, python-format
+msgid "%(name)s is defined in %(file)s. Edit it on the Middlewares tab."
+msgstr ""
+
+#, python-format
+msgid "%(name)s is defined in %(file)s. Edit it on the TLS Options tab."
 msgstr ""
 
 #, python-format
@@ -6569,6 +6580,12 @@ msgstr ""
 #. Used in the browser
 msgctxt "group"
 msgid "Other"
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"Other routes may use these, so this editor shows them but does not write "
+"them."
 msgstr ""
 
 #. Used in the browser
@@ -14194,6 +14211,11 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "{name} has no ACME email"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{name} is defined in {file}"
 msgstr ""
 
 #. Used in the browser

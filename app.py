@@ -5913,10 +5913,55 @@ def _add_route_dependencies(out, config, proto, router, svc, own_path=None):
         defined, path = _find_definition(scope, kind, name, config, own_path)
         if defined is None:
             continue
-        if own_path is None or os.path.abspath(path) == os.path.abspath(own_path):
-            out.setdefault(scope, {}).setdefault(kind, {})[name] = dict(defined)
+        out.setdefault(scope, {}).setdefault(kind, {})[name] = dict(defined)
         origins.setdefault(scope, {}).setdefault(kind, {})[name] = os.path.basename(path)
     return origins
+
+
+def _plain_value(value, templates=None):
+    if isinstance(value, dict):
+        return {str(k): _plain_value(v, templates) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_plain_value(v, templates) for v in value]
+    if isinstance(value, str) and templates:
+        for placeholder, original in templates.items():
+            value = value.replace(placeholder, original)
+    return value
+
+
+_ELSEWHERE_MESSAGES = {
+    'middlewares': lambda name, where: gettext(
+        '%(name)s is defined in %(file)s. Edit it on the Middlewares tab.', name=name, file=where),
+    'options': lambda name, where: gettext(
+        '%(name)s is defined in %(file)s. Edit it on the TLS Options tab.', name=name, file=where),
+    'serversTransports': lambda name, where: gettext(
+        '%(name)s is defined in %(file)s, which this editor does not write.', name=name, file=where),
+}
+
+
+def _dependency_scopes(data):
+    for proto in ('http', 'tcp', 'udp'):
+        for kind in ('serversTransports', 'middlewares'):
+            if _definition_section(data, proto, kind):
+                yield proto, kind
+    if _definition_section(data, 'tls', 'options'):
+        yield 'tls', 'options'
+
+
+def _sections_defined_elsewhere(new_data, config, target_path, user_map, file_map):
+    unchanged, changed = [], []
+    for scope, kind in _dependency_scopes(new_data):
+        for name, edited in _definition_section(new_data, scope, kind).items():
+            defined, path = _find_definition(scope, kind, name, config, target_path)
+            if path is None or os.path.abspath(path) == os.path.abspath(target_path):
+                continue
+            with open(path, 'r') as f:
+                _, their_map = _sanitize_go_templates(f.read())
+            here = _plain_value(edited, user_map)
+            there = _plain_value(defined, their_map)
+            (unchanged if here == there else changed).append(
+                (scope, kind, name, os.path.basename(path)))
+    return unchanged, changed
 
 
 @app.route('/api/routes/<path:route_id>/raw', methods=['GET'])
@@ -5998,6 +6043,22 @@ def api_route_raw_save(route_id):
 
     config = load_config(target_path)
 
+    file_map = {}
+    if os.path.exists(target_path):
+        with open(target_path, 'r') as f:
+            _, file_map = _sanitize_go_templates(f.read())
+
+    elsewhere, conflicts = _sections_defined_elsewhere(new_data, config, target_path,
+                                                       user_map, file_map)
+    if conflicts:
+        scope, kind, name, where = conflicts[0]
+        message = _ELSEWHERE_MESSAGES[kind](name, where)
+        return jsonify({'ok': False, 'error': message,
+                        'definedElsewhere': [{'scope': s, 'kind': k, 'name': n, 'file': f}
+                                             for s, k, n, f in conflicts]}), 409
+    for scope, kind, name, _where in elsewhere:
+        _definition_section(new_data, scope, kind).pop(name, None)
+
     for proto in ('http', 'tcp', 'udp'):
         proto_cfg  = config.get(proto, {})
         old_router = proto_cfg.get('routers', {}).pop(rname, None)
@@ -6027,10 +6088,6 @@ def api_route_raw_save(route_id):
 
     try:
         create_backup(target_path)
-        file_map = {}
-        if os.path.exists(target_path):
-            with open(target_path, 'r') as f:
-                _, file_map = _sanitize_go_templates(f.read())
         combined_map = {**file_map, **user_map}
         stream = StringIO()
         yaml.dump(_strip_empty_sections(config), stream)

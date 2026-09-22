@@ -213,12 +213,68 @@ def test_a_route_with_no_dependencies_reports_no_origins(client, config_path):
     assert _payload(client, 'plain-rtr')['origins'] == {}
 
 
-def test_a_definition_from_another_file_is_never_written_into_the_route_file(client, split_config,
-                                                                            config_path):
+def test_a_definition_from_another_file_is_shown_in_the_editor(client, split_config):
+    raw = _payload(client)['raw']
+    assert 'chain-no-auth:' in raw, 'the middleware the route uses belongs in its YAML, file aside'
+    assert 'dialTimeout: 30s' in raw, 'the transport arrives with its settings'
+    assert 'minVersion: VersionTLS12' in raw, 'so do the TLS options the router names'
+
+
+def test_an_untouched_definition_from_another_file_is_not_copied_in(client, split_config,
+                                                                   config_path):
     raw = _payload(client)['raw']
     res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
     assert res.status_code == 200, res.data[:200]
     text = config_path.read_text()
     assert 'chain-no-auth:' not in text, 'the middleware belongs to shared.yml and must stay there'
-    assert 'plex-transport:\n' not in text, 'the transport definition must not be copied in'
+    assert 'dialTimeout' not in text, 'the transport definition must not be duplicated'
+    assert 'minVersion' not in text, 'nor the TLS options'
     assert 'chain-no-auth' in split_config.read_text(), 'the other file keeps its definition'
+
+
+def test_reordering_or_reformatting_a_shared_definition_is_not_a_change(client, split_config,
+                                                                       config_path):
+    raw = _payload(client)['raw'].replace('dialTimeout: 30s', "dialTimeout: '30s'")
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 200, res.data[:200]
+    assert 'dialTimeout' not in config_path.read_text()
+
+
+def test_editing_a_definition_from_another_file_is_refused(client, split_config, config_path):
+    raw = _payload(client)['raw'].replace('dialTimeout: 30s', 'dialTimeout: 99s')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 409, res.data[:200]
+    body = res.get_json()
+    assert body['ok'] is False
+    assert 'shared.yml' in body['error'], 'the refusal must name the file that owns the definition'
+    assert body['definedElsewhere'][0]['name'] == 'plex-transport'
+    assert 'dialTimeout: 30s' in split_config.read_text(), 'the other file is left alone'
+    assert 'dialTimeout' not in config_path.read_text(), 'and nothing is written here either'
+
+
+def test_a_refused_save_writes_nothing_at_all(client, split_config, config_path):
+    before = config_path.read_text()
+    raw = _payload(client)['raw'].replace('dialTimeout: 30s', 'dialTimeout: 99s')
+    raw = raw.replace('Host(`plex.example.com`)', 'Host(`new.example.com`)')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 409
+    assert config_path.read_text() == before, 'the router edit must not land when the save is refused'
+
+
+def test_refusing_a_middleware_edit_points_at_the_middlewares_tab(client, split_config):
+    raw = _payload(client)['raw'].replace('[sec-headers]', '[sec-headers, other]')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 409, res.data[:200]
+    assert 'Middlewares' in res.get_json()['error']
+
+
+def test_a_new_definition_still_lands_in_the_route_own_file(client, split_config, config_path):
+    raw = _payload(client)['raw']
+    anchor = next(line for line in raw.splitlines() if line.strip() == 'plex-transport:')
+    pad = anchor[:len(anchor) - len(anchor.lstrip())]
+    raw = raw.replace(anchor, f'{pad}brand-new:\n{pad}  insecureSkipVerify: true\n{anchor}')
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 200, res.data[:200]
+    assert 'brand-new:' in config_path.read_text(), \
+        'a definition that exists nowhere else is this route file to write'
+    assert 'brand-new' not in split_config.read_text(), 'and it does not reach the other file'
