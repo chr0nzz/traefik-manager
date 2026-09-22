@@ -374,6 +374,107 @@ let _routeYamlId      = '';
 let _routeYamlContent = '';
 let _routeYamlFingerprints = {};
 
+let _routeYamlNames = { middlewares: [], services: [], entryPoints: [], certResolvers: [], serversTransports: [] };
+let _routeYamlCompletions = null;
+
+function _namesFromEditor(kind) {
+    const text = _routeYamlMonaco ? _routeYamlMonaco.getValue() : _routeYamlContent;
+    const block = new RegExp(`^(\\s*)${kind}:\\s*$`, 'm').exec(text || '');
+    if (!block) return [];
+    const rest = (text || '').slice(block.index + block[0].length).split('\n');
+    const want = block[1].length;
+    const found = [];
+    for (const line of rest) {
+        if (!line.trim()) continue;
+        const pad = line.length - line.trimStart().length;
+        if (pad <= want) break;
+        const key = /^\s*([A-Za-z0-9_.-]+):/.exec(line);
+        if (key && pad === want + 2) found.push(key[1]);
+    }
+    return found;
+}
+
+async function _collectRouteYamlNames() {
+    const names = { middlewares: [], services: [], entryPoints: [], certResolvers: [], serversTransports: [] };
+    names.middlewares = (typeof _allMiddlewares !== 'undefined' ? _allMiddlewares : [])
+        .map(m => String(m.name || '').split('@')[0]).filter(Boolean);
+    try {
+        const svc = await _ensureServicesList();
+        ['http', 'tcp', 'udp'].forEach(proto => {
+            (svc[proto] || []).forEach(s => names.services.push(String(s.name || s)));
+            (svc.live[proto] || []).forEach(s => names.services.push(String(s.name || '')));
+        });
+    } catch(e) {}
+    try {
+        const eps = await _fetchEntrypointsCached();
+        names.entryPoints = (eps || []).map(e => String(e.name || e)).filter(Boolean);
+    } catch(e) {}
+    const resolver = document.getElementById('certResolver');
+    if (resolver) names.certResolvers = Array.from(resolver.options).map(o => o.value).filter(Boolean);
+    names.serversTransports = _namesFromEditor('serversTransports');
+    names.middlewares = names.middlewares.concat(_namesFromEditor('middlewares'));
+    Object.keys(names).forEach(k => { names[k] = Array.from(new Set(names[k].filter(Boolean))).sort(); });
+    return names;
+}
+
+function _routeYamlContextKind(model, position) {
+    const line = model.getLineContent(position.lineNumber);
+    if (/^\s*serversTransport:\s*\S*$/.test(line)) return 'serversTransports';
+    if (/^\s*service:\s*\S*$/.test(line)) return 'services';
+    if (/^\s*certResolver:\s*\S*$/.test(line)) return 'certResolvers';
+    if (/^\s*-\s*\S*$/.test(line)) {
+        for (let n = position.lineNumber - 1; n > 0 && n > position.lineNumber - 30; n--) {
+            const above = model.getLineContent(n);
+            if (/^\s*middlewares:\s*$/.test(above)) return 'middlewares';
+            if (/^\s*entryPoints:\s*$/.test(above)) return 'entryPoints';
+            if (/^\s*[A-Za-z0-9_.-]+:\s*\S/.test(above)) return '';
+        }
+    }
+    if (/^\s*entryPoints:\s*\[?[^\]]*$/.test(line)) return 'entryPoints';
+    if (/^\s*middlewares:\s*\[[^\]]*$/.test(line)) return 'middlewares';
+    return '';
+}
+
+const _ROUTE_YAML_SNIPPETS = [
+    { label: 'healthCheck', body: 'healthCheck:\n  path: ${1:/}\n  interval: ${2:10s}\n  timeout: ${3:3s}' },
+    { label: 'serversTransport', body: 'serversTransport: ${1:transport-name}' },
+    { label: 'router', body: '${1:router-name}:\n  rule: "Host(`${2:app.example.com}`)"\n  entryPoints:\n    - ${3:websecure}\n  service: ${4:service-name}' },
+];
+
+function _registerRouteYamlCompletions() {
+    if (_routeYamlCompletions) return;
+    _routeYamlCompletions = monaco.languages.registerCompletionItemProvider('yaml', {
+        triggerCharacters: [' ', '-', '[', ','],
+        provideCompletionItems(model, position) {
+            const word = model.getWordUntilPosition(position);
+            const range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber,
+                            startColumn: word.startColumn, endColumn: word.endColumn };
+            const kind = _routeYamlContextKind(model, position);
+            if (!kind) {
+                if (!/^\s*[A-Za-z]*$/.test(model.getLineContent(position.lineNumber))) return { suggestions: [] };
+                return {
+                    suggestions: _ROUTE_YAML_SNIPPETS.map(s => ({
+                        label: s.label,
+                        kind: monaco.languages.CompletionItemKind.Snippet,
+                        insertText: s.body,
+                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        range,
+                    })),
+                };
+            }
+            const pool = _routeYamlNames[kind] || [];
+            return {
+                suggestions: pool.map(name => ({
+                    label: name,
+                    kind: monaco.languages.CompletionItemKind.Value,
+                    insertText: name,
+                    range,
+                })),
+            };
+        },
+    });
+}
+
 function _initRouteYamlMonaco(content) {
     const container = document.getElementById('routeYamlPopoutEditor');
     if (!container) return;
@@ -381,6 +482,7 @@ function _initRouteYamlMonaco(content) {
         _routeYamlMonaco.setValue(content);
         _routeYamlContent = content;
         _syncMonacoTheme();
+        _collectRouteYamlNames().then(names => { _routeYamlNames = names; });
         setTimeout(() => _routeYamlMonaco.layout(), 50);
         return;
     }
@@ -399,6 +501,8 @@ function _initRouteYamlMonaco(content) {
                 wordWrap: 'off',
             });
             _routeYamlContent = content;
+            _registerRouteYamlCompletions();
+            _collectRouteYamlNames().then(names => { _routeYamlNames = names; });
         });
     });
 }
