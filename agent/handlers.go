@@ -1915,15 +1915,18 @@ func (a *App) routeRawGetHandler(w http.ResponseWriter, r *http.Request, routeID
 			}
 			out := map[string]any{proto: map[string]any{"routers": map[string]any{rname: router}}}
 			services, _ := protoMap["services"].(map[string]any)
-			if svc, ok := services[svcName]; ok {
+			svc := services[svcName]
+			if svc != nil {
 				out[proto].(map[string]any)["services"] = map[string]any{svcName: svc}
 			}
+			origins := a.addRouteDependencies(out, config, proto, routerMap, svc, p)
 			raw, err := yaml.Marshal(out)
 			if err != nil {
 				jsonErrorCode(w, "yaml_marshal_failed", nil, "failed to marshal YAML", http.StatusInternalServerError)
 				return
 			}
-			jsonOK(w, map[string]any{"raw": string(raw), "configFile": filepath.Base(p), "proto": proto})
+			jsonOK(w, map[string]any{"raw": string(raw), "configFile": filepath.Base(p), "proto": proto,
+				"origins": origins, "fingerprints": a.dependencyFingerprints(origins, p)})
 			return
 		}
 	}
@@ -1932,7 +1935,9 @@ func (a *App) routeRawGetHandler(w http.ResponseWriter, r *http.Request, routeID
 
 func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeID string) {
 	var body struct {
-		Content string `json:"content"`
+		Content      string            `json:"content"`
+		ApplyShared  bool              `json:"applyShared"`
+		Fingerprints map[string]string `json:"fingerprints"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || strings.TrimSpace(body.Content) == "" {
 		jsonErrorCode(w, "invalid_body", nil, "invalid request body", http.StatusBadRequest)
@@ -1998,6 +2003,39 @@ func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeI
 		config = map[string]any{}
 	}
 
+	if name, file := a.renamedSharedDefinition(newData, config, targetPath); name != "" {
+		jsonErrorCode(w, "shared_definition_renamed", map[string]any{"name": name, "file": file},
+			"renaming "+name+" here would leave it behind in "+file, http.StatusConflict)
+		return
+	}
+
+	unchangedShared, changedShared := a.sectionsDefinedElsewhere(newData, config, targetPath)
+	for _, change := range changedShared {
+		if err := writableFile(change.Path); err != nil {
+			jsonErrorCode(w, "shared_definition_read_only",
+				map[string]any{"name": change.Dep.Name, "file": change.File},
+				change.Dep.Name+" is defined in "+change.File+", which is read-only here",
+				http.StatusConflict)
+			return
+		}
+		if was := body.Fingerprints[change.File]; was != "" && was != fileFingerprint(change.Path) {
+			jsonErrorCode(w, "shared_file_changed", map[string]any{"file": change.File},
+				change.File+" changed on disk since this editor opened", http.StatusConflict)
+			return
+		}
+	}
+	if len(changedShared) > 0 && !body.ApplyShared {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]any{
+			"ok": false, "needsConfirm": true, "sharedChanges": a.sharedChangePrompt(changedShared),
+		})
+		return
+	}
+	for _, change := range append(unchangedShared, changedShared...) {
+		delete(sectionMap(newData, change.Dep.Scope, change.Dep.Kind), change.Dep.Name)
+	}
+
 	for _, proto := range []string{"http", "tcp", "udp"} {
 		protoMap, _ := config[proto].(map[string]any)
 		if protoMap == nil {
@@ -2046,6 +2084,44 @@ func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeI
 				existing[k] = v
 			}
 			section["services"] = existing
+		}
+		for _, kind := range []string{"serversTransports", "middlewares"} {
+			edited, _ := newProto[kind].(map[string]any)
+			if len(edited) == 0 {
+				continue
+			}
+			existing, _ := section[kind].(map[string]any)
+			if existing == nil {
+				existing = map[string]any{}
+			}
+			for k, v := range edited {
+				existing[k] = v
+			}
+			section[kind] = existing
+		}
+	}
+
+	if newOptions := sectionMap(newData, "tls", "options"); len(newOptions) > 0 {
+		scoped, _ := config["tls"].(map[string]any)
+		if scoped == nil {
+			scoped = map[string]any{}
+			config["tls"] = scoped
+		}
+		existing, _ := scoped["options"].(map[string]any)
+		if existing == nil {
+			existing = map[string]any{}
+		}
+		for k, v := range newOptions {
+			existing[k] = v
+		}
+		scoped["options"] = existing
+	}
+
+	if len(changedShared) > 0 {
+		if err := a.writeSharedDefinitions(changedShared); err != nil {
+			a.failuref("config", "writing shared definitions failed: %v", err)
+			jsonErrorCode(w, "write_failed", map[string]any{"detail": err.Error()}, "write failed: "+err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 

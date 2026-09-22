@@ -59,6 +59,14 @@ MESSAGES = {
     'invalid_config_file': lambda p: gettext('Invalid config file'),
     'yaml_marshal_failed': lambda p: gettext('Failed to build the YAML'),
     'route_not_found': lambda p: gettext('Route not found'),
+    'shared_definition_read_only': lambda p: gettext(
+        '%(name)s is defined in %(file)s, which is read-only here.', name=p['name'], file=p['file']),
+    'shared_file_changed': lambda p: gettext(
+        '%(file)s changed on disk since this editor opened. Reopen it and make the change again.',
+        file=p['file']),
+    'shared_definition_renamed': lambda p: gettext(
+        'Renaming %(name)s here would leave it behind in %(file)s. Rename it on the Middlewares tab.',
+        name=p['name'], file=p['file']),
     'invalid_lines': lambda p: gettext('Invalid lines parameter'),
     'reset_failed': lambda p: gettext('Reset failed: %(detail)s', detail=p['detail']),
     'nothing_selected': lambda p: gettext('Nothing was selected'),

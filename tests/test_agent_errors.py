@@ -14,7 +14,7 @@ from tests.conftest import tm
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HDR = {'X-CSRF-Token': 'testtoken', 'X-Requested-With': 'fetch', 'Accept-Language': 'de'}
 AGENT = {'id': 'a1', 'name': 'edge', 'url': 'http://agent.invalid:8090', 'api_key': 'k'}
-SAMPLE = {'detail': 'boom', 'file': 'routes.yml', 'url': 'http://traefik:8080', 'path': '/logs/access.log', 'removed': 2}
+SAMPLE = {'detail': 'boom', 'file': 'routes.yml', 'url': 'http://traefik:8080', 'path': '/logs/access.log', 'removed': 2, 'name': 'chain-no-auth'}
 
 
 def _agent_codes():
