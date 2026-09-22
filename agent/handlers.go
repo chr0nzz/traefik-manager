@@ -2027,16 +2027,18 @@ func (a *App) routeRawSaveHandler(w http.ResponseWriter, r *http.Request, routeI
 	if missing := a.missingRouteReferences(newData, config, targetPath, unchangedShared); len(missing) > 0 {
 		name := missing[0].Name
 		params := map[string]any{"name": name}
-		text := name + " is not defined in any config file"
+		tail := " is not defined anywhere. Create it first, or correct the name."
 		switch missing[0].Kind {
 		case "services":
-			jsonErrorCode(w, "service_not_defined", params, text, http.StatusConflict)
+			jsonErrorCode(w, "service_not_defined", params, "The service "+name+tail, http.StatusConflict)
 		case "serversTransports":
-			jsonErrorCode(w, "transport_not_defined", params, text, http.StatusConflict)
+			jsonErrorCode(w, "transport_not_defined", params, "The serversTransport "+name+tail, http.StatusConflict)
 		case "options":
-			jsonErrorCode(w, "tls_options_not_defined", params, text, http.StatusConflict)
+			jsonErrorCode(w, "tls_options_not_defined", params,
+				"The TLS options "+name+" are not defined anywhere. Create them first, or correct the name.",
+				http.StatusConflict)
 		default:
-			jsonErrorCode(w, "middleware_not_defined", params, text, http.StatusConflict)
+			jsonErrorCode(w, "middleware_not_defined", params, "The middleware "+name+tail, http.StatusConflict)
 		}
 		return
 	}

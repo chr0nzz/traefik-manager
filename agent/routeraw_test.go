@@ -322,3 +322,13 @@ func TestAgentAnUntouchedSharedChainDoesNotBlockAnUnrelatedSave(t *testing.T) {
 		t.Errorf("the route edit did not land")
 	}
 }
+
+func TestAgentEnglishTextMatchesTheHubWording(t *testing.T) {
+	a, _, _ := splitConfigApp(t)
+	raw := strings.Replace(rawGet(t, a)["raw"].(string), "chain-no-auth@file", "chain-no-authz@file", 1)
+	_, body := rawSave(t, a, map[string]any{"content": raw, "applyShared": true})
+	want := "The middleware chain-no-authz is not defined anywhere. Create it first, or correct the name."
+	if body["error"] != want {
+		t.Errorf("error = %q, want the same sentence the hub sends for a local route", body["error"])
+	}
+}
