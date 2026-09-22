@@ -5864,29 +5864,59 @@ def _local_middleware_names(router):
     return names
 
 
-def _add_route_dependencies(out, config, proto, router, svc):
-    section = config.get(proto, {})
+def _definition_section(config, scope, kind):
+    if not isinstance(config, dict):
+        return {}
+    section = config.get(scope)
+    if not isinstance(section, dict):
+        return {}
+    holder = section.get(kind)
+    return holder if isinstance(holder, dict) else {}
+
+
+def _route_dependency_names(proto, router, svc):
+    wanted = []
     transport = _route_transport_name(svc)
     if transport:
-        defined = (section.get('serversTransports') or {}).get(transport)
-        if defined is not None:
-            out[proto]['serversTransports'] = {transport: dict(defined)}
-
-    middlewares = {}
+        wanted.append((proto, 'serversTransports', transport))
     for name in _local_middleware_names(router):
-        defined = (section.get('middlewares') or {}).get(name)
-        if defined is not None:
-            middlewares[name] = dict(defined)
-    if middlewares:
-        out[proto]['middlewares'] = middlewares
-
+        wanted.append((proto, 'middlewares', name))
     tls = router.get('tls')
     option = str((tls or {}).get('options') or '') if isinstance(tls, dict) else ''
     option = option.split('@', 1)[0]
     if option:
-        defined = ((config.get('tls') or {}).get('options') or {}).get(option)
+        wanted.append(('tls', 'options', option))
+    return wanted
+
+
+def _find_definition(scope, kind, name, own_config, own_path):
+    defined = _definition_section(own_config, scope, kind).get(name)
+    if defined is not None:
+        return defined, own_path
+    for path in env.CONFIG_PATHS:
+        if own_path and os.path.abspath(path) == os.path.abspath(own_path):
+            continue
+        try:
+            other = load_config(path)
+        except Exception:
+            logger.debug(f"Cannot read {path} while locating {kind}/{name}", exc_info=True)
+            continue
+        defined = _definition_section(other, scope, kind).get(name)
         if defined is not None:
-            out['tls'] = {'options': {option: dict(defined)}}
+            return defined, path
+    return None, None
+
+
+def _add_route_dependencies(out, config, proto, router, svc, own_path=None):
+    origins = {}
+    for scope, kind, name in _route_dependency_names(proto, router, svc):
+        defined, path = _find_definition(scope, kind, name, config, own_path)
+        if defined is None:
+            continue
+        if own_path is None or os.path.abspath(path) == os.path.abspath(own_path):
+            out.setdefault(scope, {}).setdefault(kind, {})[name] = dict(defined)
+        origins.setdefault(scope, {}).setdefault(kind, {})[name] = os.path.basename(path)
+    return origins
 
 
 @app.route('/api/routes/<path:route_id>/raw', methods=['GET'])
@@ -5910,7 +5940,7 @@ def api_route_raw_get(route_id):
                 out      = {proto: {'routers': {rname: dict(router)}}}
                 if svc is not None:
                     out[proto]['services'] = {svc_name: dict(svc)}
-                _add_route_dependencies(out, config, proto, router, svc)
+                origins = _add_route_dependencies(out, config, proto, router, svc, p)
                 stream = StringIO()
                 yaml.dump(out, stream)
                 raw = stream.getvalue()
@@ -5918,7 +5948,8 @@ def api_route_raw_get(route_id):
                     _, template_map = _sanitize_go_templates(f.read())
                 for placeholder, original in template_map.items():
                     raw = raw.replace(placeholder, original)
-                return jsonify({'raw': raw, 'configFile': os.path.basename(p), 'proto': proto})
+                return jsonify({'raw': raw, 'configFile': os.path.basename(p), 'proto': proto,
+                                'origins': origins})
 
     return jsonify({'error': gettext('Route not found')}), 404
 

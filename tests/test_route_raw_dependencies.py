@@ -49,10 +49,63 @@ CONFIG = textwrap.dedent('''\
     ''')
 
 
+ROUTE_ONLY = textwrap.dedent('''\
+    http:
+      routers:
+        plex-rtr:
+          rule: "Host(`plex.example.com`)"
+          entryPoints: [websecure]
+          middlewares:
+            - chain-no-auth@file
+          service: plex-svc
+          tls:
+            certResolver: cloudflare
+            options: tls-opts
+      services:
+        plex-svc:
+          loadBalancer:
+            servers:
+              - url: "http://192.168.1.105:32400"
+            serversTransport: plex-transport
+    ''')
+
+SHARED = textwrap.dedent('''\
+    http:
+      middlewares:
+        chain-no-auth:
+          chain:
+            middlewares: [sec-headers]
+      serversTransports:
+        plex-transport:
+          forwardingTimeouts:
+            dialTimeout: 30s
+    tls:
+      options:
+        tls-opts:
+          minVersion: VersionTLS12
+    ''')
+
+
 @pytest.fixture
 def route_config(config_path):
     config_path.write_text(CONFIG)
     return config_path
+
+
+@pytest.fixture
+def split_config(config_path, tmp_path, monkeypatch):
+    from core import env as core_env
+    shared = tmp_path / 'shared.yml'
+    shared.write_text(SHARED)
+    config_path.write_text(ROUTE_ONLY)
+    monkeypatch.setattr(core_env, 'CONFIG_PATHS', [str(config_path), str(shared)])
+    return shared
+
+
+def _payload(client, route='plex-rtr'):
+    res = client.get(f'/api/routes/{route}/raw')
+    assert res.status_code == 200, res.data[:200]
+    return res.get_json()
 
 
 def _raw(client, route='plex-rtr'):
@@ -127,3 +180,45 @@ def test_a_route_without_dependencies_is_unchanged(client, config_path):
     raw = _raw(client, 'plain-rtr')
     assert 'serversTransports' not in raw and 'middlewares' not in raw and 'tls:' not in raw, \
         'a route with no dependencies gets the YAML it always got'
+
+
+def test_the_api_names_the_file_each_dependency_lives_in(client, split_config):
+    origins = _payload(client)['origins']
+    assert origins['http']['middlewares']['chain-no-auth'] == 'shared.yml'
+    assert origins['http']['serversTransports']['plex-transport'] == 'shared.yml'
+    assert origins['tls']['options']['tls-opts'] == 'shared.yml'
+
+
+def test_a_dependency_in_the_route_own_file_is_reported_there(client, route_config):
+    origins = _payload(client)['origins']
+    own = route_config.name
+    assert origins['http']['middlewares']['chain-no-auth'] == own
+    assert origins['http']['serversTransports']['plex-transport'] == own
+    assert origins['tls']['options']['tls-opts'] == own
+
+
+def test_a_route_with_no_dependencies_reports_no_origins(client, config_path):
+    config_path.write_text(textwrap.dedent('''\
+        http:
+          routers:
+            plain-rtr:
+              rule: "Host(`plain.example.com`)"
+              service: plain-svc
+          services:
+            plain-svc:
+              loadBalancer:
+                servers:
+                  - url: "http://10.0.0.5:80"
+        '''))
+    assert _payload(client, 'plain-rtr')['origins'] == {}
+
+
+def test_a_definition_from_another_file_is_never_written_into_the_route_file(client, split_config,
+                                                                            config_path):
+    raw = _payload(client)['raw']
+    res = client.post('/api/routes/plex-rtr/raw', json={'content': raw}, headers=HDR)
+    assert res.status_code == 200, res.data[:200]
+    text = config_path.read_text()
+    assert 'chain-no-auth:' not in text, 'the middleware belongs to shared.yml and must stay there'
+    assert 'plex-transport:\n' not in text, 'the transport definition must not be copied in'
+    assert 'chain-no-auth' in split_config.read_text(), 'the other file keeps its definition'
