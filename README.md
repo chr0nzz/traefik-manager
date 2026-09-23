@@ -17,7 +17,7 @@ Routes, middlewares, Services, Plugins, certificates, crowdsec and logs, without
 
 [![Stars](https://img.shields.io/github/stars/chr0nzz/traefik-manager?logo=github&color=e3b341)](https://github.com/chr0nzz/traefik-manager/stargazers)
 [![Issues](https://img.shields.io/github/issues/chr0nzz/traefik-manager?logo=github)](https://github.com/chr0nzz/traefik-manager/issues)
-[![Discord](https://img.shields.io/badge/Discord-join-5865F2?logo=discord&logoColor=white)](https://discord.gg/a6NKyJsfc)
+[![Discord](https://img.shields.io/badge/Discord-join-5865F2?logo=discord&logoColor=white)](https://discord.gg/vRQCMrrjtz)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Sponsor-ff5f5f?logo=ko-fi&logoColor=white)](https://ko-fi.com/chr0nzz)
 
 <sub>Built for homelabbers who love Traefik but hate editing YAML at 2am.</sub>
@@ -134,7 +134,7 @@ Full [documentation](https://traefik-manager.xyzlab.dev/).
 [Reset password](https://traefik-manager.xyzlab.dev/reset-password.html) ·
 [Beta](https://traefik-manager.xyzlab.dev/beta.html)
 
-Questions, help and release news: [Discord](https://discord.gg/a6NKyJsfc)
+Questions, help and release news: [Discord](https://discord.gg/vRQCMrrjtz)
 
 ---
 
