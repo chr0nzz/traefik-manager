@@ -123,6 +123,31 @@ def test_app_aliases_point_at_core(app_module):
     assert app_module._GIT_PROTO_HARDENING is git._GIT_PROTO_HARDENING
 
 
+@pytest.mark.parametrize('has_repo, rcs', [
+    (False, {('clone',): 1}),
+    (True, {('remote', 'get-url'): 1}),
+    (True, {}),
+], ids=['clone-failed-then-remote-add', 'repo-without-origin', 'repo-with-origin'])
+def test_the_repo_url_always_follows_an_end_of_options_marker(tmp_path, monkeypatch, has_repo, rcs):
+    url = 'https://example.com/backups.git'
+    repo = tmp_path / 'repo'
+    if has_repo:
+        (repo / '.git').mkdir(parents=True)
+    calls = []
+
+    def fake_run(args, **kw):
+        calls.append(args)
+        return '', '', rcs.get(tuple(args[:2]), rcs.get(tuple(args[:1]), 0))
+
+    monkeypatch.setattr(git, '_git_run', fake_run)
+    git._git_ensure_repo_at(str(repo), url, 'main', None)
+    with_url = [c for c in calls if url in c]
+    assert with_url, 'no git call received the repo URL on this path'
+    for c in with_url:
+        assert '--' in c and c.index('--') < c.index(url), (
+            f'{c} passes the repo URL where a value starting with - would be read as a git option')
+
+
 def test_no_test_ever_touches_the_real_global_gitconfig():
     import os
     src = open(os.path.abspath(__file__), encoding='utf-8').read()

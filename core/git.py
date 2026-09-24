@@ -71,7 +71,7 @@ def _git_ensure_repo_at(repo_dir, repo_url, branch, creds):
         _, _, rc = _git_run(['clone', '--branch', branch, '--', repo_url, '.'], cwd=repo_dir, credentials=creds)
         if rc != 0:
             _git_run(['init'], cwd=repo_dir)
-            _git_run(['remote', 'add', 'origin', repo_url], cwd=repo_dir)
+            _git_run(['remote', 'add', '--', 'origin', repo_url], cwd=repo_dir)
             _git_run(['pull', 'origin', branch], cwd=repo_dir, credentials=creds)
         _git_run(['config', 'user.email', 'traefik-manager@localhost'], cwd=repo_dir)
         _git_run(['config', 'user.name', 'Traefik Manager'], cwd=repo_dir)
@@ -85,11 +85,11 @@ def _git_ensure_repo_at(repo_dir, repo_url, branch, creds):
     else:
         _, _, rc = _git_run(['remote', 'get-url', 'origin'], cwd=repo_dir)
         if rc != 0:
-            _, _, arc = _git_run(['remote', 'add', 'origin', repo_url], cwd=repo_dir)
+            _, _, arc = _git_run(['remote', 'add', '--', 'origin', repo_url], cwd=repo_dir)
             if arc != 0:
                 _fresh_clone()
         else:
-            _git_run(['remote', 'set-url', 'origin', repo_url], cwd=repo_dir)
+            _git_run(['remote', 'set-url', '--', 'origin', repo_url], cwd=repo_dir)
         _git_run(['config', 'user.email', 'traefik-manager@localhost'], cwd=repo_dir)
         _git_run(['config', 'user.name', 'Traefik Manager'], cwd=repo_dir)
     return repo_dir
