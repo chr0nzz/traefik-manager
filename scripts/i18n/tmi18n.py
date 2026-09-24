@@ -164,6 +164,85 @@ def normalize_catalogue(path, pot_path=POT_PATH):
     return proc.returncode == 0
 
 
+SOURCE_LANGUAGE = 'en'
+SPELLING_RULES = {
+    'en_GB': (
+        (re.compile(r'(?!(?:re|down|up|over|under|cap|super)siz)([a-z]{3,})iz(e|es|ed|ing|ation|ations|er|ers|able)'),
+         r'\1is\2'),
+        (re.compile(r'([a-z]+)yz(e|es|ed|ing|er|ers)'), r'\1ys\2'),
+    ),
+    'en_US': (
+        (re.compile(r'(behavi|col|fav|hon|lab|neighb|flav|hum|rum|harb|vap|arm|endeav|sav)our([a-z]*)'), r'\1or\2'),
+        (re.compile(r'(cent|met|theat|fib|calib|lit|spect|somb|meag)re(s?)'), r'\1er\2'),
+        (re.compile(r'(cent|met|theat|fib|calib|lit)(?:red|ring)'), None),
+        (re.compile(r'(lic|def|off|pret)ence(s?)'), r'\1ense\2'),
+        (re.compile(r'(catal|anal)ogue(s?)'), r'\1og\2'),
+        (re.compile(r'(cancel|label|travel|model|signal|level|fuel|counsel|marshal|tunnel|channel|total|dial|duel|'
+                    r'funnel|rival|shovel|jewel)l(ed|ing|er|ers)'), r'\1\2'),
+        (re.compile(r'grey(s|ed|ing|ish)?'), r'gray\1'),
+        (re.compile(r'(enrol|fulfil)(s|ment|ments)?'), r'\1l\2'),
+        (re.compile(r'(skil|wil)ful(ly)?'), r'\1lful\2'),
+        (re.compile(r'instalment(s?)'), r'installment\1'),
+    ),
+}
+SPELLING_WORD_RE = re.compile(r'(?<![\w./])[A-Za-z]+(?![\w/])')
+SPELLING_KEEP_RES = (BRACE_RE, PRINTF_RE, URL_RE, re.compile(r'\b(?:[A-Z][A-Za-z]*-)*[A-Z][A-Za-z]* header\b'))
+
+
+def is_source_variant(identifier):
+    try:
+        return Locale.parse(identifier).language == SOURCE_LANGUAGE
+    except (ValueError, UnknownLocaleError):
+        return False
+
+
+def _respell_word(word, rules):
+    lower = word.lower()
+    if lower != word and word[1:] != lower[1:] and not word.isupper():
+        return word
+    for pattern, replacement in rules:
+        match = pattern.fullmatch(lower)
+        if not match:
+            continue
+        if replacement is None:
+            stem = match.group(1)
+            new = stem + ('ered' if lower.endswith('red') else 'ering')
+        else:
+            new = match.expand(replacement)
+        if word.isupper():
+            return new.upper()
+        return new[:1].upper() + new[1:] if word[:1].isupper() else new
+    return word
+
+
+def respell(text, identifier):
+    rules = SPELLING_RULES.get(identifier)
+    if not rules or not text:
+        return text
+    kept = [m.span() for keep in SPELLING_KEEP_RES for m in keep.finditer(text)]
+
+    def swap(match):
+        if any(start <= match.start() < end for start, end in kept):
+            return match.group(0)
+        return _respell_word(match.group(0), rules)
+    return SPELLING_WORD_RE.sub(swap, text)
+
+
+def untranslated(catalog):
+    return [m for m in catalog if m.id and not m.fuzzy and not any(_msgstr_forms(m))]
+
+
+def fill_from_source(catalog, identifier):
+    empty = untranslated(catalog)
+    for message in empty:
+        texts = [respell(text, identifier) for text in _msgid_texts(message)]
+        if isinstance(message.id, (list, tuple)):
+            message.string = tuple(texts[min(i, len(texts) - 1)] for i in range(catalog.num_plurals))
+        else:
+            message.string = texts[0]
+    return len(empty)
+
+
 def read_catalog(path, locale=None):
     with open(path, 'rb') as fh:
         return read_po(fh, locale=locale, abort_invalid=True)
@@ -211,7 +290,8 @@ def update_catalogues(root=ROOT, init=()):
         catalog = read_catalog(path, locale=identifier)
         needs_header = (catalog.project != PROJECT or catalog.msgid_bugs_address != BUGS_ADDRESS
                         or 'PROJECT' in catalog.header_comment or 'FIRST AUTHOR' in catalog.header_comment)
-        if message_set(catalog) == message_set(template) and not needs_header:
+        variant = is_source_variant(identifier)
+        if message_set(catalog) == message_set(template) and not needs_header and not (variant and untranslated(catalog)):
             continue
         catalog.update(template, no_fuzzy_matching=True, update_header_comment=False)
         catalog.project = PROJECT
@@ -219,6 +299,8 @@ def update_catalogues(root=ROOT, init=()):
         catalog.msgid_bugs_address = BUGS_ADDRESS
         catalog.copyright_holder = f'{PROJECT} contributors'
         catalog.header_comment = header_comment(Locale.parse(identifier).english_name)
+        if variant:
+            fill_from_source(catalog, identifier)
         _write(path, catalog)
         normalize_catalogue(path, pot_path)
     return []
@@ -392,6 +474,10 @@ def check_catalogue(path, identifier, template=None):
         missing = want - have
         if missing:
             problems.append(Problem(rel, f'{len(missing)} strings from messages.pot are missing; run make i18n-extract'))
+        empty = untranslated(catalog) if is_source_variant(identifier) else []
+        if empty:
+            problems.append(Problem(rel, f'{len(empty)} strings are empty; English catalogues copy the source, '
+                                         'run make i18n-extract'))
     return problems
 
 

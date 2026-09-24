@@ -457,3 +457,65 @@ def test_the_picker_shows_a_flag_or_a_globe_and_keeps_the_code_for_screen_reader
     assert "{{ lang.region | flag }}" in navbar, 'every row in the menu needs its flag'
     assert 'class="sr-only" translate="no">{{ html_lang_code }}' in navbar, \
         'the flag alone is not a label, the code stays for screen readers'
+
+
+@pytest.mark.parametrize('identifier, source, expected', [
+    ('en_GB', 'Optimize for streaming', 'Optimise for streaming'),
+    ('en_GB', 'Git repo not initialized', 'Git repo not initialised'),
+    ('en_GB', 'Visualizations', 'Visualisations'),
+    ('en_GB', 'Analyze the log', 'Analyse the log'),
+    ('en_GB', 'Resize the panel to any size', 'Resize the panel to any size'),
+    ('en_GB', 'Emphasize the colour', 'Emphasise the colour'),
+    ('en_US', 'Behaviour', 'Behavior'),
+    ('en_US', 'centres it with the navigation', 'centers it with the navigation'),
+    ('en_US', 'Centred and cancelled', 'Centered and canceled'),
+    ('en_US', 'GPL-3.0 licence', 'GPL-3.0 license'),
+    ('en_US', 'Grey catalogues', 'Gray catalogs'),
+    ('en_US', 'Your hour of four colours', 'Your hour of four colors'),
+    ('en_US', 'ORGANIZE THE COLOUR', 'ORGANIZE THE COLOR'),
+])
+def test_english_catalogues_respell_the_canadian_source(identifier, source, expected):
+    assert tmi18n.respell(source, identifier) == expected
+
+
+@pytest.mark.parametrize('source', [
+    'Forward Authorization header',
+    'Header name sanitize_headers and optimizeFor stay',
+    'See https://example.com/initialize/colour',
+    'Remove {summarize} and %(licence)s',
+])
+def test_respelling_leaves_placeholders_links_code_and_header_names_alone(source):
+    assert tmi18n.respell(source, 'en_GB') == source
+    assert tmi18n.respell(source, 'en_US') == source
+
+
+def test_english_catalogues_copy_the_source_and_keep_what_translators_wrote():
+    from babel.messages.catalog import Catalog
+    catalog = Catalog(locale='en_GB')
+    catalog.add('Optimize for streaming')
+    catalog.add('Customize', 'Personalise')
+    catalog.add(('{count} route', '{count} routes'))
+    catalog.add('Initialize', 'Old', flags=['fuzzy'])
+    assert tmi18n.fill_from_source(catalog, 'en_GB') == 2
+    assert catalog.get('Optimize for streaming').string == 'Optimise for streaming'
+    assert catalog.get('Customize').string == 'Personalise', 'a translator edit must never be overwritten'
+    assert tuple(catalog.get('{count} route').string) == ('{count} route', '{count} routes')
+    assert catalog.get('Initialize').string == 'Old', 'fuzzy entries never ship, so they are left for review'
+
+
+def test_other_languages_are_not_filled_from_the_source():
+    assert tmi18n.is_source_variant('en_GB') and tmi18n.is_source_variant('en_US')
+    assert not tmi18n.is_source_variant('de') and not tmi18n.is_source_variant('zh_Hans')
+
+
+def test_an_empty_string_in_an_english_catalogue_fails_the_check(tmp_path):
+    from babel.messages.catalog import Catalog
+    template = Catalog()
+    template.add('Save')
+    template.add('Cancel')
+    header = DE_HEADER.replace('Language: de', 'Language: en_GB')
+    path = _po(tmp_path, _entry('Save', 'Save') + _entry('Cancel', ''), header=header, identifier='en_GB')
+    messages = [p.message for p in tmi18n.check_catalogue(path, 'en_GB', template)]
+    assert any('1 strings are empty' in m for m in messages)
+    de = _po(tmp_path, _entry('Save', 'Speichern') + _entry('Cancel', ''))
+    assert tmi18n.check_catalogue(de, 'de', template) == [], 'other languages may leave strings for translators'
