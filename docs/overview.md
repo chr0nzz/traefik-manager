@@ -39,6 +39,11 @@ curl -fsSL https://get-traefik.xyzlab.dev | bash
   <strong>Unraid</strong>
   <span>Install from the Community Applications template.</span>
 </a>
+<a class="vp-pick-card" href="./umbrel">
+  <img src="/images/i-umbrel.png" alt="" width="28" height="28">
+  <strong>umbrelOS</strong>
+  <span>Install from the Traefik Manager community app store.</span>
+</a>
 </div>
 
 ---

@@ -36,6 +36,7 @@ export default defineConfig({
           { text: 'Podman', link: '/podman' },
           { text: 'Linux (native)', link: '/linux' },
           { text: 'Unraid', link: '/unraid' },
+          { text: 'umbrelOS', link: '/umbrel' },
         ],
       },
       {
@@ -75,6 +76,7 @@ export default defineConfig({
           { text: 'Podman', link: '/podman' },
           { text: 'Linux (native)', link: '/linux' },
           { text: 'Unraid', link: '/unraid' },
+          { text: 'umbrelOS', link: '/umbrel' },
           { text: 'Beta Channel', link: '/beta' },
         ],
       },

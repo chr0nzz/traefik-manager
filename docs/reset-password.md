@@ -59,6 +59,12 @@ Open the Unraid dashboard → Docker tab → click the Traefik Manager icon → 
 flask reset-password --prompt
 ```
 
+== umbrelOS
+Open a terminal on the Umbrel, over SSH or from **Settings**, **Advanced settings**, **Terminal**, then run:
+```bash
+sudo docker exec -it tm-traefik-manager_web_1 flask reset-password --prompt
+```
+
 == Linux (native)
 ```bash
 cd /opt/traefik-manager
@@ -100,6 +106,12 @@ podman exec traefik-manager flask reset-password
 Open the Unraid dashboard → Docker tab → click the Traefik Manager icon → **Console**, then run:
 ```bash
 flask reset-password
+```
+
+== umbrelOS
+Open a terminal on the Umbrel, over SSH or from **Settings**, **Advanced settings**, **Terminal**, then run:
+```bash
+sudo docker exec tm-traefik-manager_web_1 flask reset-password
 ```
 
 == Linux (native)
@@ -150,6 +162,12 @@ podman restart traefik-manager
 nano /mnt/user/appdata/traefik-manager/config/manager.yml
 ```
 Then Docker tab → click the Traefik Manager icon → **Restart**.
+
+== umbrelOS
+```bash
+sudo nano ~/umbrel/app-data/tm-traefik-manager/data/tm/config/manager.yml
+sudo docker restart tm-traefik-manager_web_1
+```
 
 == Linux (native)
 ```bash

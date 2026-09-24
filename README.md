@@ -117,6 +117,7 @@ Full [documentation](https://traefik-manager.xyzlab.dev/).
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/podman.png" width="20" height="20"> Podman              | [Rootless, Quadlet, SELinux](https://traefik-manager.xyzlab.dev/podman.html)          |
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/linux.png" width="20" height="20"> Linux                | [Native Python and systemd](https://traefik-manager.xyzlab.dev/linux.html)            |
 | <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/unraid.png" width="20" height="20"> Unraid              | [Community Applications and appdata paths](https://traefik-manager.xyzlab.dev/unraid.html) |
+| <img src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/umbrelos.png" width="20" height="20"> umbrelOS          | [Community app store, ports and routing](https://traefik-manager.xyzlab.dev/umbrel.html) |
 | <img src="docs/public/images/icon.png" width="20" height="20"> Agent                                                 | [TMA for multi-server management](https://traefik-manager.xyzlab.dev/agent.html)      |
 
 ---
