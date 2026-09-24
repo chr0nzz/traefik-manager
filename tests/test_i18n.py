@@ -45,6 +45,11 @@ def with_languages(monkeypatch):
     monkeypatch.setattr(i18n, 'available_tags', lambda locale_dir=None: ('en', 'de', 'zh-Hans'))
 
 
+@pytest.fixture
+def with_english_variants(monkeypatch):
+    monkeypatch.setattr(i18n, 'available_tags', lambda locale_dir=None: ('en', 'en-GB', 'en-US', 'de'))
+
+
 def _catalog_block(html):
     match = re.search(r'<script type="application/json" id="i18n-catalog">(.*?)</script>', html, re.S)
     assert match, 'catalogue block missing'
@@ -147,6 +152,19 @@ def test_resolve_order(app_module, with_languages, kwargs, expected):
         assert i18n.resolve_tag(kwargs.get('default', '')) == expected
 
 
+@pytest.mark.parametrize('kwargs, expected', [
+    ({'path': '/', 'headers': {'Accept-Language': 'en-US'}}, 'en-US'),
+    ({'path': '/', 'headers': {'Accept-Language': 'en-GB,en;q=0.8'}}, 'en-GB'),
+    ({'path': '/', 'headers': {'Accept-Language': 'en-CA'}}, 'en'),
+    ({'path': '/', 'headers': {'Accept-Language': 'en-AU,de;q=0.5'}}, 'en'),
+    ({'path': '/?lang=en-CA', 'headers': {'Accept-Language': 'en-GB'}}, 'en'),
+    ({'path': '/', 'headers': {'Accept-Language': 'en-GB'}, 'default': 'en-CA'}, 'en'),
+])
+def test_english_variants_resolve(app_module, with_english_variants, kwargs, expected):
+    with app_module.app.test_request_context(kwargs['path'], headers=kwargs['headers']):
+        assert i18n.resolve_tag(kwargs.get('default', '')) == expected
+
+
 def test_linguas_gates_compiled_catalogues(locale_dir):
     _compile(locale_dir, 'de', [('Save', 'Speichern')])
     _compile(locale_dir, 'fr', [('Save', 'Enregistrer')])
@@ -155,6 +173,13 @@ def test_linguas_gates_compiled_catalogues(locale_dir):
     (locale_dir / 'LINGUAS').write_text('# enabled\nde zh_Hans\nfr  # after review\n')
     i18n.available_tags.cache_clear()
     assert i18n.available_tags(str(locale_dir)) == ('en', 'de', 'fr')
+
+
+def test_the_canadian_source_never_loads_the_us_catalogue(locale_dir):
+    _compile(locale_dir, 'en_US', [('Behaviour', 'Behavior')])
+    assert i18n.client_catalog('en', str(locale_dir))['messages'] == {}, \
+        'gettext expands en to en_US first, so the source must load as en_CA'
+    assert i18n.client_catalog('en-US', str(locale_dir))['messages'] == {'Behaviour': 'Behavior'}
 
 
 def test_client_catalog_shapes_messages(locale_dir):
@@ -182,10 +207,26 @@ def test_plural_map_follows_the_catalogue(locale_dir):
 
 def test_language_options_use_native_names(with_languages):
     assert i18n.language_options() == [
-        {'tag': 'en', 'name': 'English', 'code': 'EN', 'region': ''},
+        {'tag': 'en', 'name': 'English (Canada)', 'code': 'EN', 'region': 'CA'},
         {'tag': 'de', 'name': 'Deutsch', 'code': 'DE', 'region': 'DE'},
         {'tag': 'zh-Hans', 'name': '中文 (简体)', 'code': 'ZH', 'region': 'CN'},
     ]
+
+
+def test_english_variants_name_the_canadian_source(with_english_variants):
+    assert i18n.language_options()[:3] == [
+        {'tag': 'en', 'name': 'English (Canada)', 'code': 'EN-CA', 'region': 'CA'},
+        {'tag': 'en-GB', 'name': 'English (United Kingdom)', 'code': 'EN-GB', 'region': 'GB'},
+        {'tag': 'en-US', 'name': 'English (United States)', 'code': 'EN-US', 'region': 'US'},
+    ]
+
+
+def test_save_language_accepts_the_canadian_source_tag(client, with_english_variants):
+    resp = client.post('/api/settings/language', json={'default_language': 'en-CA'}, headers=HDR)
+    try:
+        assert resp.get_json() == {'success': True, 'default_language': 'en'}
+    finally:
+        client.post('/api/settings/language', json={'default_language': ''}, headers=HDR)
 
 
 def test_text_direction():
@@ -251,10 +292,11 @@ def test_navbar_picker_is_the_first_icon(client, with_languages):
     nav = _between(html, 'id="navActions"', 'id="navMoreWrap"')
     assert nav.index('id="langPickerWrap"') < nav.index('nav-docs-link')
     picker = _between(nav, 'id="langPickerWrap"', 'nav-docs-link')
-    assert 'ph-globe' in picker, 'English takes the globe, no country owns the language'
+    assert 'ph-globe' not in picker, 'the source strings are Canadian English, so English takes the Canadian flag'
     assert '<span class="sr-only" translate="no">EN</span>' in picker, 'the code stays for screen readers'
-    assert picker.count('tm-lang-flag') == 2, \
-        'German and Chinese take flags, English takes the globe'
+    assert picker.count('tm-lang-flag') == 4, \
+        'the button and every language in the menu take a flag'
+    assert '\U0001F1E8\U0001F1E6' in picker
     assert '\U0001F1E9\U0001F1EA' in picker and '\U0001F1E8\U0001F1F3' in picker, \
         'the flag comes from the region, with the script subtag deciding for zh-Hans'
     assert "setLanguage('')" in picker
@@ -272,9 +314,9 @@ def test_settings_lists_every_language_and_follow_system(client, with_languages)
     assert section.count('class="sc-set lang-row') == 4
     assert 'lang-row active" data-lang="de"' in section
     assert 'Follow system' in section
-    assert section.count('tm-lang-flag') == 2, \
+    assert section.count('tm-lang-flag') == 3, \
         'Settings shows the same flags as the navbar picker, not language codes'
-    assert 'ph-globe' in section, 'English takes the globe in Settings too'
+    assert '\U0001F1E8\U0001F1E6' in section, 'English takes the Canadian flag in Settings too'
     assert 'tm-lang-code' not in section, 'the code was replaced by the flag'
     assert 'window.TM_LANGUAGE = "de"' in html
 

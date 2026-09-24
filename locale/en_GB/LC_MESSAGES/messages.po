@@ -1,4 +1,4 @@
-# Traefik Manager interface strings, Spanish.
+# Traefik Manager interface strings, English (United Kingdom).
 # This file is distributed under the same license as Traefik Manager,
 # GPL-3.0.
 #
@@ -7,52 +7,47 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-09-24 22:34+0000\n"
-"PO-Revision-Date: 2026-09-24 19:04+0000\n"
-"Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
-"Language-Team: Spanish <https://hosted.weblate.org/projects/traefik-manager/"
-"web-app/es/>\n"
-"Language: es\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: en_GB <LL@li.org>\n"
+"Language: en_GB\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.18.0\n"
 
 #. Used in the browser
 #, python-brace-format
 msgid "\"{name}\" is still in use. {parts}, then delete it?"
-msgstr "\"{name}\" está siendo utilizado. {parts}, ¿quieres eliminarlo?"
+msgstr ""
 
 #. Used in the browser
 #, python-brace-format
 msgid "\"{name}\" is still used by {shown}. Delete those middlewares first."
 msgstr ""
-"\"{name}\" está siendo utilizado por {shown}. Elimina esos middlewares "
-"primero."
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
 "\"{name}\" is still used by {shown}. Remove it from {label} and delete it?"
 msgstr ""
-"\"{name}\" está siendo utilizado por {shown}. ¿Quieres sacarlo de {label} y "
-"eliminarlo?"
 
 #, python-format
 msgid "%(auth_verify)s is appended automatically"
-msgstr "%(auth_verify)s se añade automáticamente"
+msgstr ""
 
 #, python-format
 msgid "%(bare)s is %(bits)s"
-msgstr "%(bare)s es %(bits)s"
+msgstr ""
 
 #, python-format
 msgid "%(child)s is still used by %(users)s"
-msgstr "%(child)s está siendo utilizado por %(users)s"
+msgstr ""
 
 #, python-format
 msgid "%(claimed)s already belongs to %(claimed2)s. Pick a different name"
-msgstr "%(claimed)s ya pertenece a %(claimed2)s. Elige otro nombre"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -63,58 +58,50 @@ msgstr ""
 #, python-format
 msgid "%(file)s is mounted read only on this agent, nothing was changed"
 msgstr ""
-"%(file)s está montado en modo de solo lectura en este agente, no se han "
-"realizado cambios"
 
 #, python-format
 msgid "%(file)s is mounted read only on this agent, nothing was restored"
 msgstr ""
-"%(file)s está montado en modo de solo lectura en este agente, no se ha "
-"restaurado nada"
 
 #, python-format
 msgid ""
 "%(line_break)s⚠ A %(buffering)s/%(compress)s middleware is attached - remove "
 "it for smooth streaming and seeking."
 msgstr ""
-"%(line_break)s⚠ El middleware %(buffering)s/%(compress)s forma parte de la "
-"cadena. Elimínalo para mejorar la búsqueda y el streaming."
 
 #, python-format
 msgid ""
 "%(loop)s already routes back to %(name)s, which would make a cycle Traefik "
 "cannot load"
 msgstr ""
-"%(loop)s ya enruta de vuelta a %(name)s, lo que crearía un bucle que Traefik "
-"no puede cargar"
 
 #, python-format
 msgid "%(n1)s Welcome"
-msgstr "%(n1)s Bienvenido"
+msgstr ""
 
 #, python-format
 msgid "%(n3)s Self route"
-msgstr "%(n3)s Enrutado propio"
+msgstr ""
 
 #, python-format
 msgid "%(n4)s Monitoring"
-msgstr "%(n4)s Monitorización"
+msgstr ""
 
 #, python-format
 msgid "%(n6)s Git backup"
-msgstr "%(n6)s Respaldo de Git"
+msgstr ""
 
 #, python-format
 msgid "%(n7)s Notifications"
-msgstr "%(n7)s Notificaciones"
+msgstr ""
 
 #, python-format
 msgid "%(n8)s Password"
-msgstr "%(n8)s Contraseña"
+msgstr ""
 
 #, python-format
 msgid "%(name)s cannot use itself as a backend"
-msgstr "%(name)s no puede usarse como su propio backend"
+msgstr ""
 
 #, python-format
 msgid "%(name)s is defined in %(file)s, which is read-only here."
@@ -122,7 +109,7 @@ msgstr ""
 
 #, python-format
 msgid "%(name)s is still used by %(tls_users)s%(tls_users2)s"
-msgstr "%(name)s está siendo utilizado por %(tls_users)s%(tls_users2)s"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -2843,6 +2830,8 @@ msgid ""
 "Deletes the local clone only. Remote repository and commits are untouched; "
 "re-initialized on next push."
 msgstr ""
+"Deletes the local clone only. Remote repository and commits are untouched; "
+"re-initialised on next push."
 
 msgid "Deliver errors right away even inside the quiet window."
 msgstr ""
@@ -3550,6 +3539,11 @@ msgid ""
 "many it pruned. Subscribed blocklist rows are left out on purpose because "
 "they describe the internet rather than your host. {value}"
 msgstr ""
+"Every card above summarises the {retained} alerts the LAPI still retains, "
+"not every attack this host has ever seen. The oldest alert here is the edge "
+"of retention, not the start of activity, and CrowdSec does not report how "
+"many it pruned. Subscribed blocklist rows are left out on purpose because "
+"they describe the internet rather than your host. {value}"
 
 #. Used in the browser
 #, python-brace-format
@@ -4204,7 +4198,7 @@ msgid "Git backup"
 msgstr ""
 
 msgid "Git repo not initialized"
-msgstr ""
+msgstr "Git repo not initialised"
 
 #. Used in the browser
 msgid "Git settings saved"
@@ -4354,6 +4348,8 @@ msgid ""
 "Header name sanitization (aliasHeadersStrategy, forwarded header stripping) "
 "bypassed via request trailers"
 msgstr ""
+"Header name sanitisation (aliasHeadersStrategy, forwarded header stripping) "
+"bypassed via request trailers"
 
 #. Used in the browser
 msgctxt "setting"
@@ -6451,7 +6447,7 @@ msgid "Operations"
 msgstr ""
 
 msgid "Optimize for streaming (Jellyfin / Emby / Plex)"
-msgstr ""
+msgstr "Optimise for streaming (Jellyfin / Emby / Plex)"
 
 msgctxt "label"
 msgid "Optional"
@@ -7520,7 +7516,7 @@ msgstr ""
 
 #. Used in the browser
 msgid "Repository reset - push again to re-initialize"
-msgstr ""
+msgstr "Repository reset - push again to re-initialise"
 
 #. Used in the browser
 msgid "Request Header Fields Too Large"
@@ -9784,6 +9780,10 @@ msgid ""
 "start of activity. Traefik does not report the file total, so the share of "
 "overall traffic is unknown. {parsed} of {fetched} lines parsed.{value}"
 msgstr ""
+"These numbers summarise the last {fetched} lines of the access log, not all "
+"traffic. The oldest line here is the edge of the fetched window, not the "
+"start of activity. Traefik does not report the file total, so the share of "
+"overall traffic is unknown. {parsed} of {fetched} lines parsed.{value}"
 
 #, python-format
 msgid ""
@@ -10002,6 +10002,10 @@ msgid ""
 "\n"
 "This does NOT affect your remote repository or any commits."
 msgstr ""
+"This will delete the local git repository clone. TM will re-initialise it on "
+"the next push.\n"
+"\n"
+"This does NOT affect your remote repository or any commits."
 
 #. Used in the browser
 msgid "Time left on this decision, counting down live"
@@ -10695,7 +10699,7 @@ msgstr ""
 
 msgctxt "heading"
 msgid "Visualizations"
-msgstr ""
+msgstr "Visualisations"
 
 #. Used in the browser
 msgid "Warning"
@@ -10887,7 +10891,7 @@ msgid ""
 msgstr ""
 
 msgid "Your account is not authorized to access this application."
-msgstr ""
+msgstr "Your account is not authorised to access this application."
 
 #, python-format
 msgid "Your own proxies / LAN %(one_cidr_or)s"

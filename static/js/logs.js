@@ -712,7 +712,7 @@ function renderLogStats(visible, meta) {
     const selSpan = scoped ? _lgSpanOf(rows) : null;
 
     const nextLines = LG_LINE_STEPS.find(n => n > _currentLogLines) || null;
-    const scopeTip = t('These numbers summarise the last {fetched} lines of the access log, not all traffic. The oldest line here is the edge of the fetched window, not the start of activity. Traefik does not report the file total, so the share of overall traffic is unknown. {parsed} of {fetched} lines parsed.{value}', { fetched: _sdNum(meta.fetched), parsed: _sdNum(meta.parsed), value: nextLines ? ' ' + t('Click to widen the window to {count} lines.', { count: nextLines }) : '' });
+    const scopeTip = t('These numbers summarize the last {fetched} lines of the access log, not all traffic. The oldest line here is the edge of the fetched window, not the start of activity. Traefik does not report the file total, so the share of overall traffic is unknown. {parsed} of {fetched} lines parsed.{value}', { fetched: _sdNum(meta.fetched), parsed: _sdNum(meta.parsed), value: nextLines ? ' ' + t('Click to widen the window to {count} lines.', { count: nextLines }) : '' });
 
     const facts = [];
     facts.push(`<span class="sig-key-item lg-static" title="${_esc(scopeTip)}"><i class="ph-bold ph-rows"></i>${th('last{b}lines', { b: tmHtml(`<b>${_sdNum(meta.fetched)}</b>`) })}</span>`);

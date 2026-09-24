@@ -436,7 +436,8 @@ def test_the_language_picker_pairs_a_language_with_a_flag_region():
     assert i18n_mod.region_for('zh-Hans') == 'CN' and i18n_mod.region_for('zh-Hant') == 'TW', \
         'a script subtag decides the flag when the tag names no region'
     assert i18n_mod.region_for('pt-BR') == 'BR', 'an explicit region wins over the language default'
-    assert i18n_mod.region_for('en') == '', 'English is spoken in many countries, so it takes the globe'
+    assert i18n_mod.region_for('en') == 'CA', 'the source strings are Canadian English'
+    assert i18n_mod.region_for('en-GB') == 'GB' and i18n_mod.region_for('en-US') == 'US'
     assert i18n_mod.region_for('ar') == '', 'a language spanning many countries takes the globe too'
     assert i18n_mod.region_for('xx') == '', 'an unknown language must not invent a flag'
 

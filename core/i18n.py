@@ -13,6 +13,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOCALE_DIR = os.path.join(ROOT_DIR, 'locale')
 DOMAIN = 'messages'
 DEFAULT_TAG = 'en'
+SOURCE_TAG = 'en-CA'
 URL_LOCALE_KEY = 'tm.url_locale'
 BROWSER_MARK = 'Used in the browser'
 
@@ -28,6 +29,10 @@ def to_tag(identifier: str) -> str:
 
 def to_identifier(tag: str) -> str:
     return tag.replace('-', '_')
+
+
+def catalog_identifier(tag: str) -> str:
+    return to_identifier(SOURCE_TAG if tag == DEFAULT_TAG else tag)
 
 
 def enabled_identifiers(locale_dir: str) -> list:
@@ -74,6 +79,8 @@ def normalize(value, tags=None):
     for tag in tags if tags is not None else available_tags():
         if tag.lower() == wanted:
             return tag
+    if wanted == SOURCE_TAG.lower():
+        return normalize(DEFAULT_TAG, tags)
     return None
 
 
@@ -86,6 +93,8 @@ def _accept_language(tags):
         matches = [t for t in tags if t.split('-')[0].lower() == primary]
         if len(matches) == 1:
             return matches[0]
+        if primary in matches:
+            return primary
     return None
 
 
@@ -109,7 +118,7 @@ def code_for(tag: str, tags=None) -> str:
     tags = available_tags() if tags is None else tags
     primary = tag.split('-')[0]
     if sum(1 for t in tags if t.split('-')[0] == primary) > 1:
-        return tag.upper()
+        return (SOURCE_TAG if tag == DEFAULT_TAG else tag).upper()
     return primary.upper()
 
 
@@ -124,10 +133,10 @@ REGION_FOR_LANGUAGE = {
 
 
 def region_for(tag: str) -> str:
+    if tag == DEFAULT_TAG:
+        tag = SOURCE_TAG
     parts = tag.replace('_', '-').split('-')
     language = parts[0].lower()
-    if language == DEFAULT_TAG:
-        return ''
     for part in parts[1:]:
         if len(part) == 2 and part.isalpha():
             return part.upper()
@@ -149,7 +158,7 @@ def language_options() -> list:
     options = []
     tags = available_tags()
     for tag in tags:
-        identifier = to_identifier(tag)
+        identifier = catalog_identifier(tag)
         try:
             name = Locale.parse(identifier).get_display_name(identifier) or tag
         except (ValueError, UnknownLocaleError):
@@ -161,7 +170,8 @@ def language_options() -> list:
 
 def current_tag() -> str:
     locale = get_locale()
-    return to_tag(str(locale)) if locale else DEFAULT_TAG
+    tag = to_tag(str(locale)) if locale else DEFAULT_TAG
+    return DEFAULT_TAG if tag == SOURCE_TAG else tag
 
 
 def text_direction(tag: str) -> str:
@@ -205,7 +215,7 @@ def browser_keys(locale_dir: str = None):
 
 @lru_cache(maxsize=None)
 def client_catalog(tag: str, locale_dir: str = None) -> dict:
-    identifier = to_identifier(tag)
+    identifier = catalog_identifier(tag)
     translations = Translations.load(locale_dir or LOCALE_DIR, [identifier], DOMAIN)
     wanted = browser_keys(locale_dir)
     messages = {}
@@ -275,7 +285,7 @@ def install_escaped_gettext(jinja_env):
 
 
 def init_app(app, default_language):
-    app.config['BABEL_DEFAULT_LOCALE'] = DEFAULT_TAG
+    app.config['BABEL_DEFAULT_LOCALE'] = catalog_identifier(DEFAULT_TAG)
     app.config['BABEL_TRANSLATION_DIRECTORIES'] = LOCALE_DIR
     app.config['BABEL_DOMAIN'] = DOMAIN
 
@@ -286,7 +296,7 @@ def init_app(app, default_language):
             return ''
 
     def _select():
-        return to_identifier(resolve_tag(_saved()))
+        return catalog_identifier(resolve_tag(_saved()))
 
     babel = Babel(app, locale_selector=_select)
     install_escaped_gettext(app.jinja_env)
