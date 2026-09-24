@@ -656,7 +656,7 @@ function _dskAlarm(meta, down, warn) {
         html += `<button type="button" class="sig-flag dsk-alarm" data-dsk="${_esc(_dskSpec({ act: 'alarm', pod: meta.name, sev: 'down' }))}" title="${thn('{n} route in {pod} needs attention', '{n} routes in {pod} need attention', down, { pod: _dskGroupLabel(meta.name) })}"><i class="ph-fill ph-warning-octagon"></i><b>${down}</b><span class="sig-fl">${thc('button', 'down')}</span></button>`;
     }
     if (warn) {
-        html += `<button type="button" class="sig-flag dsk-alarm dsk-alarm-warn" data-dsk="${_esc(_dskSpec({ act: 'alarm', pod: meta.name, sev: 'warn' }))}" title="${thn('{n} route in {pod} have a backend server down', '{n} routes in {pod} have a backend server down', warn, { pod: _dskGroupLabel(meta.name) })}"><i class="ph-fill ph-warning"></i><b>${warn}</b><span class="sig-fl">${thc('button', 'degraded')}</span></button>`;
+        html += `<button type="button" class="sig-flag dsk-alarm dsk-alarm-warn" data-dsk="${_esc(_dskSpec({ act: 'alarm', pod: meta.name, sev: 'warn' }))}" title="${thn('{n} route in {pod} has a backend server down', '{n} routes in {pod} have a backend server down', warn, { pod: _dskGroupLabel(meta.name) })}"><i class="ph-fill ph-warning"></i><b>${warn}</b><span class="sig-fl">${thc('button', 'degraded')}</span></button>`;
     }
     return html;
 }

@@ -14381,7 +14381,7 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
-msgid "{n} route in {pod} have a backend server down"
+msgid "{n} route in {pod} has a backend server down"
 msgid_plural "{n} routes in {pod} have a backend server down"
 msgstr[0] ""
 msgstr[1] ""
