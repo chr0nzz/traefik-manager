@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-09-22 15:52+0000\n"
-"PO-Revision-Date: 2026-09-22 13:20+0000\n"
-"Last-Translator: Gilberth Cordova <gilberthcordova@gmail.com>\n"
+"PO-Revision-Date: 2026-09-24 19:04+0000\n"
+"Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/traefik-manager/"
 "web-app/es/>\n"
 "Language: es\n"
@@ -17,38 +17,43 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "Generated-By: Babel 2.18.0\n"
+"X-Generator: Weblate 2026.10.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
 msgid "\"{name}\" is still in use. {parts}, then delete it?"
-msgstr ""
+msgstr "\"{name}\" está siendo utilizado. {parts}, ¿quieres eliminarlo?"
 
 #. Used in the browser
 #, python-brace-format
 msgid "\"{name}\" is still used by {shown}. Delete those middlewares first."
 msgstr ""
+"\"{name}\" está siendo utilizado por {shown}. Elimina esos middlewares "
+"primero."
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
 "\"{name}\" is still used by {shown}. Remove it from {label} and delete it?"
 msgstr ""
+"\"{name}\" está siendo utilizado por {shown}. ¿Quieres sacarlo de {label} y "
+"eliminarlo?"
 
 #, python-format
 msgid "%(auth_verify)s is appended automatically"
-msgstr ""
+msgstr "%(auth_verify)s se añade automáticamente"
 
 #, python-format
 msgid "%(bare)s is %(bits)s"
-msgstr ""
+msgstr "%(bare)s es %(bits)s"
 
 #, python-format
 msgid "%(child)s is still used by %(users)s"
-msgstr ""
+msgstr "%(child)s está siendo utilizado por %(users)s"
 
 #, python-format
 msgid "%(claimed)s already belongs to %(claimed2)s. Pick a different name"
-msgstr ""
+msgstr "%(claimed)s ya pertenece a %(claimed2)s. Elige otro nombre"
 
 #, python-format
 msgid ""
@@ -59,22 +64,30 @@ msgstr ""
 #, python-format
 msgid "%(file)s is mounted read only on this agent, nothing was changed"
 msgstr ""
+"%(file)s está montado en modo de solo lectura en este agente, no se han "
+"realizado cambios"
 
 #, python-format
 msgid "%(file)s is mounted read only on this agent, nothing was restored"
 msgstr ""
+"%(file)s está montado en modo de solo lectura en este agente, no se ha "
+"restaurado nada"
 
 #, python-format
 msgid ""
 "%(line_break)s⚠ A %(buffering)s/%(compress)s middleware is attached - remove "
 "it for smooth streaming and seeking."
 msgstr ""
+"%(line_break)s⚠ El middleware %(buffering)s/%(compress)s forma parte de la "
+"cadena. Elimínalo para mejorar la búsqueda y el streaming."
 
 #, python-format
 msgid ""
 "%(loop)s already routes back to %(name)s, which would make a cycle Traefik "
 "cannot load"
 msgstr ""
+"%(loop)s ya enruta de vuelta a %(name)s, lo que crearía un bucle que Traefik "
+"no puede cargar"
 
 #, python-format
 msgid "%(n1)s Welcome"
@@ -82,27 +95,27 @@ msgstr "%(n1)s Bienvenido"
 
 #, python-format
 msgid "%(n3)s Self route"
-msgstr "%(n3)s Self route"
+msgstr "%(n3)s Enrutado propio"
 
 #, python-format
 msgid "%(n4)s Monitoring"
-msgstr ""
+msgstr "%(n4)s Monitorización"
 
 #, python-format
 msgid "%(n6)s Git backup"
-msgstr ""
+msgstr "%(n6)s Respaldo de Git"
 
 #, python-format
 msgid "%(n7)s Notifications"
-msgstr ""
+msgstr "%(n7)s Notificaciones"
 
 #, python-format
 msgid "%(n8)s Password"
-msgstr ""
+msgstr "%(n8)s Contraseña"
 
 #, python-format
 msgid "%(name)s cannot use itself as a backend"
-msgstr ""
+msgstr "%(name)s no puede usarse como su propio backend"
 
 #, python-format
 msgid "%(name)s is defined in %(file)s, which is read-only here."
@@ -110,7 +123,7 @@ msgstr ""
 
 #, python-format
 msgid "%(name)s is still used by %(tls_users)s%(tls_users2)s"
-msgstr ""
+msgstr "%(name)s está siendo utilizado por %(tls_users)s%(tls_users2)s"
 
 #, python-format
 msgid ""

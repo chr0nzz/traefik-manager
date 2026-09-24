@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-09-22 15:52+0000\n"
-"PO-Revision-Date: 2026-09-22 16:19+0000\n"
-"Last-Translator: slywalker01 <csyl20@yahoo.fr>\n"
+"PO-Revision-Date: 2026-09-24 19:04+0000\n"
+"Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/traefik-manager/"
 "web-app/fr/>\n"
 "Language: fr\n"
@@ -22,138 +22,156 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "\"{name}\" is still in use. {parts}, then delete it?"
-msgstr ""
+msgstr "\"{name}\" est encore utilisé. {parts}, puis le supprimer ?"
 
 #. Used in the browser
 #, python-brace-format
 msgid "\"{name}\" is still used by {shown}. Delete those middlewares first."
 msgstr ""
+"\"{name}\" est encore utilisé par {shown}. Supprimer les middlewares d'abord."
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
 "\"{name}\" is still used by {shown}. Remove it from {label} and delete it?"
 msgstr ""
+"\"{name}\" est encore utilisé par {shown}. L'enlever de {label} et le "
+"supprimer ?"
 
 #, python-format
 msgid "%(auth_verify)s is appended automatically"
-msgstr ""
+msgstr "%(auth_verify)s est automatiquement ajouté"
 
 #, python-format
 msgid "%(bare)s is %(bits)s"
-msgstr ""
+msgstr "%(bare)s fait %(bits)s"
 
 #, python-format
 msgid "%(child)s is still used by %(users)s"
-msgstr ""
+msgstr "%(child)s encore utilisé par %(users)s"
 
 #, python-format
 msgid "%(claimed)s already belongs to %(claimed2)s. Pick a different name"
-msgstr ""
+msgstr "%(claimed)s appartient déjà à %(claimed2)s. Choisissez un autre nom"
 
 #, python-format
 msgid ""
 "%(file)s changed on disk since this editor opened. Reopen it and make the "
 "change again."
 msgstr ""
+"%(file)s a changé sur le disque depuis la première ouverture. Rouvrez-le et "
+"refaites votre modification."
 
 #, python-format
 msgid "%(file)s is mounted read only on this agent, nothing was changed"
-msgstr ""
+msgstr "%(file)s est monté en lecture-seule sur cet agent, rien n'a été modifié"
 
 #, python-format
 msgid "%(file)s is mounted read only on this agent, nothing was restored"
 msgstr ""
+"%(file)s est monté en lecture-seule sur cet agent, rien n'a pu être restauré"
 
 #, python-format
 msgid ""
 "%(line_break)s⚠ A %(buffering)s/%(compress)s middleware is attached - remove "
 "it for smooth streaming and seeking."
 msgstr ""
+"%(line_break)s⚠ Un %(buffering)s/%(compress)s middleware est attaché - "
+"supprimez-le pour plus de fluidité et dans la lecture et la navigation."
 
 #, python-format
 msgid ""
 "%(loop)s already routes back to %(name)s, which would make a cycle Traefik "
 "cannot load"
 msgstr ""
+"%(loop)s pointe déjà sur la route %(name)s, ce qui génèrait une boucle que "
+"Traefik ne peux pas gérer"
 
 #, python-format
 msgid "%(n1)s Welcome"
-msgstr ""
+msgstr "%(n1)s Bienvenue"
 
 #, python-format
 msgid "%(n3)s Self route"
-msgstr ""
+msgstr "%(n3)s Self route"
 
 #, python-format
 msgid "%(n4)s Monitoring"
-msgstr ""
+msgstr "%(n4)s Supervision"
 
 #, python-format
 msgid "%(n6)s Git backup"
-msgstr ""
+msgstr "%(n6)s Sauvegarde git"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%(n7)s Notifications"
 msgstr "%(n7)s Notifications"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%(n8)s Password"
 msgstr "%(n8)s Mot de passe"
 
 #, python-format
 msgid "%(name)s cannot use itself as a backend"
-msgstr ""
+msgstr "%(name)s ne peut pas se servir de lui même comme backend"
 
 #, python-format
 msgid "%(name)s is defined in %(file)s, which is read-only here."
-msgstr ""
+msgstr "%(name)s est défini dans %(file)s, qui est en lecture seule."
 
 #, python-format
 msgid "%(name)s is still used by %(tls_users)s%(tls_users2)s"
-msgstr ""
+msgstr "%(name)s est toujours utilisé par %(tls_users)s%(tls_users2)s"
 
 #, python-format
 msgid ""
 "%(name)s is still used by %(users)s%(users2)s. Delete those middlewares first"
 msgstr ""
+"%(name)s est toujours utilisé par %(users)s%(users2)s. Supprimez ces "
+"middlewares d'abord"
 
 #, python-format
 msgid ""
 "%(new_in_v1)s Static Config Editor lets you manage your Traefik static "
 "config from the UI. %(set_it_up)s"
 msgstr ""
+"%(new_in_v1)s l'Editeur de Configuration Statique permet de gérer votre "
+"configuration statique Traefik depuis l'interface utilisateur.%(set_it_up)s"
 
 #, python-format
 msgid ""
 "%(original)s matches more than one certificate store, so this backup cannot "
 "be restored safely"
 msgstr ""
+"%(original)s correspond a plus d'un magasin de certificats donc cette "
+"sauvegarde ne peut pas être restauré en toute sécurité"
 
 #, python-format
 msgid ""
 "%(original)s matches more than one config file, so this backup cannot be "
 "restored safely"
 msgstr ""
+"%(original)s correspond à plus d'un fichier de configuration donc cette "
+"sauvegarde ne peut pas être restauré en toute sécurité"
 
 #, python-format
 msgid "%(status)s is replaced with the response code."
-msgstr ""
+msgstr "%(status)s est remplacé avec le ce code de réponse."
 
 #. Used in the browser
 #, python-brace-format
 msgid "(+{count} more)"
-msgstr ""
+msgstr "(+{count} supplémentaire)"
 
 #. Used in the browser
 msgid "(0 to 1, optional)"
-msgstr ""
+msgstr "(0 à 1, optionnel)"
 
 msgid "(32+ character random string)"
-msgstr ""
+msgstr "(chaine de + de 32 caractères aléatoires)"
 
 msgid "(Name: claim, one per line)"
-msgstr ""
+msgstr "(Nom: ??? un par ligne)"
 
 msgid "(bytes)"
 msgstr "(octets)"
@@ -163,43 +181,40 @@ msgstr "(octets, optionnel - Traefik 3.7+)"
 
 #. Used in the browser
 msgid "(empty = stdout)"
-msgstr ""
+msgstr "(vide = stdout)"
 
 #. Used in the browser
 msgid "(exposes API without auth)"
-msgstr ""
+msgstr "(expose l'API sans authentification)"
 
 #. Used in the browser
 msgid "(leave empty for stdout)"
-msgstr ""
+msgstr "(laisser vide pour stdout)"
 
 #. Used in the browser
 msgid "(lines, optional)"
-msgstr ""
+msgstr "(lignes, optionnel)"
 
-#, fuzzy
 msgctxt "option"
 msgid "(none)"
 msgstr "(aucun)"
 
-#, fuzzy
 msgid "(one CIDR or IP per line)"
-msgstr "(un CIDR ou IP par ligne)"
+msgstr "(un CIDR ou une IP par ligne)"
 
-#, fuzzy
 msgid "(one per line)"
 msgstr "(un par ligne)"
 
 msgid "(one per line, * for all)"
-msgstr ""
+msgstr "(un par ligne, * pour tous)"
 
 #, python-format
 msgid "(one per line, format: %(user_htpasswd_hash)s)"
-msgstr ""
+msgstr "(un par ligne, format : %(user_htpasswd_hash)s)"
 
 #, python-format
 msgid "(one per line, format: %(user_realm_md5hash)s)"
-msgstr ""
+msgstr "(un par ligne, format : %(user_realm_md5hash)s"
 
 #. Used in the browser
 msgid "(optional)"
@@ -223,73 +238,73 @@ msgstr "(optionnel, par exemple 60s, 1m30s, 0 = illimité)"
 
 #. Used in the browser
 msgid "(optional, one path per line)"
-msgstr ""
+msgstr "(optionnel, un chemin par ligne)"
 
 #. Used in the browser
 msgid "(pointer: coarse)"
-msgstr ""
+msgstr "(pointer: coarse)"
 
 msgid "(regex, one per line - optional)"
-msgstr ""
+msgstr "(regex, une par ligne - optionnel)"
 
 msgid "(responses smaller than this are not compressed)"
-msgstr ""
+msgstr "(les réponses plus petite que cela ne sont pas compressés)"
 
 msgid "(seconds)"
-msgstr ""
+msgstr "(secondes)"
 
 #. Used in the browser
 msgctxt "setting"
 msgid "(security)"
-msgstr ""
+msgstr "(sécurité)"
 
 msgid "(set - leave blank to keep)"
-msgstr ""
+msgstr "(à définir – laisser vide pour garder)"
 
 #. Used in the browser
 #, python-brace-format
 msgid "(traefik answered, backend said {origin})"
-msgstr ""
+msgstr "(traefik a répondu, le backend a dit {origin})"
 
 #. Used in the browser
 msgid "+ New file..."
-msgstr ""
+msgstr "+ Nouveau fichier..."
 
 #. Used in the browser
 #, python-brace-format
 msgid "+{count} codes"
-msgstr ""
+msgstr "+{count} codes"
 
 #. Used in the browser
 #, python-brace-format
 msgid "+{count} more"
-msgstr ""
+msgstr "+{count} supplémentaires"
 
 #. Used in the browser
 #, python-brace-format
 msgid "+{count} more country"
 msgid_plural "+{count} more countries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "+{count} pays supplémentaire"
+msgstr[1] "+{count} pays supplémentaires"
 
 #. Used in the browser
 #, python-brace-format
 msgid "+{count} more failing"
-msgstr ""
+msgstr "+{count} échec supplémentaires"
 
 #. Used in the browser
 #, python-brace-format
 msgid "+{more} more"
-msgstr ""
+msgstr "+{more} supplémentaires"
 
 #. Used in the browser
 #, python-brace-format
 msgid "+{rest} requests across {more}"
-msgstr ""
+msgstr "+{rest} requêtes à travers {more}"
 
 #. Used in the browser
 msgid ", all live"
-msgstr ""
+msgstr ", tous est en fonction"
 
 #. Used in the browser
 #, python-brace-format
@@ -298,15 +313,19 @@ msgid ""
 "close and reopen. Otherwise check the Traefik logs for a config "
 "error{configFile}. Showing your saved configuration."
 msgstr ""
+"bien d'autres de type « file provider » soient actives.Si vous l'avez "
+"enregistré il y a quelques instants, fermez-le et rouvrez-le. Sinon, "
+"consultez les journaux de Traefik pour détecter une erreur de configuration "
+"{configFile}. Affichage de votre configuration enregistrée."
 
 #. Used in the browser
 #, python-brace-format
 msgid ", and that {span} is inside the watched path"
-msgstr ""
+msgstr "et ce {span} se trouve à l'intérieur du chemin surveillé"
 
 #. Used in the browser
 msgid ", nothing matches this. Click to clear"
-msgstr ""
+msgstr ", rien ne correspond à ceci. Cliquez pour effacer"
 
 #. Used in the browser
 #, python-brace-format
@@ -316,49 +335,56 @@ msgid ""
 "config path and that {providers_file} points at it with {watch_true}. "
 "Showing your saved configuration."
 msgstr ""
+", cette route n'est donc pas desservie. Il est fort probable que Traefik ne "
+"surveille pas le fichier dans lequel Traefik Manager écrit ; vérifiez que "
+"les deux conteneurs montent le même chemin de configuration et que "
+"{providers_file} pointe vers celui-ci avec {watch_true}. Voici votre "
+"configuration enregistrée."
 
 #. Used in the browser
 #, python-brace-format
 msgid ", {hit} matches. Click to clear"
-msgstr ""
+msgstr ", {hit} correspondances. Cliquez pour effacer"
 
 #. Used in the browser
 #, python-brace-format
 msgid "- adds {http3} to this entrypoint"
-msgstr ""
+msgstr "- ajoute {http3} à ce point d'entrée"
 
 #. Used in the browser
 #, python-brace-format
 msgid "- adds {http_tls} so routers here get TLS by default"
 msgstr ""
+"- ajoute {http_tls} pour que les routeurs ici bénéficient du TLS par défaut"
 
 #, python-format
 msgid "- controlled by %(auth_enabled)s env var"
-msgstr ""
+msgstr "contrôlé par la variable d'environnement %(auth_enabled)s"
 
 #. Used in the browser
 msgid "- insecure"
-msgstr ""
+msgstr "- non sécurisé"
 
 #. Used in the browser
 msgid "- insecure, lets any client forge its IP"
 msgstr ""
+"- non sécurisé, permet à n'importe quel client de falsifier son adresse IP"
 
 #. Used in the browser
 msgid "- insecure, testing only"
-msgstr ""
+msgstr "- non sécurisé, test uniquement"
 
 #. Used in the browser
 #, python-brace-format
 msgid "- loaded from the {plugins_local} directory, no version needed"
-msgstr ""
+msgstr "- chargé depuis le répertoire {plugins_local}, aucune version requise"
 
 msgid "- restore it under Dashboard settings"
-msgstr ""
+msgstr "- le restaurer dans les paramètres du tableau de bord"
 
 #. Used in the browser
 msgid "- showing your saved configuration."
-msgstr ""
+msgstr "affichage de votre configuration enregistrée."
 
 #. Used in the browser
 #, python-brace-format
@@ -366,112 +392,117 @@ msgid ""
 "- showing your saved configuration. Check the API URL under Settings > "
 "Connection, and that Traefik has {api} enabled."
 msgstr ""
+"- affichage de votre configuration enregistrée. Vérifiez l'URL de l'API sous "
+"Paramètres > Connexion et assurez-vous que {api} est activé dans Traefik."
 
 #. Used in the browser
 msgid "- used by routers that list no entrypoints"
-msgstr ""
+msgstr "- utilisé par les routeurs qui ne répertorient aucun point d'entrée"
 
 #. Used in the browser
 msgid ""
 ". CrowdSec only accepts a bouncer key on /v1/decisions, the machine token is "
 "refused there, so CROWDSEC_API_KEY has to be set as well."
 msgstr ""
+". CrowdSec n'accepte qu'une clé de bouncer pour le point de terminaison /v1/"
+"decisions ; le jeton de machine y est refusé, la variable CROWDSEC_API_KEY "
+"doit donc également être définie."
 
 msgid "/ (server root)"
-msgstr ""
+msgstr "/ (racine du serveur)"
 
 msgctxt "placeholder"
 msgid "/health"
-msgstr ""
+msgstr "/santé"
 
 #. Used in the browser
 msgid "/metrics"
-msgstr ""
+msgstr "/metrics"
 
 #. Used in the browser
 msgid "/ping health check"
-msgstr ""
+msgstr "/ping vérification de l'état de santé"
 
 #. Used in the browser
 #, python-brace-format
 msgid "/v1/alerts returns {altStatus}"
-msgstr ""
+msgstr "/v1/alerts renvoie {altStatus}"
 
 #. Used in the browser
 #, python-brace-format
 msgid "0 of the last {fetched} lines are {bits}"
-msgstr ""
+msgstr "0 des {fetched} dernières lignes sont des {bits}"
 
 msgid "0 selected"
-msgstr ""
+msgstr "0 séléctionné"
 
 #. Used in the browser
 #, python-brace-format
 msgid "0/{total} servers up"
-msgstr ""
+msgstr "0/{total} serveurs opérationnels"
 
 #. Used in the browser
 #, python-brace-format
 msgid "1 cell = {each}"
-msgstr ""
+msgstr "1 cellule = {each}"
 
 #. Used in the browser
 #, python-brace-format
 msgid "1 cell = {round}"
-msgstr ""
+msgstr "1 cellule = {round}"
 
 msgid "1 hour"
-msgstr ""
+msgstr "1 heure"
 
 msgid "1 minute"
-msgstr ""
+msgstr "1 minute"
 
 #. Used in the browser
 msgid "1 route"
-msgstr ""
+msgstr "1 route"
 
 msgid "1 year"
-msgstr ""
+msgstr "1 année"
 
 msgid "1.2.3.4 or 1.2.3.0/24"
-msgstr ""
+msgstr "1.2.3.4 ou 1.2.3.0/24"
 
 msgid "15 minutes"
-msgstr ""
+msgstr "15 minutes"
 
 msgid "24 hours"
-msgstr ""
+msgstr "24 heures"
 
 #. Used in the browser
 msgid "2FA disabled"
-msgstr ""
+msgstr "2FA désactivé"
 
 #. Used in the browser
 msgid "2FA enabled successfully!"
-msgstr ""
+msgstr "La double authentification a été activée avec succès !"
 
 msgid "30 days"
-msgstr ""
+msgstr "30 jours"
 
 msgid "30 minutes"
-msgstr ""
+msgstr "30 minutes"
 
 #. Used in the browser
 msgid "301 permanent"
-msgstr ""
+msgstr "301 permanent"
 
 #. Used in the browser
 msgid "302 temporary"
-msgstr ""
+msgstr "302 temporaire"
 
 msgid "4 hours"
-msgstr ""
+msgstr "4 heures"
 
 msgid "5 minutes"
-msgstr ""
+msgstr "5 minutes"
 
 msgid "7 days"
-msgstr ""
+msgstr "7 jours"
 
 #. Used in the browser
 #, python-brace-format
@@ -479,54 +510,71 @@ msgid ""
 ": {disabled} disabled, {down} unreachable, {degraded} degraded, {warnings} "
 "warnings"
 msgstr ""
+": {disabled} désactivé, {down} inaccessible, {degraded} dégradé, {warnings} "
+"avertissements"
 
 #, python-format
 msgid ""
 "A backup is created automatically before every save. Restore from "
 "%(backups)s if something goes wrong."
 msgstr ""
+"Une sauvegarde est créée automatiquement avant chaque enregistrement. "
+"Restaurez à partir de %(backups)s en cas de problème."
 
 msgid "A backup is created automatically before restoring."
-msgstr ""
+msgstr "Une sauvegarde est créée automatiquement avant la restauration."
 
 msgid ""
 "A backup is taken first and Traefik is restarted afterwards, because it only "
 "reads acme.json at startup."
 msgstr ""
+"Une sauvegarde est effectuée en premier lieu, puis Traefik est redémarré, "
+"car il ne lit le fichier acme.json qu'au démarrage."
 
 #. Used in the browser
 msgid "A bouncer API key cannot read alerts."
-msgstr ""
+msgstr "Une clé API Bouncer ne peut pas lire les alertes."
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
 "A bouncer API key reads {v1_decisions} and nothing else. {ATK_MACHINE_NOTE}"
 msgstr ""
+"Une clé API Bouncer lit {v1_decisions} et rien d'autre. {ATK_MACHINE_NOTE}"
 
 msgid ""
 "A convenience list for the route form's host dropdown. It does not change "
 "your Traefik config, your TLS, or your routing - domains found in existing "
 "routes are picked up automatically, so this is just seeding."
 msgstr ""
+"Une liste pratique pour le menu déroulant « host » du formulaire de route. "
+"Elle ne modifie ni votre configuration Traefik, ni le TLS, ni le routage ; "
+"les domaines présents dans les routes existantes sont détectés "
+"automatiquement, il s'agit donc simplement d'une initialisation."
 
 #. Used in the browser
 msgid ""
 "A copy of acme.json is saved to your backups first, and can be restored from "
 "Settings, Backups, Certificates."
 msgstr ""
+"Une copie de acme.json est d'abord enregistrée dans vos sauvegardes et peut "
+"être restaurée depuis Paramètres, Sauvegardes, Certificats."
 
 #. Used in the browser
 msgid "A forwardAuth middleware is in use, so this is high priority."
 msgstr ""
+"Un middleware forwardAuth est utilisé ; il s'agit donc d'une priorité élevée."
 
 msgid "A label for the device this key belongs to."
-msgstr ""
+msgstr "Une étiquette pour l'appareil auquel cette clé appartient."
 
 msgid ""
 "A personal access token with write access to that one repository. Stored "
 "encrypted, and never shown again after setup."
 msgstr ""
+"Un jeton d'accès personnel disposant d'un droit d'écriture sur ce dépôt "
+"spécifique. Il est stocké de manière chiffrée et n'est plus jamais affiché "
+"après sa configuration."
 
 #, python-format
 msgid "A service named '%(name)s' already exists"
@@ -1863,11 +1911,11 @@ msgstr ""
 #. Used in the browser
 msgctxt "label"
 msgid "Certs"
-msgstr ""
+msgstr "Certificats"
 
 msgctxt "setting"
 msgid "Certs"
-msgstr ""
+msgstr "Certificats"
 
 #. Used in the browser
 msgid "Challenge type"
@@ -14855,7 +14903,7 @@ msgid "← Back to sign in"
 msgstr ""
 
 #. Used in the browser
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "✓ Connected - Traefik v{version}"
 msgstr "✓ Connecté - Traefik v{version}"
 
