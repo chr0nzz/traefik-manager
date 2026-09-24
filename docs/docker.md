@@ -420,6 +420,25 @@ docker run -d \
 
 ---
 
+## Running as a non-root user
+
+The container runs as root unless you ask otherwise, so upgrading never changes how an existing install runs. To run it as an unprivileged user, give that user your mounted paths on the host, then set `PUID` and `PGID`:
+
+```bash
+sudo chown -R 1000:1000 /path/to/traefik-manager/config /path/to/traefik-manager/backups
+sudo chown 1000:1000 /path/to/traefik/dynamic.yml
+```
+
+```yaml
+environment:
+  - PUID=1000
+  - PGID=1000
+```
+
+A mounted Docker socket keeps working: the user is added to the group that owns it. If the configuration directory is not writable by that user, the container stops at startup and says which directory and which `chown` to run. See [`PUID` / `PGID`](env-vars.md#puid-pgid) for the details.
+
+---
+
 ## Password reset
 
 ```bash

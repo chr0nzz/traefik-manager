@@ -314,6 +314,13 @@ A directory is read **one level deep**, not recursively. Point it at the folder 
 | `DOCKER_HOST` | - | e.g. `tcp://socket-proxy:2375` (used by `proxy`) |
 | `SIGNAL_FILE_PATH` | - | e.g. `/signals/restart.sig` (used by `poison-pill`) |
 
+### Running as a non-root user
+
+| Variable | Default | Description |
+|---|---|---|
+| `PUID` | - | Run the agent as this user id instead of root. Its config and `BACKUP_DIR` must be writable by it. Same behaviour as the app image, see [`PUID` / `PGID`](env-vars.md#puid-pgid) |
+| `PGID` | same as `PUID` | Group id to run as when `PUID` is set |
+
 ### CrowdSec
 
 Setup, credential generation and what each credential unlocks are in [CrowdSec on an agent](#crowdsec-on-an-agent).

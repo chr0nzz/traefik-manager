@@ -27,9 +27,10 @@ htmlcov/
 ruff.toml
 Makefile
 scripts/
-# ...except the asset fetcher and its checksums, which the image build runs.
+# ...except the asset fetcher and its checksums, which the image build runs, and the entrypoint it ships.
 !scripts/fetch-asset.sh
 !scripts/vendor-assets.sha256
+!scripts/docker-entrypoint.sh
 
 # Docker
 docker-compose.yml

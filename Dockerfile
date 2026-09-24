@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.title="Traefik Manager" \
       org.opencontainers.image.source="https://github.com/chr0nzz/traefik-manager" \
       org.opencontainers.image.licenses="GPL-3.0"
 
-RUN apk add --no-cache curl tar git tzdata
+RUN apk add --no-cache curl tar git tzdata su-exec
 
 WORKDIR /app
 
@@ -92,4 +92,6 @@ ENV HOME=/tmp
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:5000/ || exit 1
 
+RUN chmod +x /app/scripts/docker-entrypoint.sh
+ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
 CMD ["gunicorn", "--config", "/app/gunicorn.conf.py", "app:app"]

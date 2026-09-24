@@ -128,6 +128,8 @@ from `manager.yml` and restart.
 | `GUNICORN_BIND` | `0.0.0.0:5000` | - | Address the server binds inside the container. Change the published port in your compose file instead |
 | `BASE_PATH` | _(none)_ | - | Serve Traefik Manager under a sub path, for example `/traefik-manager` |
 | `LOG_LEVEL` | `INFO` | - | Python log level: `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+| `PUID` | _(unset, runs as root)_ | - | Run the container as this user id instead of root. Everything you mount must be writable by it. [Details](#puid-pgid) |
+| `PGID` | same as `PUID` | - | Group id to run as when `PUID` is set |
 
 ---
 
@@ -983,3 +985,36 @@ Environment=PROXY_FIX_HOPS=2
 ::: warning
 Only count hops you actually control. Each trusted hop is one more `X-Forwarded-For` entry a client could forge, so setting this higher than your real proxy chain lets callers spoof their source IP past the login rate-limiter and audit log. Set it to `0` to ignore `X-Forwarded-For` entirely and use the direct connection IP.
 :::
+
+---
+
+### `PUID` / `PGID`
+
+Run the container as an unprivileged user instead of root. Both are unset by default, so an existing install keeps running as root and nothing changes when you upgrade.
+
+With `PUID` set, the container starts as root only long enough to create a user with that id, with `PGID` as its group (the same number as `PUID` when `PGID` is unset). It gives that user the image's own `/app/config` and `/app/backups` when you have not mounted them, and adds it to the group that owns `/var/run/docker.sock` when the socket is mounted, so the `socket` restart method keeps working. It then starts Traefik Manager as that user. It never changes the ownership of anything you mount.
+
+Everything you mount has to be writable by that user, so hand the paths over on the host first:
+
+```bash
+sudo chown -R 1000:1000 /path/to/traefik-manager/config /path/to/traefik-manager/backups
+sudo chown 1000:1000 /path/to/traefik/dynamic.yml
+```
+
+:::tabs
+== Docker / Podman
+```yaml
+environment:
+  - PUID=1000
+  - PGID=1000
+```
+:::
+
+If the configuration directory is not writable by that user, the container stops at startup with a message naming the directory and the `chown` to run, instead of starting half-working. Other paths it cannot write, such as the backups directory or a dynamic config file, are reported in the log at startup.
+
+Prefer this over `docker run --user`: `--user` skips preparing the image's own directories and the Docker socket group.
+
+::: tip
+On Unraid the usual values are `PUID=99` and `PGID=100`. The agent image supports the same two variables.
+:::
+
