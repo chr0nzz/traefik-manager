@@ -4,6 +4,8 @@ on:
   pull_request_target:
     types: [opened, reopened, edited, synchronize]
 
+permissions: {}
+
 jobs:
   enforce-dev-base:
     if: github.actor != github.repository_owner
