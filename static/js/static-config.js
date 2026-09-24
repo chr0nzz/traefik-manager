@@ -1895,7 +1895,7 @@ function _buildStaticClassicHTML() {
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfEpHttp3" class="rounded" style="accent-color:var(--blue)">
                 <span class="text-xs" style="color:var(--text)">${th('Enable HTTP/3 (QUIC)')}</span>
-                <span class="text-xs" style="color:var(--muted)">${th('- adds {http3} to this entrypoint', { http3: tmHtml(`<code class="font-mono">http3: {}</code>`) })}</span>
+                <span class="text-xs" style="color:var(--muted)">- ${th('adds {http3} to this entrypoint', { http3: tmHtml(`<code class="font-mono">http3: {}</code>`) })}</span>
             </div>
             <div id="sfEpUnderscoreRow" style="display:none">
                 <label class="text-xs block mb-1" style="color:var(--muted)"><span id="sfEpHdrLabel">${th('Alias Headers')}</span> <span style="color:var(--muted);font-weight:400">${thc('setting', '(security)')}</span></label>
@@ -1921,12 +1921,12 @@ function _buildStaticClassicHTML() {
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfEpFwdInsecure" class="rounded" style="accent-color:var(--red)">
                 <span class="text-xs" style="color:var(--text)">${th('Trust forwarded headers from everyone')}</span>
-                <span class="text-xs" style="color:var(--red)">${th('- insecure, lets any client forge its IP')}</span>
+                <span class="text-xs" style="color:var(--red)">- ${th('insecure, lets any client forge its IP')}</span>
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfEpProxyInsecure" class="rounded" style="accent-color:var(--red)">
                 <span class="text-xs" style="color:var(--text)">${th('Accept PROXY protocol from everyone')}</span>
-                <span class="text-xs" style="color:var(--red)">${th('- insecure, testing only')}</span>
+                <span class="text-xs" style="color:var(--red)">- ${th('insecure, testing only')}</span>
             </div>
             <div>
                 <label class="text-xs block mb-1" style="color:var(--muted)">${th('Middleware chain {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
@@ -1936,7 +1936,7 @@ function _buildStaticClassicHTML() {
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfEpTlsEnabled" class="rounded" style="accent-color:var(--blue)" onchange="document.getElementById('sfEpTlsRow').style.display = this.checked ? '' : 'none'">
                 <span class="text-xs" style="color:var(--text)">${th('TLS on every router')}</span>
-                <span class="text-xs" style="color:var(--muted)">${th('- adds {http_tls} so routers here get TLS by default', { http_tls: tmHtml(`<code class="font-mono">http.tls</code>`) })}</span>
+                <span class="text-xs" style="color:var(--muted)">- ${th('adds {http_tls} so routers here get TLS by default', { http_tls: tmHtml(`<code class="font-mono">http.tls</code>`) })}</span>
             </div>
             <div id="sfEpTlsRow" class="grid grid-cols-1 sm:grid-cols-2 gap-3" style="display:none">
                 <div>
@@ -1951,7 +1951,7 @@ function _buildStaticClassicHTML() {
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfEpAsDefault" class="rounded" style="accent-color:var(--blue)">
                 <span class="text-xs" style="color:var(--text)">${th('Default entrypoint')}</span>
-                <span class="text-xs" style="color:var(--muted)">${th('- used by routers that list no entrypoints')}</span>
+                <span class="text-xs" style="color:var(--muted)">- ${th('used by routers that list no entrypoints')}</span>
             </div>
             <div>
                 <label class="text-xs block mb-1" style="color:var(--muted)">${th('Responding timeouts {optional_e_g}', { optional_e_g: tmHtml(`<span style="font-weight:400">${th('(optional, e.g. 60s, 1m30s, 0 = unlimited)')}</span>`) })}</label>
@@ -2070,7 +2070,7 @@ function _buildStaticClassicHTML() {
             <div class="flex items-center gap-2">
                 <input type="checkbox" id="sfPluginLocal" class="rounded" style="accent-color:var(--teal)" onchange="document.getElementById('sfPluginVersion').disabled = this.checked">
                 <span class="text-xs" style="color:var(--text)">${th('Local plugin')}</span>
-                <span class="text-xs" style="color:var(--muted)">${th('- loaded from the {plugins_local} directory, no version needed', { plugins_local: tmHtml(`<code class="font-mono">plugins-local</code>`) })}</span>
+                <span class="text-xs" style="color:var(--muted)">- ${th('loaded from the {plugins_local} directory, no version needed', { plugins_local: tmHtml(`<code class="font-mono">plugins-local</code>`) })}</span>
             </div>
             <div class="flex gap-2 justify-end pt-1">
                 <button onclick="closeStaticForm('plugins')" class="btn-secondary text-xs">${thc('button', 'Cancel')}</button>
@@ -2269,7 +2269,7 @@ function _buildStaticClassicHTML() {
             <div>
                 <p class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">${th('Servers transport defaults')}</p>
                 <div class="tab-toggle-row" onclick="staticToggle('stInsecure')">
-                    <span class="text-sm" style="color:var(--text)">${th('Skip backend TLS verification {insecure}', { insecure: tmHtml(`<span class="text-xs" style="color:var(--red)">${th('- insecure')}</span>`) })}</span>
+                    <span class="text-sm" style="color:var(--text)">${th('Skip backend TLS verification {insecure}', { insecure: tmHtml(`<span class="text-xs" style="color:var(--red)">- ${th('insecure')}</span>`) })}</span>
                     <div class="toggle-switch" id="staticT-stInsecure"><div class="toggle-knob"></div></div>
                 </div>
             </div>

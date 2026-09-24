@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-22 15:52+0000\n"
+"POT-Creation-Date: 2026-09-24 18:58+0000\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: zh_Hans <LL@li.org>\n"
@@ -281,96 +281,6 @@ msgstr ""
 msgid "+{rest} requests across {more}"
 msgstr ""
 
-#. Used in the browser
-msgid ", all live"
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid ""
-", although other file-provider routes are live. If you saved it seconds ago, "
-"close and reopen. Otherwise check the Traefik logs for a config "
-"error{configFile}. Showing your saved configuration."
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid ", and that {span} is inside the watched path"
-msgstr ""
-
-#. Used in the browser
-msgid ", nothing matches this. Click to clear"
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid ""
-", so this route is not being served. Traefik is most likely not watching the "
-"file Traefik Manager writes to - check that both containers mount the same "
-"config path and that {providers_file} points at it with {watch_true}. "
-"Showing your saved configuration."
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid ", {hit} matches. Click to clear"
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid "- adds {http3} to this entrypoint"
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid "- adds {http_tls} so routers here get TLS by default"
-msgstr ""
-
-#, python-format
-msgid "- controlled by %(auth_enabled)s env var"
-msgstr ""
-
-#. Used in the browser
-msgid "- insecure"
-msgstr ""
-
-#. Used in the browser
-msgid "- insecure, lets any client forge its IP"
-msgstr ""
-
-#. Used in the browser
-msgid "- insecure, testing only"
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid "- loaded from the {plugins_local} directory, no version needed"
-msgstr ""
-
-msgid "- restore it under Dashboard settings"
-msgstr ""
-
-#. Used in the browser
-msgid "- showing your saved configuration."
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid ""
-"- showing your saved configuration. Check the API URL under Settings > "
-"Connection, and that Traefik has {api} enabled."
-msgstr ""
-
-#. Used in the browser
-msgid "- used by routers that list no entrypoints"
-msgstr ""
-
-#. Used in the browser
-msgid ""
-". CrowdSec only accepts a bouncer key on /v1/decisions, the machine token is "
-"refused there, so CROWDSEC_API_KEY has to be set as well."
-msgstr ""
-
 msgid "/ (server root)"
 msgstr ""
 
@@ -465,13 +375,6 @@ msgid "5 minutes"
 msgstr ""
 
 msgid "7 days"
-msgstr ""
-
-#. Used in the browser
-#, python-brace-format
-msgid ""
-": {disabled} disabled, {down} unreachable, {degraded} degraded, {warnings} "
-"warnings"
 msgstr ""
 
 #, python-format
@@ -11060,6 +10963,16 @@ msgid "added by hand"
 msgstr ""
 
 #. Used in the browser
+#, python-brace-format
+msgid "adds {http3} to this entrypoint"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "adds {http_tls} so routers here get TLS by default"
+msgstr ""
+
+#. Used in the browser
 msgctxt "label"
 msgid "alert"
 msgstr ""
@@ -11400,6 +11313,10 @@ msgstr ""
 
 #. Used in the browser
 msgid "configured in traefik.yml"
+msgstr ""
+
+#, python-format
+msgid "controlled by %(auth_enabled)s env var"
 msgstr ""
 
 #. Used in the browser
@@ -11799,6 +11716,14 @@ msgid "insecure on"
 msgstr ""
 
 #. Used in the browser
+msgid "insecure, lets any client forge its IP"
+msgstr ""
+
+#. Used in the browser
+msgid "insecure, testing only"
+msgstr ""
+
+#. Used in the browser
 msgid "insecureSkipVerify - backend certificate not verified"
 msgstr ""
 
@@ -11886,6 +11811,11 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "load {wider} lines"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "loaded from the {plugins_local} directory, no version needed"
 msgstr ""
 
 #. Used in the browser
@@ -12720,6 +12650,9 @@ msgstr ""
 msgid "resp header (0)"
 msgstr ""
 
+msgid "restore it under Dashboard settings"
+msgstr ""
+
 #. Used in the browser
 msgid "retained alerts match every filter at once"
 msgstr ""
@@ -13242,6 +13175,10 @@ msgid "usage stats on"
 msgstr ""
 
 #. Used in the browser
+msgid "used by routers that list no entrypoints"
+msgstr ""
+
+#. Used in the browser
 #, python-brace-format
 msgid "used by {n} middleware"
 msgid_plural "used by {n} middlewares"
@@ -13551,12 +13488,14 @@ msgstr[0] ""
 #. Used in the browser
 #, python-brace-format
 msgid "{count} degraded"
-msgstr ""
+msgid_plural "{count} degraded"
+msgstr[0] ""
 
 #. Used in the browser
 #, python-brace-format
 msgid "{count} disabled"
-msgstr ""
+msgid_plural "{count} disabled"
+msgstr[0] ""
 
 #. Used in the browser
 #, python-brace-format
@@ -13797,8 +13736,15 @@ msgstr[0] ""
 
 #. Used in the browser
 #, python-brace-format
-msgid "{count} router on {name}"
-msgid_plural "{count} routers on {name}"
+msgid "{count} router on {name}, live"
+msgid_plural "{count} routers on {name}, all live"
+msgstr[0] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{count} router on {name}: {disabled}, {down}, {degraded}, {warnings}"
+msgid_plural ""
+"{count} routers on {name}: {disabled}, {down}, {degraded}, {warnings}"
 msgstr[0] ""
 
 #. Used in the browser
@@ -13856,7 +13802,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "{count} unbound"
-msgstr ""
+msgid_plural "{count} unbound"
+msgstr[0] ""
 
 #. Used in the browser
 #, python-brace-format
@@ -13866,7 +13813,8 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "{count} unreachable"
-msgstr ""
+msgid_plural "{count} unreachable"
+msgstr[0] ""
 
 #. Used in the browser
 #, python-brace-format
@@ -13984,6 +13932,13 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid ""
+"{error}. CrowdSec only accepts a bouncer key on /v1/decisions, the machine "
+"token is refused there, so CROWDSEC_API_KEY has to be set as well."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{evTotal} events rolled up"
 msgstr ""
 
@@ -14092,6 +14047,17 @@ msgstr ""
 #, python-brace-format
 msgid "{key}, no route of that name here"
 msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{k} = {v}, nothing matches this. Click to clear"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{k} = {v}, {hit} match. Click to clear"
+msgid_plural "{k} = {v}, {hit} matches. Click to clear"
+msgstr[0] ""
 
 #. Used in the browser
 #, python-brace-format
@@ -14605,6 +14571,44 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "{timed_count} timed requests, median {lgMs}, slowest {lgMs2}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{title} - showing your saved configuration."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{title} - showing your saved configuration. Check the API URL under Settings "
+"> Connection, and that Traefik has {api} enabled."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{title}, although other file-provider routes are live. If you saved it "
+"seconds ago, close and reopen. Otherwise check the Traefik logs for a config "
+"error, and that {span} is inside the watched path. Showing your saved "
+"configuration."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{title}, although other file-provider routes are live. If you saved it "
+"seconds ago, close and reopen. Otherwise check the Traefik logs for a config "
+"error. Showing your saved configuration."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{title}, so this route is not being served. Traefik is most likely not "
+"watching the file Traefik Manager writes to - check that both containers "
+"mount the same config path and that {providers_file} points at it with "
+"{watch_true}. Showing your saved configuration."
 msgstr ""
 
 #. Used in the browser

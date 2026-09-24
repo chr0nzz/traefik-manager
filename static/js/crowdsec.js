@@ -558,7 +558,7 @@ async function _csApplySummary(sum) {
     _csDecStale = _csLapiOk ? String(dec.stale || '') : '';
     _csDecErr   = _csLapiOk ? '' : (dec.error || t('CrowdSec LAPI unavailable'));
     if (!_csLapiOk && /\b403\b/.test(_csDecErr) && !/bouncer/i.test(_csDecErr)) {
-        _csDecErr += t('. CrowdSec only accepts a bouncer key on /v1/decisions, the machine token is refused there, so CROWDSEC_API_KEY has to be set as well.');
+        _csDecErr = t('{error}. CrowdSec only accepts a bouncer key on /v1/decisions, the machine token is refused there, so CROWDSEC_API_KEY has to be set as well.', { error: _csDecErr });
     }
     _csAlertsOk  = alt.ok === true;
     _csAltStatus = parseInt(alt.status, 10) || 0;
@@ -1262,7 +1262,9 @@ function _atkKeyRow(d, sel) {
             const tip = ignored
                 ? (alertOnly ? t('{k} = {v}. This filter only applies to alerts and is ignored in this view. Click to clear', { k, v })
                    : t('{k} = {v}. This filter only applies to decisions and is ignored in this view. Click to clear', { k, v }))
-                : k + ' = ' + v + (hit ? t(', {hit} matches. Click to clear', { hit: _sdNum(hit) }) : t(', nothing matches this. Click to clear'));
+                : hit
+                ? tn('{k} = {v}, {hit} match. Click to clear', '{k} = {v}, {hit} matches. Click to clear', hit, { k, v, hit: _sdNum(hit) })
+                : t('{k} = {v}, nothing matches this. Click to clear', { k, v });
             html += `<button type="button" class="sig-key-item ${hit && !ignored ? 'sig-key-on' : 'sig-key-empty'}" data-atk="${_esc(_atkSpec({ [k]: v }))}" title="${_esc(tip)}"><i class="ph-bold ph-funnel"></i>${_esc(k)}<b>${_esc(_atkClip(v, 24))}</b></button>`;
         });
         if (_atkQuery) {

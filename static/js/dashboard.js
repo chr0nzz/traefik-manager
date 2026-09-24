@@ -421,11 +421,11 @@ function _sdHealth(t) {
 function _sdAria(label, total, tally) {
     if (total === 0) return t('no {label} configured', { label });
     const bits = [];
-    if (tally.disabled)  bits.push(t('{count} disabled', { count: tally.disabled }));
-    if (tally.down)      bits.push(t('{count} unreachable', { count: tally.down }));
+    if (tally.disabled)  bits.push(tn('{count} disabled', '{count} disabled', tally.disabled, { count: tally.disabled }));
+    if (tally.down)      bits.push(tn('{count} unreachable', '{count} unreachable', tally.down, { count: tally.down }));
     if (tally.warning)   bits.push(tn('{count} warning', '{count} warnings', tally.warning, { count: tally.warning }));
-    if (tally.degraded)  bits.push(t('{count} degraded', { count: tally.degraded }));
-    if (tally.unbound)   bits.push(t('{count} unbound', { count: tally.unbound }));
+    if (tally.degraded)  bits.push(tn('{count} degraded', '{count} degraded', tally.degraded, { count: tally.degraded }));
+    if (tally.unbound)   bits.push(tn('{count} unbound', '{count} unbound', tally.unbound, { count: tally.unbound }));
     if (tally.unused)    bits.push(t('{count} unused', { count: tally.unused }));
     if (tally.composite) bits.push(t('{count} composite', { count: tally.composite }));
     if (tally.unchecked) bits.push(t('{count} unchecked', { count: tally.unchecked }));
@@ -575,11 +575,15 @@ function _sdEpRow(ep, info) {
         ? t('router bindings for {name} could not be read from the Traefik API', { name: ep.name })
         : info.n === 0
         ? t('no routers bound to {name}', { name: ep.name })
-        : tn('{count} router on {name}', '{count} routers on {name}', info.n, { count: _sdNum(info.n), name: ep.name })
-          + ((info.err || info.warn)
-              ? t(': {disabled} disabled, {down} unreachable, {degraded} degraded, {warnings} warnings',
-                  { disabled: info.err - (info.down || 0), down: info.down || 0, degraded: degradedN, warnings: warnN })
-              : t(', all live'));
+        : (info.err || info.warn)
+        ? tn('{count} router on {name}: {disabled}, {down}, {degraded}, {warnings}',
+             '{count} routers on {name}: {disabled}, {down}, {degraded}, {warnings}', info.n, {
+                 count: _sdNum(info.n), name: ep.name,
+                 disabled: tn('{count} disabled', '{count} disabled', disabledN, { count: _sdNum(disabledN) }),
+                 down: tn('{count} unreachable', '{count} unreachable', info.down || 0, { count: _sdNum(info.down || 0) }),
+                 degraded: tn('{count} degraded', '{count} degraded', degradedN, { count: _sdNum(degradedN) }),
+                 warnings: tn('{count} warning', '{count} warnings', warnN, { count: _sdNum(warnN) }) })
+        : tn('{count} router on {name}, live', '{count} routers on {name}, all live', info.n, { count: _sdNum(info.n), name: ep.name });
     return `<div class="sig-ep-row" data-health="${health}" tabindex="0" role="button" data-sd="${_esc(go)}"><span class="sig-ep-id"><span class="d-proto ${p.cls} sig-proto">${p.tag}</span><span class="sig-ep-name">${_esc(ep.name)}</span>${_sdEpGlyphs(ep, info)}</span><span class="sig-ep-addr">${_esc(ep.address || '')}</span><span class="sig-ep-strip">${_sdStrip(info.cells, aria, 'sig-strip-xs')}</span><span class="sig-ep-n${info.blind || info.n === 0 ? ' sig-ep-n0' : ''}" title="${info.blind ? th('Router list unavailable') : th('Routers bound, counted from router.using[]')}">${info.blind ? '-' : _sdNum(info.n)}</span><span class="sig-ep-flags">${flagHtml}</span><span class="sig-ep-sub">${facts.length ? facts.map(_esc).join(SD_SEP) : th('no extra configuration')}</span><span class="sig-ep-kind">${_esc(_sdEpKind(ep, info))}</span></div>`;
 }
 
@@ -815,7 +819,7 @@ function _sdRender(model) {
         explore: hGo, exploreLabel: tc('button', 'Explore'),
         sub: h.total === 0 ? _sdSubPlain(emptyTxt('http')) : _sdSubOffender(h.objs,
             (h.truncated ? th('{ok} live of {count} listed', { ok: _sdNum(h.t.ok), count: _sdNum(h.objs.length) }) : th('{ok} live', { ok: _sdNum(h.t.ok) }))
-            + (h.t.unbound ? SD_SEP + th('{count} unbound', { count: _sdNum(h.t.unbound) }) : '')),
+            + (h.t.unbound ? SD_SEP + thn('{count} unbound', '{count} unbound', h.t.unbound, { count: _sdNum(h.t.unbound) }) : '')),
         flags: [
             h.t.disabled && _sdExc('d-bad',  'ph-fill ph-x-circle', h.t.disabled, tc('label', 'disabled'),   hGo + ';apistatus=disabled', h.groups.disabled),
             h.t.down     && _sdExc('d-bad',  'ph-fill ph-warning-octagon', h.t.down, tc('label', 'unreachable'), hGo + ';apistatus=unreachable', h.groups.down),

@@ -2311,12 +2311,14 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
         : isDisabled
         ? `<div class="flex items-center gap-1.5 text-xs mb-5 p-2 rounded" style="color:var(--muted);background:var(--input-bg);border:1px solid var(--border)"><i class="ph-bold ph-pause-circle text-sm"></i> ${th('Not served by Traefik while disabled - showing your saved configuration')}</div>`
         : !(apiState && apiState.reachable)
-        ? _warnNote(`<b>${th('Traefik API unreachable')}</b> ${th('- showing your saved configuration. Check the API URL under Settings > Connection, and that Traefik has {api} enabled.', { api: tmHtml(`<span class="font-mono">api: {}</span>`) })}`)
+        ? _warnNote(th('{title} - showing your saved configuration. Check the API URL under Settings > Connection, and that Traefik has {api} enabled.', { title: tmHtml(`<b>${th('Traefik API unreachable')}</b>`), api: tmHtml(`<span class="font-mono">api: {}</span>`) }))
         : isFileRoute && apiState.fileRouters === 0
-        ? _warnNote(`<b>${th('Traefik is running but has loaded nothing from the file provider')}</b>${th(', so this route is not being served. Traefik is most likely not watching the file Traefik Manager writes to - check that both containers mount the same config path and that {providers_file} points at it with {watch_true}. Showing your saved configuration.', { providers_file: tmHtml(`<span class="font-mono">providers.file</span>`), watch_true: tmHtml(`<span class="font-mono">watch: true</span>`) })}`)
+        ? _warnNote(th('{title}, so this route is not being served. Traefik is most likely not watching the file Traefik Manager writes to - check that both containers mount the same config path and that {providers_file} points at it with {watch_true}. Showing your saved configuration.', { title: tmHtml(`<b>${th('Traefik is running but has loaded nothing from the file provider')}</b>`), providers_file: tmHtml(`<span class="font-mono">providers.file</span>`), watch_true: tmHtml(`<span class="font-mono">watch: true</span>`) }))
         : isFileRoute
-        ? _warnNote(`<b>${th('Traefik has not loaded this route')}</b>${th(', although other file-provider routes are live. If you saved it seconds ago, close and reopen. Otherwise check the Traefik logs for a config error{configFile}. Showing your saved configuration.', { configFile: tmHtml(app.configFile ? `${th(', and that {span} is inside the watched path', { span: tmHtml(`<span class="font-mono">${_esc(app.configFile)}</span>`) })}` : '') })}`)
-        : _warnNote(`<b>${th('Traefik does not report this route')}</b> ${th('- showing your saved configuration.')}`);
+        ? _warnNote(app.configFile
+            ? th('{title}, although other file-provider routes are live. If you saved it seconds ago, close and reopen. Otherwise check the Traefik logs for a config error, and that {span} is inside the watched path. Showing your saved configuration.', { title: tmHtml(`<b>${th('Traefik has not loaded this route')}</b>`), span: tmHtml(`<span class="font-mono">${_esc(app.configFile)}</span>`) })
+            : th('{title}, although other file-provider routes are live. If you saved it seconds ago, close and reopen. Otherwise check the Traefik logs for a config error. Showing your saved configuration.', { title: tmHtml(`<b>${th('Traefik has not loaded this route')}</b>`) }))
+        : _warnNote(th('{title} - showing your saved configuration.', { title: tmHtml(`<b>${th('Traefik does not report this route')}</b>`) }));
 
     
     const routerEPs = (liveRouter ? liveRouter.entryPoints : app.entryPoints) || [];

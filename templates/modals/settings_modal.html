@@ -608,7 +608,7 @@
                                         <div class="sc-set">
                                             <div class="sc-set-l">
                                                 <div class="sc-set-n">{{ _('Built-in authentication') }}</div>
-                                                <div class="sc-set-d" id="authEnabledNotice">{{ _('Auth is %(auth_state)s', auth_state=tag('strong', pgettext('status', 'enabled'), id='authStateLabel', style='color:var(--green)', data_state='on')) }}<span id="authEnvForcedNote" class="hidden"> {{ _('- controlled by %(auth_enabled)s env var', auth_enabled=tag('code', 'AUTH_ENABLED')) }}</span></div>
+                                                <div class="sc-set-d" id="authEnabledNotice">{{ _('Auth is %(auth_state)s', auth_state=tag('strong', pgettext('status', 'enabled'), id='authStateLabel', style='color:var(--green)', data_state='on')) }}<span id="authEnvForcedNote" class="hidden"> - {{ _('controlled by %(auth_enabled)s env var', auth_enabled=tag('code', 'AUTH_ENABLED')) }}</span></div>
                                             </div>
                                             <div class="sc-set-v">
                                                 <button id="authToggleBtn" onclick="toggleAuth()" class="nav-btn text-xs hidden" title="{{ _('Enable or disable built-in auth') }}">
