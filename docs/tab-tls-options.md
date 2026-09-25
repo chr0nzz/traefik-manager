@@ -16,7 +16,7 @@ Click **Add TLS Profile** and fill in:
 
 | Field | Description |
 |---|---|
-| Config File | Shown when multiple config files are mounted. Select an existing file or **+ New file...** to name one. |
+| Config File | Shown when multiple config files are mounted. Select an existing file or **+ New file…** to name one. |
 | Profile Name | The key used in `tls.options` and referenced in router configs (e.g. `modern`, `strict`, `default`). Cannot be changed after creation. |
 | Min TLS Version | Default, TLS 1.0, 1.1, 1.2 or 1.3. Recommended: TLS 1.2. |
 | Max TLS Version | Default, or an upper bound. |

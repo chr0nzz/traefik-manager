@@ -439,7 +439,7 @@ async function refreshCertsTab() {
         _certsFor = srv;
     };
     const container = document.getElementById('certsContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading certificates...')}</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading certificates…')}</p></div>`;
     try {
         const certRes = await agentFetch('/api/traefik/certs');
         if (stale()) return;
@@ -512,7 +512,7 @@ function _tlsSrv() {
 async function refreshTlsOptionsTab() {
     const el = document.getElementById('tlsOptsContent');
     if (!el) return;
-    el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading TLS profiles...')}</p></div>`;
+    el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading TLS profiles…')}</p></div>`;
     try {
         const res = await fetch('/api/tls-options' + (_tlsSrv() ? '?server=' + encodeURIComponent(_tlsSrv()) : ''));
         if (!res.ok) {

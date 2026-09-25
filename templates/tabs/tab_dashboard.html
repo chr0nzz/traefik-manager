@@ -3,7 +3,7 @@
     <div id="dashFilterBar" class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
         <div class="relative flex-1 min-w-48">
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-            <input type="search" id="dashSearch" oninput="dashApplyFilter()" placeholder="{{ _('Search routes...') }}" class="input-field pl-9" autocomplete="off" name="dash-search-nofill">
+            <input type="search" id="dashSearch" oninput="dashApplyFilter()" placeholder="{{ _('Search routes…') }}" class="input-field pl-9" autocomplete="off" name="dash-search-nofill">
         </div>
         <div id="dashProtoFilters" class="flex gap-1 p-1 rounded-lg fb-secondary" style="background:var(--input-bg); border:1px solid var(--border)">
             <button onclick="dashFilterProto('all')"  id="dashf-all"  class="proto-btn active-http text-xs px-3 py-1.5">{{ pgettext('button', 'All') }}</button>
@@ -21,7 +21,7 @@
 
     <div id="dashLoading" class="text-center py-20 hidden" style="color:var(--muted)">
         <i class="ph-light ph-squares-four text-6xl block mb-4 opacity-30" style="animation:pulse 1.5s ease-in-out infinite"></i>
-        <p class="text-sm">{{ _('Loading dashboard...') }}</p>
+        <p class="text-sm">{{ _('Loading dashboard…') }}</p>
     </div>
 
     <div id="dashEmpty" class="sig-root hidden">
@@ -72,7 +72,7 @@
                 <p class="text-xs" style="color:var(--muted)">{{ _('Assign a route to a group with the pencil on its card. A group disappears when nothing uses it.') }}</p>
                 <div id="rmGroupsList" class="mt-2"></div>
                 <div class="flex gap-2 mt-3">
-                    <input type="text" id="rmNewGroupName" placeholder="{{ _('New group name...') }}" class="input-field" style="flex:1" onkeydown="if(event.key==='Enter')rmAddCustomGroup()">
+                    <input type="text" id="rmNewGroupName" placeholder="{{ _('New group name…') }}" class="input-field" style="flex:1" onkeydown="if(event.key==='Enter')rmAddCustomGroup()">
                     <button onclick="rmAddCustomGroup()" class="btn-secondary text-xs" style="flex-shrink:0"><i class="ph-bold ph-plus"></i> {{ pgettext('button', 'Add') }}</button>
                 </div>
             </div>

@@ -1154,7 +1154,7 @@ async function testCrowdSec() {
     const url = (document.getElementById('s_cs_url').value || '').trim();
     const key = (document.getElementById('s_cs_key').value || '').trim();
     if (!url) { out.textContent = t('Enter a LAPI URL first'); out.style.color = 'var(--muted)'; return; }
-    out.textContent = tc('label', 'Testing...'); out.style.color = 'var(--muted)';
+    out.textContent = tc('label', 'Testing…'); out.style.color = 'var(--muted)';
     try {
         const res = await fetch('{{ url_for("setup_test_crowdsec") }}', {
             method: 'POST',
@@ -1171,7 +1171,7 @@ async function testGitRepo() {
     const out = document.getElementById('gitTestResult');
     const repo = (document.getElementById('s_git_repo').value || '').trim();
     if (!repo) { out.textContent = t('Enter a repository URL first'); out.style.color = 'var(--muted)'; return; }
-    out.textContent = tc('label', 'Testing...'); out.style.color = 'var(--muted)';
+    out.textContent = tc('label', 'Testing…'); out.style.color = 'var(--muted)';
     try {
         const res = await fetch('{{ url_for("setup_test_git") }}', {
             method: 'POST',

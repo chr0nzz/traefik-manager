@@ -172,7 +172,7 @@ function _wizIpStrategySync() {
 async function _populateMwErrorService() {
     const sel = document.getElementById('wizErrService');
     if (!sel) return;
-    sel.innerHTML = `<option value="">${th('Loading services...')}</option>`;
+    sel.innerHTML = `<option value="">${th('Loading services…')}</option>`;
     let svcs = [];
     try { svcs = (await _ensureServicesList()).http || []; } catch (e) { svcs = []; }
     sel.innerHTML = svcs.length
@@ -861,7 +861,7 @@ function _pluginsHydrate(c) {
 async function refreshPluginsTab() {
     const container = document.getElementById('pluginsContent');
     if (!tabCacheHydrate('plugins', _pluginsHydrate)) {
-        container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading plugins...')}</p></div>`;
+        container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading plugins…')}</p></div>`;
     }
     try {
         const availP = _activeAgent

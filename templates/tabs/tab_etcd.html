@@ -2,7 +2,7 @@
     <div class="flex flex-wrap gap-2 mb-4 items-center filter-bar">
         <div class="relative flex-1 min-w-48">
             <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-            <input type="text" id="etcdSearch" oninput="filterEtcd()" placeholder="{{ _('Search etcd routes...') }}" class="input-field pl-9">
+            <input type="text" id="etcdSearch" oninput="filterEtcd()" placeholder="{{ _('Search etcd routes…') }}" class="input-field pl-9">
         </div>
         <div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg); border:1px solid var(--border)">
             <button onclick="filterEtcd('all')"  id="et-all"  class="proto-btn active-http text-xs px-3 py-1.5">{{ pgettext('button', 'All') }}</button>
@@ -18,7 +18,7 @@
     <div id="etcdContent">
         <div class="text-center py-16" style="color:var(--muted)">
             <i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i>
-            <p>{{ _('Loading etcd routes...') }}</p>
+            <p>{{ _('Loading etcd routes…') }}</p>
         </div>
     </div>
     <div id="etcdMiddlewares"></div>

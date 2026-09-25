@@ -1123,7 +1123,7 @@ async function testChannel() {
     const btn = document.getElementById('chTestBtn');
     out.style.display = '';
     out.style.color = 'var(--muted)';
-    out.textContent = tc('label', 'Sending...');
+    out.textContent = tc('label', 'Sending…');
     btn.disabled = true;
     const id = await _persistChannel();
     if (!id) { btn.disabled = false; out.style.display = 'none'; return; }
@@ -1306,7 +1306,7 @@ async function toggleGeoip() {
         if (typeof _geoStatusLoaded !== 'undefined') { try { await loadGeoStatus(true); } catch(_) {} }
         if (_geoipEnabledState) {
             const r = await fetch('/api/geoip/status').then(r => r.json());
-            if (!r.available) { showToast(t('Geolocation on - downloading database...'), 'info'); updateGeoipDb(); }
+            if (!r.available) { showToast(t('Geolocation on - downloading database…'), 'info'); updateGeoipDb(); }
         }
         loadGeoipSettings();
     } catch(e) {
@@ -1317,7 +1317,7 @@ async function toggleGeoip() {
 }
 
 async function updateGeoipDb(btn) {
-    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="ph-bold ph-spinner-gap animate-spin text-xs"></i> ${thc('label', 'Downloading...')}`; }
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="ph-bold ph-spinner-gap animate-spin text-xs"></i> ${thc('label', 'Downloading…')}`; }
     try {
         const res = await fetch('/api/geoip/update', { method: 'POST', headers: _csrfHeaders() });
         if (!res.ok) { showToast(await _errText(res, t('Download failed')), 'error'); return; }
@@ -2142,7 +2142,7 @@ async function testOidcProvider() {
     const url    = document.getElementById('oidcProviderUrl')?.value.trim() || '';
     const result = document.getElementById('oidcTestResult');
     if (!url) return;
-    if (result) { result.textContent = tc('label', 'Testing...'); result.style.color = 'var(--muted)'; }
+    if (result) { result.textContent = tc('label', 'Testing…'); result.style.color = 'var(--muted)'; }
     try {
         const res  = await fetch('/api/auth/oidc/test', {
             method: 'POST',
@@ -2238,7 +2238,7 @@ function closeAgentKeys() {
 async function loadAgentKeys() {
     const list = document.getElementById('agentKeysList');
     if (!list || !_keysAgentId) return;
-    list.innerHTML = `<div class="text-xs" style="color:var(--muted)">${thc('label', 'Loading...')}</div>`;
+    list.innerHTML = `<div class="text-xs" style="color:var(--muted)">${thc('label', 'Loading…')}</div>`;
     try {
         const res  = await fetch('/api/agents/proxy/' + _keysAgentId + '/keys', { headers: _csrfHeaders() });
         if (!res.ok) {
@@ -2284,7 +2284,7 @@ async function createAgentKey() {
     const errEl = document.getElementById('agentKeyCreateErr');
     if (!name) { errEl.textContent = t('Enter a name for this key'); errEl.style.display = ''; return; }
     const btn = document.getElementById('agentKeyCreateBtn');
-    btn.disabled = true; btn.textContent = tc('button', 'Creating...');
+    btn.disabled = true; btn.textContent = tc('button', 'Creating…');
     errEl.style.display = 'none';
     try {
         const res  = await fetch('/api/agents/proxy/' + _keysAgentId + '/keys', {
@@ -2329,7 +2329,7 @@ async function loadActiveAgentKeys() {
     hideActiveAgentAddKeyForm();
     const list = document.getElementById('activeAgentKeysList');
     if (!list) return;
-    list.innerHTML = `<div class="text-xs" style="color:var(--muted)">${thc('label', 'Loading...')}</div>`;
+    list.innerHTML = `<div class="text-xs" style="color:var(--muted)">${thc('label', 'Loading…')}</div>`;
     try {
         const res  = await fetch('/api/agents/proxy/' + _activeAgent.id + '/keys', { headers: _csrfHeaders() });
         if (!res.ok) {
@@ -2377,7 +2377,7 @@ async function createActiveAgentKey() {
     const errEl = document.getElementById('activeAgentKeyCreateErr');
     if (!name) { errEl.textContent = t('Enter a name for this key'); errEl.style.display = ''; return; }
     const btn = document.getElementById('activeAgentKeyCreateBtn');
-    btn.disabled = true; btn.textContent = tc('button', 'Creating...');
+    btn.disabled = true; btn.textContent = tc('button', 'Creating…');
     errEl.style.display = 'none';
     try {
         const res  = await fetch('/api/agents/proxy/' + _activeAgent.id + '/keys', {
@@ -2495,7 +2495,7 @@ async function verifyAgentInstall() {
     if (!_agentWizId || !out) return;
     btn.disabled = true;
     out.style.color = 'var(--muted)';
-    out.textContent = tc('label', 'Checking...');
+    out.textContent = tc('label', 'Checking…');
     const say = (text, color) => { out.textContent = text; out.style.color = color; };
     try {
         const health = await fetch('/api/agents/' + _agentWizId + '/health').then(r => r.json());

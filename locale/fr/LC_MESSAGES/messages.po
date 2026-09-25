@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-24 22:34+0000\n"
+"POT-Creation-Date: 2026-09-25 15:20+0000\n"
 "PO-Revision-Date: 2026-09-25 15:08+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/traefik-manager/"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 "Generated-By: Babel 2.18.0\n"
-"X-Generator: Weblate 2026.10.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -268,8 +267,8 @@ msgid "(traefik answered, backend said {origin})"
 msgstr "(traefik a répondu, le backend a dit {origin})"
 
 #. Used in the browser
-msgid "+ New file..."
-msgstr "+ Nouveau fichier..."
+msgid "+ New file…"
+msgstr "+ Nouveau fichier…"
 
 #. Used in the browser
 #, python-brace-format
@@ -870,8 +869,8 @@ msgstr[1] "Ajout de {n} plages :"
 
 #. Used in the browser
 msgctxt "button"
-msgid "Adding..."
-msgstr "Ajout en cours..."
+msgid "Adding…"
+msgstr "Ajout en cours…"
 
 #. Used in the browser
 msgctxt "label"
@@ -997,8 +996,8 @@ msgstr "Agent supprimé"
 #, python-format
 msgid "Agent static config is not valid YAML: %(error)s"
 msgstr ""
-"La configuration statique de l'agent n'est pas un fichier YAML valide:%"
-"(error)s"
+"La configuration statique de l'agent n'est pas un fichier YAML valide:"
+"%(error)s"
 
 msgid "Agent timed out"
 msgstr "Délais d'attente de l'agent expiré"
@@ -1183,8 +1182,8 @@ msgid ""
 "Allows %(average)s req/s sustained, with a %(burst)s of extra requests over "
 "the %(period)s."
 msgstr ""
-"Autorise un débit soutenu de %(average)s requêtes/s, avec une rafale de %"
-"(burst)s requêtes supplémentaires sur %(period)s."
+"Autorise un débit soutenu de %(average)s requêtes/s, avec une rafale de "
+"%(burst)s requêtes supplémentaires sur %(period)s."
 
 msgid ""
 "Already protected by an external provider such as Authelia, Authentik or a "
@@ -1676,8 +1675,8 @@ msgid ""
 "to use the %(crowdsec_api_key)s env var."
 msgstr ""
 "Clé API du bouncer utilisée pour lire %(decisions)s. Stockée sous forme "
-"chiffrée. Laissez vide pour utiliser la variable d’environnement %"
-"(crowdsec_api_key)s."
+"chiffrée. Laissez vide pour utiliser la variable d’environnement "
+"%(crowdsec_api_key)s."
 
 msgid "Bouncer key, reads decisions."
 msgstr "Clé du bouncer, utilisée pour lire les décisions."
@@ -1717,8 +1716,8 @@ msgstr "Mise en tampon"
 #, python-format
 msgid "Buffering must be a whole number of lines, got %(buffer)s"
 msgstr ""
-"La taille du tampon doit être un nombre entier de lignes ; valeur reçue : %"
-"(buffer)s"
+"La taille du tampon doit être un nombre entier de lignes ; valeur reçue : "
+"%(buffer)s"
 
 msgid "Build backends"
 msgstr "Créer les backends"
@@ -1843,8 +1842,8 @@ msgid ""
 "Capture groups are %(n1)s, %(n2)s and so on. In a compose file %(code)s must "
 "be written %(code2)s."
 msgstr ""
-"Les groupes de capture sont %(n1)s, %(n2)s, etc. Dans un fichier Compose, %"
-"(code)s doit être écrit %(code2)s."
+"Les groupes de capture sont %(n1)s, %(n2)s, etc. Dans un fichier Compose, "
+"%(code)s doit être écrit %(code2)s."
 
 #. Used in the browser
 msgid "Card settings"
@@ -2011,12 +2010,12 @@ msgstr "Vérification"
 
 #. Used in the browser
 msgctxt "label"
-msgid "Checking..."
+msgid "Checking…"
 msgstr "Vérification en cours…"
 
 #. Used in the browser
 msgctxt "tooltip"
-msgid "Checking..."
+msgid "Checking…"
 msgstr "Vérification en cours…"
 
 #. Used in the browser
@@ -2071,7 +2070,8 @@ msgid "Clear every filter and the search box"
 msgstr "Effacer tous les filtres et le champ de recherche"
 
 msgid "Clear every filter, the country selection and the search box"
-msgstr "Effacer tous les filtres, la sélection de pays et le champ de recherche"
+msgstr ""
+"Effacer tous les filtres, la sélection de pays et le champ de recherche"
 
 #. Used in the browser
 msgid "Clear filter"
@@ -2094,7 +2094,8 @@ msgstr "Effacer le périmètre {p}"
 
 #, python-format
 msgid "Clears every saved CrowdSec setting from %(manager_yml)s."
-msgstr "Supprime tous les paramètres CrowdSec enregistrés dans %(manager_yml)s."
+msgstr ""
+"Supprime tous les paramètres CrowdSec enregistrés dans %(manager_yml)s."
 
 #, python-format
 msgid "Click %(middleware)s to add one"
@@ -2216,8 +2217,8 @@ msgid ""
 "Cloudflare edge ranges ({cloudflare_ranges_count}, captured "
 "{cloudflare_captured})"
 msgstr ""
-"Plages d’adresses des serveurs périphériques Cloudflare ("
-"{cloudflare_ranges_count}, relevées {cloudflare_captured})"
+"Plages d’adresses des serveurs périphériques Cloudflare "
+"({cloudflare_ranges_count}, relevées {cloudflare_captured})"
 
 msgctxt "button"
 msgid "Collapse"
@@ -2673,8 +2674,8 @@ msgstr ""
 
 #. Used in the browser
 msgctxt "button"
-msgid "Creating..."
-msgstr "Création en cours..."
+msgid "Creating…"
+msgstr "Création en cours…"
 
 #. Used in the browser
 msgctxt "label"
@@ -3451,8 +3452,8 @@ msgstr "Échec du téléchargement : %(info)s"
 
 #. Used in the browser
 msgctxt "label"
-msgid "Downloading..."
-msgstr "Téléchargement en cours..."
+msgid "Downloading…"
+msgstr "Téléchargement en cours…"
 
 #. Used in the browser
 msgid "Drag to resize - double-click to reset"
@@ -3705,7 +3706,8 @@ msgid "Enter at least one domain."
 msgstr "Saisissez au moins un domaine."
 
 msgid "Enter the 6-digit code from your authenticator app."
-msgstr "Saisissez le code à 6 chiffres de votre application d’authentification."
+msgstr ""
+"Saisissez le code à 6 chiffres de votre application d’authentification."
 
 #. Used in the browser
 msgid "Enter the 6-digit code."
@@ -4006,7 +4008,8 @@ msgid "Failed to add decision (HTTP {status})"
 msgstr "Échec de l’ajout de la décision (HTTP {status})"
 
 msgid "Failed to add decision - check LAPI permissions"
-msgstr "Échec de l’ajout de la décision : vérifiez les autorisations de la LAPI"
+msgstr ""
+"Échec de l’ajout de la décision : vérifiez les autorisations de la LAPI"
 
 #, python-format
 msgid "Failed to add decision: %(detail)s"
@@ -4247,13 +4250,13 @@ msgstr ""
 msgid "Fill in {missing} first."
 msgstr "Renseignez d’abord {missing}."
 
-msgid "Filter by address, scenario, network, path or agent..."
+msgid "Filter by address, scenario, network, path or agent…"
 msgstr "Filtrer par adresse, scénario, réseau, chemin ou agent…"
 
-msgid "Filter logs..."
+msgid "Filter logs…"
 msgstr "Filtrer les journaux…"
 
-msgid "Filter middlewares..."
+msgid "Filter middlewares…"
 msgstr "Filtrer les middlewares…"
 
 #. Used in the browser
@@ -4397,8 +4400,8 @@ msgid ""
 "%(transport)s. Entry-point %(responding_timeouts)s are global and static - "
 "adjust them in the Static Config editor if long transcodes still cut off."
 msgstr ""
-"Force %(pass_host_header)s et définit des %(forwarding_timeouts)s longs sur %"
-"(transport)s. Les %(responding_timeouts)s des points d’entrée sont globaux "
+"Force %(pass_host_header)s et définit des %(forwarding_timeouts)s longs sur "
+"%(transport)s. Les %(responding_timeouts)s des points d’entrée sont globaux "
 "et statiques : modifiez-les dans l’éditeur de configuration statique si les "
 "transcodages longs sont encore interrompus."
 
@@ -4428,7 +4431,8 @@ msgstr "Transmettre l’en-tête Authorization"
 
 #, python-format
 msgid "Forward Claims as Headers %(name_claim_one)s"
-msgstr "Transmettre les revendications sous forme d’en-têtes %(name_claim_one)s"
+msgstr ""
+"Transmettre les revendications sous forme d’en-têtes %(name_claim_one)s"
 
 #. Used in the browser
 msgid "Forward auth address is required"
@@ -4550,7 +4554,7 @@ msgid "Geolocation"
 msgstr "Géolocalisation"
 
 #. Used in the browser
-msgid "Geolocation on - downloading database..."
+msgid "Geolocation on - downloading database…"
 msgstr "Géolocalisation activée : téléchargement de la base de données…"
 
 #. Used in the browser
@@ -4598,8 +4602,8 @@ msgid ""
 "yourself."
 msgstr ""
 "Attribuez à cette interface son propre nom d’hôte via Traefik afin d’y "
-"accéder par TLS plutôt que par un port publié. Écrit un fichier %"
-"(traefik_manager_self)s dans votre répertoire de configuration. Ignorez "
+"accéder par TLS plutôt que par un port publié. Écrit un fichier "
+"%(traefik_manager_self)s dans votre répertoire de configuration. Ignorez "
 "cette étape si vous acheminez déjà vous-même le trafic vers ce conteneur."
 
 #. Used in the browser
@@ -4859,8 +4863,8 @@ msgid ""
 "%(crowdsec_alert_limit)s, or 500. %(n0)s reads every alert, which is slow on "
 "a large LAPI. Applies to this server and to agents."
 msgstr ""
-"Nombre d’alertes récentes à lire, de 0 à 100000. Si ce champ est vide, %"
-"(crowdsec_alert_limit)s ou 500 est utilisé. %(n0)s lit toutes les alertes, "
+"Nombre d’alertes récentes à lire, de 0 à 100000. Si ce champ est vide, "
+"%(crowdsec_alert_limit)s ou 500 est utilisé. %(n0)s lit toutes les alertes, "
 "ce qui est lent sur une LAPI volumineuse. S’applique à ce serveur et aux "
 "agents."
 
@@ -4927,8 +4931,8 @@ msgid ""
 "proxy."
 msgstr ""
 "Si un proxy inverse (Cloudflare, une autre instance Traefik, nginx) se "
-"trouve en amont, la liste doit lire l’adresse IP réelle du client dans %"
-"(x_forwarded_for)s plutôt que l’adresse IP de connexion du proxy. Sinon, "
+"trouve en amont, la liste doit lire l’adresse IP réelle du client dans "
+"%(x_forwarded_for)s plutôt que l’adresse IP de connexion du proxy. Sinon, "
 "toutes les requêtes semblent provenir du proxy."
 
 msgid ""
@@ -5401,114 +5405,109 @@ msgid "Load balancing"
 msgstr "Équilibrage de charge"
 
 #. Used in the browser
-msgid "Loading Consul Catalog routes..."
+msgid "Loading Consul Catalog routes…"
 msgstr "Chargement des routes du catalogue Consul…"
 
 #. Used in the browser
-msgid "Loading Consul KV routes..."
+msgid "Loading Consul KV routes…"
 msgstr "Chargement des routes Consul KV…"
 
 #. Used in the browser
-msgid "Loading CrowdSec..."
+msgid "Loading CrowdSec…"
 msgstr "Chargement de CrowdSec…"
 
 #. Used in the browser
-msgid "Loading ECS routes..."
+msgid "Loading ECS routes…"
 msgstr "Chargement des routes ECS…"
 
 #. Used in the browser
-msgid "Loading HTTP provider routes..."
+msgid "Loading HTTP provider routes…"
 msgstr "Chargement des routes du fournisseur HTTP…"
 
 #. Used in the browser
-msgid "Loading Kubernetes routes..."
+msgid "Loading Kubernetes routes…"
 msgstr "Chargement des routes Kubernetes…"
 
 #. Used in the browser
-msgid "Loading Nomad routes..."
+msgid "Loading Nomad routes…"
 msgstr "Chargement des routes Nomad…"
 
 #. Used in the browser
-msgid "Loading Redis routes..."
+msgid "Loading Redis routes…"
 msgstr "Chargement des routes Redis…"
 
 #. Used in the browser
-msgid "Loading Swarm routes..."
+msgid "Loading Swarm routes…"
 msgstr "Chargement des routes Swarm…"
 
 #. Used in the browser
-msgid "Loading TLS profiles..."
+msgid "Loading TLS profiles…"
 msgstr "Chargement des profils TLS…"
 
 #. Used in the browser
-msgid "Loading Traefik internal routes..."
+msgid "Loading Traefik internal routes…"
 msgstr "Chargement des routes internes de Traefik…"
 
 #. Used in the browser
-msgid "Loading ZooKeeper routes..."
+msgid "Loading ZooKeeper routes…"
 msgstr "Chargement des routes ZooKeeper…"
 
 msgid "Loading agents…"
 msgstr "Chargement des agents…"
 
-msgid "Loading backups..."
+msgid "Loading backups…"
 msgstr "Chargement des sauvegardes…"
 
 #. Used in the browser
-msgid "Loading certificates..."
+msgid "Loading certificates…"
 msgstr "Chargement des certificats…"
 
 msgid "Loading channels…"
 msgstr "Chargement des canaux…"
 
-msgid "Loading dashboard..."
+msgid "Loading dashboard…"
 msgstr "Chargement du tableau de bord…"
 
 #. Used in the browser
-msgid "Loading docker routes..."
+msgid "Loading docker routes…"
 msgstr "Chargement des routes Docker…"
 
 #. Used in the browser
-msgid "Loading etcd routes..."
+msgid "Loading etcd routes…"
 msgstr "Chargement des routes etcd…"
 
 #. Used in the browser
-msgid "Loading file provider routes..."
+msgid "Loading file provider routes…"
 msgstr "Chargement des routes du fournisseur de fichiers…"
 
-msgid "Loading internal routes..."
+msgid "Loading internal routes…"
 msgstr "Chargement des routes internes…"
 
 #. Used in the browser
-msgid "Loading logs..."
+msgid "Loading logs…"
 msgstr "Chargement des journaux…"
 
 #. Used in the browser
-msgid "Loading plugins..."
+msgid "Loading plugins…"
 msgstr "Chargement des plugins…"
 
 msgid "Loading release notes…"
 msgstr "Chargement des notes de version…"
 
 #. Used in the browser
-msgid "Loading services..."
+msgid "Loading services…"
 msgstr "Chargement des services…"
 
-msgid "Loading topology..."
+msgid "Loading topology…"
 msgstr "Chargement de la topologie…"
 
 #. Used in the browser
 msgctxt "label"
-msgid "Loading..."
+msgid "Loading…"
 msgstr "Chargement…"
 
 #. Used in the browser
 msgctxt "option"
-msgid "Loading..."
-msgstr "Chargement…"
-
-#. Used in the browser
-msgctxt "label"
 msgid "Loading…"
 msgstr "Chargement…"
 
@@ -5669,8 +5668,8 @@ msgstr "Version maximale"
 #, python-format
 msgid "Max idle conns must be a whole number, got %(max_idle)s"
 msgstr ""
-"Le nombre maximal de connexions inactives doit être un entier, valeur reçue "
-": %(max_idle)s"
+"Le nombre maximal de connexions inactives doit être un entier, valeur "
+"reçue : %(max_idle)s"
 
 #. Used in the browser
 #, python-brace-format
@@ -6023,7 +6022,8 @@ msgstr ""
 
 #. Used in the browser
 msgid "New entrypoints need the port open on your system"
-msgstr "Le port des nouveaux points d’entrée doit être ouvert sur votre système"
+msgstr ""
+"Le port des nouveaux points d’entrée doit être ouvert sur votre système"
 
 #. Used in the browser
 msgid "New entrypoints require additional steps after saving"
@@ -6031,7 +6031,7 @@ msgstr ""
 "Les nouveaux points d’entrée nécessitent des étapes supplémentaires après "
 "l’enregistrement"
 
-msgid "New group name..."
+msgid "New group name…"
 msgstr "Nouveau nom de groupe…"
 
 msgid "New in v1:"
@@ -8168,7 +8168,7 @@ msgstr ""
 msgid "Restart now"
 msgstr ""
 
-msgid "Restarting Traefik..."
+msgid "Restarting Traefik…"
 msgstr ""
 
 #. Used in the browser
@@ -8803,67 +8803,67 @@ msgctxt "tooltip"
 msgid "Search"
 msgstr ""
 
-msgid "Search Consul Catalog routes..."
+msgid "Search Consul Catalog routes…"
 msgstr ""
 
-msgid "Search Consul KV routes..."
+msgid "Search Consul KV routes…"
 msgstr ""
 
-msgid "Search ECS routes..."
+msgid "Search ECS routes…"
 msgstr ""
 
-msgid "Search HTTP provider routes..."
+msgid "Search HTTP provider routes…"
 msgstr ""
 
-msgid "Search Kubernetes routes..."
+msgid "Search Kubernetes routes…"
 msgstr ""
 
-msgid "Search Nomad routes..."
+msgid "Search Nomad routes…"
 msgstr ""
 
-msgid "Search Redis routes..."
+msgid "Search Redis routes…"
 msgstr ""
 
-msgid "Search Swarm routes..."
+msgid "Search Swarm routes…"
 msgstr ""
 
-msgid "Search TLS profiles..."
+msgid "Search TLS profiles…"
 msgstr ""
 
-msgid "Search ZooKeeper routes..."
+msgid "Search ZooKeeper routes…"
 msgstr ""
 
-msgid "Search certificates..."
+msgid "Search certificates…"
 msgstr ""
 
-msgid "Search docker routes..."
+msgid "Search docker routes…"
 msgstr ""
 
-msgid "Search entrypoints, resolvers, plugins..."
+msgid "Search entrypoints, resolvers, plugins…"
 msgstr ""
 
-msgid "Search etcd routes..."
+msgid "Search etcd routes…"
 msgstr ""
 
-msgid "Search file provider routes..."
+msgid "Search file provider routes…"
 msgstr ""
 
-msgid "Search internal routes..."
+msgid "Search internal routes…"
 msgstr ""
 
-msgid "Search middlewares..."
+msgid "Search middlewares…"
 msgstr ""
 
-msgid "Search plugins..."
+msgid "Search plugins…"
 msgstr ""
 
-msgid "Search routes..."
+msgid "Search routes…"
 msgstr ""
 
-msgid "Search services..."
+msgid "Search services…"
 msgstr ""
 
-msgid "Search settings by name or description..."
+msgid "Search settings by name or description…"
 msgstr ""
 
 msgctxt "setting"
@@ -8904,7 +8904,7 @@ msgid "Select a config file for this route"
 msgstr ""
 
 #. Used in the browser
-msgid "Select a file..."
+msgid "Select a file…"
 msgstr ""
 
 #. Used in the browser
@@ -8919,7 +8919,7 @@ msgid "Select at least one source"
 msgstr ""
 
 #. Used in the browser
-msgid "Select provider..."
+msgid "Select provider…"
 msgstr ""
 
 msgid "Select unused"
@@ -8977,7 +8977,7 @@ msgstr ""
 
 #. Used in the browser
 msgctxt "label"
-msgid "Sending..."
+msgid "Sending…"
 msgstr ""
 
 msgid "Serial Number"
@@ -9347,7 +9347,7 @@ msgstr ""
 msgid "Showing only {k} {v}. Click to clear this filter."
 msgstr ""
 
-msgid "Shown on the login button: \"Sign in with ...\""
+msgid "Shown on the login button: \"Sign in with …\""
 msgstr ""
 
 msgid "Shown once. It is already inside the command above."
@@ -9913,11 +9913,6 @@ msgid "Test message delivered"
 msgstr ""
 
 msgid "Test repository"
-msgstr ""
-
-#. Used in the browser
-msgctxt "label"
-msgid "Testing..."
 msgstr ""
 
 #. Used in the browser
@@ -13468,7 +13463,7 @@ msgstr ""
 
 #. Used in the browser
 msgctxt "label"
-msgid "syncing..."
+msgid "syncing…"
 msgstr ""
 
 #. Used in the browser
@@ -14355,7 +14350,8 @@ msgstr[1] "{count} routeurs sur {name}, tous actifs"
 msgid "{count} router on {name}: {disabled}, {down}, {degraded}, {warnings}"
 msgid_plural ""
 "{count} routers on {name}: {disabled}, {down}, {degraded}, {warnings}"
-msgstr[0] "{count} routeur sur {name} : {disabled}, {down}, {degraded}, {warnings}"
+msgstr[0] ""
+"{count} routeur sur {name} : {disabled}, {down}, {degraded}, {warnings}"
 msgstr[1] ""
 "{count} routeurs sur {name} : {disabled}, {down}, {degraded}, {warnings}"
 

@@ -16,9 +16,9 @@
             <div>
                 <label>{{ _('Config File') }}</label>
                 <select id="tlsOptConfigFileSelect" class="input-field" onchange="onTlsOptConfigFileChange(this)">
-                    <option value="">{{ _('Select a file...') }}</option>
+                    <option value="">{{ _('Select a file…') }}</option>
                     {% if config_dir_set %}
-                    <option value="__new__">{{ _('+ New file...') }}</option>
+                    <option value="__new__">{{ _('+ New file…') }}</option>
                     {% endif %}
                     {% for cp in config_paths_list %}
                     <option value="{{ cp.label }}">{{ cp.label }}</option>

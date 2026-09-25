@@ -17,8 +17,8 @@
                 <div id="mwConfigFileSelectWrap" {% if not multi_config and not config_dir_set %}style="display:none"{% endif %}>
                     <label>{{ _('Config File') }}</label>
                     <select id="mwConfigFileSelect" class="input-field" onchange="onMwConfigFileChange(this)">
-                        <option value="">{{ _('Select a file...') }}</option>
-                        <option value="__new__" id="mwCfNewFileOpt" {% if not config_dir_set %}style="display:none"{% endif %}>{{ _('+ New file...') }}</option>
+                        <option value="">{{ _('Select a file…') }}</option>
+                        <option value="__new__" id="mwCfNewFileOpt" {% if not config_dir_set %}style="display:none"{% endif %}>{{ _('+ New file…') }}</option>
                         {% for cp in config_paths_list %}
                         <option value="{{ cp.label }}">{{ cp.label }}</option>
                         {% endfor %}

@@ -3,7 +3,7 @@ let _consulCatalogFilter    = 'all';
 
 async function refreshConsulCatalogTab() {
     const container = document.getElementById('consulcatalogContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading Consul Catalog routes...')}</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading Consul Catalog routes…')}</p></div>`;
 
     try {
         const [routerRes, mwRes] = await Promise.all([

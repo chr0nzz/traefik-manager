@@ -83,7 +83,7 @@ async function refreshLogs(silent) {
     const stats = document.getElementById('logStats');
     if (!silent && tabCacheHydrate('logs', _lgHydrate)) silent = true;
     const keepScroll = silent ? (_lgScrollEl() || {}).scrollTop || 0 : 0;
-    if (!silent) container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading logs...')}</p></div>`;
+    if (!silent) container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading logs…')}</p></div>`;
     try {
         const logRes = await agentFetch(`/api/traefik/logs?lines=${_currentLogLines}`);
         if (!logRes.ok) {

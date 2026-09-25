@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-09-24 22:34+0000\n"
+"POT-Creation-Date: 2026-09-25 15:20+0000\n"
 "PO-Revision-Date: 2026-09-18 09:24-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: ru <LL@li.org>\n"
@@ -248,7 +248,7 @@ msgid "(traefik answered, backend said {origin})"
 msgstr ""
 
 #. Used in the browser
-msgid "+ New file..."
+msgid "+ New file…"
 msgstr ""
 
 #. Used in the browser
@@ -803,7 +803,7 @@ msgstr[2] ""
 
 #. Used in the browser
 msgctxt "button"
-msgid "Adding..."
+msgid "Adding…"
 msgstr ""
 
 #. Used in the browser
@@ -1834,12 +1834,12 @@ msgstr ""
 
 #. Used in the browser
 msgctxt "label"
-msgid "Checking..."
+msgid "Checking…"
 msgstr ""
 
 #. Used in the browser
 msgctxt "tooltip"
-msgid "Checking..."
+msgid "Checking…"
 msgstr ""
 
 #. Used in the browser
@@ -2447,7 +2447,7 @@ msgstr ""
 
 #. Used in the browser
 msgctxt "button"
-msgid "Creating..."
+msgid "Creating…"
 msgstr ""
 
 #. Used in the browser
@@ -3159,7 +3159,7 @@ msgstr ""
 
 #. Used in the browser
 msgctxt "label"
-msgid "Downloading..."
+msgid "Downloading…"
 msgstr ""
 
 #. Used in the browser
@@ -3891,13 +3891,13 @@ msgstr ""
 msgid "Fill in {missing} first."
 msgstr ""
 
-msgid "Filter by address, scenario, network, path or agent..."
+msgid "Filter by address, scenario, network, path or agent…"
 msgstr ""
 
-msgid "Filter logs..."
+msgid "Filter logs…"
 msgstr ""
 
-msgid "Filter middlewares..."
+msgid "Filter middlewares…"
 msgstr ""
 
 #. Used in the browser
@@ -4169,7 +4169,7 @@ msgid "Geolocation"
 msgstr ""
 
 #. Used in the browser
-msgid "Geolocation on - downloading database..."
+msgid "Geolocation on - downloading database…"
 msgstr ""
 
 #. Used in the browser
@@ -4946,114 +4946,109 @@ msgid "Load balancing"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading Consul Catalog routes..."
+msgid "Loading Consul Catalog routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading Consul KV routes..."
+msgid "Loading Consul KV routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading CrowdSec..."
+msgid "Loading CrowdSec…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading ECS routes..."
+msgid "Loading ECS routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading HTTP provider routes..."
+msgid "Loading HTTP provider routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading Kubernetes routes..."
+msgid "Loading Kubernetes routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading Nomad routes..."
+msgid "Loading Nomad routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading Redis routes..."
+msgid "Loading Redis routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading Swarm routes..."
+msgid "Loading Swarm routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading TLS profiles..."
+msgid "Loading TLS profiles…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading Traefik internal routes..."
+msgid "Loading Traefik internal routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading ZooKeeper routes..."
+msgid "Loading ZooKeeper routes…"
 msgstr ""
 
 msgid "Loading agents…"
 msgstr ""
 
-msgid "Loading backups..."
+msgid "Loading backups…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading certificates..."
+msgid "Loading certificates…"
 msgstr ""
 
 msgid "Loading channels…"
 msgstr ""
 
-msgid "Loading dashboard..."
+msgid "Loading dashboard…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading docker routes..."
+msgid "Loading docker routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading etcd routes..."
+msgid "Loading etcd routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading file provider routes..."
+msgid "Loading file provider routes…"
 msgstr ""
 
-msgid "Loading internal routes..."
-msgstr ""
-
-#. Used in the browser
-msgid "Loading logs..."
+msgid "Loading internal routes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading plugins..."
+msgid "Loading logs…"
+msgstr ""
+
+#. Used in the browser
+msgid "Loading plugins…"
 msgstr ""
 
 msgid "Loading release notes…"
 msgstr ""
 
 #. Used in the browser
-msgid "Loading services..."
+msgid "Loading services…"
 msgstr ""
 
-msgid "Loading topology..."
+msgid "Loading topology…"
 msgstr ""
 
 #. Used in the browser
 msgctxt "label"
-msgid "Loading..."
+msgid "Loading…"
 msgstr ""
 
 #. Used in the browser
 msgctxt "option"
-msgid "Loading..."
-msgstr ""
-
-#. Used in the browser
-msgctxt "label"
 msgid "Loading…"
 msgstr ""
 
@@ -5545,7 +5540,7 @@ msgstr ""
 msgid "New entrypoints require additional steps after saving"
 msgstr ""
 
-msgid "New group name..."
+msgid "New group name…"
 msgstr ""
 
 msgid "New in v1:"
@@ -7649,7 +7644,7 @@ msgstr ""
 msgid "Restart now"
 msgstr ""
 
-msgid "Restarting Traefik..."
+msgid "Restarting Traefik…"
 msgstr ""
 
 #. Used in the browser
@@ -8285,67 +8280,67 @@ msgctxt "tooltip"
 msgid "Search"
 msgstr ""
 
-msgid "Search Consul Catalog routes..."
+msgid "Search Consul Catalog routes…"
 msgstr ""
 
-msgid "Search Consul KV routes..."
+msgid "Search Consul KV routes…"
 msgstr ""
 
-msgid "Search ECS routes..."
+msgid "Search ECS routes…"
 msgstr ""
 
-msgid "Search HTTP provider routes..."
+msgid "Search HTTP provider routes…"
 msgstr ""
 
-msgid "Search Kubernetes routes..."
+msgid "Search Kubernetes routes…"
 msgstr ""
 
-msgid "Search Nomad routes..."
+msgid "Search Nomad routes…"
 msgstr ""
 
-msgid "Search Redis routes..."
+msgid "Search Redis routes…"
 msgstr ""
 
-msgid "Search Swarm routes..."
+msgid "Search Swarm routes…"
 msgstr ""
 
-msgid "Search TLS profiles..."
+msgid "Search TLS profiles…"
 msgstr ""
 
-msgid "Search ZooKeeper routes..."
+msgid "Search ZooKeeper routes…"
 msgstr ""
 
-msgid "Search certificates..."
+msgid "Search certificates…"
 msgstr ""
 
-msgid "Search docker routes..."
+msgid "Search docker routes…"
 msgstr ""
 
-msgid "Search entrypoints, resolvers, plugins..."
+msgid "Search entrypoints, resolvers, plugins…"
 msgstr ""
 
-msgid "Search etcd routes..."
+msgid "Search etcd routes…"
 msgstr ""
 
-msgid "Search file provider routes..."
+msgid "Search file provider routes…"
 msgstr ""
 
-msgid "Search internal routes..."
+msgid "Search internal routes…"
 msgstr ""
 
-msgid "Search middlewares..."
+msgid "Search middlewares…"
 msgstr ""
 
-msgid "Search plugins..."
+msgid "Search plugins…"
 msgstr ""
 
-msgid "Search routes..."
+msgid "Search routes…"
 msgstr ""
 
-msgid "Search services..."
+msgid "Search services…"
 msgstr ""
 
-msgid "Search settings by name or description..."
+msgid "Search settings by name or description…"
 msgstr ""
 
 msgctxt "setting"
@@ -8386,7 +8381,7 @@ msgid "Select a config file for this route"
 msgstr ""
 
 #. Used in the browser
-msgid "Select a file..."
+msgid "Select a file…"
 msgstr ""
 
 #. Used in the browser
@@ -8401,7 +8396,7 @@ msgid "Select at least one source"
 msgstr ""
 
 #. Used in the browser
-msgid "Select provider..."
+msgid "Select provider…"
 msgstr ""
 
 msgid "Select unused"
@@ -8459,7 +8454,7 @@ msgstr ""
 
 #. Used in the browser
 msgctxt "label"
-msgid "Sending..."
+msgid "Sending…"
 msgstr ""
 
 msgid "Serial Number"
@@ -8832,7 +8827,7 @@ msgstr ""
 msgid "Showing only {k} {v}. Click to clear this filter."
 msgstr ""
 
-msgid "Shown on the login button: \"Sign in with ...\""
+msgid "Shown on the login button: \"Sign in with …\""
 msgstr ""
 
 msgid "Shown once. It is already inside the command above."
@@ -9399,11 +9394,6 @@ msgid "Test message delivered"
 msgstr ""
 
 msgid "Test repository"
-msgstr ""
-
-#. Used in the browser
-msgctxt "label"
-msgid "Testing..."
 msgstr ""
 
 #. Used in the browser
@@ -12964,7 +12954,7 @@ msgstr ""
 
 #. Used in the browser
 msgctxt "label"
-msgid "syncing..."
+msgid "syncing…"
 msgstr ""
 
 #. Used in the browser

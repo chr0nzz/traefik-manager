@@ -531,7 +531,7 @@ function _csSetConfigured(on) {
 function _csSpinner() {
     const el = document.getElementById('csStats');
     if (!el) return;
-    el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading CrowdSec...')}</p></div>`;
+    el.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading CrowdSec…')}</p></div>`;
 }
 
 function _csEmptyDec() {
@@ -1616,7 +1616,7 @@ function _csRenderBanRecent() {
         return;
     }
     const colour = { ban: 'var(--red)', captcha: 'var(--yellow)', bypass: 'var(--green)' };
-    el.innerHTML = mine.map(d => `<div class="flex items-center gap-2 py-1.5" style="border-bottom:1px solid var(--border)"><span class="font-mono text-xs truncate" style="color:var(--text);flex:1;min-width:0" title="${_esc(d.value || '-')}">${_esc(d.value || '-')}</span><span class="text-xs font-semibold flex-shrink-0" style="color:${colour[d.type] || 'var(--muted)'}">${_esc(d.type || '-')}</span><span class="text-xs truncate" style="color:var(--muted);max-width:150px" title="${_esc(d.scenario || '')}">${_esc(d.scenario || '')}</span><span class="text-xs flex-shrink-0 tabular-nums" style="color:var(--muted)" title="${th('Time left on this decision, counting down live')}">${_esc(d.duration || '-')}</span>${d.id ? `<button onclick="csUnban(${Number(d.id)})" class="btn-icon text-xs flex-shrink-0" title="${th('Unban, delete this decision')}" style="color:var(--red)"><i class="ph-bold ph-trash"></i></button>` : `<span class="text-xs flex-shrink-0" style="color:var(--muted);opacity:.6">${thc('label', 'syncing...')}</span>`}</div>`).join('')
+    el.innerHTML = mine.map(d => `<div class="flex items-center gap-2 py-1.5" style="border-bottom:1px solid var(--border)"><span class="font-mono text-xs truncate" style="color:var(--text);flex:1;min-width:0" title="${_esc(d.value || '-')}">${_esc(d.value || '-')}</span><span class="text-xs font-semibold flex-shrink-0" style="color:${colour[d.type] || 'var(--muted)'}">${_esc(d.type || '-')}</span><span class="text-xs truncate" style="color:var(--muted);max-width:150px" title="${_esc(d.scenario || '')}">${_esc(d.scenario || '')}</span><span class="text-xs flex-shrink-0 tabular-nums" style="color:var(--muted)" title="${th('Time left on this decision, counting down live')}">${_esc(d.duration || '-')}</span>${d.id ? `<button onclick="csUnban(${Number(d.id)})" class="btn-icon text-xs flex-shrink-0" title="${th('Unban, delete this decision')}" style="color:var(--red)"><i class="ph-bold ph-trash"></i></button>` : `<span class="text-xs flex-shrink-0" style="color:var(--muted);opacity:.6">${thc('label', 'syncing…')}</span>`}</div>`).join('')
         + (more ? `<div class="text-center py-2 text-xs" style="color:var(--muted)">${th('{more} more in the decisions view', { more: tmHtml(_sdNum(more)) })}</div>` : '');
 }
 
@@ -1639,7 +1639,7 @@ async function submitCsBan() {
     }
     const duration = document.getElementById('csBanDuration')?.value || '24h';
     const reason   = (document.getElementById('csBanReason')?.value || '').trim();
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = tc('button', 'Adding...'); }
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = tc('button', 'Adding…'); }
     try {
         const res = await agentFetch('/api/crowdsec/decisions', {
             method: 'POST',

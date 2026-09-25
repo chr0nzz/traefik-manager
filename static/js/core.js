@@ -331,9 +331,9 @@ function switchTab(tab) {
 }
 
 function _buildConfigSelectOptions(sel, files, allowNew) {
-    sel.innerHTML = `<option value="">${th('Select a file...')}</option>`;
+    sel.innerHTML = `<option value="">${th('Select a file…')}</option>`;
     if (allowNew) {
-        const o = document.createElement('option'); o.value = '__new__'; o.textContent = t('+ New file...'); sel.appendChild(o);
+        const o = document.createElement('option'); o.value = '__new__'; o.textContent = t('+ New file…'); sel.appendChild(o);
     }
     files.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f; sel.appendChild(o); });
 }
@@ -1237,7 +1237,7 @@ function closeIpDiagModal() {
 async function loadIpDiagnostic() {
     const body = document.getElementById('ipDiagBody');
     if (!body) return;
-    body.innerHTML = `<div class="text-xs py-4 text-center" style="color:var(--muted)">${thc('label', 'Loading...')}</div>`;
+    body.innerHTML = `<div class="text-xs py-4 text-center" style="color:var(--muted)">${thc('label', 'Loading…')}</div>`;
     let d;
     try {
         d = await fetch('/api/diagnostics/client-ip').then(r => r.json());

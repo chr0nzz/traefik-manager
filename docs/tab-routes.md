@@ -87,7 +87,7 @@ Click **Add Route** in the top bar. Fields marked with a protocol apply to that 
 | Skip TLS Verification | *(HTTP)* Adds `insecureSkipVerify: true` on a `<service>-transport` serversTransport, for backends with self-signed certificates (Proxmox, Kasm). Flags the card with a warning shield. |
 | Security headers preset | *(HTTP)* Generates a tool-managed `<route>-headers` middleware and attaches it. See [Security headers preset](#security-headers-preset). |
 | Optimize for streaming | *(HTTP)* Sets long `forwardingTimeouts` and forces `passHostHeader`, for media servers. See [Streaming preset](#streaming-preset). |
-| Config File | Shown when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Pick an existing file, or **+ New file...** to name one - it is created in `CONFIG_DIR`, with `.yml` added if you omit it. |
+| Config File | Shown when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Pick an existing file, or **+ New file…** to name one - it is created in `CONFIG_DIR`, with `.yml` added if you omit it. |
 
 UDP routers have no rule: they route by entry point only.
 

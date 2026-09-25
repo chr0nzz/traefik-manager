@@ -239,7 +239,7 @@
                 <div id="settingsFilterBar" class="flex items-center gap-2" style="padding:12px 20px 0;flex-shrink:0">
                     <div class="relative flex-1 min-w-0">
                         <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-                        <input type="text" id="settingsSearch" oninput="filterSettings()" placeholder="{{ _('Search settings by name or description...') }}" class="input-field pl-9">
+                        <input type="text" id="settingsSearch" oninput="filterSettings()" placeholder="{{ _('Search settings by name or description…') }}" class="input-field pl-9">
                     </div>
                     <div class="flex gap-1 p-1 rounded-lg" id="settingsClearWrap" style="display:none;background:var(--input-bg);border:1px solid var(--border)">
                         <button type="button" onclick="clearSettingsSearch()" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Clear the search') }}"><i class="ph-bold ph-x-circle"></i></button>
@@ -757,7 +757,7 @@
                                     </div>
                                     <div class="sc-fld">
                                         <div class="sc-set-n">{{ _('Display Name') }}</div>
-                                        <div class="sc-set-d">{{ _('Shown on the login button: "Sign in with ..."') }}</div>
+                                        <div class="sc-set-d">{{ _('Shown on the login button: "Sign in with …"') }}</div>
                                         <input type="text" id="oidcDisplayName" class="input-field text-xs" placeholder="OIDC">
                                     </div>
                                     <div class="sc-set">
@@ -883,7 +883,7 @@
                                 <div id="backupRetentionEnvNote" class="text-xs" style="display:none;color:var(--muted)"><i class="ph-bold ph-info" style="color:var(--blue)"></i> {{ _('Backup retention on this agent is set via the %(backup_keep_count)s environment variable.', backup_keep_count=tag('code', 'BACKUP_KEEP_COUNT')) }}</div>
                             </div>
                             <div id="sm-backups-list" style="flex:1;overflow-y:auto;min-height:0;margin-top:10px;">
-                                <div class="sc-empty">{{ _('Loading backups...') }}</div>
+                                <div class="sc-empty">{{ _('Loading backups…') }}</div>
                             </div>
                         </div>
                         <div id="backup-sub-static" class="auth-sub-panel sig-root sc-root" style="display:none;flex-direction:column;gap:0;">
@@ -906,7 +906,7 @@
                                 </div>
                             </div>
                             <div id="sm-static-backups-list" style="flex:1;overflow-y:auto;min-height:0;margin-top:10px;">
-                                <div class="sc-empty">{{ pgettext('label', 'Loading...') }}</div>
+                                <div class="sc-empty">{{ pgettext('label', 'Loading…') }}</div>
                             </div>
                         </div>
 
@@ -927,7 +927,7 @@
                                 </div>
                             </div>
                             <div id="sm-cert-backups-list" style="flex:1;overflow-y:auto;min-height:0;margin-top:10px;">
-                                <div class="sc-empty">{{ pgettext('label', 'Loading...') }}</div>
+                                <div class="sc-empty">{{ pgettext('label', 'Loading…') }}</div>
                             </div>
                         </div>
 

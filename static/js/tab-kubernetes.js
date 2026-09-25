@@ -5,7 +5,7 @@ const _K8S_PROVIDERS = new Set(['kubernetescrd', 'kubernetes', 'kubernetesgatewa
 
 async function refreshKubernetesTab() {
     const container = document.getElementById('kubernetesContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading Kubernetes routes...')}</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading Kubernetes routes…')}</p></div>`;
 
     try {
         const [routerRes, mwRes] = await Promise.all([

@@ -26,7 +26,7 @@ Click **Middleware** in the top bar.
 | Protocol | **HTTP** (default) or **TCP**. TCP middlewares are written to `tcp.middlewares` and support `ipAllowList`, `inFlightConn` and the deprecated `ipWhiteList` - the template selector and wizard are HTTP-only, so TCP uses the YAML editor. |
 | Name | Unique identifier - referenced in routes as `name@file` |
 | Template | Pick a preset or choose Custom to write raw YAML |
-| Config File | Shown when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Select an existing file or choose **+ New file...** to type a filename - the file is created automatically in `CONFIG_DIR`. Auto-suggests `middlewares-<name>.yml`. |
+| Config File | Shown when multiple config files are mounted (`CONFIG_DIR` / `CONFIG_PATHS`). Select an existing file or choose **+ New file…** to type a filename - the file is created automatically in `CONFIG_DIR`. Auto-suggests `middlewares-<name>.yml`. |
 
 Paste the middleware body (e.g. `ipAllowList: ...`). A full `http:` or `tcp:` block wrapping a single middleware is also accepted and unwrapped for you; a block holding several middlewares, or a `udp:` block, is rejected.
 

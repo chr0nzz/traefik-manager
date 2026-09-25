@@ -3,7 +3,7 @@ let _httpProviderFilter    = 'all';
 
 async function refreshHttpProviderTab() {
     const container = document.getElementById('httpProviderContent');
-    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading HTTP provider routes...')}</p></div>`;
+    container.innerHTML = `<div class="text-center py-16" style="color:var(--muted)"><i class="ph-light ph-spinner-gap text-4xl block mb-3 animate-spin opacity-40"></i><p>${th('Loading HTTP provider routes…')}</p></div>`;
 
     try {
         const [routerRes, mwRes] = await Promise.all([

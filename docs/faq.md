@@ -48,7 +48,7 @@ Dynamic, yes. Set one of these, in priority order `CONFIG_DIR` > `CONFIG_PATHS` 
 |---|---|
 | `CONFIG_PATH` | One file. Default `/app/config/dynamic.yml` |
 | `CONFIG_PATHS` | Comma-separated list of files |
-| `CONFIG_DIR` | A directory. Every `.yml` and `.yaml` inside it, recursively, plus a **+ New file...** option in the forms |
+| `CONFIG_DIR` | A directory. Every `.yml` and `.yaml` inside it, recursively, plus a **+ New file…** option in the forms |
 
 A **Config File** picker appears in the route, middleware and TLS option forms once more than one file is loaded. See [Environment Variables](env-vars.md#config-files).
 

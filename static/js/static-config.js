@@ -2350,7 +2350,7 @@ function _buildStaticClassicHTML() {
             <div>
                 <label class="text-xs block mb-1" style="color:var(--muted)">${th('Provider Type')}</label>
                 <select id="sfProviderType" class="input-field text-sm" onchange="onProviderTypeSelect(this.value)">
-                    <option value="">${th('Select provider...')}</option>
+                    <option value="">${th('Select provider…')}</option>
                     <option value="swarm">Docker Swarm</option>
                     <option value="http">HTTP</option>
                     <option value="kubernetesCRD">${th('Kubernetes (CRD)')}</option>
@@ -2653,7 +2653,7 @@ function openTrustedIpsHelper() {
     const modal = document.getElementById('trustedIpsModal');
     if (!modal) return;
     _tipData = null;
-    document.getElementById('tipEntrypoint').innerHTML = `<option value="">${thc('option', 'Loading...')}</option>`;
+    document.getElementById('tipEntrypoint').innerHTML = `<option value="">${thc('option', 'Loading…')}</option>`;
     document.getElementById('tipCurrent').innerHTML = '';
     document.getElementById('tipPreviewBox').innerHTML = '';
     document.getElementById('tipCustom').value = '';
