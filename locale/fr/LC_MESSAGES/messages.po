@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-09-24 22:34+0000\n"
-"PO-Revision-Date: 2026-09-25 14:08+0000\n"
-"Last-Translator: Romaric Worobel <romaric.worobel@gmail.com>\n"
+"PO-Revision-Date: 2026-09-25 15:08+0000\n"
+"Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/traefik-manager/"
 "web-app/fr/>\n"
 "Language: fr\n"
@@ -14344,21 +14344,20 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. Used in the browser
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{count} router on {name}, live"
 msgid_plural "{count} routers on {name}, all live"
 msgstr[0] "{count} routeur sur {name}, actif"
 msgstr[1] "{count} routeurs sur {name}, tous actifs"
 
 #. Used in the browser
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{count} router on {name}: {disabled}, {down}, {degraded}, {warnings}"
 msgid_plural ""
 "{count} routers on {name}: {disabled}, {down}, {degraded}, {warnings}"
-msgstr[0] ""
-"{count} routeur sur {name} : {disabled}, {down}, {degraded}, {warnings}"
+msgstr[0] "{count} routeur sur {name} : {disabled}, {down}, {degraded}, {warnings}"
 msgstr[1] ""
-"{count} routeurs sur {name} : {disabled}, {down}, {degraded}, {warnings}"
+"{count} routeurs sur {name} : {disabled}, {down}, {degraded}, {warnings}"
 
 #. Used in the browser
 #, python-brace-format
@@ -14682,7 +14681,7 @@ msgid "{k} = {v}, nothing matches this. Click to clear"
 msgstr "{k} = {v}, rien ne correspond à ceci. Cliquez pour effacer"
 
 #. Used in the browser
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{k} = {v}, {hit} match. Click to clear"
 msgid_plural "{k} = {v}, {hit} matches. Click to clear"
 msgstr[0] "{k} = {v}, {hit} correspondance. Cliquez pour effacer"
