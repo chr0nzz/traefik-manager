@@ -489,33 +489,42 @@ def test_respelling_leaves_placeholders_links_code_and_header_names_alone(source
     assert tmi18n.respell(source, 'en_US') == source
 
 
-def test_english_catalogues_copy_the_source_and_keep_what_translators_wrote():
+def test_english_catalogues_hold_only_the_spellings_that_differ():
     from babel.messages.catalog import Catalog
     catalog = Catalog(locale='en_GB')
     catalog.add('Optimize for streaming')
+    catalog.add('Save')
+    catalog.add('Cancel', 'Cancel')
     catalog.add('Customize', 'Personalise')
-    catalog.add(('{count} route', '{count} routes'))
+    catalog.add(('{count} route', '{count} routes'), ('{count} route', '{count} routes'))
+    catalog.add(('{count} visualization', '{count} visualizations'))
     catalog.add('Initialize', 'Old', flags=['fuzzy'])
-    assert tmi18n.fill_from_source(catalog, 'en_GB') == 2
+    assert tmi18n.sync_spellings(catalog, 'en_GB') == 4
     assert catalog.get('Optimize for streaming').string == 'Optimise for streaming'
+    assert not catalog.get('Save').string, 'a string spelled the same falls back to the source'
+    assert catalog.get('Cancel').string == '', 'a copy of the source is dropped, it only costs page weight'
     assert catalog.get('Customize').string == 'Personalise', 'a translator edit must never be overwritten'
-    assert tuple(catalog.get('{count} route').string) == ('{count} route', '{count} routes')
+    assert tuple(catalog.get('{count} route').string) == ('', '')
+    assert tuple(catalog.get('{count} visualization').string) == ('{count} visualisation', '{count} visualisations')
     assert catalog.get('Initialize').string == 'Old', 'fuzzy entries never ship, so they are left for review'
+    assert tmi18n.sync_spellings(catalog, 'en_GB') == 0
 
 
-def test_other_languages_are_not_filled_from_the_source():
+def test_other_languages_are_not_respelled():
     assert tmi18n.is_source_variant('en_GB') and tmi18n.is_source_variant('en_US')
     assert not tmi18n.is_source_variant('de') and not tmi18n.is_source_variant('zh_Hans')
 
 
-def test_an_empty_string_in_an_english_catalogue_fails_the_check(tmp_path):
+def test_a_missing_spelling_in_an_english_catalogue_fails_the_check(tmp_path):
     from babel.messages.catalog import Catalog
     template = Catalog()
     template.add('Save')
-    template.add('Cancel')
+    template.add('Optimize')
+    template.add('Visualize')
     header = DE_HEADER.replace('Language: de', 'Language: en_GB')
-    path = _po(tmp_path, _entry('Save', 'Save') + _entry('Cancel', ''), header=header, identifier='en_GB')
+    body = _entry('Save', '') + _entry('Optimize', '') + _entry('Visualize', 'Visualise')
+    path = _po(tmp_path, body, header=header, identifier='en_GB')
     messages = [p.message for p in tmi18n.check_catalogue(path, 'en_GB', template)]
-    assert any('1 strings are empty' in m for m in messages)
-    de = _po(tmp_path, _entry('Save', 'Speichern') + _entry('Cancel', ''))
+    assert messages == ['1 strings are missing their en_GB spelling; run make i18n-extract']
+    de = _po(tmp_path, _entry('Save', 'Speichern') + _entry('Optimize', '') + _entry('Visualize', ''))
     assert tmi18n.check_catalogue(de, 'de', template) == [], 'other languages may leave strings for translators'

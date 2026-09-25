@@ -228,19 +228,35 @@ def respell(text, identifier):
     return SPELLING_WORD_RE.sub(swap, text)
 
 
-def untranslated(catalog):
-    return [m for m in catalog if m.id and not m.fuzzy and not any(_msgstr_forms(m))]
+def _as_forms(message, texts, num_plurals):
+    if isinstance(message.id, (list, tuple)):
+        return tuple(texts[min(i, len(texts) - 1)] for i in range(num_plurals))
+    return texts[0]
 
 
-def fill_from_source(catalog, identifier):
-    empty = untranslated(catalog)
-    for message in empty:
-        texts = [respell(text, identifier) for text in _msgid_texts(message)]
-        if isinstance(message.id, (list, tuple)):
-            message.string = tuple(texts[min(i, len(texts) - 1)] for i in range(catalog.num_plurals))
-        else:
-            message.string = texts[0]
-    return len(empty)
+def spelling_changes(catalog, identifier):
+    changes = []
+    for message in catalog:
+        if not message.id or message.fuzzy:
+            continue
+        texts = _msgid_texts(message)
+        copy = _as_forms(message, texts, catalog.num_plurals)
+        respelled = _as_forms(message, [respell(text, identifier) for text in texts], catalog.num_plurals)
+        empty = _as_forms(message, [''] * len(texts), catalog.num_plurals)
+        have = tuple(message.string) if isinstance(message.string, (list, tuple)) else message.string or ''
+        if any(_msgstr_forms(message)) and have != copy:
+            continue
+        wanted = respelled if respelled != copy else empty
+        if have != wanted:
+            changes.append((message, wanted))
+    return changes
+
+
+def sync_spellings(catalog, identifier):
+    changes = spelling_changes(catalog, identifier)
+    for message, wanted in changes:
+        message.string = wanted
+    return len(changes)
 
 
 def read_catalog(path, locale=None):
@@ -291,7 +307,7 @@ def update_catalogues(root=ROOT, init=()):
         needs_header = (catalog.project != PROJECT or catalog.msgid_bugs_address != BUGS_ADDRESS
                         or 'PROJECT' in catalog.header_comment or 'FIRST AUTHOR' in catalog.header_comment)
         variant = is_source_variant(identifier)
-        if message_set(catalog) == message_set(template) and not needs_header and not (variant and untranslated(catalog)):
+        if message_set(catalog) == message_set(template) and not needs_header and not (variant and spelling_changes(catalog, identifier)):
             continue
         catalog.update(template, no_fuzzy_matching=True, update_header_comment=False)
         catalog.project = PROJECT
@@ -300,7 +316,7 @@ def update_catalogues(root=ROOT, init=()):
         catalog.copyright_holder = f'{PROJECT} contributors'
         catalog.header_comment = header_comment(Locale.parse(identifier).english_name)
         if variant:
-            fill_from_source(catalog, identifier)
+            sync_spellings(catalog, identifier)
         _write(path, catalog)
         normalize_catalogue(path, pot_path)
     return []
@@ -474,9 +490,10 @@ def check_catalogue(path, identifier, template=None):
         missing = want - have
         if missing:
             problems.append(Problem(rel, f'{len(missing)} strings from messages.pot are missing; run make i18n-extract'))
-        empty = untranslated(catalog) if is_source_variant(identifier) else []
-        if empty:
-            problems.append(Problem(rel, f'{len(empty)} strings are empty; English catalogues copy the source, '
+        unspelled = [m for m, wanted in spelling_changes(catalog, identifier)
+                     if any(wanted if isinstance(wanted, tuple) else [wanted])] if is_source_variant(identifier) else []
+        if unspelled:
+            problems.append(Problem(rel, f'{len(unspelled)} strings are missing their {identifier} spelling; '
                                          'run make i18n-extract'))
     return problems
 
