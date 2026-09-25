@@ -6,7 +6,7 @@ from babel import Locale, UnknownLocaleError
 from babel.messages.pofile import read_po
 from babel.support import Translations
 from flask import has_request_context, request
-from flask_babel import Babel, get_locale, get_translations
+from flask_babel import Babel, Domain, get_locale, get_translations
 from markupsafe import Markup, escape
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -196,27 +196,69 @@ def _plural_map(identifier: str, translations) -> dict:
     return mapping
 
 
+def template_index(locale_dir: str = None) -> tuple:
+    return _template_index(os.path.abspath(locale_dir or LOCALE_DIR))
+
+
 @lru_cache(maxsize=None)
-def browser_keys(locale_dir: str = None):
-    path = os.path.join(locale_dir or LOCALE_DIR, DOMAIN + '.pot')
+def _template_index(locale_dir: str) -> tuple:
+    path = os.path.join(locale_dir, DOMAIN + '.pot')
     try:
         with open(path, 'rb') as fh:
             template = read_po(fh)
     except (OSError, ValueError):
-        return None
+        return None, {}
     keys = set()
+    plurals = {}
     for message in template:
-        if not message.id or BROWSER_MARK not in (message.auto_comments or []):
+        if not message.id:
             continue
-        msgid = message.id[0] if isinstance(message.id, (list, tuple)) else message.id
-        keys.add(message.context + '\x04' + msgid if message.context else msgid)
-    return frozenset(keys)
+        pluralizable = isinstance(message.id, (list, tuple))
+        msgid = message.id[0] if pluralizable else message.id
+        key = message.context + '\x04' + msgid if message.context else msgid
+        if BROWSER_MARK in (message.auto_comments or []):
+            keys.add(key)
+        if pluralizable:
+            plurals[key] = tuple(message.id[:2])
+    return frozenset(keys), plurals
+
+
+def browser_keys(locale_dir: str = None):
+    return template_index(locale_dir)[0]
+
+
+def drop_untranslated_plurals(translations, locale_dir: str = None):
+    catalog = getattr(translations, '_catalog', None)
+    plurals = template_index(locale_dir)[1]
+    if not catalog or not plurals:
+        return translations
+    found = {}
+    for key, value in catalog.items():
+        if isinstance(key, tuple):
+            found.setdefault(key[0], {})[key[1]] = value
+    for msgid, forms in found.items():
+        source = plurals.get(msgid)
+        if source and all(value == source[min(index, 1)] for index, value in forms.items()):
+            for index in forms:
+                del catalog[(msgid, index)]
+    return translations
+
+
+class _Domain(Domain):
+    def get_translations(self):
+        translations = super().get_translations()
+        if not getattr(translations, '_tm_plurals_checked', False):
+            for locale_dir in self.translation_directories:
+                drop_untranslated_plurals(translations, locale_dir)
+            translations._tm_plurals_checked = True
+        return translations
 
 
 @lru_cache(maxsize=None)
 def client_catalog(tag: str, locale_dir: str = None) -> dict:
     identifier = catalog_identifier(tag)
     translations = Translations.load(locale_dir or LOCALE_DIR, [identifier], DOMAIN)
+    drop_untranslated_plurals(translations, locale_dir)
     wanted = browser_keys(locale_dir)
     messages = {}
     for key, value in getattr(translations, '_catalog', {}).items():
@@ -299,6 +341,7 @@ def init_app(app, default_language):
         return catalog_identifier(resolve_tag(_saved()))
 
     babel = Babel(app, locale_selector=_select)
+    babel.domain_instance = _Domain(domain=DOMAIN)
     install_escaped_gettext(app.jinja_env)
     app.jinja_env.globals['tag'] = inline_tag
     app.jinja_env.filters['flag'] = flag_emoji

@@ -4,9 +4,12 @@ import re
 import pytest
 from babel.messages.catalog import Catalog
 from babel.messages.mofile import write_mo
+from babel.messages.pofile import write_po
+from flask_babel import get_domain, get_translations
 
 from core import i18n
 from core import settings as settings_mod
+from tests.conftest import tm
 
 HDR = {'X-CSRF-Token': 'testtoken', 'X-Requested-With': 'fetch'}
 PLANNED = ('en', 'de', 'fr', 'es', 'zh-Hans', 'ru')
@@ -203,6 +206,55 @@ def test_plural_map_follows_the_catalogue(locale_dir):
     _compile(locale_dir, 'zh_Hans', [(('{n} route', '{n} routes'), ('x',))])
     assert i18n.client_catalog('ru', str(locale_dir))['plural'] == {'many': 2, 'one': 0, 'few': 1}
     assert i18n.client_catalog('zh-Hans', str(locale_dir))['plural'] == {'other': 0}
+
+
+def _template(locale_dir, messages):
+    template = Catalog()
+    for msgid in messages:
+        if isinstance(msgid, tuple) and len(msgid) == 3:
+            template.add(msgid[1:], context=msgid[0], auto_comments=[i18n.BROWSER_MARK])
+        else:
+            template.add(msgid, auto_comments=[i18n.BROWSER_MARK])
+    with open(locale_dir / 'messages.pot', 'wb') as fh:
+        write_po(fh, template)
+
+
+PLURALS = (('{n} route', '{n} routes'), ('status', '{n} router', '{n} routers'))
+
+
+def test_untranslated_plurals_stay_out_of_the_browser_catalogue(locale_dir):
+    _template(locale_dir, ['Save', *PLURALS, ('{n} file', '{n} files')])
+    _compile(locale_dir, 'de', [
+        ('Save', 'Speichern'),
+        (PLURALS[0], ('', '')),
+        (PLURALS[1], ('', '')),
+        (('{n} file', '{n} files'), ('{n} Datei', '{n} Dateien')),
+    ])
+    messages = i18n.client_catalog('de', str(locale_dir))['messages']
+    assert messages == {'Save': 'Speichern', '{n} file': ['{n} Datei', '{n} Dateien']}, \
+        'pybabel compile fills an untranslated plural with the English source, which must not reach the browser'
+
+
+def test_a_partly_translated_plural_is_kept(locale_dir):
+    _template(locale_dir, [PLURALS[0]])
+    _compile(locale_dir, 'ru', [(PLURALS[0], ('{n} маршрут', '', ''))])
+    messages = i18n.client_catalog('ru', str(locale_dir))['messages']
+    assert messages['{n} route'] == ['{n} маршрут', '{n} routes', '{n} routes']
+
+
+def test_untranslated_plurals_follow_the_english_rule_on_the_server(locale_dir, monkeypatch):
+    _template(locale_dir, list(PLURALS))
+    _compile(locale_dir, 'zh_Hans', [(PLURALS[0], ('',)), (PLURALS[1], ('',))])
+    app = tm.app
+    monkeypatch.setattr(app.extensions['babel'], 'translation_directories', [str(locale_dir)])
+    monkeypatch.setattr(i18n, 'available_tags', lambda locale_dir=None: ('en', 'zh-Hans'))
+    with app.test_request_context('/', headers={'Accept-Language': 'zh-Hans'}):
+        monkeypatch.setattr(get_domain(), 'cache', {})
+        translations = get_translations()
+        assert translations.ungettext(*PLURALS[0], 5) == '{n} routes', \
+            'the source copy would pick the singular for every count in a one-form language'
+        assert translations.unpgettext(*PLURALS[1], 5) == '{n} routers'
+        assert translations.ungettext(*PLURALS[0], 1) == '{n} route'
 
 
 def test_language_options_use_native_names(with_languages):

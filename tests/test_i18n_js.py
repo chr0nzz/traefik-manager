@@ -154,10 +154,10 @@ def _catalogues(locale_dir, marked):
 
 @pytest.fixture
 def fresh_caches():
-    i18n.browser_keys.cache_clear()
+    i18n._template_index.cache_clear()
     i18n.client_catalog.cache_clear()
     yield
-    i18n.browser_keys.cache_clear()
+    i18n._template_index.cache_clear()
     i18n.client_catalog.cache_clear()
 
 
