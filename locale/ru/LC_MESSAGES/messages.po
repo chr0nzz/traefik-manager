@@ -7,9 +7,10 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-09-25 15:20+0000\n"
-"PO-Revision-Date: 2026-09-18 09:24-0400\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: ru <LL@li.org>\n"
+"PO-Revision-Date: 2026-09-26 14:01+0000\n"
+"Last-Translator: stilicho2011 <stilihon2011@gmail.com>\n"
+"Language-Team: Russian <https://hosted.weblate.org/projects/traefik-manager/"
+"web-app/ru/>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -17,26 +18,29 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "Generated-By: Babel 2.18.0\n"
+"X-Generator: Weblate 2026.10.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
 msgid "\"{name}\" is still in use. {parts}, then delete it?"
-msgstr ""
+msgstr "\"{name}\" всё ещё используется. {parts}. Удалить его в любом случае?"
 
 #. Used in the browser
 #, python-brace-format
 msgid "\"{name}\" is still used by {shown}. Delete those middlewares first."
-msgstr ""
+msgstr "\"{name}\" всё ещё используется {shown}. Сначала удалите эти миддлвары."
 
 #. Used in the browser
 #, python-brace-format
 msgid ""
 "\"{name}\" is still used by {shown}. Remove it from {label} and delete it?"
 msgstr ""
+"\"{name}\" всё ещё используется {shown}. Удалить его из {label} в любом "
+"случае?"
 
 #, python-format
 msgid "%(auth_verify)s is appended automatically"
-msgstr ""
+msgstr "%(auth_verify)s добавляется автоматически"
 
 #, python-format
 msgid "%(bare)s is %(bits)s"
@@ -44,100 +48,118 @@ msgstr ""
 
 #, python-format
 msgid "%(child)s is still used by %(users)s"
-msgstr ""
+msgstr "%(child)s всё ещё используется %(users)s"
 
 #, python-format
 msgid "%(claimed)s already belongs to %(claimed2)s. Pick a different name"
-msgstr ""
+msgstr "%(claimed)s уже занято %(claimed2)s. Выберите другое имя"
 
 #, python-format
 msgid ""
 "%(file)s changed on disk since this editor opened. Reopen it and make the "
 "change again."
 msgstr ""
+"%(file)s был изменён на диске с момента открытия редактора. Откройте его "
+"заново и внесите изменение повторно."
 
 #, python-format
 msgid "%(file)s is mounted read only on this agent, nothing was changed"
 msgstr ""
+"%(file)s смонтирован в этом агенте только для чтения, изменения не внесены"
 
 #, python-format
 msgid "%(file)s is mounted read only on this agent, nothing was restored"
 msgstr ""
+"%(file)s смонтирован в этом агенте только для чтения — ничего не "
+"восстановлено"
 
 #, python-format
 msgid ""
 "%(line_break)s⚠ A %(buffering)s/%(compress)s middleware is attached - remove "
 "it for smooth streaming and seeking."
 msgstr ""
+"%(line_break)s⚠ Подключён миддлвар %(buffering)s/%(compress)s — уберите его "
+"для плавного стриминга и перемотки."
 
 #, python-format
 msgid ""
 "%(loop)s already routes back to %(name)s, which would make a cycle Traefik "
 "cannot load"
 msgstr ""
+"%(loop)s уже маршрутизирует обратно на %(name)s — это создаст цикл, который "
+"Traefik не сможет загрузить"
 
 #, python-format
 msgid "%(n1)s Welcome"
-msgstr ""
+msgstr "%(n1)s Добро пожаловать"
 
 #, python-format
 msgid "%(n3)s Self route"
-msgstr ""
+msgstr "%(n3)s Собственный маршрут"
 
 #, python-format
 msgid "%(n4)s Monitoring"
-msgstr ""
+msgstr "%(n4)s Мониторинг"
 
 #, python-format
 msgid "%(n6)s Git backup"
-msgstr ""
+msgstr "%(n6)s Резервная копия Git"
 
 #, python-format
 msgid "%(n7)s Notifications"
-msgstr ""
+msgstr "%(n7)s Уведомления"
 
 #, python-format
 msgid "%(n8)s Password"
-msgstr ""
+msgstr "%(n8)s Пароль"
 
 #, python-format
 msgid "%(name)s cannot use itself as a backend"
-msgstr ""
+msgstr "%(name)s не может использовать сам себя в качестве сервиса"
 
 #, python-format
 msgid "%(name)s is defined in %(file)s, which is read-only here."
 msgstr ""
+"%(name)s определён в %(file)s, который здесь доступен только для чтения."
 
 #, python-format
 msgid "%(name)s is still used by %(tls_users)s%(tls_users2)s"
-msgstr ""
+msgstr "%(name)s всё ещё используется %(tls_users)s%(tls_users2)s"
 
 #, python-format
 msgid ""
 "%(name)s is still used by %(users)s%(users2)s. Delete those middlewares first"
 msgstr ""
+"%(name)s всё ещё используется %(users)s%(users2)s. Сначала удалите эти "
+"миддлвары"
 
 #, python-format
 msgid ""
 "%(new_in_v1)s Static Config Editor lets you manage your Traefik static "
 "config from the UI. %(set_it_up)s"
 msgstr ""
+"%(new_in_v1)s Редактор статической конфигурации позволяет управлять "
+"статической конфигурацией Traefik прямо из интерфейса. %(set_it_up)s"
 
 #, python-format
 msgid ""
 "%(original)s matches more than one certificate store, so this backup cannot "
 "be restored safely"
 msgstr ""
+"%(original)s соответствует более чем одному хранилищу сертификатов, поэтому "
+"эта резервная копия не может быть безопасно восстановлена"
 
 #, python-format
 msgid ""
 "%(original)s matches more than one config file, so this backup cannot be "
 "restored safely"
 msgstr ""
+"%(original)s соответствует более чем одному файлу конфигурации, поэтому эта "
+"резервная копия не может быть безопасно восстановлена"
 
 #, python-format
 msgid "%(status)s is replaced with the response code."
-msgstr ""
+msgstr "%(status)s заменен на код ответа."
 
 #. Used in the browser
 #, python-brace-format
