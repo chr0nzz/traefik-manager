@@ -253,6 +253,12 @@ Both resize freely and re-flow to fit.
 
 **Try Demo** on the connect screen runs the app against built-in sample data, with no server required. Useful for looking around before you point it at anything real.
 
+### Languages
+
+The app opens in the phone's language when it has it: Chinese (Simplified), Czech, Danish, Dutch, French, French (Canada), German, Portuguese, Portuguese (Brazil), Russian and Spanish, plus British and American English spellings. Any other language shows English. To use a different language than the phone, pick it in **Settings → Appearance and security → App language**.
+
+The app sends its language to the server, so error and status messages from Traefik Manager v1.15.0 or newer arrive in the same language; older servers answer in English. Translations happen on [Weblate](https://hosted.weblate.org/projects/traefik-manager/mobile/).
+
 ---
 
 ## Settings
@@ -276,6 +282,7 @@ Both resize freely and re-flow to fit.
 |---|---|
 | Theme | Light, Dark or System |
 | Dynamic colour | Takes the palette from your wallpaper on Android 12+, while status colours stay semantically distinct |
+| App language | Follow system, or one of the app's languages. The same choice is on Android's own app language page |
 | Hide the navigation bar | Frees the bottom of the screen; the drawer still reaches everything |
 | Choose items | Which five screens sit in the bar, and their order |
 | Dashboard layout | Rows or icons for the app launcher, shared with the web UI |
@@ -346,7 +353,7 @@ OIDC provider configured, `/api/*` answers without a key at all.
 
 | | |
 |---|---|
-| Traefik Manager (server) | **v1.10.1 or higher**, v1.12.0 for notification channels and push |
+| Traefik Manager (server) | **v1.10.1 or higher**, v1.12.0 for notification channels and push, v1.13.0 for service authoring, v1.15.0 for server messages in the app's language |
 | Android | 13+ (API 33) |
 | Push (optional) | A UnifiedPush distributor, such as the ntfy app |
 
