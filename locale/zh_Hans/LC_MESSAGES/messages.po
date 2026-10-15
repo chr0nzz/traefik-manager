@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-03 16:47+0000\n"
+"POT-Creation-Date: 2026-10-15 20:13+0000\n"
 "PO-Revision-Date: 2026-09-30 00:00+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/"
@@ -4430,6 +4430,12 @@ msgctxt "role"
 msgid "Fallback"
 msgstr "备用"
 
+#. Used in the browser
+msgid ""
+"FastProxy backend connection pool leaks NTLM and Negotiate identity to "
+"unauthenticated clients"
+msgstr ""
+
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
 "backend stops answering"
@@ -6147,6 +6153,12 @@ msgid "My Protected Area"
 msgstr "我的受保护区域"
 
 #. Used in the browser
+msgid ""
+"NTLM and Kerberos sticky connections are not keyed by service, so one "
+"service TLS client config applies to another"
+msgstr ""
+
+#. Used in the browser
 msgctxt "label"
 msgid "Name"
 msgstr "名称"
@@ -6204,6 +6216,12 @@ msgstr "导航"
 #, python-brace-format
 msgid "Needs {missing}"
 msgstr "需要 {missing}"
+
+#. Used in the browser
+msgid ""
+"Negated Host matcher causes a TLS option conflict that disables client "
+"certificate authentication on the excluded host"
+msgstr ""
 
 #. Used in the browser
 #, python-brace-format
@@ -7693,6 +7711,11 @@ msgstr "端口"
 
 msgid "Port and rate limit"
 msgstr "端口和速率限制"
+
+#. Used in the browser
+msgid ""
+"Preauthenticated Negotiate contaminates the shared backend connection pool"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -11877,6 +11900,14 @@ msgstr "不支持的 URL - 请使用 https://, http://, ssh:// 或 git://"
 
 msgid "Unsupported git repository URL scheme"
 msgstr "不支持的 git 仓库 URL 协议"
+
+#. Used in the browser
+msgid ""
+"Unsynchronized write to the sticky round tripper shared by concurrent HTTP/2 "
+"streams"
+msgstr ""
+"Unsynchronised write to the sticky round tripper shared by concurrent HTTP/2 "
+"streams"
 
 msgctxt "button"
 msgid "Unused"

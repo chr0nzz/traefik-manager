@@ -418,6 +418,47 @@ const TRAEFIK_ADVISORIES = [
         },
     },
     {
+        id: 'GHSA-qm9f-w54v-q2qh',
+        severity: 'High',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-qm9f-w54v-q2qh',
+        forwardAuthRelated: false,
+        summary: t('Preauthenticated Negotiate contaminates the shared backend connection pool'),
+        fixedIn: 'v3.7.14 or v2.11.58',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj === 2) return min === 11 && pat <= 57;
+            if (maj === 3) return (min < 7) || (min === 7 && pat <= 13);
+            return false;
+        },
+    },
+    {
+        id: 'GHSA-cw35-4q88-3rmp',
+        severity: 'High',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-cw35-4q88-3rmp',
+        forwardAuthRelated: false,
+        summary: t('NTLM and Kerberos sticky connections are not keyed by service, so one service TLS client config applies to another'),
+        fixedIn: 'v3.7.14 or v2.11.58',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj === 2) return min === 11 && pat <= 57;
+            if (maj === 3) return (min < 7) || (min === 7 && pat <= 13);
+            return false;
+        },
+    },
+    {
+        id: 'GHSA-53qr-784g-cj35',
+        severity: 'High',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-53qr-784g-cj35',
+        forwardAuthRelated: false,
+        summary: t('FastProxy backend connection pool leaks NTLM and Negotiate identity to unauthenticated clients'),
+        fixedIn: 'v3.7.14',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj === 3) return (min >= 2 && min < 7) || (min === 7 && pat <= 13);
+            return false;
+        },
+    },
+    {
         id: 'CVE-2026-39858',
         severity: 'High',
         url: 'https://github.com/traefik/traefik/security/advisories/GHSA-5m6w-wvh7-57vm',
@@ -457,6 +498,35 @@ const TRAEFIK_ADVISORIES = [
         affected: (p) => {
             const [maj, min, pat] = p;
             if (maj === 3) return (min === 6 && pat >= 11) || (min === 7 && pat <= 12);
+            return false;
+        },
+    },
+    {
+        id: 'GHSA-2272-4vv8-65ww',
+        severity: 'Moderate',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-2272-4vv8-65ww',
+        forwardAuthRelated: false,
+        summary: t('Negated Host matcher causes a TLS option conflict that disables client certificate authentication on the excluded host'),
+        fixedIn: 'v3.7.13 or v2.11.58',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj < 2) return true;
+            if (maj === 2) return (min < 11) || (min === 11 && pat <= 57);
+            if (maj === 3) return (min < 7) || (min === 7 && pat <= 12);
+            return false;
+        },
+    },
+    {
+        id: 'GHSA-mhjw-hmjv-p99x',
+        severity: 'Moderate',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-mhjw-hmjv-p99x',
+        forwardAuthRelated: false,
+        summary: t('Unsynchronized write to the sticky round tripper shared by concurrent HTTP/2 streams'),
+        fixedIn: 'v3.7.14 or v2.11.58',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj === 2) return min === 11 && pat <= 57;
+            if (maj === 3) return (min < 7) || (min === 7 && pat <= 13);
             return false;
         },
     },

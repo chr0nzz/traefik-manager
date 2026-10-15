@@ -55,6 +55,11 @@ Upgrading to 3.7.13 or newer is the real fix. Before 3.7.13 even `aliasHeadersSt
 | [CVE-2026-88008](https://github.com/traefik/traefik/security/advisories/GHSA-w4v4-9rw7-5326) - h2c upgrade headers forwarded to the backend let a client tunnel past every middleware                                | High                | **2.11.57 / 3.7.13**              |
 | [CVE-2026-88004](https://github.com/traefik/traefik/security/advisories/GHSA-v67p-phpq-fc8x) - `aliasHeadersStrategy` and forwarded header stripping bypassed via request trailers                                   | High                | **3.7.13**                        |
 | [CVE-2026-88010](https://github.com/traefik/traefik/security/advisories/GHSA-8fcf-v89g-xpg6) - BasicAuth request coalescing reintroduces a username enumeration timing oracle                                        | Moderate            | **3.7.13**                        |
+| [GHSA-2272-4vv8-65ww](https://github.com/traefik/traefik/security/advisories/GHSA-2272-4vv8-65ww) - negated Host matcher causes a TLS option conflict that disables client certificate authentication on the excluded host | Moderate | **2.11.58 / 3.7.13** |
+| [GHSA-qm9f-w54v-q2qh](https://github.com/traefik/traefik/security/advisories/GHSA-qm9f-w54v-q2qh) - preauthenticated Negotiate contaminates the shared backend connection pool | High | **2.11.58 / 3.7.14** |
+| [GHSA-cw35-4q88-3rmp](https://github.com/traefik/traefik/security/advisories/GHSA-cw35-4q88-3rmp) - NTLM and Kerberos sticky connections are not keyed by service, so one service TLS client config applies to another | High | **2.11.58 / 3.7.14** |
+| [GHSA-53qr-784g-cj35](https://github.com/traefik/traefik/security/advisories/GHSA-53qr-784g-cj35) - FastProxy backend connection pool leaks NTLM and Negotiate identity to unauthenticated clients | High | **3.7.14** |
+| [GHSA-mhjw-hmjv-p99x](https://github.com/traefik/traefik/security/advisories/GHSA-mhjw-hmjv-p99x) - unsynchronized write to the sticky round tripper shared by concurrent HTTP/2 streams | Moderate | **2.11.58 / 3.7.14** |
 
 All of these are fixed by upgrading Traefik, not by configuration. Traefik Manager warns you when your running version is affected, and says which release to move to.
 
