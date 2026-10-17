@@ -60,8 +60,6 @@ function _rmStatusMap(rows, build) {
         const bk = proto + ':' + item.name.split('@')[0];
         seen[bk] = (seen[bk] || 0) + 1;
         if (seen[bk] === 1) bare[bk] = st;
-        // Traefik splits a router with several entry points into one copy per entry
-        // point named "<entryPoint>-<name>" (applyModel in pkg/server/aggregator.go).
         const ep = Array.isArray(item.using) && item.using.length === 1 ? item.using[0] : '';
         if (ep && item.name.startsWith(ep + '-')) {
             const sk = proto + ':' + item.name.slice(ep.length + 1);
