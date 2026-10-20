@@ -61,4 +61,5 @@ if [ "$MODE" = "tar-xz" ]; then
 else
   mkdir -p "$(dirname "$DEST")"
   cp "$TMP" "$DEST"
+  chmod 0644 "$DEST"
 fi
