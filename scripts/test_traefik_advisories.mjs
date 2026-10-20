@@ -25,12 +25,15 @@ const shown = v => {
 const GHSA = 'GHSA-rf44-j88r-hh8c';
 const CVE  = 'CVE-2026-39858';
 const CRIT = 'CVE-2026-88007';
+const NEGO = 'GHSA-qm9f-w54v-q2qh';
 
 const cases = [
     ['2.11.56', CRIT, 'last affected 2.x, critical HTTP/3 advisory outranks the rest'],
-    ['2.11.57', null, 'patched 2.x'],
-    ['3.7.12',  CRIT, 'last affected 3.x'],
-    ['3.7.13',  null, 'patched 3.x'],
+    ['2.11.57', NEGO, 'last 2.x hit by the 2.11.58 advisories'],
+    ['2.11.58', null, 'patched 2.x'],
+    ['3.7.12',  CRIT, 'last 3.x hit by the critical one'],
+    ['3.7.13',  NEGO, 'last 3.x hit by the 3.7.14 advisories'],
+    ['3.7.14',  null, 'patched 3.x'],
     ['3.8.0',   null, 'later minor is clean'],
     ['4.0.0',   null, 'later major is clean'],
     ['3.0.0',   CRIT, 'every 3.x before 3.7.13 is hit by the critical one'],
@@ -50,6 +53,20 @@ const rangeChecks = [
     ['3.7.11', GHSA,             true,  'the dot-alias advisory still applies below 3.7.12'],
     ['3.7.12', GHSA,             false, 'the dot-alias advisory is fixed in 3.7.12'],
     ['3.6.13', CVE,              true,  'the underscore-alias CVE still applies below 3.6.14'],
+    ['3.1.9',  'GHSA-53qr-784g-cj35', false, 'FastProxy identity leak starts at 3.2.0'],
+    ['3.2.0',  'GHSA-53qr-784g-cj35', true,  'FastProxy identity leak starts at 3.2.0'],
+    ['3.7.13', 'GHSA-53qr-784g-cj35', true,  'FastProxy identity leak is fixed in 3.7.14'],
+    ['3.7.14', 'GHSA-53qr-784g-cj35', false, 'FastProxy identity leak is fixed in 3.7.14'],
+    ['2.10.9', NEGO,                  false, 'Negotiate pool advisory starts at 2.11.0'],
+    ['2.11.0', NEGO,                  true,  'Negotiate pool advisory starts at 2.11.0'],
+    ['3.7.13', 'GHSA-cw35-4q88-3rmp', true,  'sticky round tripper keying is fixed in 3.7.14'],
+    ['3.7.14', 'GHSA-cw35-4q88-3rmp', false, 'sticky round tripper keying is fixed in 3.7.14'],
+    ['3.7.13', 'GHSA-mhjw-hmjv-p99x', true,  'HTTP/2 sticky write race is fixed in 3.7.14'],
+    ['3.7.14', 'GHSA-mhjw-hmjv-p99x', false, 'HTTP/2 sticky write race is fixed in 3.7.14'],
+    ['2.11.57','GHSA-2272-4vv8-65ww', true,  'negated Host mTLS bypass is fixed in 2.11.58'],
+    ['2.11.58','GHSA-2272-4vv8-65ww', false, 'negated Host mTLS bypass is fixed in 2.11.58'],
+    ['3.7.12', 'GHSA-2272-4vv8-65ww', true,  'negated Host mTLS bypass is fixed in 3.7.13'],
+    ['3.7.13', 'GHSA-2272-4vv8-65ww', false, 'negated Host mTLS bypass is fixed in 3.7.13'],
 ];
 
 let failed = 0;

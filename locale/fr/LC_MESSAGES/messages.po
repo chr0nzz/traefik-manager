@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-03 16:47+0000\n"
+"POT-Creation-Date: 2026-10-15 20:13+0000\n"
 "PO-Revision-Date: 2026-10-06 15:50+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/traefik-manager/"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 "Generated-By: Babel 2.18.0\n"
-"X-Generator: Weblate 2026.10.1.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -4774,6 +4773,12 @@ msgctxt "role"
 msgid "Fallback"
 msgstr "Solution de secours"
 
+#. Used in the browser
+msgid ""
+"FastProxy backend connection pool leaks NTLM and Negotiate identity to "
+"unauthenticated clients"
+msgstr ""
+
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
 "backend stops answering"
@@ -6585,6 +6590,12 @@ msgid "My Protected Area"
 msgstr "Ma zone protégée"
 
 #. Used in the browser
+msgid ""
+"NTLM and Kerberos sticky connections are not keyed by service, so one "
+"service TLS client config applies to another"
+msgstr ""
+
+#. Used in the browser
 msgctxt "label"
 msgid "Name"
 msgstr "Nom"
@@ -6643,6 +6654,12 @@ msgstr "Navigation"
 #, python-brace-format
 msgid "Needs {missing}"
 msgstr "Nécessite {missing}"
+
+#. Used in the browser
+msgid ""
+"Negated Host matcher causes a TLS option conflict that disables client "
+"certificate authentication on the excluded host"
+msgstr ""
 
 #. Used in the browser
 #, python-brace-format
@@ -8275,6 +8292,11 @@ msgstr "Port"
 
 msgid "Port and rate limit"
 msgstr "Port et limite de débit"
+
+#. Used in the browser
+msgid ""
+"Preauthenticated Negotiate contaminates the shared backend connection pool"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -12928,6 +12950,14 @@ msgstr "URL non prise en charge – utilisez https://, http://, ssh:// ou git://
 
 msgid "Unsupported git repository URL scheme"
 msgstr "Schéma d’URL du dépôt Git non pris en charge"
+
+#. Used in the browser
+msgid ""
+"Unsynchronized write to the sticky round tripper shared by concurrent HTTP/2 "
+"streams"
+msgstr ""
+"Unsynchronised write to the sticky round tripper shared by concurrent HTTP/2 "
+"streams"
 
 msgctxt "button"
 msgid "Unused"

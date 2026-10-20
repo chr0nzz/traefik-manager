@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-03 16:47+0000\n"
+"POT-Creation-Date: 2026-10-15 20:13+0000\n"
 "PO-Revision-Date: 2026-09-29 20:39+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/traefik-manager/"
@@ -4708,6 +4708,12 @@ msgctxt "role"
 msgid "Fallback"
 msgstr "Respaldo"
 
+#. Used in the browser
+msgid ""
+"FastProxy backend connection pool leaks NTLM and Negotiate identity to "
+"unauthenticated clients"
+msgstr ""
+
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
 "backend stops answering"
@@ -6496,6 +6502,12 @@ msgid "My Protected Area"
 msgstr "Mi área protegida"
 
 #. Used in the browser
+msgid ""
+"NTLM and Kerberos sticky connections are not keyed by service, so one "
+"service TLS client config applies to another"
+msgstr ""
+
+#. Used in the browser
 msgctxt "label"
 msgid "Name"
 msgstr "Nombre"
@@ -6553,6 +6565,12 @@ msgstr "Navegación"
 #, python-brace-format
 msgid "Needs {missing}"
 msgstr "Requiere {missing}"
+
+#. Used in the browser
+msgid ""
+"Negated Host matcher causes a TLS option conflict that disables client "
+"certificate authentication on the excluded host"
+msgstr ""
 
 #. Used in the browser
 #, python-brace-format
@@ -8160,6 +8178,11 @@ msgstr "Puerto"
 
 msgid "Port and rate limit"
 msgstr "Puerto y límite de tasa"
+
+#. Used in the browser
+msgid ""
+"Preauthenticated Negotiate contaminates the shared backend connection pool"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -12733,6 +12756,14 @@ msgstr "URL no admitida - usa https://, http://, ssh:// o git://"
 
 msgid "Unsupported git repository URL scheme"
 msgstr "Esquema de URL de repositorio git no admitido"
+
+#. Used in the browser
+msgid ""
+"Unsynchronized write to the sticky round tripper shared by concurrent HTTP/2 "
+"streams"
+msgstr ""
+"Unsynchronised write to the sticky round tripper shared by concurrent HTTP/2 "
+"streams"
 
 msgctxt "button"
 msgid "Unused"
