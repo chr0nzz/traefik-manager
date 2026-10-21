@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-15 20:13+0000\n"
+"POT-Creation-Date: 2026-10-21 03:52+0000\n"
 "PO-Revision-Date: 2026-09-29 20:39+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/traefik-manager/"
@@ -1603,6 +1603,11 @@ msgstr "Aplicado mediante entrypoint"
 msgid "Apply & Save"
 msgstr "Aplicar y guardar"
 
+#. Used in the browser
+msgctxt "label"
+msgid "As logged"
+msgstr ""
+
 msgid ""
 "Assign a route to a group with the pencil on its card. A group disappears "
 "when nothing uses it."
@@ -2204,6 +2209,11 @@ msgstr ""
 #. Used in the browser
 msgid "Card settings"
 msgstr "Ajustes de la tarjeta"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Card settings for {name}"
+msgstr ""
 
 msgctxt "setting"
 msgid "Categories"
@@ -4042,7 +4052,6 @@ msgstr ""
 "Edita entrypoints, resolvers de certificados, plugins y proveedores en "
 "traefik.yml"
 
-#. Used in the browser
 msgid "Edit route"
 msgstr "Editar ruta"
 
@@ -11020,6 +11029,11 @@ msgid ""
 msgstr ""
 "Falló la verificación TLS - Traefik Manager no confía en el certificado del "
 "agente (%(error)s)"
+
+#. Used in the browser
+#, python-brace-format
+msgid "TLS {profile}, set on the entry point"
+msgstr ""
 
 #. Used in the browser
 msgid "TLS, no certResolver"

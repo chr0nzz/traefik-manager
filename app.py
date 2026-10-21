@@ -5707,7 +5707,7 @@ def _collect_file_services(configs):
 @app.route('/api/routes')
 @login_required
 def api_routes():
-    apps, middlewares = _build_all_apps(include_external=False)
+    apps, middlewares = _build_all_apps(include_external=False, live_tls=True)
     return jsonify({'apps': apps, 'middlewares': middlewares,
                     'configErrors': _get_config_parse_errors(),
                     'services': _collect_file_services(load_config(_p) for _p in env.CONFIG_PATHS)})
@@ -7951,6 +7951,7 @@ def _agent_routes_payload(agent, agent_id):
 
     apps.extend(_build_external_routes(all_routers, svc_urls))
     _rb.apply_live_rules(apps, all_routers)
+    _rb.apply_live_tls(apps, all_routers)
 
     prefix = f"agent_{agent_id}::"
     for store_key, rdata in load_settings().get('disabled_routes', {}).items():
