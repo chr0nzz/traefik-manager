@@ -101,7 +101,10 @@
             <i class="ph-bold ph-pencil-simple" style="color:var(--blue)"></i>
             <h2 class="font-bold text-sm" style="color:var(--text)" id="rmEditModalTitle">{{ _('Card settings') }}</h2>
         </div>
-        <button type="button" onclick="rmCloseEditModal()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
+        <div class="flex items-center gap-2">
+            <button type="button" id="rmEditRouteBtn" onclick="rmEditOpenRoute()" class="btn-secondary text-xs"><i class="ph-bold ph-pencil-simple"></i> {{ _('Edit route') }}</button>
+            <button type="button" onclick="rmCloseEditModal()" class="btn-icon"><i class="ph-bold ph-x text-base"></i></button>
+        </div>
     </div>
 
         <div class="px-6 py-5 space-y-4">

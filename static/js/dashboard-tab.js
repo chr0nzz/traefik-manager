@@ -181,9 +181,21 @@ window.rmOpenEditModal = function(routeId) {
     const hid = document.getElementById('rmEditHidden');
     if (hid) hid.checked = !!ov.hidden;
 
+    const routeBtn = document.getElementById('rmEditRouteBtn');
+    if (routeBtn) routeBtn.style.display = route && (!route.provider || route.provider === 'file') ? '' : 'none';
+
     document.getElementById('rmEditModal').classList.add('open');
     document.getElementById('rmEditBackdrop').classList.add('open');
     if (!setDetailDockOpen(true)) document.body.style.overflow = 'hidden';
+};
+
+window.rmEditOpenRoute = function() {
+    const route = (typeof _rmAllRoutes !== 'undefined' ? _rmAllRoutes : []).find(r => r.id === _rmEditRouteId);
+    if (!route) return;
+    rmCloseEditModal();
+    const btn = document.createElement('button');
+    btn.setAttribute('data-app', JSON.stringify(route));
+    handleEdit(btn);
 };
 
 window.rmCloseEditModal = function() {
@@ -464,7 +476,7 @@ function _dashLaunchInfo(r, ov) {
                     : `${th('no launch URL, the rule has no host. {set_one_in}', { set_one_in: tmHtml(`<b>${th('Set one in edit')}</b>`) })}`));
         return { url: null, why: why, glyph: 'ph-bold ph-link-break' };
     }
-    return { url: (r.tls ? 'https' : 'http') + '://' + picked.host + picked.path, hosts: hosts };
+    return { url: (r.tls || r.tlsInherited ? 'https' : 'http') + '://' + picked.host + picked.path, hosts: hosts };
 }
 
 function _dskState(r) {
@@ -624,7 +636,7 @@ function dashBuildRouteRow(r, s) {
     if (s.health === 'down' || s.health === 'warn') row.tabIndex = -1;
     row.title = _dskRowTitle(r, s, name);
 
-    row.innerHTML = `${_dskPlate(r, name, s)}<span class="dsk-id">${proto !== 'HTTP' ? '<span class="d-proto">' + _esc(proto) + '</span>' : ''}${s.url ? '<a class="dsk-name" href="' + _esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + _esc(name) + '</a>' : '<span class="dsk-name">' + _esc(name) + '</span>'}${host ? '<span class="dsk-host">' + _esc(host) + '</span>' : ''}</span>${s.note ? '<span class="dsk-note"><i class="' + s.noteIc + ' ' + s.noteCls + '"></i><span class="dsk-note-t">' + s.note + '</span></span>' : ''}<span class="dsk-rail"><button type="button" class="dsk-btn" data-dsk="${_esc(_dskSpec({ act: 'info', id: r.id }))}" title="${th('Route details')}" aria-label="${th('Details for {name}', { name })}"><i class="ph-bold ph-info"></i></button><button type="button" class="dsk-btn" data-dsk="${_esc(_dskSpec({ act: 'edit', id: r.id }))}" title="${th('Edit route')}" aria-label="${th('Edit {name}', { name })}"><i class="ph-bold ph-pencil-simple"></i></button></span>`;
+    row.innerHTML = `${_dskPlate(r, name, s)}<span class="dsk-id">${proto !== 'HTTP' ? '<span class="d-proto">' + _esc(proto) + '</span>' : ''}${s.url ? '<a class="dsk-name" href="' + _esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + _esc(name) + '</a>' : '<span class="dsk-name">' + _esc(name) + '</span>'}${host ? '<span class="dsk-host">' + _esc(host) + '</span>' : ''}</span>${s.note ? '<span class="dsk-note"><i class="' + s.noteIc + ' ' + s.noteCls + '"></i><span class="dsk-note-t">' + s.note + '</span></span>' : ''}<span class="dsk-rail"><button type="button" class="dsk-btn" data-dsk="${_esc(_dskSpec({ act: 'info', id: r.id }))}" title="${th('Route details')}" aria-label="${th('Details for {name}', { name })}"><i class="ph-bold ph-info"></i></button><button type="button" class="dsk-btn" data-dsk="${_esc(_dskSpec({ act: 'edit', id: r.id }))}" title="${th('Card settings')}" aria-label="${th('Card settings for {name}', { name })}"><i class="ph-bold ph-pencil-simple"></i></button></span>`;
     return row;
 }
 
@@ -646,7 +658,7 @@ function dashBuildIconTile(r, s) {
     tile.innerHTML = `${_dskPlate(r, name, s)
         + (s.url
             ? '<a class="dsk-tile-lk dsk-tile-name" href="' + _esc(s.url) + '" target="_blank" rel="noopener noreferrer" title="' + tip + '">' + _esc(name) + '</a>'
-            : '<span class="dsk-tile-name" title="' + tip + '">' + _esc(name) + '</span>')}<button type="button" class="dsk-tile-btn dsk-tile-btn-l" data-dsk="${_esc(_dskSpec({ act: 'info', id: r.id }))}" title="${th('Route details')}" aria-label="${th('Details for {name}', { name })}"><i class="ph-bold ph-info"></i></button><button type="button" class="dsk-tile-btn" data-dsk="${_esc(_dskSpec({ act: 'edit', id: r.id }))}" title="${th('Edit {name}', { name })}" aria-label="${th('Edit {name}', { name })}"><i class="ph-bold ph-pencil-simple"></i></button>`;
+            : '<span class="dsk-tile-name" title="' + tip + '">' + _esc(name) + '</span>')}<button type="button" class="dsk-tile-btn dsk-tile-btn-l" data-dsk="${_esc(_dskSpec({ act: 'info', id: r.id }))}" title="${th('Route details')}" aria-label="${th('Details for {name}', { name })}"><i class="ph-bold ph-info"></i></button><button type="button" class="dsk-tile-btn" data-dsk="${_esc(_dskSpec({ act: 'edit', id: r.id }))}" title="${th('Card settings')}" aria-label="${th('Card settings for {name}', { name })}"><i class="ph-bold ph-pencil-simple"></i></button>`;
     return tile;
 }
 
