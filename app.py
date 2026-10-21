@@ -558,26 +558,26 @@ def _hash_password(plaintext: str) -> str:
 def _ensure_password():
     if os.environ.get('ADMIN_PASSWORD', '').strip():
         return
-    settings = load_settings()
-    if settings.get('password_hash', ''):
+    if load_settings().get('password_hash', ''):
         return
-    password = secrets.token_urlsafe(16)
-    logger.warning("=" * 60)
-    logger.warning("  TRAEFIK MANAGER - AUTO-GENERATED PASSWORD")
-    logger.warning(f"  Password: {password}")
-    logger.warning("  Log in with this password, complete setup, then")
-    logger.warning("  you will be prompted to set a permanent password.")
-    logger.warning("=" * 60)
-    save_settings(
-        domains=settings['domains'],
-        cert_resolver=settings['cert_resolver'],
-        traefik_api_url=settings['traefik_api_url'],
-        auth_enabled=settings['auth_enabled'],
-        password_hash=_hash_password(password),
-        visible_tabs=settings['visible_tabs'],
-        must_change_password=True,
-        setup_complete=False,
-    )
+
+    def generate(current):
+        if current.get('password_hash', ''):
+            return None
+        password = secrets.token_urlsafe(16)
+        logger.warning("=" * 60)
+        logger.warning("  TRAEFIK MANAGER - AUTO-GENERATED PASSWORD")
+        logger.warning(f"  Password: {password}")
+        logger.warning("  Log in with this password, complete setup, then")
+        logger.warning("  you will be prompted to set a permanent password.")
+        logger.warning("=" * 60)
+        return {
+            'password_hash': _hash_password(password),
+            'must_change_password': True,
+            'setup_complete': False,
+        }
+
+    _settings.modify_settings(generate)
 
 
 def _sync_admin_password_fingerprint():
