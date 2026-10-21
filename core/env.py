@@ -5,7 +5,7 @@ import threading
 import time
 
 GITHUB_REPO = "chr0nzz/traefik-manager"
-APP_VERSION = "1.15.4"
+APP_VERSION = "1.15.5"
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
