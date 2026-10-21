@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-15 20:13+0000\n"
+"POT-Creation-Date: 2026-10-21 03:52+0000\n"
 "PO-Revision-Date: 2026-09-30 04:29+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/traefik-manager/"
@@ -1613,6 +1613,11 @@ msgstr "Použito přes vstupní bod"
 msgid "Apply & Save"
 msgstr "Použít a uložit"
 
+#. Used in the browser
+msgctxt "label"
+msgid "As logged"
+msgstr ""
+
 msgid ""
 "Assign a route to a group with the pencil on its card. A group disappears "
 "when nothing uses it."
@@ -2217,6 +2222,11 @@ msgstr ""
 #. Used in the browser
 msgid "Card settings"
 msgstr "Nastavení karty"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Card settings for {name}"
+msgstr ""
 
 msgctxt "setting"
 msgid "Categories"
@@ -4053,7 +4063,6 @@ msgstr ""
 "Upravit vstupní body, resolvery certifikátů, pluginy a poskytovatele v "
 "traefik.yml"
 
-#. Used in the browser
 msgid "Edit route"
 msgstr "Upravit trasu"
 
@@ -10980,6 +10989,11 @@ msgid ""
 msgstr ""
 "Ověření TLS selhalo: certifikát agenta není pro Traefik Manager důvěryhodný "
 "(%(error)s)"
+
+#. Used in the browser
+#, python-brace-format
+msgid "TLS {profile}, set on the entry point"
+msgstr ""
 
 #. Used in the browser
 msgid "TLS, no certResolver"

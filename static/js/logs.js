@@ -1388,8 +1388,11 @@ function openLogDetail(e) {
     document.getElementById('ldBadges').innerHTML =
         `<span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded" style="background:color-mix(in srgb, ${sc} 12%, transparent);color:${sc};border:1px solid color-mix(in srgb, ${sc} 30%, transparent)">${e.status || '-'} ${_esc(_lgStatusName(e.status))}</span><span class="text-xs font-mono font-bold px-2 py-1 rounded" style="background:color-mix(in srgb, ${mc} 12%, transparent);color:${mc};border:1px solid color-mix(in srgb, ${mc} 30%, transparent)">${_esc(e.method)}</span>`;
     const _g = _geoCache[e.ip];
+    const _ms = _lgTime(e);
+    const _local = _ms != null ? tmDate(_ms, { dateStyle: 'medium', timeStyle: 'long' }) : '';
     const rows = [
-        [tc('label', 'Path'), e.path], ['IP', e.ip], [tc('label', 'Date'), e.date],
+        [tc('label', 'Path'), e.path], ['IP', e.ip], [tc('label', 'Date'), _local || e.date],
+        ...(_local && e.date ? [[tc('label', 'As logged'), e.date]] : []),
         ...(_g && _g.country_code ? [[tc('label', 'Country'), `${_flagEmoji(_g.country_code)} ${_esc(_g.country_name || _g.country_code)}`, true]] : []),
         ...(e.domain ? [[tc('label', 'Domain'), e.domain]] : []),
         ...(e.scheme ? [[tc('label', 'Scheme'), e.scheme]] : []),

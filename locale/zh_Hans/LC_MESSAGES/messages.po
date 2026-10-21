@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-15 20:13+0000\n"
+"POT-Creation-Date: 2026-10-21 03:52+0000\n"
 "PO-Revision-Date: 2026-09-30 00:00+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/"
@@ -1494,6 +1494,11 @@ msgstr "通过入口点应用"
 msgid "Apply & Save"
 msgstr "应用并保存"
 
+#. Used in the browser
+msgctxt "label"
+msgid "As logged"
+msgstr ""
+
 msgid ""
 "Assign a route to a group with the pencil on its card. A group disappears "
 "when nothing uses it."
@@ -2056,6 +2061,11 @@ msgstr ""
 #. Used in the browser
 msgid "Card settings"
 msgstr "卡片设置"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Card settings for {name}"
+msgstr ""
 
 msgctxt "setting"
 msgid "Categories"
@@ -3798,7 +3808,6 @@ msgid ""
 "Edit entrypoints, certificate resolvers, plugins and providers in traefik.yml"
 msgstr "编辑 traefik.yml 中的入口点、证书解析器、插件和提供者"
 
-#. Used in the browser
 msgid "Edit route"
 msgstr "编辑路由"
 
@@ -10375,6 +10384,11 @@ msgid ""
 "TLS verification failed - the agent certificate is not trusted by Traefik "
 "Manager (%(error)s)"
 msgstr "TLS 验证失败：Traefik Manager 不信任该 Agent 证书（%(error)s）"
+
+#. Used in the browser
+#, python-brace-format
+msgid "TLS {profile}, set on the entry point"
+msgstr ""
 
 #. Used in the browser
 msgid "TLS, no certResolver"

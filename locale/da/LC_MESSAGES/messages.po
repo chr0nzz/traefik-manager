@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-15 20:13+0000\n"
+"POT-Creation-Date: 2026-10-21 03:52+0000\n"
 "PO-Revision-Date: 2026-09-30 04:18+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Danish <https://hosted.weblate.org/projects/traefik-manager/"
@@ -1585,6 +1585,11 @@ msgstr "Anvendt via entrypoint"
 msgid "Apply & Save"
 msgstr "Anvend og gem"
 
+#. Used in the browser
+msgctxt "label"
+msgid "As logged"
+msgstr ""
+
 msgid ""
 "Assign a route to a group with the pencil on its card. A group disappears "
 "when nothing uses it."
@@ -2180,6 +2185,11 @@ msgstr ""
 #. Used in the browser
 msgid "Card settings"
 msgstr "Kortindstillinger"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Card settings for {name}"
+msgstr ""
 
 msgctxt "setting"
 msgid "Categories"
@@ -4003,7 +4013,6 @@ msgid ""
 msgstr ""
 "Rediger entrypoints, certifikat-resolvere, plugins og providere i traefik.yml"
 
-#. Used in the browser
 msgid "Edit route"
 msgstr "Rediger rute"
 
@@ -10885,6 +10894,11 @@ msgid ""
 msgstr ""
 "TLS-verifikation mislykkedes - agentens certifikat er ikke betroet af "
 "Traefik Manager (%(error)s)"
+
+#. Used in the browser
+#, python-brace-format
+msgid "TLS {profile}, set on the entry point"
+msgstr ""
 
 #. Used in the browser
 msgid "TLS, no certResolver"
