@@ -425,6 +425,40 @@ def _traefik_router_rule_map(all_routers: dict) -> dict:
                 rule_map[key] = rule
     return rule_map
 
+def _traefik_router_tls_map(all_routers: dict) -> dict:
+    tls_map = {}
+    for proto in ('http', 'tcp'):
+        routers = (all_routers or {}).get(proto)
+        if not isinstance(routers, list):
+            continue
+        for r in routers:
+            if not isinstance(r, dict) or r.get('tls') is None:
+                continue
+            name = str(r.get('name', ''))
+            key  = name.split('@')[0]
+            opts = str(cfg_mod.as_dict(r.get('tls')).get('options', '') or '')
+            keys = [key]
+            using = r.get('using')
+            if isinstance(using, list) and len(using) == 1 and key.startswith(f'{using[0]}-'):
+                keys.append(key[len(using[0]) + 1:])
+            for k in keys:
+                if k:
+                    tls_map.setdefault((proto, k), opts)
+    return tls_map
+
+def apply_live_tls(apps, all_routers: dict):
+    tls_map = _traefik_router_tls_map(all_routers or {})
+    for app in apps:
+        if app.get('tls') or app.get('protocol') not in ('http', 'tcp'):
+            continue
+        if app.get('provider') not in (None, '', 'file'):
+            continue
+        key = (app.get('protocol'), app.get('name'))
+        if key in tls_map:
+            app['tlsInherited'] = True
+            app['tlsLiveOptions'] = tls_map[key].split('@')[0]
+    return apps
+
 def apply_live_rules(apps, all_routers: dict):
     rule_map = _traefik_router_rule_map(all_routers or {})
     for app in apps:
@@ -476,6 +510,7 @@ def _build_external_routes(all_routers: dict, svc_urls: dict, include_internal=F
                 'tls':          bool(tls),
                 'certResolver': cfg_mod.as_dict(tls).get('certResolver', '') if tls else '',
                 'tlsDomains':   cfg_mod.as_dict(tls).get('domains', []) or [] if tls else [],
+                'tlsOptionsProfile': str(cfg_mod.as_dict(tls).get('options', '') or '').split('@')[0] if tls else '',
                 'enabled':      r.get('status', 'enabled') == 'enabled',
                 'provider':     provider,
                 'configFile':   '',
@@ -498,7 +533,7 @@ def _entrypoint_mw_map() -> dict:
     except Exception:
         return {}
 
-def _build_all_apps(include_external=True, include_internal=False, complete=None):
+def _build_all_apps(include_external=True, include_internal=False, complete=None, live_tls=False):
     env.refresh_config_paths()
     all_apps = []
     all_middlewares = []
@@ -529,7 +564,10 @@ def _build_all_apps(include_external=True, include_internal=False, complete=None
         all_apps.extend(_build_external_routes(all_routers, api_svc_urls, include_internal=include_internal))
     if not all_routers and any('{{' in str(app.get('rule') or '') for app in all_apps):
         all_routers = traefik_mod._fetch_traefik_routers_and_services()[0] or {}
+    if not all_routers and live_tls and any(not a.get('tls') and a.get('protocol') in ('http', 'tcp') for a in all_apps):
+        all_routers = {proto: traefik_mod.traefik_api_get_all(f'/api/{proto}/routers') or [] for proto in ('http', 'tcp')}
     apply_live_rules(all_apps, all_routers)
+    apply_live_tls(all_apps, all_routers)
     for app in all_apps:
         if not app.get('entryPoints') and app.get('name') in router_ep_map:
             app['entryPoints'] = router_ep_map[app['name']]

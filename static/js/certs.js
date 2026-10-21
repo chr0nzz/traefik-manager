@@ -238,7 +238,7 @@ async function _certsForRoutes(ids) {
     const hosts = new Set();
     wanted.forEach(id => {
         const app = pool.find(a => String(a.id) === id);
-        if (!app || !app.tls) return;
+        if (!app || !(app.tls || app.tlsInherited)) return;
         [...String((app.liveRule || app.rule) || '').matchAll(/Host(?:SNI)?\(`([^`]+)`\)/g)].forEach(m => {
             const h = m[1].trim().toLowerCase();
             if (h && h !== '*') hosts.add(h);
@@ -586,9 +586,14 @@ function _tmTlsOptCard(o, i) {
     </div>`;
 }
 
+function _tlsOptProfileOf(r) {
+    if (!r || !(r.tls || r.tlsInherited)) return '';
+    return String(r.tlsOptionsProfile || r.tlsLiveOptions || 'default').split('@')[0];
+}
+
 function _tmTlsOptUsage(o) {
     const pool = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
-    const n = pool.filter(r => r.tlsOptionsProfile === o.name).length;
+    const n = pool.filter(r => _tlsOptProfileOf(r) === o.name).length;
     return n ? tn('used by {n} route', 'used by {n} routes', n) : t('unused');
 }
 
@@ -632,7 +637,7 @@ function openTlsOptDetail(o) {
         o.clientAuthCAs?.length && [t('CA Files'), _dList(o.clientAuthCAs, 'd-on'), true],
     ].filter(Boolean);
     const allRoutes = window._lastRenderedApps || APP_DATA || [];
-    const usedBy = allRoutes.filter(r => r.tlsOptionsProfile === o.name);
+    const usedBy = allRoutes.filter(r => _tlsOptProfileOf(r) === o.name);
     const usedByHtml = renderDetailBlock(t('Used by'), 'ph-arrows-split',
         usedBy.length
             ? `<div class="flex flex-wrap gap-1.5">${usedBy.map(r =>

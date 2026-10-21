@@ -937,8 +937,8 @@ function _tmRouteCard(app, i, opts) {
         !enabled ? `<i class="ph-bold ph-pause tm-glyph" style="color:var(--muted)" title="${thc('tooltip', 'Disabled')}"></i>` : '',
         app.insecureSkipVerify
             ? `<i class="ph-bold ph-shield-warning tm-glyph" style="color:var(--orange)" title="${th('insecureSkipVerify - backend certificate not verified')}"></i>` : '',
-        proto === 'udp' ? '' : (app.tls
-            ? '<i class="ph-bold ph-lock-simple tm-glyph" style="color:var(--muted)" title="TLS"></i>'
+        proto === 'udp' ? '' : (_routeTlsOn(app)
+            ? `<i class="ph-bold ph-lock-simple tm-glyph" style="color:var(--muted)" title="${_routeTlsTitle(app)}"></i>`
             : `<i class="ph-bold ph-lock-simple-open tm-glyph" style="color:var(--yellow)" title="${th('No TLS')}"></i>`),
     ].join('');
 
@@ -980,7 +980,7 @@ function _tmRouteCard(app, i, opts) {
         ? `<input type="checkbox" class="bulk-check" onclick="event.stopPropagation()" ${bulkSel ? 'checked' : ''} onchange="toggleBulkSelect(${_jsArg(app.id)})" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;margin-top:6px">`
         : '';
 
-    const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-rid="${_esc(app.id)}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}" data-target="${_esc(app.target)}" data-configfile="${_esc(app.configFile || '')}" data-eps="${(app.entryPoints || []).map(e => _esc(e)).join('|')}" data-servers="${(app.servers || []).map(sv => _esc(sv)).join('|')}" data-tls="${app.tls ? '1' : ''}"`;
+    const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-rid="${_esc(app.id)}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}" data-target="${_esc(app.target)}" data-configfile="${_esc(app.configFile || '')}" data-eps="${(app.entryPoints || []).map(e => _esc(e)).join('|')}" data-servers="${(app.servers || []).map(sv => _esc(sv)).join('|')}" data-tls="${_routeTlsOn(app) ? '1' : ''}"`;
 
     return `<div class="tm-card route-card${bulkSel ? ' tm-sel' : ''}" ${dataAttrs} style="--tm-accent:var(--blue)" onclick="openRouteDetailFromCard(this)">
         <div class="tm-head">${bulkCheckbox}${head}
@@ -1042,7 +1042,7 @@ function renderRouteGrid(apps) {
         const isComplexRule = !isSimpleHostRule && !!servedRule;
         const ruleLabel  = isComplexRule ? 'Rule' : 'Domain';
         const badgeClass = proto === 'http' ? 'badge-http' : (proto === 'tcp' ? 'badge-tcp' : 'badge-udp');
-        const tlsBadge = app.tls ? `<span class="badge badge-green" style="font-size:9px"><i class="ph-bold ph-lock"></i> TLS${app.tlsOptionsProfile ? ' ' + _esc(app.tlsOptionsProfile) : ''}</span>` : '';
+        const tlsBadge = _routeTlsOn(app) ? `<span class="badge badge-green" style="font-size:9px" title="${_routeTlsTitle(app)}"><i class="ph-bold ph-lock"></i> TLS${app.tlsOptionsProfile ? ' ' + _esc(app.tlsOptionsProfile) : ''}</span>` : '';
         const insecureBadge = app.insecureSkipVerify ? `<span class="badge" style="font-size:9px;background:rgba(240,180,0,0.12);color:#d4a017;border:1px solid rgba(240,180,0,0.3)" title="${th('insecureSkipVerify enabled')}"><i class="ph-bold ph-warning"></i> ${th('TLS skip')}</span>` : '';
         const tlsProfileBadge = '';
         const openLink = (proto === 'http' && domain && !domain.includes('{') && !domain.includes('*') && !domain.includes('HostRegexp'))
@@ -1067,7 +1067,7 @@ function renderRouteGrid(apps) {
         const httpBody = `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${ruleLabel}</div>${domainDisplay}</div><div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Target')}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1 ? `<span class="badge badge-muted" style="font-size:9px" title="${thn('{n} backend', '{n} backends', (app.servers||[]).length)}">+${(app.servers||[]).length-1}</span>` : ''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`; const tcpBody = `${app.rule ? `<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Rule')}</div><div class="text-xs font-mono truncate" style="color:var(--blue)">${_esc(app.rule)}</div></div>` : ''}<div class="rounded-md p-2.5" style="background:var(--input-bg);border:1px solid var(--border)"><div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:var(--muted)">${thc('label', 'Target')}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1 ? `<span class="badge badge-muted" style="font-size:9px" title="${thn('{n} backend', '{n} backends', (app.servers||[]).length)}">+${(app.servers||[]).length-1}</span>` : ''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div></div>`;
         const cfArg = `,${_jsArg(app.configFile || '')}`;
         const cfBadge = (epBadges || mwBadges || epMwBadges || app.configFile) ? `<div class="flex flex-wrap items-center gap-1 mt-2">${epBadges}${mwBadges}${epMwBadges}${app.configFile ? `<span class="badge badge-muted" style="font-size:9px;margin-left:auto">${_esc(app.configFile)}</span>` : ''}</div>` : '';
-        const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-rid="${_esc(app.id)}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}" data-target="${_esc(app.target)}" data-configfile="${_esc(app.configFile||'')}" data-eps="${(app.entryPoints||[]).map(e => _esc(e)).join('|')}" data-servers="${(app.servers || []).map(sv => _esc(sv)).join('|')}" data-tls="${app.tls ? '1' : ''}"`;
+        const dataAttrs = `data-protocol="${proto}" data-name="${_esc(app.name.toLowerCase())}" data-routekey="${_esc(app.name)}" data-idx="${i}" data-rid="${_esc(app.id)}" data-enabled="${enabled}" data-domains="${allDomains.map(d => _esc(d)).join('|')}" data-target="${_esc(app.target)}" data-configfile="${_esc(app.configFile||'')}" data-eps="${(app.entryPoints||[]).map(e => _esc(e)).join('|')}" data-servers="${(app.servers || []).map(sv => _esc(sv)).join('|')}" data-tls="${_routeTlsOn(app) ? '1' : ''}"`;
         const isBulkSelected = _bulkMode && _bulkSelected.has(app.id);
         const bulkOutline = isBulkSelected ? 'outline:2px solid var(--blue);outline-offset:-2px;' : '';
         const bulkCheckbox = _bulkMode ? `<input type="checkbox" class="bulk-check" onclick="event.stopPropagation()" ${isBulkSelected ? 'checked' : ''} onchange="toggleBulkSelect(${_jsArg(app.id)})" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;border-radius:3px;margin-right:2px">` : '';
@@ -1079,8 +1079,8 @@ function renderRouteGrid(apps) {
         if (_routeViewMode === 'list') {
             const epCompact = _dList((app.entryPoints || []).slice(0, 2));
             const mwCompact = _dList((app.middlewares || []).map(mw => mw.split('@')[0]), 'd-mw');
-            const listGlyphs = (proto === 'udp' ? '' : (app.tls
-                ? `<i class="ph-bold ph-lock-simple d-glyph" style="color:var(--muted)" title="TLS${app.tlsOptionsProfile ? ' ' + _esc(app.tlsOptionsProfile) : ''}"></i>`
+            const listGlyphs = (proto === 'udp' ? '' : (_routeTlsOn(app)
+                ? `<i class="ph-bold ph-lock-simple d-glyph" style="color:var(--muted)" title="${_routeTlsTitle(app)}"></i>`
                 : `<i class="ph-bold ph-lock-simple-open d-glyph" style="color:var(--yellow)" title="${th('No TLS')}"></i>`))
                 + (app.insecureSkipVerify ? `<i class="ph-bold ph-shield-warning d-glyph" style="color:var(--orange)" title="${th('insecureSkipVerify - backend certificate not verified')}"></i>` : '');
             return `<div class="svc-list-row route-list-grid route-card${enabled ? '' : ' opacity-50'}" style="${bulkOutline}" ${dataAttrs}><div class="svc-list-col-status" style="display:flex;align-items:center;gap:6px">${bulkCheckbox}<span class="svc-status-dot" style="background:${enabled ? 'var(--green)' : 'var(--muted)'}"></span><span class="d-flat ${enabled ? 'd-on' : 'd-off'} rl-state">${enabled ? thc('status', 'Active') : thc('status', 'Paused')}</span></div><div style="display:flex;align-items:center;gap:5px"><span class="d-flat d-proto d-proto-${proto}">${proto.toUpperCase()}</span>${listGlyphs}</div><div class="svc-list-col-name"><div style="display:flex;align-items:center;gap:5px">${iconHtml}<span class="truncate">${_esc(app.name)}</span></div></div><div class="rl-svc"><span class="d-flat d-off truncate" title="${_esc(app.service_name)}">${_esc(app.service_name)}</span></div><div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${listDomainDisplay}</div><div style="display:flex;align-items:center;gap:4px"><div class="text-xs font-mono truncate" style="color:var(--green)">${_esc(app.target)}</div>${(app.servers||[]).length>1 ? `<span class="d-flat d-off" title="${thn('{n} backend', '{n} backends', (app.servers||[]).length)}">+${(app.servers||[]).length-1}</span>` : ''}<button onclick="event.stopPropagation();_copyToClipboard(${_jsArg(app.target)})" title="${thc('tooltip', 'Copy')}" style="background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);flex-shrink:0;line-height:1;border-radius:3px" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 256 256" fill="currentColor"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-56,176H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg></button></div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${epCompact}</div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px">${mwCompact}</div><div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()"><button type="button" data-app='${appJson}' data-openurl="${_esc(openUrl)}" onclick="event.stopPropagation();_openRouteMenu(event,this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'More')}"><i class="ph-bold ph-dots-three text-sm"></i></button><button type="button" data-app='${appJson}' onclick="handleEdit(this)" class="pill-btn pill-btn-blue" title="${thc('tooltip', 'Edit')}"><i class="ph-bold ph-pencil-simple text-sm"></i></button>${toggleBtn}</div></div>`;
@@ -2221,6 +2221,15 @@ let _liveRoutersCache = null;
 let _liveServicesCache = null;
 let _liveEntrypointsCache = null;
 let _currentDetailApp = null;
+
+function _routeTlsOn(app) {
+    return !!(app && (app.tls || app.tlsInherited));
+}
+
+function _routeTlsTitle(app) {
+    const profile = String(app.tlsOptionsProfile || app.tlsLiveOptions || 'default').split('@')[0];
+    return app.tls ? 'TLS ' + _esc(profile) : th('TLS {profile}, set on the entry point', { profile });
+}
 
 async function openRouteDetail(name, protocol, appData) {
     closeOtherPanels('detailPanel');
