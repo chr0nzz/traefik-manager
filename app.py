@@ -1127,7 +1127,7 @@ def setup():
         notify_missing      = [f for f in _notify_providers.required_fields(notify_kind)
                                if not notify_fields[f]]
 
-        domains = [d.strip() for d in domains_raw.split(',') if d.strip()]
+        domains = _cfg.parse_domains(domains_raw)
         pw_error = None if temp_password_mode else _password_error(pw)
 
         if not domains:
@@ -4989,7 +4989,7 @@ def api_save_settings():
     try:
         data        = request.get_json()
         domains_raw = data.get('domains', '')
-        domains     = [d.strip() for d in (domains_raw if isinstance(domains_raw, list) else str(domains_raw).split(',')) if str(d).strip()]
+        domains     = _cfg.parse_domains(domains_raw)
         if not domains:
             return jsonify({'error': gettext('At least one domain is required')}), 400
         cert_resolver   = str(data.get('cert_resolver', 'cloudflare')).strip()
@@ -8213,6 +8213,8 @@ def api_agents_update(agent_id):
             for field in updatable:
                 if field in data:
                     agents[i][field] = data[field]
+            if 'domains' in data:
+                agents[i]['domains'] = _cfg.parse_domains(data['domains'])
             if 'visible_tabs' in data:
                 agents[i]['visible_tabs'] = _settings.sanitize_visible_tabs(data['visible_tabs'])
             if 'traefik_api_password' in data and data['traefik_api_password'] not in ('', '***'):

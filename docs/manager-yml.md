@@ -123,7 +123,7 @@ self_route:
 
 **Type:** list - **Default:** `["example.com"]` - **Env:** `DOMAINS`
 
-Base domains shown as options in the Add Route form.
+Base domains shown as options in the Add Route form. In **Settings - Connection - Domains** and in `DOMAINS`, separate them with commas, spaces or new lines; each one is trimmed and lowercased, and empty entries and duplicates are dropped. Connection changes are written only when you click **Save** (or press Enter in a field); the panel shows **Unsaved changes** until then. Removing a Settings domain chip in the route form also removes it here.
 
 ```yaml
 domains:

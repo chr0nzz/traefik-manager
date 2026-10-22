@@ -526,6 +526,7 @@ function _resetRouteForm() {
     const wcChk = document.getElementById('wildcardCheckbox'); if (wcChk) wcChk.checked = false;
     const mainEl = document.getElementById('tlsWildcardMain'); if (mainEl) mainEl.value = '';
     const sansEl = document.getElementById('tlsWildcardSans'); if (sansEl) sansEl.value = '';
+    _wildcardAuto = null;
     _showWildcardFields(false);
     ['http', 'tcp', 'udp'].forEach(pr => setServiceRefMode(pr, false));
     setProtocol('http');
@@ -643,6 +644,15 @@ function onRouteConfigFileChange(sel) {
     }
 }
 
+function _httpRouteMissingDomain() {
+    if (currentProto !== 'http') return false;
+    const ruleEl = document.getElementById('httpRule');
+    if (!ruleEl || !ruleEl.disabled) return false;
+    if (!document.getElementById('domainChips') || !window._domainChipSelected) return false;
+    if (window._domainChipSelected.size) return false;
+    return !(document.getElementById('subdomain')?.value || '').trim().includes('.');
+}
+
 async function saveRouteAjax(event) {
     event.preventDefault();
     const form = event.target;
@@ -656,6 +666,11 @@ async function saveRouteAjax(event) {
     if (cfWrap && cfWrap.style.display !== 'none' && cfSel && !cfSel.value
             && !document.getElementById('configFile').value) {
         showToast(t('Select a config file for this route'), 'error');
+        return;
+    }
+    if (_httpRouteMissingDomain()) {
+        showToast(t('Select at least one domain for this route'), 'error');
+        document.getElementById('domainChips')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         return;
     }
     const btn = form.querySelector('button[type=submit]');
@@ -1201,41 +1216,81 @@ function _copyToClipboard(text) {
 
 let _customDomains = [];
 
-function _derivedDomains() {
+function _derivedDomainOwners() {
     const apps = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
-    const out = new Set();
+    const out = new Map();
     apps.forEach(a => {
         [...((a.liveRule || a.rule) || '').matchAll(/Host(?:SNI)?\(`([^`]+)`\)/g)].forEach(m => {
             const h = m[1].toLowerCase().trim();
             if (!h || h.includes('*') || h.includes('{')) return;
             const parts = h.split('.').filter(Boolean);
-            if (parts.length >= 3) out.add(parts.slice(1).join('.'));
-            else if (parts.length === 2) out.add(h);
+            let d = '';
+            if (parts.length >= 3) d = parts.slice(1).join('.');
+            else if (parts.length === 2) d = h;
+            if (!d) return;
+            if (!out.has(d)) out.set(d, []);
+            const name = a.name || a.id || '';
+            if (name && !out.get(d).includes(name)) out.get(d).push(name);
         });
     });
-    return [...out];
+    return out;
+}
+
+function _derivedDomains() {
+    return [..._derivedDomainOwners().keys()];
+}
+
+function _configuredDomains() {
+    return _activeAgent ? (_activeAgent.domains || []) : availableDomains;
 }
 
 function _domainsForForm() {
-    const base = _activeAgent ? (_activeAgent.domains || []) : availableDomains;
-    const merged = [...base];
+    const merged = [..._configuredDomains()];
     [..._derivedDomains(), ..._customDomains].forEach(d => { if (!merged.includes(d)) merged.push(d); });
     return merged;
+}
+
+function _domainChipLock(domain, owners) {
+    const conf = _configuredDomains();
+    const inSettings = conf.includes(domain);
+    const custom = _customDomains.includes(domain);
+    const routes = owners.get(domain) || [];
+    if (inSettings && _activeAgent) return t("{domain} comes from this agent's Domains setting. Remove it there.", { domain });
+    if (inSettings && conf.length === 1 && !custom) return t('{domain} is the only domain in Settings, Connection, Domains. Add another one there before removing it.', { domain });
+    if (!inSettings && !custom && routes.length) {
+        return tn('{domain} is used by route {routes}, so it stays in the list until that route stops using it.',
+                  '{domain} is used by routes {routes}, so it stays in the list until those routes stop using it.',
+                  routes.length, { domain, routes: tmList(routes) });
+    }
+    return '';
+}
+
+function _domainChipRemoveTitle(domain) {
+    return _configuredDomains().includes(domain)
+        ? t('Remove {domain} from Settings, Connection, Domains', { domain })
+        : t('Remove {domain}', { domain });
 }
 
 function _initDomainChips(selectedDomains) {
     const container = document.getElementById('domainChips');
     const hiddenContainer = document.getElementById('domainHiddenInputs');
     if (!container || !hiddenContainer) return;
-    const conf = _activeAgent ? (_activeAgent.domains || []) : availableDomains;
+    const conf = _configuredDomains();
     const initialList = _domainsForForm();
     let selected = new Set(selectedDomains && selectedDomains.length ? selectedDomains : (conf.length === 1 ? [conf[0]] : (initialList.length === 1 ? [initialList[0]] : [])));
     function render() {
         const list = _domainsForForm();
-        hiddenContainer.innerHTML = [...selected].map(d => `<input type="hidden" name="domains" value="${_esc(d)}">`).join('');
+        [...selected].forEach(d => { if (!list.includes(d)) selected.delete(d); });
+        const owners = _derivedDomainOwners();
+        const hint = list.length > 1 ? `<div class="dom-chip-hint">${th('Click a domain to switch to it. Ctrl or Shift click to select more than one.')}</div>` : '';
+        hiddenContainer.innerHTML = [...selected].map(d => `<input type="hidden" name="domains" value="${_esc(d)}">`).join('') + hint;
         container.innerHTML = `${list.map(d => {
             const on = selected.has(d);
-            return `<button type="button" onclick="_toggleDomainChip(this,${_jsArg(d)})" class="dom-chip${on ? ' on' : ''}" title="${_esc(d)}">${_esc(d)}</button>`;
+            const lock = _domainChipLock(d, owners);
+            const x = lock
+                ? `<button type="button" class="dom-chip-x locked" aria-disabled="true" onclick="_removeDomainChip(event,${_jsArg(d)})" title="${_esc(lock)}" aria-label="${_esc(lock)}"><i class="ph-bold ph-lock-simple"></i></button>`
+                : `<button type="button" class="dom-chip-x" onclick="_removeDomainChip(event,${_jsArg(d)})" title="${_esc(_domainChipRemoveTitle(d))}" aria-label="${_esc(_domainChipRemoveTitle(d))}"><i class="ph-bold ph-x"></i></button>`;
+            return `<span class="dom-chip${on ? ' on' : ''}" data-domain="${_esc(d)}"><button type="button" class="dom-chip-l" onclick="_toggleDomainChip(event,${_jsArg(d)})" aria-pressed="${on}" title="${_esc(d)}">${_esc(d)}</button>${x}</span>`;
         }).join('')}<button type="button" onclick="_customDomainPrompt(this)" class="dom-chip-add" title="${th('Add another domain')}"><i class="ph-bold ph-plus" style="font-size:10px"></i></button>`;
     }
     render();
@@ -1243,12 +1298,40 @@ function _initDomainChips(selectedDomains) {
     window._domainChipRender = render;
 }
 
-function _toggleDomainChip(btn, domain) {
+function _toggleDomainChip(event, domain) {
     const selected = window._domainChipSelected;
     if (!selected) return;
-    if (selected.has(domain)) { if (selected.size > 1) selected.delete(domain); }
+    const multi = !!(event && (event.ctrlKey || event.metaKey || event.shiftKey));
+    if (selected.has(domain)) selected.delete(domain);
+    else if (!multi && selected.size === 1) { selected.clear(); selected.add(domain); }
     else selected.add(domain);
     window._domainChipRender();
+    _refreshWildcardFromDomain();
+}
+
+async function _removeDomainChip(event, domain) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+    const owners = _derivedDomainOwners();
+    const lock = _domainChipLock(domain, owners);
+    if (lock) { showToast(lock, 'info', false); return; }
+    const inSettings = _configuredDomains().includes(domain);
+    if (inSettings) {
+        if (typeof saveSettingsDomains !== 'function') return;
+        const ok = await saveSettingsDomains(availableDomains.filter(d => d !== domain));
+        if (!ok) return;
+    }
+    _customDomains = _customDomains.filter(d => d !== domain);
+    if (window._domainChipSelected) window._domainChipSelected.delete(domain);
+    if (window._domainChipRender) window._domainChipRender();
+    _refreshWildcardFromDomain();
+    const routes = owners.get(domain) || [];
+    if (routes.length) {
+        showToast(tn('Removed {domain} from Settings. It stays in the list while route {routes} uses it.',
+                     'Removed {domain} from Settings. It stays in the list while routes {routes} use it.',
+                     routes.length, { domain, routes: tmList(routes) }), 'info', false);
+    } else if (inSettings) {
+        showToast(t('Removed {domain} from Settings, Connection, Domains', { domain }), 'success');
+    }
 }
 
 function _customDomainPrompt(btn) {
@@ -1265,6 +1348,7 @@ function _customDomainPrompt(btn) {
             if (window._domainChipSelected) window._domainChipSelected.add(v);
         }
         if (window._domainChipRender) window._domainChipRender();
+        _refreshWildcardFromDomain();
     };
     input.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); commit(); }
@@ -1827,22 +1911,55 @@ function _showWildcardFields(on) {
     if (box) box.style.display = on ? '' : 'none';
 }
 
+let _wildcardAuto = null;
+
+function _wildcardBaseDomain() {
+    if (window._domainChipSelected && window._domainChipSelected.size && document.getElementById('domainChips')) {
+        return [...window._domainChipSelected][0];
+    }
+    const domSel = document.getElementById('domainSelect');
+    if (domSel && domSel.value) return domSel.value;
+    return (document.getElementById('singleDomain')?.textContent || '').trim();
+}
+
+function _fillWildcardFromDomain(mainEl, sansEl) {
+    const base = _wildcardBaseDomain();
+    if (!base) return;
+    mainEl.value = base;
+    sansEl.value = '*.' + base;
+    _wildcardAuto = { main: mainEl.value, sans: sansEl.value };
+}
+
+function _seedWildcardAuto() {
+    const mainEl = document.getElementById('tlsWildcardMain');
+    const sansEl = document.getElementById('tlsWildcardSans');
+    const base = _wildcardBaseDomain();
+    _wildcardAuto = null;
+    if (!mainEl || !sansEl || !base) return;
+    if (mainEl.value.trim() === base && sansEl.value.trim() === '*.' + base) _wildcardAuto = { main: base, sans: '*.' + base };
+}
+
+function _refreshWildcardFromDomain() {
+    const chk = document.getElementById('wildcardCheckbox');
+    const mainEl = document.getElementById('tlsWildcardMain');
+    const sansEl = document.getElementById('tlsWildcardSans');
+    if (!chk || !chk.checked || !mainEl || !sansEl) return;
+    const main = mainEl.value.trim();
+    const sans = sansEl.value.trim();
+    const empty = !main && !sans;
+    const auto = _wildcardAuto && main === _wildcardAuto.main && sans === _wildcardAuto.sans;
+    if (!empty && !auto) return;
+    _fillWildcardFromDomain(mainEl, sansEl);
+}
+
 function _onWildcardToggle(checked) {
     const mainEl = document.getElementById('tlsWildcardMain');
     const sansEl = document.getElementById('tlsWildcardSans');
     _showWildcardFields(checked);
     if (!mainEl || !sansEl) return;
-    if (!checked) { mainEl.value = ''; sansEl.value = ''; return; }
+    if (!checked) { mainEl.value = ''; sansEl.value = ''; _wildcardAuto = null; return; }
     if (mainEl.value.trim() || sansEl.value.trim()) return;
-    const domSel = document.getElementById('domainSelect');
-    let base = '';
-    if (window._domainChipSelected && window._domainChipSelected.size) {
-        base = [...window._domainChipSelected][0];
-    } else if (domSel && domSel.value) {
-        base = domSel.value;
-    }
-    if (!base) base = (document.getElementById('singleDomain')?.textContent || '').trim();
-    if (base) { mainEl.value = base; sansEl.value = '*.' + base; }
+    _fillWildcardFromDomain(mainEl, sansEl);
 }
 
 function _simpleHttpRule(subdomain, domains) {
@@ -1952,6 +2069,7 @@ async function cloneRoute(btn) {
             const sansEl = document.getElementById('tlsWildcardSans');
             if (mainEl) mainEl.value = first.main || '';
             if (sansEl) sansEl.value = (first.sans || []).join('\n');
+            _seedWildcardAuto();
             _showWildcardFields(true);
         } else if (chk) {
             chk.checked = false;
@@ -2059,6 +2177,7 @@ async function handleEdit(btn) {
             const sansEl = document.getElementById('tlsWildcardSans');
             if (mainEl) mainEl.value = first.main || '';
             if (sansEl) sansEl.value = (first.sans || []).join('\n');
+            _seedWildcardAuto();
             _showWildcardFields(true);
         } else if (wChk) {
             wChk.checked = false;

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-21 03:52+0000\n"
+"POT-Creation-Date: 2026-10-22 15:15+0000\n"
 "PO-Revision-Date: 2026-09-29 23:48+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Dutch <https://hosted.weblate.org/projects/traefik-manager/"
@@ -1634,6 +1634,7 @@ msgstr ""
 "Minstens 8 tekens. Een lange wachtzin is beter dan een kort ingewikkeld "
 "wachtwoord."
 
+#. Used in the browser
 msgid "At least one domain is required"
 msgstr "Minstens één domein is vereist"
 
@@ -2493,6 +2494,11 @@ msgstr "Wist alle opgeslagen CrowdSec-instellingen uit %(manager_yml)s."
 msgid "Click %(middleware)s to add one"
 msgstr "Klik op %(middleware)s om er een toe te voegen"
 
+#. Used in the browser
+msgid ""
+"Click a domain to switch to it. Ctrl or Shift click to select more than one."
+msgstr ""
+
 msgid "Click to copy"
 msgstr "Klik om te kopiëren"
 
@@ -2802,6 +2808,10 @@ msgstr "Verbinding mislukt: {error}"
 
 msgid "Connection refused"
 msgstr "Verbinding geweigerd"
+
+#. Used in the browser
+msgid "Connection settings saved"
+msgstr ""
 
 #. Used in the browser
 msgid "Connection successful"
@@ -8808,6 +8818,16 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "Remove {domain}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Remove {domain} from Settings, Connection, Domains"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "Remove {list_count} certificates from acme.json on {agent}: {shown}?"
 msgstr ""
 "{list_count} certificaten uit acme.json op {agent} verwijderen: {shown}?"
@@ -8835,6 +8855,22 @@ msgstr[0] ""
 "%(num)d certificaat verwijderd, daarna gestopt bij %(file)s: %(detail)s"
 msgstr[1] ""
 "%(num)d certificaten verwijderd, daarna gestopt bij %(file)s: %(detail)s"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Removed {domain} from Settings, Connection, Domains"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Removed {domain} from Settings. It stays in the list while route {routes} "
+"uses it."
+msgid_plural ""
+"Removed {domain} from Settings. It stays in the list while routes {routes} "
+"use it."
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
@@ -9756,6 +9792,11 @@ msgctxt "label"
 msgid "Saved"
 msgstr "Opgeslagen"
 
+#. Used in the browser
+msgctxt "status"
+msgid "Saved"
+msgstr ""
+
 msgid ""
 "Saved in manager.yml, so the choice follows you to every browser. Follow "
 "system uses the language your browser asks for, and English when Traefik "
@@ -9954,6 +9995,10 @@ msgid "Select a template above to use the wizard."
 msgstr "Kies hierboven een sjabloon om de wizard te gebruiken."
 
 #. Used in the browser
+msgid "Select at least one domain for this route"
+msgstr ""
+
+#. Used in the browser
 msgid "Select at least one source"
 msgstr "Kies minstens één bron"
 
@@ -10026,6 +10071,9 @@ msgstr "Stuur je bot een bericht, open {url} en kopieer chat.id."
 msgctxt "label"
 msgid "Sending…"
 msgstr "Verzenden…"
+
+msgid "Separate domains with commas, spaces or new lines."
+msgstr ""
 
 msgid "Serial Number"
 msgstr "Serienummer"
@@ -12718,6 +12766,10 @@ msgstr "Onbereikbaar: {error} · {ago}"
 #. Used in the browser
 msgid "Unsaved Changes"
 msgstr "Niet-opgeslagen wijzigingen"
+
+#. Used in the browser
+msgid "Unsaved changes"
+msgstr ""
 
 #. Used in the browser
 #, python-brace-format
@@ -16541,6 +16593,29 @@ msgstr "{decErr} Nul zou verzonnen zijn, dus hier staat niets"
 #, python-brace-format
 msgid "{digest} digest"
 msgstr "samenvatting {digest}"
+
+#. Used in the browser
+#, python-brace-format
+msgid "{domain} comes from this agent's Domains setting. Remove it there."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{domain} is the only domain in Settings, Connection, Domains. Add another "
+"one there before removing it."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{domain} is used by route {routes}, so it stays in the list until that route "
+"stops using it."
+msgid_plural ""
+"{domain} is used by routes {routes}, so it stays in the list until those "
+"routes stop using it."
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format

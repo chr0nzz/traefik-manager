@@ -579,10 +579,13 @@ async function openSettingsModal(panel) {
         const res  = await fetch('/api/settings');
         const data = await res.json();
         document.getElementById('settingsDomains').value          = (data.domains || []).join(', ');
+        _rememberConnectionSaved({ domains: data.domains || [], resolver: data.cert_resolver || '', apiUrl: data.traefik_api_url || '', apiUser: data.traefik_api_user || '' });
         syncThemeButtons(data.default_theme || 'dark');
         document.getElementById('settingsCertResolver').value     = data.cert_resolver || '';
         document.getElementById('settingsApiUrl').value           = data.traefik_api_url || '';
         document.getElementById('settingsApiUser').value          = data.traefik_api_user || '';
+        document.getElementById('settingsApiPassword').value      = '';
+        _setConnectionSaveState('clean');
         const apiPwHint = document.getElementById('apiPasswordSetHint');
         if (apiPwHint) apiPwHint.classList.toggle('hidden', !data.traefik_api_password_set);
         document.getElementById('settingsAcmeJsonPath').value     = data.acme_json_path || '';
@@ -1332,66 +1335,194 @@ async function updateGeoipDb(btn) {
     finally { if (btn) btn.disabled = false; loadGeoipSettings(); }
 }
 
-async function saveSettings() {
-    const domains          = document.getElementById('settingsDomains').value.split(',').map(d => d.trim()).filter(Boolean);
-    const resolver         = document.getElementById('settingsCertResolver').value.trim();
-    const apiUrl           = document.getElementById('settingsApiUrl').value.trim();
-    const acmeJsonPath     = document.getElementById('settingsAcmeJsonPath')?.value.trim() || '';
-    const accessLogPath    = document.getElementById('settingsAccessLogPath')?.value.trim() || '';
-    const staticConfigPath = document.getElementById('settingsStaticConfigPath')?.value.trim() || '';
-    const webhookUrl        = _legacyWebhook.url;
-    const webhookType       = _legacyWebhook.type;
-    const webhookUsername   = _legacyWebhook.username;
-    const webhookPassword   = '';
-    const crowdsecLapiUrl     = document.getElementById('settingsCrowdSecUrl')?.value.trim() || '';
-    const crowdsecApiKey      = document.getElementById('settingsCrowdSecKey')?.value || '';
-    const crowdsecMachineId       = document.getElementById('settingsCrowdSecMachineId')?.value.trim() || '';
-    const crowdsecMachinePassword = document.getElementById('settingsCrowdSecMachinePassword')?.value || '';
-    const crowdsecClientCert      = document.getElementById('settingsCrowdSecClientCert')?.value.trim() || '';
-    const crowdsecClientKey       = document.getElementById('settingsCrowdSecClientKey')?.value.trim() || '';
-    const crowdsecCaCert          = document.getElementById('settingsCrowdSecCaCert')?.value.trim() || '';
-    const traefikApiUser      = document.getElementById('settingsApiUser')?.value.trim() || '';
-    const traefikApiPassword  = document.getElementById('settingsApiPassword')?.value || '';
-    if (!domains.length) return;
+let _connSaved = null;
+
+function _connectionFieldValues() {
+    return {
+        domains:     _parseDomainList(document.getElementById('settingsDomains').value),
+        resolver:    document.getElementById('settingsCertResolver').value.trim(),
+        apiUrl:      document.getElementById('settingsApiUrl').value.trim(),
+        apiUser:     document.getElementById('settingsApiUser')?.value.trim() || '',
+        apiPassword: document.getElementById('settingsApiPassword')?.value || '',
+    };
+}
+
+function _connectionDirty() {
+    if (!_connSaved) return false;
+    const now = _connectionFieldValues();
+    return now.apiPassword !== '' || now.resolver !== _connSaved.resolver || now.apiUrl !== _connSaved.apiUrl
+        || now.apiUser !== _connSaved.apiUser || now.domains.join(',') !== _connSaved.domains.join(',');
+}
+
+function _setConnectionSaveState(state) {
+    const el = document.getElementById('connectionSaveState');
+    const btn = document.getElementById('connectionSaveBtn');
+    if (btn) btn.disabled = state !== 'dirty';
+    if (!el) return;
+    el.dataset.state = state;
+    if (state === 'dirty') {
+        el.innerHTML = `<i class="ph-bold ph-circle"></i> ${th('Unsaved changes')}`;
+        el.style.color = 'var(--yellow, #d4a017)';
+    } else if (state === 'saved') {
+        el.innerHTML = `<i class="ph-bold ph-check-circle"></i> ${thc('status', 'Saved')}`;
+        el.style.color = 'var(--green)';
+    } else {
+        el.innerHTML = '';
+        el.style.color = 'var(--muted)';
+    }
+}
+
+function _syncConnectionSaveState() {
+    if (_connectionDirty()) {
+        _setConnectionSaveState('dirty');
+        document.getElementById('settingsSavedNotice')?.classList.add('hidden');
+    } else {
+        const el = document.getElementById('connectionSaveState');
+        _setConnectionSaveState(el && el.dataset.state === 'saved' ? 'saved' : 'clean');
+    }
+}
+
+function _rememberConnectionSaved(values) {
+    _connSaved = { domains: values.domains.slice(), resolver: values.resolver, apiUrl: values.apiUrl, apiUser: values.apiUser };
+}
+
+function _connectionFieldKey(event) {
+    if (event.key !== 'Enter' || event.isComposing) return;
+    event.preventDefault();
+    if (_connectionDirty()) saveConnectionSettings();
+}
+
+async function saveConnectionSettings() {
+    const btn = document.getElementById('connectionSaveBtn');
+    if (btn) btn.disabled = true;
+    const ok = await saveSettings({ connection: true });
+    if (!ok) _syncConnectionSaveState();
+    return ok;
+}
+
+function _applySavedDomains(domains) {
+    if (typeof availableDomains !== 'undefined') {
+        availableDomains.length = 0;
+        domains.forEach(d => availableDomains.push(d));
+        const sel = document.getElementById('domain');
+        if (sel) sel.innerHTML = domains.map(d => `<option value="${_esc(d)}">${_esc(d)}</option>`).join('');
+    }
+    if (typeof window._domainChipRender === 'function') window._domainChipRender();
+}
+
+function _settingsPayload(conn) {
+    return {
+        domains: conn.domains, cert_resolver: conn.resolver, traefik_api_url: conn.apiUrl,
+        acme_json_path:     document.getElementById('settingsAcmeJsonPath')?.value.trim() || '',
+        access_log_path:    document.getElementById('settingsAccessLogPath')?.value.trim() || '',
+        static_config_path: document.getElementById('settingsStaticConfigPath')?.value.trim() || '',
+        webhook_url: _legacyWebhook.url, webhook_type: _legacyWebhook.type,
+        webhook_username: _legacyWebhook.username, webhook_password: '',
+        crowdsec_lapi_url:         document.getElementById('settingsCrowdSecUrl')?.value.trim() || '',
+        crowdsec_api_key:          document.getElementById('settingsCrowdSecKey')?.value || '',
+        crowdsec_alert_limit:      (document.getElementById('settingsCrowdSecAlertLimit')?.value || '').trim(),
+        crowdsec_machine_id:       document.getElementById('settingsCrowdSecMachineId')?.value.trim() || '',
+        crowdsec_machine_password: document.getElementById('settingsCrowdSecMachinePassword')?.value || '',
+        crowdsec_client_cert:      document.getElementById('settingsCrowdSecClientCert')?.value.trim() || '',
+        crowdsec_client_key:       document.getElementById('settingsCrowdSecClientKey')?.value.trim() || '',
+        crowdsec_ca_cert:          document.getElementById('settingsCrowdSecCaCert')?.value.trim() || '',
+        traefik_api_user: conn.apiUser, traefik_api_password: conn.apiPassword,
+    };
+}
+
+function _payloadFromSavedSettings(data, domains) {
+    return {
+        domains, cert_resolver: data.cert_resolver || '', traefik_api_url: data.traefik_api_url || '',
+        acme_json_path: data.acme_json_path || '', access_log_path: data.access_log_path || '',
+        static_config_path: data.static_config_path || '',
+        webhook_url: data.webhook_url || '', webhook_type: data.webhook_type || 'discord',
+        webhook_username: data.webhook_username || '', webhook_password: '',
+        crowdsec_lapi_url: data.crowdsec_lapi_url || '', crowdsec_api_key: '',
+        crowdsec_alert_limit: String(data.crowdsec_alert_limit || ''),
+        crowdsec_machine_id: data.crowdsec_machine_id || '', crowdsec_machine_password: '',
+        crowdsec_client_cert: data.crowdsec_client_cert || '', crowdsec_client_key: data.crowdsec_client_key || '',
+        crowdsec_ca_cert: data.crowdsec_ca_cert || '',
+        traefik_api_user: data.traefik_api_user || '', traefik_api_password: '',
+    };
+}
+
+async function _postSettings(payload) {
+    const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token']},
+        body: JSON.stringify(payload)
+    });
+    if (!res.ok) return { ok: false, error: await _errText(res, t('Failed to save settings')) };
+    const data = await res.json();
+    if (!data.success) return { ok: false, error: data.error || data.message || t('Failed to save settings') };
+    return { ok: true };
+}
+
+async function saveSettingsDomains(domains) {
+    const list = _parseDomainList(domains);
+    if (!list.length) { showToast(t('At least one domain is required'), 'error'); return false; }
     try {
-        const res  = await fetch('/api/settings', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': _csrfHeaders()['X-CSRF-Token']},
-            body: JSON.stringify({ domains, cert_resolver: resolver, traefik_api_url: apiUrl, acme_json_path: acmeJsonPath, access_log_path: accessLogPath, static_config_path: staticConfigPath, webhook_url: webhookUrl, webhook_type: webhookType, webhook_username: webhookUsername, webhook_password: webhookPassword, crowdsec_lapi_url: crowdsecLapiUrl, crowdsec_api_key: crowdsecApiKey, crowdsec_alert_limit: (document.getElementById('settingsCrowdSecAlertLimit')?.value || '').trim(), crowdsec_machine_id: crowdsecMachineId, crowdsec_machine_password: crowdsecMachinePassword, crowdsec_client_cert: crowdsecClientCert, crowdsec_client_key: crowdsecClientKey, crowdsec_ca_cert: crowdsecCaCert, traefik_api_user: traefikApiUser, traefik_api_password: traefikApiPassword })
-        });
-        if (!res.ok) { showToast(await _errText(res, t('Failed to save settings')), 'error'); return; }
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById('settingsSavedNotice').classList.remove('hidden');
-            document.getElementById('pathsSavedNotice')?.classList.remove('hidden');
-            setTimeout(() => document.getElementById('pathsSavedNotice')?.classList.add('hidden'), 3000);
-            document.getElementById('crowdsecSavedNotice')?.classList.remove('hidden');
-            setTimeout(() => document.getElementById('crowdsecSavedNotice')?.classList.add('hidden'), 3000);
-            if (crowdsecApiKey) {
-                document.getElementById('settingsCrowdSecKey').value = '';
-                document.getElementById('crowdsecKeySetHint')?.classList.remove('hidden');
-            }
-            if (crowdsecMachinePassword) {
-                document.getElementById('settingsCrowdSecMachinePassword').value = '';
-                document.getElementById('crowdsecMachineSetHint')?.classList.remove('hidden');
-            }
-            if (traefikApiPassword) {
-                document.getElementById('settingsApiPassword').value = '';
-                document.getElementById('apiPasswordSetHint')?.classList.remove('hidden');
-            }
-            if (typeof availableDomains !== 'undefined') {
-                availableDomains.length = 0;
-                domains.forEach(d => availableDomains.push(d));
-                const sel = document.getElementById('domain');
-                if (sel) sel.innerHTML = domains.map(d => `<option value="${d}">${d}</option>`).join('');
-            }
-            setTimeout(() => document.getElementById('settingsSavedNotice').classList.add('hidden'), 3000);
-        } else {
-            showToast(data.error || data.message || t('Failed to save settings'), 'error');
-        }
+        const res = await fetch('/api/settings');
+        if (!res.ok) { showToast(await _errText(res, t('Failed to save settings')), 'error'); return false; }
+        const current = await res.json();
+        const result = await _postSettings(_payloadFromSavedSettings(current, list));
+        if (!result.ok) { showToast(result.error, 'error'); return false; }
     } catch(e) {
         showToast(_netErrText(e, t('Failed to save settings')), 'error');
+        return false;
     }
+    if (_connSaved) {
+        const pending = _connectionDirty();
+        _connSaved.domains = list.slice();
+        const field = document.getElementById('settingsDomains');
+        if (field && !pending) field.value = list.join(', ');
+        _syncConnectionSaveState();
+    }
+    _applySavedDomains(list);
+    return true;
+}
+
+async function saveSettings(opts) {
+    const fromConnection = !!(opts && opts.connection);
+    const conn = fromConnection || !_connSaved ? _connectionFieldValues() : { ..._connSaved, apiPassword: '' };
+    if (!conn.domains.length) {
+        if (fromConnection) showToast(t('At least one domain is required'), 'error');
+        return false;
+    }
+    const payload = _settingsPayload(conn);
+    let result;
+    try {
+        result = await _postSettings(payload);
+    } catch(e) {
+        showToast(_netErrText(e, t('Failed to save settings')), 'error');
+        return false;
+    }
+    if (!result.ok) { showToast(result.error, 'error'); return false; }
+    if (fromConnection) {
+        _rememberConnectionSaved(conn);
+        document.getElementById('settingsDomains').value = conn.domains.join(', ');
+        document.getElementById('settingsSavedNotice').classList.remove('hidden');
+        _setConnectionSaveState('saved');
+        showToast(t('Connection settings saved'), 'success');
+    }
+    document.getElementById('pathsSavedNotice')?.classList.remove('hidden');
+    setTimeout(() => document.getElementById('pathsSavedNotice')?.classList.add('hidden'), 3000);
+    document.getElementById('crowdsecSavedNotice')?.classList.remove('hidden');
+    setTimeout(() => document.getElementById('crowdsecSavedNotice')?.classList.add('hidden'), 3000);
+    if (payload.crowdsec_api_key) {
+        document.getElementById('settingsCrowdSecKey').value = '';
+        document.getElementById('crowdsecKeySetHint')?.classList.remove('hidden');
+    }
+    if (payload.crowdsec_machine_password) {
+        document.getElementById('settingsCrowdSecMachinePassword').value = '';
+        document.getElementById('crowdsecMachineSetHint')?.classList.remove('hidden');
+    }
+    if (conn.apiPassword) {
+        document.getElementById('settingsApiPassword').value = '';
+        document.getElementById('apiPasswordSetHint')?.classList.remove('hidden');
+    }
+    _applySavedDomains(conn.domains);
+    return true;
 }
 
 async function resetCrowdSecConfig() {
@@ -2896,7 +3027,7 @@ function buildAgentCfgPayload() {
         git_backup_auto_push: document.getElementById('agCfgGitAutoPush').checked,
         tma_port:        (document.getElementById('agCfgPort')?.value.trim()) || '',
         tma_rate_limit:  (document.getElementById('agCfgRateLimit')?.value.trim()) || '',
-        domains:         (document.getElementById('agCfgDomains')?.value || '').split(',').map(s => s.trim()).filter(Boolean),
+        domains:         _parseDomainList(document.getElementById('agCfgDomains')?.value || ''),
     };
 }
 

@@ -250,6 +250,22 @@ def resolve_config_path(s: str) -> str:
     return ''
 
 
+_DOMAIN_SEP = re.compile(r'[\s,]+')
+
+
+def parse_domains(raw) -> list:
+    items = raw if isinstance(raw, (list, tuple)) else [raw]
+    out = []
+    for item in items:
+        if item is None:
+            continue
+        for part in _DOMAIN_SEP.split(str(item)):
+            d = part.strip().lower()
+            if d and d not in out:
+                out.append(d)
+    return out
+
+
 def safe_api_url(url: str) -> str:
     url = url.strip()
     if any(url.startswith(s) for s in env.ALLOWED_API_SCHEMES):

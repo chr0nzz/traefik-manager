@@ -1803,9 +1803,16 @@ html.tm-nav-collapsed .drawer-srv-head:hover .drawer-srv-mark { color: var(--tex
 @keyframes cs-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 .mw-chip { padding: 3px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); font: 400 12px 'JetBrains Mono', monospace; cursor: pointer; transition: border-color .12s, background .12s, color .12s; }
-.dom-chip { padding: 3px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); font: 400 12px 'JetBrains Mono', monospace; cursor: pointer; white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; transition: border-color .12s, background .12s, color .12s; }
+.dom-chip { display: inline-flex; align-items: center; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); font: 400 12px 'JetBrains Mono', monospace; white-space: nowrap; max-width: 230px; transition: border-color .12s, background .12s, color .12s; }
 .dom-chip:hover { border-color: var(--blue); color: var(--blue); }
 .dom-chip.on { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 15%, transparent); color: var(--blue); }
+.dom-chip-l { padding: 3px 4px 3px 10px; border: none; background: none; color: inherit; font: inherit; cursor: pointer; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dom-chip-x { display: inline-flex; align-items: center; padding: 3px 7px 3px 3px; border: none; background: none; color: inherit; font-size: 10px; line-height: 1; cursor: pointer; opacity: .55; transition: opacity .12s, color .12s; }
+.dom-chip-x:hover { opacity: 1; color: var(--red); }
+.dom-chip-x.locked { cursor: help; opacity: .35; }
+.dom-chip-x.locked:hover { color: inherit; opacity: .7; }
+.dom-chip-hint { margin-top: 4px; font-size: 11px; color: var(--muted); }
+.btn-primary:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 .dom-chip-add { padding: 3px 10px; border-radius: 6px; border: 1px dashed var(--border); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap; transition: border-color .12s, color .12s; }
 .dom-chip-add:hover { border-color: var(--blue); color: var(--blue); }
 .dom-chip-input { padding: 3px 10px; border-radius: 6px; border: 1px solid var(--blue); background: transparent; color: var(--text); font: 400 12px 'JetBrains Mono', monospace; width: 150px; outline: none; }

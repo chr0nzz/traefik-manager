@@ -64,7 +64,7 @@
                             <div id="domainChips" class="flex flex-wrap gap-1.5 p-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);min-height:38px"></div>
                             <div id="domainHiddenInputs"></div>
                             {% else %}
-                            <select name="domains" id="domainSelect" class="input-field">
+                            <select name="domains" id="domainSelect" class="input-field" onchange="_refreshWildcardFromDomain()">
                                 {% for d in domains %}
                                 <option value="{{ d }}">{{ d }}</option>
                                 {% endfor %}

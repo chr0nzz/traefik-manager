@@ -572,6 +572,7 @@
                     <div class="sc-fld">
                         <div class="sc-set-n">{{ pgettext('setting', 'Domains') }}</div>
                         <div class="sc-set-d">{{ _("A convenience list for the route form's host dropdown. It does not change your Traefik config, your TLS, or your routing - domains found in existing routes are picked up automatically, so this is just seeding.") }}</div>
+                        <div class="sc-set-d">{{ _('Separate domains with commas, spaces or new lines.') }}</div>
                         <input type="text" id="s_domains" placeholder="example.com, example.net"
                                value="{{ defaults.domains | join(', ') }}" class="input-field">
                     </div>

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-21 03:52+0000\n"
+"POT-Creation-Date: 2026-10-22 15:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1483,6 +1483,7 @@ msgstr ""
 msgid "At least 8 characters. A long passphrase beats a short complicated one."
 msgstr ""
 
+#. Used in the browser
 msgid "At least one domain is required"
 msgstr ""
 
@@ -2298,6 +2299,12 @@ msgstr ""
 msgid "Click %(middleware)s to add one"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"Click a domain to switch to it. Ctrl or Shift click to select more than "
+"one."
+msgstr ""
+
 msgid "Click to copy"
 msgstr ""
 
@@ -2590,6 +2597,10 @@ msgid "Connection failed: {error}"
 msgstr ""
 
 msgid "Connection refused"
+msgstr ""
+
+#. Used in the browser
+msgid "Connection settings saved"
 msgstr ""
 
 #. Used in the browser
@@ -8111,6 +8122,16 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "Remove {domain}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Remove {domain} from Settings, Connection, Domains"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "Remove {list_count} certificates from acme.json on {agent}: {shown}?"
 msgstr ""
 
@@ -8132,6 +8153,22 @@ msgstr ""
 #, python-format
 msgid "Removed %(num)d certificate, then stopped at %(file)s: %(detail)s"
 msgid_plural "Removed %(num)d certificates, then stopped at %(file)s: %(detail)s"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Removed {domain} from Settings, Connection, Domains"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Removed {domain} from Settings. It stays in the list while route {routes}"
+" uses it."
+msgid_plural ""
+"Removed {domain} from Settings. It stays in the list while routes "
+"{routes} use it."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -8968,6 +9005,11 @@ msgctxt "label"
 msgid "Saved"
 msgstr ""
 
+#. Used in the browser
+msgctxt "status"
+msgid "Saved"
+msgstr ""
+
 msgid ""
 "Saved in manager.yml, so the choice follows you to every browser. Follow "
 "system uses the language your browser asks for, and English when Traefik "
@@ -9154,6 +9196,10 @@ msgid "Select a template above to use the wizard."
 msgstr ""
 
 #. Used in the browser
+msgid "Select at least one domain for this route"
+msgstr ""
+
+#. Used in the browser
 msgid "Select at least one source"
 msgstr ""
 
@@ -9217,6 +9263,9 @@ msgstr ""
 #. Used in the browser
 msgctxt "label"
 msgid "Sending…"
+msgstr ""
+
+msgid "Separate domains with commas, spaces or new lines."
 msgstr ""
 
 msgid "Serial Number"
@@ -11524,6 +11573,10 @@ msgstr ""
 
 #. Used in the browser
 msgid "Unsaved Changes"
+msgstr ""
+
+#. Used in the browser
+msgid "Unsaved changes"
 msgstr ""
 
 #. Used in the browser
@@ -15175,6 +15228,29 @@ msgstr ""
 #, python-brace-format
 msgid "{digest} digest"
 msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{domain} comes from this agent's Domains setting. Remove it there."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{domain} is the only domain in Settings, Connection, Domains. Add another"
+" one there before removing it."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{domain} is used by route {routes}, so it stays in the list until that "
+"route stops using it."
+msgid_plural ""
+"{domain} is used by routes {routes}, so it stays in the list until those "
+"routes stop using it."
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format

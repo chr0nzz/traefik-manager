@@ -62,7 +62,7 @@ def parse_agent_dict(a: dict) -> dict:
         'git_host_branch':              str(a.get('git_host_branch', '')).strip(),
         'tma_port':                     str(a.get('tma_port', '')).strip(),
         'tma_rate_limit':               str(a.get('tma_rate_limit', '')).strip(),
-        'domains':                      [str(d).strip() for d in (a.get('domains') or []) if str(d).strip()],
+        'domains':                      config.parse_domains(a.get('domains') or []),
         'visible_tabs':                 {str(k): bool(v) for k, v in a['visible_tabs'].items()} if isinstance(a.get('visible_tabs'), dict) else {},
         'provider_tabs_seen':           [str(t) for t in (a.get('provider_tabs_seen') or []) if str(t)],
     }

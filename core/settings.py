@@ -264,7 +264,7 @@ def load_settings(fresh: bool = False) -> dict:
 
 def _load_settings(blob) -> dict:
     defaults = {
-        'domains':              [d.strip() for d in os.environ.get('DOMAINS', 'example.com').split(',') if d.strip()] or ['example.com'],
+        'domains':              config.parse_domains(os.environ.get('DOMAINS', 'example.com')) or ['example.com'],
         'cert_resolver':        os.environ.get('CERT_RESOLVER', 'cloudflare'),
         'traefik_api_url':      os.environ.get('TRAEFIK_API_URL', 'http://traefik:8080'),
         'auth_enabled':         True,
@@ -369,7 +369,7 @@ def _load_settings(blob) -> dict:
             _mark_unreadable(f"{env.SETTINGS_PATH} could not be parsed as a settings document")
         merged = defaults.copy()
         if 'domains' in data and isinstance(data['domains'], list):
-            merged['domains'] = [str(d).strip() for d in data['domains'] if str(d).strip()]
+            merged['domains'] = config.parse_domains(data['domains'])
         if 'cert_resolver' in data:
             merged['cert_resolver'] = str(data['cert_resolver']).strip()
         if 'traefik_api_url' in data:
