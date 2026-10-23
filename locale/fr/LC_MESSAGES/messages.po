@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-22 15:15+0000\n"
+"POT-Creation-Date: 2026-10-23 12:49+0000\n"
 "PO-Revision-Date: 2026-10-06 15:50+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/traefik-manager/"
@@ -3853,6 +3853,13 @@ msgctxt "tooltip"
 msgid "Disabled"
 msgstr "Désactivé"
 
+#. Used in the browser
+#, python-brace-format
+msgid "Disabled {n} route."
+msgid_plural "Disabled {n} routes."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid ""
 "Disables certificate validation for the backend. Use for self-signed certs "
 "(e.g. Proxmox, Kasm). Adds insecureSkipVerify via a named serversTransport."
@@ -4194,6 +4201,13 @@ msgstr "Activé"
 msgctxt "tooltip"
 msgid "Enabled"
 msgstr "Activé"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Enabled {n} route."
+msgid_plural "Enabled {n} routes."
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 msgid "Enabled, stream routes are not reachability checked"
@@ -10811,6 +10825,13 @@ msgstr[0] "{n} entrée non valide ignorée :"
 msgstr[1] "{n} entrées non valides ignorées :"
 
 #. Used in the browser
+#, python-brace-format
+msgid "Skipped {n} route that is not defined in a config file."
+msgid_plural "Skipped {n} routes that are not defined in a config file."
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
 msgctxt "button"
 msgid "Slowest"
 msgstr "Le plus lent"
@@ -11924,6 +11945,14 @@ msgstr[0] ""
 msgstr[1] ""
 "La recherche {search}, le filtre de protocole {proto} et le filtre de "
 "fournisseur {provider} combinés ne correspondent à aucun élément."
+
+#. Used in the browser
+msgid "The selected routes are already disabled."
+msgstr ""
+
+#. Used in the browser
+msgid "The selected routes are already enabled."
+msgstr ""
 
 #. Used in the browser
 msgid "The server changed, reload the list and select again"
@@ -16957,6 +16986,20 @@ msgid "{failed} of {n} route could not be deleted."
 msgid_plural "{failed} of {n} routes could not be deleted."
 msgstr[0] "Suppression impossible pour {failed} sur {n} route."
 msgstr[1] "Suppression impossible pour {failed} sur {n} routes."
+
+#. Used in the browser
+#, python-brace-format
+msgid "{failed} of {n} route could not be disabled."
+msgid_plural "{failed} of {n} routes could not be disabled."
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{failed} of {n} route could not be enabled."
+msgid_plural "{failed} of {n} routes could not be enabled."
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format

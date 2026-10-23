@@ -748,17 +748,24 @@ async function toggleRoute(id, currentlyEnabled, silent = false) {
             body: JSON.stringify({ enable: !currentlyEnabled, agent_id: _activeAgent ? _activeAgent.id : '', csrf_token: document.querySelector('meta[name="csrf-token"]')?.content || '' })
         });
         if (!res.ok) {
-            if (!silent) showToast(await _errText(res, t('Failed to toggle route')), 'error');
-            return;
+            const err = await _errText(res, t('Failed to toggle route'));
+            if (!silent) showToast(err, 'error');
+            return { ok: false, error: err };
         }
         const json = await res.json();
         if (json.ok) {
             if (!silent) { showToast(currentlyEnabled ? t('Route disabled.') : t('Route enabled.'), 'success'); refreshRoutes(); }
             if (typeof window.rmInvalidateData === 'function') window.rmInvalidateData();
-        } else {
-            if (!silent) showToast(json.message || json.error || t('Failed to toggle route.'), 'error');
+            return { ok: true };
         }
-    } catch(e) { if (!silent) showToast(_netErrText(e, t('Error toggling route')), 'error'); }
+        const err = json.message || json.error || t('Failed to toggle route.');
+        if (!silent) showToast(err, 'error');
+        return { ok: false, error: err };
+    } catch(e) {
+        const err = _netErrText(e, t('Error toggling route'));
+        if (!silent) showToast(err, 'error');
+        return { ok: false, error: err };
+    }
 }
 
 function _clearRouteViews(message) {
@@ -2219,7 +2226,7 @@ function toggleBulkSelect(id) {
     if (_bulkSelected.has(id)) _bulkSelected.delete(id);
     else _bulkSelected.add(id);
     updateBulkBar();
-    const card = document.querySelector(`.route-card[data-routekey="${CSS.escape(id)}"]`);
+    const card = _bulkCard(id);
     if (card) {
         const cb = card.querySelector('.bulk-check');
         if (cb) cb.checked = _bulkSelected.has(id);
@@ -2237,24 +2244,50 @@ function updateBulkBar() {
     if (count) count.textContent = t('{size} selected', { size: _bulkSelected.size });
 }
 
-async function bulkEnable() {
+function _bulkCard(id) {
+    return document.querySelector(`.route-card[data-rid="${CSS.escape(String(id))}"]`);
+}
+
+function _bulkApp(id) {
+    const pool = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
+    return pool.find(a => String(a.id) === String(id)) || null;
+}
+
+async function _bulkSetEnabled(enable) {
     const ids = [..._bulkSelected];
+    if (!ids.length) return;
+    let changed = 0, skipped = 0, failed = 0, firstErr = '';
     for (const id of ids) {
-        const card = document.querySelector(`.route-card[data-routekey="${CSS.escape(id)}"]`);
-        const enabled = card?.dataset.enabled === 'true';
-        if (!enabled) await toggleRoute(id, false, true);
+        const app = _bulkApp(id);
+        if (!app || (app.provider && app.provider !== 'file')) { skipped++; continue; }
+        if ((app.enabled !== false) === enable) continue;
+        const result = await toggleRoute(id, !enable, true);
+        if (result && result.ok) changed++;
+        else { failed++; if (!firstErr && result) firstErr = result.error || ''; }
+    }
+    if (failed) {
+        showToast((enable
+            ? tn('{failed} of {n} route could not be enabled.', '{failed} of {n} routes could not be enabled.', ids.length, { failed })
+            : tn('{failed} of {n} route could not be disabled.', '{failed} of {n} routes could not be disabled.', ids.length, { failed }))
+            + (firstErr ? ' ' + firstErr : ''), 'error');
+    } else if (changed) {
+        showToast(enable ? tn('Enabled {n} route.', 'Enabled {n} routes.', changed) : tn('Disabled {n} route.', 'Disabled {n} routes.', changed), 'success');
+    } else if (!skipped) {
+        showToast(enable ? t('The selected routes are already enabled.') : t('The selected routes are already disabled.'), 'info', false);
+    }
+    if (skipped) {
+        showToast(tn('Skipped {n} route that is not defined in a config file.', 'Skipped {n} routes that are not defined in a config file.', skipped), 'info', false);
     }
     _bulkSelected.clear(); updateBulkBar(); refreshRoutes();
+    if (changed) fetchNotifications();
+}
+
+async function bulkEnable() {
+    await _bulkSetEnabled(true);
 }
 
 async function bulkDisable() {
-    const ids = [..._bulkSelected];
-    for (const id of ids) {
-        const card = document.querySelector(`.route-card[data-routekey="${CSS.escape(id)}"]`);
-        const enabled = card?.dataset.enabled === 'true';
-        if (enabled) await toggleRoute(id, true, true);
-    }
-    _bulkSelected.clear(); updateBulkBar(); refreshRoutes();
+    await _bulkSetEnabled(false);
 }
 
 function _routeNameList(ids, limit = 6) {
@@ -2282,8 +2315,7 @@ async function bulkDelete() {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     let failed = 0, firstErr = '';
     for (const id of ids) {
-        const card = document.querySelector(`.route-card[data-routekey="${CSS.escape(id)}"]`);
-        const cf   = card?.dataset.configfile || '';
+        const cf   = _bulkCard(id)?.dataset.configfile || _bulkApp(id)?.configFile || '';
         const data = new FormData();
         data.append('csrf_token', csrf);
         if (cf) data.append('configFile', cf);
