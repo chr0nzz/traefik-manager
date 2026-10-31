@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-23 12:49+0000\n"
+"POT-Creation-Date: 2026-10-31 14:24-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en_GB <LL@li.org>\n"
@@ -4378,6 +4378,12 @@ msgid ""
 "unauthenticated clients"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client "
+"crash Traefik"
+msgstr ""
+
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
 "backend stops answering"
@@ -4610,6 +4616,12 @@ msgstr ""
 
 #. Used in the browser
 msgid "ForwardAuth identity spoofing via dot-form header aliases"
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"ForwardAuth shares its auth server connections between clients, leaking NTLM "
+"and Negotiate identity"
 msgstr ""
 
 #. Used in the browser
@@ -5361,6 +5373,10 @@ msgstr ""
 
 #. Used in the browser
 msgid "Keep (default)"
+msgstr ""
+
+#. Used in the browser
+msgid "Keep - allow aliased headers"
 msgstr ""
 
 msgid "Keep last N backups per file"
@@ -11689,6 +11705,11 @@ msgid "Use Host Repository"
 msgstr ""
 
 msgid "Use a service"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Use the global default ({value})"
 msgstr ""
 
 #. Used in the browser

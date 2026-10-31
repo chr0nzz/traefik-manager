@@ -36,11 +36,13 @@ entryPoints:
 
 If you use the forwardAuth wizards, enabling this is strongly recommended.
 
+**Traefik 3.7.17 or newer** can set it once for every entry point, including the internal ones, with `global.aliasHeadersStrategy` in the static config file. An entry point's own value overrides it. Traefik Manager keeps the global value when it saves, and when one is set, the entry point form offers **Use the global default** and an explicit **Keep** to opt a single entry point out. Do not add the global option on older Traefik, which refuses to start on an option it does not know.
+
 ### On older Traefik: `underscoreHeadersStrategy`
 
 **Traefik 3.7.6 through 3.7.11 only.** It takes the same three values but covers **underscores alone**, so dot-form aliases like `X.Auth.User` still get through. It is deprecated in favour of `aliasHeadersStrategy`.
 
-> **No 3.6.x release has either option.** Traefik does not ignore an option it does not know - it refuses to start with `field not found, node: underscoreHeadersStrategy`, taking the proxy down until the file is corrected. Traefik Manager only offers the field on versions that actually have it, and writes whichever name your Traefik supports.
+> **No 3.6.x release has either option.** Traefik does not ignore an option it does not know - it refuses to start with `field not found, node: underscoreHeadersStrategy`, taking the proxy down until the file is corrected. Traefik Manager only offers the field on versions that actually have it, and writes whichever name your Traefik supports. It asks the server you are editing for its version each time the form opens. If the version cannot be read, the field stays hidden and the entry point keeps whatever is already in the file.
 
 Upgrading to 3.7.13 or newer is the real fix. Before 3.7.13 even `aliasHeadersStrategy` could be bypassed by smuggling the header name as a request trailer (CVE-2026-88004), so the option alone was never enough. Traefik Manager reads either name, so switching over is just re-saving the entry point.
 

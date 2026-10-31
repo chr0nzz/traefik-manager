@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-23 12:49+0000\n"
+"POT-Creation-Date: 2026-10-31 14:24-0400\n"
 "PO-Revision-Date: 2026-09-29 23:06+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Portuguese <https://hosted.weblate.org/projects/traefik-"
@@ -4746,6 +4746,12 @@ msgid ""
 "unauthenticated clients"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client "
+"crash Traefik"
+msgstr "Uma condição de corrida no FastProxy após uma atualização HTTP/1 permite a um cliente não autenticado fazer o Traefik falhar"
+
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
 "backend stops answering"
@@ -5001,6 +5007,12 @@ msgid "ForwardAuth identity spoofing via dot-form header aliases"
 msgstr ""
 "Falsificação de identidade no ForwardAuth através de aliases de cabeçalhos "
 "com pontos"
+
+#. Used in the browser
+msgid ""
+"ForwardAuth shares its auth server connections between clients, leaking NTLM "
+"and Negotiate identity"
+msgstr "O ForwardAuth partilha as ligações ao servidor de autenticação entre clientes, expondo a identidade NTLM e Negotiate"
 
 #. Used in the browser
 msgid "Forwarding Headers"
@@ -5811,6 +5823,10 @@ msgstr "Manter"
 #. Used in the browser
 msgid "Keep (default)"
 msgstr "Manter (predefinido)"
+
+#. Used in the browser
+msgid "Keep - allow aliased headers"
+msgstr "Manter - permitir cabeçalhos com alias"
 
 msgid "Keep last N backups per file"
 msgstr "Manter as últimas N cópias de segurança por ficheiro"
@@ -12908,6 +12924,11 @@ msgstr "Usar repositório do anfitrião"
 
 msgid "Use a service"
 msgstr "Usar um serviço"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Use the global default ({value})"
+msgstr "Usar o valor global predefinido ({value})"
 
 #. Used in the browser
 msgid "Used By"

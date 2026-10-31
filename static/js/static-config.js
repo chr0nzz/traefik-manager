@@ -770,9 +770,36 @@ function _semverParts(v) {
     return m ? [+m[1], +m[2], +m[3]] : null;
 }
 
+let _epVersion = { server: null, version: null, pending: null };
+
+function _epActiveServer() {
+    return (typeof _activeAgent !== 'undefined' && _activeAgent) ? _activeAgent.id : '';
+}
+
+function _epCurrentVersion() {
+    return _epVersion.server === _epActiveServer() ? _epVersion.version : null;
+}
+
+function _loadEpVersion() {
+    const server = _epActiveServer();
+    const pending = agentFetch('/api/traefik/version')
+        .then(r => (r.ok ? r.json() : null))
+        .catch(() => null)
+        .then(d => {
+            if (_epVersion.pending === pending) _epVersion = { server, version: (d && d.Version) || null, pending: null };
+        });
+    _epVersion = { server, version: null, pending };
+    return pending;
+}
+
+function _clearEpVersion() {
+    _epVersion = { server: null, version: null, pending: null };
+    _updateEpUnderscoreVisibility();
+}
+
 function _traefikSupportsUnderscoreStrategy() {
-    const p = _semverParts(typeof _currentVersion !== 'undefined' ? _currentVersion : '');
-    if (!p) return true;
+    const p = _semverParts(_epCurrentVersion());
+    if (!p) return false;
     const [maj, min, pat] = p;
     if (maj > 3) return true;
     if (maj < 3) return false;
@@ -782,8 +809,8 @@ function _traefikSupportsUnderscoreStrategy() {
 }
 
 function _traefikSupportsAliasStrategy() {
-    const p = _semverParts(typeof _currentVersion !== 'undefined' ? _currentVersion : '');
-    if (!p) return true;
+    const p = _semverParts(_epCurrentVersion());
+    if (!p) return false;
     const [maj, min, pat] = p;
     if (maj > 3) return true;
     if (maj < 3) return false;
@@ -792,20 +819,77 @@ function _traefikSupportsAliasStrategy() {
     return false;
 }
 
-function _epHeaderStrategyKey() {
-    return _traefikSupportsAliasStrategy() ? 'aliasHeadersStrategy' : 'underscoreHeadersStrategy';
+function _epHeaderStrategyState() {
+    if (!_semverParts(_epCurrentVersion())) return 'unknown';
+    if (_traefikSupportsAliasStrategy()) return 'alias';
+    return _traefikSupportsUnderscoreStrategy() ? 'underscore' : 'unsupported';
+}
+
+function _epFileHeaderStrategy(ep) {
+    const http = (ep && ep.http) || {};
+    if (http.aliasHeadersStrategy) return { key: 'aliasHeadersStrategy', value: http.aliasHeadersStrategy };
+    if (http.underscoreHeadersStrategy) return { key: 'underscoreHeadersStrategy', value: http.underscoreHeadersStrategy };
+    return { key: '', value: '' };
 }
 
 function _epHeaderStrategyValue(ep) {
-    return (ep && ep.http && (ep.http.aliasHeadersStrategy || ep.http.underscoreHeadersStrategy)) || '';
+    return _epFileHeaderStrategy(ep).value;
+}
+
+function _epEditedEntry() {
+    const d = _staticParsedData || {};
+    return (d.entryPoints || d.entrypoints || {})[_staticEditState.name] || null;
+}
+
+function _epHeaderStrategyPayload() {
+    const state = _epHeaderStrategyState();
+    if (state === 'alias' || state === 'underscore') {
+        return {
+            underscore_headers: document.getElementById('sfEpUnderscore')?.value || '',
+            headers_strategy_key: state === 'alias' ? 'aliasHeadersStrategy' : 'underscoreHeadersStrategy',
+        };
+    }
+    if (state === 'unsupported') return { underscore_headers: '', headers_strategy_key: 'underscoreHeadersStrategy' };
+    const file = _epFileHeaderStrategy(_epEditedEntry());
+    return { underscore_headers: file.value, headers_strategy_key: file.key || 'underscoreHeadersStrategy' };
+}
+
+function _showEpHeaderField() {
+    const loading = _loadEpVersion();
+    _updateEpUnderscoreVisibility();
+    loading.then(_updateEpUnderscoreVisibility);
+}
+
+function _syncEpHeaderOptions(alias) {
+    const sel = document.getElementById('sfEpUnderscore');
+    if (!sel) return;
+    const loaded = _epHeaderStrategyValue(_epEditedEntry());
+    const globalValue = alias ? ((_staticParsedData || {})['global'] || {}).aliasHeadersStrategy : '';
+    const def = document.getElementById('sfEpHdrDefault');
+    if (def) def.textContent = globalValue ? t('Use the global default ({value})', { value: globalValue }) : t('Keep (default)');
+    let keep = document.getElementById('sfEpHdrKeep');
+    if (globalValue || loaded === 'keep') {
+        if (!keep) {
+            keep = document.createElement('option');
+            keep.id = 'sfEpHdrKeep';
+            keep.value = 'keep';
+            keep.textContent = t('Keep - allow aliased headers');
+            sel.insertBefore(keep, document.getElementById('sfEpHdrDelete'));
+        }
+        if (loaded === 'keep' && !sel.value) sel.value = 'keep';
+    } else if (keep) {
+        keep.remove();
+    }
 }
 
 function _updateEpUnderscoreVisibility() {
     const row = document.getElementById('sfEpUnderscoreRow');
-    const supported = _traefikSupportsAliasStrategy() || _traefikSupportsUnderscoreStrategy();
+    const state = _epHeaderStrategyState();
+    const supported = state === 'alias' || state === 'underscore';
     if (row) row.style.display = supported ? 'block' : 'none';
     if (!supported) return;
-    const alias = _traefikSupportsAliasStrategy();
+    const alias = state === 'alias';
+    _syncEpHeaderOptions(alias);
     const lbl = document.getElementById('sfEpHdrLabel');
     if (lbl) lbl.textContent = alias ? t('Alias Headers') : t('Underscore Headers');
     const del = document.getElementById('sfEpHdrDelete');
@@ -824,7 +908,7 @@ function openStaticAddForm(section) {
     if (_staticEditState.section) closeStaticForm(_staticEditState.section);
     _staticEditState = { section, name: null };
     _resetStaticForm(section);
-    if (section === 'entrypoints') _updateEpUnderscoreVisibility();
+    if (section === 'entrypoints') _showEpHeaderField();
     const f = document.getElementById('staticForm-' + section);
     if (f) f.style.display = 'block';
     const btn = document.getElementById('sf' + _sfFormKey(section) + 'Btn');
@@ -838,7 +922,7 @@ function openStaticEditForm(section, name) {
     if (_staticEditState.section) closeStaticForm(_staticEditState.section);
     _staticEditState = { section, name };
     _prefillStaticForm(section, name);
-    if (section === 'entrypoints') _updateEpUnderscoreVisibility();
+    if (section === 'entrypoints') _showEpHeaderField();
     const f = document.getElementById('staticForm-' + section);
     if (f) f.style.display = 'block';
     const btn = document.getElementById('sf' + _sfFormKey(section) + 'Btn');
@@ -856,6 +940,7 @@ function _resetStaticForm(section) {
     if (section === 'entrypoints') {
         ['sfEpName','sfEpAddr','sfEpRedirect','sfEpTrustedIps','sfEpProxyIps','sfEpMiddlewares','sfEpTlsResolver','sfEpTlsOptions','sfEpReadTimeout','sfEpWriteTimeout','sfEpIdleTimeout'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
         ['sfEpHttp3','sfEpFwdInsecure','sfEpProxyInsecure','sfEpTlsEnabled','sfEpAsDefault'].forEach(id => { const e = document.getElementById(id); if (e) e.checked = false; });
+        const uhsSel = document.getElementById('sfEpUnderscore'); if (uhsSel) uhsSel.value = '';
         const tlsRow = document.getElementById('sfEpTlsRow'); if (tlsRow) tlsRow.style.display = 'none';
     } else if (section === 'resolvers') {
         ['sfResName','sfResEmail','sfResProvider','sfResCaServer','sfResEabKid','sfResEabHmac','sfResDnsResolvers','sfResDnsDelay'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
@@ -980,9 +1065,10 @@ async function submitStaticSection(section) {
     const old_name = _staticEditState.name || '';
     let name, payload;
     if (section === 'entrypoints') {
+        await _epVersion.pending;
         name    = document.getElementById('sfEpName').value.trim();
-        payload = { address: document.getElementById('sfEpAddr').value.trim(), redirect_to: document.getElementById('sfEpRedirect').value.trim(), http3: document.getElementById('sfEpHttp3')?.checked || false, underscore_headers: document.getElementById('sfEpUnderscore')?.value || '',
-            headers_strategy_key: _epHeaderStrategyKey(),
+        payload = { address: document.getElementById('sfEpAddr').value.trim(), redirect_to: document.getElementById('sfEpRedirect').value.trim(), http3: document.getElementById('sfEpHttp3')?.checked || false,
+            ..._epHeaderStrategyPayload(),
             trusted_ips: document.getElementById('sfEpTrustedIps')?.value || '',
             forwarded_insecure: document.getElementById('sfEpFwdInsecure')?.checked || false,
             proxy_trusted_ips: document.getElementById('sfEpProxyIps')?.value || '',
@@ -1082,7 +1168,7 @@ function _scEpRow(name, ep) {
     if (ep.http3) glyphs.push(['ph-lightning', 'd-mw', t('HTTP/3 enabled')]);
     if (redir) glyphs.push(['ph-arrow-u-up-right', 'd-off', t('redirects to {redir}', { redir })]);
     if (tips) glyphs.push(['ph-shield', 'd-blue', tn('{setting}: {n} range', '{setting}: {n} ranges', tips, { setting: 'forwardedHeaders.trustedIPs' })]);
-    if (uhs) glyphs.push(['ph-shield-check', 'd-on', _epHeaderStrategyKey() + ': ' + uhs]);
+    if (uhs) glyphs.push(['ph-shield-check', 'd-on', _epFileHeaderStrategy(ep).key + ': ' + uhs]);
     let warn = '';
     if (insecureFwd) warn = t('forwardedHeaders.insecure is on, any client can set X-Forwarded-For');
     else if (insecurePp) warn = t('proxyProtocol.insecure is on, the PROXY header is trusted from any source');
@@ -1901,7 +1987,7 @@ function _buildStaticClassicHTML() {
             <div id="sfEpUnderscoreRow" style="display:none">
                 <label class="text-xs block mb-1" style="color:var(--muted)"><span id="sfEpHdrLabel">${th('Alias Headers')}</span> <span style="color:var(--muted);font-weight:400">${thc('setting', '(security)')}</span></label>
                 <select id="sfEpUnderscore" class="input-field text-sm">
-                    <option value="">${th('Keep (default)')}</option>
+                    <option id="sfEpHdrDefault" value="">${th('Keep (default)')}</option>
                     <option id="sfEpHdrDelete" value="delete">${th('Delete - strip aliased headers')}</option>
                     <option id="sfEpHdrReject" value="reject">${th('Reject - 400 on aliased headers')}</option>
                 </select>

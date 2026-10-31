@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-23 12:49+0000\n"
+"POT-Creation-Date: 2026-10-31 14:24-0400\n"
 "PO-Revision-Date: 2026-09-29 20:39+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/traefik-manager/"
@@ -4747,6 +4747,12 @@ msgid ""
 "unauthenticated clients"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client "
+"crash Traefik"
+msgstr "Una condición de carrera en FastProxy tras una actualización HTTP/1 permite a un cliente sin autenticar bloquear Traefik"
+
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
 "backend stops answering"
@@ -5005,6 +5011,12 @@ msgid "ForwardAuth identity spoofing via dot-form header aliases"
 msgstr ""
 "Suplantación de identidad en ForwardAuth mediante alias de cabeceras con "
 "puntos"
+
+#. Used in the browser
+msgid ""
+"ForwardAuth shares its auth server connections between clients, leaking NTLM "
+"and Negotiate identity"
+msgstr "ForwardAuth comparte sus conexiones con el servidor de autenticación entre clientes y filtra la identidad NTLM y Negotiate"
 
 #. Used in the browser
 msgid "Forwarding Headers"
@@ -5812,6 +5824,10 @@ msgstr "Conservar"
 #. Used in the browser
 msgid "Keep (default)"
 msgstr "Conservar (predeterminado)"
+
+#. Used in the browser
+msgid "Keep - allow aliased headers"
+msgstr "Conservar - permite las cabeceras con alias"
 
 msgid "Keep last N backups per file"
 msgstr "Conservar las últimas N copias de seguridad por archivo"
@@ -12923,6 +12939,11 @@ msgstr "Usar repositorio del host"
 
 msgid "Use a service"
 msgstr "Usar un servicio"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Use the global default ({value})"
+msgstr "Usar el valor global predeterminado ({value})"
 
 #. Used in the browser
 msgid "Used By"

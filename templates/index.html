@@ -610,6 +610,8 @@ function switchServer(agentId) {
     const agent = agentId ? (_agentRegistry[agentId] || null) : null;
     if (agent) _warnIfAgentUnreachable(agent);
     _activeAgent = agent;
+    _currentVersion = null;
+    if (typeof _clearEpVersion === 'function') _clearEpVersion();
     if (agent) localStorage.setItem('tm_active_agent', agent.id);
     else localStorage.removeItem('tm_active_agent');
     _cachedEntrypoints = null;
