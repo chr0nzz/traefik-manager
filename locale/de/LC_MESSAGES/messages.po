@@ -11527,7 +11527,9 @@ msgstr "Die Decisions-Ansicht funktioniert allein mit einem Bouncer-Schlüssel"
 msgid ""
 "The default for every entry point, including the internal ones. An entry "
 "point with its own value overrides it."
-msgstr "Der Standardwert für jeden Entrypoint, auch die internen. Ein Entrypoint mit eigenem Wert überschreibt ihn."
+msgstr ""
+"Der Standardwert für jeden Entrypoint, auch die internen. Ein Entrypoint mit "
+"eigenem Wert überschreibt ihn."
 
 #. Used in the browser
 msgid ""
