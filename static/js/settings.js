@@ -530,6 +530,34 @@ const TRAEFIK_ADVISORIES = [
             return false;
         },
     },
+    {
+        id: 'GHSA-hrpp-p4fc-wwf8',
+        severity: 'High',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-hrpp-p4fc-wwf8',
+        forwardAuthRelated: true,
+        summary: t('ForwardAuth shares its auth server connections between clients, leaking NTLM and Negotiate identity'),
+        fixedIn: 'v3.7.16 or v2.11.60',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj < 2) return true;
+            if (maj === 2) return (min < 11) || (min === 11 && pat <= 59);
+            if (maj === 3) return (min < 7) || (min === 7 && pat <= 15);
+            return false;
+        },
+    },
+    {
+        id: 'GHSA-ww7c-q3mv-xx22',
+        severity: 'High',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-ww7c-q3mv-xx22',
+        forwardAuthRelated: false,
+        summary: t('FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client crash Traefik'),
+        fixedIn: 'v3.7.15',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj !== 3) return false;
+            return (min >= 2 && min < 7) || (min === 7 && pat <= 14);
+        },
+    },
 ];
 
 function _configHasForwardAuth() {

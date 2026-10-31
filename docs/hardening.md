@@ -62,6 +62,8 @@ Upgrading to 3.7.13 or newer is the real fix. Before 3.7.13 even `aliasHeadersSt
 | [GHSA-cw35-4q88-3rmp](https://github.com/traefik/traefik/security/advisories/GHSA-cw35-4q88-3rmp) - NTLM and Kerberos sticky connections are not keyed by service, so one service TLS client config applies to another | High | **2.11.58 / 3.7.14** |
 | [GHSA-53qr-784g-cj35](https://github.com/traefik/traefik/security/advisories/GHSA-53qr-784g-cj35) - FastProxy backend connection pool leaks NTLM and Negotiate identity to unauthenticated clients | High | **3.7.14** |
 | [GHSA-mhjw-hmjv-p99x](https://github.com/traefik/traefik/security/advisories/GHSA-mhjw-hmjv-p99x) - unsynchronized write to the sticky round tripper shared by concurrent HTTP/2 streams | Moderate | **2.11.58 / 3.7.14** |
+| [GHSA-ww7c-q3mv-xx22](https://github.com/traefik/traefik/security/advisories/GHSA-ww7c-q3mv-xx22) - FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client crash Traefik (only with `experimental.fastProxy`) | High | **3.7.15** |
+| [GHSA-hrpp-p4fc-wwf8](https://github.com/traefik/traefik/security/advisories/GHSA-hrpp-p4fc-wwf8) - ForwardAuth shares its auth server connections between clients, leaking NTLM and Negotiate identity | High | **2.11.60 / 3.7.16** |
 
 All of these are fixed by upgrading Traefik, not by configuration. Traefik Manager warns you when your running version is affected, and says which release to move to.
 
