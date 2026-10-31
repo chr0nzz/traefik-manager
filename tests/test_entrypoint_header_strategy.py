@@ -160,6 +160,54 @@ def test_saving_the_system_section_keeps_the_global_strategy(client):
     assert r.get_json()['parsed']['global']['aliasHeadersStrategy'] == 'delete'
 
 
+def _save_system(client, raw, **extra):
+    return post_json(client, '/api/static/section', {
+        'action': 'set', 'section': 'system', 'name': '', 'current_raw': raw,
+        'data': {'check_new_version': False, 'send_usage': True, **extra},
+    })
+
+
+def test_a_system_save_without_the_key_leaves_the_global_strategy_alone(client):
+    r = _save_system(client, 'global:\n  aliasHeadersStrategy: reject\n')
+    assert r.status_code < 400, r.get_data(as_text=True)
+    assert r.get_json()['parsed']['global']['aliasHeadersStrategy'] == 'reject'
+
+
+def test_a_system_save_without_the_key_does_not_add_one(client):
+    r = _save_system(client, 'global: {}\n')
+    assert r.status_code < 400, r.get_data(as_text=True)
+    assert 'aliasHeadersStrategy' not in r.get_json()['parsed']['global']
+
+
+@pytest.mark.parametrize('value', ['keep', 'delete', 'reject'])
+def test_a_system_save_writes_the_global_strategy(client, value):
+    r = _save_system(client, 'global:\n  aliasHeadersStrategy: delete\n', global_alias_headers=value)
+    assert r.status_code < 400, r.get_data(as_text=True)
+    blk = r.get_json()['parsed']['global']
+    assert blk == {'checkNewVersion': False, 'sendAnonymousUsage': True, 'aliasHeadersStrategy': value}
+
+
+def test_a_system_save_with_an_empty_value_removes_the_global_strategy(client):
+    r = _save_system(client, 'global:\n  aliasHeadersStrategy: delete\n', global_alias_headers='')
+    assert r.status_code < 400, r.get_data(as_text=True)
+    assert r.get_json()['parsed']['global'] == {'checkNewVersion': False, 'sendAnonymousUsage': True}
+
+
+def test_clearing_the_last_global_option_removes_the_block(client):
+    r = post_json(client, '/api/static/section', {
+        'action': 'set', 'section': 'system', 'name': '',
+        'current_raw': 'global:\n  aliasHeadersStrategy: delete\n',
+        'data': {'check_new_version': True, 'send_usage': False, 'global_alias_headers': ''},
+    })
+    assert r.status_code < 400, r.get_data(as_text=True)
+    assert 'global' not in r.get_json()['parsed']
+
+
+def test_a_system_save_rejects_an_unknown_global_strategy(client):
+    r = _save_system(client, 'global:\n  aliasHeadersStrategy: delete\n', global_alias_headers='drop')
+    assert r.status_code == 400
+
+
 def test_the_form_rules_hold():
     node = shutil.which('node')
     if not node:

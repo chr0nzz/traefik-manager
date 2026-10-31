@@ -3364,6 +3364,14 @@ def api_static_section_update():
                 g_blk['sendAnonymousUsage'] = True
             else:
                 g_blk.pop('sendAnonymousUsage', None)
+            if 'global_alias_headers' in payload:
+                global_alias = str(payload.get('global_alias_headers') or '').strip().lower()
+                if global_alias not in ('', 'keep', 'delete', 'reject'):
+                    return jsonify({'error': gettext('Alias Headers must be keep, delete or reject, got %(value)s', value=global_alias)}), 400
+                if global_alias:
+                    g_blk['aliasHeadersStrategy'] = global_alias
+                else:
+                    g_blk.pop('aliasHeadersStrategy', None)
             if g_blk:
                 config['global'] = g_blk
             else:

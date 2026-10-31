@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-31 14:24-0400\n"
+"POT-Creation-Date: 2026-10-31 15:27-0400\n"
 "PO-Revision-Date: 2026-09-29 23:06+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Portuguese (Brazil) <https://hosted.weblate.org/projects/"
@@ -1377,6 +1377,10 @@ msgstr ""
 #. Used in the browser
 msgid "Alias Headers"
 msgstr "Cabeçalhos alias"
+
+#, python-format
+msgid "Alias Headers must be keep, delete or reject, got %(value)s"
+msgstr "Cabeçalhos alias deve ser keep, delete ou reject, recebido %(value)s"
 
 #. Used in the browser
 msgctxt "button"
@@ -4740,7 +4744,9 @@ msgstr ""
 msgid ""
 "FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client "
 "crash Traefik"
-msgstr "Uma condição de corrida no FastProxy após um upgrade HTTP/1 permite que um cliente não autenticado derrube o Traefik"
+msgstr ""
+"Uma condição de corrida no FastProxy após um upgrade HTTP/1 permite que um "
+"cliente não autenticado derrube o Traefik"
 
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
@@ -5004,7 +5010,9 @@ msgstr ""
 msgid ""
 "ForwardAuth shares its auth server connections between clients, leaking NTLM "
 "and Negotiate identity"
-msgstr "O ForwardAuth compartilha as conexões com o servidor de autenticação entre clientes, expondo a identidade NTLM e Negotiate"
+msgstr ""
+"O ForwardAuth compartilha as conexões com o servidor de autenticação entre "
+"clientes, expondo a identidade NTLM e Negotiate"
 
 #. Used in the browser
 msgid "Forwarding Headers"
@@ -11421,6 +11429,12 @@ msgstr "A visão de decisões roda só com a chave de bouncer"
 #. Used in the browser
 msgid "The decisions view works on a bouncer key alone"
 msgstr "A visão de decisões funciona apenas com uma chave de bouncer"
+
+#. Used in the browser
+msgid ""
+"The default for every entry point, including the internal ones. An entry "
+"point with its own value overrides it."
+msgstr "O padrão para todos os entrypoints, incluindo os internos. Um entrypoint com valor próprio o substitui."
 
 #. Used in the browser
 msgid ""

@@ -1380,9 +1380,11 @@ Edit one named section of the static config without writing raw YAML. **Nothing 
 | `providers` | `set` | `docker`, `dockerEndpoint`, `dockerExposedByDefault`, `dockerWatch`, `file`, `fileDirectory`, `fileWatch`, `providers_throttle` |
 | `providers` | `add`, `edit`, `remove` | `name` = provider type key, `yaml_config` = YAML body |
 | `observability` | `set` | `ping`, `prometheus`, `prom_ep_labels`, `prom_router_labels`, `prom_svc_labels` |
-| `system` | `set` | `check_new_version`, `send_usage`, `rule_syntax`, `st_insecure`, `st_root_cas`, `st_max_idle`, `st_dial`, `st_resp_header`, `st_idle_conn` |
+| `system` | `set` | `check_new_version`, `send_usage`, `global_alias_headers`, `rule_syntax`, `st_insecure`, `st_root_cas`, `st_max_idle`, `st_dial`, `st_resp_header`, `st_idle_conn` |
 
 Returns `{ "ok": true, "raw": "...", "parsed": { } }`. `400` for an unknown section, a missing field, or an invalid duration, CIDR or number.
+
+On `system`, `global_alias_headers` sets `global.aliasHeadersStrategy` (Traefik 3.7.17+): `keep`, `delete` or `reject`, or empty to remove it. Leave the key out to keep whatever is in the file; older clients do, and the web UI and the mobile apps do on older Traefik or when the version cannot be read. Any other value returns `400`.
 
 On `entrypoints`, `headers_strategy_key` selects which key `underscore_headers` (`keep`, `delete` or `reject`) is written to: `aliasHeadersStrategy` (Traefik 3.7.12+) or `underscoreHeadersStrategy` (3.7.6 to 3.7.11). An empty value with a valid key removes both. Only one is ever written, and saving removes the other. See [Traefik Hardening](hardening.md).
 

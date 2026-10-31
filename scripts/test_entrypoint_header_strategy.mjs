@@ -17,7 +17,7 @@ function harness({ versions, parsed = {}, name = null, agent = null }) {
     const el = id => (els[id] ||= { id, style: {}, value: '', textContent: '', innerHTML: '',
         remove() { delete els[id]; },
         insertBefore(child) { els[child.id] = child; } });
-    ['sfEpUnderscoreRow', 'sfEpUnderscore', 'sfEpHdrLabel', 'sfEpHdrDefault', 'sfEpHdrDelete', 'sfEpHdrReject', 'sfEpHdrHint'].forEach(el);
+    ['sfEpUnderscoreRow', 'sfEpUnderscore', 'sfEpHdrLabel', 'sfEpHdrDefault', 'sfEpHdrDelete', 'sfEpHdrReject', 'sfEpHdrHint', 'sfGlobalAliasRow', 'sfGlobalAlias', 'sfGlobalAliasDelete'].forEach(el);
     const document = {
         getElementById: id => els[id] || null,
         createElement: () => ({ style: {}, remove() { delete els[this.id]; } }),
@@ -38,6 +38,7 @@ function harness({ versions, parsed = {}, name = null, agent = null }) {
             load: _loadEpVersion, clear: _clearEpVersion, show: _showEpHeaderField, state: _epHeaderStrategyState,
             payload: _epHeaderStrategyPayload, file: _epFileHeaderStrategy, value: _epHeaderStrategyValue,
             setAgent: a => { _activeAgent = a; }, pending: () => _epVersion.pending,
+            globalPayload: _globalAliasPayload, fillGlobal: _fillGlobalAliasField,
         };
     `)(document, versions, parsed, name, agent);
     return { api, els };
@@ -182,6 +183,58 @@ for (const [version, shown] of [['3.7.17', 'block'], ['3.7.8', 'block'], ['3.6.2
     const { api } = harness({ versions: {} });
     check(api.file({ http: { [UNDERSCORE]: 'delete' } }).key === UNDERSCORE, 'the row shows the key in the file');
     check(api.value({ http: { [ALIAS]: 'delete', [UNDERSCORE]: 'reject' } }) === 'delete', 'alias is read first');
+}
+
+for (const [version, shown] of [
+    ['3.7.17', true], ['3.7.18', true], ['3.8.0-rc.1', true], ['4.0.0', true],
+    ['3.7.16', false], ['3.6.25', false], ['2.11.61', false],
+    ['fail', false], ['500', false], ['master', false],
+]) {
+    const { api, els } = harness({ versions: { '': version }, parsed: { global: { [ALIAS]: 'delete' } } });
+    api.fillGlobal();
+    api.show();
+    await api.pending();
+    await Promise.resolve();
+    check(els.sfGlobalAliasRow.style.display === (shown ? 'block' : 'none'), `${version}: global field shown is ${shown}`, els.sfGlobalAliasRow.style.display);
+    check(els.sfGlobalAlias.value === 'delete', `${version}: the global field holds the file value`, els.sfGlobalAlias.value);
+    const p = api.globalPayload();
+    if (shown) check(p.global_alias_headers === 'delete', `${version}: the global value is sent`, p);
+    else check(!('global_alias_headers' in p), `${version}: the global key is left out so the file stays as it is`, p);
+}
+
+{
+    const { api, els } = harness({ versions: { '': '3.7.17' } });
+    api.show();
+    check(els.sfGlobalAliasRow.style.display === 'none', 'the global field is hidden while the version loads');
+    check(!('global_alias_headers' in api.globalPayload()), 'the global key is left out while the version loads');
+    await api.pending();
+    await Promise.resolve();
+    els.sfGlobalAlias.value = '';
+    check(api.globalPayload().global_alias_headers === '', 'clearing the field sends an empty value', api.globalPayload());
+}
+
+{
+    const parsed = { global: { [ALIAS]: 'keep' } };
+    const { api, els } = harness({ versions: { '': '3.7.17' }, parsed });
+    api.fillGlobal();
+    check(!!els.sfGlobalAliasKeep && els.sfGlobalAlias.value === 'keep', 'an explicit global keep stays selectable', els.sfGlobalAlias.value);
+    parsed.global = {};
+    api.fillGlobal();
+    check(!els.sfGlobalAliasKeep && els.sfGlobalAlias.value === '', 'the extra Keep goes when the file no longer has it', els.sfGlobalAlias.value);
+}
+
+{
+    const parsed = { ...entry({}), global: { [ALIAS]: 'delete' } };
+    const { api, els } = harness({ versions: { '': '3.7.17' }, parsed, name: 'websecure' });
+    api.show();
+    await api.pending();
+    await Promise.resolve();
+    check(/delete/.test(els.sfEpHdrDefault.textContent), 'the entry point default names the global value', els.sfEpHdrDefault.textContent);
+    parsed.global = { [ALIAS]: 'reject' };
+    api.show();
+    await api.pending();
+    await Promise.resolve();
+    check(/reject/.test(els.sfEpHdrDefault.textContent), 'the entry point default follows a changed global value', els.sfEpHdrDefault.textContent);
 }
 
 if (failed) { console.error(`${failed} check(s) failed`); process.exit(1); }

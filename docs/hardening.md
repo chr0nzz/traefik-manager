@@ -36,7 +36,7 @@ entryPoints:
 
 If you use the forwardAuth wizards, enabling this is strongly recommended.
 
-**Traefik 3.7.17 or newer** can set it once for every entry point, including the internal ones, with `global.aliasHeadersStrategy` in the static config file. An entry point's own value overrides it. Traefik Manager keeps the global value when it saves, and when one is set, the entry point form offers **Use the global default** and an explicit **Keep** to opt a single entry point out. Do not add the global option on older Traefik, which refuses to start on an option it does not know.
+**Traefik 3.7.17 or newer** can set it once for every entry point, including the internal ones, with `global.aliasHeadersStrategy` in the static config file. An entry point's own value overrides it. Set it under **Static Config - System - Alias Headers**. Traefik Manager only shows that field on versions that have the option, because older Traefik refuses to start on an option it does not know; otherwise it leaves the file as it is. When a global value is set, the entry point form offers **Use the global default** and an explicit **Keep** to opt a single entry point out.
 
 ### On older Traefik: `underscoreHeadersStrategy`
 

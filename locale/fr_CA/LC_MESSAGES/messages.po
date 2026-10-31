@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-31 14:24-0400\n"
+"POT-Creation-Date: 2026-10-31 15:27-0400\n"
 "PO-Revision-Date: 2026-09-30 13:21+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French (Canada) <https://hosted.weblate.org/projects/traefik-"
@@ -1404,6 +1404,10 @@ msgstr ""
 #. Used in the browser
 msgid "Alias Headers"
 msgstr "En-têtes d’alias"
+
+#, python-format
+msgid "Alias Headers must be keep, delete or reject, got %(value)s"
+msgstr "En-têtes d’alias doit valoir keep, delete ou reject, reçu %(value)s"
 
 #. Used in the browser
 msgctxt "button"
@@ -4815,7 +4819,9 @@ msgstr ""
 msgid ""
 "FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client "
 "crash Traefik"
-msgstr "Une situation de compétition dans FastProxy après une mise à niveau HTTP/1 permet à un client non authentifié de faire planter Traefik"
+msgstr ""
+"Une situation de compétition dans FastProxy après une mise à niveau HTTP/1 "
+"permet à un client non authentifié de faire planter Traefik"
 
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
@@ -5084,7 +5090,9 @@ msgstr ""
 msgid ""
 "ForwardAuth shares its auth server connections between clients, leaking NTLM "
 "and Negotiate identity"
-msgstr "ForwardAuth partage ses connexions au serveur d’authentification entre les clients, ce qui divulgue l’identité NTLM et Negotiate"
+msgstr ""
+"ForwardAuth partage ses connexions au serveur d’authentification entre les "
+"clients, ce qui divulgue l’identité NTLM et Negotiate"
 
 #. Used in the browser
 msgid "Forwarding Headers"
@@ -11649,6 +11657,12 @@ msgstr "La vue des décisions fonctionne uniquement avec la clé de bouncer"
 #. Used in the browser
 msgid "The decisions view works on a bouncer key alone"
 msgstr "La vue des décisions fonctionne uniquement avec une clé de bouncer"
+
+#. Used in the browser
+msgid ""
+"The default for every entry point, including the internal ones. An entry "
+"point with its own value overrides it."
+msgstr "La valeur par défaut pour tous les points d’entrée, y compris les internes. Un point d’entrée avec sa propre valeur la remplace."
 
 #. Used in the browser
 msgid ""

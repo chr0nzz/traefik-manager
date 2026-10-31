@@ -39,7 +39,7 @@ Traefik's static configuration controls settings that cannot be changed at runti
 | API                   | Enable or disable the Traefik API and Dashboard, insecure mode, and debug mode. |
 | Logging               | Traefik log: level, text/JSON format, optional log file with rotation (max size, backups, age, compression). Access log: file path, CLF/JSON format, buffering, status-code and min-duration filters, retry-only mode, and header keep/redact. |
 | Observability         | Ping health endpoint, Prometheus metrics with entrypoint / router / service label toggles, and OTLP tracing (service name, sample rate, collector endpoint). Other metrics backends configured in YAML are left untouched. |
-| System                | Traefik version check, anonymous usage statistics, the default rule syntax (v3 / v2 compatibility), and servers transport defaults - backend TLS verification skip, root CAs, max idle connections, forwarding timeouts. |
+| System                | Traefik version check, anonymous usage statistics, the global [Alias Headers](hardening.md#header-alias-spoofing) default (Traefik 3.7.17+), the default rule syntax (v3 / v2 compatibility), and servers transport defaults - backend TLS verification skip, root CAs, max idle connections, forwarding timeouts. |
 | Providers             | Docker and File providers via dedicated toggles, the providers throttle duration, and other provider types via the **+ Provider** button. |
 
 Edits merge into the existing entry, so keys the forms do not manage survive a save.
