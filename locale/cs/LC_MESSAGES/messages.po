@@ -11456,7 +11456,9 @@ msgstr "Zobrazení decisions funguje pouze s klíčem bounceru"
 msgid ""
 "The default for every entry point, including the internal ones. An entry "
 "point with its own value overrides it."
-msgstr "Výchozí hodnota pro všechny vstupní body včetně interních. Vstupní bod s vlastní hodnotou ji přepíše."
+msgstr ""
+"Výchozí hodnota pro všechny vstupní body včetně interních. Vstupní bod s "
+"vlastní hodnotou ji přepíše."
 
 #. Used in the browser
 msgid ""

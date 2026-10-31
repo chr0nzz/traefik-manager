@@ -11497,7 +11497,9 @@ msgstr "La vista de decisiones funciona solo con una clave de bouncer"
 msgid ""
 "The default for every entry point, including the internal ones. An entry "
 "point with its own value overrides it."
-msgstr "El valor predeterminado para todos los entrypoints, incluidos los internos. Un entrypoint con su propio valor lo reemplaza."
+msgstr ""
+"El valor predeterminado para todos los entrypoints, incluidos los internos. "
+"Un entrypoint con su propio valor lo reemplaza."
 
 #. Used in the browser
 msgid ""

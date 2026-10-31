@@ -1384,7 +1384,8 @@ msgstr "Cabeçalhos de alias"
 
 #, python-format
 msgid "Alias Headers must be keep, delete or reject, got %(value)s"
-msgstr "Cabeçalhos de alias tem de ser keep, delete ou reject, recebido %(value)s"
+msgstr ""
+"Cabeçalhos de alias tem de ser keep, delete ou reject, recebido %(value)s"
 
 #. Used in the browser
 msgctxt "button"
@@ -11482,7 +11483,9 @@ msgstr "A vista de decisões funciona apenas com uma chave de bouncer"
 msgid ""
 "The default for every entry point, including the internal ones. An entry "
 "point with its own value overrides it."
-msgstr "O valor predefinido para todos os entrypoints, incluindo os internos. Um entrypoint com valor próprio substitui-o."
+msgstr ""
+"O valor predefinido para todos os entrypoints, incluindo os internos. Um "
+"entrypoint com valor próprio substitui-o."
 
 #. Used in the browser
 msgid ""
