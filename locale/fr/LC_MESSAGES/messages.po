@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-21 03:52+0000\n"
+"POT-Creation-Date: 2026-10-31 14:24-0400\n"
 "PO-Revision-Date: 2026-10-06 15:50+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/traefik-manager/"
@@ -1656,6 +1656,7 @@ msgstr ""
 "Au moins 8 caractères. Une longue phrase de passe vaut mieux qu’un mot de "
 "passe court et complexe."
 
+#. Used in the browser
 msgid "At least one domain is required"
 msgstr "Au moins un domaine est requis"
 
@@ -2529,6 +2530,11 @@ msgstr ""
 msgid "Click %(middleware)s to add one"
 msgstr "Cliquez sur %(middleware)s pour en ajouter un"
 
+#. Used in the browser
+msgid ""
+"Click a domain to switch to it. Ctrl or Shift click to select more than one."
+msgstr ""
+
 msgid "Click to copy"
 msgstr "Cliquez pour copier"
 
@@ -2845,6 +2851,10 @@ msgstr "Échec de la connexion : {error}"
 
 msgid "Connection refused"
 msgstr "Connexion refusée"
+
+#. Used in the browser
+msgid "Connection settings saved"
+msgstr ""
 
 #. Used in the browser
 msgid "Connection successful"
@@ -3843,6 +3853,13 @@ msgctxt "tooltip"
 msgid "Disabled"
 msgstr "Désactivé"
 
+#. Used in the browser
+#, python-brace-format
+msgid "Disabled {n} route."
+msgid_plural "Disabled {n} routes."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid ""
 "Disables certificate validation for the backend. Use for self-signed certs "
 "(e.g. Proxmox, Kasm). Adds insecureSkipVerify via a named serversTransport."
@@ -4184,6 +4201,13 @@ msgstr "Activé"
 msgctxt "tooltip"
 msgid "Enabled"
 msgstr "Activé"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Enabled {n} route."
+msgid_plural "Enabled {n} routes."
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 msgid "Enabled, stream routes are not reachability checked"
@@ -4788,6 +4812,12 @@ msgid ""
 "unauthenticated clients"
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client "
+"crash Traefik"
+msgstr "Une situation de compétition dans FastProxy après une mise à niveau HTTP/1 permet à un client non authentifié de faire planter Traefik"
+
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
 "backend stops answering"
@@ -5050,6 +5080,12 @@ msgid "ForwardAuth identity spoofing via dot-form header aliases"
 msgstr ""
 "Usurpation d’identité ForwardAuth via des alias d’en-têtes contenant des "
 "points"
+
+#. Used in the browser
+msgid ""
+"ForwardAuth shares its auth server connections between clients, leaking NTLM "
+"and Negotiate identity"
+msgstr "ForwardAuth partage ses connexions au serveur d’authentification entre les clients, ce qui divulgue l’identité NTLM et Negotiate"
 
 #. Used in the browser
 msgid "Forwarding Headers"
@@ -5871,6 +5907,10 @@ msgstr "Conserver"
 #. Used in the browser
 msgid "Keep (default)"
 msgstr "Conserver (par défaut)"
+
+#. Used in the browser
+msgid "Keep - allow aliased headers"
+msgstr "Conserver - autoriser les en-têtes avec alias"
 
 msgid "Keep last N backups per file"
 msgstr "Conserver les N dernières sauvegardes par fichier"
@@ -8953,6 +8993,16 @@ msgstr ""
 
 #. Used in the browser
 #, python-brace-format
+msgid "Remove {domain}"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Remove {domain} from Settings, Connection, Domains"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "Remove {list_count} certificates from acme.json on {agent}: {shown}?"
 msgstr ""
 "Supprimer {list_count} certificats de acme.json sur {agent} : {shown} ?"
@@ -8978,6 +9028,22 @@ msgid_plural ""
 "Removed %(num)d certificates, then stopped at %(file)s: %(detail)s"
 msgstr[0] "%(num)d certificat supprimé, puis arrêt à %(file)s : %(detail)s"
 msgstr[1] "%(num)d certificats supprimés, puis arrêt à %(file)s : %(detail)s"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Removed {domain} from Settings, Connection, Domains"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Removed {domain} from Settings. It stays in the list while route {routes} "
+"uses it."
+msgid_plural ""
+"Removed {domain} from Settings. It stays in the list while routes {routes} "
+"use it."
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format
@@ -9917,6 +9983,11 @@ msgctxt "label"
 msgid "Saved"
 msgstr "Enregistré"
 
+#. Used in the browser
+msgctxt "status"
+msgid "Saved"
+msgstr ""
+
 msgid ""
 "Saved in manager.yml, so the choice follows you to every browser. Follow "
 "system uses the language your browser asks for, and English when Traefik "
@@ -10117,6 +10188,10 @@ msgid "Select a template above to use the wizard."
 msgstr "Sélectionnez un modèle ci-dessus pour utiliser l’assistant."
 
 #. Used in the browser
+msgid "Select at least one domain for this route"
+msgstr ""
+
+#. Used in the browser
 msgid "Select at least one source"
 msgstr "Sélectionnez au moins une source"
 
@@ -10194,6 +10269,9 @@ msgstr "Envoyez un message à votre bot, ouvrez {url} et copiez chat.id."
 msgctxt "label"
 msgid "Sending…"
 msgstr "Envoi en cours…"
+
+msgid "Separate domains with commas, spaces or new lines."
+msgstr ""
 
 msgid "Serial Number"
 msgstr "Numéro de série"
@@ -10761,6 +10839,13 @@ msgid "Skipped {n} invalid entry:"
 msgid_plural "Skipped {n} invalid entries:"
 msgstr[0] "{n} entrée non valide ignorée :"
 msgstr[1] "{n} entrées non valides ignorées :"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Skipped {n} route that is not defined in a config file."
+msgid_plural "Skipped {n} routes that are not defined in a config file."
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 msgctxt "button"
@@ -11878,6 +11963,14 @@ msgstr[1] ""
 "fournisseur {provider} combinés ne correspondent à aucun élément."
 
 #. Used in the browser
+msgid "The selected routes are already disabled."
+msgstr ""
+
+#. Used in the browser
+msgid "The selected routes are already enabled."
+msgstr ""
+
+#. Used in the browser
 msgid "The server changed, reload the list and select again"
 msgstr ""
 "Le serveur a changé. Rechargez la liste et effectuez une nouvelle sélection"
@@ -12949,6 +13042,10 @@ msgid "Unsaved Changes"
 msgstr "Modifications non enregistrées"
 
 #. Used in the browser
+msgid "Unsaved changes"
+msgstr ""
+
+#. Used in the browser
 #, python-brace-format
 msgid "Unsaved changes - nothing is written to {traefik_yml} until you save"
 msgstr ""
@@ -13037,6 +13134,11 @@ msgstr "Utiliser le dépôt de l’hôte"
 
 msgid "Use a service"
 msgstr "Utiliser un service"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Use the global default ({value})"
+msgstr "Utiliser la valeur globale par défaut ({value})"
 
 #. Used in the browser
 msgid "Used By"
@@ -16804,6 +16906,29 @@ msgstr "récapitulatif : {digest}"
 
 #. Used in the browser
 #, python-brace-format
+msgid "{domain} comes from this agent's Domains setting. Remove it there."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{domain} is the only domain in Settings, Connection, Domains. Add another "
+"one there before removing it."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"{domain} is used by route {routes}, so it stays in the list until that route "
+"stops using it."
+msgid_plural ""
+"{domain} is used by routes {routes}, so it stays in the list until those "
+"routes stop using it."
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
 msgid "{down} of {n} backend DOWN"
 msgid_plural "{down} of {n} backends DOWN"
 msgstr[0] "{down} sur {n} backend INDISPONIBLE"
@@ -16882,6 +17007,20 @@ msgid "{failed} of {n} route could not be deleted."
 msgid_plural "{failed} of {n} routes could not be deleted."
 msgstr[0] "Suppression impossible pour {failed} sur {n} route."
 msgstr[1] "Suppression impossible pour {failed} sur {n} routes."
+
+#. Used in the browser
+#, python-brace-format
+msgid "{failed} of {n} route could not be disabled."
+msgid_plural "{failed} of {n} routes could not be disabled."
+msgstr[0] ""
+msgstr[1] ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "{failed} of {n} route could not be enabled."
+msgid_plural "{failed} of {n} routes could not be enabled."
+msgstr[0] ""
+msgstr[1] ""
 
 #. Used in the browser
 #, python-brace-format

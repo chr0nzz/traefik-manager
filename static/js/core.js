@@ -582,6 +582,17 @@ function _jsArg(v) {
     return _esc(JSON.stringify(v == null ? '' : String(v)));
 }
 
+function _parseDomainList(raw) {
+    const out = [];
+    (Array.isArray(raw) ? raw : [raw]).forEach(item => {
+        String(item == null ? '' : item).split(/[\s,]+/).forEach(part => {
+            const d = part.trim().toLowerCase();
+            if (d && !out.includes(d)) out.push(d);
+        });
+    });
+    return out;
+}
+
 let _backdropMd = null;
 function _onBackdropClick(e, fn) {
     if (e.target === e.currentTarget && _backdropMd === e.currentTarget) fn();

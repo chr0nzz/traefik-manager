@@ -1,6 +1,15 @@
 # Mobile App
 
-**traefik-manager-mobile** is a native Android companion app for managing Traefik Manager from your phone. Version 2.0 is a ground-up rewrite in Kotlin and Jetpack Compose.
+**traefik-manager-mobile** is the companion app for managing Traefik Manager from your phone or tablet, native on both platforms: Kotlin and Jetpack Compose on Android, Swift and SwiftUI on iPhone and iPad. Both share one version number and the same features, and the iOS app starts at 2.5.0.
+
+<div class="shot-grid">
+  <img class="screenshot dark-only" src="/images/mobile-dark.gif" alt="Android phone">
+  <img class="screenshot light-only" src="/images/mobile-light.gif" alt="Android phone">
+  <img class="screenshot dark-only" src="/images/ios-dark.gif" alt="iPhone">
+  <img class="screenshot light-only" src="/images/ios-light.gif" alt="iPhone">
+</div>
+
+Every screen on Android, tablet, iPhone and iPad is in the [UI examples](/ui-examples#android).
 
 ::: info Using external auth (Authentik, Authelia, etc.)?
 A `forwardAuth` middleware in front of Traefik Manager blocks the app before Traefik Manager ever sees the request, so no API key can help. See [external auth providers](#external-auth-providers) for the route split that fixes it.
@@ -15,6 +24,8 @@ A `forwardAuth` middleware in front of Traefik Manager blocks the app before Tra
 <a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager">
   <img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/GetItOnGooglePlay.svg" alt="Get it on Google Play" style="height:50px;width:auto" />
 </a>
+
+**iPhone and iPad:** coming soon to the App Store.
 
 ---
 
@@ -62,15 +73,23 @@ The one combination the app cannot resolve on its own. The server requires authe
 
 ::: info Internal CAs and plain HTTP
 Since v2.0.0 the Android app trusts CA certificates installed on the device, so instances secured by an internal/private CA work: install your root CA on the phone under **Settings → Security → Encryption & credentials → Install a certificate → CA certificate**, then connect with your `https://` URL. Plain `http://` URLs (LAN-only setups) are also supported.
+
+On iPhone and iPad, install the root CA as a profile, then turn on full trust for it under **Settings → General → About → Certificate Trust Settings**. The iOS app also connects to plain `http://` URLs, and asks for local network access the first time it reaches a server on your LAN.
 :::
 
 ---
 
 ## Navigation
 
+### Android
+
 Navigation adapts to the screen. On a phone the bar sits at the bottom; on a tablet or an unfolded device it becomes a side rail. Everything else lives in a drawer, opened from the menu icon in the top bar.
 
 The bar holds five destinations. By default those are **Dashboard**, **Routes**, **Middleware**, **Logs** and **CrowdSec**; pick your own five, and their order, under **Settings → Appearance and security → Choose items**. The same screen can hide the bar entirely, leaving the drawer as the way around.
+
+### iPhone and iPad
+
+On iPhone the tab bar holds **Dashboard**, **Routes**, **Middleware** and **Logs**, and **More** lists everything else. On iPad, and on a large iPhone in landscape, a sidebar lists every screen in the same four sections as the Android drawer, with the server switcher at the top.
 
 ### Drawer
 
@@ -208,7 +227,7 @@ Stored secrets read back masked. Leave a masked field alone and it is kept; clea
 
 Servers older than 1.12.0 have no channels, and the screen shows the single webhook those versions take instead.
 
-#### Push to this device
+#### Push to this device (Android)
 
 **Push to this device** delivers events to the phone through [UnifiedPush](https://unifiedpush.org).
 
@@ -232,6 +251,14 @@ Without a distributor installed the toggle stays off, and the app says so rather
 Traefik Manager posts to the endpoint in plain text. On a self-hosted ntfy that is your own server; on a shared one the operator can read the message. Notifications are also truncated at 4096 bytes.
 :::
 
+#### Alerts on this device (iPhone and iPad)
+
+iOS has no UnifiedPush, and a self-hosted server cannot send Apple push notifications. Instead, **Settings → Notifications → Alerts on this device** lets the app check the notification history in the background and show anything new as an iOS notification, from a minimum severity you choose. Nothing changes on the server.
+
+iOS decides how often the app may check, from every 15 minutes to a few hours, and less often for an app you rarely open. For instant alerts on an iPhone, add an ntfy, Pushover or Telegram channel; their own apps deliver the push.
+
+Marking the history read clears the alerts, and anything already in the history when you turn alerts on stays quiet.
+
 ### Servers and agents
 
 The server switcher sits at the top of the drawer, and the same list is under **Settings → Servers**. Switch between the host and any registered TMA agent, each with a live health indicator. Every screen then reflects that server's Traefik instance, and the destinations change to match its enabled tabs.
@@ -239,6 +266,8 @@ The server switcher sits at the top of the drawer, and the same list is under **
 **Settings → Servers** also adds, renames and removes agents, and generates the compose snippet for a new one.
 
 ### Widgets
+
+#### Android
 
 Two home screen widgets, from the same data as the app. Add one from your launcher's widget picker and its setup screen opens as you place it.
 
@@ -249,13 +278,25 @@ Two home screen widgets, from the same data as the app. Add one from your launch
 
 Both resize freely and re-flow to fit.
 
+#### iPhone and iPad
+
+Three widgets: long-press the home screen, tap **Edit → Add Widget** and pick Traefik Manager.
+
+| Widget | Sizes | Setup |
+|---|---|---|
+| Status card | Small, medium, large, Lock Screen | Edit the widget to pick the card (HTTP or TCP/UDP routers, services, middlewares, entry points, certificates, or a CrowdSec card) and the server |
+| All servers | Small, medium, large | Routers, problems and bans on every server |
+| Launcher | Medium, large | Your dashboard apps with their icons; tap one to open it |
+
+The app refreshes the widgets when you open it and when iOS runs its background check, so they show what the app last saw.
+
 ### Demo mode
 
 **Try Demo** on the connect screen runs the app against built-in sample data, with no server required. Useful for looking around before you point it at anything real.
 
 ### Languages
 
-The app opens in the phone's language when it has it: Chinese (Simplified), Czech, Danish, Dutch, French, French (Canada), German, Portuguese, Portuguese (Brazil), Russian and Spanish, plus British and American English spellings. Any other language shows English. To use a different language than the phone, pick it in **Settings → Appearance and security → App language**.
+The app opens in the phone's language when it has it: Chinese (Simplified), Czech, Danish, Dutch, French, French (Canada), German, Portuguese, Portuguese (Brazil), Russian and Spanish, plus British and American English spellings. Any other language shows English. To use a different language than the phone, pick it in **Settings → Appearance and security → App language** on Android, or under **Traefik Manager → Language** in the iOS Settings app.
 
 The app sends its language to the server, so error and status messages from Traefik Manager v1.15.0 or newer arrive in the same language; older servers answer in English. Translations happen on [Weblate](https://hosted.weblate.org/projects/traefik-manager/mobile/).
 
@@ -270,7 +311,7 @@ The app sends its language to the server, so error and status messages from Trae
 | Traefik connection | How this device reaches the server, plus domains, certificate resolvers and the direct Traefik API URL, with a **Test connection** button. Changing the API URL asks for the saved password again |
 | Servers | The server list, and the compose snippet for a new agent (see [Servers and agents](#servers-and-agents)) |
 | Authentication | Login status, the API keys registered on the server, and **Sign out other sessions** for browsers |
-| Notifications | Push to this device, the notification channels, and the history (see [Notifications](#notifications)) |
+| Notifications | Push to this device on Android or alerts on iOS, route checks, the notification channels, and the history (see [Notifications](#notifications)) |
 | Appearance and security | See below |
 | Static config | The raw `traefik.yml`, and the restart that applies it (see [Static config](#static-config)) |
 | Diagnostics | See below |
@@ -281,12 +322,12 @@ The app sends its language to the server, so error and status messages from Trae
 | Setting | What it does |
 |---|---|
 | Theme | Light, Dark or System |
-| Dynamic colour | Takes the palette from your wallpaper on Android 12+, while status colours stay semantically distinct |
-| App language | Follow system, or one of the app's languages. The same choice is on Android's own app language page |
-| Hide the navigation bar | Frees the bottom of the screen; the drawer still reaches everything |
-| Choose items | Which five screens sit in the bar, and their order |
+| Dynamic colour | Android 12+ only. Takes the palette from your wallpaper, while status colours stay semantically distinct |
+| App language | Follow system, or one of the app's languages. On iOS this opens the app's page in the Settings app |
+| Hide the navigation bar | Android only. Frees the bottom of the screen; the drawer still reaches everything |
+| Choose items | Android only. Which five screens sit in the bar, and their order |
 | Dashboard layout | Rows or icons for the app launcher, shared with the web UI |
-| Require unlock | Gates the app behind biometrics or your device PIN |
+| Require unlock | Gates the app behind biometrics (Face ID or Touch ID on iOS) or your device PIN or passcode |
 
 Everything here except the dashboard layout is stored on the device only.
 
@@ -353,18 +394,28 @@ OIDC provider configured, `/api/*` answers without a key at all.
 
 | | |
 |---|---|
-| Traefik Manager (server) | **v1.10.1 or higher**, v1.12.0 for notification channels and push, v1.13.0 for service authoring, v1.15.0 for server messages in the app's language |
+| Traefik Manager (server) | **v1.14.0 or higher**, v1.15.0 for server messages in the app's language |
 | Android | 13+ (API 33) |
-| Push (optional) | A UnifiedPush distributor, such as the ntfy app |
+| iPhone and iPad | iOS and iPadOS 17+ |
+| Push on Android (optional) | A UnifiedPush distributor, such as the ntfy app |
+
+---
+
+## Privacy
+
+The app collects nothing. It talks only to the Traefik Manager server you connect it to, and to the addresses of your own routes when you open them. The server URL and API key stay on the device (the API key in the Android keystore or the iOS Keychain), and there is no analytics, crash reporting, advertising or account with the developer. Push on Android goes through the UnifiedPush distributor you pick; alerts on iOS are local notifications built on the device.
 
 ---
 
 ## Tech Stack
 
-Version 2.x is native Android: Kotlin 2.4, Jetpack Compose with Material 3 Expressive, Hilt, Retrofit 3 with kotlinx.serialization, DataStore for storage, Glance with WorkManager for the widgets, and UnifiedPush for push. Release builds are minified and resource-shrunk with R8.
+Version 2.x is native on both platforms.
+
+- **Android:** Kotlin 2.4, Jetpack Compose with Material 3 Expressive, Hilt, Retrofit 3 with kotlinx.serialization, DataStore for storage, Glance with WorkManager for the widgets, and UnifiedPush for push. Release builds are minified and resource-shrunk with R8.
+- **iOS:** Swift and SwiftUI with no third-party dependencies, WidgetKit with App Intents for the widgets, LocalAuthentication for the app lock, and BackgroundTasks with UserNotifications for alerts.
 
 Version 1.x was built with Expo SDK 53 / React Native 0.79, and is still available on the `v1` branch.
 
 ::: tip Upgrading from 1.x
-The rewrite ships under the same application id and is signed with the same certificate, so it installs straight over 1.x from either channel and keeps your server, API key and placed widgets. iOS is not supported in 2.x.
+The rewrite ships under the same application id and is signed with the same certificate, so it installs straight over 1.x from either channel and keeps your server, API key and placed widgets.
 :::

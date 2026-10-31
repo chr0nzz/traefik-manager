@@ -558,26 +558,26 @@ def _hash_password(plaintext: str) -> str:
 def _ensure_password():
     if os.environ.get('ADMIN_PASSWORD', '').strip():
         return
-    settings = load_settings()
-    if settings.get('password_hash', ''):
+    if load_settings().get('password_hash', ''):
         return
-    password = secrets.token_urlsafe(16)
-    logger.warning("=" * 60)
-    logger.warning("  TRAEFIK MANAGER - AUTO-GENERATED PASSWORD")
-    logger.warning(f"  Password: {password}")
-    logger.warning("  Log in with this password, complete setup, then")
-    logger.warning("  you will be prompted to set a permanent password.")
-    logger.warning("=" * 60)
-    save_settings(
-        domains=settings['domains'],
-        cert_resolver=settings['cert_resolver'],
-        traefik_api_url=settings['traefik_api_url'],
-        auth_enabled=settings['auth_enabled'],
-        password_hash=_hash_password(password),
-        visible_tabs=settings['visible_tabs'],
-        must_change_password=True,
-        setup_complete=False,
-    )
+
+    def generate(current):
+        if current.get('password_hash', ''):
+            return None
+        password = secrets.token_urlsafe(16)
+        logger.warning("=" * 60)
+        logger.warning("  TRAEFIK MANAGER - AUTO-GENERATED PASSWORD")
+        logger.warning(f"  Password: {password}")
+        logger.warning("  Log in with this password, complete setup, then")
+        logger.warning("  you will be prompted to set a permanent password.")
+        logger.warning("=" * 60)
+        return {
+            'password_hash': _hash_password(password),
+            'must_change_password': True,
+            'setup_complete': False,
+        }
+
+    _settings.modify_settings(generate)
 
 
 def _sync_admin_password_fingerprint():
@@ -1127,7 +1127,7 @@ def setup():
         notify_missing      = [f for f in _notify_providers.required_fields(notify_kind)
                                if not notify_fields[f]]
 
-        domains = [d.strip() for d in domains_raw.split(',') if d.strip()]
+        domains = _cfg.parse_domains(domains_raw)
         pw_error = None if temp_password_mode else _password_error(pw)
 
         if not domains:
@@ -2922,10 +2922,14 @@ def api_static_section_update():
                 uhs = str(payload.get('underscore_headers', '')).strip().lower()
                 hdr_key = str(payload.get('headers_strategy_key', '')).strip()
                 if hdr_key not in ('aliasHeadersStrategy', 'underscoreHeadersStrategy'):
-                    hdr_key = 'underscoreHeadersStrategy'
+                    if 'aliasHeadersStrategy' in http_blk:
+                        hdr_key = 'aliasHeadersStrategy'
+                        uhs = uhs or str(http_blk['aliasHeadersStrategy']).strip().lower()
+                    else:
+                        hdr_key = 'underscoreHeadersStrategy'
                 http_blk.pop('aliasHeadersStrategy', None)
                 http_blk.pop('underscoreHeadersStrategy', None)
-                if uhs in ('delete', 'reject'):
+                if uhs in ('keep', 'delete', 'reject'):
                     http_blk[hdr_key] = uhs
                 mws = [m for m in re.split(r'[\s,]+', str(payload.get('middlewares', ''))) if m]
                 if mws:
@@ -4989,7 +4993,7 @@ def api_save_settings():
     try:
         data        = request.get_json()
         domains_raw = data.get('domains', '')
-        domains     = [d.strip() for d in (domains_raw if isinstance(domains_raw, list) else str(domains_raw).split(',')) if str(d).strip()]
+        domains     = _cfg.parse_domains(domains_raw)
         if not domains:
             return jsonify({'error': gettext('At least one domain is required')}), 400
         cert_resolver   = str(data.get('cert_resolver', 'cloudflare')).strip()
@@ -8213,6 +8217,8 @@ def api_agents_update(agent_id):
             for field in updatable:
                 if field in data:
                     agents[i][field] = data[field]
+            if 'domains' in data:
+                agents[i]['domains'] = _cfg.parse_domains(data['domains'])
             if 'visible_tabs' in data:
                 agents[i]['visible_tabs'] = _settings.sanitize_visible_tabs(data['visible_tabs'])
             if 'traefik_api_password' in data and data['traefik_api_password'] not in ('', '***'):

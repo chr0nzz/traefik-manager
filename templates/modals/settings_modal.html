@@ -256,11 +256,12 @@
                         <div class="sc-panel">
                             <div class="sc-fld">
                                 <div class="sc-set-n">{{ pgettext('setting', 'Domains') }}<span class="tm-info-btn" data-tip="{{ _('Convenience list used to build Host() rules in the route form - it does not affect your Traefik configuration, TLS, or routing. Domains found in existing routes are added to the route form automatically, so this list is optional seeding.') }}"><i class="ph-bold ph-info"></i></span></div>
-                                <input type="text" id="settingsDomains" class="input-field" placeholder="example.com, example.net" onblur="saveSettings()">
+                                <div class="sc-set-d">{{ _('Separate domains with commas, spaces or new lines.') }}</div>
+                                <input type="text" id="settingsDomains" class="input-field" placeholder="example.com, example.net" oninput="_syncConnectionSaveState()" onkeydown="_connectionFieldKey(event)">
                             </div>
                             <div class="sc-fld">
                                 <div class="sc-set-n">{{ _('Certificate resolver') }}<span class="tm-info-btn" data-tip="{{ _("One or more cert resolver names, comma-separated (e.g. letsencrypt, cloudflare). The first is the default - each route can override it individually. If you manage certificates externally and don't use ACME, type none.") }}"><i class="ph-bold ph-info"></i></span></div>
-                                <input type="text" id="settingsCertResolver" class="input-field" placeholder="cloudflare" onblur="saveSettings()">
+                                <input type="text" id="settingsCertResolver" class="input-field" placeholder="cloudflare" oninput="_syncConnectionSaveState()" onkeydown="_connectionFieldKey(event)">
                             </div>
                         </div>
                     </div>
@@ -270,14 +271,14 @@
                             <div class="sc-fld">
                                 <div class="sc-set-n">Traefik API URL</div>
                                 <div class="sc-set-d">{{ _('Base URL of the Traefik API used for live stats.') }}</div>
-                                <input type="text" id="settingsApiUrl" class="input-field" placeholder="http://traefik:8080" onblur="saveSettings()">
+                                <input type="text" id="settingsApiUrl" class="input-field" placeholder="http://traefik:8080" oninput="_syncConnectionSaveState()" onkeydown="_connectionFieldKey(event)">
                             </div>
                             <div class="sc-fld">
                                 <div class="sc-set-n">{{ pgettext('setting', 'Credentials') }}</div>
                                 <div class="sc-set-d">{{ _('Only needed if the Traefik dashboard is protected by basic auth.') }}</div>
                                 <div class="flex gap-2">
-                                    <input type="text" id="settingsApiUser" class="input-field text-xs" placeholder="{{ _('Username (if dashboard requires auth)') }}" onblur="saveSettings()" style="flex:1">
-                                    <input type="password" id="settingsApiPassword" class="input-field text-xs" placeholder="{{ pgettext('placeholder', 'Password') }}" onblur="saveSettings()" style="flex:1">
+                                    <input type="text" id="settingsApiUser" class="input-field text-xs" placeholder="{{ _('Username (if dashboard requires auth)') }}" oninput="_syncConnectionSaveState()" onkeydown="_connectionFieldKey(event)" style="flex:1">
+                                    <input type="password" id="settingsApiPassword" class="input-field text-xs" autocomplete="new-password" placeholder="{{ pgettext('placeholder', 'Password') }}" oninput="_syncConnectionSaveState()" onkeydown="_connectionFieldKey(event)" style="flex:1">
                                 </div>
                                 <div class="text-xs mt-1" style="color:var(--muted)" id="apiPasswordSetHint">
                                     <i class="ph-bold ph-lock"></i> {{ _('Password saved') }}
@@ -295,6 +296,12 @@
                                     </button>
                                 </div></div>
                             </div>
+                        </div>
+                        <div class="flex items-center justify-end gap-3 mt-2" id="connectionSaveRow">
+                            <span id="connectionSaveState" class="text-xs" data-state="clean" style="color:var(--muted)"></span>
+                            <button type="button" id="connectionSaveBtn" onclick="saveConnectionSettings()" class="btn-primary text-xs py-1.5 px-4" disabled>
+                                <i class="ph-bold ph-floppy-disk"></i> {{ pgettext('button', 'Save') }}
+                            </button>
                         </div>
                         <div id="settingsSavedNotice" class="hidden text-xs px-3 py-2 rounded-md mt-1.5" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
                             <i class="ph-bold ph-check-circle mr-1"></i>{{ _('Settings saved to %(manager_yml)s', manager_yml=tag('code', 'manager.yml')) }}

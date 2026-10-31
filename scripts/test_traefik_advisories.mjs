@@ -26,14 +26,21 @@ const GHSA = 'GHSA-rf44-j88r-hh8c';
 const CVE  = 'CVE-2026-39858';
 const CRIT = 'CVE-2026-88007';
 const NEGO = 'GHSA-qm9f-w54v-q2qh';
+const FAPOOL = 'GHSA-hrpp-p4fc-wwf8';
+const FPRACE = 'GHSA-ww7c-q3mv-xx22';
 
 const cases = [
     ['2.11.56', CRIT, 'last affected 2.x, critical HTTP/3 advisory outranks the rest'],
     ['2.11.57', NEGO, 'last 2.x hit by the 2.11.58 advisories'],
-    ['2.11.58', null, 'patched 2.x'],
+    ['2.11.58', FAPOOL, 'last 2.x hit only by the 2.11.60 advisory'],
+    ['2.11.59', FAPOOL, 'last 2.x before the ForwardAuth pool fix'],
+    ['2.11.60', null, 'patched 2.x'],
     ['3.7.12',  CRIT, 'last 3.x hit by the critical one'],
     ['3.7.13',  NEGO, 'last 3.x hit by the 3.7.14 advisories'],
-    ['3.7.14',  null, 'patched 3.x'],
+    ['3.7.14',  FAPOOL, 'first 3.x past the 3.7.14 advisories is still hit by the ForwardAuth pool'],
+    ['3.7.15',  FAPOOL, 'last 3.x before the ForwardAuth pool fix'],
+    ['3.7.16',  null, 'patched 3.x'],
+    ['3.7.17',  null, 'current 3.x is clean'],
     ['3.8.0',   null, 'later minor is clean'],
     ['4.0.0',   null, 'later major is clean'],
     ['3.0.0',   CRIT, 'every 3.x before 3.7.13 is hit by the critical one'],
@@ -67,6 +74,13 @@ const rangeChecks = [
     ['2.11.58','GHSA-2272-4vv8-65ww', false, 'negated Host mTLS bypass is fixed in 2.11.58'],
     ['3.7.12', 'GHSA-2272-4vv8-65ww', true,  'negated Host mTLS bypass is fixed in 3.7.13'],
     ['3.7.13', 'GHSA-2272-4vv8-65ww', false, 'negated Host mTLS bypass is fixed in 3.7.13'],
+    ['2.10.9', FAPOOL, true,  'ForwardAuth pool leak has no lower bound on 2.x'],
+    ['3.0.0',  FAPOOL, true,  'ForwardAuth pool leak starts at 3.0.0'],
+    ['3.7.15', FPRACE, false, 'FastProxy upgrade race is fixed in 3.7.15'],
+    ['3.7.14', FPRACE, true,  'FastProxy upgrade race is fixed in 3.7.15'],
+    ['3.1.9',  FPRACE, false, 'FastProxy upgrade race starts at 3.2.0'],
+    ['3.2.0',  FPRACE, true,  'FastProxy upgrade race starts at 3.2.0'],
+    ['2.11.59',FPRACE, false, 'v2 has no FastProxy'],
 ];
 
 let failed = 0;

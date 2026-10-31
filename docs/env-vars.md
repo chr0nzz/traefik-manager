@@ -58,7 +58,7 @@ from `manager.yml` and restart.
 
 | Variable | Default | Precedence | Description |
 |---|---|---|---|
-| `DOMAINS` | `example.com` | Seeds `domains` | Comma-separated base domains for the Add Route form |
+| `DOMAINS` | `example.com` | Seeds `domains` | Base domains for the Add Route form, separated by commas, spaces or new lines |
 | `CERT_RESOLVER` | `cloudflare` | Seeds `cert_resolver` | Default ACME resolver name. Use `none` for external certs |
 
 ### Config Files
@@ -163,7 +163,7 @@ Environment=TRAEFIK_API_URL=http://localhost:8080
 
 HTTP Basic Auth credentials for the Traefik API. Set them when `api.insecure: false` and basic auth is configured on the Traefik dashboard. Both are required together.
 
-Can also be set via **Settings → Connection** without a restart; leave the password blank there to keep the existing value.
+Can also be set via **Settings → Connection** without a restart: edit the fields, then click **Save** (or press Enter). Leave the password blank there to keep the existing value.
 
 ---
 
@@ -318,7 +318,7 @@ Environment=OIDC_REDIRECT_URI=https://tm.example.com/auth/oidc/callback
 **Default:** `example.com`  
 **Seeds:** `domains`
 
-Comma-separated list of base domains shown in the Add Route form. A form convenience only - it does not affect Traefik configuration, TLS, or routing. Domains found in existing routes are added to the form automatically, and the form's **+** chip accepts any other domain, so this list is optional.
+List of base domains shown in the Add Route form. Separate them with commas, spaces or new lines; each one is trimmed and lowercased, and empty entries and duplicates are dropped, so `example.com home.lab` and `example.com,home.lab` are the same. A form convenience only - it does not affect Traefik configuration, TLS, or routing. Domains found in existing routes are added to the form automatically, and the form's **+** chip accepts any other domain, so this list is optional.
 
 :::tabs
 == Docker / Podman

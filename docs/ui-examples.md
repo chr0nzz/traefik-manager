@@ -257,6 +257,8 @@ The companion app, connected to the same instance.
   <img class="screenshot light-only" src="/images/light-mobile-services.png" alt="Services">
   <img class="screenshot dark-only" src="/images/dark-mobile-service-detail.png" alt="Service detail">
   <img class="screenshot light-only" src="/images/light-mobile-service-detail.png" alt="Service detail">
+  <img class="screenshot dark-only" src="/images/dark-mobile-route-map.png" alt="Route map">
+  <img class="screenshot light-only" src="/images/light-mobile-route-map.png" alt="Route map">
   <img class="screenshot dark-only" src="/images/dark-mobile-logs.png" alt="Access logs">
   <img class="screenshot light-only" src="/images/light-mobile-logs.png" alt="Access logs">
   <img class="screenshot dark-only" src="/images/dark-mobile-log-detail.png" alt="Log entry detail">
@@ -310,6 +312,8 @@ The tablet layout swaps the bottom bar for a navigation rail and puts the list a
   <img class="screenshot light-only" src="/images/light-tablet-services.png" alt="Services">
   <img class="screenshot dark-only" src="/images/dark-tablet-service-detail.png" alt="Service detail">
   <img class="screenshot light-only" src="/images/light-tablet-service-detail.png" alt="Service detail">
+  <img class="screenshot dark-only" src="/images/dark-tablet-route-map.png" alt="Route map">
+  <img class="screenshot light-only" src="/images/light-tablet-route-map.png" alt="Route map">
   <img class="screenshot dark-only" src="/images/dark-tablet-logs.png" alt="Access logs">
   <img class="screenshot light-only" src="/images/light-tablet-logs.png" alt="Access logs">
   <img class="screenshot dark-only" src="/images/dark-tablet-log-detail.png" alt="Log entry detail">
@@ -334,4 +338,74 @@ The tablet layout swaps the bottom bar for a navigation rail and puts the list a
   <img class="screenshot light-only" src="/images/light-tablet-drawer.png" alt="Navigation drawer">
   <img class="screenshot dark-only" src="/images/dark-tablet-settings.png" alt="Settings">
   <img class="screenshot light-only" src="/images/light-tablet-settings.png" alt="Settings">
+</div>
+
+## iPhone
+
+The native iOS app. The tab bar holds the main screens and **More** the rest.
+
+<div class="shot-grid">
+  <img class="screenshot dark-only" src="/images/dark-ios-dashboard.png" alt="Dashboard">
+  <img class="screenshot light-only" src="/images/light-ios-dashboard.png" alt="Dashboard">
+  <img class="screenshot dark-only" src="/images/dark-ios-routes.png" alt="Routes">
+  <img class="screenshot light-only" src="/images/light-ios-routes.png" alt="Routes">
+  <img class="screenshot dark-only" src="/images/dark-ios-route-detail.png" alt="Route detail">
+  <img class="screenshot light-only" src="/images/light-ios-route-detail.png" alt="Route detail">
+  <img class="screenshot dark-only" src="/images/dark-ios-route-add.png" alt="Add a route">
+  <img class="screenshot light-only" src="/images/light-ios-route-add.png" alt="Add a route">
+  <img class="screenshot dark-only" src="/images/dark-ios-middlewares.png" alt="Middlewares">
+  <img class="screenshot light-only" src="/images/light-ios-middlewares.png" alt="Middlewares">
+  <img class="screenshot dark-only" src="/images/dark-ios-services.png" alt="Services">
+  <img class="screenshot light-only" src="/images/light-ios-services.png" alt="Services">
+  <img class="screenshot dark-only" src="/images/dark-ios-route-map.png" alt="Route map">
+  <img class="screenshot light-only" src="/images/light-ios-route-map.png" alt="Route map">
+  <img class="screenshot dark-only" src="/images/dark-ios-logs.png" alt="Access logs">
+  <img class="screenshot light-only" src="/images/light-ios-logs.png" alt="Access logs">
+  <img class="screenshot dark-only" src="/images/dark-ios-crowdsec.png" alt="CrowdSec">
+  <img class="screenshot light-only" src="/images/light-ios-crowdsec.png" alt="CrowdSec">
+  <img class="screenshot dark-only" src="/images/dark-ios-certificates.png" alt="Certificates">
+  <img class="screenshot light-only" src="/images/light-ios-certificates.png" alt="Certificates">
+  <img class="screenshot dark-only" src="/images/dark-ios-plugins.png" alt="Plugins">
+  <img class="screenshot light-only" src="/images/light-ios-plugins.png" alt="Plugins">
+  <img class="screenshot dark-only" src="/images/dark-ios-backups.png" alt="Backups">
+  <img class="screenshot light-only" src="/images/light-ios-backups.png" alt="Backups">
+  <img class="screenshot dark-only" src="/images/dark-ios-notifications.png" alt="Notifications">
+  <img class="screenshot light-only" src="/images/light-ios-notifications.png" alt="Notifications">
+  <img class="screenshot dark-only" src="/images/dark-ios-settings.png" alt="Settings">
+  <img class="screenshot light-only" src="/images/light-ios-settings.png" alt="Settings">
+</div>
+
+## iPad
+
+On iPad a sidebar lists every screen beside the one you are on.
+
+<div class="shot-grid">
+  <img class="screenshot dark-only" src="/images/dark-ipad-dashboard.png" alt="Dashboard">
+  <img class="screenshot light-only" src="/images/light-ipad-dashboard.png" alt="Dashboard">
+  <img class="screenshot dark-only" src="/images/dark-ipad-routes.png" alt="Routes">
+  <img class="screenshot light-only" src="/images/light-ipad-routes.png" alt="Routes">
+  <img class="screenshot dark-only" src="/images/dark-ipad-route-detail.png" alt="Route detail">
+  <img class="screenshot light-only" src="/images/light-ipad-route-detail.png" alt="Route detail">
+  <img class="screenshot dark-only" src="/images/dark-ipad-route-add.png" alt="Add a route">
+  <img class="screenshot light-only" src="/images/light-ipad-route-add.png" alt="Add a route">
+  <img class="screenshot dark-only" src="/images/dark-ipad-middlewares.png" alt="Middlewares">
+  <img class="screenshot light-only" src="/images/light-ipad-middlewares.png" alt="Middlewares">
+  <img class="screenshot dark-only" src="/images/dark-ipad-services.png" alt="Services">
+  <img class="screenshot light-only" src="/images/light-ipad-services.png" alt="Services">
+  <img class="screenshot dark-only" src="/images/dark-ipad-route-map.png" alt="Route map">
+  <img class="screenshot light-only" src="/images/light-ipad-route-map.png" alt="Route map">
+  <img class="screenshot dark-only" src="/images/dark-ipad-logs.png" alt="Access logs">
+  <img class="screenshot light-only" src="/images/light-ipad-logs.png" alt="Access logs">
+  <img class="screenshot dark-only" src="/images/dark-ipad-crowdsec.png" alt="CrowdSec">
+  <img class="screenshot light-only" src="/images/light-ipad-crowdsec.png" alt="CrowdSec">
+  <img class="screenshot dark-only" src="/images/dark-ipad-certificates.png" alt="Certificates">
+  <img class="screenshot light-only" src="/images/light-ipad-certificates.png" alt="Certificates">
+  <img class="screenshot dark-only" src="/images/dark-ipad-plugins.png" alt="Plugins">
+  <img class="screenshot light-only" src="/images/light-ipad-plugins.png" alt="Plugins">
+  <img class="screenshot dark-only" src="/images/dark-ipad-backups.png" alt="Backups">
+  <img class="screenshot light-only" src="/images/light-ipad-backups.png" alt="Backups">
+  <img class="screenshot dark-only" src="/images/dark-ipad-notifications.png" alt="Notifications">
+  <img class="screenshot light-only" src="/images/light-ipad-notifications.png" alt="Notifications">
+  <img class="screenshot dark-only" src="/images/dark-ipad-settings.png" alt="Settings">
+  <img class="screenshot light-only" src="/images/light-ipad-settings.png" alt="Settings">
 </div>

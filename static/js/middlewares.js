@@ -1055,6 +1055,7 @@ async function savePlugin() {
         const d1 = await _pluginSectionWrite({ section: 'plugins', action: 'edit', name, old_name: _pluginEditName, data: { moduleName, version } });
         if (!d1) return;
         closePluginForm();
+        _showPluginRestartBanner(tn('Plugin "{names}" saved to traefik.yml.', 'Plugins "{names}" saved to traefik.yml.', 1, { names: name }));
         showToast(t('Plugin saved - restart Traefik to apply'), 'success');
         refreshPluginsTab();
     } else {
@@ -1070,19 +1071,14 @@ async function savePlugin() {
         const data = await res.json();
         if (!data.ok) { showToast(data.error || data.message || t('Failed to install plugin'), 'error'); return; }
         closePluginForm();
-        const banner = document.getElementById('pluginRestartBanner');
-        const detail = document.getElementById('pluginRestartBannerDetail');
-        if (banner) {
-            const names = (data.plugins || []).join(', ');
-            const hasMw = mwYaml.length > 0 && !data.warning;
-            const pluginCount = Math.max(1, data.plugins?.length || 0);
-            if (detail) detail.textContent = hasMw
-                ? tn('Plugin "{names}" saved to traefik.yml and middleware saved to {file}.',
-                     'Plugins "{names}" saved to traefik.yml and middleware saved to {file}.',
-                     pluginCount, { names, file: data.middleware_file || 'plugin-middlewares.yml' })
-                : tn('Plugin "{names}" saved to traefik.yml.', 'Plugins "{names}" saved to traefik.yml.', pluginCount, { names });
-            banner.style.display = 'block';
-        }
+        const names = (data.plugins || []).join(', ');
+        const hasMw = mwYaml.length > 0 && !data.warning;
+        const pluginCount = Math.max(1, data.plugins?.length || 0);
+        _showPluginRestartBanner(hasMw
+            ? tn('Plugin "{names}" saved to traefik.yml and middleware saved to {file}.',
+                 'Plugins "{names}" saved to traefik.yml and middleware saved to {file}.',
+                 pluginCount, { names, file: data.middleware_file || 'plugin-middlewares.yml' })
+            : tn('Plugin "{names}" saved to traefik.yml.', 'Plugins "{names}" saved to traefik.yml.', pluginCount, { names }));
         if (data.warning) showToast(data.warning, 'warning');
         refreshPluginsTab();
     }
@@ -1149,8 +1145,17 @@ async function deletePlugin(name) {
     if (!await _confirm(t('Remove plugin "{name}"?', { name }), t('Remove Plugin'), tc('button', 'Remove'))) return;
     const d1 = await _pluginSectionWrite({ section: 'plugins', action: 'remove', name, old_name: name, data: {} });
     if (!d1) return;
+    _showPluginRestartBanner(t('Plugin removed - restart Traefik to apply'));
     showToast(t('Plugin removed - restart Traefik to apply'), 'success');
     refreshPluginsTab();
+}
+
+function _showPluginRestartBanner(text) {
+    const banner = document.getElementById('pluginRestartBanner');
+    if (!banner) return;
+    const detail = document.getElementById('pluginRestartBannerDetail');
+    if (detail) detail.textContent = text;
+    banner.style.display = 'block';
 }
 
 function _pluginMwsUsing(name) {

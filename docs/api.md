@@ -1384,7 +1384,11 @@ Edit one named section of the static config without writing raw YAML. **Nothing 
 
 Returns `{ "ok": true, "raw": "...", "parsed": { } }`. `400` for an unknown section, a missing field, or an invalid duration, CIDR or number.
 
-On `entrypoints`, `headers_strategy_key` selects which key `underscore_headers` is written to: `aliasHeadersStrategy` (Traefik 3.7.12+) or `underscoreHeadersStrategy` (3.7.6 to 3.7.11). Anything else falls back to the older name. Only one is ever written, and saving removes the other. See [Traefik Hardening](hardening.md).
+On `entrypoints`, `headers_strategy_key` selects which key `underscore_headers` (`keep`, `delete` or `reject`) is written to: `aliasHeadersStrategy` (Traefik 3.7.12+) or `underscoreHeadersStrategy` (3.7.6 to 3.7.11). An empty value with a valid key removes both. Only one is ever written, and saving removes the other. See [Traefik Hardening](hardening.md).
+
+When `headers_strategy_key` is missing or invalid, as from older mobile apps, an entry point that already has `aliasHeadersStrategy` stays on that key: an empty value leaves it in place, and any other value is written to it. Without one, the value is written to `underscoreHeadersStrategy`.
+
+The web UI and the mobile apps follow the running Traefik version. On older Traefik they hide the field and send an empty value with `underscoreHeadersStrategy`. If the version cannot be read, they hide the field and send the value and key already in the file, or `underscoreHeadersStrategy` if there is none.
 
 ---
 
