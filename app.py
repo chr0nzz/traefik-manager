@@ -2956,7 +2956,8 @@ def api_static_section_update():
                 else:
                     ep.pop('http', None)
                 if payload.get('http3'):
-                    ep['http3'] = {}
+                    if not isinstance(ep.get('http3'), dict):
+                        ep['http3'] = {}
                 else:
                     ep.pop('http3', None)
                 if payload.get('as_default'):
