@@ -11359,7 +11359,9 @@ msgstr "Decisions-visningen virker med en bouncer-nøgle alene"
 msgid ""
 "The default for every entry point, including the internal ones. An entry "
 "point with its own value overrides it."
-msgstr "Standarden for alle entrypoints, også de interne. Et entrypoint med sin egen værdi tilsidesætter den."
+msgstr ""
+"Standarden for alle entrypoints, også de interne. Et entrypoint med sin egen "
+"værdi tilsidesætter den."
 
 #. Used in the browser
 msgid ""
