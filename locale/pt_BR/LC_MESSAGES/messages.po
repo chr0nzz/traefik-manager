@@ -11434,7 +11434,9 @@ msgstr "A visão de decisões funciona apenas com uma chave de bouncer"
 msgid ""
 "The default for every entry point, including the internal ones. An entry "
 "point with its own value overrides it."
-msgstr "O padrão para todos os entrypoints, incluindo os internos. Um entrypoint com valor próprio o substitui."
+msgstr ""
+"O padrão para todos os entrypoints, incluindo os internos. Um entrypoint com "
+"valor próprio o substitui."
 
 #. Used in the browser
 msgid ""

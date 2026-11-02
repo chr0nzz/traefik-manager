@@ -11662,7 +11662,9 @@ msgstr "La vue des décisions fonctionne uniquement avec une clé de bouncer"
 msgid ""
 "The default for every entry point, including the internal ones. An entry "
 "point with its own value overrides it."
-msgstr "La valeur par défaut pour tous les points d’entrée, y compris les internes. Un point d’entrée avec sa propre valeur la remplace."
+msgstr ""
+"La valeur par défaut pour tous les points d’entrée, y compris les internes. "
+"Un point d’entrée avec sa propre valeur la remplace."
 
 #. Used in the browser
 msgid ""

@@ -11466,7 +11466,9 @@ msgstr "De decisions-weergave werkt met alleen een bouncer-sleutel"
 msgid ""
 "The default for every entry point, including the internal ones. An entry "
 "point with its own value overrides it."
-msgstr "De standaard voor elk entrypoint, ook de interne. Een entrypoint met een eigen waarde overschrijft deze."
+msgstr ""
+"De standaard voor elk entrypoint, ook de interne. Een entrypoint met een "
+"eigen waarde overschrijft deze."
 
 #. Used in the browser
 msgid ""
