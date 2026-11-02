@@ -11,6 +11,7 @@ Thanks for your interest in contributing. This guide covers everything you need 
 - [Submitting a pull request](#submitting-a-pull-request)
 - [Running locally](#running-locally)
 - [Tests](#tests)
+- [Translations](#translations)
 - [Project structure](#project-structure)
 - [Code style](#code-style)
 - [Branch guide](#branch-guide)
@@ -47,7 +48,8 @@ Start an [Idea discussion](https://github.com/chr0nzz/traefik-manager/discussion
 3. For anything beyond a small bug fix, open an issue first so we can align on approach.
 4. Test your changes with a real Traefik instance if possible.
 5. Update the relevant docs page in `docs/` if your change affects user-facing behaviour.
-6. Open the PR against `dev` (see [Branch guide](#branch-guide)). GitHub preselects `main` - change the base branch dropdown when creating the PR.
+6. If you add or reword text a user can see, mark it for translation and commit the regenerated catalogues in the same PR (see [Translations](#translations)).
+7. Open the PR against `dev` (see [Branch guide](#branch-guide)). GitHub preselects `main` - change the base branch dropdown when creating the PR.
 
 ---
 
@@ -123,6 +125,32 @@ cd agent && go test ./...             # agent suite
 ```
 
 The suite runs against a temporary config directory - it never touches a real Traefik or your own config. Please run it before opening a pull request, and add a test when you change the config write path (`/save`, middleware saves, backups). Tests assert the YAML that actually lands on disk, not just the HTTP status, because that is where config-corrupting bugs show up.
+
+---
+
+## Translations
+
+Any text a user can see goes through the translation helpers, including error messages returned by the API. CI fails a PR that shows unmarked English in a template, or that changes a string without updating `locale/messages.pot`.
+
+| Where | Plain text | Text placed into HTML |
+|-------|------------|-----------------------|
+| Python and templates | `_()`, `ngettext()`, `pgettext()` | - |
+| JavaScript | `t()`, `tn()`, `tc()` | `th()`, `thn()`, `thc()` |
+
+Pass plain string literals with named placeholders (`%(name)s` in Python and templates, `{name}` in JavaScript) and keep HTML outside the translated text.
+
+If your PR adds or rewords a string, regenerate the catalogues and commit the result with your change:
+
+```bash
+pip install -r requirements-dev.txt
+make i18n-tools     # once: installs the JS parser, needs Node
+make i18n-extract   # updates locale/messages.pot and every catalogue
+make i18n-check     # the same checks CI runs, needs gettext for msgfmt
+```
+
+Commit everything `make i18n-extract` changes under `locale/`, even though the PR then touches every language. Leave the new strings untranslated: translators fill them in on Weblate, and rewording a string sends it back to them in every language.
+
+The [Development guide](https://traefik-manager.xyzlab.dev/development.html#translations) has the full rules for each helper.
 
 ---
 
