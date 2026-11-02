@@ -30,11 +30,9 @@ def test_the_defaults_the_docs_promise_are_the_real_ones():
     assert st._get_access_log_path() == '/app/logs/access.log'
 
 
-def test_a_path_outside_app_is_readable():
+def test_a_path_outside_app_is_readable(tmp_path):
     import core.config as cfg
-    import tempfile
-    d = tempfile.mkdtemp()
-    target = os.path.join(d, 'acme.json')
+    target = str(tmp_path / 'acme.json')
     with open(target, 'w') as fh:
         fh.write('{}')
     os.environ['ACME_JSON_PATH'] = target

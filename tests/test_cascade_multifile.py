@@ -6,8 +6,8 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 PROBE = r'''
-import json, os, sys, tempfile
-d = tempfile.mkdtemp()
+import json, os, sys
+d = os.path.dirname(os.path.abspath(__file__))
 a = os.path.join(d, 'a.yml')
 b = os.path.join(d, 'b.yml')
 open(a, 'w').write(
