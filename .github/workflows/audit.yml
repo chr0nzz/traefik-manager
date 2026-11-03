@@ -9,6 +9,15 @@ on:
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:
+  # Called from the tag path in docker.yml and from release-binaries.yml, so a tag with a
+  # known-vulnerable dependency stops before any image, binary or release is published.
+  workflow_call:
+    inputs:
+      ref:
+        description: Ref to audit, defaults to the commit that triggered the caller
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -20,6 +29,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
+          ref: ${{ inputs.ref }}
           persist-credentials: false
 
       - name: Set up Python
@@ -39,6 +49,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
+          ref: ${{ inputs.ref }}
           persist-credentials: false
 
       - name: Set up Go

@@ -46,9 +46,19 @@ jobs:
             echo "run=false" >> "$GITHUB_OUTPUT"
           fi
 
+  # Tags only. Branch builds (:beta, :dev) skip the audit and publish as before; the daily
+  # and per-push runs of audit.yml still cover them.
+  audit:
+    if: github.ref_type == 'tag'
+    uses: ./.github/workflows/audit.yml
+
+  # A skipped audit only lets a branch build through. On a tag the audit has to succeed.
   build:
-    needs: changes
-    if: needs.changes.outputs.run == 'true'
+    needs: [changes, audit]
+    if: >-
+      !cancelled()
+      && needs.changes.outputs.run == 'true'
+      && (needs.audit.result == 'success' || (needs.audit.result == 'skipped' && github.ref_type != 'tag'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -111,8 +121,11 @@ jobs:
           push-to-registry: true
 
   build-agent:
-    needs: changes
-    if: needs.changes.outputs.run == 'true'
+    needs: [changes, audit]
+    if: >-
+      !cancelled()
+      && needs.changes.outputs.run == 'true'
+      && (needs.audit.result == 'success' || (needs.audit.result == 'skipped' && github.ref_type != 'tag'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -174,3 +187,17 @@ jobs:
           subject-name: ${{ env.REGISTRY }}/chr0nzz/traefik-manager-agent
           subject-digest: ${{ steps.push-agent.outputs.digest }}
           push-to-registry: true
+
+  # Last on a release tag: the GitHub release goes public only after both images are pushed
+  # and the agent binaries are attached, so /releases/latest/download never points at a
+  # release without assets.
+  release:
+    needs: [build, build-agent]
+    if: github.ref_type == 'tag' && !contains(github.ref, '-beta')
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    uses: ./.github/workflows/release-binaries.yml
+    with:
+      tag: ${{ github.ref_name }}

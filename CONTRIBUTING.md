@@ -180,10 +180,11 @@ docs/                         # VitePress documentation site
     *.md                      # One page per doc
 .github/
     workflows/
-        docker.yml            # Builds and pushes Docker images on tag/branch push
+        docker.yml            # Builds and pushes Docker images on tag/branch push; on a tag, audits first and publishes the release last
+        audit.yml             # pip-audit + govulncheck, daily, per push, and before every tag build
         tests.yml             # pytest + coverage + ruff, and the Go agent build/vet/test
         pr-base-check.yml     # Fails a PR opened against main instead of dev
-        release-binaries.yml  # Builds agent binaries on a published release
+        release-binaries.yml  # Builds agent binaries and publishes the GitHub release, called by docker.yml on a tag
 wrangler.toml                 # Cloudflare Pages builds and deploys the docs site
 ```
 
@@ -210,4 +211,4 @@ wrangler.toml                 # Cloudflare Pages builds and deploys the docs sit
 | `dev` | Active development - all features, bug fixes, and docs changes for the next release | **Yes - every PR targets `dev`** |
 | `main` | Release branch - only moves when a version is tagged | **No - never open PRs here** |
 
-Everything lands on `dev` first - features, bug fixes, and docs alike. When `dev` is ready for release it is merged to `main` and tagged, which publishes the Docker images. Nothing else touches `main`: a PR merged there would sit unreleased, drift out of sync with `dev`, and risk being clobbered by the next release merge.
+Everything lands on `dev` first - features, bug fixes, and docs alike. When `dev` is ready for release it is merged to `main` and tagged. The tag runs the dependency audit, then publishes the Docker images, then attaches the agent binaries and publishes the GitHub release; a failed audit stops all three. Prepare the release notes as a draft release for the tag rather than publishing it by hand. Nothing else touches `main`: a PR merged there would sit unreleased, drift out of sync with `dev`, and risk being clobbered by the next release merge.
