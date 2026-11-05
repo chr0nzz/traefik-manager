@@ -160,7 +160,7 @@ curl -fsSL https://get-traefik.xyzlab.dev | bash
 
 ## Mobile app
 
-Native Android (Kotlin and Jetpack Compose) and iOS (Swift and SwiftUI) apps for phones and tablets. Needs Traefik Manager v1.10.1 or newer and a per-device API key from **Settings - Authentication - API Keys**.
+Native Android (Kotlin and Jetpack Compose) and iOS (Swift and SwiftUI) apps for phones and tablets. Needs Traefik Manager v1.14.0 or newer and a per-device API key from **Settings - Authentication - API Keys**.
 
 [![Mobile App](https://img.shields.io/badge/mobile-repo-green?logo=android&logoColor=white)](https://github.com/chr0nzz/traefik-manager-mobile)
 [![Google Play](https://img.shields.io/badge/Google_Play-Available-blue?logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager)
