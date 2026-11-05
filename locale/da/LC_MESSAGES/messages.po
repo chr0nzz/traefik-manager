@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-31 15:27-0400\n"
+"POT-Creation-Date: 2026-11-05 10:35-0500\n"
 "PO-Revision-Date: 2026-09-30 04:18+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Danish <https://hosted.weblate.org/projects/traefik-manager/"
@@ -1557,6 +1557,9 @@ msgstr "Ethvert gyldigt %(traefik_router_rule)s-udtryk."
 
 msgid "Anything below this level is dropped for this channel."
 msgstr "Alt under dette niveau kasseres for denne kanal."
+
+msgid "App Store"
+msgstr ""
 
 #. Used in the browser
 msgid "App Token"

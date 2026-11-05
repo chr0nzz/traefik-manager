@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-31 15:27-0400\n"
+"POT-Creation-Date: 2026-11-05 10:35-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1432,6 +1432,9 @@ msgid "Any valid %(traefik_router_rule)s expression."
 msgstr ""
 
 msgid "Anything below this level is dropped for this channel."
+msgstr ""
+
+msgid "App Store"
 msgstr ""
 
 #. Used in the browser

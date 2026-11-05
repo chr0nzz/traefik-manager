@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-31 15:27-0400\n"
+"POT-Creation-Date: 2026-11-05 10:35-0500\n"
 "PO-Revision-Date: 2026-09-30 00:00+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/"
@@ -1466,6 +1466,9 @@ msgstr "任何有效的 %(traefik_router_rule)s 表达式。"
 
 msgid "Anything below this level is dropped for this channel."
 msgstr "低于此级别的内容在此渠道中会被丢弃。"
+
+msgid "App Store"
+msgstr ""
 
 #. Used in the browser
 msgid "App Token"
