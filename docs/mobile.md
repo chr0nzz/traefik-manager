@@ -25,7 +25,7 @@ A `forwardAuth` middleware in front of Traefik Manager blocks the app before Tra
   <img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/GetItOnGooglePlay.svg" alt="Get it on Google Play" style="height:50px;width:auto" />
 </a>
 
-**iPhone and iPad:** coming soon to the App Store.
+**iPhone and iPad:** [Download on the App Store](https://apps.apple.com/us/app/traefik-manager/id6826725061).
 
 ---
 
