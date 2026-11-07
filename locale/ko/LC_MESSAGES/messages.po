@@ -2102,7 +2102,7 @@ msgstr "에이전트에 연결할 수 없음"
 #, fuzzy, python-format
 #| msgid "Cannot reach agent: %(error)s"
 msgid "Cannot reach agent (%(reason)s)"
-msgstr "에이전트에 연결할 수 없음: %(error)s"
+msgstr "에이전트에 연결할 수 없음 (%(reason)s)"
 
 msgid "Cannot reach agent - check URL and network"
 msgstr "에이전트에 연결할 수 없음 - URL과 네트워크를 확인하세요"
