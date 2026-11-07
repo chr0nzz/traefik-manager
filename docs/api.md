@@ -118,7 +118,7 @@ When multiple config files are loaded, route `id` is prefixed as `configFile::na
 | `configFile` | string | Source config file |
 | `provider` | string | `file` for managed routes, otherwise the Traefik provider it was discovered from |
 
-HTTP routes also carry `passHostHeader`, `tlsDomains`, `tlsOptionsProfile`, `insecureSkipVerify`, `streaming` and `serviceType`.
+HTTP routes also carry `passHostHeader`, `tlsDomains`, `tlsOptionsProfile`, `insecureSkipVerify`, `serverName`, `streaming` and `serviceType`.
 
 A route whose service is composite additionally carries `compositeChildren` - one
 `{name, url, weight, percent}` per backend, with `url` filled only for children Traefik Manager
@@ -163,6 +163,7 @@ shape. The key only takes effect when present, so older clients cannot flatten a
 | `scheme` | string | `http` or `https` (default: `http`). HTTP only |
 | `passHostHeader` | boolean | Send `true` to keep the host header. Omitting the field writes `passHostHeader: false` into the service |
 | `insecureSkipVerify` | boolean | `true` writes a `<serviceName>-transport` serversTransport that skips backend certificate checks |
+| `backendServerName` | string | Hostname written as `serverName` on the `<serviceName>-transport` serversTransport (SNI sent to the backend). An empty value removes it; omitting the field leaves it unchanged. HTTP only |
 | `certResolver` | string | ACME resolver name, repeated per protocol. Use `none` to write `tls: {}` with no resolver (external certs), or `__disabled__` to write no `tls` block at all |
 | `useTls` / `tlsPassthrough` | boolean | TCP only. `tlsPassthrough` wins and writes `tls: {passthrough: true}` |
 | `tlsWildcardMain` | string | Main domain for `tls.domains` (e.g. `example.com`). Use with DNS challenge resolvers for wildcard certs |

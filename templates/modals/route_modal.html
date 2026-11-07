@@ -205,6 +205,13 @@
                         </div>
                         <span class="tm-info-btn" data-tip="{{ _('Disables certificate validation for the backend. Use for self-signed certs (e.g. Proxmox, Kasm). Adds insecureSkipVerify via a named serversTransport.') }}"><i class="ph-bold ph-info"></i></span>
                     </div>
+                    <div id="httpServerNameRow">
+                        <div class="flex items-center justify-between mb-1">
+                            <label style="margin:0">{{ _('Backend server name (SNI)') }}</label>
+                            <span class="tm-info-btn" data-tip="{{ _('The name Traefik sends as SNI and checks the backend certificate against. Use it when the backend serves its certificate for a different name than the target address. Adds serverName via a named serversTransport.') }}"><i class="ph-bold ph-info"></i></span>
+                        </div>
+                        <input type="text" name="backendServerName" id="backendServerName" class="input-field font-mono text-sm" placeholder="backend.example.com" autocomplete="off" spellcheck="false">
+                    </div>
                     <div id="headersPresetSection">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">

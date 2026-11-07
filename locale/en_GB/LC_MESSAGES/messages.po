@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-07 02:41+0000\n"
+"POT-Creation-Date: 2026-11-07 16:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en_GB <LL@li.org>\n"
@@ -1673,6 +1673,13 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Backend online · {latency_ms}ms"
+msgstr ""
+
+msgid "Backend server name (SNI)"
+msgstr ""
+
+#, python-format
+msgid "Backend server name must be a hostname, got %(value)s"
 msgstr ""
 
 msgid "Backend service"
@@ -10638,6 +10645,12 @@ msgid ""
 "The middleware snippet contains template placeholders (%(example)s) that "
 "must be replaced with real values before saving. Edit the middleware in the "
 "editor and replace all %(marker)s placeholders."
+msgstr ""
+
+msgid ""
+"The name Traefik sends as SNI and checks the backend certificate against. "
+"Use it when the backend serves its certificate for a different name than the "
+"target address. Adds serverName via a named serversTransport."
 msgstr ""
 
 #. Used in the browser

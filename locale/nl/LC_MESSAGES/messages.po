@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-07 02:41+0000\n"
+"POT-Creation-Date: 2026-11-07 16:18+0000\n"
 "PO-Revision-Date: 2026-09-29 23:48+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Dutch <https://hosted.weblate.org/projects/traefik-manager/"
@@ -1842,6 +1842,13 @@ msgstr "Backend van"
 #, python-brace-format
 msgid "Backend online · {latency_ms}ms"
 msgstr "Backend online · {latency_ms}ms"
+
+msgid "Backend server name (SNI)"
+msgstr ""
+
+#, python-format
+msgid "Backend server name must be a hostname, got %(value)s"
+msgstr ""
 
 msgid "Backend service"
 msgstr "Backend-service"
@@ -11615,6 +11622,12 @@ msgstr ""
 "Het middlewarefragment bevat sjabloonplaceholders (%(example)s) die vóór het "
 "opslaan door echte waarden moeten worden vervangen. Bewerk de middleware in "
 "de editor en vervang alle %(marker)s-placeholders."
+
+msgid ""
+"The name Traefik sends as SNI and checks the backend certificate against. "
+"Use it when the backend serves its certificate for a different name than the "
+"target address. Adds serverName via a named serversTransport."
+msgstr ""
 
 #. Used in the browser
 msgid "The primary view"

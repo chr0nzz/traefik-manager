@@ -6526,6 +6526,9 @@ def _is_fetch():
     return request.headers.get('X-Requested-With') == 'fetch'
 
 
+_SNI_NAME_RE = re.compile(r'^(?=.{1,253}$)[A-Za-z0-9_*]([A-Za-z0-9_.-]*[A-Za-z0-9])?$')
+
+
 @app.route('/save', methods=['POST'])
 @csrf_protect
 @login_required
@@ -6790,6 +6793,14 @@ def save_entry():
                 target_url = f"{scheme}://{target_ip}:{target_port}" if target_port else f"{scheme}://{target_ip}"
             mws        = [m.strip() for m in middlewares_in.split(',')] if middlewares_in else []
             insecure   = request.form.get('insecureSkipVerify') == 'true'
+            sni_posted = 'backendServerName' in request.form
+            sni_name   = request.form.get('backendServerName', '').strip()
+            if sni_name and not _SNI_NAME_RE.match(sni_name):
+                _sni_msg = gettext('Backend server name must be a hostname, got %(value)s', value=repr(sni_name))
+                if fetch:
+                    return jsonify({'ok': False, 'message': _sni_msg}), 400
+                flash(_sni_msg, "error")
+                return redirect(url_for('index'))
             config.setdefault('http', {}).setdefault('routers', {})
             config['http'].setdefault('services', {})
             if hdr_preset_present:
@@ -6882,6 +6893,11 @@ def save_entry():
                         tp['insecureSkipVerify'] = True
                     else:
                         tp.pop('insecureSkipVerify', None)
+                    if sni_posted:
+                        if sni_name:
+                            tp['serverName'] = sni_name
+                        else:
+                            tp.pop('serverName', None)
                     if stream_preset_present:
                         if stream_preset_on:
                             tp['forwardingTimeouts'] = _streaming_forwarding_timeouts()

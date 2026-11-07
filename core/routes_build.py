@@ -315,6 +315,7 @@ def _build_apps(config, config_file='', extra_http_svcs=None, extra_tcp_svcs=Non
                      'tlsDomains': tls_http.get('domains', []) if isinstance(tls_http, dict) else [],
                      'tlsOptionsProfile': tls_http.get('options', '') if isinstance(tls_http, dict) else '',
                      'insecureSkipVerify': insecure,
+                     'serverName': str(transport_cfg.get('serverName') or ''),
                      'streaming': streaming,
                      'servers': [str(s.get('url', '')) for s in (lb.get('servers') or []) if isinstance(s, dict) and s.get('url')],
                      'sticky': (lb.get('sticky') or {}).get('cookie', {}) if isinstance(lb.get('sticky'), dict) else {},
