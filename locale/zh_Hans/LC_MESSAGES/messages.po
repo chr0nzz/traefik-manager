@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-05 10:35-0500\n"
+"POT-Creation-Date: 2026-11-07 02:02+0000\n"
 "PO-Revision-Date: 2026-09-30 00:00+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/"
@@ -3115,6 +3115,15 @@ msgstr "DNS 提供者"
 #, python-brace-format
 msgid "DNS check resolvers {optional}"
 msgstr "DNS 检查解析器 {optional}"
+
+#, python-format
+msgctxt "check failure"
+msgid "DNS name %(host)s does not resolve"
+msgstr "DNS 名称 %(host)s 无法解析"
+
+msgctxt "check failure"
+msgid "DNS name does not resolve"
+msgstr "DNS 名称无法解析"
 
 #. Used in the browser
 msgctxt "status"
@@ -10418,6 +10427,15 @@ msgid ""
 msgstr ""
 "TLS 证书由 Traefik 的 ACME 解析器自动管理。通过 Traefik 配置续期或吊销证书。"
 
+msgctxt "check failure"
+msgid "TLS handshake failed"
+msgstr "TLS 握手失败"
+
+#, python-format
+msgctxt "check failure"
+msgid "TLS handshake failed (%(reason)s)"
+msgstr "TLS 握手失败（%(reason)s）"
+
 #. Used in the browser
 msgid "TLS on every router"
 msgstr "每个路由器都启用 TLS"
@@ -11459,9 +11477,6 @@ msgstr ""
 #. Used in the browser
 msgid "Time left on this decision, counting down live"
 msgstr "此决策的剩余时间，实时倒计时"
-
-msgid "Timeout"
-msgstr "超时"
 
 msgctxt "setting"
 msgid "Timeout"
@@ -12951,6 +12966,22 @@ msgstr "组合"
 msgid "configured in traefik.yml"
 msgstr "在 traefik.yml 中配置"
 
+msgctxt "check failure"
+msgid "connection closed without a response"
+msgstr "连接已关闭，未收到响应"
+
+msgctxt "check failure"
+msgid "connection refused"
+msgstr "连接被拒绝"
+
+msgctxt "check failure"
+msgid "connection reset"
+msgstr "连接被重置"
+
+msgctxt "check failure"
+msgid "connection timed out"
+msgstr "连接超时"
+
 #, python-format
 msgid "controlled by %(auth_enabled)s env var"
 msgstr "由 %(auth_enabled)s 环境变量控制"
@@ -13611,6 +13642,10 @@ msgctxt "label"
 msgid "network"
 msgstr "网络"
 
+msgctxt "check failure"
+msgid "network unreachable"
+msgstr "网络不可达"
+
 #. Used in the browser
 msgctxt "button"
 msgid "newer"
@@ -13829,6 +13864,10 @@ msgstr "无解析器"
 msgid ""
 "no restart method is configured, and Traefik only reads acme.json at startup"
 msgstr "未配置重启方式，而 Traefik 只在启动时读取 acme.json"
+
+msgctxt "check failure"
+msgid "no route to host"
+msgstr "没有到主机的路由"
 
 #. Used in the browser
 msgid "no router binds this entry point"
@@ -14645,6 +14684,10 @@ msgstr "此证书未包含任何域名"
 #. Used in the browser
 msgid "this server"
 msgstr "此服务器"
+
+msgctxt "check failure"
+msgid "timed out waiting for a response"
+msgstr "等待响应超时"
 
 #. Used in the browser
 msgid "tls fields"

@@ -1,10 +1,14 @@
+import errno
+import http.client
 import ipaddress
 import socket
+import ssl
 import time
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urljoin, urlparse
 
 import requests
+from urllib3 import exceptions as _u3
 
 from core import i18n as _i18n
 
@@ -12,16 +16,40 @@ POOL_WORKERS = 6
 UNREACHABLE = (502, 503, 504)
 REDIRECTS   = (301, 302, 303, 307, 308)
 TIMEOUT     = 5
+DETAIL_MAX  = 100
+CAUSE_DEPTH = 10
 
-_DOWN_MARKERS    = ('connection refused', 'no route to host', 'network is unreachable',
-                    'connection reset', 'remote end closed')
-_DOWN_WHY        = (('connection refused', 'refused'),
-                    ('no route to host', 'no_route'),
-                    ('network is unreachable', 'network'),
-                    ('connection reset', 'reset'),
-                    ('remote end closed', 'closed'))
-_UNKNOWN_MARKERS = ('name or service not known', 'nodename nor servname', 'temporary failure in name resolution',
-                    'nameresolutionerror', 'getaddrinfo failed', 'timed out', 'timeout')
+_DOWN_KINDS    = ('closed', 'refused', 'no_route', 'network', 'reset')
+_UNKNOWN_KINDS = ('dns', 'read_timeout', 'timeout')
+_KIND_ORDER    = ('dns', 'closed', 'refused', 'no_route', 'network', 'reset', 'tls', 'read_timeout', 'timeout')
+_KIND_ERRNOS   = {errno.ECONNREFUSED: 'refused', errno.EHOSTUNREACH: 'no_route', errno.ENETUNREACH: 'network',
+                  errno.ECONNRESET: 'reset', errno.ETIMEDOUT: 'timeout'}
+_KIND_TYPES    = ((socket.gaierror, 'dns'), (_u3.NameResolutionError, 'dns'),
+                  (http.client.RemoteDisconnected, 'closed'),
+                  (ConnectionRefusedError, 'refused'), (ConnectionResetError, 'reset'),
+                  (ssl.SSLError, 'tls'), (_u3.SSLError, 'tls'), (requests.exceptions.SSLError, 'tls'),
+                  (requests.exceptions.ReadTimeout, 'read_timeout'), (_u3.ReadTimeoutError, 'read_timeout'),
+                  (_u3.NewConnectionError, ''),
+                  (requests.exceptions.ConnectTimeout, 'timeout'), (_u3.ConnectTimeoutError, 'timeout'),
+                  (TimeoutError, 'timeout'))
+_KIND_MARKERS  = (('dns', ('name or service not known', 'nodename nor servname', 'temporary failure in name resolution',
+                           'name does not resolve', 'nameresolutionerror', 'getaddrinfo failed')),
+                  ('closed', ('remote end closed',)),
+                  ('refused', ('connection refused',)),
+                  ('no_route', ('no route to host',)),
+                  ('network', ('network is unreachable',)),
+                  ('reset', ('connection reset',)),
+                  ('read_timeout', ('read timed out',)),
+                  ('timeout', ('timed out', 'timeout')))
+_KIND_TEXT     = {
+    'refused':      _i18n.lazy_pgettext('check failure', 'connection refused'),
+    'no_route':     _i18n.lazy_pgettext('check failure', 'no route to host'),
+    'network':      _i18n.lazy_pgettext('check failure', 'network unreachable'),
+    'reset':        _i18n.lazy_pgettext('check failure', 'connection reset'),
+    'closed':       _i18n.lazy_pgettext('check failure', 'connection closed without a response'),
+    'timeout':      _i18n.lazy_pgettext('check failure', 'connection timed out'),
+    'read_timeout': _i18n.lazy_pgettext('check failure', 'timed out waiting for a response'),
+}
 
 
 MAX_REDIRECT_HOPS = 5
@@ -85,9 +113,64 @@ def _head(target, head):
     return ms, resp.status_code, location
 
 
-def _error_text(exc) -> str:
-    err = str(exc)[:80]
-    return _i18n.lazy_gettext('Timeout') if 'timeout' in err.lower() else err
+def _causes(exc) -> list:
+    chain = []
+    while isinstance(exc, BaseException) and len(chain) < CAUSE_DEPTH and not any(exc is seen for seen in chain):
+        chain.append(exc)
+        nxt = getattr(exc, 'reason', None)
+        if not isinstance(nxt, BaseException):
+            nxt = next((a for a in exc.args if isinstance(a, BaseException)), None)
+        exc = nxt if nxt is not None else exc.__cause__
+    return chain
+
+
+def _kind_of(exc) -> str:
+    code = getattr(exc, 'errno', None)
+    if isinstance(code, int) and code in _KIND_ERRNOS:
+        return _KIND_ERRNOS[code]
+    return next((kind for cls, kind in _KIND_TYPES if isinstance(exc, cls)), '')
+
+
+def _failure_kind(chain) -> str:
+    kinds = {_kind_of(e) for e in chain}
+    found = next((kind for kind in _KIND_ORDER if kind in kinds), '')
+    if found:
+        return found
+    text = ' '.join(str(e) for e in chain).lower()
+    return next((kind for kind, markers in _KIND_MARKERS if any(m in text for m in markers)), '')
+
+
+def _cause_text(chain) -> str:
+    for exc in reversed(chain):
+        text = exc.strerror if isinstance(exc, OSError) and isinstance(exc.strerror, str) and exc.strerror else str(exc)
+        text = ' '.join(text.split())
+        if text:
+            return text[:DETAIL_MAX]
+    return ''
+
+
+def _tls_reason(chain) -> str:
+    reason = next((e.reason for e in chain if isinstance(e, ssl.SSLError) and isinstance(getattr(e, 'reason', None), str)
+                   and e.reason), '')
+    return reason.lower().replace('_', ' ') if reason else _cause_text(chain)
+
+
+def _error_text(exc, url: str = ''):
+    chain = _causes(exc)
+    kind  = _failure_kind(chain)
+    if kind == 'dns':
+        host = urlparse(url).hostname if url else ''
+        if host:
+            return _i18n.lazy_pgettext('check failure', 'DNS name %(host)s does not resolve', host=host)
+        return _i18n.lazy_pgettext('check failure', 'DNS name does not resolve')
+    if kind == 'tls':
+        reason = _tls_reason(chain)
+        if reason:
+            return _i18n.lazy_pgettext('check failure', 'TLS handshake failed (%(reason)s)', reason=reason)
+        return _i18n.lazy_pgettext('check failure', 'TLS handshake failed')
+    if kind in _KIND_TEXT:
+        return _KIND_TEXT[kind]
+    return _cause_text(chain)
 
 
 def redirect_target_host(url: str, code: int, location: str) -> str:
@@ -102,19 +185,17 @@ def redirect_target_host(url: str, code: int, location: str) -> str:
 
 
 def _classify_failure(exc) -> str:
-    text = str(exc).lower()
-    if isinstance(exc, (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout)):
-        return 'unknown'
-    if any(m in text for m in _DOWN_MARKERS):
+    kind = _failure_kind(_causes(exc))
+    if kind in _DOWN_KINDS:
         return 'down'
-    if any(m in text for m in _UNKNOWN_MARKERS):
+    if kind in _UNKNOWN_KINDS:
         return 'unknown'
     return 'down' if isinstance(exc, requests.exceptions.ConnectionError) else 'unknown'
 
 
 def _down_why(exc) -> str:
-    text = str(exc).lower()
-    return next((why for marker, why in _DOWN_WHY if marker in text), 'unreachable')
+    kind = _failure_kind(_causes(exc))
+    return kind if kind in _DOWN_KINDS else 'unreachable'
 
 
 def redirect_reason(host: str, why) -> str:
@@ -155,7 +236,7 @@ def _backend(fallback, ssrf, head):
         ms, code, _loc = _head(fallback, head)
     except Exception as exc:
         verdict = _classify_failure(exc)
-        why = (_down_why(exc), '') if verdict == 'down' else ('error', _error_text(exc))
+        why = (_down_why(exc), '') if verdict == 'down' else ('error', _error_text(exc, fallback))
         return verdict, None, why
     if code in UNREACHABLE:
         return 'down', None, ('answered', code)
@@ -199,7 +280,7 @@ def probe(url: str, fallback: str = '', ssrf=None, head=None, verify_backend: bo
         verdict, alt, _why = _backend(fallback, ssrf, head)
         if alt:
             return alt
-        return {'ok': False, 'error': _error_text(primary_err), 'latency_ms': None}
+        return {'ok': False, 'error': _error_text(primary_err, url), 'latency_ms': None}
 
     if code in UNREACHABLE:
         verdict, alt, _why = _backend(fallback, ssrf, head)

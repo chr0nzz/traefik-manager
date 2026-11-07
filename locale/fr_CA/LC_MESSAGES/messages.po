@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-05 10:35-0500\n"
+"POT-Creation-Date: 2026-11-07 02:02+0000\n"
 "PO-Revision-Date: 2026-09-30 13:21+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French (Canada) <https://hosted.weblate.org/projects/traefik-"
@@ -3369,6 +3369,15 @@ msgstr "Fournisseur DNS"
 #, python-brace-format
 msgid "DNS check resolvers {optional}"
 msgstr "Résolveurs pour la vérification DNS {optional}"
+
+#, python-format
+msgctxt "check failure"
+msgid "DNS name %(host)s does not resolve"
+msgstr "le nom DNS %(host)s ne se résout pas"
+
+msgctxt "check failure"
+msgid "DNS name does not resolve"
+msgstr "le nom DNS ne se résout pas"
 
 #. Used in the browser
 msgctxt "status"
@@ -11226,6 +11235,15 @@ msgstr ""
 "Les certificats TLS sont gérés automatiquement par le résolveur ACME de "
 "Traefik. Renouvelez-les ou révoquez-les depuis votre configuration Traefik."
 
+msgctxt "check failure"
+msgid "TLS handshake failed"
+msgstr "échec de la négociation TLS"
+
+#, python-format
+msgctxt "check failure"
+msgid "TLS handshake failed (%(reason)s)"
+msgstr "échec de la négociation TLS (%(reason)s)"
+
 #. Used in the browser
 msgid "TLS on every router"
 msgstr "TLS sur chaque routeur"
@@ -12468,9 +12486,6 @@ msgstr ""
 #. Used in the browser
 msgid "Time left on this decision, counting down live"
 msgstr "Temps restant pour cette décision, avec décompte en temps réel"
-
-msgid "Timeout"
-msgstr "Délai d’attente dépassé"
 
 msgctxt "setting"
 msgid "Timeout"
@@ -14070,6 +14085,22 @@ msgstr "composite"
 msgid "configured in traefik.yml"
 msgstr "configuré dans traefik.yml"
 
+msgctxt "check failure"
+msgid "connection closed without a response"
+msgstr "connexion fermée sans réponse"
+
+msgctxt "check failure"
+msgid "connection refused"
+msgstr "connexion refusée"
+
+msgctxt "check failure"
+msgid "connection reset"
+msgstr "connexion réinitialisée"
+
+msgctxt "check failure"
+msgid "connection timed out"
+msgstr "délai de connexion dépassé"
+
 #, python-format
 msgid "controlled by %(auth_enabled)s env var"
 msgstr "contrôlé par la variable d’environnement %(auth_enabled)s"
@@ -14749,6 +14780,10 @@ msgctxt "label"
 msgid "network"
 msgstr "réseau"
 
+msgctxt "check failure"
+msgid "network unreachable"
+msgstr "réseau inaccessible"
+
 #. Used in the browser
 msgctxt "button"
 msgid "newer"
@@ -14972,6 +15007,10 @@ msgid ""
 msgstr ""
 "aucune méthode de redémarrage n’est configurée, et Traefik ne lit acme.json "
 "qu’au démarrage"
+
+msgctxt "check failure"
+msgid "no route to host"
+msgstr "aucune route vers l’hôte"
 
 #. Used in the browser
 msgid "no router binds this entry point"
@@ -15814,6 +15853,10 @@ msgstr "ce certificat n’indique aucun domaine"
 #. Used in the browser
 msgid "this server"
 msgstr "ce serveur"
+
+msgctxt "check failure"
+msgid "timed out waiting for a response"
+msgstr "délai d’attente de la réponse dépassé"
 
 #. Used in the browser
 msgid "tls fields"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-05 10:35-0500\n"
+"POT-Creation-Date: 2026-11-07 02:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3057,6 +3057,15 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "DNS check resolvers {optional}"
+msgstr ""
+
+#, python-format
+msgctxt "check failure"
+msgid "DNS name %(host)s does not resolve"
+msgstr ""
+
+msgctxt "check failure"
+msgid "DNS name does not resolve"
 msgstr ""
 
 #. Used in the browser
@@ -10154,6 +10163,15 @@ msgid ""
 "Renew or revoke them via your Traefik config."
 msgstr ""
 
+msgctxt "check failure"
+msgid "TLS handshake failed"
+msgstr ""
+
+#, python-format
+msgctxt "check failure"
+msgid "TLS handshake failed (%(reason)s)"
+msgstr ""
+
 #. Used in the browser
 msgid "TLS on every router"
 msgstr ""
@@ -11118,9 +11136,6 @@ msgstr ""
 
 #. Used in the browser
 msgid "Time left on this decision, counting down live"
-msgstr ""
-
-msgid "Timeout"
 msgstr ""
 
 msgctxt "setting"
@@ -12564,6 +12579,22 @@ msgstr ""
 msgid "configured in traefik.yml"
 msgstr ""
 
+msgctxt "check failure"
+msgid "connection closed without a response"
+msgstr ""
+
+msgctxt "check failure"
+msgid "connection refused"
+msgstr ""
+
+msgctxt "check failure"
+msgid "connection reset"
+msgstr ""
+
+msgctxt "check failure"
+msgid "connection timed out"
+msgstr ""
+
 #, python-format
 msgid "controlled by %(auth_enabled)s env var"
 msgstr ""
@@ -13228,6 +13259,10 @@ msgctxt "label"
 msgid "network"
 msgstr ""
 
+msgctxt "check failure"
+msgid "network unreachable"
+msgstr ""
+
 #. Used in the browser
 msgctxt "button"
 msgid "newer"
@@ -13446,6 +13481,10 @@ msgstr ""
 msgid ""
 "no restart method is configured, and Traefik only reads acme.json at "
 "startup"
+msgstr ""
+
+msgctxt "check failure"
+msgid "no route to host"
 msgstr ""
 
 #. Used in the browser
@@ -14264,6 +14303,10 @@ msgstr ""
 
 #. Used in the browser
 msgid "this server"
+msgstr ""
+
+msgctxt "check failure"
+msgid "timed out waiting for a response"
 msgstr ""
 
 #. Used in the browser

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-05 10:35-0500\n"
+"POT-Creation-Date: 2026-11-07 02:02+0000\n"
 "PO-Revision-Date: 2026-09-29 23:48+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Dutch <https://hosted.weblate.org/projects/traefik-manager/"
@@ -3321,6 +3321,15 @@ msgstr "DNS-provider"
 #, python-brace-format
 msgid "DNS check resolvers {optional}"
 msgstr "Resolvers voor DNS-controle {optional}"
+
+#, python-format
+msgctxt "check failure"
+msgid "DNS name %(host)s does not resolve"
+msgstr "DNS-naam %(host)s kan niet worden omgezet"
+
+msgctxt "check failure"
+msgid "DNS name does not resolve"
+msgstr "DNS-naam kan niet worden omgezet"
 
 #. Used in the browser
 msgctxt "status"
@@ -11035,6 +11044,15 @@ msgstr ""
 "TLS-certificaten worden automatisch beheerd door de ACME-resolver van "
 "Traefik. Vernieuw of trek ze in via je Traefik-configuratie."
 
+msgctxt "check failure"
+msgid "TLS handshake failed"
+msgstr "TLS-handshake mislukt"
+
+#, python-format
+msgctxt "check failure"
+msgid "TLS handshake failed (%(reason)s)"
+msgstr "TLS-handshake mislukt (%(reason)s)"
+
 #. Used in the browser
 msgid "TLS on every router"
 msgstr "TLS op elke router"
@@ -12254,9 +12272,6 @@ msgstr ""
 #. Used in the browser
 msgid "Time left on this decision, counting down live"
 msgstr "Resterende tijd van deze decision, live aftellend"
-
-msgid "Timeout"
-msgstr "Time-out"
 
 msgctxt "setting"
 msgid "Timeout"
@@ -13826,6 +13841,22 @@ msgstr "samengesteld"
 msgid "configured in traefik.yml"
 msgstr "ingesteld in traefik.yml"
 
+msgctxt "check failure"
+msgid "connection closed without a response"
+msgstr "verbinding gesloten zonder antwoord"
+
+msgctxt "check failure"
+msgid "connection refused"
+msgstr "verbinding geweigerd"
+
+msgctxt "check failure"
+msgid "connection reset"
+msgstr "verbinding gereset"
+
+msgctxt "check failure"
+msgid "connection timed out"
+msgstr "time-out van de verbinding"
+
 #, python-format
 msgid "controlled by %(auth_enabled)s env var"
 msgstr "geregeld door omgevingsvariabele %(auth_enabled)s"
@@ -14503,6 +14534,10 @@ msgctxt "label"
 msgid "network"
 msgstr "netwerk"
 
+msgctxt "check failure"
+msgid "network unreachable"
+msgstr "netwerk onbereikbaar"
+
 #. Used in the browser
 msgctxt "button"
 msgid "newer"
@@ -14727,6 +14762,10 @@ msgid ""
 msgstr ""
 "er is geen herstartmethode geconfigureerd en Traefik leest acme.json alleen "
 "bij het opstarten"
+
+msgctxt "check failure"
+msgid "no route to host"
+msgstr "geen route naar host"
 
 #. Used in the browser
 msgid "no router binds this entry point"
@@ -15565,6 +15604,10 @@ msgstr "dit certificaat noemt geen domein"
 #. Used in the browser
 msgid "this server"
 msgstr "deze server"
+
+msgctxt "check failure"
+msgid "timed out waiting for a response"
+msgstr "time-out bij het wachten op een antwoord"
 
 #. Used in the browser
 msgid "tls fields"

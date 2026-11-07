@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-05 10:35-0500\n"
+"POT-Creation-Date: 2026-11-07 02:02+0000\n"
 "PO-Revision-Date: 2026-09-30 04:29+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/traefik-manager/"
@@ -3335,6 +3335,15 @@ msgstr "Poskytovatel DNS"
 #, python-brace-format
 msgid "DNS check resolvers {optional}"
 msgstr "Resolvery pro kontrolu DNS {optional}"
+
+#, python-format
+msgctxt "check failure"
+msgid "DNS name %(host)s does not resolve"
+msgstr "název %(host)s nelze v DNS přeložit"
+
+msgctxt "check failure"
+msgid "DNS name does not resolve"
+msgstr "název nelze v DNS přeložit"
 
 #. Used in the browser
 msgctxt "status"
@@ -11029,6 +11038,15 @@ msgstr ""
 "TLS certifikáty automaticky spravuje ACME resolver Traefiku. Obnovte je nebo "
 "odvolejte přes konfiguraci Traefiku."
 
+msgctxt "check failure"
+msgid "TLS handshake failed"
+msgstr "TLS handshake selhal"
+
+#, python-format
+msgctxt "check failure"
+msgid "TLS handshake failed (%(reason)s)"
+msgstr "TLS handshake selhal (%(reason)s)"
+
 #. Used in the browser
 msgid "TLS on every router"
 msgstr "TLS na každém routeru"
@@ -12256,9 +12274,6 @@ msgstr ""
 #. Used in the browser
 msgid "Time left on this decision, counting down live"
 msgstr "Zbývající čas této decision, odpočítávaný živě"
-
-msgid "Timeout"
-msgstr "Časový limit"
 
 msgctxt "setting"
 msgid "Timeout"
@@ -13815,6 +13830,22 @@ msgstr "složené"
 msgid "configured in traefik.yml"
 msgstr "nakonfigurováno v traefik.yml"
 
+msgctxt "check failure"
+msgid "connection closed without a response"
+msgstr "spojení zavřeno bez odpovědi"
+
+msgctxt "check failure"
+msgid "connection refused"
+msgstr "připojení odmítnuto"
+
+msgctxt "check failure"
+msgid "connection reset"
+msgstr "spojení bylo resetováno"
+
+msgctxt "check failure"
+msgid "connection timed out"
+msgstr "časový limit připojení vypršel"
+
 #, python-format
 msgid "controlled by %(auth_enabled)s env var"
 msgstr "řízeno proměnnou prostředí %(auth_enabled)s"
@@ -14493,6 +14524,10 @@ msgctxt "label"
 msgid "network"
 msgstr "síť"
 
+msgctxt "check failure"
+msgid "network unreachable"
+msgstr "síť je nedostupná"
+
 #. Used in the browser
 msgctxt "button"
 msgid "newer"
@@ -14715,6 +14750,10 @@ msgid ""
 msgstr ""
 "není nakonfigurována žádná metoda restartu a Traefik načítá acme.json jen "
 "při spuštění"
+
+msgctxt "check failure"
+msgid "no route to host"
+msgstr "žádná cesta k hostiteli"
 
 #. Used in the browser
 msgid "no router binds this entry point"
@@ -15552,6 +15591,10 @@ msgstr "tento certifikát neuvádí žádnou doménu"
 #. Used in the browser
 msgid "this server"
 msgstr "tento server"
+
+msgctxt "check failure"
+msgid "timed out waiting for a response"
+msgstr "vypršel časový limit čekání na odpověď"
 
 #. Used in the browser
 msgid "tls fields"
