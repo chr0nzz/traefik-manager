@@ -2476,6 +2476,19 @@ paths:
                         error: { type: string }
         "404":
           description: Agent not found
+        "502":
+          description: |
+            The agent could not be reached. `error` names the cause, such as
+            `Cannot reach agent (connection refused)`, or says the agent's TLS
+            certificate is not trusted, with the verification reason.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "504":
+          description: The agent accepted the connection but did not answer in time
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
 
   /api/agents/{agent_id}/cert-resolvers:
     get:

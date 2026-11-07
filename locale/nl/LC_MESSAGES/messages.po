@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-07 02:43+0000\n"
+"POT-Creation-Date: 2026-11-07 02:41+0000\n"
 "PO-Revision-Date: 2026-09-29 23:48+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Dutch <https://hosted.weblate.org/projects/traefik-manager/"
@@ -2169,6 +2169,10 @@ msgstr "Annuleren"
 
 msgid "Cannot reach agent"
 msgstr "Kan agent niet bereiken"
+
+#, python-format
+msgid "Cannot reach agent (%(reason)s)"
+msgstr "Kan agent niet bereiken (%(reason)s)"
 
 msgid "Cannot reach agent - check URL and network"
 msgstr "Kan agent niet bereiken - controleer URL en netwerk"

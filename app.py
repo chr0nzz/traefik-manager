@@ -3641,6 +3641,14 @@ def api_geoip_update():
         return jsonify({'success': True, 'db_month': info, 'status': _geoip_status()})
     return jsonify({'success': False, 'error': gettext('Download failed: %(info)s', info=info)}), 502
 
+def _traefik_api_unreachable_error(exc, url):
+    verify = _reach.cert_verify_reason(exc)
+    if verify:
+        return gettext('TLS verification failed - the API certificate is not trusted. Mount your CA into /etc/ssl/certs/ca-certificates.crt or set TRAEFIK_INSECURE_SKIP_VERIFY=true. (%(error)s)', error=verify)
+    reason = _reach.failure_reason(exc, url) or str(exc)[:120]
+    return _i18n.lazy_gettext('Connection error - check the URL and network. (%(error)s)', error=reason)
+
+
 @app.route('/api/setup/test-connection', methods=['POST'])
 @login_required
 def api_setup_test_connection():
@@ -3667,11 +3675,11 @@ def api_setup_test_connection():
             return jsonify({'ok': False, 'error': gettext('HTTP %(status_code)s - check the API username and password', status_code=resp.status_code)})
         return jsonify({'ok': False, 'error': gettext('HTTP %(status_code)s from %(url)s/api/version', status_code=resp.status_code, url=url)})
     except requests.exceptions.SSLError as e:
-        return jsonify({'ok': False, 'error': gettext('TLS verification failed - the API certificate is not trusted. Mount your CA into /etc/ssl/certs/ca-certificates.crt or set TRAEFIK_INSECURE_SKIP_VERIFY=true. (%(error)s)', error=str(e)[:120])})
+        return jsonify({'ok': False, 'error': _traefik_api_unreachable_error(e, url)})
     except requests.exceptions.Timeout:
         return jsonify({'ok': False, 'error': gettext('Connection timed out - the API URL may be unreachable from the container')})
     except requests.exceptions.ConnectionError as e:
-        return jsonify({'ok': False, 'error': gettext('Connection error - check the URL and network. (%(error)s)', error=str(e)[:120])})
+        return jsonify({'ok': False, 'error': _traefik_api_unreachable_error(e, url)})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)[:160]})
 
@@ -5176,11 +5184,11 @@ def api_settings_test_connection():
             return jsonify({'ok': False, 'error': err})
         return jsonify({'ok': False, 'error': gettext('HTTP %(status_code)s from %(url)s/api/version', status_code=resp.status_code, url=url)})
     except requests.exceptions.SSLError as e:
-        return jsonify({'ok': False, 'error': gettext('TLS verification failed - the API certificate is not trusted. Mount your CA into /etc/ssl/certs/ca-certificates.crt or set TRAEFIK_INSECURE_SKIP_VERIFY=true. (%(error)s)', error=str(e)[:120])})
+        return jsonify({'ok': False, 'error': _traefik_api_unreachable_error(e, url)})
     except requests.exceptions.Timeout:
         return jsonify({'ok': False, 'error': gettext('Connection timed out - the API URL may be unreachable from the container')})
     except requests.exceptions.ConnectionError as e:
-        return jsonify({'ok': False, 'error': gettext('Connection error - check the URL and network. (%(error)s)', error=str(e)[:120])})
+        return jsonify({'ok': False, 'error': _traefik_api_unreachable_error(e, url)})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)[:160]})
 
@@ -7964,6 +7972,11 @@ def _agent_routes_payload(agent, agent_id):
             except Exception:
                 err = r_resp.text
             config_errors.append({'file': "Agent Traefik API", 'error': err or f'HTTP {r_resp.status_code}'})
+    except requests.exceptions.RequestException as e:
+        all_routers  = {}
+        all_services = {}
+        config_errors.append({'file': "Agent Traefik API",
+                              'error': _reach.failure_reason(e, agent.get('url', '')) or str(e)})
     except Exception as e:
         all_routers  = {}
         all_services = {}
@@ -8053,6 +8066,15 @@ def _agent_routes_payload(agent, agent_id):
             'traefikServices': all_services}
 
 
+def _agent_unreachable_error(exc, agent, fallback):
+    verify = _reach.cert_verify_reason(exc)
+    if verify:
+        return gettext('TLS verification failed - the agent certificate is not trusted '
+                       'by Traefik Manager (%(error)s)', error=verify)
+    reason = _reach.failure_reason(exc, agent.get('url', ''))
+    return _i18n.lazy_gettext('Cannot reach agent (%(reason)s)', reason=reason) if reason else fallback
+
+
 @app.route('/api/agents/<agent_id>/routes')
 @login_required
 def api_agent_routes(agent_id):
@@ -8064,10 +8086,11 @@ def api_agent_routes(agent_id):
         payload.pop('traefikServices', None)
         return jsonify(payload)
     except requests.exceptions.SSLError as e:
-        return jsonify({'error': gettext('TLS verification failed - the agent certificate is not trusted '
-                                         'by Traefik Manager (%(error)s)', error=str(e)[:100])}), 502
-    except requests.exceptions.ConnectionError:
-        return jsonify({'error': gettext('Cannot reach agent')}), 502
+        return jsonify({'error': _agent_unreachable_error(e, agent, gettext('Cannot reach agent'))}), 502
+    except requests.exceptions.ConnectionError as e:
+        return jsonify({'error': _agent_unreachable_error(e, agent, gettext('Cannot reach agent'))}), 502
+    except requests.exceptions.Timeout:
+        return jsonify({'error': gettext('Agent timed out')}), 504
     except Exception as e:
         logger.exception("Agent routes error")
         return jsonify({'error': str(e)}), 500
@@ -8407,10 +8430,11 @@ def api_agents_proxy(agent_id, path):
                 out_headers[key] = value
         return _agent_err.localize_bytes(resp.content, content_type), resp.status_code, out_headers
     except requests.exceptions.SSLError as e:
-        return jsonify({'error': gettext('TLS verification failed - the agent certificate is not trusted '
-                                         'by Traefik Manager (%(error)s)', error=str(e)[:100])}), 502
-    except requests.exceptions.ConnectionError:
-        return jsonify({'error': gettext('Cannot reach agent - check URL and network')}), 502
+        return jsonify({'error': _agent_unreachable_error(
+            e, agent, gettext('Cannot reach agent - check URL and network'))}), 502
+    except requests.exceptions.ConnectionError as e:
+        return jsonify({'error': _agent_unreachable_error(
+            e, agent, gettext('Cannot reach agent - check URL and network'))}), 502
     except requests.exceptions.Timeout:
         return jsonify({'error': gettext('Agent timed out')}), 504
     except Exception as e:

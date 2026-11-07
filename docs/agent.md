@@ -407,7 +407,7 @@ before it costs you a config write.
 ## Security
 
 - The API key is the only credential - keep it secret and use HTTPS between TM and TMA
-- TM verifies the agent's TLS certificate on every call and has no skip-verify for the TM to agent hop. A self-signed or private-CA certificate fails the health check, the routes fetch and proxied calls with `TLS verification failed - the agent certificate is not trusted by Traefik Manager`. The health check adds the verification reason in parentheses, such as `self-signed certificate`. Use a publicly trusted certificate, or add your CA to the TM container's trust store
+- TM verifies the agent's TLS certificate on every call and has no skip-verify for the TM to agent hop. A self-signed or private-CA certificate fails the health check, the routes fetch and proxied calls with `TLS verification failed - the agent certificate is not trusted by Traefik Manager`. The error adds the verification reason in parentheses, such as `self-signed certificate`. Use a publicly trusted certificate, or add your CA to the TM container's trust store
 - Put TMA behind a reverse proxy (Traefik itself) with TLS for production use
 - `TMA_RATE_LIMIT` defaults to 300 req/min because TM makes many API calls per tab switch; lower it only if you need to restrict access
 - The `/health` endpoint is public (no auth required) - use it for uptime monitoring

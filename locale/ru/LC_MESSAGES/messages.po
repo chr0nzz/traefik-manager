@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-07 02:43+0000\n"
+"POT-Creation-Date: 2026-11-07 02:41+0000\n"
 "PO-Revision-Date: 2026-09-30 01:07+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Russian <https://hosted.weblate.org/projects/traefik-manager/"
@@ -2216,6 +2216,10 @@ msgstr "Отмена"
 
 msgid "Cannot reach agent"
 msgstr "Не удаётся связаться с агентом"
+
+#, python-format
+msgid "Cannot reach agent (%(reason)s)"
+msgstr "Не удаётся связаться с агентом (%(reason)s)"
 
 msgid "Cannot reach agent - check URL and network"
 msgstr "Не удаётся связаться с агентом: проверьте URL и сеть"

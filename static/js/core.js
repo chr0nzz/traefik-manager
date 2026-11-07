@@ -446,7 +446,13 @@ function _dCount(n) {
 }
 
 async function _errText(res, fallback) {
-    if (res && res.status === 502) return t('Cannot reach the agent. Check that it is running and reachable.');
+    if (res && res.status === 502) {
+        try {
+            const data = await res.json();
+            if (data && data.error) return String(data.error).slice(0, 300);
+        } catch (e) {}
+        return t('Cannot reach the agent. Check that it is running and reachable.');
+    }
     if (res && res.status === 401) { tabCacheClear(); return t('Session expired. Sign in again.'); }
     if (res && res.status === 403) return t('Not allowed. Your session may have expired.');
     if (res && res.status === 404) return t('{fallback} (not found)', { fallback });

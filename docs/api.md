@@ -705,6 +705,8 @@ Known keys: `dashboard`, `routemap`, `docker`, `kubernetes`, `swarm`, `nomad`, `
 
 Test connectivity to a Traefik API URL before saving. Accepts optional credentials for auth-protected dashboards. Without `password`, the saved credentials are sent only when `url` matches the saved Traefik API URL.
 
+A failed test returns `"ok": false` with an `error` that names the cause, such as `Connection error - check the URL and network. (connection refused)` or `(TLS handshake failed (wrong version number))` for an `https://` URL on a plain HTTP API. A certificate Traefik Manager does not trust returns the `TLS verification failed - the API certificate is not trusted` message with the verification reason in parentheses, such as `self-signed certificate`.
+
 ```json
 { "url": "http://traefik:8080", "user": "admin", "password": "secret" }
 ```
@@ -2014,6 +2016,8 @@ Routes and middlewares on that agent, in the same shape as [`GET /api/routes`](#
 
 If the agent's Traefik API is unreachable, routes from its config files are still returned and the failure appears in `configErrors`.
 
+If the agent itself cannot be reached, returns `502` with an `error` that names the cause, such as `Cannot reach agent (connection refused)` or `Cannot reach agent (DNS name agent.example.com does not resolve)`. A certificate Traefik Manager does not trust returns `TLS verification failed - the agent certificate is not trusted by Traefik Manager` with the verification reason in parentheses. An agent that accepts the connection but does not answer in time returns `504`.
+
 ---
 
 ### `GET /api/agents/{id}/cert-resolvers`
@@ -2040,7 +2044,7 @@ For example, `GET /api/agents/proxy/abc123/traefik/routers` proxies to `GET http
 
 A successful write to the agent's config, route, middleware, static or backup paths also triggers that agent's git backup push, when configured.
 
-Returns `404` for an unknown agent, `502` if the agent refuses the connection or if its TLS certificate is not trusted by TM, `504` if it times out, and `500` for any other proxy error.
+Returns `404` for an unknown agent, `502` if the agent cannot be reached or its TLS certificate is not trusted by TM (the `error` names the cause, as for [`GET /api/agents/{id}/routes`](#get-api-agents-id-routes)), `504` if it times out, and `500` for any other proxy error.
 
 See the [Agent API Reference](api-agent.md) for every endpoint an agent exposes.
 
