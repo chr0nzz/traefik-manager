@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-06 21:02-0500\n"
+"POT-Creation-Date: 2026-11-07 02:43+0000\n"
 "PO-Revision-Date: 2026-09-30 04:29+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/traefik-manager/"
@@ -2829,9 +2829,6 @@ msgstr "Připojení se nezdařilo"
 #, python-brace-format
 msgid "Connection failed: {error}"
 msgstr "Připojení se nezdařilo: {error}"
-
-msgid "Connection refused"
-msgstr "Připojení odmítnuto"
 
 #. Used in the browser
 msgid "Connection settings saved"

@@ -160,7 +160,15 @@ def _tls_reason(chain) -> str:
     return _SSL_NOISE.sub('', text).strip() or text
 
 
-def _error_text(exc, url: str = ''):
+def cert_verify_reason(exc) -> str:
+    err = next((e for e in _causes(exc) if isinstance(e, ssl.SSLCertVerificationError)), None)
+    if err is None:
+        return ''
+    text = err.verify_message if isinstance(getattr(err, 'verify_message', None), str) else ''
+    return ' '.join(text.split())[:DETAIL_MAX] or _tls_reason([err])
+
+
+def failure_reason(exc, url: str = ''):
     chain = _causes(exc)
     kind  = _failure_kind(chain)
     if kind == 'dns':
@@ -241,7 +249,7 @@ def _backend(fallback, ssrf, head):
         ms, code, _loc = _head(fallback, head)
     except Exception as exc:
         verdict = _classify_failure(exc)
-        why = (_down_why(exc), '') if verdict == 'down' else ('error', _error_text(exc, fallback))
+        why = (_down_why(exc), '') if verdict == 'down' else ('error', failure_reason(exc, fallback))
         return verdict, None, why
     if code in UNREACHABLE:
         return 'down', None, ('answered', code)
@@ -285,7 +293,7 @@ def probe(url: str, fallback: str = '', ssrf=None, head=None, verify_backend: bo
         verdict, alt, _why = _backend(fallback, ssrf, head)
         if alt:
             return alt
-        return {'ok': False, 'error': _error_text(primary_err, url), 'latency_ms': None}
+        return {'ok': False, 'error': failure_reason(primary_err, url), 'latency_ms': None}
 
     if code in UNREACHABLE:
         verdict, alt, _why = _backend(fallback, ssrf, head)

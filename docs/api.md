@@ -1983,7 +1983,7 @@ Check connectivity to an agent by calling its `/health`.
 { "ok": true, "latency_ms": 12, "version": "1.5.1", "status": 200 }
 ```
 
-If the agent is unreachable, `ok` is `false` and `latency_ms` is `-1`. A TLS failure returns `ok: false` with `error` naming the untrusted agent certificate, so a certificate problem is distinguishable from a refused connection.
+If the agent is unreachable, `ok` is `false`, `latency_ms` is `-1` and `error` names the cause, such as `connection refused`, `DNS name agent.example.com does not resolve`, `connection timed out` or `TLS handshake failed (wrong version number)`. A certificate Traefik Manager does not trust returns `TLS verification failed - the agent certificate is not trusted by Traefik Manager` with the verification reason in parentheses, such as `self-signed certificate` or `unable to get local issuer certificate`.
 
 ---
 

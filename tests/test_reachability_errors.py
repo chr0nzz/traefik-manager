@@ -93,7 +93,7 @@ def connect_fails(monkeypatch):
 
 
 def _text(exc, url):
-    return str(reachability._error_text(exc, url))
+    return str(reachability.failure_reason(exc, url))
 
 
 def _assert_no_wrapper(text):
@@ -193,6 +193,35 @@ def test_an_ssl_error_python_cannot_name_drops_the_openssl_noise():
     assert _text(exc, 'https://a.example.test/') == 'TLS handshake failed (record layer failure)'
 
 
+def _verify_failure(message):
+    err = ssl.SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: '
+                                          'unable to get local issuer certificate (_ssl.c:1032)')
+    err.reason = 'CERTIFICATE_VERIFY_FAILED'
+    err.verify_message = message
+    inner = u3exc.SSLError(err)
+    pool = u3exc.MaxRetryError(None, '/health', reason=inner)
+    return requests.exceptions.SSLError(pool)
+
+
+def test_a_certificate_verification_failure_gives_the_verify_reason():
+    exc = _verify_failure('unable to get local issuer certificate')
+    assert reachability.cert_verify_reason(exc) == 'unable to get local issuer certificate'
+
+
+def test_a_verification_failure_without_a_verify_message_falls_back_to_the_ssl_reason():
+    assert reachability.cert_verify_reason(_verify_failure(None)) == 'certificate verify failed'
+
+
+def test_other_failures_have_no_verify_reason():
+    assert reachability.cert_verify_reason(requests.exceptions.SSLError('certificate rejected')) == ''
+    assert reachability.cert_verify_reason(_failure(_closed_port_url('https'))) == ''
+    srv = _Raw(_plain_http)
+    try:
+        assert reachability.cert_verify_reason(_failure(srv.url('https'))) == ''
+    finally:
+        srv.close()
+
+
 def test_a_reset_connection():
     srv = _Raw(_reset_after_request)
     try:
@@ -226,7 +255,7 @@ def test_text_only_errors_still_classify():
 
 def test_reasons_are_translatable_messages():
     url = _closed_port_url()
-    msg = reachability._error_text(_failure(url), url)
+    msg = reachability.failure_reason(_failure(url), url)
     assert isinstance(msg, i18n.Message) and msg.spec == {'id': 'connection refused', 'ctx': 'check failure'}, msg.spec
 
 

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-06 21:02-0500\n"
+"POT-Creation-Date: 2026-11-07 02:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en_US <LL@li.org>\n"
@@ -2597,9 +2597,6 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Connection failed: {error}"
-msgstr ""
-
-msgid "Connection refused"
 msgstr ""
 
 #. Used in the browser

@@ -8362,11 +8362,14 @@ def api_agents_health(agent_id):
         body = resp.json() if resp.headers.get('content-type', '').startswith('application/json') else {}
         return jsonify({'ok': resp.status_code == 200, 'latency_ms': ms, 'version': body.get('version', ''), 'status': resp.status_code})
     except requests.exceptions.SSLError as e:
-        return jsonify({'ok': False, 'latency_ms': -1,
-                        'error': gettext('TLS verification failed - the agent certificate is not trusted '
-                                         'by Traefik Manager (%(error)s)', error=str(e)[:100])})
-    except requests.exceptions.ConnectionError:
-        return jsonify({'ok': False, 'latency_ms': -1, 'error': gettext('Connection refused')})
+        verify = _reach.cert_verify_reason(e)
+        if verify:
+            return jsonify({'ok': False, 'latency_ms': -1,
+                            'error': gettext('TLS verification failed - the agent certificate is not trusted '
+                                             'by Traefik Manager (%(error)s)', error=verify)})
+        return jsonify({'ok': False, 'latency_ms': -1, 'error': _reach.failure_reason(e, agent['url'])})
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        return jsonify({'ok': False, 'latency_ms': -1, 'error': _reach.failure_reason(e, agent['url'])})
     except Exception as e:
         return jsonify({'ok': False, 'latency_ms': -1, 'error': str(e)})
 
