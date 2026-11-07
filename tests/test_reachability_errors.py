@@ -1,11 +1,13 @@
 import errno
 import socket
+import ssl
 import struct
 import threading
 import time
 
 import pytest
 import requests
+from urllib3 import exceptions as u3exc
 from urllib3.util import connection as u3conn
 
 from core import i18n
@@ -172,7 +174,9 @@ def test_tls_to_a_plain_http_port_names_the_ssl_reason():
     try:
         url = srv.url('https')
         text = _text(_failure(url), url)
-        assert text == 'TLS handshake failed (wrong version number)', text
+        assert text.startswith('TLS handshake failed (') and text.endswith(')'), text
+        assert '_ssl.c' not in text and '[SSL' not in text, text
+        _assert_no_wrapper(text)
     finally:
         srv.close()
 
@@ -180,6 +184,13 @@ def test_tls_to_a_plain_http_port_names_the_ssl_reason():
 def test_a_tls_error_without_an_ssl_reason_keeps_the_detail():
     exc = requests.exceptions.SSLError('certificate rejected')
     assert _text(exc, 'https://a.example.test/') == 'TLS handshake failed (certificate rejected)'
+
+
+def test_an_ssl_error_python_cannot_name_drops_the_openssl_noise():
+    err = ssl.SSLError(1, '[SSL] record layer failure (_ssl.c:1018)')
+    pool = u3exc.MaxRetryError(None, '/', reason=u3exc.SSLError(err))
+    exc = requests.exceptions.SSLError(pool)
+    assert _text(exc, 'https://a.example.test/') == 'TLS handshake failed (record layer failure)'
 
 
 def test_a_reset_connection():

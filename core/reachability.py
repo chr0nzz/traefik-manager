@@ -1,6 +1,7 @@
 import errno
 import http.client
 import ipaddress
+import re
 import socket
 import ssl
 import time
@@ -18,6 +19,7 @@ REDIRECTS   = (301, 302, 303, 307, 308)
 TIMEOUT     = 5
 DETAIL_MAX  = 100
 CAUSE_DEPTH = 10
+_SSL_NOISE  = re.compile(r'^\s*\[[^\]]*\]\s*|\s*\(_ssl\.c:\d+\)\s*$')
 
 _DOWN_KINDS    = ('closed', 'refused', 'no_route', 'network', 'reset')
 _UNKNOWN_KINDS = ('dns', 'read_timeout', 'timeout')
@@ -152,7 +154,10 @@ def _cause_text(chain) -> str:
 def _tls_reason(chain) -> str:
     reason = next((e.reason for e in chain if isinstance(e, ssl.SSLError) and isinstance(getattr(e, 'reason', None), str)
                    and e.reason), '')
-    return reason.lower().replace('_', ' ') if reason else _cause_text(chain)
+    if reason:
+        return reason.lower().replace('_', ' ')
+    text = _cause_text(chain)
+    return _SSL_NOISE.sub('', text).strip() or text
 
 
 def _error_text(exc, url: str = ''):
