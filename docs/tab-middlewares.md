@@ -15,6 +15,8 @@ The filter bar has a name search, an All / HTTP / TCP protocol filter, the templ
 
 **Grid** view (default) shows a type glyph, the middleware name with its Traefik type below it, the first lines of its YAML, and a footer reading `used by N routes`, `used in a chain`, or `unused` in amber. Edit and delete sit in a hover rail in the card's top right; clicking anywhere else opens the detail panel. The config file chip appears only when your middlewares span more than one file.
 
+The route count includes routers from other providers that use the middleware as `name@file`, such as Docker labels or a Kubernetes CRD. Those come from the Traefik API (the middleware's `usedBy` list) and show in the detail panel's **Used by** block with their `@provider` suffix; they are read-only there. When the Traefik API cannot be reached, only the routes in your config files are counted.
+
 **List** view is a compact table: Protocol, Name, Config File, Actions.
 
 ## Creating a middleware
@@ -77,6 +79,8 @@ Renaming one moves every route that uses it to the new name, including routes in
 ## Deleting a middleware
 
 Deleting one a route still uses is refused, and the message names the routes. Confirm and Traefik Manager removes it from those routes and deletes it.
+
+Routers from other providers count too. Traefik Manager cannot edit Docker labels or other providers, so when one of them still uses the middleware the prompt says so and offers **Delete anyway**. Those routers keep the reference and stop working until you remove it there.
 
 ## Attaching a middleware to a route
 

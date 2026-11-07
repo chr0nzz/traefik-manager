@@ -7431,6 +7431,32 @@ def _middleware_routers_using(configs, name: str) -> list:
     return sorted(set(out))
 
 
+def _live_middleware_users(name: str, agent=None) -> list:
+    bare = str(name or '').split('@')[0]
+    if not bare:
+        return []
+    try:
+        if agent:
+            resp = _agent_request(agent, 'GET', '/api/traefik/middlewares')
+            data = resp.json() if resp.ok else {}
+            lists = [data.get('http'), data.get('tcp')] if isinstance(data, dict) else []
+        else:
+            lists = [traefik_api_get_all('/api/http/middlewares'), traefik_api_get_all('/api/tcp/middlewares')]
+    except Exception as e:
+        logger.debug(f"Live middleware usage unavailable: {e}")
+        return []
+    out = set()
+    for items in lists:
+        for mw in (items if isinstance(items, list) else []):
+            if not isinstance(mw, dict) or mw.get('name') != f'{bare}@file':
+                continue
+            for router in (mw.get('usedBy') or []):
+                router = str(router)
+                if '@' in router and not router.endswith('@file'):
+                    out.add(router)
+    return sorted(out)
+
+
 def _retarget_middleware(config, old: str, new: str) -> bool:
     bare = str(old or '').split('@')[0]
     changed = False
@@ -7469,11 +7495,13 @@ def delete_middleware(mw_name):
         force           = str(request.form.get('force', '')).strip().lower() in ('1', 'true', 'yes')
         _all = (list(_agent_load_configs(agent).values()) if agent
                 else [load_config(_p) for _p in env.CONFIG_PATHS])
-        _users = _middleware_routers_using(_all, mw_name)
+        _users = [] if force else _middleware_routers_using(_all, mw_name)
+        _external = [] if force else _live_middleware_users(mw_name, agent)
+        _users = _users + _external
         if _users and not force:
             msg = gettext('%(child)s is still used by %(users)s', child=mw_name, users=_name_list(_users))
             if fetch:
-                return jsonify({'ok': False, 'message': msg, 'inUseBy': _users}), 409
+                return jsonify({'ok': False, 'message': msg, 'inUseBy': _users, 'externalUsers': _external}), 409
             flash(msg, "error")
             return redirect(url_for('index'))
         if agent:

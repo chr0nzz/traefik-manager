@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-07 02:02+0000\n"
+"POT-Creation-Date: 2026-11-06 21:02-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en_GB <LL@li.org>\n"
@@ -20,6 +20,11 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "\"{name}\" is still in use."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "\"{name}\" is still used by {shown}."
 msgstr ""
 
 #. Used in the browser
@@ -3236,6 +3241,10 @@ msgid "Delete all of it?"
 msgstr ""
 
 #. Used in the browser
+msgid "Delete anyway"
+msgstr ""
+
+#. Used in the browser
 #, python-brace-format
 msgid "Delete backup \"{name}\"?"
 msgstr ""
@@ -3256,6 +3265,10 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Delete failed: {error}"
+msgstr ""
+
+#. Used in the browser
+msgid "Delete it anyway?"
 msgstr ""
 
 #. Used in the browser
@@ -11245,6 +11258,17 @@ msgstr ""
 msgid "Traefik Manager Version badge, highlights when an update is available."
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines it. It stops working until you remove the middleware there."
+msgid_plural ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines them. They stop working until you remove the middleware there."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid ""
 "Traefik Manager cannot read its configuration file, so it cannot tell "
 "whether this is a new install. Setup is disabled until the file is fixed or "
@@ -11287,6 +11311,13 @@ msgid ""
 "API. With it disabled those tabs will be empty until you turn it back on and "
 "restart Traefik."
 msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Traefik Manager removes it from {n} route in your config files."
+msgid_plural "Traefik Manager removes it from {n} routes in your config files."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Traefik Manager update available"
 msgstr ""

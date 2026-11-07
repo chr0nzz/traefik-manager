@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-07 02:02+0000\n"
+"POT-Creation-Date: 2026-11-06 21:02-0500\n"
 "PO-Revision-Date: 2026-10-06 15:50+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/traefik-manager/"
@@ -22,6 +22,11 @@ msgstr ""
 #, python-brace-format
 msgid "\"{name}\" is still in use."
 msgstr "\"{name}\" est encore utilisé."
+
+#. Used in the browser
+#, python-brace-format
+msgid "\"{name}\" is still used by {shown}."
+msgstr "\"{name}\" est encore utilisé par {shown}."
 
 #. Used in the browser
 #, python-brace-format
@@ -3565,6 +3570,10 @@ msgid "Delete all of it?"
 msgstr "Tout supprimer ?"
 
 #. Used in the browser
+msgid "Delete anyway"
+msgstr "Supprimer quand même"
+
+#. Used in the browser
 #, python-brace-format
 msgid "Delete backup \"{name}\"?"
 msgstr "Supprimer la sauvegarde « {name} » ?"
@@ -3587,6 +3596,10 @@ msgstr "Échec de la suppression : %(detail)s"
 #, python-brace-format
 msgid "Delete failed: {error}"
 msgstr "Échec de la suppression : {error}"
+
+#. Used in the browser
+msgid "Delete it anyway?"
+msgstr "Le supprimer quand même ?"
 
 #. Used in the browser
 #, python-brace-format
@@ -12603,6 +12616,23 @@ msgstr ""
 "Badge de version de Traefik Manager, mis en évidence lorsqu’une mise à jour "
 "est disponible."
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines it. It stops working until you remove the middleware there."
+msgid_plural ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines them. They stop working until you remove the middleware there."
+msgstr[0] ""
+"Traefik Manager ne peut pas modifier {names}, car un autre fournisseur, "
+"comme les labels Docker, le définit. Il ne fonctionnera pas tant que vous "
+"n’aurez pas retiré le middleware à cet endroit."
+msgstr[1] ""
+"Traefik Manager ne peut pas modifier {names}, car un autre fournisseur, "
+"comme les labels Docker, les définit. Ils ne fonctionneront pas tant que "
+"vous n’aurez pas retiré le middleware à cet endroit."
+
 msgid ""
 "Traefik Manager cannot read its configuration file, so it cannot tell "
 "whether this is a new install. Setup is disabled until the file is fixed or "
@@ -12661,6 +12691,15 @@ msgstr ""
 "Traefik Manager lit vos routes, services et middlewares depuis l’API "
 "Traefik. Si elle est désactivée, ces onglets resteront vides jusqu’à sa "
 "réactivation et au redémarrage de Traefik."
+
+#. Used in the browser
+#, python-brace-format
+msgid "Traefik Manager removes it from {n} route in your config files."
+msgid_plural "Traefik Manager removes it from {n} routes in your config files."
+msgstr[0] ""
+"Traefik Manager le retire de {n} route dans vos fichiers de configuration."
+msgstr[1] ""
+"Traefik Manager le retire de {n} routes dans vos fichiers de configuration."
 
 msgid "Traefik Manager update available"
 msgstr "Mise à jour de Traefik Manager disponible"

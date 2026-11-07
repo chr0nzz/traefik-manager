@@ -296,8 +296,12 @@ Delete a middleware by name. Accepts `application/x-www-form-urlencoded`.
 | `agent_id` | Delete on this agent instead of the Host (body) |
 | `force` | Remove the middleware from the routes using it, then delete it (body) |
 
-Refused with `409` while a router still references it. The response carries `inUseBy` with the
-router names. Send `force` to remove it from them and delete it.
+Refused with `409` while a router still references it. That includes routers from other providers
+(Docker labels, Kubernetes and so on) that Traefik lists in the middleware's `usedBy`. The response
+carries `inUseBy` with the router names (routers from other providers keep their `@provider` suffix)
+and `externalUsers` with only those from other providers. Send `force` to remove it from the routers
+in the config files and delete it; routers from other providers keep the reference and fail until it
+is removed there. When the Traefik API cannot be reached, only the config files are checked.
 
 ---
 

@@ -809,6 +809,7 @@ async function refreshRoutes() {
         }
         const data = await res.json();
         _paintRoutes(data);
+        if (typeof refreshMwLiveUsage === 'function') refreshMwLiveUsage();
         tabCachePut('routes', { apps: data.apps || [], middlewares: data.middlewares || [],
                                 services: data.services || null, configErrors: data.configErrors || [] });
     } catch(e) {

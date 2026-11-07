@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-07 02:02+0000\n"
+"POT-Creation-Date: 2026-11-06 21:02-0500\n"
 "PO-Revision-Date: 2026-09-30 04:29+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/traefik-manager/"
@@ -22,6 +22,11 @@ msgstr ""
 #, python-brace-format
 msgid "\"{name}\" is still in use."
 msgstr "„{name}“ se stále používá."
+
+#. Used in the browser
+#, python-brace-format
+msgid "\"{name}\" is still used by {shown}."
+msgstr "„{name}“ stále používá {shown}."
 
 #. Used in the browser
 #, python-brace-format
@@ -3528,6 +3533,10 @@ msgid "Delete all of it?"
 msgstr "Smazat vše?"
 
 #. Used in the browser
+msgid "Delete anyway"
+msgstr "Přesto smazat"
+
+#. Used in the browser
 #, python-brace-format
 msgid "Delete backup \"{name}\"?"
 msgstr "Smazat zálohu „{name}“?"
@@ -3549,6 +3558,10 @@ msgstr "Smazání se nezdařilo: %(detail)s"
 #, python-brace-format
 msgid "Delete failed: {error}"
 msgstr "Smazání se nezdařilo: {error}"
+
+#. Used in the browser
+msgid "Delete it anyway?"
+msgstr "Přesto smazat?"
 
 #. Used in the browser
 #, python-brace-format
@@ -12387,6 +12400,27 @@ msgid "Traefik Manager Version badge, highlights when an update is available."
 msgstr ""
 "Odznak verze Traefik Manageru, zvýrazní se, když je k dispozici aktualizace."
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines it. It stops working until you remove the middleware there."
+msgid_plural ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines them. They stop working until you remove the middleware there."
+msgstr[0] ""
+"Traefik Manager nemůže upravit {names}, protože ho definuje jiný "
+"poskytovatel, například Docker labely. Nebude fungovat, dokud tam middleware "
+"neodeberete."
+msgstr[1] ""
+"Traefik Manager nemůže upravit {names}, protože je definuje jiný "
+"poskytovatel, například Docker labely. Nebudou fungovat, dokud tam "
+"middleware neodeberete."
+msgstr[2] ""
+"Traefik Manager nemůže upravit {names}, protože je definuje jiný "
+"poskytovatel, například Docker labely. Nebudou fungovat, dokud tam "
+"middleware neodeberete."
+
 msgid ""
 "Traefik Manager cannot read its configuration file, so it cannot tell "
 "whether this is a new install. Setup is disabled until the file is fixed or "
@@ -12444,6 +12478,17 @@ msgstr ""
 "Traefik Manager čte vaše trasy, služby a middleware z Traefik API. Když je "
 "vypnuté, zůstanou tyto karty prázdné, dokud ho znovu nezapnete a "
 "nerestartujete Traefik."
+
+#. Used in the browser
+#, python-brace-format
+msgid "Traefik Manager removes it from {n} route in your config files."
+msgid_plural "Traefik Manager removes it from {n} routes in your config files."
+msgstr[0] ""
+"Traefik Manager ho odebere z {n} trasy ve vašich konfiguračních souborech."
+msgstr[1] ""
+"Traefik Manager ho odebere z {n} tras ve vašich konfiguračních souborech."
+msgstr[2] ""
+"Traefik Manager ho odebere z {n} tras ve vašich konfiguračních souborech."
 
 msgid "Traefik Manager update available"
 msgstr "Je k dispozici aktualizace Traefik Manageru"

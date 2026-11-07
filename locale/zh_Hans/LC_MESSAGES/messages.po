@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-07 02:02+0000\n"
+"POT-Creation-Date: 2026-11-06 21:02-0500\n"
 "PO-Revision-Date: 2026-09-30 00:00+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/"
@@ -22,6 +22,11 @@ msgstr ""
 #, python-brace-format
 msgid "\"{name}\" is still in use."
 msgstr "“{name}”仍在使用中。"
+
+#. Used in the browser
+#, python-brace-format
+msgid "\"{name}\" is still used by {shown}."
+msgstr "“{name}”仍被 {shown} 使用。"
 
 #. Used in the browser
 #, python-brace-format
@@ -3307,6 +3312,10 @@ msgid "Delete all of it?"
 msgstr "全部删除？"
 
 #. Used in the browser
+msgid "Delete anyway"
+msgstr "仍然删除"
+
+#. Used in the browser
 #, python-brace-format
 msgid "Delete backup \"{name}\"?"
 msgstr "删除备份“{name}”？"
@@ -3328,6 +3337,10 @@ msgstr "删除失败：%(detail)s"
 #, python-brace-format
 msgid "Delete failed: {error}"
 msgstr "删除失败：{error}"
+
+#. Used in the browser
+msgid "Delete it anyway?"
+msgstr "仍要删除吗？"
 
 #. Used in the browser
 #, python-brace-format
@@ -11589,6 +11602,18 @@ msgstr ""
 msgid "Traefik Manager Version badge, highlights when an update is available."
 msgstr "Traefik Manager 版本徽章，有可用更新时高亮显示。"
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines it. It stops working until you remove the middleware there."
+msgid_plural ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines them. They stop working until you remove the middleware there."
+msgstr[0] ""
+"Traefik Manager 无法编辑 {names}，因为其由其他提供者（例如 Docker 标签）定"
+"义。在您从那里移除该中间件之前，相关路由器将无法正常工作。"
+
 msgid ""
 "Traefik Manager cannot read its configuration file, so it cannot tell "
 "whether this is a new install. Setup is disabled until the file is fixed or "
@@ -11638,6 +11663,12 @@ msgid ""
 msgstr ""
 "Traefik Manager 从 Traefik API 读取路由、服务和中间件。禁用后，这些标签页将为"
 "空，直到您重新启用并重启 Traefik。"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Traefik Manager removes it from {n} route in your config files."
+msgid_plural "Traefik Manager removes it from {n} routes in your config files."
+msgstr[0] "Traefik Manager 会将其从配置文件中的 {n} 个路由中移除。"
 
 msgid "Traefik Manager update available"
 msgstr "Traefik Manager 有可用更新"

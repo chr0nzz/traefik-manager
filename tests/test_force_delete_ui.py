@@ -31,7 +31,7 @@ def test_the_first_delete_never_forces():
 
 def test_the_confirm_names_the_routes():
     body = _fn('_sendMwDelete', _src('static', 'js', 'middlewares.js'))
-    assert 'routes.slice(0, 5)' in body, 'the prompt should name the routes it will edit'
+    assert 'a.slice(0, 5)' in body and 'list(routes)' in body, 'the prompt should name the routes it will edit'
 
 
 def test_the_tls_form_sends_the_original_name():
