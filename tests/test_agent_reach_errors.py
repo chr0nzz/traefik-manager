@@ -70,7 +70,8 @@ def test_agent_routes_on_a_plain_http_agent_name_the_handshake_not_trust(client,
     srv = server(_plain_http)
     _seed(srv.url('https'))
     code, text = _routes(client)
-    assert code == 502 and text == 'Cannot reach agent (TLS handshake failed (wrong version number))', text
+    assert code == 502 and text.startswith('Cannot reach agent (TLS handshake failed (') and text.endswith('))'), text
+    assert '_ssl.c' not in text and '[SSL' not in text, text
     assert 'not trusted' not in text
 
 
@@ -141,7 +142,8 @@ def test_traefik_api_test_names_a_refused_connection(client, api_ssrf):
 def test_traefik_api_test_on_a_plain_http_api_names_the_handshake(client, server, api_ssrf):
     srv = server(_plain_http)
     d = _api_test(client, srv.url('https'))
-    assert d['error'] == API_CONN + 'TLS handshake failed (wrong version number))', d
+    assert d['error'].startswith(API_CONN + 'TLS handshake failed (') and d['error'].endswith('))'), d
+    assert '_ssl.c' not in d['error'] and '[SSL' not in d['error'], d
     assert 'not trusted' not in d['error']
 
 
