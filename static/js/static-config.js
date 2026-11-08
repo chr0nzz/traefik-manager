@@ -181,10 +181,16 @@ function _initStaticMonaco(content, containerId) {
     });
 }
 
+function _syncPopoutOpen() {
+    const open = ['staticYamlPopout', 'routeYamlPopout', 'gitDiffPopout'].some(id => document.getElementById(id)?.style.display === 'flex');
+    document.documentElement.classList.toggle('tm-popout-open', open);
+}
+
 function openStaticYamlPopout() {
     const overlay = document.getElementById('staticYamlPopout');
     if (!overlay) return;
     overlay.style.display = 'flex';
+    _syncPopoutOpen();
     if (_staticMonaco) {
         setTimeout(() => _staticMonaco.layout(), 50);
     } else {
@@ -210,6 +216,7 @@ async function openStaticYamlPopoutFromShortcut() {
 function closeStaticYamlPopout() {
     const overlay = document.getElementById('staticYamlPopout');
     if (overlay) overlay.style.display = 'none';
+    _syncPopoutOpen();
 }
 
 let _gitDiffEditor  = null;
@@ -224,6 +231,7 @@ function openGitDiffPopout(sha, files) {
     _gitDiffFiles  = files;
     _gitDiffActive = 0;
     overlay.style.display = 'flex';
+    _syncPopoutOpen();
     _renderGitDiffTabs();
     _showGitDiffFile(0);
 }
@@ -278,6 +286,7 @@ function _showGitDiffFile(idx) {
 function closeGitDiffPopout() {
     const overlay = document.getElementById('gitDiffPopout');
     if (overlay) overlay.style.display = 'none';
+    _syncPopoutOpen();
 }
 
 async function saveStaticPopout() {
@@ -561,6 +570,7 @@ async function openRouteYamlEditor(id) {
         if (data.error) { showToast(data.error, 'error'); return; }
         const overlay = document.getElementById('routeYamlPopout');
         if (overlay) overlay.style.display = 'flex';
+        _syncPopoutOpen();
         _routeYamlFingerprints = data.fingerprints || {};
         _renderRouteYamlOrigins(data.origins, data.configFile, data.warnings);
         _initRouteYamlMonaco(data.raw || '');
@@ -572,6 +582,7 @@ async function openRouteYamlEditor(id) {
 function closeRouteYamlEditor() {
     const overlay = document.getElementById('routeYamlPopout');
     if (overlay) overlay.style.display = 'none';
+    _syncPopoutOpen();
 }
 
 function _sharedChangeNote(change) {
