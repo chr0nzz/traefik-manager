@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-07 16:18+0000\n"
+"POT-Creation-Date: 2026-11-08 02:53+0000\n"
 "PO-Revision-Date: 2026-10-06 15:50+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/traefik-manager/"
@@ -5451,6 +5451,14 @@ msgstr "HTTP/3 annoncé"
 #, python-brace-format
 msgid "HTTP/3 advertised on port {port}"
 msgstr "HTTP/3 annoncé sur le port {port}"
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"HTTP/3 also uses UDP on this port. Publish it too, for example {udp_port} in "
+"Docker, and allow it through any firewall. Only routers with TLS can use "
+"HTTP/3."
+msgstr ""
 
 #. Used in the browser
 msgid ""
@@ -13764,11 +13772,6 @@ msgstr ""
 #. Used in the browser
 msgid "added by hand"
 msgstr "ajouté manuellement"
-
-#. Used in the browser
-#, python-brace-format
-msgid "adds {http3} to this entrypoint"
-msgstr "ajoute {http3} à ce point d’entrée"
 
 #. Used in the browser
 #, python-brace-format

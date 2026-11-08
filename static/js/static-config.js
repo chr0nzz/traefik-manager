@@ -2026,10 +2026,12 @@ function _buildStaticClassicHTML() {
                 <label class="text-xs block mb-1" style="color:var(--muted)">${th('HTTP → HTTPS redirect {optional}', { optional: tmHtml(`<span style="color:var(--muted);font-weight:400">${th('(optional)')}</span>`) })}</label>
                 <input id="sfEpRedirect" type="text" class="input-field text-sm" placeholder="${th('Name of the HTTPS entrypoint to redirect to, e.g. websecure')}">
             </div>
-            <div class="flex items-center gap-2">
-                <input type="checkbox" id="sfEpHttp3" class="rounded" style="accent-color:var(--blue)">
-                <span class="text-xs" style="color:var(--text)">${th('Enable HTTP/3 (QUIC)')}</span>
-                <span class="text-xs" style="color:var(--muted)">- ${th('adds {http3} to this entrypoint', { http3: tmHtml(`<code class="font-mono">http3: {}</code>`) })}</span>
+            <div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="sfEpHttp3" class="rounded" style="accent-color:var(--blue)">
+                    <span class="text-xs" style="color:var(--text)">${th('Enable HTTP/3 (QUIC)')}</span>
+                </div>
+                <p class="text-xs mt-1" style="color:var(--muted)">${th('HTTP/3 also uses UDP on this port. Publish it too, for example {udp_port} in Docker, and allow it through any firewall. Only routers with TLS can use HTTP/3.', { udp_port: tmHtml(`<code class="font-mono">443:443/udp</code>`) })}</p>
             </div>
             <div id="sfEpUnderscoreRow" style="display:none">
                 <label class="text-xs block mb-1" style="color:var(--muted)"><span id="sfEpHdrLabel">${th('Alias Headers')}</span> <span style="color:var(--muted);font-weight:400">${thc('setting', '(security)')}</span></label>
