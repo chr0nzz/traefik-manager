@@ -344,7 +344,7 @@ accessLog:
 
 ## Mobile App
 
-A companion Android app. See the [requirements table](mobile.md#requirements) for which server version each app release needs.
+A companion app for Android, iPhone and iPad. See the [requirements table](mobile.md#requirements) for which server version each app release needs.
 
 Connect it with an API key: go to **Settings - Authentication - API Keys**, click **Add Key**, enter a device name, and copy the generated key. Each device gets its own key, so one can be revoked without affecting the others.
 

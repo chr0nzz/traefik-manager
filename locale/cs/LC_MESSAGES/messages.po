@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-31 14:24-0400\n"
+"POT-Creation-Date: 2026-11-07 16:18+0000\n"
 "PO-Revision-Date: 2026-09-30 04:29+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/traefik-manager/"
@@ -22,6 +22,11 @@ msgstr ""
 #, python-brace-format
 msgid "\"{name}\" is still in use."
 msgstr "„{name}“ se stále používá."
+
+#. Used in the browser
+#, python-brace-format
+msgid "\"{name}\" is still used by {shown}."
+msgstr "„{name}“ stále používá {shown}."
 
 #. Used in the browser
 #, python-brace-format
@@ -1395,6 +1400,10 @@ msgstr ""
 msgid "Alias Headers"
 msgstr "Alias hlavičky"
 
+#, python-format
+msgid "Alias Headers must be keep, delete or reject, got %(value)s"
+msgstr "Alias hlavičky musí být keep, delete nebo reject, zadáno %(value)s"
+
 #. Used in the browser
 msgctxt "button"
 msgid "All"
@@ -1581,6 +1590,9 @@ msgstr "Jakýkoli platný výraz %(traefik_router_rule)s."
 
 msgid "Anything below this level is dropped for this channel."
 msgstr "Vše pod touto úrovní se pro tento kanál zahodí."
+
+msgid "App Store"
+msgstr ""
 
 #. Used in the browser
 msgid "App Token"
@@ -1839,6 +1851,13 @@ msgstr "Backend pro"
 #, python-brace-format
 msgid "Backend online · {latency_ms}ms"
 msgstr "Backend online · {latency_ms}ms"
+
+msgid "Backend server name (SNI)"
+msgstr ""
+
+#, python-format
+msgid "Backend server name must be a hostname, got %(value)s"
+msgstr ""
 
 msgid "Backend service"
 msgstr "Backendová služba"
@@ -2167,6 +2186,10 @@ msgstr "Zrušit"
 
 msgid "Cannot reach agent"
 msgstr "Nelze se spojit s agentem"
+
+#, python-format
+msgid "Cannot reach agent (%(reason)s)"
+msgstr "Nelze se spojit s agentem (%(reason)s)"
 
 msgid "Cannot reach agent - check URL and network"
 msgstr "Nelze se spojit s agentem: zkontrolujte URL a síť"
@@ -2818,9 +2841,6 @@ msgstr "Připojení se nezdařilo"
 msgid "Connection failed: {error}"
 msgstr "Připojení se nezdařilo: {error}"
 
-msgid "Connection refused"
-msgstr "Připojení odmítnuto"
-
 #. Used in the browser
 msgid "Connection settings saved"
 msgstr ""
@@ -3329,6 +3349,15 @@ msgstr "Poskytovatel DNS"
 msgid "DNS check resolvers {optional}"
 msgstr "Resolvery pro kontrolu DNS {optional}"
 
+#, python-format
+msgctxt "check failure"
+msgid "DNS name %(host)s does not resolve"
+msgstr "název %(host)s nelze v DNS přeložit"
+
+msgctxt "check failure"
+msgid "DNS name does not resolve"
+msgstr "název nelze v DNS přeložit"
+
 #. Used in the browser
 msgctxt "status"
 msgid "DOWN"
@@ -3512,6 +3541,10 @@ msgid "Delete all of it?"
 msgstr "Smazat vše?"
 
 #. Used in the browser
+msgid "Delete anyway"
+msgstr "Přesto smazat"
+
+#. Used in the browser
 #, python-brace-format
 msgid "Delete backup \"{name}\"?"
 msgstr "Smazat zálohu „{name}“?"
@@ -3533,6 +3566,10 @@ msgstr "Smazání se nezdařilo: %(detail)s"
 #, python-brace-format
 msgid "Delete failed: {error}"
 msgstr "Smazání se nezdařilo: {error}"
+
+#. Used in the browser
+msgid "Delete it anyway?"
+msgstr "Přesto smazat?"
 
 #. Used in the browser
 #, python-brace-format
@@ -4763,7 +4800,9 @@ msgstr ""
 msgid ""
 "FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client "
 "crash Traefik"
-msgstr "Souběh dat ve FastProxy po upgradu HTTP/1 umožňuje neověřenému klientovi shodit Traefik"
+msgstr ""
+"Souběh dat ve FastProxy po upgradu HTTP/1 umožňuje neověřenému klientovi "
+"shodit Traefik"
 
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
@@ -5024,7 +5063,9 @@ msgstr "Podvržení identity ve ForwardAuth přes aliasy hlaviček s tečkami"
 msgid ""
 "ForwardAuth shares its auth server connections between clients, leaking NTLM "
 "and Negotiate identity"
-msgstr "ForwardAuth sdílí připojení k autentizačnímu serveru mezi klienty, čímž uniká identita NTLM a Negotiate"
+msgstr ""
+"ForwardAuth sdílí připojení k autentizačnímu serveru mezi klienty, čímž "
+"uniká identita NTLM a Negotiate"
 
 #. Used in the browser
 msgid "Forwarding Headers"
@@ -11018,6 +11059,15 @@ msgstr ""
 "TLS certifikáty automaticky spravuje ACME resolver Traefiku. Obnovte je nebo "
 "odvolejte přes konfiguraci Traefiku."
 
+msgctxt "check failure"
+msgid "TLS handshake failed"
+msgstr "TLS handshake selhal"
+
+#, python-format
+msgctxt "check failure"
+msgid "TLS handshake failed (%(reason)s)"
+msgstr "TLS handshake selhal (%(reason)s)"
+
 #. Used in the browser
 msgid "TLS on every router"
 msgstr "TLS na každém routeru"
@@ -11446,6 +11496,14 @@ msgstr "Zobrazení decisions funguje pouze s klíčem bounceru"
 
 #. Used in the browser
 msgid ""
+"The default for every entry point, including the internal ones. An entry "
+"point with its own value overrides it."
+msgstr ""
+"Výchozí hodnota pro všechny vstupní body včetně interních. Vstupní bod s "
+"vlastní hodnotou ji přepíše."
+
+#. Used in the browser
+msgid ""
 "The direct TCP connection - your reverse proxy, or the real client if none."
 msgstr ""
 "Přímé TCP spojení: vaše reverzní proxy, nebo skutečný klient, pokud žádná "
@@ -11549,6 +11607,12 @@ msgstr ""
 "Úryvek middleware obsahuje zástupné symboly šablony (%(example)s), které je "
 "třeba před uložením nahradit skutečnými hodnotami. Upravte middleware v "
 "editoru a nahraďte všechny zástupné symboly %(marker)s."
+
+msgid ""
+"The name Traefik sends as SNI and checks the backend certificate against. "
+"Use it when the backend serves its certificate for a different name than the "
+"target address. Adds serverName via a named serversTransport."
+msgstr ""
 
 #. Used in the browser
 msgid "The primary view"
@@ -12238,9 +12302,6 @@ msgstr ""
 msgid "Time left on this decision, counting down live"
 msgstr "Zbývající čas této decision, odpočítávaný živě"
 
-msgid "Timeout"
-msgstr "Časový limit"
-
 msgctxt "setting"
 msgid "Timeout"
 msgstr "Časový limit"
@@ -12353,6 +12414,27 @@ msgid "Traefik Manager Version badge, highlights when an update is available."
 msgstr ""
 "Odznak verze Traefik Manageru, zvýrazní se, když je k dispozici aktualizace."
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines it. It stops working until you remove the middleware there."
+msgid_plural ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines them. They stop working until you remove the middleware there."
+msgstr[0] ""
+"Traefik Manager nemůže upravit {names}, protože ho definuje jiný "
+"poskytovatel, například Docker labely. Nebude fungovat, dokud tam middleware "
+"neodeberete."
+msgstr[1] ""
+"Traefik Manager nemůže upravit {names}, protože je definuje jiný "
+"poskytovatel, například Docker labely. Nebudou fungovat, dokud tam "
+"middleware neodeberete."
+msgstr[2] ""
+"Traefik Manager nemůže upravit {names}, protože je definuje jiný "
+"poskytovatel, například Docker labely. Nebudou fungovat, dokud tam "
+"middleware neodeberete."
+
 msgid ""
 "Traefik Manager cannot read its configuration file, so it cannot tell "
 "whether this is a new install. Setup is disabled until the file is fixed or "
@@ -12410,6 +12492,17 @@ msgstr ""
 "Traefik Manager čte vaše trasy, služby a middleware z Traefik API. Když je "
 "vypnuté, zůstanou tyto karty prázdné, dokud ho znovu nezapnete a "
 "nerestartujete Traefik."
+
+#. Used in the browser
+#, python-brace-format
+msgid "Traefik Manager removes it from {n} route in your config files."
+msgid_plural "Traefik Manager removes it from {n} routes in your config files."
+msgstr[0] ""
+"Traefik Manager ho odebere z {n} trasy ve vašich konfiguračních souborech."
+msgstr[1] ""
+"Traefik Manager ho odebere z {n} tras ve vašich konfiguračních souborech."
+msgstr[2] ""
+"Traefik Manager ho odebere z {n} tras ve vašich konfiguračních souborech."
 
 msgid "Traefik Manager update available"
 msgstr "Je k dispozici aktualizace Traefik Manageru"
@@ -13796,6 +13889,22 @@ msgstr "složené"
 msgid "configured in traefik.yml"
 msgstr "nakonfigurováno v traefik.yml"
 
+msgctxt "check failure"
+msgid "connection closed without a response"
+msgstr "spojení zavřeno bez odpovědi"
+
+msgctxt "check failure"
+msgid "connection refused"
+msgstr "připojení odmítnuto"
+
+msgctxt "check failure"
+msgid "connection reset"
+msgstr "spojení bylo resetováno"
+
+msgctxt "check failure"
+msgid "connection timed out"
+msgstr "časový limit připojení vypršel"
+
 #, python-format
 msgid "controlled by %(auth_enabled)s env var"
 msgstr "řízeno proměnnou prostředí %(auth_enabled)s"
@@ -14474,6 +14583,10 @@ msgctxt "label"
 msgid "network"
 msgstr "síť"
 
+msgctxt "check failure"
+msgid "network unreachable"
+msgstr "síť je nedostupná"
+
 #. Used in the browser
 msgctxt "button"
 msgid "newer"
@@ -14696,6 +14809,10 @@ msgid ""
 msgstr ""
 "není nakonfigurována žádná metoda restartu a Traefik načítá acme.json jen "
 "při spuštění"
+
+msgctxt "check failure"
+msgid "no route to host"
+msgstr "žádná cesta k hostiteli"
 
 #. Used in the browser
 msgid "no router binds this entry point"
@@ -15533,6 +15650,10 @@ msgstr "tento certifikát neuvádí žádnou doménu"
 #. Used in the browser
 msgid "this server"
 msgstr "tento server"
+
+msgctxt "check failure"
+msgid "timed out waiting for a response"
+msgstr "vypršel časový limit čekání na odpověď"
 
 #. Used in the browser
 msgid "tls fields"

@@ -1,4 +1,6 @@
+import atexit
 import os
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -9,6 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 _TMP = Path(tempfile.mkdtemp(prefix="tm-tests-"))
+atexit.register(shutil.rmtree, _TMP, ignore_errors=True)
 _CONFIG_DIR = _TMP / "config"
 _CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-31 14:24-0400\n"
+"POT-Creation-Date: 2026-11-07 16:18+0000\n"
 "PO-Revision-Date: 2026-09-30 00:00+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/"
@@ -22,6 +22,11 @@ msgstr ""
 #, python-brace-format
 msgid "\"{name}\" is still in use."
 msgstr "“{name}”仍在使用中。"
+
+#. Used in the browser
+#, python-brace-format
+msgid "\"{name}\" is still used by {shown}."
+msgstr "“{name}”仍被 {shown} 使用。"
 
 #. Used in the browser
 #, python-brace-format
@@ -1291,6 +1296,10 @@ msgstr ""
 msgid "Alias Headers"
 msgstr "别名标头"
 
+#, python-format
+msgid "Alias Headers must be keep, delete or reject, got %(value)s"
+msgstr "别名标头必须为 keep、delete 或 reject，收到的是 %(value)s"
+
 #. Used in the browser
 msgctxt "button"
 msgid "All"
@@ -1462,6 +1471,9 @@ msgstr "任何有效的 %(traefik_router_rule)s 表达式。"
 
 msgid "Anything below this level is dropped for this channel."
 msgstr "低于此级别的内容在此渠道中会被丢弃。"
+
+msgid "App Store"
+msgstr ""
 
 #. Used in the browser
 msgid "App Token"
@@ -1697,6 +1709,13 @@ msgstr "所属服务"
 #, python-brace-format
 msgid "Backend online · {latency_ms}ms"
 msgstr "后端在线 · {latency_ms} ms"
+
+msgid "Backend server name (SNI)"
+msgstr ""
+
+#, python-format
+msgid "Backend server name must be a hostname, got %(value)s"
+msgstr ""
 
 msgid "Backend service"
 msgstr "后端服务"
@@ -2009,6 +2028,10 @@ msgstr "取消"
 
 msgid "Cannot reach agent"
 msgstr "无法连接 Agent"
+
+#, python-format
+msgid "Cannot reach agent (%(reason)s)"
+msgstr "无法连接 Agent（%(reason)s）"
 
 msgid "Cannot reach agent - check URL and network"
 msgstr "无法连接 Agent：检查 URL 和网络"
@@ -2630,9 +2653,6 @@ msgstr "连接失败"
 msgid "Connection failed: {error}"
 msgstr "连接失败：{error}"
 
-msgid "Connection refused"
-msgstr "连接被拒绝"
-
 #. Used in the browser
 msgid "Connection settings saved"
 msgstr ""
@@ -3109,6 +3129,15 @@ msgstr "DNS 提供者"
 msgid "DNS check resolvers {optional}"
 msgstr "DNS 检查解析器 {optional}"
 
+#, python-format
+msgctxt "check failure"
+msgid "DNS name %(host)s does not resolve"
+msgstr "DNS 名称 %(host)s 无法解析"
+
+msgctxt "check failure"
+msgid "DNS name does not resolve"
+msgstr "DNS 名称无法解析"
+
 #. Used in the browser
 msgctxt "status"
 msgid "DOWN"
@@ -3291,6 +3320,10 @@ msgid "Delete all of it?"
 msgstr "全部删除？"
 
 #. Used in the browser
+msgid "Delete anyway"
+msgstr "仍然删除"
+
+#. Used in the browser
 #, python-brace-format
 msgid "Delete backup \"{name}\"?"
 msgstr "删除备份“{name}”？"
@@ -3312,6 +3345,10 @@ msgstr "删除失败：%(detail)s"
 #, python-brace-format
 msgid "Delete failed: {error}"
 msgstr "删除失败：{error}"
+
+#. Used in the browser
+msgid "Delete it anyway?"
+msgstr "仍要删除吗？"
 
 #. Used in the browser
 #, python-brace-format
@@ -4471,7 +4508,8 @@ msgstr ""
 msgid ""
 "FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client "
 "crash Traefik"
-msgstr "HTTP/1 升级后 FastProxy 中的数据竞争可让未经身份验证的客户端使 Traefik 崩溃"
+msgstr ""
+"HTTP/1 升级后 FastProxy 中的数据竞争可让未经身份验证的客户端使 Traefik 崩溃"
 
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
@@ -4715,7 +4753,9 @@ msgstr "通过点号形式的标头别名伪造 ForwardAuth 身份"
 msgid ""
 "ForwardAuth shares its auth server connections between clients, leaking NTLM "
 "and Negotiate identity"
-msgstr "ForwardAuth 在客户端之间共享与认证服务器的连接，导致 NTLM 和 Negotiate 身份泄露"
+msgstr ""
+"ForwardAuth 在客户端之间共享与认证服务器的连接，导致 NTLM 和 Negotiate 身份泄"
+"露"
 
 #. Used in the browser
 msgid "Forwarding Headers"
@@ -10408,6 +10448,15 @@ msgid ""
 msgstr ""
 "TLS 证书由 Traefik 的 ACME 解析器自动管理。通过 Traefik 配置续期或吊销证书。"
 
+msgctxt "check failure"
+msgid "TLS handshake failed"
+msgstr "TLS 握手失败"
+
+#, python-format
+msgctxt "check failure"
+msgid "TLS handshake failed (%(reason)s)"
+msgstr "TLS 握手失败（%(reason)s）"
+
 #. Used in the browser
 msgid "TLS on every router"
 msgstr "每个路由器都启用 TLS"
@@ -10809,6 +10858,12 @@ msgstr "决策视图仅凭 Bouncer 密钥即可工作"
 
 #. Used in the browser
 msgid ""
+"The default for every entry point, including the internal ones. An entry "
+"point with its own value overrides it."
+msgstr "所有入口点（包括内部入口点）的默认值。设置了自身值的入口点会覆盖它。"
+
+#. Used in the browser
+msgid ""
 "The direct TCP connection - your reverse proxy, or the real client if none."
 msgstr "直接的 TCP 连接：即您的反向代理，若无代理则为真实客户端。"
 
@@ -10896,6 +10951,12 @@ msgid ""
 msgstr ""
 "中间件片段包含模板占位符（%(example)s），保存前必须替换为实际值。在编辑器中编"
 "辑该中间件，并替换所有 %(marker)s 占位符。"
+
+msgid ""
+"The name Traefik sends as SNI and checks the backend certificate against. "
+"Use it when the backend serves its certificate for a different name than the "
+"target address. Adds serverName via a named serversTransport."
+msgstr ""
 
 #. Used in the browser
 msgid "The primary view"
@@ -11444,9 +11505,6 @@ msgstr ""
 msgid "Time left on this decision, counting down live"
 msgstr "此决策的剩余时间，实时倒计时"
 
-msgid "Timeout"
-msgstr "超时"
-
 msgctxt "setting"
 msgid "Timeout"
 msgstr "超时"
@@ -11558,6 +11616,18 @@ msgstr ""
 msgid "Traefik Manager Version badge, highlights when an update is available."
 msgstr "Traefik Manager 版本徽章，有可用更新时高亮显示。"
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines it. It stops working until you remove the middleware there."
+msgid_plural ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines them. They stop working until you remove the middleware there."
+msgstr[0] ""
+"Traefik Manager 无法编辑 {names}，因为其由其他提供者（例如 Docker 标签）定"
+"义。在您从那里移除该中间件之前，相关路由器将无法正常工作。"
+
 msgid ""
 "Traefik Manager cannot read its configuration file, so it cannot tell "
 "whether this is a new install. Setup is disabled until the file is fixed or "
@@ -11607,6 +11677,12 @@ msgid ""
 msgstr ""
 "Traefik Manager 从 Traefik API 读取路由、服务和中间件。禁用后，这些标签页将为"
 "空，直到您重新启用并重启 Traefik。"
+
+#. Used in the browser
+#, python-brace-format
+msgid "Traefik Manager removes it from {n} route in your config files."
+msgid_plural "Traefik Manager removes it from {n} routes in your config files."
+msgstr[0] "Traefik Manager 会将其从配置文件中的 {n} 个路由中移除。"
 
 msgid "Traefik Manager update available"
 msgstr "Traefik Manager 有可用更新"
@@ -12935,6 +13011,22 @@ msgstr "组合"
 msgid "configured in traefik.yml"
 msgstr "在 traefik.yml 中配置"
 
+msgctxt "check failure"
+msgid "connection closed without a response"
+msgstr "连接已关闭，未收到响应"
+
+msgctxt "check failure"
+msgid "connection refused"
+msgstr "连接被拒绝"
+
+msgctxt "check failure"
+msgid "connection reset"
+msgstr "连接被重置"
+
+msgctxt "check failure"
+msgid "connection timed out"
+msgstr "连接超时"
+
 #, python-format
 msgid "controlled by %(auth_enabled)s env var"
 msgstr "由 %(auth_enabled)s 环境变量控制"
@@ -13595,6 +13687,10 @@ msgctxt "label"
 msgid "network"
 msgstr "网络"
 
+msgctxt "check failure"
+msgid "network unreachable"
+msgstr "网络不可达"
+
 #. Used in the browser
 msgctxt "button"
 msgid "newer"
@@ -13813,6 +13909,10 @@ msgstr "无解析器"
 msgid ""
 "no restart method is configured, and Traefik only reads acme.json at startup"
 msgstr "未配置重启方式，而 Traefik 只在启动时读取 acme.json"
+
+msgctxt "check failure"
+msgid "no route to host"
+msgstr "没有到主机的路由"
 
 #. Used in the browser
 msgid "no router binds this entry point"
@@ -14629,6 +14729,10 @@ msgstr "此证书未包含任何域名"
 #. Used in the browser
 msgid "this server"
 msgstr "此服务器"
+
+msgctxt "check failure"
+msgid "timed out waiting for a response"
+msgstr "等待响应超时"
 
 #. Used in the browser
 msgid "tls fields"

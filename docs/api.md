@@ -118,7 +118,7 @@ When multiple config files are loaded, route `id` is prefixed as `configFile::na
 | `configFile` | string | Source config file |
 | `provider` | string | `file` for managed routes, otherwise the Traefik provider it was discovered from |
 
-HTTP routes also carry `passHostHeader`, `tlsDomains`, `tlsOptionsProfile`, `insecureSkipVerify`, `streaming` and `serviceType`.
+HTTP routes also carry `passHostHeader`, `tlsDomains`, `tlsOptionsProfile`, `insecureSkipVerify`, `serverName`, `streaming` and `serviceType`.
 
 A route whose service is composite additionally carries `compositeChildren` - one
 `{name, url, weight, percent}` per backend, with `url` filled only for children Traefik Manager
@@ -163,6 +163,7 @@ shape. The key only takes effect when present, so older clients cannot flatten a
 | `scheme` | string | `http` or `https` (default: `http`). HTTP only |
 | `passHostHeader` | boolean | Send `true` to keep the host header. Omitting the field writes `passHostHeader: false` into the service |
 | `insecureSkipVerify` | boolean | `true` writes a `<serviceName>-transport` serversTransport that skips backend certificate checks |
+| `backendServerName` | string | Hostname written as `serverName` on the `<serviceName>-transport` serversTransport (SNI sent to the backend). An empty value removes it; omitting the field leaves it unchanged. HTTP only |
 | `certResolver` | string | ACME resolver name, repeated per protocol. Use `none` to write `tls: {}` with no resolver (external certs), or `__disabled__` to write no `tls` block at all |
 | `useTls` / `tlsPassthrough` | boolean | TCP only. `tlsPassthrough` wins and writes `tls: {passthrough: true}` |
 | `tlsWildcardMain` | string | Main domain for `tls.domains` (e.g. `example.com`). Use with DNS challenge resolvers for wildcard certs |
@@ -296,8 +297,12 @@ Delete a middleware by name. Accepts `application/x-www-form-urlencoded`.
 | `agent_id` | Delete on this agent instead of the Host (body) |
 | `force` | Remove the middleware from the routes using it, then delete it (body) |
 
-Refused with `409` while a router still references it. The response carries `inUseBy` with the
-router names. Send `force` to remove it from them and delete it.
+Refused with `409` while a router still references it. That includes routers from other providers
+(Docker labels, Kubernetes and so on) that Traefik lists in the middleware's `usedBy`. The response
+carries `inUseBy` with the router names (routers from other providers keep their `@provider` suffix)
+and `externalUsers` with only those from other providers. Send `force` to remove it from the routers
+in the config files and delete it; routers from other providers keep the reference and fail until it
+is removed there. When the Traefik API cannot be reached, only the config files are checked.
 
 ---
 
@@ -700,6 +705,8 @@ Known keys: `dashboard`, `routemap`, `docker`, `kubernetes`, `swarm`, `nomad`, `
 ### `POST /api/settings/test-connection`
 
 Test connectivity to a Traefik API URL before saving. Accepts optional credentials for auth-protected dashboards. Without `password`, the saved credentials are sent only when `url` matches the saved Traefik API URL.
+
+A failed test returns `"ok": false` with an `error` that names the cause, such as `Connection error - check the URL and network. (connection refused)` or `(TLS handshake failed (wrong version number))` for an `https://` URL on a plain HTTP API. A certificate Traefik Manager does not trust returns the `TLS verification failed - the API certificate is not trusted` message with the verification reason in parentheses, such as `self-signed certificate`.
 
 ```json
 { "url": "http://traefik:8080", "user": "admin", "password": "secret" }
@@ -1380,9 +1387,11 @@ Edit one named section of the static config without writing raw YAML. **Nothing 
 | `providers` | `set` | `docker`, `dockerEndpoint`, `dockerExposedByDefault`, `dockerWatch`, `file`, `fileDirectory`, `fileWatch`, `providers_throttle` |
 | `providers` | `add`, `edit`, `remove` | `name` = provider type key, `yaml_config` = YAML body |
 | `observability` | `set` | `ping`, `prometheus`, `prom_ep_labels`, `prom_router_labels`, `prom_svc_labels` |
-| `system` | `set` | `check_new_version`, `send_usage`, `rule_syntax`, `st_insecure`, `st_root_cas`, `st_max_idle`, `st_dial`, `st_resp_header`, `st_idle_conn` |
+| `system` | `set` | `check_new_version`, `send_usage`, `global_alias_headers`, `rule_syntax`, `st_insecure`, `st_root_cas`, `st_max_idle`, `st_dial`, `st_resp_header`, `st_idle_conn` |
 
 Returns `{ "ok": true, "raw": "...", "parsed": { } }`. `400` for an unknown section, a missing field, or an invalid duration, CIDR or number.
+
+On `system`, `global_alias_headers` sets `global.aliasHeadersStrategy` (Traefik 3.7.17+): `keep`, `delete` or `reject`, or empty to remove it. Leave the key out to keep whatever is in the file; older clients do, and the web UI and the mobile apps do on older Traefik or when the version cannot be read. Any other value returns `400`.
 
 On `entrypoints`, `headers_strategy_key` selects which key `underscore_headers` (`keep`, `delete` or `reject`) is written to: `aliasHeadersStrategy` (Traefik 3.7.12+) or `underscoreHeadersStrategy` (3.7.6 to 3.7.11). An empty value with a valid key removes both. Only one is ever written, and saving removes the other. See [Traefik Hardening](hardening.md).
 
@@ -1977,7 +1986,7 @@ Check connectivity to an agent by calling its `/health`.
 { "ok": true, "latency_ms": 12, "version": "1.5.1", "status": 200 }
 ```
 
-If the agent is unreachable, `ok` is `false` and `latency_ms` is `-1`. A TLS failure returns `ok: false` with `error` naming the untrusted agent certificate, so a certificate problem is distinguishable from a refused connection.
+If the agent is unreachable, `ok` is `false`, `latency_ms` is `-1` and `error` names the cause, such as `connection refused`, `DNS name agent.example.com does not resolve`, `connection timed out` or `TLS handshake failed (wrong version number)`. A certificate Traefik Manager does not trust returns `TLS verification failed - the agent certificate is not trusted by Traefik Manager` with the verification reason in parentheses, such as `self-signed certificate` or `unable to get local issuer certificate`.
 
 ---
 
@@ -2008,6 +2017,8 @@ Routes and middlewares on that agent, in the same shape as [`GET /api/routes`](#
 
 If the agent's Traefik API is unreachable, routes from its config files are still returned and the failure appears in `configErrors`.
 
+If the agent itself cannot be reached, returns `502` with an `error` that names the cause, such as `Cannot reach agent (connection refused)` or `Cannot reach agent (DNS name agent.example.com does not resolve)`. A certificate Traefik Manager does not trust returns `TLS verification failed - the agent certificate is not trusted by Traefik Manager` with the verification reason in parentheses. An agent that accepts the connection but does not answer in time returns `504`.
+
 ---
 
 ### `GET /api/agents/{id}/cert-resolvers`
@@ -2034,7 +2045,7 @@ For example, `GET /api/agents/proxy/abc123/traefik/routers` proxies to `GET http
 
 A successful write to the agent's config, route, middleware, static or backup paths also triggers that agent's git backup push, when configured.
 
-Returns `404` for an unknown agent, `502` if the agent refuses the connection or if its TLS certificate is not trusted by TM, `504` if it times out, and `500` for any other proxy error.
+Returns `404` for an unknown agent, `502` if the agent cannot be reached or its TLS certificate is not trusted by TM (the `error` names the cause, as for [`GET /api/agents/{id}/routes`](#get-api-agents-id-routes)), `504` if it times out, and `500` for any other proxy error.
 
 See the [Agent API Reference](api-agent.md) for every endpoint an agent exposes.
 

@@ -130,8 +130,8 @@ def test_env_bool_words(monkeypatch, tmp_path):
 
 
 STARTUP_PROBE = r'''
-import json, os, sys, tempfile
-d = tempfile.mkdtemp()
+import json, os, sys
+d = os.path.dirname(os.path.abspath(__file__))
 os.environ['SETTINGS_PATH'] = os.path.join(d, 'manager.yml')
 os.environ['BACKUP_DIR'] = os.path.join(d, 'backups')
 os.environ['CONFIG_PATHS'] = os.path.join(d, 'dynamic.yml')
@@ -179,8 +179,8 @@ def test_startup_is_quiet_when_nothing_is_plaintext(tmp_path):
 
 
 UNWRITABLE_PROBE = r'''
-import json, os, sys, tempfile
-d = tempfile.mkdtemp()
+import json, os, sys
+d = os.path.dirname(os.path.abspath(__file__))
 os.environ['SETTINGS_PATH'] = os.path.join(d, 'manager.yml')
 os.environ['BACKUP_DIR'] = os.path.join(d, 'backups')
 os.environ['CONFIG_PATHS'] = os.path.join(d, 'dynamic.yml')
@@ -259,8 +259,8 @@ def test_the_docs_explain_hand_written_secrets():
 
 
 AGENTS_PROBE = r'''
-import json, os, sys, tempfile
-d = tempfile.mkdtemp()
+import json, os, sys
+d = os.path.dirname(os.path.abspath(__file__))
 os.environ['SETTINGS_PATH'] = os.path.join(d, 'manager.yml')
 os.environ['BACKUP_DIR'] = os.path.join(d, 'backups')
 os.environ['CONFIG_PATHS'] = os.path.join(d, 'dynamic.yml')

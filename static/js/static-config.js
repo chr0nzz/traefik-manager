@@ -819,6 +819,47 @@ function _traefikSupportsAliasStrategy() {
     return false;
 }
 
+function _traefikSupportsGlobalAliasStrategy() {
+    const p = _semverParts(_epCurrentVersion());
+    if (!p) return false;
+    const [maj, min, pat] = p;
+    if (maj > 3) return true;
+    if (maj < 3) return false;
+    if (min > 7) return true;
+    return min === 7 && pat >= 17;
+}
+
+function _globalAliasValue() {
+    return ((_staticParsedData || {})['global'] || {}).aliasHeadersStrategy || '';
+}
+
+function _syncGlobalAliasRow() {
+    const row = document.getElementById('sfGlobalAliasRow');
+    if (row) row.style.display = _traefikSupportsGlobalAliasStrategy() ? 'block' : 'none';
+}
+
+function _fillGlobalAliasField() {
+    const sel = document.getElementById('sfGlobalAlias');
+    if (!sel) return;
+    const value = _globalAliasValue();
+    let keep = document.getElementById('sfGlobalAliasKeep');
+    if (value === 'keep' && !keep) {
+        keep = document.createElement('option');
+        keep.id = 'sfGlobalAliasKeep';
+        keep.value = 'keep';
+        keep.textContent = t('Keep - allow aliased headers');
+        sel.insertBefore(keep, document.getElementById('sfGlobalAliasDelete'));
+    } else if (value !== 'keep' && keep) {
+        keep.remove();
+    }
+    sel.value = value;
+}
+
+function _globalAliasPayload() {
+    if (!_traefikSupportsGlobalAliasStrategy()) return {};
+    return { global_alias_headers: document.getElementById('sfGlobalAlias')?.value || '' };
+}
+
 function _epHeaderStrategyState() {
     if (!_semverParts(_epCurrentVersion())) return 'unknown';
     if (_traefikSupportsAliasStrategy()) return 'alias';
@@ -883,6 +924,7 @@ function _syncEpHeaderOptions(alias) {
 }
 
 function _updateEpUnderscoreVisibility() {
+    _syncGlobalAliasRow();
     const row = document.getElementById('sfEpUnderscoreRow');
     const state = _epHeaderStrategyState();
     const supported = state === 'alias' || state === 'underscore';
@@ -1489,6 +1531,9 @@ function _renderStaticSystem(globalData, coreData, serversTransport) {
     const g = globalData || {};
     _setStaticToggle('checkNewVersion', g.checkNewVersion !== false);
     _setStaticToggle('sendUsage', !!g.sendAnonymousUsage);
+    _fillGlobalAliasField();
+    if (_epVersion.pending || _epCurrentVersion()) _updateEpUnderscoreVisibility();
+    else _showEpHeaderField();
     const rs = document.getElementById('sfRuleSyntax');
     if (rs) rs.value = (coreData || {}).defaultRuleSyntax === 'v2' ? 'v2' : '';
     const st = serversTransport || {};
@@ -1784,7 +1829,9 @@ async function saveStaticSingleSection(section) {
             trace_endpoint: document.getElementById('sfTraceEndpoint')?.value.trim() || '',
         };
     } else if (section === 'system') {
+        await _epVersion.pending;
         data = {
+            ..._globalAliasPayload(),
             check_new_version: _staticToggleState('checkNewVersion'),
             send_usage: _staticToggleState('sendUsage'),
             rule_syntax: document.getElementById('sfRuleSyntax')?.value || '',
@@ -2344,6 +2391,15 @@ function _buildStaticClassicHTML() {
             <div class="tab-toggle-row" onclick="staticToggle('sendUsage')">
                 <span class="flex items-center gap-2 text-sm"><i class="ph-bold ph-chart-pie-slice" style="color:var(--muted)"></i> ${th('Send anonymous usage statistics')}</span>
                 <div class="toggle-switch" id="staticT-sendUsage"><div class="toggle-knob"></div></div>
+            </div>
+            <div id="sfGlobalAliasRow" style="display:none">
+                <label class="text-xs block mb-1" style="color:var(--muted)">${th('Alias Headers')} <span style="color:var(--muted);font-weight:400">${thc('setting', '(security)')}</span></label>
+                <select id="sfGlobalAlias" class="input-field text-sm">
+                    <option value="">${th('Keep (default)')}</option>
+                    <option id="sfGlobalAliasDelete" value="delete">${th('Delete - strip aliased headers')}</option>
+                    <option value="reject">${th('Reject - 400 on aliased headers')}</option>
+                </select>
+                <p class="text-xs mt-1" style="color:var(--muted)">${th('The default for every entry point, including the internal ones. An entry point with its own value overrides it.')}</p>
             </div>
             <div>
                 <label class="text-xs block mb-1" style="color:var(--muted)">${th('Default rule syntax')}</label>

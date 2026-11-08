@@ -145,7 +145,7 @@ let currentProto = 'http';
 
 const _svcRefMode = { http: false, tcp: false, udp: false };
 const _SVC_MANUAL_IDS = {
-    http: ['httpBackendsHead', 'httpTargetGrid', 'httpBackendRows', 'httpBackendsHint', 'httpLbAdvanced', 'httpSkipVerifyRow'],
+    http: ['httpBackendsHead', 'httpTargetGrid', 'httpBackendRows', 'httpBackendsHint', 'httpLbAdvanced', 'httpSkipVerifyRow', 'httpServerNameRow'],
     tcp:  ['tcpTargetGrid', 'tcpBackendRows', 'tcpBackendsFoot', 'tcpPriorityRow'],
     udp:  ['udpTargetGrid', 'udpBackendRows', 'udpBackendsFoot'],
 };
@@ -511,7 +511,7 @@ function _resetRouteForm() {
     _applyServiceTypeNotice('loadBalancer');
     _resetLbAdvanced();
     document.getElementById('originalId').value = '';
-    ['serviceName','subdomain','targetIp','targetPort','middlewares','tcpRule','httpRule'].forEach(id => {
+    ['serviceName','subdomain','targetIp','targetPort','middlewares','tcpRule','httpRule','backendServerName'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
@@ -809,6 +809,7 @@ async function refreshRoutes() {
         }
         const data = await res.json();
         _paintRoutes(data);
+        if (typeof refreshMwLiveUsage === 'function') refreshMwLiveUsage();
         tabCachePut('routes', { apps: data.apps || [], middlewares: data.middlewares || [],
                                 services: data.services || null, configErrors: data.configErrors || [] });
     } catch(e) {
@@ -2067,6 +2068,8 @@ async function cloneRoute(btn) {
         }
         const insecureChk = document.getElementById('insecureSkipVerify');
         if (insecureChk) insecureChk.checked = !!app.insecureSkipVerify;
+        const sniEl = document.getElementById('backendServerName');
+        if (sniEl) sniEl.value = app.serverName || '';
         const tlsDomains = app.tlsDomains || [];
         const chk = document.getElementById('wildcardCheckbox');
         if (tlsDomains.length && chk) {
@@ -2175,6 +2178,8 @@ async function handleEdit(btn) {
         }
         const insecureChk = document.getElementById('insecureSkipVerify');
         if (insecureChk) insecureChk.checked = !!app.insecureSkipVerify;
+        const sniEl = document.getElementById('backendServerName');
+        if (sniEl) sniEl.value = app.serverName || '';
         const tlsDomains = app.tlsDomains || [];
         const wChk = document.getElementById('wildcardCheckbox');
         if (tlsDomains.length && wChk) {

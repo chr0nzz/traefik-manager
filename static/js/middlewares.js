@@ -509,9 +509,21 @@ async function _sendMwDelete(name, configFile, force) {
         const json = await res.json().catch(() => null);
         if (res.status === 409 && json && (json.inUseBy || []).length) {
             const routes = json.inUseBy;
-            const shown = routes.length > 5 ? t('{items} and {count} more', { items: routes.slice(0, 5).join(', '), count: routes.length - 5 }) : tmList(routes);
-            if (await _confirm(tn('"{name}" is still used by {shown}. Remove it from {n} route and delete it?', '"{name}" is still used by {shown}. Remove it from {n} routes and delete it?', routes.length, { name, shown }),
-                               t('Middleware In Use'), t('Remove and delete'), _confirmWordFor(name))) {
+            const list = a => a.length > 5 ? t('{items} and {count} more', { items: a.slice(0, 5).join(', '), count: a.length - 5 }) : tmList(a);
+            const shown = list(routes);
+            const ext = (json.externalUsers || []).filter(r => routes.includes(r));
+            let msg = tn('"{name}" is still used by {shown}. Remove it from {n} route and delete it?', '"{name}" is still used by {shown}. Remove it from {n} routes and delete it?', routes.length, { name, shown });
+            if (ext.length) {
+                const lines = [t('"{name}" is still used by {shown}.', { name, shown })];
+                const fileCount = routes.length - ext.length;
+                if (fileCount > 0) lines.push(tn('Traefik Manager removes it from {n} route in your config files.', 'Traefik Manager removes it from {n} routes in your config files.', fileCount));
+                lines.push(tn('Traefik Manager cannot edit {names}, because another provider such as Docker labels defines it. It stops working until you remove the middleware there.',
+                              'Traefik Manager cannot edit {names}, because another provider such as Docker labels defines them. They stop working until you remove the middleware there.',
+                              ext.length, { names: list(ext) }));
+                lines.push(t('Delete it anyway?'));
+                msg = lines.join(' ').replace(/([。！？]) /g, '$1');
+            }
+            if (await _confirm(msg, t('Middleware In Use'), ext.length ? t('Delete anyway') : t('Remove and delete'), _confirmWordFor(name))) {
                 await _sendMwDelete(name, configFile, true);
             }
             return;
@@ -539,11 +551,56 @@ function _tmMwKind(mw) {
     return m ? m[1] : 'middleware';
 }
 
+let _mwLive = null;
+let _mwLiveSeq = 0;
+
+function _mwServerKey() {
+    return (typeof _activeAgent !== 'undefined' && _activeAgent) ? String(_activeAgent.id) : '';
+}
+
+function _mwLiveMap(data) {
+    const map = {};
+    for (const proto of ['http', 'tcp']) {
+        for (const m of (data && Array.isArray(data[proto]) ? data[proto] : [])) {
+            const name = m && typeof m.name === 'string' ? m.name : '';
+            if (!name.endsWith('@file')) continue;
+            const users = (Array.isArray(m.usedBy) ? m.usedBy : []).map(String)
+                .filter(r => r.includes('@') && !r.endsWith('@file'));
+            if (users.length) map[proto + ':' + name.slice(0, -'@file'.length)] = users;
+        }
+    }
+    return map;
+}
+
+async function refreshMwLiveUsage() {
+    const key = _mwServerKey();
+    const seq = ++_mwLiveSeq;
+    let map = null;
+    try {
+        const res = await agentFetch('/api/traefik/middlewares');
+        if (res.ok) map = _mwLiveMap(await res.json());
+    } catch (e) {}
+    if (seq !== _mwLiveSeq || key !== _mwServerKey()) return;
+    const before = JSON.stringify(_mwLive ? _mwLive.map : null);
+    _mwLive = map ? { key, map } : null;
+    if (JSON.stringify(map) !== before && (_allMiddlewares || []).length) renderMwGrid(_allMiddlewares);
+}
+
+function _tmMwLiveUsers(mw) {
+    if (!_mwLive || _mwLive.key !== _mwServerKey() || (mw.provider && mw.provider !== 'file')) return [];
+    const users = _mwLive.map[(mw.type || 'http').toLowerCase() + ':' + String(mw.name).split('@')[0]] || [];
+    if (!users.length) return [];
+    const pool = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
+    const known = new Set(pool.map(a => String(a.id)));
+    return users.filter(r => !known.has(r));
+}
+
 function _tmMwUsage(mw) {
     const pool = window._lastRenderedApps || (typeof APP_DATA !== 'undefined' ? APP_DATA : []) || [];
     const bare = String(mw.name).split('@')[0];
     const hit = x => String(x).split('@')[0] === bare;
-    return pool.filter(a => (a.middlewares || []).some(hit) || (a.entrypointMiddlewares || []).some(hit)).length;
+    return pool.filter(a => (a.middlewares || []).some(hit) || (a.entrypointMiddlewares || []).some(hit)).length
+        + _tmMwLiveUsers(mw).length;
 }
 
 function _tmMwChained(mw) {
@@ -817,13 +874,16 @@ function renderMwDetailPanel(mw) {
 
     const routes = _mwRoutesUsing(mw);
     const chains = _mwChainsUsing(mw);
+    const external = _tmMwLiveUsers(mw);
     let usedHtml = '';
-    if (!routes.length && !chains.length) {
+    if (!routes.length && !chains.length && !external.length) {
         usedHtml += `<div class="text-xs" style="color:var(--yellow)">${th('Not referenced by any route')}</div>`;
     } else {
         usedHtml += '<div class="flex flex-wrap gap-1.5">'
             + routes.map(({ a, viaEp }) =>
                 `<button type="button" class="route-deep-chip" onclick="_mwOpenRoute(${_jsArg(String(a.id))})" title="${viaEp ? th('Attached via entry point') : th('Open route')}"><i class="ph-bold ${viaEp ? 'ph-arrows-in' : 'ph-arrows-split'}"></i>${_esc(a.name)}</button>`).join('')
+            + external.map(r =>
+                `<span class="route-deep-chip" style="cursor:default" title="${th('Managed by {provider} - read only', { provider: r.split('@').pop() })}"><i class="ph-bold ph-cube"></i>${_esc(r)}</span>`).join('')
             + chains.map(c =>
                 `<button type="button" class="route-deep-chip" onclick="_mwOpenSibling(${_jsArg(c.name)})" title="${th('Referenced by this middleware')}"><i class="ph-bold ph-stack"></i>${_esc(c.name.split('@')[0])}</button>`).join('')
             + '</div>';

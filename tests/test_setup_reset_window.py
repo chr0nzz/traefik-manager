@@ -5,9 +5,9 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 PROBE = r'''
-import json, os, re, sys, tempfile
+import json, os, re, sys
 import bcrypt
-d = tempfile.mkdtemp()
+d = os.path.dirname(os.path.abspath(__file__))
 os.environ['SETTINGS_PATH'] = os.path.join(d, 'manager.yml')
 os.environ['BACKUP_DIR'] = os.path.join(d, 'backups')
 os.environ['CONFIG_PATHS'] = os.path.join(d, 'dynamic.yml')
@@ -112,9 +112,9 @@ def RECOVERY(c, tok):
 
 
 NO_LOGIN_PROBE = r'''
-import json, os, re, sys, tempfile
+import json, os, re, sys
 import bcrypt
-d = tempfile.mkdtemp()
+d = os.path.dirname(os.path.abspath(__file__))
 os.environ['SETTINGS_PATH'] = os.path.join(d, 'manager.yml')
 os.environ['BACKUP_DIR'] = os.path.join(d, 'backups')
 os.environ['CONFIG_PATHS'] = os.path.join(d, 'dynamic.yml')
@@ -156,9 +156,9 @@ def RECOVERY(c, tok):
 '''
 
 LOGIN_PROBE = r'''
-import json, os, re, sys, tempfile
+import json, os, re, sys
 import bcrypt
-d = tempfile.mkdtemp()
+d = os.path.dirname(os.path.abspath(__file__))
 os.environ['SETTINGS_PATH'] = os.path.join(d, 'manager.yml')
 os.environ['BACKUP_DIR'] = os.path.join(d, 'backups')
 os.environ['CONFIG_PATHS'] = os.path.join(d, 'dynamic.yml')

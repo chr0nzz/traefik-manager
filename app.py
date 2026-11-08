@@ -2956,7 +2956,8 @@ def api_static_section_update():
                 else:
                     ep.pop('http', None)
                 if payload.get('http3'):
-                    ep['http3'] = {}
+                    if not isinstance(ep.get('http3'), dict):
+                        ep['http3'] = {}
                 else:
                     ep.pop('http3', None)
                 if payload.get('as_default'):
@@ -3364,6 +3365,14 @@ def api_static_section_update():
                 g_blk['sendAnonymousUsage'] = True
             else:
                 g_blk.pop('sendAnonymousUsage', None)
+            if 'global_alias_headers' in payload:
+                global_alias = str(payload.get('global_alias_headers') or '').strip().lower()
+                if global_alias not in ('', 'keep', 'delete', 'reject'):
+                    return jsonify({'error': gettext('Alias Headers must be keep, delete or reject, got %(value)s', value=global_alias)}), 400
+                if global_alias:
+                    g_blk['aliasHeadersStrategy'] = global_alias
+                else:
+                    g_blk.pop('aliasHeadersStrategy', None)
             if g_blk:
                 config['global'] = g_blk
             else:
@@ -3632,6 +3641,14 @@ def api_geoip_update():
         return jsonify({'success': True, 'db_month': info, 'status': _geoip_status()})
     return jsonify({'success': False, 'error': gettext('Download failed: %(info)s', info=info)}), 502
 
+def _traefik_api_unreachable_error(exc, url):
+    verify = _reach.cert_verify_reason(exc)
+    if verify:
+        return gettext('TLS verification failed - the API certificate is not trusted. Mount your CA into /etc/ssl/certs/ca-certificates.crt or set TRAEFIK_INSECURE_SKIP_VERIFY=true. (%(error)s)', error=verify)
+    reason = _reach.failure_reason(exc, url) or str(exc)[:120]
+    return _i18n.lazy_gettext('Connection error - check the URL and network. (%(error)s)', error=reason)
+
+
 @app.route('/api/setup/test-connection', methods=['POST'])
 @login_required
 def api_setup_test_connection():
@@ -3658,11 +3675,11 @@ def api_setup_test_connection():
             return jsonify({'ok': False, 'error': gettext('HTTP %(status_code)s - check the API username and password', status_code=resp.status_code)})
         return jsonify({'ok': False, 'error': gettext('HTTP %(status_code)s from %(url)s/api/version', status_code=resp.status_code, url=url)})
     except requests.exceptions.SSLError as e:
-        return jsonify({'ok': False, 'error': gettext('TLS verification failed - the API certificate is not trusted. Mount your CA into /etc/ssl/certs/ca-certificates.crt or set TRAEFIK_INSECURE_SKIP_VERIFY=true. (%(error)s)', error=str(e)[:120])})
+        return jsonify({'ok': False, 'error': _traefik_api_unreachable_error(e, url)})
     except requests.exceptions.Timeout:
         return jsonify({'ok': False, 'error': gettext('Connection timed out - the API URL may be unreachable from the container')})
     except requests.exceptions.ConnectionError as e:
-        return jsonify({'ok': False, 'error': gettext('Connection error - check the URL and network. (%(error)s)', error=str(e)[:120])})
+        return jsonify({'ok': False, 'error': _traefik_api_unreachable_error(e, url)})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)[:160]})
 
@@ -5167,11 +5184,11 @@ def api_settings_test_connection():
             return jsonify({'ok': False, 'error': err})
         return jsonify({'ok': False, 'error': gettext('HTTP %(status_code)s from %(url)s/api/version', status_code=resp.status_code, url=url)})
     except requests.exceptions.SSLError as e:
-        return jsonify({'ok': False, 'error': gettext('TLS verification failed - the API certificate is not trusted. Mount your CA into /etc/ssl/certs/ca-certificates.crt or set TRAEFIK_INSECURE_SKIP_VERIFY=true. (%(error)s)', error=str(e)[:120])})
+        return jsonify({'ok': False, 'error': _traefik_api_unreachable_error(e, url)})
     except requests.exceptions.Timeout:
         return jsonify({'ok': False, 'error': gettext('Connection timed out - the API URL may be unreachable from the container')})
     except requests.exceptions.ConnectionError as e:
-        return jsonify({'ok': False, 'error': gettext('Connection error - check the URL and network. (%(error)s)', error=str(e)[:120])})
+        return jsonify({'ok': False, 'error': _traefik_api_unreachable_error(e, url)})
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)[:160]})
 
@@ -6509,6 +6526,9 @@ def _is_fetch():
     return request.headers.get('X-Requested-With') == 'fetch'
 
 
+_SNI_NAME_RE = re.compile(r'^(?=.{1,253}$)[A-Za-z0-9_*]([A-Za-z0-9_.-]*[A-Za-z0-9])?$')
+
+
 @app.route('/save', methods=['POST'])
 @csrf_protect
 @login_required
@@ -6773,6 +6793,14 @@ def save_entry():
                 target_url = f"{scheme}://{target_ip}:{target_port}" if target_port else f"{scheme}://{target_ip}"
             mws        = [m.strip() for m in middlewares_in.split(',')] if middlewares_in else []
             insecure   = request.form.get('insecureSkipVerify') == 'true'
+            sni_posted = 'backendServerName' in request.form
+            sni_name   = request.form.get('backendServerName', '').strip()
+            if sni_name and not _SNI_NAME_RE.match(sni_name):
+                _sni_msg = gettext('Backend server name must be a hostname, got %(value)s', value=repr(sni_name))
+                if fetch:
+                    return jsonify({'ok': False, 'message': _sni_msg}), 400
+                flash(_sni_msg, "error")
+                return redirect(url_for('index'))
             config.setdefault('http', {}).setdefault('routers', {})
             config['http'].setdefault('services', {})
             if hdr_preset_present:
@@ -6865,6 +6893,11 @@ def save_entry():
                         tp['insecureSkipVerify'] = True
                     else:
                         tp.pop('insecureSkipVerify', None)
+                    if sni_posted:
+                        if sni_name:
+                            tp['serverName'] = sni_name
+                        else:
+                            tp.pop('serverName', None)
                     if stream_preset_present:
                         if stream_preset_on:
                             tp['forwardingTimeouts'] = _streaming_forwarding_timeouts()
@@ -7422,6 +7455,32 @@ def _middleware_routers_using(configs, name: str) -> list:
     return sorted(set(out))
 
 
+def _live_middleware_users(name: str, agent=None) -> list:
+    bare = str(name or '').split('@')[0]
+    if not bare:
+        return []
+    try:
+        if agent:
+            resp = _agent_request(agent, 'GET', '/api/traefik/middlewares')
+            data = resp.json() if resp.ok else {}
+            lists = [data.get('http'), data.get('tcp')] if isinstance(data, dict) else []
+        else:
+            lists = [traefik_api_get_all('/api/http/middlewares'), traefik_api_get_all('/api/tcp/middlewares')]
+    except Exception as e:
+        logger.debug(f"Live middleware usage unavailable: {e}")
+        return []
+    out = set()
+    for items in lists:
+        for mw in (items if isinstance(items, list) else []):
+            if not isinstance(mw, dict) or mw.get('name') != f'{bare}@file':
+                continue
+            for router in (mw.get('usedBy') or []):
+                router = str(router)
+                if '@' in router and not router.endswith('@file'):
+                    out.add(router)
+    return sorted(out)
+
+
 def _retarget_middleware(config, old: str, new: str) -> bool:
     bare = str(old or '').split('@')[0]
     changed = False
@@ -7460,11 +7519,13 @@ def delete_middleware(mw_name):
         force           = str(request.form.get('force', '')).strip().lower() in ('1', 'true', 'yes')
         _all = (list(_agent_load_configs(agent).values()) if agent
                 else [load_config(_p) for _p in env.CONFIG_PATHS])
-        _users = _middleware_routers_using(_all, mw_name)
+        _users = [] if force else _middleware_routers_using(_all, mw_name)
+        _external = [] if force else _live_middleware_users(mw_name, agent)
+        _users = _users + _external
         if _users and not force:
             msg = gettext('%(child)s is still used by %(users)s', child=mw_name, users=_name_list(_users))
             if fetch:
-                return jsonify({'ok': False, 'message': msg, 'inUseBy': _users}), 409
+                return jsonify({'ok': False, 'message': msg, 'inUseBy': _users, 'externalUsers': _external}), 409
             flash(msg, "error")
             return redirect(url_for('index'))
         if agent:
@@ -7927,6 +7988,11 @@ def _agent_routes_payload(agent, agent_id):
             except Exception:
                 err = r_resp.text
             config_errors.append({'file': "Agent Traefik API", 'error': err or f'HTTP {r_resp.status_code}'})
+    except requests.exceptions.RequestException as e:
+        all_routers  = {}
+        all_services = {}
+        config_errors.append({'file': "Agent Traefik API",
+                              'error': _reach.failure_reason(e, agent.get('url', '')) or str(e)})
     except Exception as e:
         all_routers  = {}
         all_services = {}
@@ -8016,6 +8082,15 @@ def _agent_routes_payload(agent, agent_id):
             'traefikServices': all_services}
 
 
+def _agent_unreachable_error(exc, agent, fallback):
+    verify = _reach.cert_verify_reason(exc)
+    if verify:
+        return gettext('TLS verification failed - the agent certificate is not trusted '
+                       'by Traefik Manager (%(error)s)', error=verify)
+    reason = _reach.failure_reason(exc, agent.get('url', ''))
+    return _i18n.lazy_gettext('Cannot reach agent (%(reason)s)', reason=reason) if reason else fallback
+
+
 @app.route('/api/agents/<agent_id>/routes')
 @login_required
 def api_agent_routes(agent_id):
@@ -8027,10 +8102,11 @@ def api_agent_routes(agent_id):
         payload.pop('traefikServices', None)
         return jsonify(payload)
     except requests.exceptions.SSLError as e:
-        return jsonify({'error': gettext('TLS verification failed - the agent certificate is not trusted '
-                                         'by Traefik Manager (%(error)s)', error=str(e)[:100])}), 502
-    except requests.exceptions.ConnectionError:
-        return jsonify({'error': gettext('Cannot reach agent')}), 502
+        return jsonify({'error': _agent_unreachable_error(e, agent, gettext('Cannot reach agent'))}), 502
+    except requests.exceptions.ConnectionError as e:
+        return jsonify({'error': _agent_unreachable_error(e, agent, gettext('Cannot reach agent'))}), 502
+    except requests.exceptions.Timeout:
+        return jsonify({'error': gettext('Agent timed out')}), 504
     except Exception as e:
         logger.exception("Agent routes error")
         return jsonify({'error': str(e)}), 500
@@ -8325,11 +8401,14 @@ def api_agents_health(agent_id):
         body = resp.json() if resp.headers.get('content-type', '').startswith('application/json') else {}
         return jsonify({'ok': resp.status_code == 200, 'latency_ms': ms, 'version': body.get('version', ''), 'status': resp.status_code})
     except requests.exceptions.SSLError as e:
-        return jsonify({'ok': False, 'latency_ms': -1,
-                        'error': gettext('TLS verification failed - the agent certificate is not trusted '
-                                         'by Traefik Manager (%(error)s)', error=str(e)[:100])})
-    except requests.exceptions.ConnectionError:
-        return jsonify({'ok': False, 'latency_ms': -1, 'error': gettext('Connection refused')})
+        verify = _reach.cert_verify_reason(e)
+        if verify:
+            return jsonify({'ok': False, 'latency_ms': -1,
+                            'error': gettext('TLS verification failed - the agent certificate is not trusted '
+                                             'by Traefik Manager (%(error)s)', error=verify)})
+        return jsonify({'ok': False, 'latency_ms': -1, 'error': _reach.failure_reason(e, agent['url'])})
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        return jsonify({'ok': False, 'latency_ms': -1, 'error': _reach.failure_reason(e, agent['url'])})
     except Exception as e:
         return jsonify({'ok': False, 'latency_ms': -1, 'error': str(e)})
 
@@ -8367,10 +8446,11 @@ def api_agents_proxy(agent_id, path):
                 out_headers[key] = value
         return _agent_err.localize_bytes(resp.content, content_type), resp.status_code, out_headers
     except requests.exceptions.SSLError as e:
-        return jsonify({'error': gettext('TLS verification failed - the agent certificate is not trusted '
-                                         'by Traefik Manager (%(error)s)', error=str(e)[:100])}), 502
-    except requests.exceptions.ConnectionError:
-        return jsonify({'error': gettext('Cannot reach agent - check URL and network')}), 502
+        return jsonify({'error': _agent_unreachable_error(
+            e, agent, gettext('Cannot reach agent - check URL and network'))}), 502
+    except requests.exceptions.ConnectionError as e:
+        return jsonify({'error': _agent_unreachable_error(
+            e, agent, gettext('Cannot reach agent - check URL and network'))}), 502
     except requests.exceptions.Timeout:
         return jsonify({'error': gettext('Agent timed out')}), 504
     except Exception as e:

@@ -11,6 +11,7 @@ Thanks for your interest in contributing. This guide covers everything you need 
 - [Submitting a pull request](#submitting-a-pull-request)
 - [Running locally](#running-locally)
 - [Tests](#tests)
+- [Translations](#translations)
 - [Project structure](#project-structure)
 - [Code style](#code-style)
 - [Branch guide](#branch-guide)
@@ -47,7 +48,8 @@ Start an [Idea discussion](https://github.com/chr0nzz/traefik-manager/discussion
 3. For anything beyond a small bug fix, open an issue first so we can align on approach.
 4. Test your changes with a real Traefik instance if possible.
 5. Update the relevant docs page in `docs/` if your change affects user-facing behaviour.
-6. Open the PR against `dev` (see [Branch guide](#branch-guide)). GitHub preselects `main` - change the base branch dropdown when creating the PR.
+6. If you add or reword text a user can see, mark it for translation and commit the regenerated catalogues in the same PR (see [Translations](#translations)).
+7. Open the PR against `dev` (see [Branch guide](#branch-guide)). GitHub preselects `main` - change the base branch dropdown when creating the PR.
 
 ---
 
@@ -126,6 +128,32 @@ The suite runs against a temporary config directory - it never touches a real Tr
 
 ---
 
+## Translations
+
+Any text a user can see goes through the translation helpers, including error messages returned by the API. CI fails a PR that shows unmarked English in a template, or that changes a string without updating `locale/messages.pot`.
+
+| Where | Plain text | Text placed into HTML |
+|-------|------------|-----------------------|
+| Python and templates | `_()`, `ngettext()`, `pgettext()` | - |
+| JavaScript | `t()`, `tn()`, `tc()` | `th()`, `thn()`, `thc()` |
+
+Pass plain string literals with named placeholders (`%(name)s` in Python and templates, `{name}` in JavaScript) and keep HTML outside the translated text.
+
+If your PR adds or rewords a string, regenerate the catalogues and commit the result with your change:
+
+```bash
+pip install -r requirements-dev.txt
+make i18n-tools     # once: installs the JS parser, needs Node
+make i18n-extract   # updates locale/messages.pot and every catalogue
+make i18n-check     # the same checks CI runs, needs gettext for msgfmt
+```
+
+Commit everything `make i18n-extract` changes under `locale/`, even though the PR then touches every language. Leave the new strings untranslated: translators fill them in on Weblate, and rewording a string sends it back to them in every language.
+
+The [Development guide](https://traefik-manager.xyzlab.dev/development.html#translations) has the full rules for each helper.
+
+---
+
 ## Project structure
 
 ```
@@ -152,10 +180,11 @@ docs/                         # VitePress documentation site
     *.md                      # One page per doc
 .github/
     workflows/
-        docker.yml            # Builds and pushes Docker images on tag/branch push
+        docker.yml            # Builds and pushes Docker images on tag/branch push; on a tag, audits first and publishes the release last
+        audit.yml             # pip-audit + govulncheck, daily, per push, and before every tag build
         tests.yml             # pytest + coverage + ruff, and the Go agent build/vet/test
         pr-base-check.yml     # Fails a PR opened against main instead of dev
-        release-binaries.yml  # Builds agent binaries on a published release
+        release-binaries.yml  # Builds agent binaries and publishes the GitHub release, called by docker.yml on a tag
 wrangler.toml                 # Cloudflare Pages builds and deploys the docs site
 ```
 
@@ -182,4 +211,4 @@ wrangler.toml                 # Cloudflare Pages builds and deploys the docs sit
 | `dev` | Active development - all features, bug fixes, and docs changes for the next release | **Yes - every PR targets `dev`** |
 | `main` | Release branch - only moves when a version is tagged | **No - never open PRs here** |
 
-Everything lands on `dev` first - features, bug fixes, and docs alike. When `dev` is ready for release it is merged to `main` and tagged, which publishes the Docker images. Nothing else touches `main`: a PR merged there would sit unreleased, drift out of sync with `dev`, and risk being clobbered by the next release merge.
+Everything lands on `dev` first - features, bug fixes, and docs alike. When `dev` is ready for release it is merged to `main` and tagged. The tag runs the dependency audit, then publishes the Docker images, then attaches the agent binaries and publishes the GitHub release; a failed audit stops all three. Prepare the release notes as a draft release for the tag rather than publishing it by hand. Nothing else touches `main`: a PR merged there would sit unreleased, drift out of sync with `dev`, and risk being clobbered by the next release merge.

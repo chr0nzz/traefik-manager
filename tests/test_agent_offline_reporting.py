@@ -1,5 +1,7 @@
+import errno
 import os
 import re
+import ssl
 
 import requests
 
@@ -18,24 +20,33 @@ def test_ssl_error_subclasses_connection_error():
         'this is why a TLS failure used to be reported as a refused connection'
 
 
+def _verify_error(reason):
+    err = ssl.SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: '
+                                          '%s (_ssl.c:1032)' % reason)
+    err.reason = 'CERTIFICATE_VERIFY_FAILED'
+    err.verify_code = 19
+    err.verify_message = reason
+    return err
+
+
 def test_health_reports_a_tls_failure_as_a_trust_problem(client, monkeypatch):
     _seed()
     import app as tm
     monkeypatch.setattr(tm.requests, 'get', lambda *a, **k: (_ for _ in ()).throw(
-        requests.exceptions.SSLError('self signed certificate in certificate chain')))
+        requests.exceptions.SSLError(_verify_error('self-signed certificate in certificate chain'))))
     d = client.get('/api/agents/a1/health').get_json()
     assert d['ok'] is False
-    assert 'TLS' in d['error'], d
-    assert 'Connection refused' not in d['error']
+    assert d['error'] == ('TLS verification failed - the agent certificate is not trusted by Traefik Manager '
+                          '(self-signed certificate in certificate chain)'), d
 
 
 def test_health_still_reports_a_refused_connection_plainly(client, monkeypatch):
     _seed()
     import app as tm
     monkeypatch.setattr(tm.requests, 'get', lambda *a, **k: (_ for _ in ()).throw(
-        requests.exceptions.ConnectionError('refused')))
+        requests.exceptions.ConnectionError(ConnectionRefusedError(errno.ECONNREFUSED, 'Connection refused'))))
     d = client.get('/api/agents/a1/health').get_json()
-    assert d['error'] == 'Connection refused'
+    assert d['error'] == 'connection refused'
 
 
 def test_the_tls_branch_is_ordered_before_the_connection_branch():

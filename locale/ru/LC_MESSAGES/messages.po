@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-31 14:24-0400\n"
+"POT-Creation-Date: 2026-11-07 16:18+0000\n"
 "PO-Revision-Date: 2026-09-30 01:07+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Russian <https://hosted.weblate.org/projects/traefik-manager/"
@@ -23,6 +23,11 @@ msgstr ""
 #, python-brace-format
 msgid "\"{name}\" is still in use."
 msgstr "«{name}» всё ещё используется."
+
+#. Used in the browser
+#, python-brace-format
+msgid "\"{name}\" is still used by {shown}."
+msgstr "«{name}» всё ещё используется в маршрутах: {shown}."
 
 #. Used in the browser
 #, python-brace-format
@@ -1419,6 +1424,12 @@ msgstr ""
 msgid "Alias Headers"
 msgstr "Заголовки-псевдонимы"
 
+#, python-format
+msgid "Alias Headers must be keep, delete or reject, got %(value)s"
+msgstr ""
+"Заголовки-псевдонимы должны иметь значение keep, delete или reject, получено "
+"%(value)s"
+
 #. Used in the browser
 msgctxt "button"
 msgid "All"
@@ -1606,6 +1617,9 @@ msgstr "Любое допустимое выражение %(traefik_router_rule
 
 msgid "Anything below this level is dropped for this channel."
 msgstr "Всё ниже этого уровня отбрасывается для этого канала."
+
+msgid "App Store"
+msgstr ""
 
 #. Used in the browser
 msgid "App Token"
@@ -1871,6 +1885,13 @@ msgstr "Бэкенд для"
 #, python-brace-format
 msgid "Backend online · {latency_ms}ms"
 msgstr "Бэкенд в сети · {latency_ms}ms"
+
+msgid "Backend server name (SNI)"
+msgstr ""
+
+#, python-format
+msgid "Backend server name must be a hostname, got %(value)s"
+msgstr ""
 
 msgid "Backend service"
 msgstr "Сервис бэкенда"
@@ -2202,6 +2223,10 @@ msgstr "Отмена"
 
 msgid "Cannot reach agent"
 msgstr "Не удаётся связаться с агентом"
+
+#, python-format
+msgid "Cannot reach agent (%(reason)s)"
+msgstr "Не удаётся связаться с агентом (%(reason)s)"
 
 msgid "Cannot reach agent - check URL and network"
 msgstr "Не удаётся связаться с агентом: проверьте URL и сеть"
@@ -2855,9 +2880,6 @@ msgstr "Не удалось подключиться"
 msgid "Connection failed: {error}"
 msgstr "Не удалось подключиться: {error}"
 
-msgid "Connection refused"
-msgstr "Соединение отклонено"
-
 #. Used in the browser
 msgid "Connection settings saved"
 msgstr ""
@@ -3372,6 +3394,15 @@ msgstr "DNS-провайдер"
 msgid "DNS check resolvers {optional}"
 msgstr "Резолверы для проверки DNS {optional}"
 
+#, python-format
+msgctxt "check failure"
+msgid "DNS name %(host)s does not resolve"
+msgstr "DNS-имя %(host)s не разрешается"
+
+msgctxt "check failure"
+msgid "DNS name does not resolve"
+msgstr "DNS-имя не разрешается"
+
 #. Used in the browser
 msgctxt "status"
 msgid "DOWN"
@@ -3555,6 +3586,10 @@ msgid "Delete all of it?"
 msgstr "Удалить всё?"
 
 #. Used in the browser
+msgid "Delete anyway"
+msgstr "Всё равно удалить"
+
+#. Used in the browser
 #, python-brace-format
 msgid "Delete backup \"{name}\"?"
 msgstr "Удалить резервную копию «{name}»?"
@@ -3576,6 +3611,10 @@ msgstr "Ошибка удаления: %(detail)s"
 #, python-brace-format
 msgid "Delete failed: {error}"
 msgstr "Ошибка удаления: {error}"
+
+#. Used in the browser
+msgid "Delete it anyway?"
+msgstr "Всё равно удалить?"
 
 #. Used in the browser
 #, python-brace-format
@@ -4819,7 +4858,9 @@ msgstr ""
 msgid ""
 "FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client "
 "crash Traefik"
-msgstr "Гонка данных в FastProxy после обновления HTTP/1 позволяет неаутентифицированному клиенту аварийно завершить Traefik"
+msgstr ""
+"Гонка данных в FastProxy после обновления HTTP/1 позволяет "
+"неаутентифицированному клиенту аварийно завершить Traefik"
 
 msgid ""
 "Feeds the status dot on the Routes tab and the Dashboard, and alerts when a "
@@ -5081,7 +5122,9 @@ msgstr "Подмена личности в ForwardAuth через псевдон
 msgid ""
 "ForwardAuth shares its auth server connections between clients, leaking NTLM "
 "and Negotiate identity"
-msgstr "ForwardAuth использует подключения к серверу аутентификации совместно для разных клиентов, что раскрывает личность NTLM и Negotiate"
+msgstr ""
+"ForwardAuth использует подключения к серверу аутентификации совместно для "
+"разных клиентов, что раскрывает личность NTLM и Negotiate"
 
 #. Used in the browser
 msgid "Forwarding Headers"
@@ -11118,6 +11161,15 @@ msgstr ""
 "TLS-сертификаты управляются автоматически ACME-резолвером Traefik. "
 "Продлевайте или отзывайте их через конфигурацию Traefik."
 
+msgctxt "check failure"
+msgid "TLS handshake failed"
+msgstr "сбой TLS-рукопожатия"
+
+#, python-format
+msgctxt "check failure"
+msgid "TLS handshake failed (%(reason)s)"
+msgstr "сбой TLS-рукопожатия (%(reason)s)"
+
 #. Used in the browser
 msgid "TLS on every router"
 msgstr "TLS на каждом роутере"
@@ -11551,6 +11603,14 @@ msgstr "Представлению decisions достаточно одного �
 
 #. Used in the browser
 msgid ""
+"The default for every entry point, including the internal ones. An entry "
+"point with its own value overrides it."
+msgstr ""
+"Значение по умолчанию для всех точек входа, включая внутренние. Точка входа "
+"с собственным значением его переопределяет."
+
+#. Used in the browser
+msgid ""
 "The direct TCP connection - your reverse proxy, or the real client if none."
 msgstr ""
 "Прямое TCP-соединение: ваш обратный прокси или реальный клиент, если прокси "
@@ -11653,6 +11713,12 @@ msgstr ""
 "Фрагмент middleware содержит заполнители шаблона (%(example)s), которые "
 "нужно заменить реальными значениями перед сохранением. Откройте middleware в "
 "редакторе и замените все заполнители %(marker)s."
+
+msgid ""
+"The name Traefik sends as SNI and checks the backend certificate against. "
+"Use it when the backend serves its certificate for a different name than the "
+"target address. Adds serverName via a named serversTransport."
+msgstr ""
 
 #. Used in the browser
 msgid "The primary view"
@@ -12348,9 +12414,6 @@ msgstr ""
 msgid "Time left on this decision, counting down live"
 msgstr "Оставшееся время этого decision, обратный отсчёт в реальном времени"
 
-msgid "Timeout"
-msgstr "Тайм-аут"
-
 msgctxt "setting"
 msgid "Timeout"
 msgstr "Тайм-аут"
@@ -12463,6 +12526,27 @@ msgid "Traefik Manager Version badge, highlights when an update is available."
 msgstr ""
 "Значок версии Traefik Manager, подсвечивается, когда доступно обновление."
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines it. It stops working until you remove the middleware there."
+msgid_plural ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines them. They stop working until you remove the middleware there."
+msgstr[0] ""
+"Traefik Manager не может изменить {names}: его задаёт другой провайдер, "
+"например Docker-метки. Он не будет работать, пока вы не уберёте там "
+"middleware."
+msgstr[1] ""
+"Traefik Manager не может изменить {names}: их задаёт другой провайдер, "
+"например Docker-метки. Они не будут работать, пока вы не уберёте там "
+"middleware."
+msgstr[2] ""
+"Traefik Manager не может изменить {names}: их задаёт другой провайдер, "
+"например Docker-метки. Они не будут работать, пока вы не уберёте там "
+"middleware."
+
 msgid ""
 "Traefik Manager cannot read its configuration file, so it cannot tell "
 "whether this is a new install. Setup is disabled until the file is fixed or "
@@ -12520,6 +12604,17 @@ msgstr ""
 "Traefik Manager читает ваши маршруты, сервисы и middleware из API Traefik. "
 "Если он отключён, эти вкладки будут пустыми, пока вы снова не включите его и "
 "не перезапустите Traefik."
+
+#. Used in the browser
+#, python-brace-format
+msgid "Traefik Manager removes it from {n} route in your config files."
+msgid_plural "Traefik Manager removes it from {n} routes in your config files."
+msgstr[0] ""
+"Traefik Manager уберёт его из {n} маршрута в ваших файлах конфигурации."
+msgstr[1] ""
+"Traefik Manager уберёт его из {n} маршрутов в ваших файлах конфигурации."
+msgstr[2] ""
+"Traefik Manager уберёт его из {n} маршрутов в ваших файлах конфигурации."
 
 msgid "Traefik Manager update available"
 msgstr "Доступно обновление Traefik Manager"
@@ -13917,6 +14012,22 @@ msgstr "составные"
 msgid "configured in traefik.yml"
 msgstr "задано в traefik.yml"
 
+msgctxt "check failure"
+msgid "connection closed without a response"
+msgstr "соединение закрыто без ответа"
+
+msgctxt "check failure"
+msgid "connection refused"
+msgstr "соединение отклонено"
+
+msgctxt "check failure"
+msgid "connection reset"
+msgstr "соединение сброшено"
+
+msgctxt "check failure"
+msgid "connection timed out"
+msgstr "истекло время подключения"
+
 #, python-format
 msgid "controlled by %(auth_enabled)s env var"
 msgstr "управляется переменной окружения %(auth_enabled)s"
@@ -14595,6 +14706,10 @@ msgctxt "label"
 msgid "network"
 msgstr "сеть"
 
+msgctxt "check failure"
+msgid "network unreachable"
+msgstr "сеть недоступна"
+
 #. Used in the browser
 msgctxt "button"
 msgid "newer"
@@ -14816,6 +14931,10 @@ msgid ""
 "no restart method is configured, and Traefik only reads acme.json at startup"
 msgstr ""
 "способ перезапуска не настроен, а Traefik читает acme.json только при запуске"
+
+msgctxt "check failure"
+msgid "no route to host"
+msgstr "нет маршрута к хосту"
 
 #. Used in the browser
 msgid "no router binds this entry point"
@@ -15658,6 +15777,10 @@ msgstr "в этом сертификате не указан домен"
 #. Used in the browser
 msgid "this server"
 msgstr "этого сервера"
+
+msgctxt "check failure"
+msgid "timed out waiting for a response"
+msgstr "истекло время ожидания ответа"
 
 #. Used in the browser
 msgid "tls fields"

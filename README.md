@@ -160,11 +160,12 @@ curl -fsSL https://get-traefik.xyzlab.dev | bash
 
 ## Mobile app
 
-Native Android, rewritten in Kotlin and Jetpack Compose for v2. Needs Traefik Manager v1.10.1 or newer and a per-device API key from **Settings - Authentication - API Keys**.
+Native Android (Kotlin and Jetpack Compose) and iOS (Swift and SwiftUI) apps for phones and tablets. Needs Traefik Manager v1.14.0 or newer and a per-device API key from **Settings - Authentication - API Keys**.
 
 [![Mobile App](https://img.shields.io/badge/mobile-repo-green?logo=android&logoColor=white)](https://github.com/chr0nzz/traefik-manager-mobile)
 [![Google Play](https://img.shields.io/badge/Google_Play-Available-blue?logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager)
 [![Play Downloads](https://playbadges.pavi2410.me/badge/downloads?id=dev.chr0nzz.traefikmanager)](https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager)
+[![App Store](https://img.shields.io/badge/App_Store-Available-blue?logo=apple&logoColor=white)](https://apps.apple.com/us/app/traefik-manager/id6826725061)
 
 [Repository](https://github.com/chr0nzz/traefik-manager-mobile) ·
 [Releases](https://github.com/chr0nzz/traefik-manager-mobile/releases/latest) ·
@@ -231,6 +232,8 @@ Pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for reporting 
 <a href="https://github.com/TehoorMarjan" title="Tehoor Marjan (@TehoorMarjan) - French translation"><img src="https://images.weserv.nl/?url=github.com/TehoorMarjan.png&w=96&h=96&fit=cover&mask=circle" width="48" height="48" alt="TehoorMarjan"></a>
 <a href="https://github.com/shrimphorticulturist" title="@shrimphorticulturist - French translation"><img src="https://images.weserv.nl/?url=github.com/shrimphorticulturist.png&w=96&h=96&fit=cover&mask=circle" width="48" height="48" alt="shrimphorticulturist"></a>
 <a href="https://github.com/stilicho2011" title="@stilicho2011 - Russian translation"><img src="https://images.weserv.nl/?url=github.com/stilicho2011.png&w=96&h=96&fit=cover&mask=circle" width="48" height="48" alt="stilicho2011"></a>
+<a href="https://github.com/stopspazzing" title="Jeremy Zimmerman (@stopspazzing) - keep http3 settings when saving an entry point"><img src="https://images.weserv.nl/?url=github.com/stopspazzing.png&w=96&h=96&fit=cover&mask=circle" width="48" height="48" alt="stopspazzing"></a>
+<a href="https://github.com/WhiPaper" title="Heejong Jo (@WhiPaper) - Korean translation"><img src="https://images.weserv.nl/?url=github.com/WhiPaper.png&w=96&h=96&fit=cover&mask=circle" width="48" height="48" alt="WhiPaper"></a>
 </p>
 
 Thanks as well to everyone who has opened an issue or a discussion - several features started as a question from someone running into something unexpected.

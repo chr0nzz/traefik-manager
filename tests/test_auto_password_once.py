@@ -2,7 +2,6 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
 
 import bcrypt
 
@@ -20,13 +19,12 @@ def test_stale_read_does_not_replace_a_password_another_worker_saved(monkeypatch
     assert 'AUTO-GENERATED PASSWORD' not in caplog.text
 
 
-def test_workers_starting_together_generate_one_password():
-    d = tempfile.mkdtemp(prefix='tm-autopw-')
+def test_workers_starting_together_generate_one_password(tmp_path):
     env = {k: v for k, v in os.environ.items() if k != 'ADMIN_PASSWORD'}
     env.update({
-        'SETTINGS_PATH': os.path.join(d, 'manager.yml'),
-        'BACKUP_DIR': os.path.join(d, 'backups'),
-        'CONFIG_PATHS': os.path.join(d, 'dynamic.yml'),
+        'SETTINGS_PATH': os.path.join(tmp_path, 'manager.yml'),
+        'BACKUP_DIR': os.path.join(tmp_path, 'backups'),
+        'CONFIG_PATHS': os.path.join(tmp_path, 'dynamic.yml'),
         'TRAEFIK_API_URL': 'http://traefik.invalid:8080',
         'PYTHONDONTWRITEBYTECODE': '1',
     })
@@ -34,7 +32,7 @@ def test_workers_starting_together_generate_one_password():
         fh.write('http:\n  routers: {}\n')
     probe = 'import sys; sys.path.insert(0, %r); import app' % ROOT
     procs = [
-        subprocess.Popen([sys.executable, '-c', probe], env=env, cwd=d,
+        subprocess.Popen([sys.executable, '-c', probe], env=env, cwd=tmp_path,
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         for _ in range(4)
     ]

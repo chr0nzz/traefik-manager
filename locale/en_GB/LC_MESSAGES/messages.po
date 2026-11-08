@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-10-31 14:24-0400\n"
+"POT-Creation-Date: 2026-11-07 16:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en_GB <LL@li.org>\n"
@@ -20,6 +20,11 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "\"{name}\" is still in use."
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "\"{name}\" is still used by {shown}."
 msgstr ""
 
 #. Used in the browser
@@ -1258,6 +1263,10 @@ msgstr ""
 msgid "Alias Headers"
 msgstr ""
 
+#, python-format
+msgid "Alias Headers must be keep, delete or reject, got %(value)s"
+msgstr ""
+
 #. Used in the browser
 msgctxt "button"
 msgid "All"
@@ -1423,6 +1432,9 @@ msgid "Any valid %(traefik_router_rule)s expression."
 msgstr ""
 
 msgid "Anything below this level is dropped for this channel."
+msgstr ""
+
+msgid "App Store"
 msgstr ""
 
 #. Used in the browser
@@ -1661,6 +1673,13 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Backend online · {latency_ms}ms"
+msgstr ""
+
+msgid "Backend server name (SNI)"
+msgstr ""
+
+#, python-format
+msgid "Backend server name must be a hostname, got %(value)s"
 msgstr ""
 
 msgid "Backend service"
@@ -1974,6 +1993,10 @@ msgid "Cancel"
 msgstr ""
 
 msgid "Cannot reach agent"
+msgstr ""
+
+#, python-format
+msgid "Cannot reach agent (%(reason)s)"
 msgstr ""
 
 msgid "Cannot reach agent - check URL and network"
@@ -2587,9 +2610,6 @@ msgstr ""
 msgid "Connection failed: {error}"
 msgstr ""
 
-msgid "Connection refused"
-msgstr ""
-
 #. Used in the browser
 msgid "Connection settings saved"
 msgstr ""
@@ -3043,6 +3063,15 @@ msgstr ""
 msgid "DNS check resolvers {optional}"
 msgstr ""
 
+#, python-format
+msgctxt "check failure"
+msgid "DNS name %(host)s does not resolve"
+msgstr ""
+
+msgctxt "check failure"
+msgid "DNS name does not resolve"
+msgstr ""
+
 #. Used in the browser
 msgctxt "status"
 msgid "DOWN"
@@ -3220,6 +3249,10 @@ msgid "Delete all of it?"
 msgstr ""
 
 #. Used in the browser
+msgid "Delete anyway"
+msgstr ""
+
+#. Used in the browser
 #, python-brace-format
 msgid "Delete backup \"{name}\"?"
 msgstr ""
@@ -3240,6 +3273,10 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Delete failed: {error}"
+msgstr ""
+
+#. Used in the browser
+msgid "Delete it anyway?"
 msgstr ""
 
 #. Used in the browser
@@ -10145,6 +10182,15 @@ msgid ""
 "or revoke them via your Traefik config."
 msgstr ""
 
+msgctxt "check failure"
+msgid "TLS handshake failed"
+msgstr ""
+
+#, python-format
+msgctxt "check failure"
+msgid "TLS handshake failed (%(reason)s)"
+msgstr ""
+
 #. Used in the browser
 msgid "TLS on every router"
 msgstr ""
@@ -10514,6 +10560,12 @@ msgstr ""
 
 #. Used in the browser
 msgid ""
+"The default for every entry point, including the internal ones. An entry "
+"point with its own value overrides it."
+msgstr ""
+
+#. Used in the browser
+msgid ""
 "The direct TCP connection - your reverse proxy, or the real client if none."
 msgstr ""
 
@@ -10593,6 +10645,12 @@ msgid ""
 "The middleware snippet contains template placeholders (%(example)s) that "
 "must be replaced with real values before saving. Edit the middleware in the "
 "editor and replace all %(marker)s placeholders."
+msgstr ""
+
+msgid ""
+"The name Traefik sends as SNI and checks the backend certificate against. "
+"Use it when the backend serves its certificate for a different name than the "
+"target address. Adds serverName via a named serversTransport."
 msgstr ""
 
 #. Used in the browser
@@ -11107,9 +11165,6 @@ msgstr ""
 msgid "Time left on this decision, counting down live"
 msgstr ""
 
-msgid "Timeout"
-msgstr ""
-
 msgctxt "setting"
 msgid "Timeout"
 msgstr ""
@@ -11217,6 +11272,17 @@ msgstr ""
 msgid "Traefik Manager Version badge, highlights when an update is available."
 msgstr ""
 
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines it. It stops working until you remove the middleware there."
+msgid_plural ""
+"Traefik Manager cannot edit {names}, because another provider such as Docker "
+"labels defines them. They stop working until you remove the middleware there."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid ""
 "Traefik Manager cannot read its configuration file, so it cannot tell "
 "whether this is a new install. Setup is disabled until the file is fixed or "
@@ -11259,6 +11325,13 @@ msgid ""
 "API. With it disabled those tabs will be empty until you turn it back on and "
 "restart Traefik."
 msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "Traefik Manager removes it from {n} route in your config files."
+msgid_plural "Traefik Manager removes it from {n} routes in your config files."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Traefik Manager update available"
 msgstr ""
@@ -12547,6 +12620,22 @@ msgstr ""
 msgid "configured in traefik.yml"
 msgstr ""
 
+msgctxt "check failure"
+msgid "connection closed without a response"
+msgstr ""
+
+msgctxt "check failure"
+msgid "connection refused"
+msgstr ""
+
+msgctxt "check failure"
+msgid "connection reset"
+msgstr ""
+
+msgctxt "check failure"
+msgid "connection timed out"
+msgstr ""
+
 #, python-format
 msgid "controlled by %(auth_enabled)s env var"
 msgstr ""
@@ -13211,6 +13300,10 @@ msgctxt "label"
 msgid "network"
 msgstr ""
 
+msgctxt "check failure"
+msgid "network unreachable"
+msgstr ""
+
 #. Used in the browser
 msgctxt "button"
 msgid "newer"
@@ -13428,6 +13521,10 @@ msgstr ""
 
 msgid ""
 "no restart method is configured, and Traefik only reads acme.json at startup"
+msgstr ""
+
+msgctxt "check failure"
+msgid "no route to host"
 msgstr ""
 
 #. Used in the browser
@@ -14248,6 +14345,10 @@ msgstr ""
 
 #. Used in the browser
 msgid "this server"
+msgstr ""
+
+msgctxt "check failure"
+msgid "timed out waiting for a response"
 msgstr ""
 
 #. Used in the browser

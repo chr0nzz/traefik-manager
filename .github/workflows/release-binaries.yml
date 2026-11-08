@@ -1,12 +1,20 @@
 name: Release Agent Binaries
 
+# Runs as the last stage of docker.yml on a release tag, after the audit and both image pushes
+# have succeeded. It no longer listens for a published release: publishing first is what left
+# /releases/latest/download pointing at a release with no assets, and it skipped the audit.
+# Run it by hand only to rebuild the binaries for a tag that already exists; it audits that
+# tag first.
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing release tag to attach the agent binaries to
+        description: Existing release tag to build the agent binaries for and publish
         required: true
 
 permissions:
@@ -16,13 +24,24 @@ permissions:
   attestations: write
 
 jobs:
+  # docker.yml already audited the tag before calling this, so only a manual run audits here.
+  audit:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/audit.yml
+    with:
+      ref: ${{ inputs.tag }}
+
   build-binaries:
+    needs: audit
+    if: >-
+      !cancelled()
+      && (needs.audit.result == 'success' || (needs.audit.result == 'skipped' && github.event_name != 'workflow_dispatch'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
-          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          ref: ${{ inputs.tag }}
           # This job runs with contents: write. Without this, checkout leaves the token in
           # .git/config, where anything the build runs afterwards can read it.
           persist-credentials: false
@@ -53,11 +72,21 @@ jobs:
         with:
           subject-path: agent/dist/tma-linux-*
 
-      - name: Attach binaries to release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
-        with:
-          tag_name: ${{ github.event.release.tag_name || inputs.tag }}
-          files: |
-            agent/dist/tma-linux-*
-            agent/dist/SHA256SUMS
-          fail_on_unmatched_files: true
+      # A draft prepared for the tag keeps its notes: the assets go on first, then the draft is
+      # published and marked latest. An already published release (a manual rebuild) only gets
+      # its assets replaced. With neither, the release is created with generated notes.
+      - name: Attach binaries and publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          assets=(agent/dist/tma-linux-* agent/dist/SHA256SUMS)
+          if is_draft="$(gh release view "$TAG" --json isDraft -q .isDraft 2>/dev/null)"; then
+            gh release upload "$TAG" "${assets[@]}" --clobber
+            if [[ "$is_draft" == "true" ]]; then
+              gh release edit "$TAG" --draft=false --latest
+            fi
+          else
+            gh release create "$TAG" "${assets[@]}" --verify-tag --generate-notes --latest
+          fi
