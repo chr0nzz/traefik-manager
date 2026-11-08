@@ -755,6 +755,16 @@ let _traefikRuntime      = null;
 function _sfFormKey(s)   { return {entrypoints:'Ep', resolvers:'Res', plugins:'Plugin', providers:'Provider'}[s]||''; }
 function _sfFormLabel(s) { return {entrypoints:'Entrypoint', resolvers:'Resolver', plugins:'Plugin', providers:'Provider'}[s]||''; }
 
+function _setStaticFormTitle(section, editing) {
+    const titles = {
+        entrypoints: [t('New Entrypoint'), t('Edit Entrypoint')],
+        resolvers:   [t('New Resolver'), t('Edit Resolver')],
+        plugins:     [t('New Plugin'), t('Edit Plugin')],
+    }[section];
+    const el = document.getElementById('sf' + _sfFormKey(section) + 'FormTitle');
+    if (el && titles) el.textContent = titles[editing ? 1 : 0];
+}
+
 function _updateStaticTabArrows() {
     const bar = document.getElementById('staticTabBar');
     const lBtn = document.getElementById('staticTabArrowL');
@@ -961,6 +971,7 @@ function openStaticAddForm(section) {
     if (_staticEditState.section) closeStaticForm(_staticEditState.section);
     _staticEditState = { section, name: null };
     _resetStaticForm(section);
+    _setStaticFormTitle(section, false);
     if (section === 'entrypoints') _showEpHeaderField();
     const f = document.getElementById('staticForm-' + section);
     if (f) f.style.display = 'block';
@@ -975,6 +986,7 @@ function openStaticEditForm(section, name) {
     if (_staticEditState.section) closeStaticForm(_staticEditState.section);
     _staticEditState = { section, name };
     _prefillStaticForm(section, name);
+    _setStaticFormTitle(section, true);
     if (section === 'entrypoints') _showEpHeaderField();
     const f = document.getElementById('staticForm-' + section);
     if (f) f.style.display = 'block';

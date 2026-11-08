@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-08 02:53+0000\n"
+"POT-Creation-Date: 2026-11-11 00:30-0500\n"
 "PO-Revision-Date: 2026-09-30 00:00+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/"
@@ -3838,8 +3838,16 @@ msgid "Edit Channel"
 msgstr "编辑渠道"
 
 #. Used in the browser
+msgid "Edit Entrypoint"
+msgstr ""
+
+#. Used in the browser
 msgid "Edit Plugin"
 msgstr "编辑插件"
+
+#. Used in the browser
+msgid "Edit Resolver"
+msgstr ""
 
 #. Used in the browser
 msgid "Edit Service"
