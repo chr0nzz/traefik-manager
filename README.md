@@ -232,6 +232,8 @@ Pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for reporting 
 <a href="https://github.com/TehoorMarjan" title="Tehoor Marjan (@TehoorMarjan) - French translation"><img src="https://images.weserv.nl/?url=github.com/TehoorMarjan.png&w=96&h=96&fit=cover&mask=circle" width="48" height="48" alt="TehoorMarjan"></a>
 <a href="https://github.com/shrimphorticulturist" title="@shrimphorticulturist - French translation"><img src="https://images.weserv.nl/?url=github.com/shrimphorticulturist.png&w=96&h=96&fit=cover&mask=circle" width="48" height="48" alt="shrimphorticulturist"></a>
 <a href="https://github.com/stilicho2011" title="@stilicho2011 - Russian translation"><img src="https://images.weserv.nl/?url=github.com/stilicho2011.png&w=96&h=96&fit=cover&mask=circle" width="48" height="48" alt="stilicho2011"></a>
+<a href="https://github.com/stopspazzing" title="Jeremy Zimmerman (@stopspazzing) - keep http3 settings when saving an entry point"><img src="https://images.weserv.nl/?url=github.com/stopspazzing.png&w=96&h=96&fit=cover&mask=circle" width="48" height="48" alt="stopspazzing"></a>
+<a href="https://github.com/WhiPaper" title="Heejong Jo (@WhiPaper) - Korean translation"><img src="https://images.weserv.nl/?url=github.com/WhiPaper.png&w=96&h=96&fit=cover&mask=circle" width="48" height="48" alt="WhiPaper"></a>
 </p>
 
 Thanks as well to everyone who has opened an issue or a discussion - several features started as a question from someone running into something unexpected.
