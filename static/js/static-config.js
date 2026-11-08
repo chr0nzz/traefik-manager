@@ -1003,8 +1003,9 @@ function closeStaticForm(section) {
 
 function _resetStaticForm(section) {
     if (section === 'entrypoints') {
-        ['sfEpName','sfEpAddr','sfEpRedirect','sfEpTrustedIps','sfEpProxyIps','sfEpMiddlewares','sfEpTlsResolver','sfEpTlsOptions','sfEpReadTimeout','sfEpWriteTimeout','sfEpIdleTimeout'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+        ['sfEpName','sfEpAddr','sfEpRedirect','sfEpHttp3Port','sfEpTrustedIps','sfEpProxyIps','sfEpMiddlewares','sfEpTlsResolver','sfEpTlsOptions','sfEpReadTimeout','sfEpWriteTimeout','sfEpIdleTimeout'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
         ['sfEpHttp3','sfEpFwdInsecure','sfEpProxyInsecure','sfEpTlsEnabled','sfEpAsDefault'].forEach(id => { const e = document.getElementById(id); if (e) e.checked = false; });
+        const h3Row = document.getElementById('sfEpHttp3PortRow'); if (h3Row) h3Row.style.display = 'none';
         const uhsSel = document.getElementById('sfEpUnderscore'); if (uhsSel) uhsSel.value = '';
         const tlsRow = document.getElementById('sfEpTlsRow'); if (tlsRow) tlsRow.style.display = 'none';
     } else if (section === 'resolvers') {
@@ -1034,6 +1035,8 @@ function _prefillStaticForm(section, name) {
         document.getElementById('sfEpAddr').value    = ep.address || '';
         document.getElementById('sfEpRedirect').value = ep.http?.redirections?.entryPoint?.to || '';
         const h3chk = document.getElementById('sfEpHttp3'); if (h3chk) h3chk.checked = !!ep.http3;
+        const h3Port = document.getElementById('sfEpHttp3Port'); if (h3Port) h3Port.value = ep.http3?.advertisedPort || '';
+        const h3Row = document.getElementById('sfEpHttp3PortRow'); if (h3Row) h3Row.style.display = ep.http3 ? '' : 'none';
         const uhsSel = document.getElementById('sfEpUnderscore');
         if (uhsSel) uhsSel.value = _epHeaderStrategyValue(ep);
         const fh = ep.forwardedHeaders || {};
@@ -1133,6 +1136,7 @@ async function submitStaticSection(section) {
         await _epVersion.pending;
         name    = document.getElementById('sfEpName').value.trim();
         payload = { address: document.getElementById('sfEpAddr').value.trim(), redirect_to: document.getElementById('sfEpRedirect').value.trim(), http3: document.getElementById('sfEpHttp3')?.checked || false,
+            http3_advertised_port: document.getElementById('sfEpHttp3Port')?.value.trim() || '',
             ..._epHeaderStrategyPayload(),
             trusted_ips: document.getElementById('sfEpTrustedIps')?.value || '',
             forwarded_insecure: document.getElementById('sfEpFwdInsecure')?.checked || false,
@@ -2051,10 +2055,15 @@ function _buildStaticClassicHTML() {
             </div>
             <div>
                 <div class="flex items-center gap-2">
-                    <input type="checkbox" id="sfEpHttp3" class="rounded" style="accent-color:var(--blue)">
+                    <input type="checkbox" id="sfEpHttp3" class="rounded" style="accent-color:var(--blue)" onchange="document.getElementById('sfEpHttp3PortRow').style.display = this.checked ? '' : 'none'">
                     <span class="text-xs" style="color:var(--text)">${th('Enable HTTP/3 (QUIC)')}</span>
                 </div>
                 <p class="text-xs mt-1" style="color:var(--muted)">${th('HTTP/3 also uses UDP on this port. Publish it too, for example {udp_port} in Docker, and allow it through any firewall. Only routers with TLS can use HTTP/3.', { udp_port: tmHtml(`<code class="font-mono">443:443/udp</code>`) })}</p>
+            </div>
+            <div id="sfEpHttp3PortRow" style="display:none">
+                <label class="text-xs block mb-1" style="color:var(--muted)">${th('HTTP/3 advertised port {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
+                <input id="sfEpHttp3Port" type="text" inputmode="numeric" class="input-field text-sm" placeholder="443">
+                <p class="text-xs mt-1" style="color:var(--muted)">${th('The port clients use for HTTP/3 when it differs from the one Traefik listens on, for example behind a Docker port mapping. Empty advertises the entrypoint port.')}</p>
             </div>
             <div id="sfEpUnderscoreRow" style="display:none">
                 <label class="text-xs block mb-1" style="color:var(--muted)"><span id="sfEpHdrLabel">${th('Alias Headers')}</span> <span style="color:var(--muted);font-weight:400">${thc('setting', '(security)')}</span></label>
