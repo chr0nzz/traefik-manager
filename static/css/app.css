@@ -1421,14 +1421,14 @@ html.tm-nav-collapsed .drawer-srv-title { display: block; }
 .drawer-srv-check { color: var(--blue) !important; }
 .drawer-srv-head .ph-caret-down { font-size: 12px; transition: transform 0.15s ease; }
 .drawer-srv-head .ph-caret-down.open { transform: rotate(180deg); }
-.drawer-srv-list { display: flex; flex-direction: column; gap: 2px; padding: 0 0 4px; }
+.drawer-srv-list { display: flex; flex-direction: column; gap: 2px; padding: 0 0 4px; max-height: 45vh; overflow-y: auto; overscroll-behavior: contain; }
 .side-nav-foot { padding: 8px; border-top: 1px solid var(--border); flex-shrink: 0; }
 .side-nav-foot form { width: 100%; }
 html.tm-nav-collapsed .drawer-srv-head { justify-content: center; padding: 9px 0; gap: 0; }
 html.tm-nav-collapsed .drawer-srv-head .drawer-srv-t,
 html.tm-nav-collapsed #drawerServerCaret { display: none; }
 html.tm-nav-collapsed .drawer-srv-dot { width: 10px; height: 10px; }
-html.tm-nav-collapsed .drawer-srv-list { position: fixed; width: 232px; z-index: 60; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+html.tm-nav-collapsed .drawer-srv-list { position: fixed; width: 232px; max-height: calc(100vh - 24px); box-sizing: border-box; z-index: 60; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
 .side-nav-foot button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; border: none; background: none; border-radius: 8px; cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 500; text-align: left; transition: background 0.12s, color 0.12s; }
 .side-nav-foot button i { font-size: 15px; flex-shrink: 0; width: 18px; text-align: center; }
 .side-nav-foot button:hover { background: var(--btn-secondary-bg); color: var(--text); }
@@ -1609,7 +1609,7 @@ html.tm-nav-collapsed .drawer-srv-head:hover .drawer-srv-mark { color: var(--tex
     html.tm-nav-collapsed .drawer-srv-head .drawer-srv-mark { display: none; }
     html.tm-nav-collapsed .drawer-srv-head > .drawer-srv-dot { display: block; width: 8px; height: 8px; }
     html.tm-nav-collapsed .drawer-srv-title { display: none; }
-    html.tm-nav-collapsed .drawer-srv-list { position: static; width: auto; padding: 4px 0 0; border: none; background: none; box-shadow: none; left: auto !important; top: auto !important; }
+    html.tm-nav-collapsed .drawer-srv-list { position: static; width: auto; max-height: 45vh; padding: 4px 0 0; border: none; background: none; box-shadow: none; left: auto !important; top: auto !important; }
     html.tm-nav-collapsed .side-nav-item { justify-content: flex-start; padding: 9px 12px; }
     html.tm-nav-collapsed .side-nav-label, html.tm-nav-collapsed .side-nav-count, html.tm-nav-collapsed .side-nav-section { display: block; }
     .side-nav-brand-row img { width: 22px; height: 22px; }
