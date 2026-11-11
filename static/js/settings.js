@@ -558,6 +558,34 @@ const TRAEFIK_ADVISORIES = [
             return (min >= 2 && min < 7) || (min === 7 && pat <= 14);
         },
     },
+    {
+        id: 'GHSA-xv5x-242w-7hf7',
+        severity: 'High',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-xv5x-242w-7hf7',
+        forwardAuthRelated: false,
+        summary: t('An NTLM or Negotiate Authorization header pins a backend transport that is never released, so unauthenticated clients can exhaust memory and connections'),
+        fixedIn: 'v3.7.17 or v2.11.61',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj === 2) return min === 11 && pat >= 58 && pat <= 60;
+            if (maj === 3) return min === 7 && pat >= 14 && pat <= 16;
+            return false;
+        },
+    },
+    {
+        id: 'GHSA-fh26-gfpp-7xxx',
+        severity: 'High',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-fh26-gfpp-7xxx',
+        forwardAuthRelated: false,
+        summary: t('SNI check skipped for HTTP/2 requests sent as http over TLS, so a router requiring a client certificate can be reached without one (Traefik built with Go 1.27)'),
+        fixedIn: 'v3.7.14 or v2.11.58',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj === 2) return (min < 11) || (min === 11 && pat <= 57);
+            if (maj === 3) return (min < 7) || (min === 7 && pat <= 13);
+            return false;
+        },
+    },
 ];
 
 function _configHasForwardAuth() {
