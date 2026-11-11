@@ -843,6 +843,7 @@ _SILENT_PREFIXES = (
     '/api/configs',
     '/api/settings/tabs',
     '/api/ping',
+    '/api/health',
 )
 
 @app.before_request
