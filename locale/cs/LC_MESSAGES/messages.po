@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-11 08:32-0500\n"
+"POT-Creation-Date: 2026-11-11 14:43-0500\n"
 "PO-Revision-Date: 2026-09-30 04:29+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/traefik-manager/"
@@ -1858,6 +1858,7 @@ msgstr "Backend pro"
 msgid "Backend online · {latency_ms}ms"
 msgstr "Backend online · {latency_ms}ms"
 
+#. Used in the browser
 msgid "Backend server name (SNI)"
 msgstr ""
 
@@ -10704,6 +10705,7 @@ msgctxt "label"
 msgid "Size"
 msgstr "Velikost"
 
+#. Used in the browser
 msgid "Skip TLS Verification"
 msgstr "Přeskočit ověření TLS"
 

@@ -65,3 +65,11 @@ def test_the_route_list_reports_server_name(client):
     _save(client, backendServerName='nas.lan.example')
     apps = _build_apps(cfg.load_config(str(DYNAMIC_PATH)))
     assert [a['serverName'] for a in apps if a['name'] == 'nas'] == ['nas.lan.example']
+
+
+def test_the_route_detail_service_section_shows_the_transport():
+    import os
+    src = open(os.path.join(os.path.dirname(__file__), '..', 'static', 'js', 'routes.js'), encoding='utf-8').read()
+    rows = src.split('const svcRows = [', 1)[1].split('];', 1)[0]
+    assert "app.serverName ? [[t('Backend server name (SNI)'), app.serverName, false]]" in rows
+    assert "app.insecureSkipVerify ? [[t('Skip TLS Verification'), _dBool(true), true]]" in rows
