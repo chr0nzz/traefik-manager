@@ -1,6 +1,6 @@
 module github.com/chr0nzz/traefik-manager/agent
 
-go 1.26.10
+go 1.26.11
 
 require golang.org/x/time v0.15.0
 
