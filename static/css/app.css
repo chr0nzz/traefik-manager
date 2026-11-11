@@ -1865,6 +1865,7 @@ html.tm-nav-collapsed .drawer-srv-head:hover .drawer-srv-mark { color: var(--tex
 .sc-root .sc-panel + .text-xs:not(.hidden) { display: block; margin: 8px 2px 0; font: 400 10.5px/1.55 'JetBrains Mono', monospace; color: var(--muted); max-width: 76ch; }
 
 html.tm-settings-open #noAuthBanner { display: none; }
+html.tm-popout-open #noAuthBanner { display: none; }
 html.tm-settings-open .detail-panel { z-index: 95; }
 html.tm-settings-open .detail-backdrop { z-index: 94; }
 html.tm-static-in-settings #mpanel-static #staticFilterBar { display: none; }
