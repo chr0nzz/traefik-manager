@@ -64,6 +64,8 @@ Upgrading to 3.7.13 or newer is the real fix. Before 3.7.13 even `aliasHeadersSt
 | [GHSA-mhjw-hmjv-p99x](https://github.com/traefik/traefik/security/advisories/GHSA-mhjw-hmjv-p99x) - unsynchronized write to the sticky round tripper shared by concurrent HTTP/2 streams | Moderate | **2.11.58 / 3.7.14** |
 | [GHSA-ww7c-q3mv-xx22](https://github.com/traefik/traefik/security/advisories/GHSA-ww7c-q3mv-xx22) - FastProxy data race after an HTTP/1 upgrade lets an unauthenticated client crash Traefik (only with `experimental.fastProxy`) | High | **3.7.15** |
 | [GHSA-hrpp-p4fc-wwf8](https://github.com/traefik/traefik/security/advisories/GHSA-hrpp-p4fc-wwf8) - ForwardAuth shares its auth server connections between clients, leaking NTLM and Negotiate identity | High | **2.11.60 / 3.7.16** |
+| [GHSA-xv5x-242w-7hf7](https://github.com/traefik/traefik/security/advisories/GHSA-xv5x-242w-7hf7) - an NTLM or Negotiate `Authorization` header pins a backend transport that is never released, so unauthenticated clients can exhaust memory and connections | High | **2.11.61 / 3.7.17** |
+| [GHSA-fh26-gfpp-7xxx](https://github.com/traefik/traefik/security/advisories/GHSA-fh26-gfpp-7xxx) - SNI check skipped for HTTP/2 requests sent as `http` over TLS, so a router requiring a client certificate can be reached without one (only Traefik built with Go 1.27) | High | **2.11.58 / 3.7.14** |
 
 All of these are fixed by upgrading Traefik, not by configuration. Traefik Manager warns you when your running version is affected, and says which release to move to.
 

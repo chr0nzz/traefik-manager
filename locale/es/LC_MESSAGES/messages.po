@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-11 00:30-0500\n"
+"POT-Creation-Date: 2026-11-11 08:32-0500\n"
 "PO-Revision-Date: 2026-09-29 20:39+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/traefik-manager/"
@@ -1552,6 +1552,12 @@ msgstr[1] ""
 
 msgid "Also set by the theme toggle in the nav bar"
 msgstr "También se cambia con el selector de tema de la barra de navegación"
+
+#. Used in the browser
+msgid ""
+"An NTLM or Negotiate Authorization header pins a backend transport that is "
+"never released, so unauthenticated clients can exhaust memory and connections"
+msgstr ""
 
 msgid ""
 "An agent runs beside Traefik on a remote host so this instance can manage "
@@ -9783,6 +9789,13 @@ msgstr "SIGNAL_FILE_PATH no configurado"
 #. Used in the browser
 msgid "SNI Strict"
 msgstr "SNI estricto"
+
+#. Used in the browser
+msgid ""
+"SNI check skipped for HTTP/2 requests sent as http over TLS, so a router "
+"requiring a client certificate can be reached without one (Traefik built "
+"with Go 1.27)"
+msgstr ""
 
 #. Used in the browser
 msgid "SNI strict"

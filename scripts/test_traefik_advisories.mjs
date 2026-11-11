@@ -28,18 +28,21 @@ const CRIT = 'CVE-2026-88007';
 const NEGO = 'GHSA-qm9f-w54v-q2qh';
 const FAPOOL = 'GHSA-hrpp-p4fc-wwf8';
 const FPRACE = 'GHSA-ww7c-q3mv-xx22';
+const NEGLEAK = 'GHSA-xv5x-242w-7hf7';
+const SNI = 'GHSA-fh26-gfpp-7xxx';
 
 const cases = [
     ['2.11.56', CRIT, 'last affected 2.x, critical HTTP/3 advisory outranks the rest'],
     ['2.11.57', NEGO, 'last 2.x hit by the 2.11.58 advisories'],
     ['2.11.58', FAPOOL, 'last 2.x hit only by the 2.11.60 advisory'],
     ['2.11.59', FAPOOL, 'last 2.x before the ForwardAuth pool fix'],
-    ['2.11.60', null, 'patched 2.x'],
+    ['2.11.60', NEGLEAK, 'last 2.x before the Negotiate transport leak fix'],
+    ['2.11.61', null, 'patched 2.x'],
     ['3.7.12',  CRIT, 'last 3.x hit by the critical one'],
     ['3.7.13',  NEGO, 'last 3.x hit by the 3.7.14 advisories'],
     ['3.7.14',  FAPOOL, 'first 3.x past the 3.7.14 advisories is still hit by the ForwardAuth pool'],
     ['3.7.15',  FAPOOL, 'last 3.x before the ForwardAuth pool fix'],
-    ['3.7.16',  null, 'patched 3.x'],
+    ['3.7.16',  NEGLEAK, 'last 3.x before the Negotiate transport leak fix'],
     ['3.7.17',  null, 'current 3.x is clean'],
     ['3.8.0',   null, 'later minor is clean'],
     ['4.0.0',   null, 'later major is clean'],
@@ -81,6 +84,18 @@ const rangeChecks = [
     ['3.1.9',  FPRACE, false, 'FastProxy upgrade race starts at 3.2.0'],
     ['3.2.0',  FPRACE, true,  'FastProxy upgrade race starts at 3.2.0'],
     ['2.11.59',FPRACE, false, 'v2 has no FastProxy'],
+    ['2.11.57',NEGLEAK, false, 'Negotiate transport leak starts at 2.11.58'],
+    ['2.11.58',NEGLEAK, true,  'Negotiate transport leak starts at 2.11.58'],
+    ['2.11.61',NEGLEAK, false, 'Negotiate transport leak is fixed in 2.11.61'],
+    ['3.7.13', NEGLEAK, false, 'Negotiate transport leak starts at 3.7.14'],
+    ['3.7.14', NEGLEAK, true,  'Negotiate transport leak starts at 3.7.14'],
+    ['3.7.17', NEGLEAK, false, 'Negotiate transport leak is fixed in 3.7.17'],
+    ['3.6.20', NEGLEAK, false, 'Negotiate transport leak does not reach 3.6'],
+    ['3.0.0',  SNI,     true,  'SNI check bypass covers every 3.x before 3.7.14'],
+    ['3.7.13', SNI,     true,  'SNI check bypass is fixed in 3.7.14'],
+    ['3.7.14', SNI,     false, 'SNI check bypass is fixed in 3.7.14'],
+    ['2.11.57',SNI,     true,  'SNI check bypass is fixed in 2.11.58'],
+    ['2.11.58',SNI,     false, 'SNI check bypass is fixed in 2.11.58'],
 ];
 
 let failed = 0;
