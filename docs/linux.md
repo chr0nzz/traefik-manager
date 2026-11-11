@@ -10,7 +10,7 @@ Traefik Manager is a standard Python/Flask application and runs natively on any 
 
 ## Requirements
 
-- Python 3.11 or newer
+- Python 3.11 or newer, with the `venv` module (`sudo apt install python3-venv` on Debian and Ubuntu)
 - `pip`
 - A running Traefik instance reachable from the same host
 - Write access to your Traefik `dynamic.yml` and the directory holding it

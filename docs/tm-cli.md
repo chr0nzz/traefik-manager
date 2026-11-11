@@ -85,7 +85,7 @@ Installs both via Docker Compose. Best for a fresh server with nothing running y
 
 - A Linux server (amd64 or arm64 - the container images are built for those two; only the standalone agent binary is built for armv7). Docker is installed for you on Debian/Ubuntu, RHEL/Fedora and Arch; anything else falls back to the `get.docker.com` script.
 - A domain name with DNS pointing to your server
-- Ports 80 and 443 open for internet-facing deployments
+- Ports 80 and 443 open for internet-facing deployments (and 443/udp with HTTP/3)
 
 ### Sections and review screen
 
@@ -137,6 +137,8 @@ Your base domain and subdomains for:
 | Let's Encrypt - DNS: DuckDNS      | A DuckDNS token.                                        |
 | Let's Encrypt - DNS: deSEC        | A deSEC token. Works without port 80.                   |
 | No TLS (HTTP only)                | Port 80 only. Suitable for internal LAN use.            |
+
+**HTTP/3** - with TLS on, the wizard also asks **Enable HTTP/3 (QUIC)?**, off by default (`tls.http3` in an answers file). Yes adds `http3: {}` to the `websecure` entrypoint, publishes `443:443/udp` next to `443:443`, and adds `443/udp` to the firewall notice. Open 443/udp in any firewall in front of the server. See [HTTP/3](static.md#http3).
 
 **Dynamic config layout**
 
@@ -260,7 +262,7 @@ Installs Traefik and Traefik Manager as systemd services on the host. No Docker 
 
 ### Prerequisites
 
-- Python 3.11 or newer
+- Python 3.11 or newer, with the `venv` module (`sudo apt install python3-venv` on Debian and Ubuntu). `tm` checks for it before installing anything
 - `git`, `curl`
 - `systemd`
 - amd64, arm64 or armv7. `tm` downloads the Traefik release for that architecture
@@ -295,7 +297,7 @@ Nothing is written to disk until you pick Continue.
 |---|---|
 | General | Install directory (default `/opt/traefik-manager`), data directory (default `/var/lib/traefik-manager`), Traefik Manager port (default `5000`), Traefik internal API port (default `8080`) |
 | Deployment type | External (internet-facing) or internal only (LAN, VPN, Tailscale) |
-| TLS / Certificates | Same choices as mode 1: Let's Encrypt HTTP or DNS challenge, or no TLS |
+| TLS / Certificates | Same choices as mode 1: Let's Encrypt HTTP or DNS challenge, or no TLS. With TLS on, also whether to enable [HTTP/3](static.md#http3), which makes Traefik listen on 443/udp as well |
 | Domain | Optional. Leave it empty for no dashboard route. Otherwise the dashboard subdomain (default `traefik.<domain>`) and whether to serve the Traefik dashboard UI |
 | Dynamic config | Single file (`/etc/traefik/dynamic/dynamic.yml`) or directory (`/etc/traefik/dynamic`). The paths are fixed |
 | Static config editor | Whether Traefik Manager may edit `/etc/traefik/traefik.yml`. With TLS on it also offers certificate removal |
@@ -460,7 +462,7 @@ Installs Traefik Manager as a native systemd service. No Docker required. Use th
 
 ### Prerequisites
 
-- Python 3.11 or newer
+- Python 3.11 or newer, with the `venv` module (`sudo apt install python3-venv` on Debian and Ubuntu). `tm` checks for it before installing anything
 - `git`, `curl`
 - `systemd`
 
@@ -595,6 +597,7 @@ Pick a section to answer it again, or Continue to install. The binary method has
 - Enable HTTPS on port 443
 - TLS certificate method: Let's Encrypt HTTP challenge, Let's Encrypt Cloudflare DNS, or no TLS
 - ACME email (if Let's Encrypt)
+- Enable HTTP/3 (QUIC) (if TLS) - adds `http3: {}` to `websecure` and publishes `443:443/udp`
 - Cloudflare DNS API token (if Cloudflare DNS)
 - Cert resolver name (default: `letsencrypt`)
 - Enable Traefik dashboard and hostname
