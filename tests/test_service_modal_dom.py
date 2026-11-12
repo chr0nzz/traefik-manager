@@ -215,7 +215,7 @@ def test_editing_parses_the_scheme_back_out():
 
 def test_editing_a_composite_loads_the_real_child_address():
     js = _read('static', 'js', 'services.js')
-    m = re.search(r'function _svcChildToRow\(label\) \{(.*?)\n\}', js, re.S)
+    m = re.search(r'function _svcChildToRow\(entry\) \{(.*?)\n\}', js, re.S)
     assert m, 'the child loader moved'
     assert '_allServices.find' in m.group(1), \
         'owned children came back with an empty address before'
