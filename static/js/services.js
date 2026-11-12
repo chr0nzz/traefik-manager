@@ -806,9 +806,9 @@ function _svcUrlToRow(url) {
              address: u.replace(_SVC_SCHEME_RE, '') };
 }
 
-function _svcChildToRow(label) {
-    const name = String(label).split(' ')[0];
-    const m = String(label).match(/\((\d+)%?\)/);
+function _svcChildToRow(entry) {
+    const name = String(entry.name);
+    const m = String(entry.share).match(/^(\d+)%?$/);
     const weight = m ? m[1] : 1;
     if (!_ownedChildNames.has(name)) return { kind: 'service', name, weight };
     const child = _allServices.find(x => _svcBareName(x.name) === name);
