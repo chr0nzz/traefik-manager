@@ -181,10 +181,16 @@ function _initStaticMonaco(content, containerId) {
     });
 }
 
+function _syncPopoutOpen() {
+    const open = ['staticYamlPopout', 'routeYamlPopout', 'gitDiffPopout'].some(id => document.getElementById(id)?.style.display === 'flex');
+    document.documentElement.classList.toggle('tm-popout-open', open);
+}
+
 function openStaticYamlPopout() {
     const overlay = document.getElementById('staticYamlPopout');
     if (!overlay) return;
     overlay.style.display = 'flex';
+    _syncPopoutOpen();
     if (_staticMonaco) {
         setTimeout(() => _staticMonaco.layout(), 50);
     } else {
@@ -210,6 +216,7 @@ async function openStaticYamlPopoutFromShortcut() {
 function closeStaticYamlPopout() {
     const overlay = document.getElementById('staticYamlPopout');
     if (overlay) overlay.style.display = 'none';
+    _syncPopoutOpen();
 }
 
 let _gitDiffEditor  = null;
@@ -224,6 +231,7 @@ function openGitDiffPopout(sha, files) {
     _gitDiffFiles  = files;
     _gitDiffActive = 0;
     overlay.style.display = 'flex';
+    _syncPopoutOpen();
     _renderGitDiffTabs();
     _showGitDiffFile(0);
 }
@@ -278,6 +286,7 @@ function _showGitDiffFile(idx) {
 function closeGitDiffPopout() {
     const overlay = document.getElementById('gitDiffPopout');
     if (overlay) overlay.style.display = 'none';
+    _syncPopoutOpen();
 }
 
 async function saveStaticPopout() {
@@ -561,6 +570,7 @@ async function openRouteYamlEditor(id) {
         if (data.error) { showToast(data.error, 'error'); return; }
         const overlay = document.getElementById('routeYamlPopout');
         if (overlay) overlay.style.display = 'flex';
+        _syncPopoutOpen();
         _routeYamlFingerprints = data.fingerprints || {};
         _renderRouteYamlOrigins(data.origins, data.configFile, data.warnings);
         _initRouteYamlMonaco(data.raw || '');
@@ -572,6 +582,7 @@ async function openRouteYamlEditor(id) {
 function closeRouteYamlEditor() {
     const overlay = document.getElementById('routeYamlPopout');
     if (overlay) overlay.style.display = 'none';
+    _syncPopoutOpen();
 }
 
 function _sharedChangeNote(change) {
@@ -743,6 +754,16 @@ let _traefikRuntime      = null;
 
 function _sfFormKey(s)   { return {entrypoints:'Ep', resolvers:'Res', plugins:'Plugin', providers:'Provider'}[s]||''; }
 function _sfFormLabel(s) { return {entrypoints:'Entrypoint', resolvers:'Resolver', plugins:'Plugin', providers:'Provider'}[s]||''; }
+
+function _setStaticFormTitle(section, editing) {
+    const titles = {
+        entrypoints: [t('New Entrypoint'), t('Edit Entrypoint')],
+        resolvers:   [t('New Resolver'), t('Edit Resolver')],
+        plugins:     [t('New Plugin'), t('Edit Plugin')],
+    }[section];
+    const el = document.getElementById('sf' + _sfFormKey(section) + 'FormTitle');
+    if (el && titles) el.textContent = titles[editing ? 1 : 0];
+}
 
 function _updateStaticTabArrows() {
     const bar = document.getElementById('staticTabBar');
@@ -950,6 +971,7 @@ function openStaticAddForm(section) {
     if (_staticEditState.section) closeStaticForm(_staticEditState.section);
     _staticEditState = { section, name: null };
     _resetStaticForm(section);
+    _setStaticFormTitle(section, false);
     if (section === 'entrypoints') _showEpHeaderField();
     const f = document.getElementById('staticForm-' + section);
     if (f) f.style.display = 'block';
@@ -964,6 +986,7 @@ function openStaticEditForm(section, name) {
     if (_staticEditState.section) closeStaticForm(_staticEditState.section);
     _staticEditState = { section, name };
     _prefillStaticForm(section, name);
+    _setStaticFormTitle(section, true);
     if (section === 'entrypoints') _showEpHeaderField();
     const f = document.getElementById('staticForm-' + section);
     if (f) f.style.display = 'block';
@@ -2026,10 +2049,12 @@ function _buildStaticClassicHTML() {
                 <label class="text-xs block mb-1" style="color:var(--muted)">${th('HTTP → HTTPS redirect {optional}', { optional: tmHtml(`<span style="color:var(--muted);font-weight:400">${th('(optional)')}</span>`) })}</label>
                 <input id="sfEpRedirect" type="text" class="input-field text-sm" placeholder="${th('Name of the HTTPS entrypoint to redirect to, e.g. websecure')}">
             </div>
-            <div class="flex items-center gap-2">
-                <input type="checkbox" id="sfEpHttp3" class="rounded" style="accent-color:var(--blue)">
-                <span class="text-xs" style="color:var(--text)">${th('Enable HTTP/3 (QUIC)')}</span>
-                <span class="text-xs" style="color:var(--muted)">- ${th('adds {http3} to this entrypoint', { http3: tmHtml(`<code class="font-mono">http3: {}</code>`) })}</span>
+            <div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="sfEpHttp3" class="rounded" style="accent-color:var(--blue)">
+                    <span class="text-xs" style="color:var(--text)">${th('Enable HTTP/3 (QUIC)')}</span>
+                </div>
+                <p class="text-xs mt-1" style="color:var(--muted)">${th('HTTP/3 also uses UDP on this port. Publish it too, for example {udp_port} in Docker, and allow it through any firewall. Only routers with TLS can use HTTP/3.', { udp_port: tmHtml(`<code class="font-mono">443:443/udp</code>`) })}</p>
             </div>
             <div id="sfEpUnderscoreRow" style="display:none">
                 <label class="text-xs block mb-1" style="color:var(--muted)"><span id="sfEpHdrLabel">${th('Alias Headers')}</span> <span style="color:var(--muted);font-weight:400">${thc('setting', '(security)')}</span></label>

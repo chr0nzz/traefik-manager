@@ -22,6 +22,7 @@ Traefik Manager speaks more than English. Every page, dialog, tooltip, toast, no
 | Português | `pt` |
 | Português (Brasil) | `pt-BR` |
 | Русский | `ru` |
+| 한국어 | `ko` |
 | 中文 (简体) | `zh-Hans` |
 
 The source text is Canadian English. The United Kingdom and United States variants only change spelling. A string that has no translation yet falls back to English.

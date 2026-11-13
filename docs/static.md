@@ -33,7 +33,7 @@ Traefik's static configuration controls settings that cannot be changed at runti
 
 | Section               | Description                                                                                                                                          |
 | -----------------------| ------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Entrypoints           | Port, protocol, optional HTTP-to-HTTPS redirect, the [Alias Headers](hardening.md#header-alias-spoofing) strategy (Traefik 3.7.12+, or Underscore Headers on 3.7.6 to 3.7.11), trusted IPs for forwarded headers (`forwardedHeaders.trustedIPs` / `insecure`, one CIDR per line), PROXY protocol trust (`proxyProtocol.trustedIPs` / `insecure`), an entrypoint-wide middleware chain (`http.middlewares`), TLS-by-default (`http.tls` with cert resolver and TLS options), `asDefault`, and responding timeouts (read / write / idle). |
+| Entrypoints           | Port, protocol, optional HTTP-to-HTTPS redirect, [HTTP/3](#http3), the [Alias Headers](hardening.md#header-alias-spoofing) strategy (Traefik 3.7.12+, or Underscore Headers on 3.7.6 to 3.7.11), trusted IPs for forwarded headers (`forwardedHeaders.trustedIPs` / `insecure`, one CIDR per line), PROXY protocol trust (`proxyProtocol.trustedIPs` / `insecure`), an entrypoint-wide middleware chain (`http.middlewares`), TLS-by-default (`http.tls` with cert resolver and TLS options), `asDefault`, and responding timeouts (read / write / idle). |
 | Certificate Resolvers | ACME email, storage path, DNS / HTTP / TLS challenge type, custom CA server, key type, external account binding (EAB), and DNS propagation controls (check resolvers, delay, disable checks). |
 | Plugins               | Remote plugins (module + version) and local plugins from the `plugins-local` directory. The [Plugins tab](tab-plugins.md) offers the richer install flow. |
 | API                   | Enable or disable the Traefik API and Dashboard, insecure mode, and debug mode. |
@@ -91,6 +91,74 @@ Because `trustedIPs` lives in the static config, this is global and needs a Trae
 ::: tip Refreshing the Cloudflare ranges
 The hardcoded ranges live in `_CLOUDFLARE_IPS_V4` / `_CLOUDFLARE_IPS_V6` in `app.py`, sourced from [cloudflare.com/ips](https://www.cloudflare.com/ips/) (`/ips-v4` + `/ips-v6`). They are refreshed on release; replace both lists from that source and bump `_CLOUDFLARE_IPS_CAPTURED`.
 :::
+
+---
+
+## HTTP/3 {#http3}
+
+**Enable HTTP/3 (QUIC)** on an entrypoint adds an `http3` block to it. Traefik then also listens on UDP, on the same port number as the entrypoint, and advertises HTTP/3 to clients in an `Alt-Svc` response header. Browsers make their first request over TCP and switch to HTTP/3 once they have seen that header.
+
+Saving the form keeps anything already set under `http3`, such as `advertisedPort`. Unticking the box removes the whole block. A bare `http3:` key with no value is off in Traefik, so the box shows unticked for it.
+
+Ticking the box is not enough on its own. HTTP/3 also needs:
+
+- **UDP published on the same port.** A Docker mapping such as `443:443` only covers TCP, so add `443:443/udp` as well. The compose file written by the [tm CLI installer](tm-cli.md) publishes TCP only.
+- **UDP open in every firewall** between clients and Traefik, including the host firewall and any port forward on your router.
+- **TLS on the router.** Only routers with TLS can be reached over HTTP/3. Other routers keep working over TCP.
+- **No UDP entrypoint on the same port.** Traefik does not start when a `/udp` entrypoint listens on the port an HTTP/3 entrypoint uses.
+
+A working setup publishes both protocols:
+
+```yaml
+services:
+  traefik:
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+```
+
+and enables HTTP/3 on the TLS entrypoint in `traefik.yml`:
+
+```yaml
+entryPoints:
+  websecure:
+    address: ":443"
+    http3: {}
+    http:
+      tls:
+        certResolver: letsencrypt
+```
+
+### Advertised port
+
+Traefik advertises the port it listens on. When clients reach it on a different port, for example when Docker maps the public port `443` to `8443` in the container (`443:8443` and `443:8443/udp`), set `http3.advertisedPort` to the public port in the raw YAML editor:
+
+```yaml
+entryPoints:
+  websecure:
+    address: ":8443"
+    http3:
+      advertisedPort: 443
+```
+
+Without it, browsers try HTTP/3 on `8443`, which nothing outside the container answers, and stay on HTTP/2.
+
+### Checking HTTP/3
+
+After restarting Traefik, look for the header on any TLS route:
+
+```bash
+curl -sI https://app.example.com | grep -i alt-svc
+```
+
+It should show `h3=":443"`, with your public port. Then make a request over HTTP/3 only, with a curl build that supports it:
+
+```bash
+curl -sI --http3-only https://app.example.com
+```
+
+If the header is there but this request times out, UDP is not reaching Traefik. Check the UDP port mapping and the firewalls. The [Traefik entrypoint reference](https://doc.traefik.io/traefik/reference/install-configuration/entrypoints/) has the full list of `http3` options.
 
 ---
 

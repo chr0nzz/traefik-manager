@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-07 16:18+0000\n"
+"POT-Creation-Date: 2026-11-11 14:43-0500\n"
 "PO-Revision-Date: 2026-09-30 13:21+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French (Canada) <https://hosted.weblate.org/projects/traefik-"
@@ -1574,6 +1574,12 @@ msgstr[1] ""
 msgid "Also set by the theme toggle in the nav bar"
 msgstr "Également défini par le bouton de thème dans la barre de navigation"
 
+#. Used in the browser
+msgid ""
+"An NTLM or Negotiate Authorization header pins a backend transport that is "
+"never released, so unauthenticated clients can exhaust memory and connections"
+msgstr ""
+
 msgid ""
 "An agent runs beside Traefik on a remote host so this instance can manage "
 "it. Pick how you want to install it."
@@ -1867,6 +1873,7 @@ msgstr "Backend de"
 msgid "Backend online · {latency_ms}ms"
 msgstr "Backend en ligne · {latency_ms} ms"
 
+#. Used in the browser
 msgid "Backend server name (SNI)"
 msgstr ""
 
@@ -4136,8 +4143,16 @@ msgid "Edit Channel"
 msgstr "Modifier le canal"
 
 #. Used in the browser
+msgid "Edit Entrypoint"
+msgstr ""
+
+#. Used in the browser
 msgid "Edit Plugin"
 msgstr "Modifier le plugin"
+
+#. Used in the browser
+msgid "Edit Resolver"
+msgstr ""
 
 #. Used in the browser
 msgid "Edit Service"
@@ -5451,6 +5466,14 @@ msgstr "HTTP/3 annoncé"
 #, python-brace-format
 msgid "HTTP/3 advertised on port {port}"
 msgstr "HTTP/3 annoncé sur le port {port}"
+
+#. Used in the browser
+#, python-brace-format
+msgid ""
+"HTTP/3 also uses UDP on this port. Publish it too, for example {udp_port} in "
+"Docker, and allow it through any firewall. Only routers with TLS can use "
+"HTTP/3."
+msgstr ""
 
 #. Used in the browser
 msgid ""
@@ -9892,6 +9915,13 @@ msgid "SNI Strict"
 msgstr "SNI strict"
 
 #. Used in the browser
+msgid ""
+"SNI check skipped for HTTP/2 requests sent as http over TLS, so a router "
+"requiring a client certificate can be reached without one (Traefik built "
+"with Go 1.27)"
+msgstr ""
+
+#. Used in the browser
 msgid "SNI strict"
 msgstr "SNI strict"
 
@@ -10863,6 +10893,7 @@ msgctxt "label"
 msgid "Size"
 msgstr "Taille"
 
+#. Used in the browser
 msgid "Skip TLS Verification"
 msgstr "Ignorer la vérification TLS"
 
@@ -13763,11 +13794,6 @@ msgstr ""
 #. Used in the browser
 msgid "added by hand"
 msgstr "ajouté manuellement"
-
-#. Used in the browser
-#, python-brace-format
-msgid "adds {http3} to this entrypoint"
-msgstr "ajoute {http3} à ce point d’entrée"
 
 #. Used in the browser
 #, python-brace-format

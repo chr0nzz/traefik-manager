@@ -2638,6 +2638,8 @@ function renderDetailPanel(app, protocol, liveRouter, liveService, entrypoints, 
         [tc('label', 'Status'), svcStatus !== '-' ? _dState(svcStatus) + svcHealthTxt : '-', svcStatus !== '-'],
         [tc('label', 'Type'), app.serviceType && app.serviceType !== 'loadBalancer' ? app.serviceType : t('Load Balancer'), false],
         [t('Pass Host Header'), svcPassHostHeader, false],
+        ...(app.insecureSkipVerify ? [[t('Skip TLS Verification'), _dBool(true), true]] : []),
+        ...(app.serverName ? [[t('Backend server name (SNI)'), app.serverName, false]] : []),
         ...(app.containerAddr ? [[tc('label', 'Container'), app.containerAddr, false]] : []),
         ...svcServerRows,
     ];
