@@ -31,7 +31,33 @@ with c.session_transaction() as s:
     s['csrf_token'] = 't'
 H = {'X-CSRF-Token': 't', 'X-Requested-With': 'fetch'}
 mode = sys.argv[1]
-if mode == 'agent-disable':
+extra = {}
+if mode == 'same-name':
+    open(b, 'w').write(
+        "http:\n  routers:\n    app:\n      rule: Host(`app.lan`)\n      service: app\n")
+if mode == 'lazy':
+    reads = []
+    real = A.load_config
+    A.load_config = lambda p=None: (reads.append(os.path.basename(p or '')), real(p))[1]
+    cfg = C.load_config(a)
+    cfg['http']['routers']['app-alt'] = {'rule': 'Host(`alt.example.com`)', 'service': 'app'}
+    others = A._other_configs(current=a, cache={})
+    shared = A._service_shared(cfg, 'app', 'app', others)
+    first = list(reads)
+    A._service_shared({}, 'app', 'app', others)
+    A._service_shared({}, 'app', 'app', others)
+    print('@@' + json.dumps({'shared': shared, 'first': first, 'reads': reads}))
+    sys.exit(0)
+if mode == 'agent-reenable':
+    store = {'a.yml': C.load_config(a), 'b.yml': C.load_config(b)}
+    A._agent_by_id = lambda i: {'id': i, 'name': 'x', 'url': 'http://x'}
+    A._agent_load_configs = lambda ag: json.loads(json.dumps(store))
+    A._agent_write_config = lambda ag, f, cfg: store.__setitem__(f, json.loads(json.dumps(cfg)))
+    c.post('/api/routes/a.yml::app/toggle', headers=H, json={'enable': False, 'agent_id': 'ag1'})
+    store['a.yml']['http']['services']['app']['loadBalancer']['servers'] = [{'url': 'http://10.0.0.9:80'}]
+    r = c.post('/api/routes/a.yml::app/toggle', headers=H, json={'enable': True, 'agent_id': 'ag1'})
+    http = store['a.yml'].get('http') or {}
+elif mode == 'agent-disable':
     store = {'a.yml': C.load_config(a), 'b.yml': C.load_config(b)}
     A._agent_by_id = lambda i: {'id': i, 'name': 'x', 'url': 'http://x'}
     A._agent_load_configs = lambda ag: json.loads(json.dumps(store))
@@ -47,12 +73,20 @@ else:
             'csrf_token': 't', 'isEdit': 'true', 'originalId': 'a.yml::app', 'configFile': 'a.yml',
             'serviceName': 'app', 'subdomain': 'app.example.com', 'protocol': 'http', 'serviceRef': 'other',
             'scheme': 'http', 'targetIp': '10.0.0.1', 'targetPort': '80'})
+    elif mode == 'reenable':
+        c.post('/api/routes/a.yml::app/toggle', headers=H, json={'enable': False})
+        edited = C.load_config(a)
+        edited['http']['services']['app']['loadBalancer']['servers'] = [{'url': 'http://10.0.0.9:80'}]
+        C.save_config(edited, a)
+        r = c.post('/api/routes/a.yml::app/toggle', headers=H, json={'enable': True})
     else:
         r = c.post('/api/routes/a.yml::app/toggle', headers=H, json={'enable': False})
     http = C.load_config(a).get('http') or {}
 print('@@' + json.dumps({'status': r.status_code,
                          'routers': sorted((http.get('routers') or {})),
-                         'services': sorted((http.get('services') or {}))}))
+                         'services': sorted((http.get('services') or {})),
+                         'urls': [sv.get('url') for sv in ((((http.get('services') or {}).get('app') or {})
+                                  .get('loadBalancer') or {}).get('servers') or [])]}))
 '''
 
 
@@ -92,3 +126,31 @@ def test_switching_a_route_to_another_service_keeps_one_another_file_uses(tmp_pa
     res = _run(tmp_path, 'edit')
     assert res['status'] == 200, res
     assert 'app' in res['services'], 'app-lan in b.yml still uses it: %r' % res
+
+
+def test_reenable_keeps_edits_made_to_a_shared_service_while_disabled(tmp_path):
+    res = _run(tmp_path, 'reenable')
+    assert res['status'] == 200, res
+    assert res['routers'] == ['app'], res
+    assert res['urls'] == ['http://10.0.0.9:80'], 'the edit was overwritten by the snapshot: %r' % res
+
+
+def test_agent_reenable_keeps_edits_made_to_a_shared_service_while_disabled(tmp_path):
+    res = _run(tmp_path, 'agent-reenable')
+    assert res['status'] == 200, res
+    assert res['routers'] == ['app'], res
+    assert res['urls'] == ['http://10.0.0.9:80'], 'the edit was overwritten by the snapshot: %r' % res
+
+
+def test_a_router_with_the_same_name_in_another_file_still_counts(tmp_path):
+    res = _run(tmp_path, 'same-name')
+    assert res['status'] == 200, res
+    assert res['routers'] == [], res
+    assert res['services'] == ['app'], 'app in b.yml still uses it: %r' % res
+
+
+def test_other_files_are_read_only_when_needed_and_only_once(tmp_path):
+    res = _run(tmp_path, 'lazy')
+    assert res['shared'] is True, res
+    assert res['first'] == [], 'shared within a.yml, b.yml should not be read: %r' % res
+    assert res['reads'] == ['b.yml'], 'b.yml should be read once and reused: %r' % res
