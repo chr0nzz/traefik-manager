@@ -1503,7 +1503,7 @@ Test a git backup remote during first-time setup by running `git ls-remote`. `40
 
 ### `GET /api/ping`
 
-Send a `HEAD` request to a route's domain from the TM server and return latency. Backs the route health check in the Routes tab.
+Send a `HEAD` request to a route's domain from the TM server and return latency. Backs the route health check in the Routes tab. If the server drops the `HEAD` request, or answers it with 405, 501, 502, 503 or 504, the check is repeated once with a `GET` (the body is not downloaded) and that answer is used.
 
 | Query param | Description |
 |---|---|
