@@ -138,9 +138,10 @@ def _head(target, head, get=None):
     if get is None or answer[1] not in UNREACHABLE + NO_HEAD:
         return answer
     try:
-        return _get(target, get)
+        retried = _get(target, get)
     except Exception:
         return answer
+    return answer if retried[1] in UNREACHABLE + NO_HEAD else retried
 
 
 def _clients(head, get):

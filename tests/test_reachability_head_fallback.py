@@ -99,6 +99,15 @@ def test_a_502_on_both_methods_is_still_down():
         s.close()
 
 
+def test_a_get_that_is_not_supported_keeps_the_head_answer():
+    s = _Server(head=502, get=501)
+    try:
+        r = _probe(s.url)
+        assert r['ok'] is False and r['status_code'] == 502, r
+    finally:
+        s.close()
+
+
 def test_a_working_head_does_not_send_a_get():
     s = _Server(head=200, get=200)
     try:
