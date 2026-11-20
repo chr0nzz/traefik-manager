@@ -16,12 +16,14 @@ from core import i18n as _i18n
 POOL_WORKERS = 6
 UNREACHABLE = (502, 503, 504)
 REDIRECTS   = (301, 302, 303, 307, 308)
+NO_HEAD     = (405, 501)
 TIMEOUT     = 5
 DETAIL_MAX  = 100
 CAUSE_DEPTH = 10
 _SSL_NOISE  = re.compile(r'^\s*\[[^\]]*\]\s*|\s*\(_ssl\.c:\d+\)\s*$')
 
 _DOWN_KINDS    = ('closed', 'refused', 'no_route', 'network', 'reset')
+_HEAD_DROPPED  = ('closed', 'reset')
 _UNKNOWN_KINDS = ('dns', 'read_timeout', 'timeout')
 _KIND_ORDER    = ('dns', 'closed', 'refused', 'no_route', 'network', 'reset', 'tls', 'read_timeout', 'timeout')
 _KIND_ERRNOS   = {errno.ECONNREFUSED: 'refused', errno.EHOSTUNREACH: 'no_route', errno.ENETUNREACH: 'network',
@@ -103,16 +105,49 @@ def _is_http(url: str) -> bool:
     return str(url or '').startswith(('http://', 'https://'))
 
 
-def _head(target, head):
-    t0   = time.monotonic()
-    resp = head(target, timeout=TIMEOUT, allow_redirects=False, verify=False)
-    ms   = round((time.monotonic() - t0) * 1000)
+def _answer(resp, t0):
+    ms = round((time.monotonic() - t0) * 1000)
     location = ''
     try:
         location = resp.headers.get('Location', '') or ''
     except Exception:
         pass
     return ms, resp.status_code, location
+
+
+def _get(target, get):
+    t0   = time.monotonic()
+    resp = get(target, timeout=TIMEOUT, allow_redirects=False, verify=False, stream=True)
+    try:
+        return _answer(resp, t0)
+    finally:
+        close = getattr(resp, 'close', None)
+        if callable(close):
+            close()
+
+
+def _head(target, head, get=None):
+    t0 = time.monotonic()
+    try:
+        resp = head(target, timeout=TIMEOUT, allow_redirects=False, verify=False)
+    except Exception as exc:
+        if get is None or _failure_kind(_causes(exc)) not in _HEAD_DROPPED:
+            raise
+        return _get(target, get)
+    answer = _answer(resp, t0)
+    if get is None or answer[1] not in UNREACHABLE + NO_HEAD:
+        return answer
+    try:
+        retried = _get(target, get)
+    except Exception:
+        return answer
+    return answer if retried[1] in UNREACHABLE + NO_HEAD else retried
+
+
+def _clients(head, get):
+    if head is None:
+        return requests.head, get or requests.get
+    return head, get
 
 
 def _causes(exc) -> list:
@@ -242,11 +277,11 @@ def redirect_reason(host: str, why) -> str:
                               'and the backend is unreachable', host=host)
 
 
-def _backend(fallback, ssrf, head):
+def _backend(fallback, ssrf, head, get=None):
     if not (fallback and _is_http(fallback) and ssrf(fallback)):
         return 'unknown', None, ('no_address', '')
     try:
-        ms, code, _loc = _head(fallback, head)
+        ms, code, _loc = _head(fallback, head, get)
     except Exception as exc:
         verdict = _classify_failure(exc)
         why = (_down_why(exc), '') if verdict == 'down' else ('error', failure_reason(exc, fallback))
@@ -256,16 +291,18 @@ def _backend(fallback, ssrf, head):
     return 'up', {'ok': True, 'latency_ms': ms, 'status_code': code, 'via_target': True}, ('', '')
 
 
-def backend_state(url: str, ssrf=None, head=None) -> str:
-    verdict, _alt, _why = _backend(url, ssrf or ssrf_ok, head or requests.head)
+def backend_state(url: str, ssrf=None, head=None, get=None) -> str:
+    head, get = _clients(head, get)
+    verdict, _alt, _why = _backend(url, ssrf or ssrf_ok, head, get)
     return verdict
 
 
-def pool_health(urls, ssrf=None, head=None):
+def pool_health(urls, ssrf=None, head=None, get=None):
     clean = [str(u) for u in (urls or []) if str(u).startswith(('http://', 'https://'))]
     if len(clean) < 2:
         return None
-    probe = backend_state if (ssrf is None and head is None) else (lambda u: backend_state(u, ssrf, head))
+    probe = backend_state if (ssrf is None and head is None and get is None) \
+        else (lambda u: backend_state(u, ssrf, head, get))
     with ThreadPoolExecutor(max_workers=min(POOL_WORKERS, len(clean))) as pool:
         verdicts = list(pool.map(probe, clean))
     if 'unknown' in verdicts:
@@ -283,20 +320,20 @@ def pool_result(pool: dict) -> dict:
     return out
 
 
-def probe(url: str, fallback: str = '', ssrf=None, head=None, verify_backend: bool = True) -> dict:
+def probe(url: str, fallback: str = '', ssrf=None, head=None, verify_backend: bool = True, get=None) -> dict:
     ssrf = ssrf or ssrf_ok
-    head = head or requests.head
+    head, get = _clients(head, get)
 
     try:
-        ms, code, location = _head(url, head)
+        ms, code, location = _head(url, head, get)
     except Exception as primary_err:
-        verdict, alt, _why = _backend(fallback, ssrf, head)
+        verdict, alt, _why = _backend(fallback, ssrf, head, get)
         if alt:
             return alt
         return {'ok': False, 'error': failure_reason(primary_err, url), 'latency_ms': None}
 
     if code in UNREACHABLE:
-        verdict, alt, _why = _backend(fallback, ssrf, head)
+        verdict, alt, _why = _backend(fallback, ssrf, head, get)
         if alt:
             return alt
         return {'ok': False, 'latency_ms': ms, 'status_code': code,
@@ -304,7 +341,7 @@ def probe(url: str, fallback: str = '', ssrf=None, head=None, verify_backend: bo
 
     auth_host = redirect_target_host(url, code, location) if verify_backend else ''
     if auth_host:
-        verdict, alt, why = _backend(fallback, ssrf, head)
+        verdict, alt, why = _backend(fallback, ssrf, head, get)
         if alt:
             return alt
         if verdict == 'down':

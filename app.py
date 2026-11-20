@@ -2580,10 +2580,10 @@ def api_route_ping():
     self_domain = (settings.get('self_route') or {}).get('domain', '').strip().lower()
     if self_domain and host.lower() == self_domain:
         return jsonify({'ok': True, 'latency_ms': 0, 'status_code': 200, 'self': True})
-    pool = _reach.pool_health(request.args.getlist('servers'), ssrf=_ssrf_ok, head=requests.head)
+    pool = _reach.pool_health(request.args.getlist('servers'), ssrf=_ssrf_ok, head=requests.head, get=requests.get)
     if pool:
         return jsonify(_reach.pool_result(pool))
-    return jsonify(_reach.probe(url, fallback, ssrf=_ssrf_ok, head=requests.head))
+    return jsonify(_reach.probe(url, fallback, ssrf=_ssrf_ok, head=requests.head, get=requests.get))
 
 def _apr1_hash(password: str, salt: str) -> str:
     import hashlib
