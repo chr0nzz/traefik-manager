@@ -1731,14 +1731,14 @@ def _stream_service_proto(name: str) -> str:
     return ''
 
 
-def _remove_router(config, sec, name, ledger, agent_id=''):
+def _remove_router(config, sec, name, ledger, agent_id='', others=()):
     s = config.get(sec) or {}
     routers = s.get('routers') or {}
     if name not in routers:
         return False
     svc = str((routers[name] or {}).get('service') or '').strip()
     del routers[name]
-    if svc and 'services' in s and svc in s['services'] and not _service_shared(config, svc, name):
+    if svc and 'services' in s and svc in s['services'] and not _service_shared(config, svc, name, others):
         del s['services'][svc]
         _drop_owned_transport(config, svc, ledger, agent_id)
         if sec == 'http':
@@ -5578,13 +5578,45 @@ def _service_in_disabled_snapshots(target: str, exclude_router: str) -> bool:
     return False
 
 
-def _service_shared(config: dict, svc_name: str, exclude_router: str) -> bool:
-    target = _svc_key(svc_name)
+class _LazyConfigs:
+    def __init__(self, loaders):
+        self._loaders = list(loaders)
+        self._loaded = []
+
+    def __iter__(self):
+        i = 0
+        while True:
+            if i < len(self._loaded):
+                yield self._loaded[i]
+            elif self._loaders:
+                self._loaded.extend(self._loaders.pop(0)())
+                continue
+            else:
+                return
+            i += 1
+
+
+def _other_configs(agent=None, current='', cache=None):
+    if agent:
+        def _agent_others():
+            return [c for f, c in _agent_load_configs(agent).items() if f != current]
+        return _LazyConfigs([_agent_others])
+    cache = {} if cache is None else cache
+
+    def _loader(p):
+        def _load():
+            if p not in cache:
+                cache[p] = load_config(p)
+            return [cache[p]]
+        return _load
+    return _LazyConfigs(_loader(p) for p in env.CONFIG_PATHS if p != current)
+
+
+def _service_used_in(cfg: dict, target: str, exclude_router: str = '') -> bool:
     for sec in ('http', 'tcp', 'udp'):
-        sec_cfg = config.get(sec) or {}
-        routers = sec_cfg.get('routers') or {}
-        for rn, rd in routers.items():
-            if rn == exclude_router or not isinstance(rd, dict):
+        sec_cfg = cfg.get(sec) or {}
+        for rn, rd in (sec_cfg.get('routers') or {}).items():
+            if (exclude_router and rn == exclude_router) or not isinstance(rd, dict):
                 continue
             if _svc_key(rd.get('service', '')) == target:
                 return True
@@ -5594,7 +5626,16 @@ def _service_shared(config: dict, svc_name: str, exclude_router: str) -> bool:
             for child in _composite_children(sd):
                 if _svc_key(child) == target:
                     return True
-    return _service_in_disabled_snapshots(target, exclude_router)
+    return False
+
+
+def _service_shared(config: dict, svc_name: str, exclude_router: str, others=()) -> bool:
+    target = _svc_key(svc_name)
+    if _service_used_in(config, target, exclude_router):
+        return True
+    if _service_in_disabled_snapshots(target, exclude_router):
+        return True
+    return any(_service_used_in(cfg, target) for cfg in others)
 
 
 def _disabled_key(disabled, full_id, plain_id, prefix=''):
@@ -5611,6 +5652,16 @@ def _disabled_key(disabled, full_id, plain_id, prefix=''):
 
 def _save_disabled_routes(settings, disabled):
     _save_edit_dicts(disabled_routes=disabled)
+
+
+def _put_service_back(config: dict, proto: str, svc_name: str, svc) -> bool:
+    if not svc:
+        return False
+    services = config.setdefault(proto, {}).setdefault('services', {})
+    if svc_name in services:
+        return False
+    services[svc_name] = svc
+    return True
 
 
 def _toggle_route(route_id: str, enable: bool):
@@ -5639,8 +5690,7 @@ def _toggle_route(route_id: str, enable: bool):
         config      = load_config(target_path)
         config.setdefault(proto, {}).setdefault('routers', {})[rname] = router
         if svc_cf == cf or not svc_cf:
-            if svc:
-                config.setdefault(proto, {}).setdefault('services', {})[svc_name] = svc
+            _put_service_back(config, proto, svc_name, svc)
             create_backup(target_path)
             save_config(_strip_empty_sections(config), target_path)
         else:
@@ -5648,10 +5698,9 @@ def _toggle_route(route_id: str, enable: bool):
             save_config(_strip_empty_sections(config), target_path)
             svc_path   = _resolve_or_fallback(svc_cf)
             svc_config = load_config(svc_path)
-            if svc:
-                svc_config.setdefault(proto, {}).setdefault('services', {})[svc_name] = svc
-            create_backup(svc_path)
-            save_config(_strip_empty_sections(svc_config), svc_path)
+            if _put_service_back(svc_config, proto, svc_name, svc):
+                create_backup(svc_path)
+                save_config(_strip_empty_sections(svc_config), svc_path)
     else:
         proto        = None
         router       = None
@@ -5678,7 +5727,10 @@ def _toggle_route(route_id: str, enable: bool):
                 break
         if proto is None:
             return
-        if _service_shared(svc_config, svc_name, rname):
+        _cache = {}
+        others = _other_configs(current=target_path, cache=_cache)
+        shared = _service_shared(svc_config, svc_name, rname, others)
+        if shared:
             svc = dict(svc_config.get(proto, {}).get('services', {}).get(svc_name, {}))
         else:
             svc = dict(svc_config.get(proto, {}).get('services', {}).pop(svc_name, {}))
@@ -5686,14 +5738,16 @@ def _toggle_route(route_id: str, enable: bool):
             for p in env.CONFIG_PATHS:
                 if p == target_path:
                     continue
-                other = load_config(p)
+                other = _cache[p] if p in _cache else load_config(p)
                 if svc_name in other.get(proto, {}).get('services', {}):
-                    svc      = dict(other[proto]['services'].pop(svc_name))
                     svc_path = p
-                    svc      = _restore_go_templates(svc, _file_template_map(p))
-                    other_stripped = _strip_empty_sections(other)
-                    create_backup(p)
-                    save_config(other_stripped, p)
+                    if shared:
+                        svc = dict(other[proto]['services'][svc_name])
+                    else:
+                        svc = dict(other[proto]['services'].pop(svc_name))
+                        create_backup(p)
+                        save_config(_strip_empty_sections(other), p)
+                    svc = _restore_go_templates(svc, _file_template_map(p))
                     break
         _target_map = _file_template_map(target_path)
         router = _restore_go_templates(router, _target_map)
@@ -5880,8 +5934,7 @@ def _toggle_route_agent(agent: dict, agent_id: str, route_id: str, enable: bool)
         all_cfgs = _agent_load_configs(agent)
         config   = all_cfgs.get(cf, {})
         config.setdefault(proto, {}).setdefault('routers', {})[rname] = router
-        if svc:
-            config.setdefault(proto, {}).setdefault('services', {})[svc_name] = svc
+        _put_service_back(config, proto, svc_name, svc)
         _agent_write_config(agent, cf, config)
     else:
         all_cfgs = _agent_load_configs(agent)
@@ -5893,7 +5946,8 @@ def _toggle_route_agent(agent: dict, agent_id: str, route_id: str, enable: bool)
                 if rname in routers:
                     router   = dict(routers.pop(rname))
                     svc_name = _svc_key(router.get('service', rname))
-                    if _service_shared(config, svc_name, rname):
+                    others = [c for f, c in all_cfgs.items() if f != fname]
+                    if _service_shared(config, svc_name, rname, others):
                         svc = dict(config.get(prot, {}).get('services', {}).get(svc_name, {}))
                     else:
                         svc = dict(config.get(prot, {}).get('services', {}).pop(svc_name, {}))
@@ -6755,6 +6809,7 @@ def save_entry():
                 save_config(_strip_empty_sections(old_config), orig_target_path)
 
         if is_edit and plain_original_id:
+            others = _other_configs(agent, cfg_filename if agent else target_path)
             for sec in ('http', 'tcp', 'udp'):
                 s = config.get(sec, {})
                 old_routers = s.get('routers', {})
@@ -6762,7 +6817,7 @@ def save_entry():
                 if plain_original_id != router_name and plain_original_id in old_routers:
                     del old_routers[plain_original_id]
                 if (old_svc and old_svc != service_name and 'services' in s and old_svc in s['services']
-                        and not _service_shared(config, old_svc, plain_original_id)):
+                        and not _service_shared(config, old_svc, plain_original_id, others)):
                     del s['services'][old_svc]
             if hdr_preset_present and plain_original_id != router_name:
                 rn_hdr_name = f"{plain_original_id}-headers"
@@ -7135,8 +7190,9 @@ def delete_entry(router_id):
             for fname, config in all_configs.items():
                 if config_file_raw and fname != config_file_raw:
                     continue
+                others = [c for f, c in all_configs.items() if f != fname]
                 for sec in ('http', 'tcp', 'udp'):
-                    if _remove_router(config, sec, plain_id, _del_ledger, agent_id):
+                    if _remove_router(config, sec, plain_id, _del_ledger, agent_id, others):
                         _del_ledger_changed = True
                         _agent_write_config(agent, fname, config)
                         deleted = True
@@ -7148,10 +7204,14 @@ def delete_entry(router_id):
                 search_paths = [_resolve_config_path(config_file_raw) or env.CONFIG_PATH]
             else:
                 search_paths = env.CONFIG_PATHS
+            _cache = {}
             for target_path in search_paths:
-                config = load_config(target_path)
+                if target_path not in _cache:
+                    _cache[target_path] = load_config(target_path)
+                config = _cache[target_path]
+                others = _other_configs(current=target_path, cache=_cache)
                 for sec in ('http', 'tcp', 'udp'):
-                    if _remove_router(config, sec, plain_id, _del_ledger, agent_id):
+                    if _remove_router(config, sec, plain_id, _del_ledger, agent_id, others):
                         _del_ledger_changed = True
                         create_backup(target_path)
                         save_config(_strip_empty_sections(config), target_path)
