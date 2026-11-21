@@ -102,7 +102,7 @@ Saving the form keeps anything already set under `http3`, such as `advertisedPor
 
 Ticking the box is not enough on its own. HTTP/3 also needs:
 
-- **UDP published on the same port.** A Docker mapping such as `443:443` only covers TCP, so add `443:443/udp` as well. The compose file written by the [tm CLI installer](tm-cli.md) publishes TCP only.
+- **UDP published on the same port.** A Docker mapping such as `443:443` only covers TCP, so add `443:443/udp` as well. The compose file written by the [tm CLI installer](tm-cli.md) publishes UDP only when you answer yes to its HTTP/3 question.
 - **UDP open in every firewall** between clients and Traefik, including the host firewall and any port forward on your router.
 - **TLS on the router.** Only routers with TLS can be reached over HTTP/3. Other routers keep working over TCP.
 - **No UDP entrypoint on the same port.** Traefik does not start when a `/udp` entrypoint listens on the port an HTTP/3 entrypoint uses.
