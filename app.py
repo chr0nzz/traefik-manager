@@ -2957,8 +2957,16 @@ def api_static_section_update():
                 else:
                     ep.pop('http', None)
                 if payload.get('http3'):
-                    if not isinstance(ep.get('http3'), dict):
-                        ep['http3'] = {}
+                    h3_blk = ep.get('http3') if isinstance(ep.get('http3'), dict) else {}
+                    if 'http3_advertised_port' in payload:
+                        h3_port = str(payload.get('http3_advertised_port') or '').strip()
+                        if h3_port:
+                            if not (h3_port.isascii() and h3_port.isdigit() and 1 <= int(h3_port) <= 65535):
+                                return jsonify({'error': gettext('HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s', value=repr(h3_port))}), 400
+                            h3_blk['advertisedPort'] = int(h3_port)
+                        else:
+                            h3_blk.pop('advertisedPort', None)
+                    ep['http3'] = h3_blk
                 else:
                     ep.pop('http3', None)
                 if payload.get('as_default'):

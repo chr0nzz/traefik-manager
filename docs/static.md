@@ -132,7 +132,7 @@ entryPoints:
 
 ### Advertised port
 
-Traefik advertises the port it listens on. When clients reach it on a different port, for example when Docker maps the public port `443` to `8443` in the container (`443:8443` and `443:8443/udp`), set `http3.advertisedPort` to the public port in the raw YAML editor:
+Traefik advertises the port it listens on. When clients reach it on a different port, for example when Docker maps the public port `443` to `8443` in the container (`443:8443` and `443:8443/udp`), enter the public port in **HTTP/3 advertised port**, under the checkbox. It writes `http3.advertisedPort`:
 
 ```yaml
 entryPoints:

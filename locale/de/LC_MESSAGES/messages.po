@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-11 14:43-0500\n"
+"POT-Creation-Date: 2026-11-21 19:02+0000\n"
 "PO-Revision-Date: 2026-09-29 20:36+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/traefik-manager/"
@@ -5412,6 +5412,16 @@ msgstr "HTTP/3 angekündigt"
 #, python-brace-format
 msgid "HTTP/3 advertised on port {port}"
 msgstr "HTTP/3 auf Port {port} angekündigt"
+
+#, python-format
+msgid ""
+"HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "HTTP/3 advertised port {optional}"
+msgstr ""
 
 #. Used in the browser
 #, python-brace-format
@@ -11718,6 +11728,13 @@ msgid ""
 "The name Traefik sends as SNI and checks the backend certificate against. "
 "Use it when the backend serves its certificate for a different name than the "
 "target address. Adds serverName via a named serversTransport."
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"The port clients use for HTTP/3 when it differs from the one Traefik listens "
+"on, for example behind a Docker port mapping. Empty advertises the "
+"entrypoint port."
 msgstr ""
 
 #. Used in the browser

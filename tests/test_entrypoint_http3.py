@@ -26,10 +26,14 @@ def static_file():
         fh.write(original)
 
 
-def _save(client, path, raw, http3):
-    res = client.post('/api/static/section', headers=HDR, json={
+def _section(client, raw, http3, **extra):
+    return client.post('/api/static/section', headers=HDR, json={
         'action': 'edit', 'section': 'entrypoints', 'name': 'websecure', 'old_name': 'websecure',
-        'data': dict(FORM, http3=http3), 'current_raw': raw})
+        'data': dict(FORM, http3=http3, **extra), 'current_raw': raw})
+
+
+def _save(client, path, raw, http3, **extra):
+    res = _section(client, raw, http3, **extra)
     assert res.status_code == 200, res.data
     saved = client.post('/api/static/config', headers=HDR, json={'content': res.get_json()['raw']})
     assert saved.status_code == 200, saved.data
@@ -53,3 +57,44 @@ def test_ticking_http3_replaces_bare_key(client, static_file):
 
 def test_unticking_http3_removes_block(client, static_file):
     assert 'http3' not in _save(client, static_file, WITH_PORT, False)
+
+
+def test_the_advertised_port_is_written(client, static_file):
+    ep = _save(client, static_file, NO_HTTP3, True, http3_advertised_port='443')
+    assert ep['http3'] == {'advertisedPort': 443}
+
+
+def test_the_advertised_port_replaces_the_old_one(client, static_file):
+    ep = _save(client, static_file, WITH_PORT, True, http3_advertised_port=' 443 ')
+    assert ep['http3'] == {'advertisedPort': 443}
+
+
+def test_the_advertised_port_replaces_a_bare_key(client, static_file):
+    ep = _save(client, static_file, BARE_KEY, True, http3_advertised_port='443')
+    assert ep['http3'] == {'advertisedPort': 443}
+
+
+def test_a_number_from_an_api_client_is_accepted(client, static_file):
+    ep = _save(client, static_file, NO_HTTP3, True, http3_advertised_port=8443)
+    assert ep['http3'] == {'advertisedPort': 8443}
+
+
+@pytest.mark.parametrize('empty', ['', '  ', None])
+def test_an_empty_advertised_port_removes_it(client, static_file, empty):
+    ep = _save(client, static_file, WITH_PORT, True, http3_advertised_port=empty)
+    assert ep['http3'] == {}
+
+
+def test_unticking_http3_drops_the_advertised_port_too(client, static_file):
+    assert 'http3' not in _save(client, static_file, WITH_PORT, False, http3_advertised_port='443')
+
+
+@pytest.mark.parametrize('bad', ['0', '65536', '-1', '44.3', 'https', '4 43', True])
+def test_a_bad_advertised_port_is_refused(client, static_file, bad):
+    with open(static_file) as fh:
+        before = fh.read()
+    res = _section(client, WITH_PORT, True, http3_advertised_port=bad)
+    assert res.status_code == 400
+    assert 'advertised port' in res.get_json()['error']
+    with open(static_file) as fh:
+        assert fh.read() == before
