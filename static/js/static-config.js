@@ -1117,15 +1117,16 @@ async function _applyStaticSectionChange(body) {
         headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
         body: JSON.stringify({ ...body, current_raw: _staticRawContent }),
     });
-    if (!res.ok) { showToast(await _errText(res, t('Could not update the static config')), 'error'); return; }
+    if (!res.ok) { showToast(await _errText(res, t('Could not update the static config')), 'error'); return false; }
     const data = await res.json();
-    if (!data.ok) { showToast(data.error || data.message || t('Could not update the static config'), 'error'); return; }
+    if (!data.ok) { showToast(data.error || data.message || t('Could not update the static config'), 'error'); return false; }
     _staticParsedData = data.parsed || {};
     _staticRawContent = data.raw || '';
     _renderStaticSections(_staticParsedData);
     if (_staticMonaco) _staticMonaco.setValue(_staticRawContent);
     _staticSectionEdits = true;
     _markStaticPending();
+    return true;
 }
 
 async function submitStaticSection(section) {
@@ -1166,8 +1167,7 @@ async function submitStaticSection(section) {
     }
     if (!name) { showToast(t('Name is required'), 'error'); return; }
     try {
-        await _applyStaticSectionChange({ action, section, name, old_name, data: payload });
-        closeStaticForm(section);
+        if (await _applyStaticSectionChange({ action, section, name, old_name, data: payload })) closeStaticForm(section);
     } catch(e) { showToast(_netErrText(e, t('Could not update the static config')), 'error'); }
 }
 
@@ -1811,8 +1811,7 @@ async function submitStaticProvider() {
     const action   = _staticEditState.name ? 'edit' : 'add';
     const old_name = _staticEditState.name || '';
     try {
-        await _applyStaticSectionChange({ action, section: 'providers', name: type, old_name, data: { yaml_config } });
-        closeStaticForm('providers');
+        if (await _applyStaticSectionChange({ action, section: 'providers', name: type, old_name, data: { yaml_config } })) closeStaticForm('providers');
     } catch(e) { showToast(_netErrText(e, t('Could not update the static config')), 'error'); }
 }
 
@@ -1882,7 +1881,7 @@ async function saveStaticSingleSection(section) {
         };
     }
     try {
-        await _applyStaticSectionChange({ action: 'set', section, name: '', data });
+        if (!await _applyStaticSectionChange({ action: 'set', section, name: '', data })) return;
         const save = document.querySelector(`.sc-save[data-sc-save="${section}"]`);
         if (save) save.style.display = 'none';
     } catch(e) { showToast(_netErrText(e, t('Could not update the static config')), 'error'); }
