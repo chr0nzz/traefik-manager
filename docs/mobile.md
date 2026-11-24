@@ -21,11 +21,20 @@ A `forwardAuth` middleware in front of Traefik Manager blocks the app before Tra
 
 <MobileRelease />
 
-<a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager">
-  <img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/GetItOnGooglePlay.svg" alt="Get it on Google Play" style="height:50px;width:auto" />
-</a>
+<p>
+  <a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager"><img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/GetItOnGooglePlay.svg" alt="Get it on Google Play" style="height:50px;width:auto;display:inline-block" /></a>
+  <a href="https://apps.apple.com/us/app/traefik-manager/id6826725061"><img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/DownloadOnTheAppStore.svg" alt="Download on the App Store" style="height:50px;width:auto;display:inline-block" /></a>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/chr0nzz/traefik-manager-mobile"><img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/GetItOnObtainium.png" alt="Get it on Obtainium" style="height:50px;width:auto;display:inline-block" /></a>
+</p>
 
-**iPhone and iPad:** [Download on the App Store](https://apps.apple.com/us/app/traefik-manager/id6826725061).
+| Source | Platform | How |
+|---|---|---|
+| Google Play | Android | [Install from Google Play](https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager) |
+| App Store | iPhone and iPad | [Download on the App Store](https://apps.apple.com/us/app/traefik-manager/id6826725061) |
+| Obtainium | Android | [Add to Obtainium](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/chr0nzz/traefik-manager-mobile), or in Obtainium tap **Add App** and paste `https://github.com/chr0nzz/traefik-manager-mobile` |
+| GitHub | Android | APK from the [latest release](https://github.com/chr0nzz/traefik-manager-mobile/releases/latest) |
+
+Obtainium installs the APK from GitHub releases and updates it when a new release is published.
 
 ---
 
