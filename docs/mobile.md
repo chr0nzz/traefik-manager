@@ -22,9 +22,9 @@ A `forwardAuth` middleware in front of Traefik Manager blocks the app before Tra
 <MobileRelease />
 
 <p>
-  <a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager"><img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/GetItOnGooglePlay.svg" alt="Get it on Google Play" style="height:50px;width:auto;display:inline-block" /></a>
-  <a href="https://apps.apple.com/us/app/traefik-manager/id6826725061"><img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/DownloadOnTheAppStore.svg" alt="Download on the App Store" style="height:50px;width:auto;display:inline-block" /></a>
-  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/chr0nzz/traefik-manager-mobile"><img src="https://github.com/chr0nzz/traefik-manager/raw/main/static/icons/GetItOnObtainium.png" alt="Get it on Obtainium" style="height:50px;width:auto;display:inline-block" /></a>
+  <a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager"><img src="/images/get-it-on-google-play.svg" alt="Get it on Google Play" style="height:50px;width:auto;display:inline-block" /></a>
+  <a href="https://apps.apple.com/us/app/traefik-manager/id6826725061"><img src="/images/download-on-the-app-store.svg" alt="Download on the App Store" style="height:50px;width:auto;display:inline-block" /></a>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/chr0nzz/traefik-manager-mobile"><img src="/images/get-it-on-obtainium.png" alt="Get it on Obtainium" style="height:50px;width:auto;display:inline-block" /></a>
 </p>
 
 | Source | Platform | How |
