@@ -213,7 +213,7 @@ function _atkCard(c) {
         + (c.go ? '<button type="button" class="sig-explore" data-atk="' + _esc(c.go) + '" title="' + _esc(c.goTip || '') + '">'
             + _esc(c.goLabel) + ' <i class="ph-bold ph-arrow-right"></i></button>' : '')
         + '</div>'
-        + '<div class="sig-metric"><span class="sig-total">' + c.total + '</span>'
+        + '<div class="sig-metric"><span class="sig-total">' + tmDigits(c.total) + '</span>'
         + '<span class="sig-flags">' + (c.flags || '') + '</span></div>'
         + (c.sub || '')
         + (c.body || '')
@@ -231,7 +231,7 @@ function _atkRow(r) {
         + '<span class="lg-kind">' + _esc(r.kind || '') + '</span></span>'
         + (r.bad || '<span class="lg-bad"></span>')
         + '<span class="lg-n">' + _sdNum(r.n) + '</span>'
-        + '<span class="lg-pct">' + r.pct + '%</span>'
+        + '<span class="lg-pct">' + tmDigits(r.pct) + '%</span>'
         + '</div>';
 }
 

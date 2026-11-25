@@ -5,7 +5,7 @@ function rmRenderGroupsList() {
     if (!list) return;
     const groups = _rmConfig.custom_groups || [];
     const gc = document.getElementById('rmGroupsCount');
-    if (gc) gc.textContent = groups.length;
+    if (gc) gc.textContent = tmDigits(groups.length);
     if (!groups.length) {
         list.innerHTML = `<div class="text-xs py-3 text-center" style="color:var(--muted)">${th('No custom groups yet.')}</div>`;
         return;
@@ -61,7 +61,7 @@ window.rmRenderHiddenList = function() {
     const cnt = document.getElementById('rmHiddenCount');
     if (!el) return;
     const ids = rmHiddenIds();
-    if (cnt) cnt.textContent = ids.length;
+    if (cnt) cnt.textContent = tmDigits(ids.length);
     if (!ids.length) {
         el.innerHTML = `<div class="lg-note">${th('Nothing is hidden. Use the pencil on a card to hide it.')}</div>`;
         return;
@@ -707,7 +707,7 @@ function dashBuildPod(entry) {
     pod.innerHTML = '<div class="sig-ep-head">'
         + '<i class="ph-fill ' + _esc(meta.icon) + ' sig-ep-headic"></i>'
         + '<span class="sc-sec-label">' + _esc(_dskGroupLabel(meta.name)) + '</span>'
-        + '<span class="d-n">' + list.length + '</span>'
+        + '<span class="d-n">' + tmDigits(list.length) + '</span>'
         + '<span class="sc-sec-rule"></span>'
         + _dskAlarm(meta, down, warn)
         + '</div>'
