@@ -86,7 +86,7 @@ function setTabCount(tab, n) {
     if (_tabCounts[tab] === val) return;
     _tabCounts[tab] = val;
     const el = document.querySelector('#sbtn-' + tab + ' .side-nav-count');
-    if (el) { el.textContent = val ?? ''; el.style.display = val === null ? 'none' : ''; }
+    if (el) { el.textContent = val === null ? '' : tmDigits(val); el.style.display = val === null ? 'none' : ''; }
     else buildSideNav();
 }
 
@@ -121,7 +121,7 @@ function buildSideNav() {
         item.innerHTML = `<i class="ph-bold ${def.icon}"></i>`
             + `<span class="side-nav-label">${_esc(def.label)}</span>`
             + `<span class="side-nav-count"${count === null || count === undefined ? ' style="display:none"' : ''}>`
-            + `${count === null || count === undefined ? '' : _esc(count)}</span>`;
+            + `${count === null || count === undefined ? '' : _esc(tmDigits(count))}</span>`;
         return item;
     };
 
@@ -452,7 +452,7 @@ function renderDetailBlock(title, icon, bodyHtml, badgeHtml) {
 }
 
 function _dCount(n) {
-    return `<span class="d-n">${n}</span>`;
+    return `<span class="d-n">${tmDigits(n)}</span>`;
 }
 
 async function _errText(res, fallback) {
@@ -1205,8 +1205,8 @@ function _geoPanelHtml(panelId, countryData, activeCC, onClearAttr) {
         return `<div class="lg-row${sel ? ' lg-row-on' : ''}" role="button" tabindex="0" onclick="${panelId}_click(${_jsArg(cc)})" title="${thn('{name} - {count} request, {pct}%', '{name} - {count} requests, {pct}%', d.count, { name: d.name, count: tmHtml(d.count.toLocaleString()), pct: tmHtml(pct) })}">
             <span class="lg-id"><span class="lg-g">${_flagEmoji(cc)}</span><span class="lg-name">${_esc(d.name)}</span></span>
             <span class="lg-bad"></span>
-            <span class="lg-n">${d.count.toLocaleString()}</span>
-            <span class="lg-pct">${pct}%</span>
+            <span class="lg-n">${tmDigits(d.count.toLocaleString())}</span>
+            <span class="lg-pct">${tmDigits(pct)}%</span>
         </div>`;
     }).join('');
     const clear = activeCC
@@ -1217,7 +1217,7 @@ function _geoPanelHtml(panelId, countryData, activeCC, onClearAttr) {
         <section class="sig-ep lg-geo">
             <div class="sig-ep-head">
                 <i class="ph-fill ph-globe-hemisphere-west sig-ep-headic"></i>
-                <span class="sc-sec-label">${thc('heading', 'Geography')}</span><span class="d-n">${entries.length}</span>
+                <span class="sc-sec-label">${thc('heading', 'Geography')}</span><span class="d-n">${tmDigits(entries.length)}</span>
                 <span class="sc-sec-rule"></span>
                 ${clear || `<span class="sig-ep-tot">${thn('{count} country', '{count} countries', entries.length, { count: entries.length.toLocaleString() })}</span>`}
             </div>

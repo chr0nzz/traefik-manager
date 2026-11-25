@@ -1101,7 +1101,7 @@ function _sdRender(model) {
                 strN  ? tn('{n} stream', '{n} stream', strN, { n: _sdNum(strN) }) : '',
                 idleN ? tn('{n} idle', '{n} idle', idleN, { n: _sdNum(idleN) }) : '',
             ].filter(Boolean).join(' · ');
-            barEl.innerHTML = `<div class="sig-ep-head"><i class="ph-fill ph-door-open sig-ep-headic"></i><span class="sc-sec-label">${th('Entry Points')}</span><span class="d-n">${eps.length}</span><span class="sc-sec-rule"></span><span class="sig-ep-tot">${_esc(summary)}</span></div><div class="sig-ep-rows" id="entrypointsList">${eps.map(ep => _sdEpRow(ep, info.get(ep.name))).join('')}</div>`;
+            barEl.innerHTML = `<div class="sig-ep-head"><i class="ph-fill ph-door-open sig-ep-headic"></i><span class="sc-sec-label">${th('Entry Points')}</span><span class="d-n">${tmDigits(eps.length)}</span><span class="sc-sec-rule"></span><span class="sig-ep-tot">${_esc(summary)}</span></div><div class="sig-ep-rows" id="entrypointsList">${eps.map(ep => _sdEpRow(ep, info.get(ep.name))).join('')}</div>`;
         } else {
             barEl.innerHTML = '';
         }

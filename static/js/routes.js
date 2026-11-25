@@ -974,7 +974,7 @@ function _tmRouteCard(app, i, opts) {
     if (proto === 'http' && simpleHost && allDomains.length) {
         valRows = allDomains.slice(0, 2).map((d, n) =>
             `<div class="tm-val tm-val-host"><i class="ph-bold ph-globe-simple" ${n ? 'style="opacity:0"' : ''}></i><span class="tm-v">${_esc(d)}</span>` +
-            (allDomains.length > 2 && n === 1 ? `<span class="tm-more" title="${_esc(allDomains.join(', '))}">+${allDomains.length - 2}</span>` : '') +
+            (allDomains.length > 2 && n === 1 ? `<span class="tm-more" title="${_esc(allDomains.join(', '))}">+${tmDigits(allDomains.length - 2)}</span>` : '') +
             _tmCopy(d) + '</div>').join('');
     } else if (servedRule) {
         valRows = `<div class="tm-val tm-val-rule"><i class="ph-bold ph-brackets-curly"></i><span class="tm-v" title="${_esc(servedRule)}">${_esc(servedRule)}</span>${_tmCopy(servedRule)}</div>`;
@@ -983,7 +983,7 @@ function _tmRouteCard(app, i, opts) {
     }
     const nBackends = (app.servers || []).length;
     valRows += `<div class="tm-val tm-val-target"><i class="ph-bold ph-arrow-elbow-down-right"></i><span class="tm-v">${_esc(app.target)}</span>` +
-        (nBackends > 1 ? `<span class="tm-more" title="${thn('{n} backend, load balanced', '{n} backends, load balanced', nBackends)}">+${nBackends - 1}</span>` : '') +
+        (nBackends > 1 ? `<span class="tm-more" title="${thn('{n} backend, load balanced', '{n} backends, load balanced', nBackends)}">+${tmDigits(nBackends - 1)}</span>` : '') +
         _tmCopy(app.target) + '</div>';
 
     const eps = (app.entryPoints || []).join(' \u00b7 ');

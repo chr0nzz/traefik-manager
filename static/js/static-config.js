@@ -1291,7 +1291,7 @@ function _scPluginRow(name, p) {
 function _renderStaticEntrypoints(eps) {
     const keys = Object.keys(eps || {});
     const cnt  = document.getElementById('staticEpCount');
-    if (cnt) cnt.textContent = keys.length;
+    if (cnt) cnt.textContent = tmDigits(keys.length);
     const el = document.getElementById('staticEpList');
     if (!el) return;
     if (!keys.length) {
@@ -1304,7 +1304,7 @@ function _renderStaticEntrypoints(eps) {
 function _renderStaticResolvers(resolvers) {
     const keys = Object.keys(resolvers || {});
     const cnt  = document.getElementById('staticResolverCount');
-    if (cnt) cnt.textContent = keys.length;
+    if (cnt) cnt.textContent = tmDigits(keys.length);
     const el = document.getElementById('staticResolverList');
     if (!el) return;
     if (!keys.length) {
@@ -1320,7 +1320,7 @@ function _renderStaticPlugins(plugins, localPlugins) {
     Object.entries(localPlugins || {}).forEach(([n, p]) => { all[n] = { ...(p || {}), _local: true }; });
     const keys = Object.keys(all);
     const cnt  = document.getElementById('staticPluginCount');
-    if (cnt) cnt.textContent = keys.length;
+    if (cnt) cnt.textContent = tmDigits(keys.length);
     const el = document.getElementById('staticPluginList');
     if (!el) return;
     if (!keys.length) {
@@ -1682,7 +1682,7 @@ function _scRenderProviderRows(prov) {
     if (!el) return;
     const configured = Object.keys(prov).filter(k => k !== 'providersThrottleDuration' && _scHas(prov[k]));
     const cnt = document.getElementById('staticProviderCount');
-    if (cnt) cnt.textContent = configured.length;
+    if (cnt) cnt.textContent = tmDigits(configured.length);
     const rows = [];
     const hasDocker = _scHas(prov.docker);
     const d = prov.docker || {};

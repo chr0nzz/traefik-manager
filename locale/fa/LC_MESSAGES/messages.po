@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-11-25 02:03-0500\n"
-"PO-Revision-Date: 2026-11-25 07:24+0000\n"
+"PO-Revision-Date: 2026-11-25 15:37+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Persian <https://hosted.weblate.org/projects/traefik-manager/"
 "web-app/fa/>\n"
@@ -413,7 +413,7 @@ msgid "(0 to 1, optional)"
 msgstr "(0 تا 1، اختیاری)"
 
 msgid "(32+ character random string)"
-msgstr "(رشته تصادفی 32+ نویسه‌ای)"
+msgstr "(رشته تصادفی ۳۲+ نویسه‌ای)"
 
 msgid "(Name: claim, one per line)"
 msgstr "(Name: claim، یکی در هر خط)"
@@ -572,55 +572,55 @@ msgstr "/v1/alerts مقدار {altStatus} برمی‌گرداند"
 #, python-brace-format
 msgid "0 of the last {fetched} line are {bits}"
 msgid_plural "0 of the last {fetched} lines are {bits}"
-msgstr[0] "0 مورد از {fetched} خط آخر {bits} است"
-msgstr[1] "0 مورد از {fetched} خط آخر {bits} است"
+msgstr[0] "۰ مورد از {fetched} خط آخر {bits} است"
+msgstr[1] "۰ مورد از {fetched} خط آخر {bits} است"
 
 #. Used in the browser
 #, python-brace-format
 msgid "0 of {n} retained alert matches every filter at once"
 msgid_plural "0 of {n} retained alerts match every filter at once"
 msgstr[0] ""
-"0 مورد از {n} هشدار نگه‌داشته‌شده با همه فیلترها به‌طور هم‌زمان مطابقت دارد"
+"۰ مورد از {n} هشدار نگه‌داشته‌شده با همه فیلترها به‌طور هم‌زمان مطابقت دارد"
 msgstr[1] ""
-"0 مورد از {n} هشدار نگه‌داشته‌شده با همه فیلترها به‌طور هم‌زمان مطابقت دارد"
+"۰ مورد از {n} هشدار نگه‌داشته‌شده با همه فیلترها به‌طور هم‌زمان مطابقت دارد"
 
 msgid "0 selected"
-msgstr "0 انتخاب‌شده"
+msgstr "۰ انتخاب‌شده"
 
 #. Used in the browser
 #, python-brace-format
 msgid "0/{n} server up"
 msgid_plural "0/{n} servers up"
-msgstr[0] "0/{n} سرور سالم"
-msgstr[1] "0/{n} سرور سالم"
+msgstr[0] "۰/{n} سرور سالم"
+msgstr[1] "۰/{n} سرور سالم"
 
 #. Used in the browser
 #, python-brace-format
 msgid "1 cell = {each}"
-msgstr "1 خانه = {each}"
+msgstr "۱ خانه = {each}"
 
 #. Used in the browser
 #, python-brace-format
 msgid "1 cell = {round}"
-msgstr "1 خانه = {round}"
+msgstr "۱ خانه = {round}"
 
 msgid "1 hour"
-msgstr "1 ساعت"
+msgstr "۱ ساعت"
 
 msgid "1 minute"
-msgstr "1 دقیقه"
+msgstr "۱ دقیقه"
 
 msgid "1 year"
-msgstr "1 سال"
+msgstr "۱ سال"
 
 msgid "1.2.3.4 or 1.2.3.0/24"
 msgstr "1.2.3.4 یا 1.2.3.0/24"
 
 msgid "15 minutes"
-msgstr "15 دقیقه"
+msgstr "۱۵ دقیقه"
 
 msgid "24 hours"
-msgstr "24 ساعت"
+msgstr "۲۴ ساعت"
 
 #. Used in the browser
 msgid "2FA disabled"
@@ -631,10 +631,10 @@ msgid "2FA enabled successfully!"
 msgstr "2FA با موفقیت فعال شد."
 
 msgid "30 days"
-msgstr "30 روز"
+msgstr "۳۰ روز"
 
 msgid "30 minutes"
-msgstr "30 دقیقه"
+msgstr "۳۰ دقیقه"
 
 #. Used in the browser
 msgid "301 permanent"
@@ -645,13 +645,13 @@ msgid "302 temporary"
 msgstr "302 موقت"
 
 msgid "4 hours"
-msgstr "4 ساعت"
+msgstr "۴ ساعت"
 
 msgid "5 minutes"
-msgstr "5 دقیقه"
+msgstr "۵ دقیقه"
 
 msgid "7 days"
-msgstr "7 روز"
+msgstr "۷ روز"
 
 #, python-format
 msgid ""
@@ -971,8 +971,8 @@ msgid ""
 "Active decisions after expired rows are dropped. The cursor walk stops at "
 "200 pages of 1000, so 200,000 is the undocumented ceiling"
 msgstr ""
-"اقدام‌های فعال پس از کنار گذاشتن ردیف‌های منقضی‌شده. پیمایش cursor در 200 صفحه "
-"1000تایی متوقف می‌شود، بنابراین 200,000 سقف مستندنشده است"
+"اقدام‌های فعال پس از کنار گذاشتن ردیف‌های منقضی‌شده. پیمایش cursor در ۲۰۰ صفحه "
+"۱۰۰۰تایی متوقف می‌شود، بنابراین ۲۰۰٬۰۰۰ سقف مستندنشده است"
 
 #. Used in the browser
 msgid ""
@@ -1650,11 +1650,11 @@ msgstr ""
 "مدیریت کنید."
 
 msgid "At least 8 characters"
-msgstr "دست‌کم 8 نویسه"
+msgstr "دست‌کم ۸ نویسه"
 
 msgid "At least 8 characters. A long passphrase beats a short complicated one."
 msgstr ""
-"دست‌کم 8 نویسه. یک عبارت عبور طولانی بهتر از یک گذرواژه کوتاه و پیچیده است."
+"دست‌کم ۸ نویسه. یک عبارت عبور طولانی بهتر از یک گذرواژه کوتاه و پیچیده است."
 
 #. Used in the browser
 msgid "At least one domain is required"
@@ -1833,8 +1833,8 @@ msgstr[1] "بک‌اند کاهش‌یافته، {up} از {n} سرور سالم
 #, python-brace-format
 msgid "Backend down, 0 of {n} server up"
 msgid_plural "Backend down, 0 of {n} servers up"
-msgstr[0] "بک‌اند از دسترس خارج، 0 از {n} سرور سالم"
-msgstr[1] "بک‌اند از دسترس خارج، 0 از {n} سرور سالم"
+msgstr[0] "بک‌اند از دسترس خارج، ۰ از {n} سرور سالم"
+msgstr[1] "بک‌اند از دسترس خارج، ۰ از {n} سرور سالم"
 
 #. Used in the browser
 msgid "Backend of"
@@ -1860,8 +1860,8 @@ msgstr "سرویس بک‌اند"
 #, python-brace-format
 msgid "Backend unreachable - 0 of {n} server up"
 msgid_plural "Backend unreachable - 0 of {n} servers up"
-msgstr[0] "بک‌اند در دسترس نیست - 0 از {n} سرور سالم"
-msgstr[1] "بک‌اند در دسترس نیست - 0 از {n} سرور سالم"
+msgstr[0] "بک‌اند در دسترس نیست - ۰ از {n} سرور سالم"
+msgstr[1] "بک‌اند در دسترس نیست - ۰ از {n} سرور سالم"
 
 #. Used in the browser
 #, python-brace-format
@@ -3472,7 +3472,7 @@ msgid "Default theme"
 msgstr "پوسته پیش‌فرض"
 
 msgid "Defaults: port 8090, 300 requests per minute per IP."
-msgstr "پیش‌فرض‌ها: پورت 8090، 300 درخواست در دقیقه برای هر IP."
+msgstr "پیش‌فرض‌ها: پورت 8090، ۳۰۰ درخواست در دقیقه برای هر IP."
 
 #. Used in the browser
 msgctxt "button"
@@ -4204,7 +4204,7 @@ msgstr ""
 "همچنان کار می‌کنند."
 
 msgid "Enter 6-digit code to confirm"
-msgstr "برای تأیید، کد 6 رقمی را وارد کنید"
+msgstr "برای تأیید، کد ۶ رقمی را وارد کنید"
 
 #. Used in the browser
 msgid "Enter a LAPI URL first"
@@ -4246,11 +4246,11 @@ msgid "Enter at least one domain."
 msgstr "دست‌کم یک دامنه وارد کنید."
 
 msgid "Enter the 6-digit code from your authenticator app."
-msgstr "کد 6 رقمی برنامه احراز هویت خود را وارد کنید."
+msgstr "کد ۶ رقمی برنامه احراز هویت خود را وارد کنید."
 
 #. Used in the browser
 msgid "Enter the 6-digit code."
-msgstr "کد 6 رقمی را وارد کنید."
+msgstr "کد ۶ رقمی را وارد کنید."
 
 #. Used in the browser
 msgid "Enter the Traefik API URL."
@@ -4509,7 +4509,7 @@ msgid "Expected status"
 msgstr "وضعیت مورد انتظار"
 
 msgid "Expired, or expiring within 30 days"
-msgstr "منقضی‌شده یا رو به انقضا در 30 روز آینده"
+msgstr "منقضی‌شده یا رو به انقضا در ۳۰ روز آینده"
 
 msgctxt "button"
 msgid "Expiring"
@@ -6347,7 +6347,7 @@ msgid "Max idle conns per host {optional}"
 msgstr "حداکثر اتصال‌های بیکار به ازای هر میزبان {optional}"
 
 msgid "Maximum of 10 API keys reached"
-msgstr "به حداکثر 10 کلید API رسیده‌اید"
+msgstr "به حداکثر ۱۰ کلید API رسیده‌اید"
 
 #. Used in the browser
 msgctxt "group"
@@ -6728,22 +6728,22 @@ msgid "New password"
 msgstr "گذرواژه جدید"
 
 msgid "New password (min 8 chars)"
-msgstr "گذرواژه جدید (حداقل 8 نویسه)"
+msgstr "گذرواژه جدید (حداقل ۸ نویسه)"
 
 #. Used in the browser
 msgid ""
 "New password must be 72 bytes or fewer, which is the bcrypt limit. Accented "
 "and non-Latin characters take more than one byte each."
 msgstr ""
-"گذرواژه جدید باید حداکثر 72 بایت باشد که محدودیت bcrypt است. نویسه‌های دارای "
+"گذرواژه جدید باید حداکثر ۷۲ بایت باشد که محدودیت bcrypt است. نویسه‌های دارای "
 "اعراب و غیرلاتین هر کدام بیش از یک بایت می‌گیرند."
 
 msgid "New password must be at least 8 characters and at most 72 bytes."
-msgstr "گذرواژه جدید باید حداقل 8 نویسه و حداکثر 72 بایت باشد."
+msgstr "گذرواژه جدید باید حداقل ۸ نویسه و حداکثر ۷۲ بایت باشد."
 
 #. Used in the browser
 msgid "New password must be at least 8 characters."
-msgstr "گذرواژه جدید باید حداقل 8 نویسه باشد."
+msgstr "گذرواژه جدید باید حداقل ۸ نویسه باشد."
 
 msgid "Next server"
 msgstr "سرور بعدی"
@@ -7890,12 +7890,12 @@ msgid ""
 "Password must be 72 bytes or fewer, which is the bcrypt limit. Accented and "
 "non-Latin characters take more than one byte each."
 msgstr ""
-"گذرواژه باید 72 بایت یا کمتر باشد که محدودیت bcrypt است. نویسه‌های اعراب‌دار و "
+"گذرواژه باید ۷۲ بایت یا کمتر باشد که محدودیت bcrypt است. نویسه‌های اعراب‌دار و "
 "غیرلاتین هر کدام بیش از یک بایت می‌گیرند."
 
 #. Used in the browser
 msgid "Password must be at least 8 characters."
-msgstr "گذرواژه باید دست‌کم 8 نویسه باشد."
+msgstr "گذرواژه باید دست‌کم ۸ نویسه باشد."
 
 msgid "Password saved"
 msgstr "گذرواژه ذخیره شد"
@@ -8006,7 +8006,7 @@ msgid ""
 "Per-device keys used by the mobile app via X-Api-Key header. Up to 10 keys."
 msgstr ""
 "کلیدهای مخصوص هر دستگاه که اپ موبایل از طریق هدر X-Api-Key استفاده می‌کند. "
-"حداکثر 10 کلید."
+"حداکثر ۱۰ کلید."
 
 #. Used in the browser
 msgctxt "tooltip"
@@ -8717,7 +8717,7 @@ msgid "Reload now"
 msgstr "بارگذاری دوباره"
 
 msgid "Remember me for 7 days"
-msgstr "به خاطر سپردن ورود به مدت 7 روز"
+msgstr "به خاطر سپردن ورود به مدت ۷ روز"
 
 msgctxt "label"
 msgid "Remote"
@@ -9357,17 +9357,17 @@ msgstr[1] ""
 #, python-format
 msgid "Route %(name)s backend is down, 0 of %(num)d server up"
 msgid_plural "Route %(name)s backend is down, 0 of %(num)d servers up"
-msgstr[0] "بک‌اند مسیر %(name)s از دسترس خارج است، 0 از %(num)d سرور سالم"
-msgstr[1] "بک‌اند مسیر %(name)s از دسترس خارج است، 0 از %(num)d سرور سالم"
+msgstr[0] "بک‌اند مسیر %(name)s از دسترس خارج است، ۰ از %(num)d سرور سالم"
+msgstr[1] "بک‌اند مسیر %(name)s از دسترس خارج است، ۰ از %(num)d سرور سالم"
 
 #, python-format
 msgid "Route %(name)s backend is down, 0 of %(num)d server up (%(servers)s)"
 msgid_plural ""
 "Route %(name)s backend is down, 0 of %(num)d servers up (%(servers)s)"
 msgstr[0] ""
-"بک‌اند مسیر %(name)s از دسترس خارج است، 0 از %(num)d سرور سالم (%(servers)s)"
+"بک‌اند مسیر %(name)s از دسترس خارج است، ۰ از %(num)d سرور سالم (%(servers)s)"
 msgstr[1] ""
-"بک‌اند مسیر %(name)s از دسترس خارج است، 0 از %(num)d سرور سالم (%(servers)s)"
+"بک‌اند مسیر %(name)s از دسترس خارج است، ۰ از %(num)d سرور سالم (%(servers)s)"
 
 #, python-format
 msgid "Route %(name)s created"
@@ -9864,7 +9864,7 @@ msgid ""
 "Scan the QR code with Google Authenticator or any TOTP app, then enter the 6-"
 "digit code to confirm."
 msgstr ""
-"کد QR را با Google Authenticator یا هر برنامه TOTP اسکن کنید، سپس کد 6 رقمی "
+"کد QR را با Google Authenticator یا هر برنامه TOTP اسکن کنید، سپس کد ۶ رقمی "
 "را برای تأیید وارد کنید."
 
 #. Used in the browser
@@ -10797,16 +10797,16 @@ msgstr "وضعیت: {entry}"
 msgid ""
 "Step 1 - Paste the static config snippet from the %(traefik_plugin_page)s"
 msgstr ""
-"گام 1 - قطعه پیکربندی ایستا را از %(traefik_plugin_page)s جای‌گذاری کنید"
+"گام ۱ - قطعه پیکربندی ایستا را از %(traefik_plugin_page)s جای‌گذاری کنید"
 
 msgid ""
 "Step 2 - Paste the middleware snippet and edit the settings for your needs"
 msgstr ""
-"گام 2 - قطعه میان‌افزار را جای‌گذاری کنید و تنظیمات را مطابق نیاز خود ویرایش "
+"گام ۲ - قطعه میان‌افزار را جای‌گذاری کنید و تنظیمات را مطابق نیاز خود ویرایش "
 "کنید"
 
 msgid "Step 3 - Choose which config file the middleware is written to"
-msgstr "گام 3 - انتخاب کنید میان‌افزار در کدام فایل پیکربندی نوشته شود"
+msgstr "گام ۳ - انتخاب کنید میان‌افزار در کدام فایل پیکربندی نوشته شود"
 
 #. Used in the browser
 #, python-brace-format
@@ -13616,8 +13616,8 @@ msgstr[1] "بک‌اند کاهش‌یافته، {up} از {n} سرور سالم
 #, python-brace-format
 msgid "backend down, 0 of {n} server up"
 msgid_plural "backend down, 0 of {n} servers up"
-msgstr[0] "بک‌اند از دسترس خارج، 0 از {n} سرور سالم"
-msgstr[1] "بک‌اند از دسترس خارج، 0 از {n} سرور سالم"
+msgstr[0] "بک‌اند از دسترس خارج، ۰ از {n} سرور سالم"
+msgstr[1] "بک‌اند از دسترس خارج، ۰ از {n} سرور سالم"
 
 #. Used in the browser
 #, python-brace-format
@@ -16933,13 +16933,13 @@ msgid ""
 "{label} must be 72 bytes or fewer, which is the bcrypt limit. Accented and "
 "non-Latin characters take more than one byte each."
 msgstr ""
-"{label} باید حداکثر 72 بایت باشد که محدودیت bcrypt است. نویسه‌های دارای اعراب "
+"{label} باید حداکثر ۷۲ بایت باشد که محدودیت bcrypt است. نویسه‌های دارای اعراب "
 "و غیرلاتین هر کدام بیش از یک بایت می‌گیرند."
 
 #. Used in the browser
 #, python-brace-format
 msgid "{label} must be at least 8 characters."
-msgstr "{label} باید حداقل 8 نویسه باشد."
+msgstr "{label} باید حداقل ۸ نویسه باشد."
 
 #. Used in the browser
 #, python-brace-format
@@ -17267,15 +17267,15 @@ msgstr[1] "{n} گواهی"
 #, python-brace-format
 msgid "{n} certificate expiring within 30 days"
 msgid_plural "{n} certificates expiring within 30 days"
-msgstr[0] "{n} گواهی که ظرف 30 روز منقضی می‌شود"
-msgstr[1] "{n} گواهی که ظرف 30 روز منقضی می‌شود"
+msgstr[0] "{n} گواهی که ظرف ۳۰ روز منقضی می‌شود"
+msgstr[1] "{n} گواهی که ظرف ۳۰ روز منقضی می‌شود"
 
 #. Used in the browser
 #, python-brace-format
 msgid "{n} certificate expiring within 7 days"
 msgid_plural "{n} certificates expiring within 7 days"
-msgstr[0] "{n} گواهی که ظرف 7 روز منقضی می‌شود"
-msgstr[1] "{n} گواهی که ظرف 7 روز منقضی می‌شود"
+msgstr[0] "{n} گواهی که ظرف ۷ روز منقضی می‌شود"
+msgstr[1] "{n} گواهی که ظرف ۷ روز منقضی می‌شود"
 
 #. Used in the browser
 #, python-brace-format
@@ -18343,8 +18343,8 @@ msgstr[1] "{visible_count} از {fetched} خط"
 #, python-brace-format
 msgid "{vslow} request took longer than 2 seconds"
 msgid_plural "{vslow} requests took longer than 2 seconds"
-msgstr[0] "{vslow} درخواست بیش از 2 ثانیه طول کشید"
-msgstr[1] "{vslow} درخواست بیش از 2 ثانیه طول کشید"
+msgstr[0] "{vslow} درخواست بیش از ۲ ثانیه طول کشید"
+msgstr[1] "{vslow} درخواست بیش از ۲ ثانیه طول کشید"
 
 #. Used in the browser
 #, python-brace-format
