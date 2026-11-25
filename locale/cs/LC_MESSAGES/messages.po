@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-25 02:03-0500\n"
+"POT-Creation-Date: 2026-11-25 13:27-0500\n"
 "PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/traefik-manager/"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2);\n"
 "Generated-By: Babel 2.18.0\n"
-"X-Generator: Weblate 2026.12.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -4360,6 +4359,12 @@ msgstr "Vstupní bod"
 #, python-format
 msgid "Entrypoint \"%(entrypoint)s\" not found in static config"
 msgstr "Vstupní bod „%(entrypoint)s“ nebyl ve statické konfiguraci nalezen"
+
+#, python-format
+msgid ""
+"Entrypoint address must be a port such as :443, optionally with a host and /"
+"tcp or /udp, got %(value)s"
+msgstr ""
 
 #. Used in the browser
 msgid "Entrypoint labels"
@@ -10772,9 +10777,12 @@ msgstr[2] "Přeskočeno {n} neplatných položek:"
 #, python-brace-format
 msgid "Skipped {n} route that is not defined in a config file."
 msgid_plural "Skipped {n} routes that are not defined in a config file."
-msgstr[0] "Přeskočena {n} trasa, která není definována v konfiguračním souboru."
-msgstr[1] "Přeskočeny {n} trasy, které nejsou definovány v konfiguračním souboru."
-msgstr[2] "Přeskočeno {n} tras, které nejsou definovány v konfiguračním souboru."
+msgstr[0] ""
+"Přeskočena {n} trasa, která není definována v konfiguračním souboru."
+msgstr[1] ""
+"Přeskočeny {n} trasy, které nejsou definovány v konfiguračním souboru."
+msgstr[2] ""
+"Přeskočeno {n} tras, které nejsou definovány v konfiguračním souboru."
 
 #. Used in the browser
 msgctxt "button"

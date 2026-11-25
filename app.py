@@ -2741,6 +2741,18 @@ def trigger_traefik_restart() -> tuple:
     return False, gettext('Unknown RESTART_METHOD: %(method)s', method=repr(method))
 
 
+_EP_ADDRESS_RE = re.compile(r'^(?:(\[[0-9A-Fa-f:.]+\]|[A-Za-z0-9._-]*):)?(\d{1,5})(?:/(tcp|udp))?$', re.IGNORECASE)
+
+
+def _normalize_ep_address(addr: str):
+    m = _EP_ADDRESS_RE.match(addr)
+    if not m or not 1 <= int(m.group(2)) <= 65535:
+        return None
+    host = m.group(1) or ''
+    proto = f'/{m.group(3).lower()}' if m.group(3) else ''
+    return f'{host}:{int(m.group(2))}{proto}'
+
+
 @app.route('/api/static/available')
 @login_required
 def api_static_available():
@@ -2911,7 +2923,10 @@ def api_static_section_update():
                     ep = {}
                 addr = str(payload.get('address', '')).strip()
                 if addr:
-                    ep['address'] = DoubleQuotedScalarString(addr)
+                    norm = _normalize_ep_address(addr)
+                    if norm is None:
+                        return jsonify({'error': gettext('Entrypoint address must be a port such as :443, optionally with a host and /tcp or /udp, got %(value)s', value=repr(addr))}), 400
+                    ep['address'] = DoubleQuotedScalarString(norm)
                 elif 'address' not in ep:
                     ep['address'] = ''
                 http_blk = ep.get('http') if isinstance(ep.get('http'), dict) else {}

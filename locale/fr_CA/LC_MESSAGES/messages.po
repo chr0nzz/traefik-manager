@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-25 02:03-0500\n"
+"POT-Creation-Date: 2026-11-25 13:27-0500\n"
 "PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French (Canada) <https://hosted.weblate.org/projects/traefik-"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 "Generated-By: Babel 2.18.0\n"
-"X-Generator: Weblate 2026.12.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -4408,6 +4407,12 @@ msgid "Entrypoint \"%(entrypoint)s\" not found in static config"
 msgstr ""
 "Point d’entrée « %(entrypoint)s » introuvable dans la configuration statique"
 
+#, python-format
+msgid ""
+"Entrypoint address must be a port such as :443, optionally with a host and /"
+"tcp or /udp, got %(value)s"
+msgstr ""
+
 #. Used in the browser
 msgid "Entrypoint labels"
 msgstr "Labels des points d’entrée"
@@ -5489,8 +5494,8 @@ msgstr "HTTP/3 annoncé sur le port {port}"
 msgid ""
 "HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s"
 msgstr ""
-"Le port HTTP/3 annoncé doit être un nombre entier de 1 à 65535, valeur reçue "
-": %(value)s"
+"Le port HTTP/3 annoncé doit être un nombre entier de 1 à 65535, valeur "
+"reçue : %(value)s"
 
 #. Used in the browser
 #, python-brace-format
@@ -11938,8 +11943,8 @@ msgid ""
 "entrypoint port."
 msgstr ""
 "Le port que les clients utilisent pour HTTP/3 lorsqu’il diffère de celui sur "
-"lequel Traefik écoute, par exemple derrière un mappage de ports Docker. Vide "
-": le port du point d’entrée est annoncé."
+"lequel Traefik écoute, par exemple derrière un mappage de ports Docker. "
+"Vide : le port du point d’entrée est annoncé."
 
 #. Used in the browser
 msgid "The primary view"
