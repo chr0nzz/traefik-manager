@@ -30,6 +30,9 @@ const FAPOOL = 'GHSA-hrpp-p4fc-wwf8';
 const FPRACE = 'GHSA-ww7c-q3mv-xx22';
 const NEGLEAK = 'GHSA-xv5x-242w-7hf7';
 const SNI = 'GHSA-fh26-gfpp-7xxx';
+const BROTLI = 'GHSA-3rh5-223h-cpwr';
+const TDOT = 'GHSA-9657-c2gv-wjpj';
+const REDACT = 'GHSA-42x2-976f-ph52';
 
 const cases = [
     ['2.11.56', CRIT, 'last affected 2.x, critical HTTP/3 advisory outranks the rest'],
@@ -37,14 +40,18 @@ const cases = [
     ['2.11.58', FAPOOL, 'last 2.x hit only by the 2.11.60 advisory'],
     ['2.11.59', FAPOOL, 'last 2.x before the ForwardAuth pool fix'],
     ['2.11.60', NEGLEAK, 'last 2.x before the Negotiate transport leak fix'],
-    ['2.11.61', null, 'patched 2.x'],
+    ['2.11.61', TDOT, 'last 2.x hit only by the trailing-dot TLS options advisory'],
+    ['2.11.63', TDOT, 'last 2.x before the trailing-dot TLS options fix'],
+    ['2.11.64', null, 'patched 2.x'],
     ['3.7.12',  CRIT, 'last 3.x hit by the critical one'],
     ['3.7.13',  NEGO, 'last 3.x hit by the 3.7.14 advisories'],
     ['3.7.14',  FAPOOL, 'first 3.x past the 3.7.14 advisories is still hit by the ForwardAuth pool'],
     ['3.7.15',  FAPOOL, 'last 3.x before the ForwardAuth pool fix'],
     ['3.7.16',  NEGLEAK, 'last 3.x before the Negotiate transport leak fix'],
-    ['3.7.17',  null, 'current 3.x is clean'],
-    ['3.8.0',   null, 'later minor is clean'],
+    ['3.7.17',  BROTLI, 'first 3.x past the Negotiate leak is still hit by the Brotli advisory, which outranks the two medium ones'],
+    ['3.7.19',  BROTLI, 'last 3.x before the 3.7.20 advisories'],
+    ['3.7.20',  null, 'current 3.7 is clean'],
+    ['3.8.0',   null, '3.8.0 is clean'],
     ['4.0.0',   null, 'later major is clean'],
     ['3.0.0',   CRIT, 'every 3.x before 3.7.13 is hit by the critical one'],
     ['2.10.9',  'CVE-2026-88009', '2.x below 2.11 is only hit by the rootless-target advisory'],
@@ -96,6 +103,18 @@ const rangeChecks = [
     ['3.7.14', SNI,     false, 'SNI check bypass is fixed in 3.7.14'],
     ['2.11.57',SNI,     true,  'SNI check bypass is fixed in 2.11.58'],
     ['2.11.58',SNI,     false, 'SNI check bypass is fixed in 2.11.58'],
+    ['3.0.0',  BROTLI,  true,  'Brotli memory exhaustion covers every 3.x before 3.7.20'],
+    ['3.7.19', BROTLI,  true,  'Brotli memory exhaustion is fixed in 3.7.20'],
+    ['3.7.20', BROTLI,  false, 'Brotli memory exhaustion is fixed in 3.7.20'],
+    ['2.11.63',BROTLI,  false, 'v2 has no Brotli compression'],
+    ['3.7.19', REDACT,  true,  'provider credential redaction is fixed in 3.7.20'],
+    ['3.7.20', REDACT,  false, 'provider credential redaction is fixed in 3.7.20'],
+    ['2.11.63',REDACT,  false, 'v2 has none of the unredacted options'],
+    ['3.7.19', TDOT,    true,  'trailing-dot TLS options bypass is fixed in 3.7.20'],
+    ['3.7.20', TDOT,    false, 'trailing-dot TLS options bypass is fixed in 3.7.20'],
+    ['2.0.0',  TDOT,    true,  'trailing-dot TLS options bypass covers all of v2 before 2.11.64'],
+    ['2.11.64',TDOT,    false, 'trailing-dot TLS options bypass is fixed in 2.11.64'],
+    ['3.8.0',  TDOT,    false, '3.8.0 is patched'],
 ];
 
 let failed = 0;
