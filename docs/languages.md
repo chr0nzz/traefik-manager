@@ -22,10 +22,13 @@ Traefik Manager speaks more than English. Every page, dialog, tooltip, toast, no
 | Português | `pt` |
 | Português (Brasil) | `pt-BR` |
 | Русский | `ru` |
+| فارسی | `fa` |
 | 한국어 | `ko` |
 | 中文 (简体) | `zh-Hans` |
 
 The source text is Canadian English. The United Kingdom and United States variants only change spelling. A string that has no translation yet falls back to English.
+
+Persian is shown right to left: the whole layout mirrors, while code, YAML, hostnames, addresses and paths stay left to right.
 
 ## Picking a language
 
