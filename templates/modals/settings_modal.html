@@ -3,7 +3,7 @@
 
         <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--border);flex-shrink:0;">
             <div class="flex items-center gap-2">
-                <button id="settingsMobileBack" onclick="settingsMobileBack()" style="display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--muted);align-items:center;margin-right:2px" class="flex items-center">
+                <button id="settingsMobileBack" onclick="settingsMobileBack()" style="display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--muted);align-items:center;margin-inline-end:2px" class="flex items-center">
                     <i class="ph-bold ph-caret-left" style="font-size:16px"></i>
                 </button>
                 <i class="ph-fill ph-gear" style="color:var(--blue);font-size:18px;" id="settingsGearIcon"></i>
@@ -32,15 +32,15 @@
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('system', 'tabs')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-monitor" style="color:var(--muted)"></i>{{ _('Tab Visibility') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-monitor" style="color:var(--muted)"></i>{{ _('Tab Visibility') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('system', 'paths')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-folder-open" style="color:var(--muted)"></i>{{ _('File Paths') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-folder-open" style="color:var(--muted)"></i>{{ _('File Paths') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('system', 'crowdsec')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-shield" style="color:var(--muted)"></i>CrowdSec</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-shield" style="color:var(--muted)"></i>CrowdSec</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row" id="msb-notifications-mobile" onclick="switchSettingsPanel('notifications')">
@@ -54,35 +54,35 @@
                         <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                     </button>
                     <button class="settings-mobile-row is-child" onclick="openSettingsChild('static', 'entrypoints')">
-                        <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-door-open" style="color:var(--muted)"></i>{{ pgettext('button', 'Entrypoints') }}</span>
+                        <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-door-open" style="color:var(--muted)"></i>{{ pgettext('button', 'Entrypoints') }}</span>
                         <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                     </button>
                     <button class="settings-mobile-row is-child" onclick="openSettingsChild('static', 'providers')">
-                        <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-cloud" style="color:var(--muted)"></i>{{ pgettext('button', 'Providers') }}</span>
+                        <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-cloud" style="color:var(--muted)"></i>{{ pgettext('button', 'Providers') }}</span>
                         <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                     </button>
                     <button class="settings-mobile-row is-child" onclick="openSettingsChild('static', 'resolvers')">
-                        <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-certificate" style="color:var(--muted)"></i>{{ _('Cert Resolvers') }}</span>
+                        <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-certificate" style="color:var(--muted)"></i>{{ _('Cert Resolvers') }}</span>
                         <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                     </button>
                     <button class="settings-mobile-row is-child" onclick="openSettingsChild('static', 'api')">
-                        <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-gauge" style="color:var(--muted)"></i>{{ _('API & Dashboard') }}</span>
+                        <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-gauge" style="color:var(--muted)"></i>{{ _('API & Dashboard') }}</span>
                         <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                     </button>
                     <button class="settings-mobile-row is-child" onclick="openSettingsChild('static', 'log')">
-                        <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-scroll" style="color:var(--muted)"></i>{{ pgettext('button', 'Logging') }}</span>
+                        <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-scroll" style="color:var(--muted)"></i>{{ pgettext('button', 'Logging') }}</span>
                         <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                     </button>
                     <button class="settings-mobile-row is-child" onclick="openSettingsChild('static', 'observability')">
-                        <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-heartbeat" style="color:var(--muted)"></i>{{ pgettext('button', 'Observability') }}</span>
+                        <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-heartbeat" style="color:var(--muted)"></i>{{ pgettext('button', 'Observability') }}</span>
                         <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                     </button>
                     <button class="settings-mobile-row is-child" onclick="openSettingsChild('static', 'system')">
-                        <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-gear-six" style="color:var(--muted)"></i>{{ pgettext('button', 'System') }}</span>
+                        <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-gear-six" style="color:var(--muted)"></i>{{ pgettext('button', 'System') }}</span>
                         <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                     </button>
                     <button class="settings-mobile-row is-child" onclick="openSettingsChild('static', 'plugins')">
-                        <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-plug" style="color:var(--muted)"></i>{{ pgettext('button', 'Plugins') }}</span>
+                        <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-plug" style="color:var(--muted)"></i>{{ pgettext('button', 'Plugins') }}</span>
                         <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                     </button>
                 </div>
@@ -91,19 +91,19 @@
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('backups', 'routes')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-arrows-split" style="color:var(--muted)"></i>{{ _('Dynamic Config') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-arrows-split" style="color:var(--muted)"></i>{{ _('Dynamic Config') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('backups', 'static')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-file-code" style="color:var(--muted)"></i>{{ _('Static Config') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-file-code" style="color:var(--muted)"></i>{{ _('Static Config') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('backups', 'certs')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-shield-check" style="color:var(--muted)"></i>{{ pgettext('button', 'Certificates') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-shield-check" style="color:var(--muted)"></i>{{ pgettext('button', 'Certificates') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('backups', 'git')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-git-branch" style="color:var(--muted)"></i>{{ pgettext('button', 'Git') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-git-branch" style="color:var(--muted)"></i>{{ pgettext('button', 'Git') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <div class="settings-mobile-section">{{ pgettext('label', 'Remote') }}</div>
@@ -121,19 +121,19 @@
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('ui', 'general')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-sliders-horizontal" style="color:var(--muted)"></i>{{ pgettext('button', 'General') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-sliders-horizontal" style="color:var(--muted)"></i>{{ pgettext('button', 'General') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('ui', 'dashboard')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-squares-four" style="color:var(--muted)"></i>{{ pgettext('button', 'Dashboard') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-squares-four" style="color:var(--muted)"></i>{{ pgettext('button', 'Dashboard') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('ui', 'navbar')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-navigation-arrow" style="color:var(--muted)"></i>{{ pgettext('button', 'Navbar') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-navigation-arrow" style="color:var(--muted)"></i>{{ pgettext('button', 'Navbar') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('ui', 'tabs')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-tabs" style="color:var(--muted)"></i>{{ pgettext('button', 'Tabs') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-tabs" style="color:var(--muted)"></i>{{ pgettext('button', 'Tabs') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row" id="msb-auth-mobile" onclick="switchSettingsPanel('auth')">
@@ -141,15 +141,15 @@
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('auth', 'password')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-lock-key" style="color:var(--muted)"></i>{{ _('Password & 2FA') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-lock-key" style="color:var(--muted)"></i>{{ _('Password & 2FA') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('auth', 'apikeys')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-key" style="color:var(--muted)"></i>{{ _('API Keys') }}</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-key" style="color:var(--muted)"></i>{{ _('API Keys') }}</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row is-child" onclick="openSettingsChild('auth', 'oidc')">
-                    <span style="display:flex;align-items:center;gap:12px;padding-left:20px;"><i class="ph-bold ph-fingerprint" style="color:var(--muted)"></i>OIDC / SSO</span>
+                    <span style="display:flex;align-items:center;gap:12px;padding-inline-start:20px;"><i class="ph-bold ph-fingerprint" style="color:var(--muted)"></i>OIDC / SSO</span>
                     <i class="ph-bold ph-caret-right" style="color:var(--muted)"></i>
                 </button>
                 <button class="settings-mobile-row" onclick="switchSettingsPanel('about')">
@@ -238,8 +238,8 @@
                 </div>
                 <div id="settingsFilterBar" class="flex items-center gap-2" style="padding:12px 20px 0;flex-shrink:0">
                     <div class="relative flex-1 min-w-0">
-                        <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
-                        <input type="text" id="settingsSearch" oninput="filterSettings()" placeholder="{{ _('Search settings by name or description…') }}" class="input-field pl-9">
+                        <i class="ph-bold ph-magnifying-glass absolute start-3 top-1/2 -translate-y-1/2 text-sm" style="color:var(--muted)"></i>
+                        <input type="text" id="settingsSearch" oninput="filterSettings()" placeholder="{{ _('Search settings by name or description…') }}" class="input-field ps-9">
                     </div>
                     <div class="flex gap-1 p-1 rounded-lg" id="settingsClearWrap" style="display:none;background:var(--input-bg);border:1px solid var(--border)">
                         <button type="button" onclick="clearSettingsSearch()" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Clear the search') }}"><i class="ph-bold ph-x-circle"></i></button>
@@ -304,7 +304,7 @@
                             </button>
                         </div>
                         <div id="settingsSavedNotice" class="hidden text-xs px-3 py-2 rounded-md mt-1.5" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
-                            <i class="ph-bold ph-check-circle mr-1"></i>{{ _('Settings saved to %(manager_yml)s', manager_yml=tag('code', 'manager.yml')) }}
+                            <i class="ph-bold ph-check-circle me-1"></i>{{ _('Settings saved to %(manager_yml)s', manager_yml=tag('code', 'manager.yml')) }}
                         </div>
                     </div>
                     <div style="margin-bottom:12px;">
@@ -452,7 +452,7 @@
 
                         <div id="system-sub-paths" class="auth-sub-panel sig-root sc-root" style="display:none;">
                             <div class="text-xs px-3 py-2 rounded-md" style="background:rgba(58,130,246,0.08);border:1px solid rgba(58,130,246,0.2);color:var(--blue)">
-                                <i class="ph-bold ph-info mr-1"></i>{{ _('These paths refer to files %(inside_this_container)s. Mount the file into Traefik Manager in your %(docker_compose_yml)s first, then set the path here.', inside_this_container=tag('strong', _('inside this container')), docker_compose_yml=tag('code', 'docker-compose.yml', class_='font-mono')) }}
+                                <i class="ph-bold ph-info me-1"></i>{{ _('These paths refer to files %(inside_this_container)s. Mount the file into Traefik Manager in your %(docker_compose_yml)s first, then set the path here.', inside_this_container=tag('strong', _('inside this container')), docker_compose_yml=tag('code', 'docker-compose.yml', class_='font-mono')) }}
                             </div>
                             <div>
                                 <div class="sc-sec-head"><i class="ph-bold ph-folder-open sc-sec-icon" style="color:var(--blue)"></i><span class="sc-sec-label">{{ _('File Paths') }}</span><span class="sc-sec-rule"></span></div>
@@ -475,7 +475,7 @@
                                 </div>
                             </div>
                             <div id="pathsSavedNotice" class="hidden text-xs px-3 py-2 rounded-md" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
-                                <i class="ph-bold ph-check-circle mr-1"></i>{{ _('Paths saved to %(manager_yml)s', manager_yml=tag('code', 'manager.yml')) }}
+                                <i class="ph-bold ph-check-circle me-1"></i>{{ _('Paths saved to %(manager_yml)s', manager_yml=tag('code', 'manager.yml')) }}
                             </div>
                         </div>
 
@@ -538,7 +538,7 @@
                                 </div>
                             </div>
                             <div id="crowdsecSavedNotice" class="hidden text-xs px-3 py-2 rounded-md" style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--green)">
-                                <i class="ph-bold ph-check-circle mr-1"></i>{{ _('CrowdSec credentials saved') }}
+                                <i class="ph-bold ph-check-circle me-1"></i>{{ _('CrowdSec credentials saved') }}
                             </div>
                             <div>
                                 <div class="sc-sec-head"><i class="ph-bold ph-trash sc-sec-icon" style="color:var(--red)"></i><span class="sc-sec-label">{{ pgettext('heading', 'Maintenance') }}</span><span class="sc-sec-rule"></span></div>
@@ -549,7 +549,7 @@
                                             <div class="sc-set-d">{{ _('Clears every saved CrowdSec setting from %(manager_yml)s.', manager_yml=tag('code', 'manager.yml', class_='font-mono')) }}</div>
                                         </div>
                                         <div class="sc-set-v"><button onclick="resetCrowdSecConfig()" class="btn-secondary text-xs py-1 px-2.5" style="color:var(--red);border-color:var(--red)">
-                                            <i class="ph-bold ph-trash mr-1"></i>{{ _('Remove CrowdSec configuration') }}
+                                            <i class="ph-bold ph-trash me-1"></i>{{ _('Remove CrowdSec configuration') }}
                                         </button></div>
                                     </div>
                                 </div>
@@ -673,7 +673,7 @@
                                     </div>
                                     <div id="otpSetupFlow" class="hidden" style="display:none;flex-direction:column;gap:10px;margin-top:8px;">
                                         <div class="text-xs px-3 py-2 rounded-md" style="background:rgba(58,130,246,0.08);border:1px solid rgba(58,130,246,0.2);color:var(--blue)">
-                                            <i class="ph-bold ph-info mr-1"></i>{{ _('Scan the QR code with Google Authenticator or any TOTP app, then enter the 6-digit code to confirm.') }}
+                                            <i class="ph-bold ph-info me-1"></i>{{ _('Scan the QR code with Google Authenticator or any TOTP app, then enter the 6-digit code to confirm.') }}
                                         </div>
                                         <div id="otpQrCanvas" class="flex justify-center py-3"></div>
                                         <div class="text-xs text-center" style="color:var(--muted)">
@@ -857,7 +857,7 @@
                             <button class="auth-sub-tab" id="backup-tab-git" onclick="switchBackupTab('git', this)">
                                 <i class="ph-bold ph-git-branch"></i> {{ pgettext('button', 'Git') }}
                             </button>
-                            <span id="backupRemoteChip" style="display:none;margin-left:auto;margin-bottom:6px;font:600 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.04em;padding:3px 7px;border-radius:5px;background:color-mix(in srgb, var(--blue) 10%, transparent);border:1px solid color-mix(in srgb, var(--blue) 28%, transparent);color:var(--blue)"></span>
+                            <span id="backupRemoteChip" style="display:none;margin-inline-start:auto;margin-bottom:6px;font:600 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.04em;padding:3px 7px;border-radius:5px;background:color-mix(in srgb, var(--blue) 10%, transparent);border:1px solid color-mix(in srgb, var(--blue) 28%, transparent);color:var(--blue)"></span>
                         </div>
                         <div id="backup-sub-routes" class="auth-sub-panel sig-root sc-root" style="display:flex;flex-direction:column;gap:0;">
                             <div style="flex-shrink:0;">
@@ -1105,7 +1105,7 @@
                                         <div class="sc-set-n">{{ _('Default theme') }}</div>
                                         <div class="sc-set-d">{{ _('Also set by the theme toggle in the nav bar') }}</div>
                                     </div>
-                                    <div class="sc-set-v"><div class="flex gap-1 flex-shrink-0" style="margin-left:12px">
+                                    <div class="sc-set-v"><div class="flex gap-1 flex-shrink-0" style="margin-inline-start:12px">
                                         <button type="button" id="theme-opt-dark" onclick="setTheme('dark')" class="proto-btn" title="{{ pgettext('tooltip', 'Dark') }}" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-moon"></i></button>
                                         <button type="button" id="theme-opt-light" onclick="setTheme('light')" class="proto-btn" title="{{ pgettext('tooltip', 'Light') }}" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-sun"></i></button>
                                         <button type="button" id="theme-opt-system" onclick="setTheme('system')" class="proto-btn" title="{{ pgettext('tooltip', 'System') }}" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-desktop"></i></button>
@@ -1211,7 +1211,7 @@
                                         <div class="sc-set-n">{{ _('Dashboard categories') }}</div>
                                         <div class="sc-set-d">{{ _('Rows with domains, or a compact grid of app icons') }}</div>
                                     </div>
-                                    <div class="sc-set-v"><div class="flex gap-1 flex-shrink-0" style="margin-left:12px">
+                                    <div class="sc-set-v"><div class="flex gap-1 flex-shrink-0" style="margin-inline-start:12px">
                                         <button type="button" id="dashdens-list" onclick="setDashPodDensity('list')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">{{ pgettext('button', 'Rows') }}</button>
                                         <button type="button" id="dashdens-icons" onclick="setDashPodDensity('icons')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px">{{ pgettext('button', 'Icons') }}</button>
                                     </div></div>
@@ -1382,7 +1382,7 @@
                     </div>
 
                     <div id="channelEditView" style="display:none;flex-direction:column;">
-                        <div class="sc-sec-head"><button onclick="cancelChannelEdit()" class="btn-icon" style="margin-right:2px"><i class="ph-bold ph-caret-left text-sm"></i></button><span class="sc-sec-label" id="channelEditTitle">{{ _('Add Channel') }}</span><span class="sc-sec-rule"></span></div>
+                        <div class="sc-sec-head"><button onclick="cancelChannelEdit()" class="btn-icon" style="margin-inline-end:2px"><i class="ph-bold ph-caret-left text-sm"></i></button><span class="sc-sec-label" id="channelEditTitle">{{ _('Add Channel') }}</span><span class="sc-sec-rule"></span></div>
                         <div class="sc-panel">
                             <div class="sc-fld">
                                 <div class="sc-set-n">{{ pgettext('setting', 'Name') }}</div>
@@ -1496,7 +1496,7 @@
                     </div>
 
                     <div id="agentChooserView" style="display:none;flex-direction:column;">
-                        <div class="sc-sec-head"><button onclick="cancelAddAgent()" class="btn-icon" style="margin-right:2px"><i class="ph-bold ph-caret-left text-sm"></i></button><span class="sc-sec-label">{{ _('Add Agent') }}</span><span class="sc-sec-rule"></span></div>
+                        <div class="sc-sec-head"><button onclick="cancelAddAgent()" class="btn-icon" style="margin-inline-end:2px"><i class="ph-bold ph-caret-left text-sm"></i></button><span class="sc-sec-label">{{ _('Add Agent') }}</span><span class="sc-sec-rule"></span></div>
                         <p class="text-xs mb-3" style="color:var(--muted)">{{ _('An agent runs beside Traefik on a remote host so this instance can manage it. Pick how you want to install it.') }}</p>
                         <button type="button" class="agent-door" onclick="startAgentAdd('cli')">
                             <div class="agent-door-icon"><i class="ph-bold ph-terminal-window"></i></div>
@@ -1516,7 +1516,7 @@
                         </button>
                     </div>
                     <div id="agentWizardView" style="display:none;flex-direction:column;">
-                        <div class="sc-sec-head"><button onclick="cancelAddAgent()" class="btn-icon" style="margin-right:2px"><i class="ph-bold ph-caret-left text-sm"></i></button><span class="sc-sec-label" id="agentWizardTitle">{{ _('Add Agent') }}</span><span class="sc-sec-rule"></span><div class="flex items-center gap-1.5" id="agentWizardStepPills"><span id="wiz-step-pill-1" class="wiz-step on">1</span><span id="wiz-step-pill-2" class="wiz-step">2</span><span id="wiz-step-pill-3" class="wiz-step">3</span></div></div>
+                        <div class="sc-sec-head"><button onclick="cancelAddAgent()" class="btn-icon" style="margin-inline-end:2px"><i class="ph-bold ph-caret-left text-sm"></i></button><span class="sc-sec-label" id="agentWizardTitle">{{ _('Add Agent') }}</span><span class="sc-sec-rule"></span><div class="flex items-center gap-1.5" id="agentWizardStepPills"><span id="wiz-step-pill-1" class="wiz-step on">1</span><span id="wiz-step-pill-2" class="wiz-step">2</span><span id="wiz-step-pill-3" class="wiz-step">3</span></div></div>
                         <div>
                             <div id="agentWizStepCli" style="display:none">
                                 <p class="text-xs mb-3" style="color:var(--muted)">{{ _('Run this on %(agent_cli_host_name)s. It installs the %(tm)s CLI and opens its agent installer with the key already set.', agent_cli_host_name=tag('span', '', id_='agentCliHostName', style_='color:var(--text)'), tm=tag('code', 'tm', class_='font-mono')) }}</p>
@@ -1581,7 +1581,7 @@ tm add crowdsec  add CrowdSec to this agent</pre>
 
                             <div id="agentWizStep2" style="display:none;">
                                 <div class="px-3 py-2.5 rounded-lg mb-4 text-xs" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange);">
-                                    <i class="ph-bold ph-warning mr-1"></i> {{ _('Save this API key - it will not be shown again.') }}
+                                    <i class="ph-bold ph-warning me-1"></i> {{ _('Save this API key - it will not be shown again.') }}
                                 </div>
                                 <div class="flex items-center gap-2 px-3 py-2.5 rounded-lg mb-4" style="background:var(--input-bg);border:1px solid var(--border);">
                                     <code id="agentWizKeyDisplay" class="text-xs font-mono flex-1 break-all" style="color:var(--text)"></code>
@@ -1627,7 +1627,7 @@ tm add crowdsec  add CrowdSec to this agent</pre>
                                     <button id="agentRotateKeyBtn" onclick="rotateAgentKey()" class="btn-secondary text-xs py-1 px-2.5 flex-shrink-0" style="white-space:nowrap"><i class="ph-bold ph-arrows-clockwise text-xs"></i> {{ _('Rotate Key') }}</button>
                                     </div>
                                     <div id="agentRotatedKeyDisplay" style="display:none;" class="mt-2">
-                                    <div class="px-3 py-2 rounded-lg text-xs" style="background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.3);color:var(--orange)"><i class="ph-bold ph-warning mr-1"></i> {{ _('Save this new key - it will not be shown again. Your agent will stop working until you update it.') }}</div>
+                                    <div class="px-3 py-2 rounded-lg text-xs" style="background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.3);color:var(--orange)"><i class="ph-bold ph-warning me-1"></i> {{ _('Save this new key - it will not be shown again. Your agent will stop working until you update it.') }}</div>
                                     <div class="flex items-center gap-2 px-3 py-2.5 rounded-lg mt-2" style="background:var(--input-bg);border:1px solid var(--border);">
                                     <code id="agentRotatedKeyText" class="text-xs font-mono flex-1 break-all" style="color:var(--text)"></code>
                                     <button onclick="copyRotatedKey()" class="btn-icon flex-shrink-0" title="{{ pgettext('tooltip', 'Copy') }}"><i class="ph-bold ph-copy text-sm"></i></button>
@@ -1881,7 +1881,7 @@ tm add crowdsec                                    add CrowdSec to this agent</p
                                     <div class="px-4 py-2.5 text-xs flex items-center gap-2" onclick="toggleAgentDockerOutputs()" style="cursor:pointer;color:var(--muted)">
                                         <i class="ph-bold ph-file-code" style="color:var(--teal)"></i>
                                         <span class="font-semibold" style="color:var(--text)">{{ _('Compose and run commands') }}</span>
-                                        <span style="margin-left:auto"><i class="ph-bold ph-caret-down sc-notice-caret text-xs"></i></span>
+                                        <span style="margin-inline-start:auto"><i class="ph-bold ph-caret-down sc-notice-caret text-xs"></i></span>
                                     </div>
                                     <div class="sc-notice-body px-4 pb-3">
                                 <div class="mt-4" style="margin-bottom:12px;">
@@ -1907,13 +1907,13 @@ tm add crowdsec                                    add CrowdSec to this agent</p
                     </div>
 
                     <div id="agentKeysView" style="display:none;flex-direction:column;">
-                        <div class="sc-sec-head"><button onclick="closeAgentKeys()" class="btn-icon" style="margin-right:2px"><i class="ph-bold ph-caret-left text-sm"></i></button><span class="sc-sec-label" id="agentKeysTitle">{{ _('API Keys') }}</span><span class="sc-sec-rule"></span><div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)"><button onclick="showAddKeyForm()" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Add key') }}"><i class="ph-bold ph-plus"></i></button></div></div>
+                        <div class="sc-sec-head"><button onclick="closeAgentKeys()" class="btn-icon" style="margin-inline-end:2px"><i class="ph-bold ph-caret-left text-sm"></i></button><span class="sc-sec-label" id="agentKeysTitle">{{ _('API Keys') }}</span><span class="sc-sec-rule"></span><div class="flex gap-1 p-1 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border)"><button onclick="showAddKeyForm()" class="proto-btn text-xs px-3 py-1.5" title="{{ _('Add key') }}"><i class="ph-bold ph-plus"></i></button></div></div>
                         <div>
                             <div id="agentKeysAddForm" class="sc-panel" style="display:none;flex-direction:column;gap:8px;padding:12px;margin-bottom:10px;">
                                 <div class="sc-set-n">{{ _('New API key') }}</div>
                                 <input id="agentKeyNameInput" type="text" class="input-field text-xs" placeholder="{{ _('e.g. Mobile App') }}" maxlength="80">
                                 <div id="agentKeyNewDisplay" style="display:none;flex-direction:column;gap:6px;">
-                                    <div class="text-xs px-2 py-1.5 rounded" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)"><i class="ph-bold ph-warning text-xs mr-1"></i>{{ _('Save this key - it will not be shown again.') }}</div>
+                                    <div class="text-xs px-2 py-1.5 rounded" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)"><i class="ph-bold ph-warning text-xs me-1"></i>{{ _('Save this key - it will not be shown again.') }}</div>
                                     <div class="flex items-center gap-2 px-3 py-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);">
                                         <code id="agentKeyNewValue" class="text-xs font-mono flex-1 break-all" style="color:var(--text)"></code>
                                         <button onclick="copyNewAgentKey()" class="btn-icon flex-shrink-0" title="{{ pgettext('tooltip', 'Copy') }}"><i class="ph-bold ph-copy text-sm"></i></button>
@@ -1940,7 +1940,7 @@ tm add crowdsec                                    add CrowdSec to this agent</p
                             <div class="sc-set-n">{{ _('New API key') }}</div>
                             <input id="activeAgentKeyNameInput" type="text" class="input-field text-xs" placeholder="{{ _('e.g. Mobile App') }}" maxlength="80">
                             <div id="activeAgentKeyNewDisplay" style="display:none;flex-direction:column;gap:6px;">
-                                <div class="text-xs px-2 py-1.5 rounded" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)"><i class="ph-bold ph-warning text-xs mr-1"></i>{{ _('Save this key - it will not be shown again.') }}</div>
+                                <div class="text-xs px-2 py-1.5 rounded" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)"><i class="ph-bold ph-warning text-xs me-1"></i>{{ _('Save this key - it will not be shown again.') }}</div>
                                 <div class="flex items-center gap-2 px-3 py-2 rounded-lg" style="background:var(--input-bg);border:1px solid var(--border);">
                                     <code id="activeAgentKeyNewValue" class="text-xs font-mono flex-1 break-all" style="color:var(--text)"></code>
                                     <button onclick="copyActiveAgentKey()" class="btn-icon flex-shrink-0" title="{{ pgettext('tooltip', 'Copy') }}"><i class="ph-bold ph-copy text-sm"></i></button>
@@ -1993,7 +1993,7 @@ tm add crowdsec                                    add CrowdSec to this agent</p
                             </div>
                         </div>
                         <div id="sm-mgr-update-notice" class="hidden text-xs px-3 py-2 rounded-md mt-2" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)">
-                            <i class="ph-bold ph-arrow-circle-up mr-1"></i><span id="sm-mgr-update-text"></span>
+                            <i class="ph-bold ph-arrow-circle-up me-1"></i><span id="sm-mgr-update-text"></span>
                         </div>
                         <div class="flex flex-wrap gap-2 mt-2">
                             <a href="https://github.com/chr0nzz/traefik-manager" target="_blank" class="nav-btn text-xs" style="text-decoration:none">
@@ -2035,7 +2035,7 @@ tm add crowdsec                                    add CrowdSec to this agent</p
                             </div>
                         </div>
                         <div id="sm-traefik-update-notice" class="hidden text-xs px-3 py-2 rounded-md mt-2" style="background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.3);color:var(--orange)">
-                            <i class="ph-bold ph-arrow-circle-up mr-1"></i><span id="sm-traefik-update-text"></span>
+                            <i class="ph-bold ph-arrow-circle-up me-1"></i><span id="sm-traefik-update-text"></span>
                         </div>
                         <a id="updateReleaseLink" href="https://github.com/traefik/traefik/releases" target="_blank"
                            class="nav-btn text-xs mt-2" style="text-decoration:none;display:inline-flex">

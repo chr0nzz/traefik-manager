@@ -93,7 +93,7 @@ async function refreshLogs(silent) {
                 <i class="ph-light ph-plugs text-4xl block mb-3 opacity-40"></i>
                 <p class="font-medium">${th('Failed to load logs')}</p>
                 <p class="text-xs mt-1 font-mono">${_esc(_lgLoadError)}</p>
-                <button onclick="refreshLogs()" class="proto-btn text-xs px-3 py-1.5 mt-4"><i class="ph-bold ph-arrows-clockwise mr-1"></i>${thc('button', 'Retry')}</button>
+                <button onclick="refreshLogs()" class="proto-btn text-xs px-3 py-1.5 mt-4"><i class="ph-bold ph-arrows-clockwise me-1"></i>${thc('button', 'Retry')}</button>
             </div>`;
             return;
         }
@@ -137,7 +137,7 @@ async function refreshLogs(silent) {
             <i class="ph-light ph-plugs text-4xl block mb-3 opacity-40"></i>
             <p class="font-medium">${th('Failed to load logs')}</p>
             <p class="text-xs mt-1 font-mono">${_esc(_lgLoadError)}</p>
-            <button onclick="refreshLogs()" class="proto-btn text-xs px-3 py-1.5 mt-4"><i class="ph-bold ph-arrows-clockwise mr-1"></i>${thc('button', 'Retry')}</button>
+            <button onclick="refreshLogs()" class="proto-btn text-xs px-3 py-1.5 mt-4"><i class="ph-bold ph-arrows-clockwise me-1"></i>${thc('button', 'Retry')}</button>
         </div>`;
     }
 }
@@ -599,7 +599,7 @@ function _lgStrip(groups, aria, extraCls) {
     const total = live.reduce((a, g) => a + g.items.length, 0);
     let html = '';
     if (!total) {
-        html = `<span class="sig-more" style="margin-left:0">${th('no requests')}</span>`;
+        html = `<span class="sig-more" style="margin-inline-start:0">${th('no requests')}</span>`;
     } else if (total <= LG_CELL_CAP) {
         live.forEach(g => g.items.forEach(t => {
             html += '<i class="sig-cell' + (g.cls ? ' ' + g.cls : '') + '" title="' + _esc(t) + '"></i>';

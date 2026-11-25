@@ -385,6 +385,28 @@ def test_a_rule_matching_neither_is_refused(tmp_path, rule):
     assert any('Plural-Forms' in p.message for p in tmi18n.check_catalogue(path, 'pt'))
 
 
+FA_HEADER = DE_HEADER.replace('Language: de', 'Language: fa').replace('plural=(n != 1);', 'plural=n > 1;')
+
+
+def _plural_entry(one, other, forms):
+    lines = [f'msgid {json.dumps(one)}', f'msgid_plural {json.dumps(other)}']
+    lines += [f'msgstr[{i}] {json.dumps(f, ensure_ascii=False)}' for i, f in enumerate(forms)]
+    return '\n'.join(lines) + '\n\n'
+
+
+def test_the_browser_rule_sets_the_number_of_forms(tmp_path):
+    path = _po(tmp_path, _plural_entry('{n} route', '{n} routes', ['{n} مسیر', '{n} مسیر']),
+               identifier='fa', header=FA_HEADER)
+    assert [p.message for p in tmi18n.check_catalogue(path, 'fa')] == [], \
+        'Weblate writes two forms for Persian (CLDR one/other), where Babel alone would expect one'
+
+
+def test_a_form_missing_under_the_browser_rule_is_still_refused(tmp_path):
+    path = _po(tmp_path, _plural_entry('{n} route', '{n} routes', ['{n} مسیر']),
+               identifier='fa', header=FA_HEADER)
+    assert any('plural forms' in p.message for p in tmi18n.check_catalogue(path, 'fa'))
+
+
 GETTEXT_PLURALS = {
     'de': 'nplurals=2; plural=n != 1;',
     'es': 'nplurals=2; plural=n != 1;',

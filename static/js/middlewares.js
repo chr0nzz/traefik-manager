@@ -957,7 +957,7 @@ async function refreshPluginsTab() {
                     <a href="https://get-traefik.xyzlab.dev" target="_blank" class="btn-secondary" style="text-decoration:none"><i class="ph-bold ph-terminal"></i> ${th('Install script')}</a>
                     <a href="${docsUrl}" target="_blank" class="btn-secondary" style="text-decoration:none"><i class="ph-bold ph-book-open"></i> ${th('Setup docs')}</a>
                 </div>
-                <div class="mt-5 mx-auto text-left rounded-lg p-3 text-xs font-mono" style="max-width:420px;background:var(--input-bg);border:1px solid var(--border);color:var(--muted)">
+                <div class="mt-5 mx-auto text-start rounded-lg p-3 text-xs font-mono" style="max-width:420px;background:var(--input-bg);border:1px solid var(--border);color:var(--muted)">
                     <div style="color:var(--text);margin-bottom:4px">docker-compose.yml - ${svcName}</div>
                     environment:<br>
                     &nbsp;&nbsp;- STATIC_CONFIG_PATH=/traefik.yml<br>
@@ -1297,7 +1297,7 @@ function renderPluginCards() {
                 <span class="tm-ic tm-ic-tile"><i class="ph-bold ph-puzzle-piece"></i></span>
                 <div class="tm-head-txt">
                     <div class="tm-title"><span class="tm-name">${_esc(name)}</span></div>
-                    <div class="tm-sub">${_esc(version.startsWith('v') ? version : t('v{version}', { version }))}${latest ? ` <span class="sig-flag d-warn lg-static" style="margin-left:4px" title="${th('Update available: change the version in traefik.yml and restart Traefik')}"><i class="ph-fill ph-arrow-circle-up"></i><b>${_esc(latest)}</b></span>` : ''}</div>
+                    <div class="tm-sub">${_esc(version.startsWith('v') ? version : t('v{version}', { version }))}${latest ? ` <span class="sig-flag d-warn lg-static" style="margin-inline-start:4px" title="${th('Update available: change the version in traefik.yml and restart Traefik')}"><i class="ph-fill ph-arrow-circle-up"></i><b>${_esc(latest)}</b></span>` : ''}</div>
                 </div>${rail}
             </div>
             ${moduleName ? `<div class="tm-vals"><div class="tm-val"><i class="ph-bold ph-package"></i><span class="tm-v" title="${_esc(moduleName)}">${_esc(moduleName)}</span>${_tmCopy(moduleName)}</div></div>` : ''}
@@ -1323,7 +1323,7 @@ function openPluginDetail(idx) {
     const latest = _pluginLatest(p);
     const known = Object.keys(_pluginCatalog).length > 0;
     const versionVal = latest
-        ? `${_esc(version)} <span class="sig-flag d-warn lg-static" style="margin-left:6px"><i class="ph-fill ph-arrow-circle-up"></i><b>${th('{latest} available', { latest })}</b></span>`
+        ? `${_esc(version)} <span class="sig-flag d-warn lg-static" style="margin-inline-start:6px"><i class="ph-fill ph-arrow-circle-up"></i><b>${th('{latest} available', { latest })}</b></span>`
         : known && _pluginCatalog[(moduleName || '').trim().toLowerCase()]
         ? `${_esc(version)} <span style="color:var(--green)"><i class="ph-bold ph-check"></i> ${thc('label', 'latest')}</span>`
         : _esc(version);
