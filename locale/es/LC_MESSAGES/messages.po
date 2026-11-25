@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-21 19:02+0000\n"
+"POT-Creation-Date: 2026-11-25 02:03-0500\n"
 "PO-Revision-Date: 2026-09-29 20:39+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/traefik-manager/"
@@ -723,6 +723,12 @@ msgstr ""
 msgid "A forwardAuth middleware is in use, so this is high priority."
 msgstr ""
 "Hay un middleware forwardAuth en uso, así que esto tiene prioridad alta."
+
+#. Used in the browser
+msgid ""
+"A host written with a trailing dot evades TLS option conflict detection, so "
+"a router can bypass the client certificate check of another"
+msgstr ""
 
 msgid "A label for the device this key belongs to."
 msgstr "Una etiqueta para el dispositivo al que pertenece esta clave."
@@ -11376,6 +11382,12 @@ msgstr ""
 "preajuste y vuelve a activarlo para reemplazarlo con los valores "
 "predeterminados de los interruptores. Desactívalo para quitarlo."
 
+#. Used in the browser
+msgid ""
+"The Compress middleware holds megabytes of Brotli state per response in "
+"flight, so unauthenticated clients can exhaust memory"
+msgstr ""
+
 msgid "The CrowdSec alert cache is being refreshed"
 msgstr "Se está actualizando la caché de alertas de CrowdSec"
 
@@ -11388,6 +11400,12 @@ msgid ""
 msgstr ""
 "Los campos de CrowdSec de este servidor en Ajustes solo generan el fragmento "
 "de compose de abajo: nunca se envían a un agente en ejecución."
+
+#. Used in the browser
+msgid ""
+"The Docker and Swarm password, the Knative token and the HTTP provider "
+"headers are not redacted from debug logs, support dumps and usage statistics"
+msgstr ""
 
 #, python-format
 msgid ""

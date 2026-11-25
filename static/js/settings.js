@@ -586,6 +586,46 @@ const TRAEFIK_ADVISORIES = [
             return false;
         },
     },
+    {
+        id: 'GHSA-3rh5-223h-cpwr',
+        severity: 'High',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-3rh5-223h-cpwr',
+        forwardAuthRelated: false,
+        summary: t('The Compress middleware holds megabytes of Brotli state per response in flight, so unauthenticated clients can exhaust memory'),
+        fixedIn: 'v3.7.20 or v3.8.0',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj !== 3) return false;
+            return (min < 7) || (min === 7 && pat <= 19);
+        },
+    },
+    {
+        id: 'GHSA-9657-c2gv-wjpj',
+        severity: 'Medium',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-9657-c2gv-wjpj',
+        forwardAuthRelated: false,
+        summary: t('A host written with a trailing dot evades TLS option conflict detection, so a router can bypass the client certificate check of another'),
+        fixedIn: 'v3.7.20, v3.8.0 or v2.11.64',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj === 2) return (min < 11) || (min === 11 && pat <= 63);
+            if (maj === 3) return (min < 7) || (min === 7 && pat <= 19);
+            return false;
+        },
+    },
+    {
+        id: 'GHSA-42x2-976f-ph52',
+        severity: 'Medium',
+        url: 'https://github.com/traefik/traefik/security/advisories/GHSA-42x2-976f-ph52',
+        forwardAuthRelated: false,
+        summary: t('The Docker and Swarm password, the Knative token and the HTTP provider headers are not redacted from debug logs, support dumps and usage statistics'),
+        fixedIn: 'v3.7.20 or v3.8.0',
+        affected: (p) => {
+            const [maj, min, pat] = p;
+            if (maj !== 3) return false;
+            return (min < 7) || (min === 7 && pat <= 19);
+        },
+    },
 ];
 
 function _configHasForwardAuth() {
