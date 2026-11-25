@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-11-25 02:03-0500\n"
-"PO-Revision-Date: 2026-09-30 04:18+0000\n"
+"PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Danish <https://hosted.weblate.org/projects/traefik-manager/"
 "web-app/da/>\n"
@@ -17,6 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "Generated-By: Babel 2.18.0\n"
+"X-Generator: Weblate 2026.12.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -713,6 +714,9 @@ msgid ""
 "A host written with a trailing dot evades TLS option conflict detection, so "
 "a router can bypass the client certificate check of another"
 msgstr ""
+"En vært skrevet med et afsluttende punktum undgår registrering af TLS-"
+"indstillingskonflikter, så en router kan omgå en anden routers "
+"klientcertifikatkontrol"
 
 msgid "A label for the device this key belongs to."
 msgstr "En etiket for den enhed, som denne nøgle tilhører."
@@ -1546,6 +1550,9 @@ msgid ""
 "An NTLM or Negotiate Authorization header pins a backend transport that is "
 "never released, so unauthenticated clients can exhaust memory and connections"
 msgstr ""
+"En NTLM- eller Negotiate-Authorization-header fastlåser en backend-"
+"transport, der aldrig frigives, så ikke-godkendte klienter kan opbruge "
+"hukommelse og forbindelser"
 
 msgid ""
 "An agent runs beside Traefik on a remote host so this instance can manage "
@@ -1576,7 +1583,7 @@ msgid "Anything below this level is dropped for this channel."
 msgstr "Alt under dette niveau kasseres for denne kanal."
 
 msgid "App Store"
-msgstr ""
+msgstr "App Store"
 
 #. Used in the browser
 msgid "App Token"
@@ -1612,7 +1619,7 @@ msgstr "Anvend og gem"
 #. Used in the browser
 msgctxt "label"
 msgid "As logged"
-msgstr ""
+msgstr "Som logget"
 
 msgid ""
 "Assign a route to a group with the pencil on its card. A group disappears "
@@ -1831,11 +1838,11 @@ msgstr "Backend online · {latency_ms}ms"
 
 #. Used in the browser
 msgid "Backend server name (SNI)"
-msgstr ""
+msgstr "Backend-servernavn (SNI)"
 
 #, python-format
 msgid "Backend server name must be a hostname, got %(value)s"
-msgstr ""
+msgstr "Backend-servernavn skal være et værtsnavn, fik %(value)s"
 
 msgid "Backend service"
 msgstr "Backend-service"
@@ -2226,7 +2233,7 @@ msgstr "Kortindstillinger"
 #. Used in the browser
 #, python-brace-format
 msgid "Card settings for {name}"
-msgstr ""
+msgstr "Kortindstillinger for {name}"
 
 msgctxt "setting"
 msgid "Categories"
@@ -2505,6 +2512,8 @@ msgstr "Klik på %(middleware)s for at tilføje en"
 msgid ""
 "Click a domain to switch to it. Ctrl or Shift click to select more than one."
 msgstr ""
+"Klik på et domæne for at skifte til det. Ctrl- eller Shift-klik for at vælge "
+"flere."
 
 msgid "Click to copy"
 msgstr "Klik for at kopiere"
@@ -2815,7 +2824,7 @@ msgstr "Forbindelsen mislykkedes: {error}"
 
 #. Used in the browser
 msgid "Connection settings saved"
-msgstr ""
+msgstr "Forbindelsesindstillinger gemt"
 
 #. Used in the browser
 msgid "Connection successful"
@@ -3816,8 +3825,8 @@ msgstr "Deaktiveret"
 #, python-brace-format
 msgid "Disabled {n} route."
 msgid_plural "Disabled {n} routes."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Deaktiverede {n} rute."
+msgstr[1] "Deaktiverede {n} ruter."
 
 msgid ""
 "Disables certificate validation for the backend. Use for self-signed certs "
@@ -4057,7 +4066,7 @@ msgstr "Rediger kanal"
 
 #. Used in the browser
 msgid "Edit Entrypoint"
-msgstr ""
+msgstr "Rediger entrypoint"
 
 #. Used in the browser
 msgid "Edit Plugin"
@@ -4065,7 +4074,7 @@ msgstr "Rediger plugin"
 
 #. Used in the browser
 msgid "Edit Resolver"
-msgstr ""
+msgstr "Rediger resolver"
 
 #. Used in the browser
 msgid "Edit Service"
@@ -4169,8 +4178,8 @@ msgstr "Aktiveret"
 #, python-brace-format
 msgid "Enabled {n} route."
 msgid_plural "Enabled {n} routes."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Aktiverede {n} rute."
+msgstr[1] "Aktiverede {n} ruter."
 
 #. Used in the browser
 msgid "Enabled, stream routes are not reachability checked"
@@ -4759,6 +4768,8 @@ msgid ""
 "FastProxy backend connection pool leaks NTLM and Negotiate identity to "
 "unauthenticated clients"
 msgstr ""
+"FastProxys backend-forbindelsespulje lækker NTLM- og Negotiate-identitet til "
+"ikke-godkendte klienter"
 
 #. Used in the browser
 msgid ""
@@ -5351,11 +5362,12 @@ msgstr "HTTP/3 annonceret på port {port}"
 msgid ""
 "HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s"
 msgstr ""
+"Annonceret HTTP/3-port skal være et heltal fra 1 til 65535, fik %(value)s"
 
 #. Used in the browser
 #, python-brace-format
 msgid "HTTP/3 advertised port {optional}"
-msgstr ""
+msgstr "Annonceret HTTP/3-port {optional}"
 
 #. Used in the browser
 #, python-brace-format
@@ -5364,6 +5376,9 @@ msgid ""
 "Docker, and allow it through any firewall. Only routers with TLS can use "
 "HTTP/3."
 msgstr ""
+"HTTP/3 bruger også UDP på denne port. Publicér den også, for eksempel "
+"{udp_port} i Docker, og tillad den gennem eventuelle firewalls. Kun routere "
+"med TLS kan bruge HTTP/3."
 
 #. Used in the browser
 msgid ""
@@ -6577,6 +6592,8 @@ msgid ""
 "NTLM and Kerberos sticky connections are not keyed by service, so one "
 "service TLS client config applies to another"
 msgstr ""
+"NTLM- og Kerberos-sticky-forbindelser har ikke service som nøgle, så én "
+"services TLS-klientkonfiguration gælder for en anden"
 
 #. Used in the browser
 msgctxt "label"
@@ -6642,6 +6659,8 @@ msgid ""
 "Negated Host matcher causes a TLS option conflict that disables client "
 "certificate authentication on the excluded host"
 msgstr ""
+"Negeret Host-matcher giver en TLS-indstillingskonflikt, der deaktiverer "
+"klientcertifikatgodkendelse på den udelukkede vært"
 
 #. Used in the browser
 #, python-brace-format
@@ -8220,6 +8239,7 @@ msgstr "Port og rate limit"
 msgid ""
 "Preauthenticated Negotiate contaminates the shared backend connection pool"
 msgstr ""
+"Forhåndsgodkendt Negotiate forurener den delte backend-forbindelsespulje"
 
 #, python-format
 msgid ""
@@ -8858,12 +8878,12 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Remove {domain}"
-msgstr ""
+msgstr "Fjern {domain}"
 
 #. Used in the browser
 #, python-brace-format
 msgid "Remove {domain} from Settings, Connection, Domains"
-msgstr ""
+msgstr "Fjern {domain} fra Indstillinger, Forbindelse, Domæner"
 
 #. Used in the browser
 #, python-brace-format
@@ -8897,7 +8917,7 @@ msgstr[1] ""
 #. Used in the browser
 #, python-brace-format
 msgid "Removed {domain} from Settings, Connection, Domains"
-msgstr ""
+msgstr "{domain} fjernet fra Indstillinger, Forbindelse, Domæner"
 
 #. Used in the browser
 #, python-brace-format
@@ -8908,7 +8928,11 @@ msgid_plural ""
 "Removed {domain} from Settings. It stays in the list while routes {routes} "
 "use it."
 msgstr[0] ""
+"{domain} fjernet fra Indstillinger. Det bliver på listen, så længe ruten "
+"{routes} bruger det."
 msgstr[1] ""
+"{domain} fjernet fra Indstillinger. Det bliver på listen, så længe ruterne "
+"{routes} bruger det."
 
 #. Used in the browser
 #, python-brace-format
@@ -9693,6 +9717,9 @@ msgid ""
 "requiring a client certificate can be reached without one (Traefik built "
 "with Go 1.27)"
 msgstr ""
+"SNI-kontrol springes over for HTTP/2-forespørgsler sendt som http over TLS, "
+"så en router, der kræver et klientcertifikat, kan nås uden et (Traefik "
+"bygget med Go 1.27)"
 
 #. Used in the browser
 msgid "SNI strict"
@@ -9825,7 +9852,7 @@ msgstr "Gemt"
 #. Used in the browser
 msgctxt "status"
 msgid "Saved"
-msgstr ""
+msgstr "Gemt"
 
 msgid ""
 "Saved in manager.yml, so the choice follows you to every browser. Follow "
@@ -10025,7 +10052,7 @@ msgstr "Vælg en skabelon ovenfor for at bruge guiden."
 
 #. Used in the browser
 msgid "Select at least one domain for this route"
-msgstr ""
+msgstr "Vælg mindst ét domæne for denne rute"
 
 #. Used in the browser
 msgid "Select at least one source"
@@ -10102,7 +10129,7 @@ msgid "Sending…"
 msgstr "Sender…"
 
 msgid "Separate domains with commas, spaces or new lines."
-msgstr ""
+msgstr "Adskil domæner med kommaer, mellemrum eller linjeskift."
 
 msgid "Serial Number"
 msgstr "Serienummer"
@@ -10644,8 +10671,8 @@ msgstr[1] "Sprang {n} ugyldige poster over:"
 #, python-brace-format
 msgid "Skipped {n} route that is not defined in a config file."
 msgid_plural "Skipped {n} routes that are not defined in a config file."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Sprang {n} rute over, der ikke er defineret i en konfigurationsfil."
+msgstr[1] "Sprang {n} ruter over, der ikke er defineret i en konfigurationsfil."
 
 #. Used in the browser
 msgctxt "button"
@@ -11080,7 +11107,7 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "TLS {profile}, set on the entry point"
-msgstr ""
+msgstr "TLS {profile}, angivet på entrypointet"
 
 #. Used in the browser
 msgid "TLS, no certResolver"
@@ -11251,6 +11278,8 @@ msgid ""
 "The Compress middleware holds megabytes of Brotli state per response in "
 "flight, so unauthenticated clients can exhaust memory"
 msgstr ""
+"Compress-middlewaren holder flere megabyte Brotli-tilstand pr. igangværende "
+"svar, så ikke-godkendte klienter kan opbruge hukommelse"
 
 msgid "The CrowdSec alert cache is being refreshed"
 msgstr "CrowdSec-alert-cachen bliver opdateret"
@@ -11270,6 +11299,8 @@ msgid ""
 "The Docker and Swarm password, the Knative token and the HTTP provider "
 "headers are not redacted from debug logs, support dumps and usage statistics"
 msgstr ""
+"Docker- og Swarm-adgangskoden, Knative-tokenet og HTTP-providerens headers "
+"maskeres ikke i debuglogs, supportdumps og brugsstatistik"
 
 #, python-format
 msgid ""
@@ -11575,6 +11606,9 @@ msgid ""
 "Use it when the backend serves its certificate for a different name than the "
 "target address. Adds serverName via a named serversTransport."
 msgstr ""
+"Navnet, Traefik sender som SNI og kontrollerer backend-certifikatet mod. "
+"Brug det, når backenden leverer sit certifikat til et andet navn end "
+"måladressen. Tilføjer serverName via en navngivet serversTransport."
 
 #. Used in the browser
 msgid ""
@@ -11582,6 +11616,9 @@ msgid ""
 "on, for example behind a Docker port mapping. Empty advertises the "
 "entrypoint port."
 msgstr ""
+"Porten, klienter bruger til HTTP/3, når den er en anden end den, Traefik "
+"lytter på, for eksempel bag en Docker-porttilknytning. Er feltet tomt, "
+"annonceres entrypointets port."
 
 #. Used in the browser
 msgid "The primary view"
@@ -11778,11 +11815,11 @@ msgstr[1] ""
 
 #. Used in the browser
 msgid "The selected routes are already disabled."
-msgstr ""
+msgstr "De valgte ruter er allerede deaktiveret."
 
 #. Used in the browser
 msgid "The selected routes are already enabled."
-msgstr ""
+msgstr "De valgte ruter er allerede aktiveret."
 
 #. Used in the browser
 msgid "The server changed, reload the list and select again"
@@ -12837,7 +12874,7 @@ msgstr "Ikke-gemte ændringer"
 
 #. Used in the browser
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Ikke-gemte ændringer"
 
 #. Used in the browser
 #, python-brace-format
@@ -12859,6 +12896,8 @@ msgid ""
 "Unsynchronized write to the sticky round tripper shared by concurrent HTTP/2 "
 "streams"
 msgstr ""
+"Usynkroniseret skrivning til den sticky round tripper, der deles af "
+"samtidige HTTP/2-streams"
 
 msgctxt "button"
 msgid "Unused"
@@ -13221,6 +13260,8 @@ msgid ""
 "With TLS on, this route only answers HTTPS, so plain http on {eps} returns "
 "404 page not found. Choose No TLS for an http-only route."
 msgstr ""
+"Med TLS slået til svarer denne rute kun på HTTPS, så almindelig http på "
+"{eps} returnerer 404 page not found. Vælg Ingen TLS til en ren http-rute."
 
 #, python-format
 msgid ""
@@ -16660,7 +16701,7 @@ msgstr "{digest} opsummering"
 #. Used in the browser
 #, python-brace-format
 msgid "{domain} comes from this agent's Domains setting. Remove it there."
-msgstr ""
+msgstr "{domain} kommer fra denne agents indstilling Domæner. Fjern det der."
 
 #. Used in the browser
 #, python-brace-format
@@ -16668,6 +16709,8 @@ msgid ""
 "{domain} is the only domain in Settings, Connection, Domains. Add another "
 "one there before removing it."
 msgstr ""
+"{domain} er det eneste domæne i Indstillinger, Forbindelse, Domæner. Tilføj "
+"et andet der, før du fjerner det."
 
 #. Used in the browser
 #, python-brace-format
@@ -16678,7 +16721,11 @@ msgid_plural ""
 "{domain} is used by routes {routes}, so it stays in the list until those "
 "routes stop using it."
 msgstr[0] ""
+"{domain} bruges af ruten {routes}, så det bliver på listen, indtil ruten "
+"holder op med at bruge det."
 msgstr[1] ""
+"{domain} bruges af ruterne {routes}, så det bliver på listen, indtil de "
+"ruter holder op med at bruge det."
 
 #. Used in the browser
 #, python-brace-format
@@ -16762,15 +16809,15 @@ msgstr[1] "{failed} af {n} ruter kunne ikke slettes."
 #, python-brace-format
 msgid "{failed} of {n} route could not be disabled."
 msgid_plural "{failed} of {n} routes could not be disabled."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{failed} af {n} rute kunne ikke deaktiveres."
+msgstr[1] "{failed} af {n} ruter kunne ikke deaktiveres."
 
 #. Used in the browser
 #, python-brace-format
 msgid "{failed} of {n} route could not be enabled."
 msgid_plural "{failed} of {n} routes could not be enabled."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{failed} af {n} rute kunne ikke aktiveres."
+msgstr[1] "{failed} af {n} ruter kunne ikke aktiveres."
 
 #. Used in the browser
 #, python-brace-format

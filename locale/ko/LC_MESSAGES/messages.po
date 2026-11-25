@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-11-25 02:03-0500\n"
-"PO-Revision-Date: 2026-11-07 02:53+0000\n"
+"PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Korean <https://hosted.weblate.org/projects/traefik-manager/"
 "web-app/ko/>\n"
@@ -17,6 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.18.0\n"
+"X-Generator: Weblate 2026.12.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -25,9 +26,9 @@ msgstr "\"{name}\" 항목이 아직 사용 중입니다."
 
 # | msgid "\"{name}\" is still in use."
 #. Used in the browser
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "\"{name}\" is still used by {shown}."
-msgstr "\"{name}\" 항목이 아직 사용 중입니다."
+msgstr "\"{name}\" 항목은 아직 다음에서 사용 중입니다: {shown}."
 
 #. Used in the browser
 #, python-brace-format
@@ -703,6 +704,8 @@ msgid ""
 "A host written with a trailing dot evades TLS option conflict detection, so "
 "a router can bypass the client certificate check of another"
 msgstr ""
+"끝에 점이 붙은 호스트는 TLS 옵션 충돌 감지를 피해 가므로 한 라우터가 다른 "
+"라우터의 클라이언트 인증서 검사를 우회할 수 있습니다"
 
 msgid "A label for the device this key belongs to."
 msgstr "이 키를 사용하는 기기의 레이블입니다."
@@ -1524,6 +1527,8 @@ msgid ""
 "An NTLM or Negotiate Authorization header pins a backend transport that is "
 "never released, so unauthenticated clients can exhaust memory and connections"
 msgstr ""
+"NTLM 또는 Negotiate Authorization 헤더가 해제되지 않는 백엔드 전송을 "
+"고정하므로 인증되지 않은 클라이언트가 메모리와 연결을 고갈시킬 수 있습니다"
 
 msgid ""
 "An agent runs beside Traefik on a remote host so this instance can manage "
@@ -1794,11 +1799,11 @@ msgstr "백엔드 온라인 · {latency_ms}ms"
 
 #. Used in the browser
 msgid "Backend server name (SNI)"
-msgstr ""
+msgstr "백엔드 서버 이름(SNI)"
 
 #, python-format
 msgid "Backend server name must be a hostname, got %(value)s"
-msgstr ""
+msgstr "백엔드 서버 이름은 호스트 이름이어야 합니다. 입력값: %(value)s"
 
 msgid "Backend service"
 msgstr "백엔드 서비스"
@@ -2119,9 +2124,9 @@ msgid "Cannot reach agent"
 msgstr "에이전트에 연결할 수 없음"
 
 # | msgid "Cannot reach agent: %(error)s"
-#, fuzzy, python-format
+#, python-format
 msgid "Cannot reach agent (%(reason)s)"
-msgstr "에이전트에 연결할 수 없음 (%(reason)s)"
+msgstr "에이전트에 연결할 수 없습니다(%(reason)s)"
 
 msgid "Cannot reach agent - check URL and network"
 msgstr "에이전트에 연결할 수 없음 - URL과 네트워크를 확인하세요"
@@ -3443,9 +3448,8 @@ msgstr "모두 삭제하시겠습니까?"
 # | msgctxt "button"
 # | msgid "Delete"
 #. Used in the browser
-#, fuzzy
 msgid "Delete anyway"
-msgstr "삭제"
+msgstr "그래도 삭제"
 
 #. Used in the browser
 #, python-brace-format
@@ -3472,7 +3476,7 @@ msgstr "삭제하지 못했습니다: {error}"
 
 #. Used in the browser
 msgid "Delete it anyway?"
-msgstr ""
+msgstr "그래도 삭제하시겠습니까?"
 
 #. Used in the browser
 #, python-brace-format
@@ -3985,7 +3989,7 @@ msgstr "채널 편집"
 
 #. Used in the browser
 msgid "Edit Entrypoint"
-msgstr ""
+msgstr "엔트리포인트 편집"
 
 #. Used in the browser
 msgid "Edit Plugin"
@@ -3993,7 +3997,7 @@ msgstr "플러그인 편집"
 
 #. Used in the browser
 msgid "Edit Resolver"
-msgstr ""
+msgstr "리졸버 편집"
 
 #. Used in the browser
 msgid "Edit Service"
@@ -5252,12 +5256,12 @@ msgstr "HTTP/3 광고됨: 포트 {port}"
 #, python-format
 msgid ""
 "HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s"
-msgstr ""
+msgstr "HTTP/3 공개 포트는 1에서 65535 사이의 정수여야 합니다. 입력값: %(value)s"
 
 #. Used in the browser
 #, python-brace-format
 msgid "HTTP/3 advertised port {optional}"
-msgstr ""
+msgstr "HTTP/3 공개 포트 {optional}"
 
 #. Used in the browser
 #, python-brace-format
@@ -5266,6 +5270,9 @@ msgid ""
 "Docker, and allow it through any firewall. Only routers with TLS can use "
 "HTTP/3."
 msgstr ""
+"HTTP/3는 이 포트에서 UDP도 사용합니다. 이 포트도 게시하세요(예: Docker에서 "
+"{udp_port}). 방화벽에서도 허용하세요. TLS를 사용하는 라우터만 HTTP/3를 "
+"사용할 수 있습니다."
 
 #. Used in the browser
 msgid ""
@@ -9540,6 +9547,9 @@ msgid ""
 "requiring a client certificate can be reached without one (Traefik built "
 "with Go 1.27)"
 msgstr ""
+"TLS를 통해 http로 전송된 HTTP/2 요청에서는 SNI 검사를 건너뛰므로 클라이언트 "
+"인증서가 필요한 라우터에 인증서 없이 접근할 수 있습니다(Go 1.27로 빌드된 "
+"Traefik)"
 
 #. Used in the browser
 msgid "SNI strict"
@@ -11081,6 +11091,8 @@ msgid ""
 "The Compress middleware holds megabytes of Brotli state per response in "
 "flight, so unauthenticated clients can exhaust memory"
 msgstr ""
+"Compress 미들웨어는 처리 중인 응답마다 수 메가바이트의 Brotli 상태를 "
+"유지하므로 인증되지 않은 클라이언트가 메모리를 고갈시킬 수 있습니다"
 
 msgid "The CrowdSec alert cache is being refreshed"
 msgstr "CrowdSec 경고 캐시를 새로 고치는 중입니다"
@@ -11100,6 +11112,8 @@ msgid ""
 "The Docker and Swarm password, the Knative token and the HTTP provider "
 "headers are not redacted from debug logs, support dumps and usage statistics"
 msgstr ""
+"Docker 및 Swarm 비밀번호, Knative 토큰, HTTP 프로바이더 헤더가 디버그 로그, "
+"지원 덤프, 사용 통계에서 가려지지 않습니다"
 
 #, python-format
 msgid ""
@@ -11399,6 +11413,9 @@ msgid ""
 "Use it when the backend serves its certificate for a different name than the "
 "target address. Adds serverName via a named serversTransport."
 msgstr ""
+"Traefik이 SNI로 보내고 백엔드 인증서를 검증할 때 사용하는 이름입니다. "
+"백엔드가 대상 주소와 다른 이름의 인증서를 제공할 때 사용하세요. 이름이 "
+"지정된 serversTransport를 통해 serverName을 추가합니다."
 
 #. Used in the browser
 msgid ""
@@ -11406,6 +11423,9 @@ msgid ""
 "on, for example behind a Docker port mapping. Empty advertises the "
 "entrypoint port."
 msgstr ""
+"Traefik이 수신하는 포트와 다를 때 클라이언트가 HTTP/3에 사용하는 포트입니다"
+"(예: Docker 포트 매핑 뒤에 있는 경우). 비워 두면 엔트리포인트 포트를 "
+"공개합니다."
 
 #. Used in the browser
 msgid "The primary view"
@@ -12155,6 +12175,9 @@ msgid_plural ""
 "Traefik Manager cannot edit {names}, because another provider such as Docker "
 "labels defines them. They stop working until you remove the middleware there."
 msgstr[0] ""
+"Traefik Manager는 {names} 라우트를 편집할 수 없습니다. Docker 레이블 같은 "
+"다른 프로바이더에서 정의하기 때문입니다. 그곳에서 미들웨어를 제거할 때까지 "
+"해당 라우트는 작동하지 않습니다."
 
 msgid ""
 "Traefik Manager cannot read its configuration file, so it cannot tell "
@@ -12216,7 +12239,7 @@ msgstr ""
 #, python-brace-format
 msgid "Traefik Manager removes it from {n} route in your config files."
 msgid_plural "Traefik Manager removes it from {n} routes in your config files."
-msgstr[0] ""
+msgstr[0] "Traefik Manager가 구성 파일의 라우트 {n}개에서 이 미들웨어를 제거합니다."
 
 msgid "Traefik Manager update available"
 msgstr "Traefik Manager 업데이트 있음"

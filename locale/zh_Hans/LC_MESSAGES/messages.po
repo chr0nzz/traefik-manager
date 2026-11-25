@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-11-25 02:03-0500\n"
-"PO-Revision-Date: 2026-09-30 00:00+0000\n"
+"PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/"
 "projects/traefik-manager/web-app/zh_Hans/>\n"
@@ -17,6 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.18.0\n"
+"X-Generator: Weblate 2026.12.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -665,6 +666,8 @@ msgid ""
 "A host written with a trailing dot evades TLS option conflict detection, so "
 "a router can bypass the client certificate check of another"
 msgstr ""
+"以尾随点书写的主机可绕过 TLS 选项冲突检测，导致一个路由器能绕过另一个路由器的"
+"客户端证书检查"
 
 msgid "A label for the device this key belongs to."
 msgstr "此密钥所属设备的标签。"
@@ -1458,6 +1461,8 @@ msgid ""
 "An NTLM or Negotiate Authorization header pins a backend transport that is "
 "never released, so unauthenticated clients can exhaust memory and connections"
 msgstr ""
+"NTLM 或 Negotiate Authorization 标头会锁定一个永不释放的后端传输，导致未认证"
+"的客户端可耗尽内存和连接"
 
 msgid ""
 "An agent runs beside Traefik on a remote host so this instance can manage "
@@ -1485,7 +1490,7 @@ msgid "Anything below this level is dropped for this channel."
 msgstr "低于此级别的内容在此渠道中会被丢弃。"
 
 msgid "App Store"
-msgstr ""
+msgstr "App Store"
 
 #. Used in the browser
 msgid "App Token"
@@ -1521,7 +1526,7 @@ msgstr "应用并保存"
 #. Used in the browser
 msgctxt "label"
 msgid "As logged"
-msgstr ""
+msgstr "日志原始时间"
 
 msgid ""
 "Assign a route to a group with the pencil on its card. A group disappears "
@@ -1724,11 +1729,11 @@ msgstr "后端在线 · {latency_ms} ms"
 
 #. Used in the browser
 msgid "Backend server name (SNI)"
-msgstr ""
+msgstr "后端服务器名称（SNI）"
 
 #, python-format
 msgid "Backend server name must be a hostname, got %(value)s"
-msgstr ""
+msgstr "后端服务器名称必须是主机名，实际为 %(value)s"
 
 msgid "Backend service"
 msgstr "后端服务"
@@ -2102,7 +2107,7 @@ msgstr "卡片设置"
 #. Used in the browser
 #, python-brace-format
 msgid "Card settings for {name}"
-msgstr ""
+msgstr "{name} 的卡片设置"
 
 msgctxt "setting"
 msgid "Categories"
@@ -2371,7 +2376,7 @@ msgstr "点击 %(middleware)s 添加一个"
 #. Used in the browser
 msgid ""
 "Click a domain to switch to it. Ctrl or Shift click to select more than one."
-msgstr ""
+msgstr "点击域名以切换到该域名。按住 Ctrl 或 Shift 点击可选择多个。"
 
 msgid "Click to copy"
 msgstr "点击复制"
@@ -2668,7 +2673,7 @@ msgstr "连接失败：{error}"
 
 #. Used in the browser
 msgid "Connection settings saved"
-msgstr ""
+msgstr "连接设置已保存"
 
 #. Used in the browser
 msgid "Connection successful"
@@ -3620,7 +3625,7 @@ msgstr "已禁用"
 #, python-brace-format
 msgid "Disabled {n} route."
 msgid_plural "Disabled {n} routes."
-msgstr[0] ""
+msgstr[0] "已禁用 {n} 个路由。"
 
 msgid ""
 "Disables certificate validation for the backend. Use for self-signed certs "
@@ -3852,7 +3857,7 @@ msgstr "编辑渠道"
 
 #. Used in the browser
 msgid "Edit Entrypoint"
-msgstr ""
+msgstr "编辑入口点"
 
 #. Used in the browser
 msgid "Edit Plugin"
@@ -3860,7 +3865,7 @@ msgstr "编辑插件"
 
 #. Used in the browser
 msgid "Edit Resolver"
-msgstr ""
+msgstr "编辑证书解析器"
 
 #. Used in the browser
 msgid "Edit Service"
@@ -3962,7 +3967,7 @@ msgstr "已启用"
 #, python-brace-format
 msgid "Enabled {n} route."
 msgid_plural "Enabled {n} routes."
-msgstr[0] ""
+msgstr[0] "已启用 {n} 个路由。"
 
 #. Used in the browser
 msgid "Enabled, stream routes are not reachability checked"
@@ -4523,7 +4528,7 @@ msgstr "备用"
 msgid ""
 "FastProxy backend connection pool leaks NTLM and Negotiate identity to "
 "unauthenticated clients"
-msgstr ""
+msgstr "FastProxy 后端连接池会将 NTLM 和 Negotiate 身份泄露给未认证的客户端"
 
 #. Used in the browser
 msgid ""
@@ -5093,12 +5098,12 @@ msgstr "已在端口 {port} 上通告 HTTP/3"
 #, python-format
 msgid ""
 "HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s"
-msgstr ""
+msgstr "HTTP/3 通告端口必须是 1 到 65535 之间的整数，实际为 %(value)s"
 
 #. Used in the browser
 #, python-brace-format
 msgid "HTTP/3 advertised port {optional}"
-msgstr ""
+msgstr "HTTP/3 通告端口 {optional}"
 
 #. Used in the browser
 #, python-brace-format
@@ -5107,6 +5112,8 @@ msgid ""
 "Docker, and allow it through any firewall. Only routers with TLS can use "
 "HTTP/3."
 msgstr ""
+"HTTP/3 还会使用此端口上的 UDP。请同时发布该端口（例如在 Docker 中为 "
+"{udp_port}），并在所有防火墙中放行。只有启用 TLS 的路由器才能使用 HTTP/3。"
 
 #. Used in the browser
 msgid ""
@@ -6283,6 +6290,8 @@ msgid ""
 "NTLM and Kerberos sticky connections are not keyed by service, so one "
 "service TLS client config applies to another"
 msgstr ""
+"NTLM 和 Kerberos 粘性连接未按服务区分，导致一个服务的 TLS 客户端配置被应用到"
+"另一个服务"
 
 #. Used in the browser
 msgctxt "label"
@@ -6347,7 +6356,7 @@ msgstr "需要 {missing}"
 msgid ""
 "Negated Host matcher causes a TLS option conflict that disables client "
 "certificate authentication on the excluded host"
-msgstr ""
+msgstr "取反的 Host 匹配器会引发 TLS 选项冲突，从而在被排除的主机上禁用客户端证书认证"
 
 #. Used in the browser
 #, python-brace-format
@@ -7841,7 +7850,7 @@ msgstr "端口和速率限制"
 #. Used in the browser
 msgid ""
 "Preauthenticated Negotiate contaminates the shared backend connection pool"
-msgstr ""
+msgstr "预认证的 Negotiate 会污染共享的后端连接池"
 
 #, python-format
 msgid ""
@@ -8446,12 +8455,12 @@ msgstr "移除此决策。DELETE /v1/decisions 需要机器令牌，Bouncer 密�
 #. Used in the browser
 #, python-brace-format
 msgid "Remove {domain}"
-msgstr ""
+msgstr "移除 {domain}"
 
 #. Used in the browser
 #, python-brace-format
 msgid "Remove {domain} from Settings, Connection, Domains"
-msgstr ""
+msgstr "从设置 - 连接 - 域名中移除 {domain}"
 
 #. Used in the browser
 #, python-brace-format
@@ -8482,7 +8491,7 @@ msgstr[0] "已移除 %(num)d 个证书，随后在 %(file)s 处停止：%(detail
 #. Used in the browser
 #, python-brace-format
 msgid "Removed {domain} from Settings, Connection, Domains"
-msgstr ""
+msgstr "已从设置 - 连接 - 域名中移除 {domain}"
 
 #. Used in the browser
 #, python-brace-format
@@ -8492,7 +8501,7 @@ msgid ""
 msgid_plural ""
 "Removed {domain} from Settings. It stays in the list while routes {routes} "
 "use it."
-msgstr[0] ""
+msgstr[0] "已从设置中移除 {domain}。路由 {routes} 仍在使用它，因此它会保留在列表中。"
 
 #. Used in the browser
 #, python-brace-format
@@ -9225,6 +9234,8 @@ msgid ""
 "requiring a client certificate can be reached without one (Traefik built "
 "with Go 1.27)"
 msgstr ""
+"对通过 TLS 以 http 方式发送的 HTTP/2 请求跳过了 SNI 检查，导致无需客户端证书"
+"即可访问要求客户端证书的路由器（使用 Go 1.27 构建的 Traefik）"
 
 #. Used in the browser
 msgid "SNI strict"
@@ -9356,7 +9367,7 @@ msgstr "已保存"
 #. Used in the browser
 msgctxt "status"
 msgid "Saved"
-msgstr ""
+msgstr "已保存"
 
 msgid ""
 "Saved in manager.yml, so the choice follows you to every browser. Follow "
@@ -9552,7 +9563,7 @@ msgstr "在上方选择模板以使用向导。"
 
 #. Used in the browser
 msgid "Select at least one domain for this route"
-msgstr ""
+msgstr "至少为此路由选择一个域名"
 
 #. Used in the browser
 msgid "Select at least one source"
@@ -9626,7 +9637,7 @@ msgid "Sending…"
 msgstr "发送中…"
 
 msgid "Separate domains with commas, spaces or new lines."
-msgstr ""
+msgstr "使用逗号、空格或换行分隔域名。"
 
 msgid "Serial Number"
 msgstr "序列号"
@@ -10144,7 +10155,7 @@ msgstr[0] "已跳过 {n} 个无效条目："
 #, python-brace-format
 msgid "Skipped {n} route that is not defined in a config file."
 msgid_plural "Skipped {n} routes that are not defined in a config file."
-msgstr[0] ""
+msgstr[0] "已跳过 {n} 个未在配置文件中定义的路由。"
 
 #. Used in the browser
 msgctxt "button"
@@ -10565,7 +10576,7 @@ msgstr "TLS 验证失败：Traefik Manager 不信任该 Agent 证书（%(error)s
 #. Used in the browser
 #, python-brace-format
 msgid "TLS {profile}, set on the entry point"
-msgstr ""
+msgstr "TLS {profile}，在入口点上设置"
 
 #. Used in the browser
 msgid "TLS, no certResolver"
@@ -10732,6 +10743,8 @@ msgid ""
 "The Compress middleware holds megabytes of Brotli state per response in "
 "flight, so unauthenticated clients can exhaust memory"
 msgstr ""
+"Compress 中间件会为每个进行中的响应保留数 MB 的 Brotli 状态，导致未认证的客户"
+"端可耗尽内存"
 
 msgid "The CrowdSec alert cache is being refreshed"
 msgstr "正在刷新 CrowdSec 告警缓存"
@@ -10751,6 +10764,8 @@ msgid ""
 "The Docker and Swarm password, the Knative token and the HTTP provider "
 "headers are not redacted from debug logs, support dumps and usage statistics"
 msgstr ""
+"Docker 和 Swarm 密码、Knative 令牌以及 HTTP 提供者标头未在调试日志、支持转储"
+"和使用统计中脱敏"
 
 #, python-format
 msgid ""
@@ -11016,6 +11031,8 @@ msgid ""
 "Use it when the backend serves its certificate for a different name than the "
 "target address. Adds serverName via a named serversTransport."
 msgstr ""
+"Traefik 作为 SNI 发送并用于校验后端证书的名称。当后端为不同于目标地址的名称提"
+"供证书时使用。通过命名的 serversTransport 添加 serverName。"
 
 #. Used in the browser
 msgid ""
@@ -11023,6 +11040,8 @@ msgid ""
 "on, for example behind a Docker port mapping. Empty advertises the "
 "entrypoint port."
 msgstr ""
+"当客户端用于 HTTP/3 的端口与 Traefik 监听的端口不同时（例如在 Docker 端口映射"
+"之后）填写此端口。留空则通告入口点端口。"
 
 #. Used in the browser
 msgid "The primary view"
@@ -11176,11 +11195,11 @@ msgstr[0] ""
 
 #. Used in the browser
 msgid "The selected routes are already disabled."
-msgstr ""
+msgstr "所选路由已处于禁用状态。"
 
 #. Used in the browser
 msgid "The selected routes are already enabled."
-msgstr ""
+msgstr "所选路由已处于启用状态。"
 
 #. Used in the browser
 msgid "The server changed, reload the list and select again"
@@ -12133,7 +12152,7 @@ msgstr "未保存的更改"
 
 #. Used in the browser
 msgid "Unsaved changes"
-msgstr ""
+msgstr "未保存的更改"
 
 #. Used in the browser
 #, python-brace-format
@@ -12500,6 +12519,8 @@ msgid ""
 "With TLS on, this route only answers HTTPS, so plain http on {eps} returns "
 "404 page not found. Choose No TLS for an http-only route."
 msgstr ""
+"启用 TLS 后，此路由仅响应 HTTPS，因此 {eps} 上的普通 http 请求会返回 404 "
+"page not found。仅 http 的路由请选择无 TLS。"
 
 #, python-format
 msgid ""
@@ -15754,7 +15775,7 @@ msgstr "{digest} 摘要汇总"
 #. Used in the browser
 #, python-brace-format
 msgid "{domain} comes from this agent's Domains setting. Remove it there."
-msgstr ""
+msgstr "{domain} 来自此 Agent 的域名设置。请在那里移除。"
 
 #. Used in the browser
 #, python-brace-format
@@ -15762,6 +15783,8 @@ msgid ""
 "{domain} is the only domain in Settings, Connection, Domains. Add another "
 "one there before removing it."
 msgstr ""
+"{domain} 是设置 - 连接 - 域名中唯一的域名。请先在那里添加另一个域名，再移除它"
+"。"
 
 #. Used in the browser
 #, python-brace-format
@@ -15771,7 +15794,7 @@ msgid ""
 msgid_plural ""
 "{domain} is used by routes {routes}, so it stays in the list until those "
 "routes stop using it."
-msgstr[0] ""
+msgstr[0] "{domain} 正被路由 {routes} 使用，因此会保留在列表中，直到路由不再使用它。"
 
 #. Used in the browser
 #, python-brace-format
@@ -15848,13 +15871,13 @@ msgstr[0] "{n} 个路由中有 {failed} 个无法删除。"
 #, python-brace-format
 msgid "{failed} of {n} route could not be disabled."
 msgid_plural "{failed} of {n} routes could not be disabled."
-msgstr[0] ""
+msgstr[0] "{n} 个路由中有 {failed} 个无法禁用。"
 
 #. Used in the browser
 #, python-brace-format
 msgid "{failed} of {n} route could not be enabled."
 msgid_plural "{failed} of {n} routes could not be enabled."
-msgstr[0] ""
+msgstr[0] "{n} 个路由中有 {failed} 个无法启用。"
 
 #. Used in the browser
 #, python-brace-format
