@@ -70,7 +70,7 @@
         .wz-opt {
             font: 600 9px 'JetBrains Mono', monospace; letter-spacing: .1em; text-transform: uppercase;
             color: var(--muted); border: 1px solid var(--border); border-radius: 4px;
-            padding: 1px 5px; margin-left: 6px; vertical-align: 1px;
+            padding: 1px 5px; margin-inline-start: 6px; vertical-align: 1px;
         }
         .wz-note { font: 400 11px/1.55 'JetBrains Mono', monospace; color: var(--muted); margin: 8px 2px 24px; max-width: 84ch; }
         .wz-body .sc-root .sc-set { align-items: start; padding-top: 10px; padding-bottom: 10px; }
@@ -91,7 +91,7 @@
 
         @media (max-width: 860px) {
             body { padding: 0; }
-            .wz-shell { height: 100vh; border-radius: 0; border-left: none; border-right: none; }
+            .wz-shell { height: 100vh; border-radius: 0; border-inline-start: none; border-inline-end: none; }
             .wz-nav { width: 60px; padding: 12px 6px; }
             .wz-nav-btn { justify-content: center; font-size: 0; gap: 0; }
             .wz-nav-label { display: none; }
@@ -887,7 +887,7 @@
                     <button type="button" class="btn-secondary" id="wzBack" onclick="goTo(currentStep - 1)">
                         <i class="ph-bold ph-arrow-left"></i> {{ pgettext('button', 'Back') }}
                     </button>
-                    <div class="flex items-center gap-2" style="margin-left:auto">
+                    <div class="flex items-center gap-2" style="margin-inline-start:auto">
                         <span class="wz-skip-note" id="wzSkipNote"></span>
                         <button type="button" class="btn-primary" id="wzNext" onclick="nextStep()">
                             {{ pgettext('button', 'Continue') }} <i class="ph-bold ph-arrow-right"></i>

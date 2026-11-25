@@ -35,7 +35,7 @@
                             <div class="flex items-center gap-2 py-1">
                                 <i class="ph-bold ph-desktop" style="width:18px;text-align:center;color:var(--muted)"></i>
                                 <div class="text-xs font-medium truncate" style="color:var(--text);flex:1;min-width:0">{{ _('Follow system') }}</div>
-                                {% if not language_setting %}<i class="ph-bold ph-check text-xs ml-auto flex-shrink-0" style="color:var(--blue)"></i>{% endif %}
+                                {% if not language_setting %}<i class="ph-bold ph-check text-xs ms-auto flex-shrink-0" style="color:var(--blue)"></i>{% endif %}
                             </div>
                         </div>
                         {% for lang in language_options %}
@@ -44,7 +44,7 @@
                                 {% if lang.region %}<span class="tm-flag tm-lang-flag" translate="no" aria-hidden="true" style="width:18px;text-align:center">{{ lang.region | flag }}</span>
                                 {% else %}<i class="ph-bold ph-globe" style="width:18px;text-align:center;color:var(--muted)"></i>{% endif %}
                                 <div class="text-xs font-medium truncate" style="color:var(--text);flex:1;min-width:0">{{ lang.name }}</div>
-                                {% if language_setting == lang.tag %}<i class="ph-bold ph-check text-xs ml-auto flex-shrink-0" style="color:var(--blue)"></i>{% endif %}
+                                {% if language_setting == lang.tag %}<i class="ph-bold ph-check text-xs ms-auto flex-shrink-0" style="color:var(--blue)"></i>{% endif %}
                             </div>
                         </div>
                         {% endfor %}
@@ -62,7 +62,7 @@
                         <span id="serverSwitcherLabel" style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ pgettext('button', 'Host') }}</span>
                         <i class="ph-bold ph-caret-down" style="font-size:10px;opacity:0.6;"></i>
                     </button>
-                    <div id="serverSwitcherMenu" class="notif-panel" style="position:absolute;top:44px;right:0;width:220px;max-height:320px;overflow-y:auto;z-index:1000;">
+                    <div id="serverSwitcherMenu" class="notif-panel" style="position:absolute;top:44px;inset-inline-end:0;width:220px;max-height:320px;overflow-y:auto;z-index:1000;">
                         <div id="serverSwitcherList"></div>
                     </div>
                 </div>
@@ -120,7 +120,7 @@
 
     <div class="notif-panel" id="shortcutsPanel">
         <div class="notif-panel-header">
-            <span class="notif-panel-title"><i class="ph-bold ph-keyboard" style="margin-right:6px"></i>{{ _('Keyboard Shortcuts') }}</span>
+            <span class="notif-panel-title"><i class="ph-bold ph-keyboard" style="margin-inline-end:6px"></i>{{ _('Keyboard Shortcuts') }}</span>
         </div>
         <div class="notif-list" style="max-height:480px;padding:10px 12px;">
             <div class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--muted)">{{ pgettext('label', 'Actions') }}</div>

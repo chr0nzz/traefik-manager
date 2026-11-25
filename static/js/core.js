@@ -971,12 +971,12 @@ function installPWA() {
 
 function _emptyMountState({ icon, title, description, steps, note }) {
     const stepHtml = steps.map((step, i) => `
-        <div class="text-left" style="max-width:480px;margin:0 auto">
+        <div class="text-start" style="max-width:480px;margin:0 auto">
             <p class="text-xs mb-2" style="color:var(--muted)">${steps.length > 1 ? `<span class="font-bold" style="color:var(--text)">${th('Step {n}.', { n: i + 1 })}</span> ` : ''}${step.label}</p>
             <div class="relative rounded-lg overflow-hidden" style="background:var(--input-bg);border:1px solid var(--border)">
-                <pre class="text-xs font-mono px-4 py-3 pr-16 leading-relaxed overflow-x-auto" style="color:var(--blue);white-space:pre">${step.code}</pre>
+                <pre class="text-xs font-mono px-4 py-3 pe-16 leading-relaxed overflow-x-auto" style="color:var(--blue);white-space:pre">${step.code}</pre>
                 <button onclick="_copyCode(this, ${JSON.stringify(step.code)})"
-                    class="absolute top-2 right-2 flex items-center gap-1 text-xs px-2 py-1 rounded"
+                    class="absolute top-2 end-2 flex items-center gap-1 text-xs px-2 py-1 rounded"
                     style="background:var(--btn-secondary-bg);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all 0.15s"
                     onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
                     onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
@@ -985,7 +985,7 @@ function _emptyMountState({ icon, title, description, steps, note }) {
             </div>
         </div>`).join('<div style="height:12px"></div>');
 
-    const noteHtml = note ? `<p class="text-xs mt-4" style="color:var(--muted);opacity:0.7"><i class="ph-bold ph-info mr-1"></i>${note}</p>` : '';
+    const noteHtml = note ? `<p class="text-xs mt-4" style="color:var(--muted);opacity:0.7"><i class="ph-bold ph-info me-1"></i>${note}</p>` : '';
 
     return `<div class="text-center py-12 px-4 rounded-xl" style="border:1px solid var(--border)">
         <i class="ph-light ${icon} text-5xl block mb-3 opacity-30" style="color:var(--muted)"></i>
@@ -1172,7 +1172,7 @@ async function renderGeoMap(container, countryData, onCountryClick, activeCC) {
         if (!p) { tip.style.display = 'none'; return; }
         const cc = p.getAttribute('data-cc');
         const d  = countryData[cc] || {};
-        tip.innerHTML = `${_flagEmoji(cc)} ${_esc(d.name || p.getAttribute('data-name') || cc)} <span style="color:var(--muted);margin-left:4px">${d.count || 0}</span>`;
+        tip.innerHTML = `${_flagEmoji(cc)} ${_esc(d.name || p.getAttribute('data-name') || cc)} <span style="color:var(--muted);margin-inline-start:4px">${d.count || 0}</span>`;
         tip.style.display = 'block';
         tip.style.left = (e.clientX + 12) + 'px';
         tip.style.top  = (e.clientY + 12) + 'px';
@@ -1298,7 +1298,7 @@ async function loadIpDiagnostic() {
                 <span class="text-xs font-mono truncate" style="color:var(--text);flex:1;min-width:0" title="${_esc(ip || '')}">${ip ? _esc(ip) : '<span style="color:var(--muted)">-</span>'}</span>
                 ${ip ? ipClassBadge(cls || classifyIp(ip)) : ''}
             </div>
-            ${hint ? `<div class="text-xs" style="color:var(--muted);margin-top:5px;padding-left:128px">${_esc(hint)}</div>` : ''}
+            ${hint ? `<div class="text-xs" style="color:var(--muted);margin-top:5px;padding-inline-start:128px">${_esc(hint)}</div>` : ''}
         </div>`;
 
     const hdrRows = Object.entries(d.headers || {}).map(([k, v]) => `
@@ -1326,8 +1326,8 @@ async function loadIpDiagnostic() {
         <div class="rounded-xl p-3 mb-3" style="background:var(--card);border:1px solid var(--border)">
             ${hdrRows}
         </div>
-        ${d.proxy_trusted === false && ((d.headers || {})['X-Forwarded-For'] || (d.headers || {})['X-Forwarded-Proto'] || (d.headers || {})['X-Forwarded-Host']) ? `<div class="rounded-xl p-3 mb-3 text-xs" style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);color:var(--text)"><i class="ph-bold ph-warning" style="color:var(--yellow);margin-right:6px"></i>${th('Forwarding headers arrived from {strong}, which is not in {trusted_proxies}, so they were ignored. If that address is your reverse proxy, add it to {trusted_proxies2}.', { strong: tmHtml(`<strong>${_esc(d.socket_peer || '')}</strong>`), trusted_proxies: tmHtml(`<code class="font-mono">TRUSTED_PROXIES</code>`), trusted_proxies2: tmHtml(`<code class="font-mono">TRUSTED_PROXIES</code>`) })}</div>` : ''}
-        ${spoofable ? `<div class="rounded-xl p-3 text-xs" style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);color:var(--text)"><i class="ph-bold ph-warning" style="color:var(--yellow);margin-right:6px"></i>${th('The client IP the app trusts is {strong}. If clients should reach you from the public internet, a proxy in front is rewriting it - check that your trusted hops and the upstream {trustedips} are set correctly, or real client IPs will be lost to logs, CrowdSec and ipAllowList.', { strong: tmHtml(`<strong>${_esc(d.effective_class)}</strong>`), trustedips: tmHtml(`<code class="font-mono">trustedIPs</code>`) })}</div>` : ''}`;
+        ${d.proxy_trusted === false && ((d.headers || {})['X-Forwarded-For'] || (d.headers || {})['X-Forwarded-Proto'] || (d.headers || {})['X-Forwarded-Host']) ? `<div class="rounded-xl p-3 mb-3 text-xs" style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);color:var(--text)"><i class="ph-bold ph-warning" style="color:var(--yellow);margin-inline-end:6px"></i>${th('Forwarding headers arrived from {strong}, which is not in {trusted_proxies}, so they were ignored. If that address is your reverse proxy, add it to {trusted_proxies2}.', { strong: tmHtml(`<strong>${_esc(d.socket_peer || '')}</strong>`), trusted_proxies: tmHtml(`<code class="font-mono">TRUSTED_PROXIES</code>`), trusted_proxies2: tmHtml(`<code class="font-mono">TRUSTED_PROXIES</code>`) })}</div>` : ''}
+        ${spoofable ? `<div class="rounded-xl p-3 text-xs" style="background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.3);color:var(--text)"><i class="ph-bold ph-warning" style="color:var(--yellow);margin-inline-end:6px"></i>${th('The client IP the app trusts is {strong}. If clients should reach you from the public internet, a proxy in front is rewriting it - check that your trusted hops and the upstream {trustedips} are set correctly, or real client IPs will be lost to logs, CrowdSec and ipAllowList.', { strong: tmHtml(`<strong>${_esc(d.effective_class)}</strong>`), trustedips: tmHtml(`<code class="font-mono">trustedIPs</code>`) })}</div>` : ''}`;
 }
 
 function _initMobileFilterBars() {

@@ -131,7 +131,7 @@ async function openDockerRouteDetail(idx) {
 
     document.getElementById('detailEditBtn').style.display = 'none';
 
-    const dockerBadge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-cube"></i> docker</span>`;
+    const dockerBadge = `<span class="d-flat d-off ms-2"><i class="ph-bold ph-cube"></i> docker</span>`;
 
     let rawLabels = null;
     try {

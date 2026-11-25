@@ -97,7 +97,7 @@
 
 {% if no_auth %}
 <div id="noAuthBanner" style="background:var(--red);color:#fff;text-align:center;padding:8px 16px;font-size:13px;font-weight:600;position:sticky;top:0;z-index:99997;">
-    <i class="ph-bold ph-warning" style="margin-right:6px"></i>
+    <i class="ph-bold ph-warning" style="margin-inline-end:6px"></i>
     {{ _('No authentication is active - this interface is publicly accessible. Enable a password or OIDC in Settings - Authentication.') }}
 </div>
 {% endif %}
@@ -119,7 +119,7 @@
             </label>
         </div>
         <div id="customConfirmTypeWrap" style="display:none;padding:16px 22px 0">
-            <label class="text-xs block mb-1.5" style="color:var(--muted)">{% set confirm_word %}<button type="button" id="customConfirmWord" title="{{ _('Click to copy') }}" style="color:var(--red);font-weight:700;background:none;border:none;padding:0 2px;cursor:copy;font-size:inherit;font-family:inherit;word-break:break-all;text-align:left" translate="no"></button>{% endset %}{{ _('Type %(confirm_word)s to confirm', confirm_word=confirm_word) }}</label>
+            <label class="text-xs block mb-1.5" style="color:var(--muted)">{% set confirm_word %}<button type="button" id="customConfirmWord" title="{{ _('Click to copy') }}" style="color:var(--red);font-weight:700;background:none;border:none;padding:0 2px;cursor:copy;font-size:inherit;font-family:inherit;word-break:break-all;text-align:start" translate="no"></button>{% endset %}{{ _('Type %(confirm_word)s to confirm', confirm_word=confirm_word) }}</label>
             <input type="text" id="customConfirmType" class="input-field" autocomplete="off" spellcheck="false" placeholder="">
         </div>
         <div class="flex gap-2 justify-end" style="padding:18px 22px;margin-top:4px">
@@ -136,8 +136,8 @@
             <span class="font-semibold text-sm">{{ _('Raw YAML - traefik.yml') }}</span>
         </div>
         <div class="flex gap-2">
-            <button onclick="saveStaticPopout()" class="btn-primary text-xs"><i class="ph-bold ph-floppy-disk mr-1"></i>{{ pgettext('button', 'Save') }}</button>
-            <button onclick="closeStaticYamlPopout()" class="btn-secondary text-xs"><i class="ph-bold ph-arrows-in mr-1"></i>{{ pgettext('button', 'Close') }}</button>
+            <button onclick="saveStaticPopout()" class="btn-primary text-xs"><i class="ph-bold ph-floppy-disk me-1"></i>{{ pgettext('button', 'Save') }}</button>
+            <button onclick="closeStaticYamlPopout()" class="btn-secondary text-xs"><i class="ph-bold ph-arrows-in me-1"></i>{{ pgettext('button', 'Close') }}</button>
         </div>
     </div>
     <div id="staticYamlPopoutEditor" style="flex:1;min-height:0;"></div>
@@ -150,8 +150,8 @@
             <span class="font-semibold text-sm" id="routeYamlPopoutTitle">{{ _('Raw YAML') }}</span>
         </div>
         <div class="flex gap-2">
-            <button onclick="saveRouteYaml()" class="btn-primary text-xs"><i class="ph-bold ph-floppy-disk mr-1"></i>{{ pgettext('button', 'Save') }}</button>
-            <button onclick="closeRouteYamlEditor()" class="btn-secondary text-xs"><i class="ph-bold ph-arrows-in mr-1"></i>{{ pgettext('button', 'Close') }}</button>
+            <button onclick="saveRouteYaml()" class="btn-primary text-xs"><i class="ph-bold ph-floppy-disk me-1"></i>{{ pgettext('button', 'Save') }}</button>
+            <button onclick="closeRouteYamlEditor()" class="btn-secondary text-xs"><i class="ph-bold ph-arrows-in me-1"></i>{{ pgettext('button', 'Close') }}</button>
         </div>
     </div>
     <div id="routeYamlOrigins" class="px-6 py-2 text-xs" style="display:none;flex-shrink:0;border-bottom:1px solid var(--border);color:var(--muted);"></div>
@@ -167,7 +167,7 @@
             </div>
             <div id="gitDiffFileTabs" class="flex gap-1 flex-wrap"></div>
         </div>
-        <button onclick="closeGitDiffPopout()" class="btn-secondary text-xs flex-shrink-0"><i class="ph-bold ph-arrows-in mr-1"></i>{{ pgettext('button', 'Close') }}</button>
+        <button onclick="closeGitDiffPopout()" class="btn-secondary text-xs flex-shrink-0"><i class="ph-bold ph-arrows-in me-1"></i>{{ pgettext('button', 'Close') }}</button>
     </div>
     <div id="gitDiffPopoutEditor" style="flex:1;min-height:0;"></div>
 </div>
@@ -181,7 +181,7 @@
     <button id="traefikRestartManualReload" onclick="location.reload()" style="display:none;margin-top:8px;padding:8px 20px;border-radius:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:13px;cursor:pointer">{{ _('Reload now') }}</button>
 </div>
 
-<div id="tmUpdatePopup" class="hidden" style="position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--card);border:1px solid var(--orange);border-radius:10px;padding:14px 16px;min-width:240px;max-width:300px;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
+<div id="tmUpdatePopup" class="hidden" style="position:fixed;bottom:24px;inset-inline-end:24px;z-index:9999;background:var(--card);border:1px solid var(--orange);border-radius:10px;padding:14px 16px;min-width:240px;max-width:300px;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
     <div class="flex items-start gap-3">
         <i class="ph-bold ph-arrow-circle-up" style="color:var(--orange);font-size:20px;flex-shrink:0;margin-top:1px"></i>
         <div style="flex:1;min-width:0;">
@@ -195,7 +195,7 @@
     </div>
 </div>
 
-<div id="securityAdvisoryPopup" class="hidden" style="position:fixed;bottom:24px;right:24px;z-index:10000;background:var(--card);border:1px solid var(--red);border-radius:10px;padding:14px 16px;min-width:260px;max-width:340px;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
+<div id="securityAdvisoryPopup" class="hidden" style="position:fixed;bottom:24px;inset-inline-end:24px;z-index:10000;background:var(--card);border:1px solid var(--red);border-radius:10px;padding:14px 16px;min-width:260px;max-width:340px;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
     <div class="flex items-start gap-3">
         <i class="ph-bold ph-shield-warning" style="color:var(--red);font-size:20px;flex-shrink:0;margin-top:1px"></i>
         <div style="flex:1;min-width:0;">
@@ -216,7 +216,7 @@
     <div class="toast-item {{ category }}" onclick="this.remove()">
         {% if category == 'success' %}<i class="ph-fill ph-check-circle text-green-400 text-lg"></i>{% else %}<i class="ph-fill ph-warning-circle text-red-400 text-lg"></i>{% endif %}
         <span>{{ message }}</span>
-        <button onclick="this.parentElement.remove()" class="ml-auto text-traefik-muted hover:text-white"><i class="ph-bold ph-x text-sm"></i></button>
+        <button onclick="this.parentElement.remove()" class="ms-auto text-traefik-muted hover:text-white"><i class="ph-bold ph-x text-sm"></i></button>
     </div>
     {% endfor %}
   {% endif %}
@@ -233,7 +233,7 @@
         <div class="flex items-center gap-3 rounded-lg px-4 py-2.5" style="background:rgba(9,105,218,0.08);border:1px solid rgba(9,105,218,0.25)">
             <i class="ph-bold ph-info text-sm shrink-0" style="color:var(--blue)"></i>
             <p class="text-xs flex-1" style="color:var(--text)">
-                {{ _('%(new_in_v1)s Static Config Editor lets you manage your Traefik static config from the UI. %(set_it_up)s', new_in_v1=tag('strong', _('New in v1:')), set_it_up=tag('a', _('Set it up →'), href='https://traefik-manager.xyzlab.dev/static', target='_blank', style_='color:var(--blue);text-decoration:underline;margin-left:4px')) }}
+                {{ _('%(new_in_v1)s Static Config Editor lets you manage your Traefik static config from the UI. %(set_it_up)s', new_in_v1=tag('strong', _('New in v1:')), set_it_up=tag('a', _('Set it up →'), href='https://traefik-manager.xyzlab.dev/static', target='_blank', style_='color:var(--blue);text-decoration:underline;margin-inline-start:4px')) }}
             </p>
             <button onclick="document.getElementById('staticSetupBanner').style.display='none';localStorage.setItem('tm-static-setup-v1','1')" class="shrink-0" style="color:var(--muted);line-height:1" aria-label="{{ pgettext('label', 'Dismiss') }}">
                 <i class="ph-bold ph-x text-sm"></i>
@@ -490,7 +490,7 @@ function _renderServerSwitcherList(runHealthChecks) {
             <div class="flex items-center gap-2 py-1">
                 <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${dotColor}"${dotId ? ` id="${dotId}"` : ''}></span>
                 <div style="min-width:0;flex:1;"><div class="text-xs font-medium truncate" style="color:var(--text)">${label}</div></div>
-                ${active ? '<i class="ph-bold ph-check text-xs ml-auto flex-shrink-0" style="color:var(--blue)"></i>' : ''}
+                ${active ? '<i class="ph-bold ph-check text-xs ms-auto flex-shrink-0" style="color:var(--blue)"></i>' : ''}
             </div>
         </div>`;
     const hostDot = 'var(--green)';
@@ -712,7 +712,7 @@ document.addEventListener('click', e => {
     <span id="footerManagerVer" style="cursor:pointer" title="{{ pgettext('tooltip', 'About') }}" onclick="openSettingsModal('about')">-</span>
 </footer>
 
-<div id="_copyToast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:500;pointer-events:none;opacity:0;transition:opacity 0.2s;z-index:9999"></div>
+<div id="_copyToast" style="position:fixed;bottom:24px;inset-inline-start:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:500;pointer-events:none;opacity:0;transition:opacity 0.2s;z-index:9999"></div>
 
 <script src="{{ base_path }}/static/vendor/dagre.min.js"></script>
 <script src="{{ base_path }}/static/vendor/monaco/vs/loader.js"></script>
