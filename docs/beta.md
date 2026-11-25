@@ -88,6 +88,18 @@ Switching over for one test and rolling back afterwards is a perfectly good way 
 
 ---
 
+## Mobile app
+
+| Platform | Beta |
+|---|---|
+| iPhone, iPad and Apple silicon Mac | [Join the TestFlight beta](https://testflight.apple.com/join/zjT2P6JN) |
+
+Install the [TestFlight](https://apps.apple.com/app/testflight/id899247664) app, open the link and tap **Accept**. TestFlight updates the app when a new beta build is out. Send feedback from TestFlight or [open an issue](https://github.com/chr0nzz/traefik-manager-mobile/issues).
+
+To leave the beta, install [Traefik Manager from the App Store](https://apps.apple.com/us/app/traefik-manager/id6826725061).
+
+---
+
 ## What is in it
 
 The [release notes](https://github.com/chr0nzz/traefik-manager/releases) cover each release. For what is on `dev` right now, the [commit history](https://github.com/chr0nzz/traefik-manager/commits/dev) is the source of truth.

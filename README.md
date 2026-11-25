@@ -166,6 +166,7 @@ Native Android (Kotlin and Jetpack Compose) and iOS (Swift and SwiftUI) apps for
 [![Google Play](https://img.shields.io/badge/Google_Play-Available-blue?logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager)
 [![Play Downloads](https://playbadges.pavi2410.me/badge/downloads?id=dev.chr0nzz.traefikmanager)](https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager)
 [![App Store](https://img.shields.io/badge/App_Store-Available-blue?logo=apple&logoColor=white)](https://apps.apple.com/us/app/traefik-manager/id6826725061)
+[![TestFlight](https://img.shields.io/badge/TestFlight-Beta-blue?logo=apple&logoColor=white)](https://testflight.apple.com/join/zjT2P6JN)
 
 <a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager"><img src="static/icons/GetItOnGooglePlay.svg" alt="Get it on Google Play" height="50" /></a>
 <a href="https://apps.apple.com/us/app/traefik-manager/id6826725061"><img src="static/icons/DownloadOnTheAppStore.svg" alt="Download on the App Store" height="50" /></a>
@@ -173,6 +174,7 @@ Native Android (Kotlin and Jetpack Compose) and iOS (Swift and SwiftUI) apps for
 
 [Repository](https://github.com/chr0nzz/traefik-manager-mobile) ·
 [Releases](https://github.com/chr0nzz/traefik-manager-mobile/releases/latest) ·
+[iOS beta (TestFlight)](https://testflight.apple.com/join/zjT2P6JN) ·
 [Docs](https://traefik-manager.xyzlab.dev/mobile.html)
 
 ---
