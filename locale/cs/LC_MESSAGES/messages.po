@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
 "POT-Creation-Date: 2026-11-25 02:03-0500\n"
-"PO-Revision-Date: 2026-09-30 04:29+0000\n"
+"PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/traefik-manager/"
 "web-app/cs/>\n"
@@ -17,6 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2);\n"
 "Generated-By: Babel 2.18.0\n"
+"X-Generator: Weblate 2026.12.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -743,6 +744,8 @@ msgid ""
 "A host written with a trailing dot evades TLS option conflict detection, so "
 "a router can bypass the client certificate check of another"
 msgstr ""
+"Host zapsaný s tečkou na konci obejde detekci konfliktu možností TLS, takže "
+"router může obejít kontrolu klientského certifikátu jiného routeru"
 
 msgid "A label for the device this key belongs to."
 msgstr "Označení zařízení, ke kterému tento klíč patří."
@@ -1574,6 +1577,9 @@ msgid ""
 "An NTLM or Negotiate Authorization header pins a backend transport that is "
 "never released, so unauthenticated clients can exhaust memory and connections"
 msgstr ""
+"Hlavička Authorization s NTLM nebo Negotiate připne backendový transport, "
+"který se nikdy neuvolní, takže neověření klienti mohou vyčerpat paměť a "
+"spojení"
 
 msgid ""
 "An agent runs beside Traefik on a remote host so this instance can manage "
@@ -1604,7 +1610,7 @@ msgid "Anything below this level is dropped for this channel."
 msgstr "Vše pod touto úrovní se pro tento kanál zahodí."
 
 msgid "App Store"
-msgstr ""
+msgstr "App Store"
 
 #. Used in the browser
 msgid "App Token"
@@ -1640,7 +1646,7 @@ msgstr "Použít a uložit"
 #. Used in the browser
 msgctxt "label"
 msgid "As logged"
-msgstr ""
+msgstr "Podle logu"
 
 msgid ""
 "Assign a route to a group with the pencil on its card. A group disappears "
@@ -1866,11 +1872,11 @@ msgstr "Backend online · {latency_ms}ms"
 
 #. Used in the browser
 msgid "Backend server name (SNI)"
-msgstr ""
+msgstr "Název backendového serveru (SNI)"
 
 #, python-format
 msgid "Backend server name must be a hostname, got %(value)s"
-msgstr ""
+msgstr "Název backendového serveru musí být název hostitele, zadáno %(value)s"
 
 msgid "Backend service"
 msgstr "Backendová služba"
@@ -2263,7 +2269,7 @@ msgstr "Nastavení karty"
 #. Used in the browser
 #, python-brace-format
 msgid "Card settings for {name}"
-msgstr ""
+msgstr "Nastavení karty {name}"
 
 msgctxt "setting"
 msgid "Categories"
@@ -2544,6 +2550,8 @@ msgstr "Klikněte na %(middleware)s a jedno přidejte"
 msgid ""
 "Click a domain to switch to it. Ctrl or Shift click to select more than one."
 msgstr ""
+"Kliknutím na doménu na ni přepnete. Pro výběr více domén klikněte s Ctrl "
+"nebo Shift."
 
 msgid "Click to copy"
 msgstr "Kliknutím zkopírujete"
@@ -2856,7 +2864,7 @@ msgstr "Připojení se nezdařilo: {error}"
 
 #. Used in the browser
 msgid "Connection settings saved"
-msgstr ""
+msgstr "Nastavení připojení uloženo"
 
 #. Used in the browser
 msgid "Connection successful"
@@ -3866,9 +3874,9 @@ msgstr "Vypnuto"
 #, python-brace-format
 msgid "Disabled {n} route."
 msgid_plural "Disabled {n} routes."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Vypnuta {n} trasa."
+msgstr[1] "Vypnuty {n} trasy."
+msgstr[2] "Vypnuto {n} tras."
 
 msgid ""
 "Disables certificate validation for the backend. Use for self-signed certs "
@@ -4107,7 +4115,7 @@ msgstr "Upravit kanál"
 
 #. Used in the browser
 msgid "Edit Entrypoint"
-msgstr ""
+msgstr "Upravit vstupní bod"
 
 #. Used in the browser
 msgid "Edit Plugin"
@@ -4115,7 +4123,7 @@ msgstr "Upravit plugin"
 
 #. Used in the browser
 msgid "Edit Resolver"
-msgstr ""
+msgstr "Upravit resolver"
 
 #. Used in the browser
 msgid "Edit Service"
@@ -4219,9 +4227,9 @@ msgstr "Zapnuto"
 #, python-brace-format
 msgid "Enabled {n} route."
 msgid_plural "Enabled {n} routes."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Zapnuta {n} trasa."
+msgstr[1] "Zapnuty {n} trasy."
+msgstr[2] "Zapnuto {n} tras."
 
 #. Used in the browser
 msgid "Enabled, stream routes are not reachability checked"
@@ -4816,6 +4824,8 @@ msgid ""
 "FastProxy backend connection pool leaks NTLM and Negotiate identity to "
 "unauthenticated clients"
 msgstr ""
+"Fond backendových spojení FastProxy prozrazuje identitu NTLM a Negotiate "
+"neověřeným klientům"
 
 #. Used in the browser
 msgid ""
@@ -5409,11 +5419,12 @@ msgstr "HTTP/3 inzerováno na portu {port}"
 msgid ""
 "HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s"
 msgstr ""
+"Inzerovaný port HTTP/3 musí být celé číslo od 1 do 65535, zadáno %(value)s"
 
 #. Used in the browser
 #, python-brace-format
 msgid "HTTP/3 advertised port {optional}"
-msgstr ""
+msgstr "Inzerovaný port HTTP/3 {optional}"
 
 #. Used in the browser
 #, python-brace-format
@@ -5422,6 +5433,9 @@ msgid ""
 "Docker, and allow it through any firewall. Only routers with TLS can use "
 "HTTP/3."
 msgstr ""
+"HTTP/3 na tomto portu používá také UDP. Publikujte ho také, například "
+"{udp_port} v Dockeru, a povolte ho ve všech firewallech. HTTP/3 mohou "
+"používat jen routery s TLS."
 
 #. Used in the browser
 msgid ""
@@ -6632,6 +6646,8 @@ msgid ""
 "NTLM and Kerberos sticky connections are not keyed by service, so one "
 "service TLS client config applies to another"
 msgstr ""
+"Sticky spojení NTLM a Kerberos nejsou klíčována podle služby, takže "
+"konfigurace TLS klienta jedné služby platí i pro jinou"
 
 #. Used in the browser
 msgctxt "label"
@@ -6697,6 +6713,8 @@ msgid ""
 "Negated Host matcher causes a TLS option conflict that disables client "
 "certificate authentication on the excluded host"
 msgstr ""
+"Negovaný matcher Host způsobí konflikt možností TLS, který na vyloučeném "
+"hostu vypne ověřování klientským certifikátem"
 
 #. Used in the browser
 #, python-brace-format
@@ -8277,7 +8295,7 @@ msgstr "Port a limit požadavků"
 #. Used in the browser
 msgid ""
 "Preauthenticated Negotiate contaminates the shared backend connection pool"
-msgstr ""
+msgstr "Předem ověřený Negotiate kontaminuje sdílený fond backendových spojení"
 
 #, python-format
 msgid ""
@@ -8915,12 +8933,12 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Remove {domain}"
-msgstr ""
+msgstr "Odebrat doménu {domain}"
 
 #. Used in the browser
 #, python-brace-format
 msgid "Remove {domain} from Settings, Connection, Domains"
-msgstr ""
+msgstr "Odebrat doménu {domain} z Nastavení, Připojení, Domény"
 
 #. Used in the browser
 #, python-brace-format
@@ -8954,7 +8972,7 @@ msgstr[2] "Odebráno %(num)d certifikátů, poté zastaveno u %(file)s: %(detail
 #. Used in the browser
 #, python-brace-format
 msgid "Removed {domain} from Settings, Connection, Domains"
-msgstr ""
+msgstr "Doména {domain} odebrána z Nastavení, Připojení, Domény"
 
 #. Used in the browser
 #, python-brace-format
@@ -8965,8 +8983,14 @@ msgid_plural ""
 "Removed {domain} from Settings. It stays in the list while routes {routes} "
 "use it."
 msgstr[0] ""
+"Doména {domain} odebrána z Nastavení. V seznamu zůstane, dokud ji používá "
+"trasa {routes}."
 msgstr[1] ""
+"Doména {domain} odebrána z Nastavení. V seznamu zůstane, dokud ji používají "
+"trasy {routes}."
 msgstr[2] ""
+"Doména {domain} odebrána z Nastavení. V seznamu zůstane, dokud ji používají "
+"trasy {routes}."
 
 #. Used in the browser
 #, python-brace-format
@@ -9771,6 +9795,9 @@ msgid ""
 "requiring a client certificate can be reached without one (Traefik built "
 "with Go 1.27)"
 msgstr ""
+"Kontrola SNI se přeskakuje u požadavků HTTP/2 odeslaných jako http přes TLS, "
+"takže router vyžadující klientský certifikát je dostupný i bez něj (Traefik "
+"sestavený s Go 1.27)"
 
 #. Used in the browser
 msgid "SNI strict"
@@ -9904,7 +9931,7 @@ msgstr "Uloženo"
 #. Used in the browser
 msgctxt "status"
 msgid "Saved"
-msgstr ""
+msgstr "Uloženo"
 
 msgid ""
 "Saved in manager.yml, so the choice follows you to every browser. Follow "
@@ -10105,7 +10132,7 @@ msgstr "Pro použití průvodce vyberte šablonu výše."
 
 #. Used in the browser
 msgid "Select at least one domain for this route"
-msgstr ""
+msgstr "Vyberte pro tuto trasu alespoň jednu doménu"
 
 #. Used in the browser
 msgid "Select at least one source"
@@ -10181,7 +10208,7 @@ msgid "Sending…"
 msgstr "Odesílání…"
 
 msgid "Separate domains with commas, spaces or new lines."
-msgstr ""
+msgstr "Domény oddělte čárkami, mezerami nebo novými řádky."
 
 msgid "Serial Number"
 msgstr "Sériové číslo"
@@ -10745,9 +10772,9 @@ msgstr[2] "Přeskočeno {n} neplatných položek:"
 #, python-brace-format
 msgid "Skipped {n} route that is not defined in a config file."
 msgid_plural "Skipped {n} routes that are not defined in a config file."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Přeskočena {n} trasa, která není definována v konfiguračním souboru."
+msgstr[1] "Přeskočeny {n} trasy, které nejsou definovány v konfiguračním souboru."
+msgstr[2] "Přeskočeno {n} tras, které nejsou definovány v konfiguračním souboru."
 
 #. Used in the browser
 msgctxt "button"
@@ -11179,7 +11206,7 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "TLS {profile}, set on the entry point"
-msgstr ""
+msgstr "TLS {profile}, nastaveno na vstupním bodu"
 
 #. Used in the browser
 msgid "TLS, no certResolver"
@@ -11349,6 +11376,8 @@ msgid ""
 "The Compress middleware holds megabytes of Brotli state per response in "
 "flight, so unauthenticated clients can exhaust memory"
 msgstr ""
+"Middleware Compress drží pro každou rozpracovanou odpověď megabajty stavu "
+"Brotli, takže neověření klienti mohou vyčerpat paměť"
 
 msgid "The CrowdSec alert cache is being refreshed"
 msgstr "Mezipaměť alertů CrowdSec se obnovuje"
@@ -11368,6 +11397,8 @@ msgid ""
 "The Docker and Swarm password, the Knative token and the HTTP provider "
 "headers are not redacted from debug logs, support dumps and usage statistics"
 msgstr ""
+"Heslo pro Docker a Swarm, token Knative a hlavičky poskytovatele HTTP nejsou "
+"skryty v debug logech, výpisech pro podporu a statistikách použití"
 
 #, python-format
 msgid ""
@@ -11672,6 +11703,9 @@ msgid ""
 "Use it when the backend serves its certificate for a different name than the "
 "target address. Adds serverName via a named serversTransport."
 msgstr ""
+"Název, který Traefik posílá jako SNI a proti kterému ověřuje certifikát "
+"backendu. Použijte ho, když backend poskytuje certifikát pro jiný název, než "
+"je cílová adresa. Přidá serverName přes pojmenovaný serversTransport."
 
 #. Used in the browser
 msgid ""
@@ -11679,6 +11713,9 @@ msgid ""
 "on, for example behind a Docker port mapping. Empty advertises the "
 "entrypoint port."
 msgstr ""
+"Port, který klienti používají pro HTTP/3, pokud se liší od portu, na kterém "
+"Traefik naslouchá, například za mapováním portů v Dockeru. Prázdná hodnota "
+"inzeruje port vstupního bodu."
 
 #. Used in the browser
 msgid "The primary view"
@@ -11889,11 +11926,11 @@ msgstr[2] ""
 
 #. Used in the browser
 msgid "The selected routes are already disabled."
-msgstr ""
+msgstr "Vybrané trasy jsou již vypnuté."
 
 #. Used in the browser
 msgid "The selected routes are already enabled."
-msgstr ""
+msgstr "Vybrané trasy jsou již zapnuté."
 
 #. Used in the browser
 msgid "The server changed, reload the list and select again"
@@ -12973,7 +13010,7 @@ msgstr "Neuložené změny"
 
 #. Used in the browser
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Neuložené změny"
 
 #. Used in the browser
 #, python-brace-format
@@ -12995,6 +13032,8 @@ msgid ""
 "Unsynchronized write to the sticky round tripper shared by concurrent HTTP/2 "
 "streams"
 msgstr ""
+"Nesynchronizovaný zápis do sticky round trippera sdíleného souběžnými "
+"streamy HTTP/2"
 
 msgctxt "button"
 msgid "Unused"
@@ -13357,6 +13396,8 @@ msgid ""
 "With TLS on, this route only answers HTTPS, so plain http on {eps} returns "
 "404 page not found. Choose No TLS for an http-only route."
 msgstr ""
+"Se zapnutým TLS odpovídá tato trasa jen na HTTPS, takže prosté http na {eps} "
+"vrátí 404 page not found. Pro trasu jen přes http zvolte Bez TLS."
 
 #, python-format
 msgid ""
@@ -16923,6 +16964,7 @@ msgstr "souhrn: {digest}"
 #, python-brace-format
 msgid "{domain} comes from this agent's Domains setting. Remove it there."
 msgstr ""
+"Doména {domain} pochází z nastavení Domény tohoto agenta. Odeberte ji tam."
 
 #. Used in the browser
 #, python-brace-format
@@ -16930,6 +16972,8 @@ msgid ""
 "{domain} is the only domain in Settings, Connection, Domains. Add another "
 "one there before removing it."
 msgstr ""
+"Doména {domain} je jediná doména v Nastavení, Připojení, Domény. Než ji "
+"odeberete, přidejte tam jinou."
 
 #. Used in the browser
 #, python-brace-format
@@ -16940,8 +16984,14 @@ msgid_plural ""
 "{domain} is used by routes {routes}, so it stays in the list until those "
 "routes stop using it."
 msgstr[0] ""
+"Doménu {domain} používá trasa {routes}, proto zůstane v seznamu, dokud ji "
+"tato trasa nepřestane používat."
 msgstr[1] ""
+"Doménu {domain} používají trasy {routes}, proto zůstane v seznamu, dokud ji "
+"tyto trasy nepřestanou používat."
 msgstr[2] ""
+"Doménu {domain} používají trasy {routes}, proto zůstane v seznamu, dokud ji "
+"tyto trasy nepřestanou používat."
 
 #. Used in the browser
 #, python-brace-format
@@ -17032,17 +17082,17 @@ msgstr[2] "{failed} z {n} tras nešlo smazat."
 #, python-brace-format
 msgid "{failed} of {n} route could not be disabled."
 msgid_plural "{failed} of {n} routes could not be disabled."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{failed} z {n} trasy se nepodařilo vypnout."
+msgstr[1] "{failed} z {n} tras se nepodařilo vypnout."
+msgstr[2] "{failed} z {n} tras se nepodařilo vypnout."
 
 #. Used in the browser
 #, python-brace-format
 msgid "{failed} of {n} route could not be enabled."
 msgid_plural "{failed} of {n} routes could not be enabled."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{failed} z {n} trasy se nepodařilo zapnout."
+msgstr[1] "{failed} z {n} tras se nepodařilo zapnout."
+msgstr[2] "{failed} z {n} tras se nepodařilo zapnout."
 
 #. Used in the browser
 #, python-brace-format
