@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-25 02:03-0500\n"
+"POT-Creation-Date: 2026-11-25 13:27-0500\n"
 "PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.18.0\n"
-"X-Generator: Weblate 2026.12.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -4089,6 +4088,12 @@ msgstr "入口点"
 msgid "Entrypoint \"%(entrypoint)s\" not found in static config"
 msgstr "在静态配置中未找到入口点“%(entrypoint)s”"
 
+#, python-format
+msgid ""
+"Entrypoint address must be a port such as :443, optionally with a host and /"
+"tcp or /udp, got %(value)s"
+msgstr ""
+
 #. Used in the browser
 msgid "Entrypoint labels"
 msgstr "入口点标签"
@@ -6356,7 +6361,8 @@ msgstr "需要 {missing}"
 msgid ""
 "Negated Host matcher causes a TLS option conflict that disables client "
 "certificate authentication on the excluded host"
-msgstr "取反的 Host 匹配器会引发 TLS 选项冲突，从而在被排除的主机上禁用客户端证书认证"
+msgstr ""
+"取反的 Host 匹配器会引发 TLS 选项冲突，从而在被排除的主机上禁用客户端证书认证"
 
 #. Used in the browser
 #, python-brace-format
@@ -8501,7 +8507,8 @@ msgid ""
 msgid_plural ""
 "Removed {domain} from Settings. It stays in the list while routes {routes} "
 "use it."
-msgstr[0] "已从设置中移除 {domain}。路由 {routes} 仍在使用它，因此它会保留在列表中。"
+msgstr[0] ""
+"已从设置中移除 {domain}。路由 {routes} 仍在使用它，因此它会保留在列表中。"
 
 #. Used in the browser
 #, python-brace-format
@@ -15783,8 +15790,8 @@ msgid ""
 "{domain} is the only domain in Settings, Connection, Domains. Add another "
 "one there before removing it."
 msgstr ""
-"{domain} 是设置 - 连接 - 域名中唯一的域名。请先在那里添加另一个域名，再移除它"
-"。"
+"{domain} 是设置 - 连接 - 域名中唯一的域名。请先在那里添加另一个域名，再移除"
+"它。"
 
 #. Used in the browser
 #, python-brace-format
@@ -15794,7 +15801,8 @@ msgid ""
 msgid_plural ""
 "{domain} is used by routes {routes}, so it stays in the list until those "
 "routes stop using it."
-msgstr[0] "{domain} 正被路由 {routes} 使用，因此会保留在列表中，直到路由不再使用它。"
+msgstr[0] ""
+"{domain} 正被路由 {routes} 使用，因此会保留在列表中，直到路由不再使用它。"
 
 #. Used in the browser
 #, python-brace-format

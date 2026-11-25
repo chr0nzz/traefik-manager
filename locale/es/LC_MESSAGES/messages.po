@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-25 02:03-0500\n"
+"POT-Creation-Date: 2026-11-25 13:27-0500\n"
 "PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/traefik-manager/"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "Generated-By: Babel 2.18.0\n"
-"X-Generator: Weblate 2026.12.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -1863,8 +1862,8 @@ msgstr "Nombre del servidor backend (SNI)"
 #, python-format
 msgid "Backend server name must be a hostname, got %(value)s"
 msgstr ""
-"El nombre del servidor backend debe ser un nombre de host, se recibió %"
-"(value)s"
+"El nombre del servidor backend debe ser un nombre de host, se recibió "
+"%(value)s"
 
 msgid "Backend service"
 msgstr "Servicio backend"
@@ -4350,6 +4349,12 @@ msgstr "Entrypoint"
 msgid "Entrypoint \"%(entrypoint)s\" not found in static config"
 msgstr ""
 "No se encontró el entrypoint \"%(entrypoint)s\" en la configuración estática"
+
+#, python-format
+msgid ""
+"Entrypoint address must be a port such as :443, optionally with a host and /"
+"tcp or /udp, got %(value)s"
+msgstr ""
 
 #. Used in the browser
 msgid "Entrypoint labels"
@@ -10808,7 +10813,8 @@ msgstr[1] "Se omitieron {n} entradas no válidas:"
 #, python-brace-format
 msgid "Skipped {n} route that is not defined in a config file."
 msgid_plural "Skipped {n} routes that are not defined in a config file."
-msgstr[0] "Se omitió {n} ruta que no está definida en un archivo de configuración."
+msgstr[0] ""
+"Se omitió {n} ruta que no está definida en un archivo de configuración."
 msgstr[1] ""
 "Se omitieron {n} rutas que no están definidas en un archivo de configuración."
 

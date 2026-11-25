@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-25 02:03-0500\n"
+"POT-Creation-Date: 2026-11-25 13:27-0500\n"
 "PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Portuguese (Brazil) <https://hosted.weblate.org/projects/"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 "Generated-By: Babel 2.18.0\n"
-"X-Generator: Weblate 2026.12.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -4341,6 +4340,12 @@ msgstr "Entrypoint"
 #, python-format
 msgid "Entrypoint \"%(entrypoint)s\" not found in static config"
 msgstr "Entrypoint \"%(entrypoint)s\" não encontrado na configuração estática"
+
+#, python-format
+msgid ""
+"Entrypoint address must be a port such as :443, optionally with a host and /"
+"tcp or /udp, got %(value)s"
+msgstr ""
 
 #. Used in the browser
 msgid "Entrypoint labels"
@@ -10748,7 +10753,8 @@ msgstr[1] "{n} entradas inválidas ignoradas:"
 #, python-brace-format
 msgid "Skipped {n} route that is not defined in a config file."
 msgid_plural "Skipped {n} routes that are not defined in a config file."
-msgstr[0] "{n} rota ignorada por não estar definida em um arquivo de configuração."
+msgstr[0] ""
+"{n} rota ignorada por não estar definida em um arquivo de configuração."
 msgstr[1] ""
 "{n} rotas ignoradas por não estarem definidas em um arquivo de configuração."
 

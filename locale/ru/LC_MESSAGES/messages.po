@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-25 02:03-0500\n"
+"POT-Creation-Date: 2026-11-25 13:27-0500\n"
 "PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Russian <https://hosted.weblate.org/projects/traefik-manager/"
@@ -18,7 +18,6 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "Generated-By: Babel 2.18.0\n"
-"X-Generator: Weblate 2026.12.dev0\n"
 
 #. Used in the browser
 #, python-brace-format
@@ -4415,6 +4414,12 @@ msgstr "Точка входа"
 msgid "Entrypoint \"%(entrypoint)s\" not found in static config"
 msgstr "Точка входа «%(entrypoint)s» не найдена в статической конфигурации"
 
+#, python-format
+msgid ""
+"Entrypoint address must be a port such as :443, optionally with a host and /"
+"tcp or /udp, got %(value)s"
+msgstr ""
+
 #. Used in the browser
 msgid "Entrypoint labels"
 msgstr "Метки точек входа"
@@ -5481,8 +5486,8 @@ msgstr "HTTP/3 объявлен на порту {port}"
 msgid ""
 "HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s"
 msgstr ""
-"Объявляемый порт HTTP/3 должен быть целым числом от 1 до 65535, получено %"
-"(value)s"
+"Объявляемый порт HTTP/3 должен быть целым числом от 1 до 65535, получено "
+"%(value)s"
 
 #. Used in the browser
 #, python-brace-format
