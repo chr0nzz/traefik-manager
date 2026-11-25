@@ -104,7 +104,7 @@ async function openInternalRouteDetail(idx) {
 
     document.getElementById('detailEditBtn').style.display = 'none';
 
-    const badge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-traffic-signal"></i> ${thc('label', 'internal')}</span>`;
+    const badge = `<span class="d-flat d-off ms-2"><i class="ph-bold ph-traffic-signal"></i> ${thc('label', 'internal')}</span>`;
 
     const appData = {
         id:           (r.name || '').split('@')[0],

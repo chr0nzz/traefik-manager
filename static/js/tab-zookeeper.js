@@ -104,7 +104,7 @@ async function openZookeeperRouteDetail(idx) {
 
     document.getElementById('detailEditBtn').style.display = 'none';
 
-    const badge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-database"></i> zookeeper</span>`;
+    const badge = `<span class="d-flat d-off ms-2"><i class="ph-bold ph-database"></i> zookeeper</span>`;
 
     const appData = {
         id:           (r.name || '').split('@')[0],

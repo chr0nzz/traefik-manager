@@ -542,11 +542,11 @@ function _renderRouteYamlOrigins(origins, ownFile, warnings) {
             name: tmHtml(`<code class="font-mono">${_esc(s.name)}</code>`),
             file: tmHtml(`<code class="font-mono">${_esc(s.file)}</code>`),
         })).join(', ');
-        html += `<i class="ph-bold ph-info mr-1"></i>${items}. `
+        html += `<i class="ph-bold ph-info me-1"></i>${items}. `
              + th('Other routes may use these, so this editor shows them but does not write them.');
     }
     broken.forEach(w => {
-        html += `<div style="color:var(--red);margin-top:4px"><i class="ph-bold ph-warning mr-1"></i>`
+        html += `<div style="color:var(--red);margin-top:4px"><i class="ph-bold ph-warning me-1"></i>`
              + th('{name}, defined in {file}, points at {missing}, which is not defined anywhere', {
                  name: tmHtml(`<code class="font-mono">${_esc(w.name)}</code>`),
                  file: tmHtml(`<code class="font-mono">${_esc(w.file)}</code>`),
@@ -771,13 +771,14 @@ function _updateStaticTabArrows() {
     const rBtn = document.getElementById('staticTabArrowR');
     if (!bar || !lBtn || !rBtn) return;
     const overflow = bar.scrollWidth > bar.clientWidth + 2;
-    lBtn.style.display = overflow && bar.scrollLeft > 2 ? '' : 'none';
-    rBtn.style.display = overflow && bar.scrollLeft < bar.scrollWidth - bar.clientWidth - 2 ? '' : 'none';
+    const pos = Math.abs(bar.scrollLeft);
+    lBtn.style.display = overflow && pos > 2 ? '' : 'none';
+    rBtn.style.display = overflow && pos < bar.scrollWidth - bar.clientWidth - 2 ? '' : 'none';
 }
 
 function _scrollStaticTabs(dir) {
     const bar = document.getElementById('staticTabBar');
-    if (bar) bar.scrollBy({ left: dir * 160, behavior: 'smooth' });
+    if (bar) bar.scrollBy({ left: dir * 160 * (document.documentElement.dir === 'rtl' ? -1 : 1), behavior: 'smooth' });
 }
 
 function switchStaticSection(section) {
@@ -2555,7 +2556,7 @@ function _buildStaticClassicHTML() {
 
 function _scNotice(key, title, body) {
     return `<div class="sc-notice rounded-lg" id="scNotice-${key}" style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2)">
-        <button type="button" onclick="toggleStaticNote(${_jsArg(key)})" class="w-full px-4 py-2.5 flex items-center gap-2 text-left" style="background:none;border:none;cursor:pointer">
+        <button type="button" onclick="toggleStaticNote(${_jsArg(key)})" class="w-full px-4 py-2.5 flex items-center gap-2 text-start" style="background:none;border:none;cursor:pointer">
             <i class="ph-bold ph-info text-sm shrink-0" style="color:var(--blue)"></i>
             <span class="text-xs font-semibold flex-1" style="color:var(--text)">${title}</span>
             <i class="ph-bold ph-caret-right sc-notice-caret text-xs" style="color:var(--muted)"></i>

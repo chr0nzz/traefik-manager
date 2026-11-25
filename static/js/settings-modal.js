@@ -1891,7 +1891,7 @@ function renderReleaseNotes(md) {
                 rows.forEach((row, idx) => {
                     const tag = idx === 0 ? 'th' : 'td';
                     const st  = idx === 0
-                        ? 'padding:3px 8px;border-bottom:1px solid var(--border);color:var(--text);font-weight:600;text-align:left;white-space:nowrap'
+                        ? 'padding:3px 8px;border-bottom:1px solid var(--border);color:var(--text);font-weight:600;text-align:start;white-space:nowrap'
                         : 'padding:3px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
                     html += '<tr>' + parseCells(row).map(c => `<${tag} style="${st}">${inline(c)}</${tag}>`).join('') + '</tr>';
                 });
@@ -1922,8 +1922,8 @@ function renderReleaseNotes(md) {
                 ? `<div style="font-weight:700;color:${col};display:flex;align-items:center;gap:5px;margin-bottom:3px">`
                     + `<i class="ph-bold ${ALERTS[key][1]}"></i>${key.charAt(0)}${key.slice(1).toLowerCase()}</div>`
                 : '';
-            html += `<div style="margin:8px 0;padding:7px 10px;border-left:3px solid ${col};`
-                + `background:color-mix(in srgb, ${col} 8%, transparent);border-radius:0 4px 4px 0;`
+            html += `<div style="margin:8px 0;padding:7px 10px;border-inline-start:3px solid ${col};`
+                + `background:color-mix(in srgb, ${col} 8%, transparent);border-start-start-radius:0; border-start-end-radius:4px; border-end-end-radius:4px; border-end-start-radius:0;`
                 + `font-size:11px;color:var(--muted)">${head}${body}</div>`;
             continue;
         }
@@ -1946,7 +1946,7 @@ function renderReleaseNotes(md) {
         }
 
         if (/^[-*] /.test(line)) {
-            if (!inList) { html += '<ul style="margin:4px 0 6px;padding-left:16px;list-style:disc">'; inList = true; }
+            if (!inList) { html += '<ul style="margin:4px 0 6px;padding-inline-start:16px;list-style:disc">'; inList = true; }
             html += `<li style="margin:2px 0;color:var(--text)">${inline(line.replace(/^[-*] /, ''))}</li>`;
             i++; continue;
         }

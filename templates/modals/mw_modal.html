@@ -88,8 +88,8 @@
                 </div>
 
                 <div class="flex gap-2">
-                    <button type="button" id="mwModeWizBtn" onclick="setMwMode('wizard')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-magic-wand" style="margin-right:4px"></i>{{ pgettext('button', 'Wizard') }}</button>
-                    <button type="button" id="mwModeYamlBtn" onclick="setMwMode('yaml')" class="proto-btn active-http" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-code" style="margin-right:4px"></i>YAML</button>
+                    <button type="button" id="mwModeWizBtn" onclick="setMwMode('wizard')" class="proto-btn" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-magic-wand" style="margin-inline-end:4px"></i>{{ pgettext('button', 'Wizard') }}</button>
+                    <button type="button" id="mwModeYamlBtn" onclick="setMwMode('yaml')" class="proto-btn active-http" style="padding:4px 12px;font-size:11px;border-radius:6px"><i class="ph-bold ph-code" style="margin-inline-end:4px"></i>YAML</button>
                 </div>
 
                 <div id="mwWizardSection" style="display:none">
@@ -101,11 +101,11 @@
                             <div class="grid grid-cols-2 gap-2">
                                 <input type="text" id="wizBaGenUser" class="input-field text-sm" placeholder="{{ pgettext('placeholder', 'Username') }}">
                                 <div class="relative">
-                                    <input type="password" id="wizBaGenPass" class="input-field text-sm pr-8" placeholder="{{ pgettext('placeholder', 'Password') }}">
-                                    <button type="button" onclick="togglePwVis('wizBaGenPass',this)" class="absolute right-2 top-1/2 -translate-y-1/2" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0"><i class="ph-bold ph-eye text-sm"></i></button>
+                                    <input type="password" id="wizBaGenPass" class="input-field text-sm pe-8" placeholder="{{ pgettext('placeholder', 'Password') }}">
+                                    <button type="button" onclick="togglePwVis('wizBaGenPass',this)" class="absolute end-2 top-1/2 -translate-y-1/2" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0"><i class="ph-bold ph-eye text-sm"></i></button>
                                 </div>
                             </div>
-                            <button type="button" onclick="generateHtpasswd()" class="proto-btn active-http text-xs px-3 py-1" style="border-radius:6px"><i class="ph-bold ph-plus" style="margin-right:4px"></i>{{ _('Generate & Add') }}</button>
+                            <button type="button" onclick="generateHtpasswd()" class="proto-btn active-http text-xs px-3 py-1" style="border-radius:6px"><i class="ph-bold ph-plus" style="margin-inline-end:4px"></i>{{ _('Generate & Add') }}</button>
                         </div>
                         <div>
                             <label>{{ pgettext('setting', 'Users') }} <span class="text-xs font-normal" style="color:var(--muted)">{{ _('(one per line, format: %(user_htpasswd_hash)s)', user_htpasswd_hash=tag('code', 'user:htpasswd-hash', class_='font-mono')) }}</span></label>
@@ -170,7 +170,7 @@ X-Auth-Groups</textarea>
 
                     <div id="mwWiz-oidcAuth" class="mw-wiz-form space-y-3" style="display:none">
                         <div class="rounded-md px-3 py-2 text-xs" style="background:rgba(163,113,247,0.08);border:1px solid rgba(163,113,247,0.25);color:var(--purple)">
-                            <i class="ph-bold ph-info mr-1"></i>{{ _('Requires the %(sevensolutions_traefik_oidc)s plugin installed via the Plugins tab.', sevensolutions_traefik_oidc=tag('code', 'sevensolutions/traefik-oidc-auth', class_='font-mono')) }}
+                            <i class="ph-bold ph-info me-1"></i>{{ _('Requires the %(sevensolutions_traefik_oidc)s plugin installed via the Plugins tab.', sevensolutions_traefik_oidc=tag('code', 'sevensolutions/traefik-oidc-auth', class_='font-mono')) }}
                         </div>
                         <div class="grid grid-cols-1 gap-3">
                             <div>
@@ -270,7 +270,7 @@ X-Forwarded-Name: name</textarea>
                                 <input type="checkbox" id="wizShHsts" checked class="rounded" style="accent-color:var(--blue)" onchange="document.getElementById('wizShHstsOptions').style.display=this.checked?'':'none'">
                                 <span class="text-sm" style="color:var(--text)">{{ _('HSTS (Strict Transport Security)') }}</span>
                             </div>
-                            <div id="wizShHstsOptions" class="pl-6 space-y-1.5">
+                            <div id="wizShHstsOptions" class="ps-6 space-y-1.5">
                                 <div class="flex items-center gap-3">
                                     <label class="text-xs" style="color:var(--muted)">{{ _('Max Age (seconds)') }}</label>
                                     <input type="number" id="wizShHstsAge" class="input-field text-xs" value="315360000" style="width:130px">
@@ -310,11 +310,11 @@ X-Forwarded-Name: name</textarea>
                                 <input type="text" id="wizDaGenUser" class="input-field text-sm" placeholder="{{ pgettext('placeholder', 'Username') }}">
                                 <input type="text" id="wizDaGenRealm" class="input-field text-sm" placeholder="{{ _('Realm (e.g. traefik)') }}">
                                 <div class="relative">
-                                    <input type="password" id="wizDaGenPass" class="input-field text-sm pr-8" placeholder="{{ pgettext('placeholder', 'Password') }}">
-                                    <button type="button" onclick="togglePwVis('wizDaGenPass',this)" class="absolute right-2 top-1/2 -translate-y-1/2" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0"><i class="ph-bold ph-eye text-sm"></i></button>
+                                    <input type="password" id="wizDaGenPass" class="input-field text-sm pe-8" placeholder="{{ pgettext('placeholder', 'Password') }}">
+                                    <button type="button" onclick="togglePwVis('wizDaGenPass',this)" class="absolute end-2 top-1/2 -translate-y-1/2" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0"><i class="ph-bold ph-eye text-sm"></i></button>
                                 </div>
                             </div>
-                            <button type="button" onclick="generateDigestAuth()" class="proto-btn active-http text-xs px-3 py-1" style="border-radius:6px"><i class="ph-bold ph-plus" style="margin-right:4px"></i>{{ _('Generate & Add') }}</button>
+                            <button type="button" onclick="generateDigestAuth()" class="proto-btn active-http text-xs px-3 py-1" style="border-radius:6px"><i class="ph-bold ph-plus" style="margin-inline-end:4px"></i>{{ _('Generate & Add') }}</button>
                         </div>
                         <div>
                             <label>{{ pgettext('setting', 'Users') }} <span class="text-xs font-normal" style="color:var(--muted)">{{ _('(one per line, format: %(user_realm_md5hash)s)', user_realm_md5hash=tag('code', 'user:realm:md5hash', class_='font-mono')) }}</span></label>

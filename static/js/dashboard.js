@@ -359,7 +359,7 @@ function _sdStrip(cells, aria, extraCls) {
         html += `<span class="sig-more" title="${thn('{n} more object not drawn individually', '{n} more objects not drawn individually', hidden, { n: _sdNum(hidden) })}">+${_sdNum(hidden)}</span>`;
     }
     if (total === 0) {
-        html = `<span class="sig-more" style="margin-left:0">${cells.blind ? th('no data') : th('nothing configured')}</span>`;
+        html = `<span class="sig-more" style="margin-inline-start:0">${cells.blind ? th('no data') : th('nothing configured')}</span>`;
     }
     return '<div class="sig-strip' + (extraCls ? ' ' + extraCls : '') + '" role="img" aria-label="'
          + _esc(aria) + '">' + html + '</div>';
@@ -1268,7 +1268,7 @@ function _sdApplyRouteCards() {
                     errEl.style.cssText = 'margin-top:8px;padding:6px 10px;border-radius:6px;font-size:11px;font-family:monospace;color:var(--red);background:color-mix(in srgb, var(--red) 8%, transparent);border:1px solid color-mix(in srgb, var(--red) 25%, transparent);word-break:break-word;line-height:1.4';
                     card.appendChild(errEl);
                 }
-                errEl.innerHTML = '<i class="ph-bold ph-warning-circle" style="font-size:11px;margin-right:4px"></i>' + _esc(apiError);
+                errEl.innerHTML = '<i class="ph-bold ph-warning-circle" style="font-size:11px;margin-inline-end:4px"></i>' + _esc(apiError);
             }
         } else if (apiStatus === 'warning') {
             statusEl.className = 'status-dot status-checking';

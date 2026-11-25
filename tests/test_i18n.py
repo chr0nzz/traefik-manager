@@ -1,4 +1,5 @@
 import json
+import os
 import re
 
 import pytest
@@ -46,6 +47,11 @@ def locale_dir(tmp_path):
 @pytest.fixture
 def with_languages(monkeypatch):
     monkeypatch.setattr(i18n, 'available_tags', lambda locale_dir=None: ('en', 'de', 'zh-Hans'))
+
+
+@pytest.fixture
+def with_persian(monkeypatch):
+    monkeypatch.setattr(i18n, 'available_tags', lambda locale_dir=None: ('en', 'fa'))
 
 
 @pytest.fixture
@@ -296,6 +302,7 @@ def test_save_language_accepts_the_canadian_source_tag(client, with_english_vari
 def test_text_direction():
     assert i18n.text_direction('de') == 'ltr'
     assert i18n.text_direction('ar') == 'rtl'
+    assert i18n.text_direction('fa') == 'rtl'
     assert i18n.text_direction('not a locale') == 'ltr'
 
 
@@ -415,3 +422,19 @@ def test_the_picker_can_be_hidden(client):
     html = client.get('/').get_data(as_text=True)
     assert "if (!pref('showLangPicker', true))   d.add('tm-hide-lang');" in html
     assert 'html.tm-hide-lang .nav-lang-picker { display: none !important; }' in html
+
+
+def test_persian_renders_right_to_left(client, with_persian):
+    html = client.get('/fa/').get_data(as_text=True)
+    assert '<html lang="fa" dir="rtl"' in html
+    assert _catalog_block(html)['locale'] == 'fa'
+
+
+def test_persian_login_renders_right_to_left(anon_client, with_persian):
+    html = anon_client.get('/fa/login').get_data(as_text=True)
+    assert '<html lang="fa" dir="rtl">' in html
+
+
+def test_persian_is_shipped():
+    with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'locale', 'LINGUAS'), encoding='utf-8') as fh:
+        assert 'fa' in fh.read().split()
