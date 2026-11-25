@@ -192,6 +192,15 @@ function _detailDockActive() {
         && window.matchMedia('(min-width: 1440px)').matches;
 }
 
+function _isRtl() {
+    return document.documentElement.dir === 'rtl';
+}
+
+function _panelLeftUnder(r, panelW) {
+    if (_isRtl()) return Math.max(8, Math.min(r.left, window.innerWidth - panelW - 8));
+    return Math.max(8, r.right - panelW);
+}
+
 function _initDetailPanelSizers() {
     document.querySelectorAll('.detail-panel').forEach(panel => {
         if (panel.querySelector('.detail-panel-sizer')) return;
@@ -210,7 +219,8 @@ function _initDetailPanelSizers() {
         });
         grip.addEventListener('pointermove', e => {
             if (!dragging) return;
-            const w = Math.min(Math.max(Math.round(window.innerWidth - e.clientX), 380), Math.round(window.innerWidth * 0.96));
+            const fromEdge = _isRtl() ? e.clientX : window.innerWidth - e.clientX;
+            const w = Math.min(Math.max(Math.round(fromEdge), 380), Math.round(window.innerWidth * 0.96));
             panel.style.width = w + 'px';
             panel.style.maxWidth = w + 'px';
         });
@@ -693,10 +703,8 @@ function toggleShortcutsPanel() {
         panel.style.position = 'fixed';
         panel.style.width = panelW + 'px';
         if (r && r.width) {
-            let left = r.right - panelW;
-            if (left < 8) left = 8;
             panel.style.top  = (r.bottom + 8) + 'px';
-            panel.style.left = left + 'px';
+            panel.style.left = _panelLeftUnder(r, panelW) + 'px';
         } else {
             panel.style.top  = Math.max(24, Math.round(window.innerHeight * 0.14)) + 'px';
             panel.style.left = Math.round((window.innerWidth - panelW) / 2) + 'px';
@@ -1515,11 +1523,9 @@ function toggleNotifPanel() {
         if (btn) {
             const r = btn.getBoundingClientRect();
             const panelW = Math.min(360, window.innerWidth - 16);
-            let left = r.right - panelW;
-            if (left < 8) left = 8;
             panel.style.position = 'fixed';
             panel.style.top  = (r.bottom + 8) + 'px';
-            panel.style.left = left + 'px';
+            panel.style.left = _panelLeftUnder(r, panelW) + 'px';
             panel.style.right = 'auto';
             panel.style.width = panelW + 'px';
         }

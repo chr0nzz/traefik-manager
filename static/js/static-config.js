@@ -771,13 +771,14 @@ function _updateStaticTabArrows() {
     const rBtn = document.getElementById('staticTabArrowR');
     if (!bar || !lBtn || !rBtn) return;
     const overflow = bar.scrollWidth > bar.clientWidth + 2;
-    lBtn.style.display = overflow && bar.scrollLeft > 2 ? '' : 'none';
-    rBtn.style.display = overflow && bar.scrollLeft < bar.scrollWidth - bar.clientWidth - 2 ? '' : 'none';
+    const pos = Math.abs(bar.scrollLeft);
+    lBtn.style.display = overflow && pos > 2 ? '' : 'none';
+    rBtn.style.display = overflow && pos < bar.scrollWidth - bar.clientWidth - 2 ? '' : 'none';
 }
 
 function _scrollStaticTabs(dir) {
     const bar = document.getElementById('staticTabBar');
-    if (bar) bar.scrollBy({ left: dir * 160, behavior: 'smooth' });
+    if (bar) bar.scrollBy({ left: dir * 160 * (document.documentElement.dir === 'rtl' ? -1 : 1), behavior: 'smooth' });
 }
 
 function switchStaticSection(section) {

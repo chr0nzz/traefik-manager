@@ -7,20 +7,16 @@ import pytest
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 PHYSICAL_RULES = {
-    'toggle-knob': 'the knob slides with translateX, which does not flip',
-    'toggle-switch': 'the knob slides with translateX, which does not flip',
-    '.toast': 'toasts slide in with translateX from the right edge',
-    '.detail-panel': 'the detail panel slides in with translateX and its resize handle reads clientX',
     '.rm-popup-panel': 'centred with left: 50% and translate(-50%)',
-    '#sideNav': 'the side nav drawer slides in with translateX',
-    'side-nav-item': 'part of the side nav, which stays physical with it',
-    'main.max-w-7xl': 'offsets the page by the side nav and the detail panel, which stay physical',
-    'html.tm-fixed': 'positions the side nav, which stays physical',
-    'drawer-srv-list': 'positioned from JS with style.left',
+    'drawer-srv-list': 'positioned from JS with style.left, which handles right-to-left itself',
+    'route-ctx-menu': 'positioned from JS at the pointer',
     '.routemap-svg': 'route map coordinates are physical',
     '.rm-': 'route map coordinates are physical',
-    'slideIn': 'translateX keyframes',
-    'route-ctx-menu': 'positioned from JS at the pointer',
+    'slideIn': 'translateX keyframes, mirrored by slideInRtl',
+}
+NOT_MIRRORED_ICONS = {
+    'ph-arrows-left-right': 'symmetric',
+    'ph-arrow-up-right': 'opens a link, the same in both directions',
 }
 PHYSICAL_FILES = {
     'static/js/routemap.js': 'lays out nodes and tooltips with physical pixel coordinates',
@@ -119,3 +115,26 @@ def test_every_physical_exception_still_exists():
         assert key in css, f'{key!r} is no longer in app.css, drop it from PHYSICAL_RULES'
     for rel in PHYSICAL_FILES:
         assert os.path.isfile(os.path.join(ROOT, rel)), f'{rel} is gone, drop it from PHYSICAL_FILES'
+
+
+def _mirrored_icons(css):
+    m = re.search(r'\[dir="rtl"\] :is\(([^)]*)\)::before\s*\{[^}]*scaleX\(-1\)', css)
+    assert m, 'app.css lost the rule that mirrors directional icons in right-to-left layouts'
+    return {c.strip().lstrip('.') for c in m.group(1).split(',')}
+
+
+def test_directional_icons_mirror_in_rtl():
+    mirrored = _mirrored_icons(_read('static/css/app.css'))
+    used = set()
+    for rel in _sources() + list(PHYSICAL_FILES):
+        used |= set(re.findall(r'ph-(?:caret|arrow)[a-z-]*?(?:left|right)[a-z-]*', _read(rel)))
+    missing = sorted(i for i in used if i not in mirrored and i not in NOT_MIRRORED_ICONS)
+    assert not missing, ('these icons point left or right, so add them to the [dir="rtl"] scaleX(-1) rule in app.css '
+                         'or to NOT_MIRRORED_ICONS with a reason: ' + ', '.join(missing))
+
+
+def test_rtl_rules_only_apply_to_rtl_pages():
+    css = _read('static/css/app.css')
+    for sel, body, line in _css_rules(css):
+        if 'rtl' in sel.lower():
+            assert '[dir="rtl"]' in sel, f'app.css:{line} {sel} should be scoped with [dir="rtl"]'

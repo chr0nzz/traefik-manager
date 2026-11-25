@@ -580,7 +580,7 @@ function toggleDrawerServerList() {
     const railed = document.documentElement.classList.contains('tm-nav-collapsed') && window.innerWidth >= 768;
     if (opening && btn && railed) {
         const r = btn.getBoundingClientRect();
-        list.style.left = (r.right + 8) + 'px';
+        list.style.left = (document.documentElement.dir === 'rtl' ? r.left - 8 - list.offsetWidth : r.right + 8) + 'px';
         list.style.top  = Math.min(r.top, window.innerHeight - list.offsetHeight - 12) + 'px';
     } else {
         list.style.left = '';
