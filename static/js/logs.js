@@ -15,6 +15,11 @@ const LG_LINE_STEPS = [100, 200, 500, 1000];
 const LG_CELL_CAP   = 240;
 const LG_ROW_CAP    = 6;
 
+document.addEventListener('DOMContentLoaded', () => LG_LINE_STEPS.forEach(v => {
+    const btn = document.getElementById('log-' + v);
+    if (btn) btn.textContent = tmDigits(v);
+}));
+
 function setLogLines(n) {
     _currentLogLines = n;
     LG_LINE_STEPS.forEach(v => {
@@ -93,7 +98,7 @@ async function refreshLogs(silent) {
                 <i class="ph-light ph-plugs text-4xl block mb-3 opacity-40"></i>
                 <p class="font-medium">${th('Failed to load logs')}</p>
                 <p class="text-xs mt-1 font-mono">${_esc(_lgLoadError)}</p>
-                <button onclick="refreshLogs()" class="proto-btn text-xs px-3 py-1.5 mt-4"><i class="ph-bold ph-arrows-clockwise mr-1"></i>${thc('button', 'Retry')}</button>
+                <button onclick="refreshLogs()" class="proto-btn text-xs px-3 py-1.5 mt-4"><i class="ph-bold ph-arrows-clockwise me-1"></i>${thc('button', 'Retry')}</button>
             </div>`;
             return;
         }
@@ -137,7 +142,7 @@ async function refreshLogs(silent) {
             <i class="ph-light ph-plugs text-4xl block mb-3 opacity-40"></i>
             <p class="font-medium">${th('Failed to load logs')}</p>
             <p class="text-xs mt-1 font-mono">${_esc(_lgLoadError)}</p>
-            <button onclick="refreshLogs()" class="proto-btn text-xs px-3 py-1.5 mt-4"><i class="ph-bold ph-arrows-clockwise mr-1"></i>${thc('button', 'Retry')}</button>
+            <button onclick="refreshLogs()" class="proto-btn text-xs px-3 py-1.5 mt-4"><i class="ph-bold ph-arrows-clockwise me-1"></i>${thc('button', 'Retry')}</button>
         </div>`;
     }
 }
@@ -573,7 +578,7 @@ function _lgCard(c) {
         + (c.go ? '<button type="button" class="sig-explore" data-lg="' + _esc(c.go) + '" title="' + _esc(c.goTip || '') + '">'
             + _esc(c.goLabel) + ' <i class="ph-bold ph-arrow-right"></i></button>' : '')
         + '</div>'
-        + '<div class="sig-metric"><span class="sig-total">' + c.total + '</span>'
+        + '<div class="sig-metric"><span class="sig-total">' + tmDigits(c.total) + '</span>'
         + '<span class="sig-flags">' + (c.flags || '') + '</span></div>'
         + (c.sub || '')
         + (c.body || '')
@@ -591,7 +596,7 @@ function _lgRow(r) {
         + (r.kind ? '<span class="lg-kind">' + _esc(r.kind) + '</span>' : '') + '</span>'
         + (r.bad || '<span class="lg-bad"></span>')
         + '<span class="lg-n">' + _sdNum(r.n) + '</span>'
-        + '<span class="lg-pct">' + r.pct + '%</span></div>';
+        + '<span class="lg-pct">' + tmDigits(r.pct) + '%</span></div>';
 }
 
 function _lgStrip(groups, aria, extraCls) {
@@ -599,7 +604,7 @@ function _lgStrip(groups, aria, extraCls) {
     const total = live.reduce((a, g) => a + g.items.length, 0);
     let html = '';
     if (!total) {
-        html = `<span class="sig-more" style="margin-left:0">${th('no requests')}</span>`;
+        html = `<span class="sig-more" style="margin-inline-start:0">${th('no requests')}</span>`;
     } else if (total <= LG_CELL_CAP) {
         live.forEach(g => g.items.forEach(t => {
             html += '<i class="sig-cell' + (g.cls ? ' ' + g.cls : '') + '" title="' + _esc(t) + '"></i>';
@@ -1044,7 +1049,7 @@ function _lgMethodsCard(rows, total) {
             tip: tn('{writes_count} write request (POST, PUT, PATCH or DELETE). Click to filter to {method}.', '{writes_count} write requests (POST, PUT, PATCH or DELETE). Click to filter to {method}.', writes.length, { writes_count: _sdNum(writes.length), method: writes[0].method }) })]
         : [_lgOk(t('reads only'))];
     const top = byVolume[0];
-    const sub = _lgSub(top ? '<b>' + _esc(top.key) + '</b> ' + Math.round((top.n / total) * 100) + '%' : th('no method recorded'),
+    const sub = _lgSub(top ? '<b>' + _esc(top.key) + '</b> ' + tmDigits(Math.round((top.n / total) * 100)) + '%' : th('no method recorded'),
         risky ? th('PUT or DELETE present') : th('no PUT or DELETE'));
     const built = _lgRankBody(list, {
         total: total, noun: 'methods',
@@ -1279,10 +1284,10 @@ function _lgFailPanel(rows, total) {
         if (p95 != null) subBits.push('p95 ' + _lgMs(p95));
         if (dom) subBits.push(dom);
         if (svc) subBits.push(_sdShort(svc));
-        return `<div class="sig-ep-row" role="button" tabindex="0"${bad ? ' data-health="down"' : ''} data-lg="${_esc(_lgSpec({ status: String(o.status), path: o.path }))}" title="${_esc(tn('{count} of the {n} request to {path} returned {status} {lgStatusName} ({pct}%). Click to filter the log list to just those.', '{count} of the {n} requests to {path} returned {status} {lgStatusName} ({pct}%). Click to filter the log list to just those.', denom, { count: _sdNum(o.n), n: _sdNum(denom), path: o.path, status: o.status, lgStatusName: _lgStatusName(o.status), pct }))}"><span class="sig-ep-id"><span class="d-proto sig-proto ${bad ? 'd-bad' : 'd-warn'}">${o.status}</span><span class="sig-ep-name">${_esc(o.path)}</span></span><span class="sig-ep-addr">${_esc(svc ? _sdShort(svc) : _lgStatusName(o.status))}</span><span class="sig-ep-strip">${_lgStrip(cells, tn('{count} of {n} request to {path} failed', '{count} of {n} requests to {path} failed', denom, { count: _sdNum(o.n), n: _sdNum(denom), path: o.path }), 'sig-strip-xs')}</span><span class="sig-ep-n">${_sdNum(o.n)}</span><span class="sig-ep-flags"><span class="lg-share ${pct >= 50 ? bad ? 'd-bad' : 'd-warn' : 'd-off'}">${pct}%</span></span><span class="sig-ep-sub">${_esc(subBits.join(' · '))}</span><span class="sig-ep-kind">${_esc(t('{status} on {sdShort}, {share} of that path', { status: o.status, sdShort: svc ? _sdShort(svc) : o.path, share: tmNumber(pct / 100, { style: 'percent' }) }))}</span></div>`;
+        return `<div class="sig-ep-row" role="button" tabindex="0"${bad ? ' data-health="down"' : ''} data-lg="${_esc(_lgSpec({ status: String(o.status), path: o.path }))}" title="${_esc(tn('{count} of the {n} request to {path} returned {status} {lgStatusName} ({pct}%). Click to filter the log list to just those.', '{count} of the {n} requests to {path} returned {status} {lgStatusName} ({pct}%). Click to filter the log list to just those.', denom, { count: _sdNum(o.n), n: _sdNum(denom), path: o.path, status: o.status, lgStatusName: _lgStatusName(o.status), pct }))}"><span class="sig-ep-id"><span class="d-proto sig-proto ${bad ? 'd-bad' : 'd-warn'}">${o.status}</span><span class="sig-ep-name">${_esc(o.path)}</span></span><span class="sig-ep-addr">${_esc(svc ? _sdShort(svc) : _lgStatusName(o.status))}</span><span class="sig-ep-strip">${_lgStrip(cells, tn('{count} of {n} request to {path} failed', '{count} of {n} requests to {path} failed', denom, { count: _sdNum(o.n), n: _sdNum(denom), path: o.path }), 'sig-strip-xs')}</span><span class="sig-ep-n">${_sdNum(o.n)}</span><span class="sig-ep-flags"><span class="lg-share ${pct >= 50 ? bad ? 'd-bad' : 'd-warn' : 'd-off'}">${tmDigits(pct)}%</span></span><span class="sig-ep-sub">${_esc(subBits.join(' · '))}</span><span class="sig-ep-kind">${_esc(t('{status} on {sdShort}, {share} of that path', { status: o.status, sdShort: svc ? _sdShort(svc) : o.path, share: tmNumber(pct / 100, { style: 'percent' }) }))}</span></div>`;
     }).join('');
 
-    return `<section class="sig-ep"><div class="sig-ep-head"><i class="ph-fill ph-warning-octagon sig-ep-headic ${fails.some(e => e.status >= 500) ? 'd-bad' : 'd-warn'}"></i><span class="sc-sec-label">${th('Where it fails')}</span><span class="d-n">${_sdNum(list.length)}</span><span class="sc-sec-rule"></span><span class="sig-ep-tot">${thn('{fails_count} of {total} request', '{fails_count} of {total} requests', total, { fails_count: _sdNum(fails.length), total: _sdNum(total) })}</span></div><div class="sig-ep-rows">${rowsHtml}</div></section>`;
+    return `<section class="sig-ep"><div class="sig-ep-head"><i class="ph-fill ph-warning-octagon sig-ep-headic ${fails.some(e => e.status >= 500) ? 'd-bad' : 'd-warn'}"></i><span class="sc-sec-label">${th('Where it fails')}</span><span class="d-n">${tmDigits(_sdNum(list.length))}</span><span class="sc-sec-rule"></span><span class="sig-ep-tot">${thn('{fails_count} of {total} request', '{fails_count} of {total} requests', total, { fails_count: _sdNum(fails.length), total: _sdNum(total) })}</span></div><div class="sig-ep-rows">${rowsHtml}</div></section>`;
 }
 
 function _lgRuntime(meta, rows) {
@@ -1376,7 +1381,7 @@ function renderLogs() {
         ? '<div class="sig-ep-rows lg-feed-rows">' + cards + '</div>'
         : `<div class="atk-empty"><i class="ph-fill ph-receipt"></i><div class="atk-empty-t">${th('Nothing to show')}</div><p class="lg-note">${_esc(emptyTxt)}</p></div>`;
 
-    container.innerHTML = `${geoPanel}<div class="sig-root"><section class="sig-ep lg-feed"><div class="sig-ep-head"><i class="ph-fill ph-receipt sig-ep-headic"></i><span class="sc-sec-label">${th('Access log')}</span><span class="d-n">${_sdNum(visible.length)}</span><span class="sc-sec-rule"></span><span class="sig-idle-txt">${thn('{visible_count} of {fetched} line', '{visible_count} of {fetched} lines', fetched, { visible_count: _sdNum(visible.length), fetched: _sdNum(fetched) })}</span></div>${body}</section></div>`;
+    container.innerHTML = `${geoPanel}<div class="sig-root"><section class="sig-ep lg-feed"><div class="sig-ep-head"><i class="ph-fill ph-receipt sig-ep-headic"></i><span class="sc-sec-label">${th('Access log')}</span><span class="d-n">${tmDigits(_sdNum(visible.length))}</span><span class="sc-sec-rule"></span><span class="sig-idle-txt">${thn('{visible_count} of {fetched} line', '{visible_count} of {fetched} lines', fetched, { visible_count: _sdNum(visible.length), fetched: _sdNum(fetched) })}</span></div>${body}</section></div>`;
 
     if (geoPanel) renderGeoMap(document.getElementById('logGeoMap'), countryData, logGeo_click, _logCountryFilter);
 }

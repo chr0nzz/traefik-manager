@@ -495,9 +495,11 @@ def check_catalogue(path, identifier, template=None):
     expected = Catalog(locale=identifier)
     if str(catalog.locale) != identifier:
         problems.append(Problem(rel, f'Language header is {catalog.locale}, expected {identifier}'))
-    if not (same_plural_rule(catalog.plural_forms, expected.plural_forms)
-            or matches_browser_plurals(catalog.plural_forms, identifier)):
+    plural_rule_ok = (same_plural_rule(catalog.plural_forms, expected.plural_forms)
+                      or matches_browser_plurals(catalog.plural_forms, identifier))
+    if not plural_rule_ok:
         problems.append(Problem(rel, f'Plural-Forms is "{catalog.plural_forms}", expected "{expected.plural_forms}"'))
+    num_plurals = catalog.num_plurals if plural_rule_ok else expected.num_plurals
     content_type = dict(catalog.mime_headers).get('Content-Type', '')
     if 'charset=utf-8' not in content_type.lower():
         problems.append(Problem(rel, 'must be UTF-8'))
@@ -505,7 +507,7 @@ def check_catalogue(path, identifier, template=None):
     for message in catalog:
         if not message.id or message.fuzzy:
             continue
-        problems.extend(check_message(message, expected.num_plurals, rel))
+        problems.extend(check_message(message, num_plurals, rel))
 
     if template is not None:
         have, want = message_set(catalog), message_set(template)

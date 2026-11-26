@@ -123,7 +123,7 @@ async function openFileExternalRouteDetail(idx) {
 
     document.getElementById('detailEditBtn').style.display = 'none';
 
-    const badge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-file-text"></i> ${th('file provider')}</span>`;
+    const badge = `<span class="d-flat d-off ms-2"><i class="ph-bold ph-file-text"></i> ${th('file provider')}</span>`;
 
     const appData = {
         id:           (r.name || '').split('@')[0],

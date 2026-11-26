@@ -2580,10 +2580,10 @@ def api_route_ping():
     self_domain = (settings.get('self_route') or {}).get('domain', '').strip().lower()
     if self_domain and host.lower() == self_domain:
         return jsonify({'ok': True, 'latency_ms': 0, 'status_code': 200, 'self': True})
-    pool = _reach.pool_health(request.args.getlist('servers'), ssrf=_ssrf_ok, head=requests.head)
+    pool = _reach.pool_health(request.args.getlist('servers'), ssrf=_ssrf_ok, head=requests.head, get=requests.get)
     if pool:
         return jsonify(_reach.pool_result(pool))
-    return jsonify(_reach.probe(url, fallback, ssrf=_ssrf_ok, head=requests.head))
+    return jsonify(_reach.probe(url, fallback, ssrf=_ssrf_ok, head=requests.head, get=requests.get))
 
 def _apr1_hash(password: str, salt: str) -> str:
     import hashlib
@@ -2739,6 +2739,18 @@ def trigger_traefik_restart() -> tuple:
         return ok, ('' if ok else gettext('Signal file write failed - check SIGNAL_FILE_PATH (%(path)s)',
                                           path=repr(_get_signal_file_path())))
     return False, gettext('Unknown RESTART_METHOD: %(method)s', method=repr(method))
+
+
+_EP_ADDRESS_RE = re.compile(r'^(?:(\[[0-9A-Fa-f:.]+\]|[A-Za-z0-9._-]*):)?(\d{1,5})(?:/(tcp|udp))?$', re.IGNORECASE)
+
+
+def _normalize_ep_address(addr: str):
+    m = _EP_ADDRESS_RE.match(addr)
+    if not m or not 1 <= int(m.group(2)) <= 65535:
+        return None
+    host = m.group(1) or ''
+    proto = f'/{m.group(3).lower()}' if m.group(3) else ''
+    return f'{host}:{int(m.group(2))}{proto}'
 
 
 @app.route('/api/static/available')
@@ -2911,7 +2923,10 @@ def api_static_section_update():
                     ep = {}
                 addr = str(payload.get('address', '')).strip()
                 if addr:
-                    ep['address'] = DoubleQuotedScalarString(addr)
+                    norm = _normalize_ep_address(addr)
+                    if norm is None:
+                        return jsonify({'error': gettext('Entrypoint address must be a port such as :443, optionally with a host and /tcp or /udp, got %(value)s', value=repr(addr))}), 400
+                    ep['address'] = DoubleQuotedScalarString(norm)
                 elif 'address' not in ep:
                     ep['address'] = ''
                 http_blk = ep.get('http') if isinstance(ep.get('http'), dict) else {}
@@ -2957,8 +2972,16 @@ def api_static_section_update():
                 else:
                     ep.pop('http', None)
                 if payload.get('http3'):
-                    if not isinstance(ep.get('http3'), dict):
-                        ep['http3'] = {}
+                    h3_blk = ep.get('http3') if isinstance(ep.get('http3'), dict) else {}
+                    if 'http3_advertised_port' in payload:
+                        h3_port = str(payload.get('http3_advertised_port') or '').strip()
+                        if h3_port:
+                            if not (h3_port.isascii() and h3_port.isdigit() and 1 <= int(h3_port) <= 65535):
+                                return jsonify({'error': gettext('HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s', value=repr(h3_port))}), 400
+                            h3_blk['advertisedPort'] = int(h3_port)
+                        else:
+                            h3_blk.pop('advertisedPort', None)
+                    ep['http3'] = h3_blk
                 else:
                     ep.pop('http3', None)
                 if payload.get('as_default'):

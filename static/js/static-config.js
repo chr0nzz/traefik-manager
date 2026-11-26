@@ -542,11 +542,11 @@ function _renderRouteYamlOrigins(origins, ownFile, warnings) {
             name: tmHtml(`<code class="font-mono">${_esc(s.name)}</code>`),
             file: tmHtml(`<code class="font-mono">${_esc(s.file)}</code>`),
         })).join(', ');
-        html += `<i class="ph-bold ph-info mr-1"></i>${items}. `
+        html += `<i class="ph-bold ph-info me-1"></i>${items}. `
              + th('Other routes may use these, so this editor shows them but does not write them.');
     }
     broken.forEach(w => {
-        html += `<div style="color:var(--red);margin-top:4px"><i class="ph-bold ph-warning mr-1"></i>`
+        html += `<div style="color:var(--red);margin-top:4px"><i class="ph-bold ph-warning me-1"></i>`
              + th('{name}, defined in {file}, points at {missing}, which is not defined anywhere', {
                  name: tmHtml(`<code class="font-mono">${_esc(w.name)}</code>`),
                  file: tmHtml(`<code class="font-mono">${_esc(w.file)}</code>`),
@@ -771,13 +771,14 @@ function _updateStaticTabArrows() {
     const rBtn = document.getElementById('staticTabArrowR');
     if (!bar || !lBtn || !rBtn) return;
     const overflow = bar.scrollWidth > bar.clientWidth + 2;
-    lBtn.style.display = overflow && bar.scrollLeft > 2 ? '' : 'none';
-    rBtn.style.display = overflow && bar.scrollLeft < bar.scrollWidth - bar.clientWidth - 2 ? '' : 'none';
+    const pos = Math.abs(bar.scrollLeft);
+    lBtn.style.display = overflow && pos > 2 ? '' : 'none';
+    rBtn.style.display = overflow && pos < bar.scrollWidth - bar.clientWidth - 2 ? '' : 'none';
 }
 
 function _scrollStaticTabs(dir) {
     const bar = document.getElementById('staticTabBar');
-    if (bar) bar.scrollBy({ left: dir * 160, behavior: 'smooth' });
+    if (bar) bar.scrollBy({ left: dir * 160 * (document.documentElement.dir === 'rtl' ? -1 : 1), behavior: 'smooth' });
 }
 
 function switchStaticSection(section) {
@@ -1003,8 +1004,9 @@ function closeStaticForm(section) {
 
 function _resetStaticForm(section) {
     if (section === 'entrypoints') {
-        ['sfEpName','sfEpAddr','sfEpRedirect','sfEpTrustedIps','sfEpProxyIps','sfEpMiddlewares','sfEpTlsResolver','sfEpTlsOptions','sfEpReadTimeout','sfEpWriteTimeout','sfEpIdleTimeout'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+        ['sfEpName','sfEpAddr','sfEpRedirect','sfEpHttp3Port','sfEpTrustedIps','sfEpProxyIps','sfEpMiddlewares','sfEpTlsResolver','sfEpTlsOptions','sfEpReadTimeout','sfEpWriteTimeout','sfEpIdleTimeout'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
         ['sfEpHttp3','sfEpFwdInsecure','sfEpProxyInsecure','sfEpTlsEnabled','sfEpAsDefault'].forEach(id => { const e = document.getElementById(id); if (e) e.checked = false; });
+        const h3Row = document.getElementById('sfEpHttp3PortRow'); if (h3Row) h3Row.style.display = 'none';
         const uhsSel = document.getElementById('sfEpUnderscore'); if (uhsSel) uhsSel.value = '';
         const tlsRow = document.getElementById('sfEpTlsRow'); if (tlsRow) tlsRow.style.display = 'none';
     } else if (section === 'resolvers') {
@@ -1034,6 +1036,8 @@ function _prefillStaticForm(section, name) {
         document.getElementById('sfEpAddr').value    = ep.address || '';
         document.getElementById('sfEpRedirect').value = ep.http?.redirections?.entryPoint?.to || '';
         const h3chk = document.getElementById('sfEpHttp3'); if (h3chk) h3chk.checked = !!ep.http3;
+        const h3Port = document.getElementById('sfEpHttp3Port'); if (h3Port) h3Port.value = ep.http3?.advertisedPort || '';
+        const h3Row = document.getElementById('sfEpHttp3PortRow'); if (h3Row) h3Row.style.display = ep.http3 ? '' : 'none';
         const uhsSel = document.getElementById('sfEpUnderscore');
         if (uhsSel) uhsSel.value = _epHeaderStrategyValue(ep);
         const fh = ep.forwardedHeaders || {};
@@ -1114,15 +1118,16 @@ async function _applyStaticSectionChange(body) {
         headers: { 'Content-Type': 'application/json', ..._csrfHeaders() },
         body: JSON.stringify({ ...body, current_raw: _staticRawContent }),
     });
-    if (!res.ok) { showToast(await _errText(res, t('Could not update the static config')), 'error'); return; }
+    if (!res.ok) { showToast(await _errText(res, t('Could not update the static config')), 'error'); return false; }
     const data = await res.json();
-    if (!data.ok) { showToast(data.error || data.message || t('Could not update the static config'), 'error'); return; }
+    if (!data.ok) { showToast(data.error || data.message || t('Could not update the static config'), 'error'); return false; }
     _staticParsedData = data.parsed || {};
     _staticRawContent = data.raw || '';
     _renderStaticSections(_staticParsedData);
     if (_staticMonaco) _staticMonaco.setValue(_staticRawContent);
     _staticSectionEdits = true;
     _markStaticPending();
+    return true;
 }
 
 async function submitStaticSection(section) {
@@ -1133,6 +1138,7 @@ async function submitStaticSection(section) {
         await _epVersion.pending;
         name    = document.getElementById('sfEpName').value.trim();
         payload = { address: document.getElementById('sfEpAddr').value.trim(), redirect_to: document.getElementById('sfEpRedirect').value.trim(), http3: document.getElementById('sfEpHttp3')?.checked || false,
+            http3_advertised_port: document.getElementById('sfEpHttp3Port')?.value.trim() || '',
             ..._epHeaderStrategyPayload(),
             trusted_ips: document.getElementById('sfEpTrustedIps')?.value || '',
             forwarded_insecure: document.getElementById('sfEpFwdInsecure')?.checked || false,
@@ -1162,8 +1168,7 @@ async function submitStaticSection(section) {
     }
     if (!name) { showToast(t('Name is required'), 'error'); return; }
     try {
-        await _applyStaticSectionChange({ action, section, name, old_name, data: payload });
-        closeStaticForm(section);
+        if (await _applyStaticSectionChange({ action, section, name, old_name, data: payload })) closeStaticForm(section);
     } catch(e) { showToast(_netErrText(e, t('Could not update the static config')), 'error'); }
 }
 
@@ -1286,7 +1291,7 @@ function _scPluginRow(name, p) {
 function _renderStaticEntrypoints(eps) {
     const keys = Object.keys(eps || {});
     const cnt  = document.getElementById('staticEpCount');
-    if (cnt) cnt.textContent = keys.length;
+    if (cnt) cnt.textContent = tmDigits(keys.length);
     const el = document.getElementById('staticEpList');
     if (!el) return;
     if (!keys.length) {
@@ -1299,7 +1304,7 @@ function _renderStaticEntrypoints(eps) {
 function _renderStaticResolvers(resolvers) {
     const keys = Object.keys(resolvers || {});
     const cnt  = document.getElementById('staticResolverCount');
-    if (cnt) cnt.textContent = keys.length;
+    if (cnt) cnt.textContent = tmDigits(keys.length);
     const el = document.getElementById('staticResolverList');
     if (!el) return;
     if (!keys.length) {
@@ -1315,7 +1320,7 @@ function _renderStaticPlugins(plugins, localPlugins) {
     Object.entries(localPlugins || {}).forEach(([n, p]) => { all[n] = { ...(p || {}), _local: true }; });
     const keys = Object.keys(all);
     const cnt  = document.getElementById('staticPluginCount');
-    if (cnt) cnt.textContent = keys.length;
+    if (cnt) cnt.textContent = tmDigits(keys.length);
     const el = document.getElementById('staticPluginList');
     if (!el) return;
     if (!keys.length) {
@@ -1677,7 +1682,7 @@ function _scRenderProviderRows(prov) {
     if (!el) return;
     const configured = Object.keys(prov).filter(k => k !== 'providersThrottleDuration' && _scHas(prov[k]));
     const cnt = document.getElementById('staticProviderCount');
-    if (cnt) cnt.textContent = configured.length;
+    if (cnt) cnt.textContent = tmDigits(configured.length);
     const rows = [];
     const hasDocker = _scHas(prov.docker);
     const d = prov.docker || {};
@@ -1807,8 +1812,7 @@ async function submitStaticProvider() {
     const action   = _staticEditState.name ? 'edit' : 'add';
     const old_name = _staticEditState.name || '';
     try {
-        await _applyStaticSectionChange({ action, section: 'providers', name: type, old_name, data: { yaml_config } });
-        closeStaticForm('providers');
+        if (await _applyStaticSectionChange({ action, section: 'providers', name: type, old_name, data: { yaml_config } })) closeStaticForm('providers');
     } catch(e) { showToast(_netErrText(e, t('Could not update the static config')), 'error'); }
 }
 
@@ -1878,7 +1882,7 @@ async function saveStaticSingleSection(section) {
         };
     }
     try {
-        await _applyStaticSectionChange({ action: 'set', section, name: '', data });
+        if (!await _applyStaticSectionChange({ action: 'set', section, name: '', data })) return;
         const save = document.querySelector(`.sc-save[data-sc-save="${section}"]`);
         if (save) save.style.display = 'none';
     } catch(e) { showToast(_netErrText(e, t('Could not update the static config')), 'error'); }
@@ -2051,10 +2055,15 @@ function _buildStaticClassicHTML() {
             </div>
             <div>
                 <div class="flex items-center gap-2">
-                    <input type="checkbox" id="sfEpHttp3" class="rounded" style="accent-color:var(--blue)">
+                    <input type="checkbox" id="sfEpHttp3" class="rounded" style="accent-color:var(--blue)" onchange="document.getElementById('sfEpHttp3PortRow').style.display = this.checked ? '' : 'none'">
                     <span class="text-xs" style="color:var(--text)">${th('Enable HTTP/3 (QUIC)')}</span>
                 </div>
                 <p class="text-xs mt-1" style="color:var(--muted)">${th('HTTP/3 also uses UDP on this port. Publish it too, for example {udp_port} in Docker, and allow it through any firewall. Only routers with TLS can use HTTP/3.', { udp_port: tmHtml(`<code class="font-mono">443:443/udp</code>`) })}</p>
+            </div>
+            <div id="sfEpHttp3PortRow" style="display:none">
+                <label class="text-xs block mb-1" style="color:var(--muted)">${th('HTTP/3 advertised port {optional}', { optional: tmHtml(`<span style="font-weight:400">${th('(optional)')}</span>`) })}</label>
+                <input id="sfEpHttp3Port" type="text" inputmode="numeric" class="input-field text-sm" placeholder="443">
+                <p class="text-xs mt-1" style="color:var(--muted)">${th('The port clients use for HTTP/3 when it differs from the one Traefik listens on, for example behind a Docker port mapping. Empty advertises the entrypoint port.')}</p>
             </div>
             <div id="sfEpUnderscoreRow" style="display:none">
                 <label class="text-xs block mb-1" style="color:var(--muted)"><span id="sfEpHdrLabel">${th('Alias Headers')}</span> <span style="color:var(--muted);font-weight:400">${thc('setting', '(security)')}</span></label>
@@ -2547,7 +2556,7 @@ function _buildStaticClassicHTML() {
 
 function _scNotice(key, title, body) {
     return `<div class="sc-notice rounded-lg" id="scNotice-${key}" style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2)">
-        <button type="button" onclick="toggleStaticNote(${_jsArg(key)})" class="w-full px-4 py-2.5 flex items-center gap-2 text-left" style="background:none;border:none;cursor:pointer">
+        <button type="button" onclick="toggleStaticNote(${_jsArg(key)})" class="w-full px-4 py-2.5 flex items-center gap-2 text-start" style="background:none;border:none;cursor:pointer">
             <i class="ph-bold ph-info text-sm shrink-0" style="color:var(--blue)"></i>
             <span class="text-xs font-semibold flex-1" style="color:var(--text)">${title}</span>
             <i class="ph-bold ph-caret-right sc-notice-caret text-xs" style="color:var(--muted)"></i>

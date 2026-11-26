@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-11 14:43-0500\n"
+"POT-Creation-Date: 2026-11-25 13:27-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en_US <LL@li.org>\n"
@@ -660,6 +660,12 @@ msgstr ""
 
 #. Used in the browser
 msgid "A forwardAuth middleware is in use, so this is high priority."
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"A host written with a trailing dot evades TLS option conflict detection, so "
+"a router can bypass the client certificate check of another"
 msgstr ""
 
 msgid "A label for the device this key belongs to."
@@ -3992,6 +3998,12 @@ msgstr ""
 msgid "Entrypoint \"%(entrypoint)s\" not found in static config"
 msgstr ""
 
+#, python-format
+msgid ""
+"Entrypoint address must be a port such as :443, optionally with a host and /"
+"tcp or /udp, got %(value)s"
+msgstr ""
+
 #. Used in the browser
 msgid "Entrypoint labels"
 msgstr ""
@@ -4976,6 +4988,16 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "HTTP/3 advertised on port {port}"
+msgstr ""
+
+#, python-format
+msgid ""
+"HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s"
+msgstr ""
+
+#. Used in the browser
+#, python-brace-format
+msgid "HTTP/3 advertised port {optional}"
 msgstr ""
 
 #. Used in the browser
@@ -10437,6 +10459,12 @@ msgid ""
 "toggle defaults. Turn it off to remove it."
 msgstr ""
 
+#. Used in the browser
+msgid ""
+"The Compress middleware holds megabytes of Brotli state per response in "
+"flight, so unauthenticated clients can exhaust memory"
+msgstr ""
+
 msgid "The CrowdSec alert cache is being refreshed"
 msgstr ""
 
@@ -10446,6 +10474,12 @@ msgstr ""
 msgid ""
 "The CrowdSec fields on this server in Settings only build the compose "
 "snippet below - they are never pushed to a running agent."
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"The Docker and Swarm password, the Knative token and the HTTP provider "
+"headers are not redacted from debug logs, support dumps and usage statistics"
 msgstr ""
 
 #, python-format
@@ -10681,6 +10715,13 @@ msgid ""
 "The name Traefik sends as SNI and checks the backend certificate against. "
 "Use it when the backend serves its certificate for a different name than the "
 "target address. Adds serverName via a named serversTransport."
+msgstr ""
+
+#. Used in the browser
+msgid ""
+"The port clients use for HTTP/3 when it differs from the one Traefik listens "
+"on, for example behind a Docker port mapping. Empty advertises the "
+"entrypoint port."
 msgstr ""
 
 #. Used in the browser

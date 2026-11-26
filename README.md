@@ -103,7 +103,7 @@ Open **http://your-server:5000** and the setup wizard takes it from there.
 
 **Two layouts** - *Fluid* fills the screen, *Fixed* caps the width.
 
-**Mobile** - a native Android app on Google Play, and the web app installs as a PWA on any platform.
+**Mobile** - native Android (Google Play or Obtainium) and iOS (App Store) apps, and the web app installs as a PWA on any platform.
 
 Full [documentation](https://traefik-manager.xyzlab.dev/).
 
@@ -166,9 +166,15 @@ Native Android (Kotlin and Jetpack Compose) and iOS (Swift and SwiftUI) apps for
 [![Google Play](https://img.shields.io/badge/Google_Play-Available-blue?logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager)
 [![Play Downloads](https://playbadges.pavi2410.me/badge/downloads?id=dev.chr0nzz.traefikmanager)](https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager)
 [![App Store](https://img.shields.io/badge/App_Store-Available-blue?logo=apple&logoColor=white)](https://apps.apple.com/us/app/traefik-manager/id6826725061)
+[![TestFlight](https://img.shields.io/badge/TestFlight-Beta-blue?logo=apple&logoColor=white)](https://testflight.apple.com/join/zjT2P6JN)
+
+<a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager"><img src="static/icons/GetItOnGooglePlay.svg" alt="Get it on Google Play" height="50" /></a>
+<a href="https://apps.apple.com/us/app/traefik-manager/id6826725061"><img src="static/icons/DownloadOnTheAppStore.svg" alt="Download on the App Store" height="50" /></a>
+<a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/chr0nzz/traefik-manager-mobile"><img src="static/icons/GetItOnObtainium.png" alt="Get it on Obtainium" height="50" /></a>
 
 [Repository](https://github.com/chr0nzz/traefik-manager-mobile) ·
 [Releases](https://github.com/chr0nzz/traefik-manager-mobile/releases/latest) ·
+[iOS beta (TestFlight)](https://testflight.apple.com/join/zjT2P6JN) ·
 [Docs](https://traefik-manager.xyzlab.dev/mobile.html)
 
 ---
@@ -197,7 +203,7 @@ v1.15.0 is the first release that is not English-only. The whole interface is re
 <img src="https://hosted.weblate.org/widget/traefik-manager/matrix-auto.svg" alt="Translation status per language" />
 </a>
 
-v1.15.0 ships in French, French (Canada), German, Spanish, Portuguese (Portugal), Portuguese (Brazil), Dutch, Chinese (Simplified), Russian, Czech and Danish, plus English spellings for the United States and the United Kingdom. Any other language is added on request.
+v1.15.0 ships in French, French (Canada), German, Spanish, Portuguese (Portugal), Portuguese (Brazil), Dutch, Chinese (Simplified), Russian, Czech and Danish, plus English spellings for the United States and the United Kingdom. Korean ships from v1.15.6, and Persian, the first right-to-left language, from v1.15.9. Any other language is added on request.
 
 | You want to | Where |
 | --- | --- |

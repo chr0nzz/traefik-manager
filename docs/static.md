@@ -33,7 +33,7 @@ Traefik's static configuration controls settings that cannot be changed at runti
 
 | Section               | Description                                                                                                                                          |
 | -----------------------| ------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Entrypoints           | Port, protocol, optional HTTP-to-HTTPS redirect, [HTTP/3](#http3), the [Alias Headers](hardening.md#header-alias-spoofing) strategy (Traefik 3.7.12+, or Underscore Headers on 3.7.6 to 3.7.11), trusted IPs for forwarded headers (`forwardedHeaders.trustedIPs` / `insecure`, one CIDR per line), PROXY protocol trust (`proxyProtocol.trustedIPs` / `insecure`), an entrypoint-wide middleware chain (`http.middlewares`), TLS-by-default (`http.tls` with cert resolver and TLS options), `asDefault`, and responding timeouts (read / write / idle). |
+| Entrypoints           | Port (a bare port such as `8080` is saved as `:8080`, and an address Traefik cannot listen on is refused), protocol, optional HTTP-to-HTTPS redirect, [HTTP/3](#http3), the [Alias Headers](hardening.md#header-alias-spoofing) strategy (Traefik 3.7.12+, or Underscore Headers on 3.7.6 to 3.7.11), trusted IPs for forwarded headers (`forwardedHeaders.trustedIPs` / `insecure`, one CIDR per line), PROXY protocol trust (`proxyProtocol.trustedIPs` / `insecure`), an entrypoint-wide middleware chain (`http.middlewares`), TLS-by-default (`http.tls` with cert resolver and TLS options), `asDefault`, and responding timeouts (read / write / idle). |
 | Certificate Resolvers | ACME email, storage path, DNS / HTTP / TLS challenge type, custom CA server, key type, external account binding (EAB), and DNS propagation controls (check resolvers, delay, disable checks). |
 | Plugins               | Remote plugins (module + version) and local plugins from the `plugins-local` directory. The [Plugins tab](tab-plugins.md) offers the richer install flow. |
 | API                   | Enable or disable the Traefik API and Dashboard, insecure mode, and debug mode. |
@@ -102,7 +102,7 @@ Saving the form keeps anything already set under `http3`, such as `advertisedPor
 
 Ticking the box is not enough on its own. HTTP/3 also needs:
 
-- **UDP published on the same port.** A Docker mapping such as `443:443` only covers TCP, so add `443:443/udp` as well. The compose file written by the [tm CLI installer](tm-cli.md) publishes TCP only.
+- **UDP published on the same port.** A Docker mapping such as `443:443` only covers TCP, so add `443:443/udp` as well. The compose file written by the [tm CLI installer](tm-cli.md) also publishes `443:443/udp` when you answer yes to its HTTP/3 question, which it asks when TLS is on.
 - **UDP open in every firewall** between clients and Traefik, including the host firewall and any port forward on your router.
 - **TLS on the router.** Only routers with TLS can be reached over HTTP/3. Other routers keep working over TCP.
 - **No UDP entrypoint on the same port.** Traefik does not start when a `/udp` entrypoint listens on the port an HTTP/3 entrypoint uses.
@@ -132,7 +132,7 @@ entryPoints:
 
 ### Advertised port
 
-Traefik advertises the port it listens on. When clients reach it on a different port, for example when Docker maps the public port `443` to `8443` in the container (`443:8443` and `443:8443/udp`), set `http3.advertisedPort` to the public port in the raw YAML editor:
+Traefik advertises the port it listens on. When clients reach it on a different port, for example when Docker maps the public port `443` to `8443` in the container (`443:8443` and `443:8443/udp`), enter the public port in **HTTP/3 advertised port**, under the checkbox. It writes `http3.advertisedPort`:
 
 ```yaml
 entryPoints:

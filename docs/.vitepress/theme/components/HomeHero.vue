@@ -15,6 +15,11 @@ import { withBase } from 'vitepress'
       <a class="hh-btn" href="#features">Features</a>
       <a class="hh-btn" href="https://github.com/chr0nzz/traefik-manager" target="_blank" rel="noopener noreferrer">GitHub</a>
     </div>
+    <div class="hh-stores">
+      <a href="https://play.google.com/store/apps/details?id=dev.chr0nzz.traefikmanager" target="_blank" rel="noopener noreferrer"><img :src="withBase('/images/get-it-on-google-play.svg')" alt="Get it on Google Play" /></a>
+      <a href="https://apps.apple.com/us/app/traefik-manager/id6826725061" target="_blank" rel="noopener noreferrer"><img :src="withBase('/images/download-on-the-app-store.svg')" alt="Download on the App Store" /></a>
+      <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/chr0nzz/traefik-manager-mobile" target="_blank" rel="noopener noreferrer"><img :src="withBase('/images/get-it-on-obtainium.png')" alt="Get it on Obtainium" /></a>
+    </div>
   </section>
 </template>
 
@@ -99,6 +104,29 @@ import { withBase } from 'vitepress'
 
 .hh-btn-brand:hover {
   opacity: 0.88;
+}
+
+.hh-stores {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.hh-stores a {
+  display: inline-flex;
+  transition: opacity 0.2s;
+}
+
+.hh-stores a:hover {
+  opacity: 0.85;
+}
+
+.hh-stores img {
+  height: 44px;
+  width: auto;
 }
 
 @media (max-width: 640px) {

@@ -241,7 +241,7 @@ function renderServicesTable() {
                     <span class="svc-status-dot" style="background:${stColor}"></span>${_esc(stLabel)}
                 </span>
             </div>
-            <div class="svc-card-name">${_esc(name)}${ownerName ? `<span class="svc-type-badge" style="margin-left:6px">${th('backend of {ownerName}', { ownerName })}</span>` : ''}</div>
+            <div class="svc-card-name">${_esc(name)}${ownerName ? `<span class="svc-type-badge" style="margin-inline-start:6px">${th('backend of {ownerName}', { ownerName })}</span>` : ''}</div>
             <div class="svc-card-meta">
                 <span class="svc-meta-chip"><i class="ph-bold ph-database" style="font-size:10px"></i>${_esc(provider)}</span>
                 ${serverSummary ? `<span class="svc-meta-chip" style="color:${srvColor};background:color-mix(in srgb,${srvColor} 10%,transparent);border-color:color-mix(in srgb,${srvColor} 35%,transparent)"><i class="ph-bold ph-hard-drives" style="font-size:10px"></i>${serverSummary}</span>` : ''}
@@ -290,9 +290,9 @@ function renderServicesTable() {
                 </div>
                 <div class="svc-list-col-name">${_esc(name)}${ownerName ? ` <span class="d-flat d-off">${th('backend of {owner}', { owner: ownerName })}</span>` : ''}</div>
                 <div class="svc-list-col-url overflow-hidden">${serverUrlHtml}</div>
-                <div class="svc-list-col-provider"><span class="d-flat d-off"><i class="ph-bold ph-database" style="font-size:10px;margin-right:4px"></i>${_esc(provider)}</span></div>
-                <div class="svc-list-col-servers">${serverSummary ? `<span class="d-flat" style="color:${srvColor}"><i class="ph-bold ph-hard-drives" style="font-size:10px;margin-right:4px"></i>${serverSummary}</span>` : '<span class="d-flat d-off">-</span>'}</div>
-                <div class="svc-list-col-usedby">${usedBy.length > 0 ? `<span class="d-flat d-mw"><i class="ph-bold ph-git-branch" style="font-size:9px;margin-right:4px"></i>${usedBy.length}</span>` : '<span class="d-flat d-off">-</span>'}</div>
+                <div class="svc-list-col-provider"><span class="d-flat d-off"><i class="ph-bold ph-database" style="font-size:10px;margin-inline-end:4px"></i>${_esc(provider)}</span></div>
+                <div class="svc-list-col-servers">${serverSummary ? `<span class="d-flat" style="color:${srvColor}"><i class="ph-bold ph-hard-drives" style="font-size:10px;margin-inline-end:4px"></i>${serverSummary}</span>` : '<span class="d-flat d-off">-</span>'}</div>
+                <div class="svc-list-col-usedby">${usedBy.length > 0 ? `<span class="d-flat d-mw"><i class="ph-bold ph-git-branch" style="font-size:9px;margin-inline-end:4px"></i>${usedBy.length}</span>` : '<span class="d-flat d-off">-</span>'}</div>
             </div>`;
         }).join('');
         const header = `<div class="svc-list-header svc-list-grid">
@@ -473,11 +473,11 @@ function openSvcDetail(idx) {
 
     
     const serversHtml = servers.length > 0 ? `
-        <table class="w-full text-left mt-2">
+        <table class="w-full text-start mt-2">
             <thead style="background:var(--card)">
                 <tr>
-                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Status')}</th>
-                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">URL</th>
+                    <th class="px-3 py-2 text-start text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Status')}</th>
+                    <th class="px-3 py-2 text-start text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">URL</th>
                 </tr>
             </thead>
             <tbody>
@@ -494,12 +494,12 @@ function openSvcDetail(idx) {
     
     const children = _compositeChildren(s);
     const childrenHtml = `
-        <table class="w-full text-left mt-2">
+        <table class="w-full text-start mt-2">
             <thead style="background:var(--card)">
                 <tr>
-                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Role')}</th>
-                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Service')}</th>
-                    <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Share')}</th>
+                    <th class="px-3 py-2 text-start text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Role')}</th>
+                    <th class="px-3 py-2 text-start text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Service')}</th>
+                    <th class="px-3 py-2 text-start text-xs font-semibold uppercase tracking-wider" style="color:var(--muted)">${thc('column', 'Share')}</th>
                 </tr>
             </thead>
             <tbody>

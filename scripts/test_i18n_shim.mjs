@@ -122,6 +122,21 @@ check('one item in a list asks for its name', _confirmWordFor(['  immich  ']), '
 check('several ask for the count', _confirmWordFor(['a', 'b', 'c']), '3');
 check('empty names are ignored', _confirmWordFor(['a', '', null]), 'a');
 
+const fa = load(JSON.stringify({ locale: 'fa', plural: { one: 0, other: 1 }, messages: {} }));
+check('fa digits for a count', fa.t('{n} routes', { n: 12 }), '۱۲ routes');
+check('fa digits for a numeric string', fa.t('{count} countries', { count: '1,234' }), '۱,۲۳۴ countries');
+check('fa keeps a port Latin', fa.t('Listening on {port}', { port: 443 }), 'Listening on 443');
+check('fa keeps a status code Latin', fa.t('{code} responses', { code: 502 }), '502 responses');
+check('fa keeps a version Latin', fa.t('Update to {version}', { version: '3.7.20' }), 'Update to 3.7.20');
+check('fa keeps text params', fa.t('Remove {name}', { name: 'api-2' }), 'Remove api-2');
+check('fa plural count', fa.tn('{n} route', '{n} routes', 3), '۳ routes');
+check('fa tmDigits', fa.tmDigits('1000'), '۱۰۰۰');
+check('en tmDigits is the identity', en.tmDigits('1,234'), '1,234');
+check('en count unchanged', en.t('{n} routes', { n: 1234 }), '1234 routes');
+check('en numeric string unchanged', en.t('{count} countries', { count: '1,234' }), '1,234 countries');
+const deDigits = load(JSON.stringify({ locale: 'de', plural: { one: 0, other: 1 }, messages: {} }));
+check('de count unchanged', deDigits.t('{n} routes', { n: 1234 }), '1234 routes');
+
 if (failures) {
     console.error(`${failures} i18n shim check(s) failed`);
     process.exit(1);

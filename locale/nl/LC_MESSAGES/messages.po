@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-11 14:43-0500\n"
-"PO-Revision-Date: 2026-09-29 23:48+0000\n"
+"POT-Creation-Date: 2026-11-25 13:27-0500\n"
+"PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Dutch <https://hosted.weblate.org/projects/traefik-manager/"
 "web-app/nl/>\n"
@@ -720,6 +720,15 @@ msgstr ""
 msgid "A forwardAuth middleware is in use, so this is high priority."
 msgstr ""
 "Er is een forwardAuth-middleware in gebruik, dus dit heeft hoge prioriteit."
+
+#. Used in the browser
+msgid ""
+"A host written with a trailing dot evades TLS option conflict detection, so "
+"a router can bypass the client certificate check of another"
+msgstr ""
+"Een host die met een punt aan het eind is geschreven, ontsnapt aan de "
+"detectie van TLS-optieconflicten, waardoor een router de "
+"clientcertificaatcontrole van een andere router kan omzeilen"
 
 msgid "A label for the device this key belongs to."
 msgstr "Een label voor het apparaat waar deze sleutel bij hoort."
@@ -1560,6 +1569,9 @@ msgid ""
 "An NTLM or Negotiate Authorization header pins a backend transport that is "
 "never released, so unauthenticated clients can exhaust memory and connections"
 msgstr ""
+"Een NTLM- of Negotiate-Authorization-header legt een backendtransport vast "
+"dat nooit wordt vrijgegeven, waardoor niet-geauthenticeerde clients geheugen "
+"en verbindingen kunnen uitputten"
 
 msgid ""
 "An agent runs beside Traefik on a remote host so this instance can manage "
@@ -1590,7 +1602,7 @@ msgid "Anything below this level is dropped for this channel."
 msgstr "Alles onder dit niveau wordt voor dit kanaal verworpen."
 
 msgid "App Store"
-msgstr ""
+msgstr "App Store"
 
 #. Used in the browser
 msgid "App Token"
@@ -1626,7 +1638,7 @@ msgstr "Toepassen en opslaan"
 #. Used in the browser
 msgctxt "label"
 msgid "As logged"
-msgstr ""
+msgstr "Zoals gelogd"
 
 msgid ""
 "Assign a route to a group with the pencil on its card. A group disappears "
@@ -1851,11 +1863,11 @@ msgstr "Backend online · {latency_ms}ms"
 
 #. Used in the browser
 msgid "Backend server name (SNI)"
-msgstr ""
+msgstr "Servernaam van de backend (SNI)"
 
 #, python-format
 msgid "Backend server name must be a hostname, got %(value)s"
-msgstr ""
+msgstr "Servernaam van de backend moet een hostnaam zijn, ontvangen: %(value)s"
 
 msgid "Backend service"
 msgstr "Backend-service"
@@ -2247,7 +2259,7 @@ msgstr "Kaartinstellingen"
 #. Used in the browser
 #, python-brace-format
 msgid "Card settings for {name}"
-msgstr ""
+msgstr "Kaartinstellingen voor {name}"
 
 msgctxt "setting"
 msgid "Categories"
@@ -2528,6 +2540,8 @@ msgstr "Klik op %(middleware)s om er een toe te voegen"
 msgid ""
 "Click a domain to switch to it. Ctrl or Shift click to select more than one."
 msgstr ""
+"Klik op een domein om ernaar over te schakelen. Houd Ctrl of Shift ingedrukt "
+"en klik om er meer dan één te selecteren."
 
 msgid "Click to copy"
 msgstr "Klik om te kopiëren"
@@ -2838,7 +2852,7 @@ msgstr "Verbinding mislukt: {error}"
 
 #. Used in the browser
 msgid "Connection settings saved"
-msgstr ""
+msgstr "Verbindingsinstellingen opgeslagen"
 
 #. Used in the browser
 msgid "Connection successful"
@@ -3845,8 +3859,8 @@ msgstr "Uitgeschakeld"
 #, python-brace-format
 msgid "Disabled {n} route."
 msgid_plural "Disabled {n} routes."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} route uitgeschakeld."
+msgstr[1] "{n} routes uitgeschakeld."
 
 msgid ""
 "Disables certificate validation for the backend. Use for self-signed certs "
@@ -4086,7 +4100,7 @@ msgstr "Kanaal bewerken"
 
 #. Used in the browser
 msgid "Edit Entrypoint"
-msgstr ""
+msgstr "Entrypoint bewerken"
 
 #. Used in the browser
 msgid "Edit Plugin"
@@ -4094,7 +4108,7 @@ msgstr "Plug-in bewerken"
 
 #. Used in the browser
 msgid "Edit Resolver"
-msgstr ""
+msgstr "Resolver bewerken"
 
 #. Used in the browser
 msgid "Edit Service"
@@ -4198,8 +4212,8 @@ msgstr "Ingeschakeld"
 #, python-brace-format
 msgid "Enabled {n} route."
 msgid_plural "Enabled {n} routes."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{n} route ingeschakeld."
+msgstr[1] "{n} routes ingeschakeld."
 
 #. Used in the browser
 msgid "Enabled, stream routes are not reachability checked"
@@ -4328,6 +4342,12 @@ msgstr "Entrypoint"
 #, python-format
 msgid "Entrypoint \"%(entrypoint)s\" not found in static config"
 msgstr "Entrypoint “%(entrypoint)s” niet gevonden in statische configuratie"
+
+#, python-format
+msgid ""
+"Entrypoint address must be a port such as :443, optionally with a host and /"
+"tcp or /udp, got %(value)s"
+msgstr ""
 
 #. Used in the browser
 msgid "Entrypoint labels"
@@ -4794,6 +4814,8 @@ msgid ""
 "FastProxy backend connection pool leaks NTLM and Negotiate identity to "
 "unauthenticated clients"
 msgstr ""
+"FastProxy-verbindingspool naar de backend lekt NTLM- en Negotiate-identiteit "
+"naar niet-geauthenticeerde clients"
 
 #. Used in the browser
 msgid ""
@@ -5381,6 +5403,18 @@ msgstr "HTTP/3 aangekondigd"
 msgid "HTTP/3 advertised on port {port}"
 msgstr "HTTP/3 aangekondigd op poort {port}"
 
+#, python-format
+msgid ""
+"HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s"
+msgstr ""
+"Aangekondigde HTTP/3-poort moet een geheel getal van 1 tot 65535 zijn, "
+"ontvangen: %(value)s"
+
+#. Used in the browser
+#, python-brace-format
+msgid "HTTP/3 advertised port {optional}"
+msgstr "Aangekondigde HTTP/3-poort {optional}"
+
 #. Used in the browser
 #, python-brace-format
 msgid ""
@@ -5388,6 +5422,9 @@ msgid ""
 "Docker, and allow it through any firewall. Only routers with TLS can use "
 "HTTP/3."
 msgstr ""
+"HTTP/3 gebruikt op deze poort ook UDP. Publiceer die ook, bijvoorbeeld "
+"{udp_port} in Docker, en sta hem toe in elke firewall. Alleen routers met "
+"TLS kunnen HTTP/3 gebruiken."
 
 #. Used in the browser
 msgid ""
@@ -6610,6 +6647,8 @@ msgid ""
 "NTLM and Kerberos sticky connections are not keyed by service, so one "
 "service TLS client config applies to another"
 msgstr ""
+"NTLM- en Kerberos-sticky-verbindingen zijn niet per service gescheiden, "
+"waardoor de TLS-clientconfiguratie van de ene service voor een andere geldt"
 
 #. Used in the browser
 msgctxt "label"
@@ -6675,6 +6714,8 @@ msgid ""
 "Negated Host matcher causes a TLS option conflict that disables client "
 "certificate authentication on the excluded host"
 msgstr ""
+"Host-matcher met negatie veroorzaakt een TLS-optieconflict dat "
+"clientcertificaatauthenticatie op de uitgesloten host uitschakelt"
 
 #. Used in the browser
 #, python-brace-format
@@ -8271,6 +8312,8 @@ msgstr "Poort en snelheidslimiet"
 msgid ""
 "Preauthenticated Negotiate contaminates the shared backend connection pool"
 msgstr ""
+"Vooraf geauthenticeerde Negotiate vervuilt de gedeelde verbindingspool naar "
+"de backend"
 
 #, python-format
 msgid ""
@@ -8913,12 +8956,12 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Remove {domain}"
-msgstr ""
+msgstr "{domain} verwijderen"
 
 #. Used in the browser
 #, python-brace-format
 msgid "Remove {domain} from Settings, Connection, Domains"
-msgstr ""
+msgstr "{domain} verwijderen uit Instellingen, Verbinding, Domeinen"
 
 #. Used in the browser
 #, python-brace-format
@@ -8953,7 +8996,7 @@ msgstr[1] ""
 #. Used in the browser
 #, python-brace-format
 msgid "Removed {domain} from Settings, Connection, Domains"
-msgstr ""
+msgstr "{domain} verwijderd uit Instellingen, Verbinding, Domeinen"
 
 #. Used in the browser
 #, python-brace-format
@@ -8964,7 +9007,11 @@ msgid_plural ""
 "Removed {domain} from Settings. It stays in the list while routes {routes} "
 "use it."
 msgstr[0] ""
+"{domain} verwijderd uit Instellingen. Het blijft in de lijst zolang route "
+"{routes} het gebruikt."
 msgstr[1] ""
+"{domain} verwijderd uit Instellingen. Het blijft in de lijst zolang de "
+"routes {routes} het gebruiken."
 
 #. Used in the browser
 #, python-brace-format
@@ -9762,6 +9809,9 @@ msgid ""
 "requiring a client certificate can be reached without one (Traefik built "
 "with Go 1.27)"
 msgstr ""
+"SNI-controle wordt overgeslagen voor HTTP/2-verzoeken die als http over TLS "
+"worden verzonden, waardoor een router die een clientcertificaat vereist "
+"zonder certificaat bereikbaar is (Traefik gebouwd met Go 1.27)"
 
 #. Used in the browser
 msgid "SNI strict"
@@ -9896,7 +9946,7 @@ msgstr "Opgeslagen"
 #. Used in the browser
 msgctxt "status"
 msgid "Saved"
-msgstr ""
+msgstr "Opgeslagen"
 
 msgid ""
 "Saved in manager.yml, so the choice follows you to every browser. Follow "
@@ -10097,7 +10147,7 @@ msgstr "Kies hierboven een sjabloon om de wizard te gebruiken."
 
 #. Used in the browser
 msgid "Select at least one domain for this route"
-msgstr ""
+msgstr "Kies minstens één domein voor deze route"
 
 #. Used in the browser
 msgid "Select at least one source"
@@ -10174,7 +10224,7 @@ msgid "Sending…"
 msgstr "Verzenden…"
 
 msgid "Separate domains with commas, spaces or new lines."
-msgstr ""
+msgstr "Scheid domeinen met komma’s, spaties of nieuwe regels."
 
 msgid "Serial Number"
 msgstr "Serienummer"
@@ -10731,7 +10781,10 @@ msgstr[1] "{n} ongeldige items overgeslagen:"
 msgid "Skipped {n} route that is not defined in a config file."
 msgid_plural "Skipped {n} routes that are not defined in a config file."
 msgstr[0] ""
+"{n} route overgeslagen die niet in een configuratiebestand is gedefinieerd."
 msgstr[1] ""
+"{n} routes overgeslagen die niet in een configuratiebestand zijn "
+"gedefinieerd."
 
 #. Used in the browser
 msgctxt "button"
@@ -11169,7 +11222,7 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "TLS {profile}, set on the entry point"
-msgstr ""
+msgstr "TLS {profile}, ingesteld op het entrypoint"
 
 #. Used in the browser
 msgid "TLS, no certResolver"
@@ -11336,6 +11389,14 @@ msgstr ""
 "aan om hem te vervangen door de standaardwaarden van de schakelaars. Zet de "
 "preset uit om hem te verwijderen."
 
+#. Used in the browser
+msgid ""
+"The Compress middleware holds megabytes of Brotli state per response in "
+"flight, so unauthenticated clients can exhaust memory"
+msgstr ""
+"De Compress-middleware houdt per lopend antwoord megabytes aan Brotli-status "
+"vast, waardoor niet-geauthenticeerde clients het geheugen kunnen uitputten"
+
 msgid "The CrowdSec alert cache is being refreshed"
 msgstr "De CrowdSec-alertcache wordt vernieuwd"
 
@@ -11348,6 +11409,15 @@ msgid ""
 msgstr ""
 "De CrowdSec-velden van deze server in Instellingen bouwen alleen het compose-"
 "fragment hieronder: ze worden nooit naar een draaiende agent gestuurd."
+
+#. Used in the browser
+msgid ""
+"The Docker and Swarm password, the Knative token and the HTTP provider "
+"headers are not redacted from debug logs, support dumps and usage statistics"
+msgstr ""
+"Het Docker- en Swarm-wachtwoord, het Knative-token en de headers van de HTTP-"
+"provider worden niet afgeschermd in debuglogs, supportdumps en "
+"gebruiksstatistieken"
 
 #, python-format
 msgid ""
@@ -11659,6 +11729,20 @@ msgid ""
 "Use it when the backend serves its certificate for a different name than the "
 "target address. Adds serverName via a named serversTransport."
 msgstr ""
+"De naam die Traefik als SNI verstuurt en waartegen het backendcertificaat "
+"wordt gecontroleerd. Gebruik dit als de backend zijn certificaat voor een "
+"andere naam aanbiedt dan het doeladres. Voegt serverName toe via een "
+"benoemde serversTransport."
+
+#. Used in the browser
+msgid ""
+"The port clients use for HTTP/3 when it differs from the one Traefik listens "
+"on, for example behind a Docker port mapping. Empty advertises the "
+"entrypoint port."
+msgstr ""
+"De poort die clients voor HTTP/3 gebruiken als die afwijkt van de poort "
+"waarop Traefik luistert, bijvoorbeeld achter een Docker-poortmapping. Leeg "
+"kondigt de poort van het entrypoint aan."
 
 #. Used in the browser
 msgid "The primary view"
@@ -11857,11 +11941,11 @@ msgstr[1] ""
 
 #. Used in the browser
 msgid "The selected routes are already disabled."
-msgstr ""
+msgstr "De geselecteerde routes zijn al uitgeschakeld."
 
 #. Used in the browser
 msgid "The selected routes are already enabled."
-msgstr ""
+msgstr "De geselecteerde routes zijn al ingeschakeld."
 
 #. Used in the browser
 msgid "The server changed, reload the list and select again"
@@ -12932,7 +13016,7 @@ msgstr "Niet-opgeslagen wijzigingen"
 
 #. Used in the browser
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Niet-opgeslagen wijzigingen"
 
 #. Used in the browser
 #, python-brace-format
@@ -13322,6 +13406,8 @@ msgid ""
 "With TLS on, this route only answers HTTPS, so plain http on {eps} returns "
 "404 page not found. Choose No TLS for an http-only route."
 msgstr ""
+"Met TLS aan beantwoordt deze route alleen HTTPS, dus gewone http op {eps} "
+"geeft 404 page not found. Kies Geen TLS voor een route met alleen http."
 
 #, python-format
 msgid ""
@@ -16789,6 +16875,7 @@ msgstr "samenvatting {digest}"
 #, python-brace-format
 msgid "{domain} comes from this agent's Domains setting. Remove it there."
 msgstr ""
+"{domain} komt uit de instelling Domeinen van deze agent. Verwijder het daar."
 
 #. Used in the browser
 #, python-brace-format
@@ -16796,6 +16883,8 @@ msgid ""
 "{domain} is the only domain in Settings, Connection, Domains. Add another "
 "one there before removing it."
 msgstr ""
+"{domain} is het enige domein in Instellingen, Verbinding, Domeinen. Voeg "
+"daar eerst een ander toe voordat je het verwijdert."
 
 #. Used in the browser
 #, python-brace-format
@@ -16806,7 +16895,11 @@ msgid_plural ""
 "{domain} is used by routes {routes}, so it stays in the list until those "
 "routes stop using it."
 msgstr[0] ""
+"{domain} wordt gebruikt door route {routes}, dus het blijft in de lijst tot "
+"die route het niet meer gebruikt."
 msgstr[1] ""
+"{domain} wordt gebruikt door de routes {routes}, dus het blijft in de lijst "
+"tot die routes het niet meer gebruiken."
 
 #. Used in the browser
 #, python-brace-format
@@ -16891,15 +16984,15 @@ msgstr[1] "{failed} van {n} routes konden niet worden verwijderd."
 #, python-brace-format
 msgid "{failed} of {n} route could not be disabled."
 msgid_plural "{failed} of {n} routes could not be disabled."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{failed} van {n} route kon niet worden uitgeschakeld."
+msgstr[1] "{failed} van {n} routes konden niet worden uitgeschakeld."
 
 #. Used in the browser
 #, python-brace-format
 msgid "{failed} of {n} route could not be enabled."
 msgid_plural "{failed} of {n} routes could not be enabled."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{failed} van {n} route kon niet worden ingeschakeld."
+msgstr[1] "{failed} van {n} routes konden niet worden ingeschakeld."
 
 #. Used in the browser
 #, python-brace-format

@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Traefik Manager 1.15\n"
 "Report-Msgid-Bugs-To: https://github.com/chr0nzz/tm-locale/issues\n"
-"POT-Creation-Date: 2026-11-11 14:43-0500\n"
-"PO-Revision-Date: 2026-09-29 20:39+0000\n"
+"POT-Creation-Date: 2026-11-25 13:27-0500\n"
+"PO-Revision-Date: 2026-11-25 07:24+0000\n"
 "Last-Translator: chr0nzz <chronzz@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/traefik-manager/"
 "web-app/es/>\n"
@@ -723,6 +723,15 @@ msgstr ""
 msgid "A forwardAuth middleware is in use, so this is high priority."
 msgstr ""
 "Hay un middleware forwardAuth en uso, así que esto tiene prioridad alta."
+
+#. Used in the browser
+msgid ""
+"A host written with a trailing dot evades TLS option conflict detection, so "
+"a router can bypass the client certificate check of another"
+msgstr ""
+"Un host escrito con punto final elude la detección de conflictos de opciones "
+"TLS, así que un router puede saltarse la comprobación de certificado de "
+"cliente de otro"
 
 msgid "A label for the device this key belongs to."
 msgstr "Una etiqueta para el dispositivo al que pertenece esta clave."
@@ -1558,6 +1567,9 @@ msgid ""
 "An NTLM or Negotiate Authorization header pins a backend transport that is "
 "never released, so unauthenticated clients can exhaust memory and connections"
 msgstr ""
+"Una cabecera Authorization NTLM o Negotiate fija un transporte al backend "
+"que nunca se libera, así que clientes no autenticados pueden agotar la "
+"memoria y las conexiones"
 
 msgid ""
 "An agent runs beside Traefik on a remote host so this instance can manage "
@@ -1588,7 +1600,7 @@ msgid "Anything below this level is dropped for this channel."
 msgstr "Todo lo que esté por debajo de este nivel se descarta para este canal."
 
 msgid "App Store"
-msgstr ""
+msgstr "App Store"
 
 #. Used in the browser
 msgid "App Token"
@@ -1624,7 +1636,7 @@ msgstr "Aplicar y guardar"
 #. Used in the browser
 msgctxt "label"
 msgid "As logged"
-msgstr ""
+msgstr "Según el registro"
 
 msgid ""
 "Assign a route to a group with the pencil on its card. A group disappears "
@@ -1845,11 +1857,13 @@ msgstr "Backend en línea · {latency_ms}ms"
 
 #. Used in the browser
 msgid "Backend server name (SNI)"
-msgstr ""
+msgstr "Nombre del servidor backend (SNI)"
 
 #, python-format
 msgid "Backend server name must be a hostname, got %(value)s"
 msgstr ""
+"El nombre del servidor backend debe ser un nombre de host, se recibió "
+"%(value)s"
 
 msgid "Backend service"
 msgstr "Servicio backend"
@@ -2244,7 +2258,7 @@ msgstr "Ajustes de la tarjeta"
 #. Used in the browser
 #, python-brace-format
 msgid "Card settings for {name}"
-msgstr ""
+msgstr "Ajustes de la tarjeta de {name}"
 
 msgctxt "setting"
 msgid "Categories"
@@ -2526,6 +2540,8 @@ msgstr "Haz clic en %(middleware)s para añadir uno"
 msgid ""
 "Click a domain to switch to it. Ctrl or Shift click to select more than one."
 msgstr ""
+"Haz clic en un dominio para cambiar a él. Haz clic con Ctrl o Mayús para "
+"seleccionar más de uno."
 
 msgid "Click to copy"
 msgstr "Haz clic para copiar"
@@ -2837,7 +2853,7 @@ msgstr "Conexión fallida: {error}"
 
 #. Used in the browser
 msgid "Connection settings saved"
-msgstr ""
+msgstr "Ajustes de conexión guardados"
 
 #. Used in the browser
 msgid "Connection successful"
@@ -3847,8 +3863,8 @@ msgstr "Desactivado"
 #, python-brace-format
 msgid "Disabled {n} route."
 msgid_plural "Disabled {n} routes."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Se desactivó {n} ruta."
+msgstr[1] "Se desactivaron {n} rutas."
 
 msgid ""
 "Disables certificate validation for the backend. Use for self-signed certs "
@@ -4089,7 +4105,7 @@ msgstr "Editar canal"
 
 #. Used in the browser
 msgid "Edit Entrypoint"
-msgstr ""
+msgstr "Editar entrypoint"
 
 #. Used in the browser
 msgid "Edit Plugin"
@@ -4097,7 +4113,7 @@ msgstr "Editar plugin"
 
 #. Used in the browser
 msgid "Edit Resolver"
-msgstr ""
+msgstr "Editar resolver"
 
 #. Used in the browser
 msgid "Edit Service"
@@ -4202,8 +4218,8 @@ msgstr "Activado"
 #, python-brace-format
 msgid "Enabled {n} route."
 msgid_plural "Enabled {n} routes."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Se activó {n} ruta."
+msgstr[1] "Se activaron {n} rutas."
 
 #. Used in the browser
 msgid "Enabled, stream routes are not reachability checked"
@@ -4333,6 +4349,12 @@ msgstr "Entrypoint"
 msgid "Entrypoint \"%(entrypoint)s\" not found in static config"
 msgstr ""
 "No se encontró el entrypoint \"%(entrypoint)s\" en la configuración estática"
+
+#, python-format
+msgid ""
+"Entrypoint address must be a port such as :443, optionally with a host and /"
+"tcp or /udp, got %(value)s"
+msgstr ""
 
 #. Used in the browser
 msgid "Entrypoint labels"
@@ -4798,6 +4820,8 @@ msgid ""
 "FastProxy backend connection pool leaks NTLM and Negotiate identity to "
 "unauthenticated clients"
 msgstr ""
+"El pool de conexiones al backend de FastProxy filtra la identidad NTLM y "
+"Negotiate a clientes no autenticados"
 
 #. Used in the browser
 msgid ""
@@ -5394,6 +5418,18 @@ msgstr "HTTP/3 anunciado"
 msgid "HTTP/3 advertised on port {port}"
 msgstr "HTTP/3 anunciado en el puerto {port}"
 
+#, python-format
+msgid ""
+"HTTP/3 advertised port must be a whole number from 1 to 65535, got %(value)s"
+msgstr ""
+"El puerto anunciado de HTTP/3 debe ser un número entero de 1 a 65535, se "
+"recibió %(value)s"
+
+#. Used in the browser
+#, python-brace-format
+msgid "HTTP/3 advertised port {optional}"
+msgstr "Puerto anunciado de HTTP/3 {optional}"
+
 #. Used in the browser
 #, python-brace-format
 msgid ""
@@ -5401,6 +5437,9 @@ msgid ""
 "Docker, and allow it through any firewall. Only routers with TLS can use "
 "HTTP/3."
 msgstr ""
+"HTTP/3 también usa UDP en este puerto. Publícalo también, por ejemplo "
+"{udp_port} en Docker, y permítelo en cualquier firewall. Solo los routers "
+"con TLS pueden usar HTTP/3."
 
 #. Used in the browser
 msgid ""
@@ -6619,6 +6658,8 @@ msgid ""
 "NTLM and Kerberos sticky connections are not keyed by service, so one "
 "service TLS client config applies to another"
 msgstr ""
+"Las conexiones persistentes NTLM y Kerberos no se separan por servicio, así "
+"que la configuración de cliente TLS de un servicio se aplica a otro"
 
 #. Used in the browser
 msgctxt "label"
@@ -6684,6 +6725,8 @@ msgid ""
 "Negated Host matcher causes a TLS option conflict that disables client "
 "certificate authentication on the excluded host"
 msgstr ""
+"Un matcher Host negado provoca un conflicto de opciones TLS que desactiva la "
+"autenticación por certificado de cliente en el host excluido"
 
 #. Used in the browser
 #, python-brace-format
@@ -8296,6 +8339,8 @@ msgstr "Puerto y límite de tasa"
 msgid ""
 "Preauthenticated Negotiate contaminates the shared backend connection pool"
 msgstr ""
+"Negotiate preautenticado contamina el pool compartido de conexiones al "
+"backend"
 
 #, python-format
 msgid ""
@@ -8939,12 +8984,12 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "Remove {domain}"
-msgstr ""
+msgstr "Quitar {domain}"
 
 #. Used in the browser
 #, python-brace-format
 msgid "Remove {domain} from Settings, Connection, Domains"
-msgstr ""
+msgstr "Quitar {domain} de Ajustes, Conexión, Dominios"
 
 #. Used in the browser
 #, python-brace-format
@@ -8978,7 +9023,7 @@ msgstr[1] ""
 #. Used in the browser
 #, python-brace-format
 msgid "Removed {domain} from Settings, Connection, Domains"
-msgstr ""
+msgstr "Se quitó {domain} de Ajustes, Conexión, Dominios"
 
 #. Used in the browser
 #, python-brace-format
@@ -8989,7 +9034,11 @@ msgid_plural ""
 "Removed {domain} from Settings. It stays in the list while routes {routes} "
 "use it."
 msgstr[0] ""
+"Se quitó {domain} de Ajustes. Sigue en la lista mientras la ruta {routes} lo "
+"use."
 msgstr[1] ""
+"Se quitó {domain} de Ajustes. Sigue en la lista mientras las rutas {routes} "
+"lo usen."
 
 #. Used in the browser
 #, python-brace-format
@@ -9797,6 +9846,9 @@ msgid ""
 "requiring a client certificate can be reached without one (Traefik built "
 "with Go 1.27)"
 msgstr ""
+"La comprobación de SNI se omite en peticiones HTTP/2 enviadas como http "
+"sobre TLS, así que se puede acceder sin certificado de cliente a un router "
+"que lo exige (Traefik compilado con Go 1.27)"
 
 #. Used in the browser
 msgid "SNI strict"
@@ -9932,7 +9984,7 @@ msgstr "Guardado"
 #. Used in the browser
 msgctxt "status"
 msgid "Saved"
-msgstr ""
+msgstr "Guardado"
 
 msgid ""
 "Saved in manager.yml, so the choice follows you to every browser. Follow "
@@ -10133,7 +10185,7 @@ msgstr "Selecciona una plantilla arriba para usar el asistente."
 
 #. Used in the browser
 msgid "Select at least one domain for this route"
-msgstr ""
+msgstr "Selecciona al menos un dominio para esta ruta"
 
 #. Used in the browser
 msgid "Select at least one source"
@@ -10210,7 +10262,7 @@ msgid "Sending…"
 msgstr "Enviando…"
 
 msgid "Separate domains with commas, spaces or new lines."
-msgstr ""
+msgstr "Separa los dominios con comas, espacios o saltos de línea."
 
 msgid "Serial Number"
 msgstr "Número de serie"
@@ -10762,7 +10814,9 @@ msgstr[1] "Se omitieron {n} entradas no válidas:"
 msgid "Skipped {n} route that is not defined in a config file."
 msgid_plural "Skipped {n} routes that are not defined in a config file."
 msgstr[0] ""
+"Se omitió {n} ruta que no está definida en un archivo de configuración."
 msgstr[1] ""
+"Se omitieron {n} rutas que no están definidas en un archivo de configuración."
 
 #. Used in the browser
 msgctxt "button"
@@ -11199,7 +11253,7 @@ msgstr ""
 #. Used in the browser
 #, python-brace-format
 msgid "TLS {profile}, set on the entry point"
-msgstr ""
+msgstr "TLS {profile}, definido en el entrypoint"
 
 #. Used in the browser
 msgid "TLS, no certResolver"
@@ -11366,6 +11420,14 @@ msgstr ""
 "preajuste y vuelve a activarlo para reemplazarlo con los valores "
 "predeterminados de los interruptores. Desactívalo para quitarlo."
 
+#. Used in the browser
+msgid ""
+"The Compress middleware holds megabytes of Brotli state per response in "
+"flight, so unauthenticated clients can exhaust memory"
+msgstr ""
+"El middleware Compress mantiene megabytes de estado Brotli por cada "
+"respuesta en curso, así que clientes no autenticados pueden agotar la memoria"
+
 msgid "The CrowdSec alert cache is being refreshed"
 msgstr "Se está actualizando la caché de alertas de CrowdSec"
 
@@ -11378,6 +11440,15 @@ msgid ""
 msgstr ""
 "Los campos de CrowdSec de este servidor en Ajustes solo generan el fragmento "
 "de compose de abajo: nunca se envían a un agente en ejecución."
+
+#. Used in the browser
+msgid ""
+"The Docker and Swarm password, the Knative token and the HTTP provider "
+"headers are not redacted from debug logs, support dumps and usage statistics"
+msgstr ""
+"La contraseña de Docker y Swarm, el token de Knative y las cabeceras del "
+"proveedor HTTP no se ocultan en los logs de depuración, los volcados de "
+"soporte ni las estadísticas de uso"
 
 #, python-format
 msgid ""
@@ -11690,6 +11761,20 @@ msgid ""
 "Use it when the backend serves its certificate for a different name than the "
 "target address. Adds serverName via a named serversTransport."
 msgstr ""
+"El nombre que Traefik envía como SNI y con el que comprueba el certificado "
+"del backend. Úsalo cuando el backend sirva su certificado para un nombre "
+"distinto de la dirección de destino. Añade serverName mediante un "
+"serversTransport con nombre."
+
+#. Used in the browser
+msgid ""
+"The port clients use for HTTP/3 when it differs from the one Traefik listens "
+"on, for example behind a Docker port mapping. Empty advertises the "
+"entrypoint port."
+msgstr ""
+"El puerto que usan los clientes para HTTP/3 cuando difiere del puerto en el "
+"que escucha Traefik, por ejemplo detrás de un mapeo de puertos de Docker. Si "
+"se deja vacío, se anuncia el puerto del entrypoint."
 
 #. Used in the browser
 msgid "The primary view"
@@ -11889,11 +11974,11 @@ msgstr[1] ""
 
 #. Used in the browser
 msgid "The selected routes are already disabled."
-msgstr ""
+msgstr "Las rutas seleccionadas ya están desactivadas."
 
 #. Used in the browser
 msgid "The selected routes are already enabled."
-msgstr ""
+msgstr "Las rutas seleccionadas ya están activadas."
 
 #. Used in the browser
 msgid "The server changed, reload the list and select again"
@@ -12968,7 +13053,7 @@ msgstr "Cambios sin guardar"
 
 #. Used in the browser
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Cambios sin guardar"
 
 #. Used in the browser
 #, python-brace-format
@@ -13359,6 +13444,8 @@ msgid ""
 "With TLS on, this route only answers HTTPS, so plain http on {eps} returns "
 "404 page not found. Choose No TLS for an http-only route."
 msgstr ""
+"Con TLS activado, esta ruta solo responde a HTTPS, así que http sin cifrar "
+"en {eps} devuelve 404 page not found. Elige Sin TLS para una ruta solo http."
 
 #, python-format
 msgid ""
@@ -16827,7 +16914,7 @@ msgstr "resumen {digest}"
 #. Used in the browser
 #, python-brace-format
 msgid "{domain} comes from this agent's Domains setting. Remove it there."
-msgstr ""
+msgstr "{domain} proviene del ajuste Dominios de este agente. Quítalo allí."
 
 #. Used in the browser
 #, python-brace-format
@@ -16835,6 +16922,8 @@ msgid ""
 "{domain} is the only domain in Settings, Connection, Domains. Add another "
 "one there before removing it."
 msgstr ""
+"{domain} es el único dominio en Ajustes, Conexión, Dominios. Añade otro allí "
+"antes de quitarlo."
 
 #. Used in the browser
 #, python-brace-format
@@ -16845,7 +16934,11 @@ msgid_plural ""
 "{domain} is used by routes {routes}, so it stays in the list until those "
 "routes stop using it."
 msgstr[0] ""
+"{domain} lo usa la ruta {routes}, así que sigue en la lista hasta que esa "
+"ruta deje de usarlo."
 msgstr[1] ""
+"{domain} lo usan las rutas {routes}, así que sigue en la lista hasta que "
+"esas rutas dejen de usarlo."
 
 #. Used in the browser
 #, python-brace-format
@@ -16932,15 +17025,15 @@ msgstr[1] "No se pudieron eliminar {failed} de {n} rutas."
 #, python-brace-format
 msgid "{failed} of {n} route could not be disabled."
 msgid_plural "{failed} of {n} routes could not be disabled."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "No se pudo desactivar {failed} de {n} ruta."
+msgstr[1] "No se pudieron desactivar {failed} de {n} rutas."
 
 #. Used in the browser
 #, python-brace-format
 msgid "{failed} of {n} route could not be enabled."
 msgid_plural "{failed} of {n} routes could not be enabled."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "No se pudo activar {failed} de {n} ruta."
+msgstr[1] "No se pudieron activar {failed} de {n} rutas."
 
 #. Used in the browser
 #, python-brace-format

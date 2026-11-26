@@ -23,10 +23,40 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    const TECHNICAL_PARAM = /^(code|codes|status|statuses|port|ports|version|ver|year|ip|addr|address|host|http|tls|pid|id)$/i;
+    const NUMERIC_TEXT = /^-?[\d.,\u00a0\u202f\u066b\u066c]+$/;
+    let nativeDigitMap;
+
+    function nativeDigits() {
+        if (nativeDigitMap === undefined) {
+            nativeDigitMap = null;
+            try {
+                const f = new Intl.NumberFormat(formatLocale(), { useGrouping: false });
+                const digits = '0123456789'.split('').map(d => f.format(Number(d)));
+                if (digits.join('') !== '0123456789' && digits.every(d => d.length === 1)) nativeDigitMap = digits;
+            } catch (e) {
+                nativeDigitMap = null;
+            }
+        }
+        return nativeDigitMap;
+    }
+
+    function tmDigits(value) {
+        const text = String(value == null ? '' : value);
+        const map = nativeDigits();
+        return map ? text.replace(/[0-9]/g, d => map[d]) : text;
+    }
+
+    function fillValue(key, value) {
+        if (TECHNICAL_PARAM.test(key)) return String(value);
+        if (typeof value === 'number' || (typeof value === 'string' && NUMERIC_TEXT.test(value))) return tmDigits(value);
+        return String(value);
+    }
+
     function fill(text, params) {
         if (!params) return text;
         return text.replace(/\{(\w+)\}/g, (match, key) =>
-            Object.prototype.hasOwnProperty.call(params, key) ? String(params[key]) : match);
+            Object.prototype.hasOwnProperty.call(params, key) ? fillValue(key, params[key]) : match);
     }
 
     function lookup(key) {
@@ -158,6 +188,7 @@
     window.tmHtml = tmHtml;
     window.tmEscapeHtml = escapeHtml;
     window.tmNumber = tmNumber;
+    window.tmDigits = tmDigits;
     window.tmDate = tmDate;
     window.tmAgo = tmAgo;
     window.tmList = tmList;

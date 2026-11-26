@@ -124,7 +124,7 @@ async function openKubernetesRouteDetail(idx) {
     const provider = r.provider || (r.name || '').split('@')[1] || 'kubernetes';
     const labels = { kubernetescrd: 'CRD', kubernetes: 'Ingress', kubernetesgateway: 'Gateway' };
     const providerLabel = labels[provider] || provider;
-    const k8sBadge = `<span class="d-flat d-off ml-2"><i class="ph-bold ph-circles-three"></i> ${th('k8s/{providerLabel}', { providerLabel: tmHtml(providerLabel) })}</span>`;
+    const k8sBadge = `<span class="d-flat d-off ms-2"><i class="ph-bold ph-circles-three"></i> ${th('k8s/{providerLabel}', { providerLabel: tmHtml(providerLabel) })}</span>`;
 
     const svcRaw  = r.service || '';
     const appData = {

@@ -213,7 +213,7 @@ function _atkCard(c) {
         + (c.go ? '<button type="button" class="sig-explore" data-atk="' + _esc(c.go) + '" title="' + _esc(c.goTip || '') + '">'
             + _esc(c.goLabel) + ' <i class="ph-bold ph-arrow-right"></i></button>' : '')
         + '</div>'
-        + '<div class="sig-metric"><span class="sig-total">' + c.total + '</span>'
+        + '<div class="sig-metric"><span class="sig-total">' + tmDigits(c.total) + '</span>'
         + '<span class="sig-flags">' + (c.flags || '') + '</span></div>'
         + (c.sub || '')
         + (c.body || '')
@@ -231,7 +231,7 @@ function _atkRow(r) {
         + '<span class="lg-kind">' + _esc(r.kind || '') + '</span></span>'
         + (r.bad || '<span class="lg-bad"></span>')
         + '<span class="lg-n">' + _sdNum(r.n) + '</span>'
-        + '<span class="lg-pct">' + r.pct + '%</span>'
+        + '<span class="lg-pct">' + tmDigits(r.pct) + '%</span>'
         + '</div>';
 }
 
@@ -263,7 +263,7 @@ function _atkStrip(groups, aria, opts) {
     const cell = (cls, title) => '<i class="sig-cell' + (cls ? ' ' + cls : '') + '" title="' + _esc(title) + '"></i>';
     let html = '';
     if (!total) {
-        html = '<span class="sig-more" style="margin-left:0">' + _esc(o.empty || t('none')) + '</span>';
+        html = '<span class="sig-more" style="margin-inline-start:0">' + _esc(o.empty || t('none')) + '</span>';
     } else if (total <= cap) {
         live.forEach(g => { for (let i = 0; i < g.n; i++) html += cell(g.cls, g.at(i)); });
     } else {
