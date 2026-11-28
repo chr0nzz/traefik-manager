@@ -12,8 +12,8 @@ curl -fsSL https://get-traefik.xyzlab.dev | bash
 
 | Command | What it does |
 |---|---|
-| `tm status` | Mode, directory, services, URLs, health, release channel |
-| `tm update` | Pulls images, `git pull`, or downloads the agent binary, then restarts. On a Linux service install it skips reinstalling dependencies and rebuilding assets when git reports no change, `--force` does it anyway. `--channel beta` and `--channel stable` switch release channel, see [Beta releases](beta.md) |
+| `tm status` | Mode, directory, Traefik and CrowdSec versions, services, URLs, health, release channel |
+| `tm update [app\|traefik\|crowdsec]` | Updates the install and the Traefik and CrowdSec tm manages, then restarts. On a Linux service install it skips reinstalling dependencies and rebuilding assets when git reports no change, `--force` does it anyway. `--channel beta` and `--channel stable` switch release channel, see [Beta releases](beta.md). See [Updating Traefik and CrowdSec](#updating-traefik-and-crowdsec) |
 | `tm logs [service]` | Follows the logs (`--no-follow`, `-n <lines>`) |
 | `tm restart`, `tm start`, `tm stop` | Whole install, or one service |
 | `tm password` | Prints the temporary password from the logs |
@@ -25,6 +25,39 @@ curl -fsSL https://get-traefik.xyzlab.dev | bash
 | `tm self-update` | Updates `tm` itself |
 
 Commands find the install from `--dir` or `TM_DIR`, then the current directory, then the installs `tm` already knows about.
+
+### Updating Traefik and CrowdSec
+
+| Command | What it does |
+|---|---|
+| `tm update` | App, Traefik and CrowdSec |
+| `tm update app` | Traefik Manager or the agent only |
+| `tm update traefik` | Traefik only |
+| `tm update crowdsec` | CrowdSec only |
+| `tm update --check` | Shows installed and latest versions, changes nothing |
+
+| Install | Traefik | CrowdSec |
+|---|---|---|
+| Docker modes | Pulls and recreates the `traefik` service | Pulls and recreates the `crowdsec` service |
+| Traefik + Traefik Manager (Linux services) | Replaces `/usr/local/bin/traefik` | Upgrades the `crowdsec` package |
+| Traefik Manager only (Linux service), agent binary | After `--adopt` | When tm installed it, or after `--adopt` |
+
+| Flag | What it does |
+|---|---|
+| `--adopt` | Records a native Traefik (systemd unit and binary) or CrowdSec that tm did not install, so tm updates it |
+| `--major` | Lets Traefik move to a new major version. Without it tm stays on the newest release of the installed major |
+| `--pin v3.8` | Keeps Traefik on a line (`v3`, `v3.8`) or an exact version (`v3.8.1`). `--unpin` removes it |
+| `--hub` | Also runs `cscli hub update` and `cscli hub upgrade` |
+
+| Step | Traefik binary | CrowdSec package |
+|---|---|---|
+| Download | Release from GitHub, SHA-256 verified | apt, dnf, yum or zypper, only the `crowdsec` package. On Arch run `pacman -Syu` |
+| Keep | `traefik.prev`, with its owner and file capabilities | - |
+| Restart | The unit tm recorded | `crowdsec`, when the version changed |
+| Check | `/ping` within 30 seconds, or the unit staying active when Traefik has no ping endpoint | `cscli lapi status` |
+| On failure | Restores `traefik.prev` | Reports the error |
+
+A Docker image pinned to a tag in `docker-compose.yml` is pulled at that tag, and `tm update` says so.
 
 ### Removing tm
 
@@ -309,7 +342,7 @@ Unlike mode 1, Traefik Manager itself gets no hostname and no Traefik route. Rea
 
 ### What tm installs
 
-- Downloads the latest Traefik release for this architecture, verifies its SHA-256, and installs `/usr/local/bin/traefik`. The version is recorded so `tm update` can compare
+- Downloads the latest Traefik release for this architecture, verifies its SHA-256, and installs `/usr/local/bin/traefik`, which `tm update` keeps up to date
 - Creates the `traefik-manager` system user. Traefik and Traefik Manager both run as it, which is what makes certificate removal work here: `acme.json` stays mode 600 and is owned by the user that writes it
 - Writes `traefik.service` (with a systemd watchdog) and `traefik-manager.service`, plus `traefik-restart.path` and `traefik-restart.service` when a restart is needed
 - Adds `/etc/logrotate.d/traefik`, rotating the access log daily and keeping 14
@@ -358,7 +391,7 @@ tm restart
 
 ### Updating
 
-`tm update` pulls the app as the `traefik-manager` user, reinstalls dependencies, rebuilds the assets and restarts the service. It then checks for a newer Traefik release, keeps the old binary as `traefik.prev`, and rolls back to it if Traefik stops answering `/ping` within 30 seconds.
+`tm update` pulls the app as the `traefik-manager` user, reinstalls dependencies, rebuilds the assets and restarts the service. It then updates Traefik and CrowdSec, see [Updating Traefik and CrowdSec](#updating-traefik-and-crowdsec).
 
 ### Uninstalling
 
